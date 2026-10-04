@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'none'; connect-src 'self' ws://127.0.0.1:6255" />
+    <title>Lifting harness (work package C1b)</title>
+    <style>
+      :root {
+        --foreground: #001117;
+        --muted: #4f5d61;
+        --ground: #f7f3e3;
+        --panel: #ffffff;
+        --line: #c9c8bd;
+        --accent: #1e9b8d;
+      }
+      html[data-theme="dark"] {
+        --foreground: #f7f3e3;
+        --muted: #a9b5b2;
+        --ground: #001117;
+        --panel: #1d2b2f;
+        --line: #3b4a4e;
+        --accent: #34d1bf;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: var(--ground);
+        color: var(--foreground);
+        font: 15px/1.4 system-ui, sans-serif;
+        overflow: hidden;
+      }
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .app.reduced * {
+        transition-duration: 0.01ms !important;
+      }
+      header {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 600;
+      }
+      main {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 40px 0;
+      }
+      .card {
+        width: 640px;
+        margin: 0 auto 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .tasks {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        border: 1px solid var(--line);
+        padding: 4px 10px;
+        font-size: 14px;
+        background: var(--panel);
+        transition: opacity 300ms ease, background-color 150ms ease;
+      }
+      .row:hover {
+        background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+      }
+      .index {
+        width: 2ch;
+        flex-shrink: 0;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+      }
+      .glyph {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 2;
+      }
+      .title {
+        flex: 1;
+        min-width: 0;
+        font-weight: 500;
+      }
+      .kind {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .row input,
+      .row select {
+        font: inherit;
+        font-size: 13px;
+        color: var(--foreground);
+        background: var(--ground);
+        border: 1px solid var(--line);
+        padding: 1px 4px;
+      }
+      .row input {
+        width: 80px;
+      }
+      footer {
+        padding: 6px 16px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>Heating — tasks</header>
+      <main>
+        <section class="card" data-card="quiz-tasks">
+          <h2>Tasks of this quiz</h2>
+          <ol class="tasks">
+            <li class="row" data-pet-prop="heating/u-values" id="first-task">
+              <span class="index">1</span>
+              <svg class="glyph" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 15 L3 6 L9 2 L15 6 L15 15 Z" /></svg>
+              <span class="title">U-values of building parts</span>
+              <span class="kind">Classification</span>
+            </li>
+            <li class="row" data-pet-prop="heating/heating-load-and-demand" data-presence-anchor="item:load">
+              <span class="index">2</span>
+              <svg class="glyph" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2 C13 7 13 10 9 16 C5 10 5 7 9 2 Z" /></svg>
+              <span class="title">Heating load and heating demand</span>
+              <span class="kind">Sorting</span>
+            </li>
+            <li class="row" data-pet-prop="heating/guess">
+              <span class="index">3</span>
+              <span class="title"><label for="guess">Your guess</label></span>
+              <input id="guess" name="guess" type="text" value="12.5" />
+              <select id="unit" name="unit" aria-label="Unit">
+                <option>W/(m²K)</option>
+                <option selected>kWh/a</option>
+                <option>kW</option>
+              </select>
+            </li>
+          </ol>
+        </section>
+      </main>
+      <footer>Lifting harness · copies live in the pet layer, the originals never move</footer>
+    </div>
+    <div class="pet-layer" aria-hidden="true"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

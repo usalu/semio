@@ -2,7 +2,7 @@
  * of one category (a quiz of the catalog), one shown at a time. The learner chooses the period and the category with
  * two segmented choices, and the choice holds for the page and the card alike. The page shows the top learners with a
  * submitted run on the chosen leaderboard in a table that sorts by any column on a click on its heading — rank,
- * learner, total, best score per quiz, badges, runs and last submission —, what the leaderboard counts (the window of
+ * learner, total, best run per quiz as points with its challenge, badges, runs and last submission —, what the leaderboard counts (the window of
  * its period in the learner's own time zone), how many learners are ranked in all, and the current learner's own row
  * with its real rank, highlighted inside the top and set apart below it otherwise; the card at the centre of the home
  * grid shows its excerpt (the first rows and the own row), sortable the same way. Rows never carry learner ids (an
@@ -18,9 +18,10 @@ import { useEffect, useId, useState, type ReactElement } from "react";
 import { Icon, overviewCardChipClass } from "@semio-tech/ui-react/chrome";
 import { LEADERBOARD_PERIODS, learnerTag, roomScope, type CatalogView, type Leaderboard, type LeaderboardPeriod, type LeaderboardRow, type Slug } from "@semio-tech/quiz";
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
-import { formatClock, formatInstant, formatPoints, formatScore } from "../📏️quantity/🟦️.ts";
+import { formatClock, formatInstant, formatPoints } from "../📏️quantity/🟦️.ts";
+import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
-import { CARD_CHIP_WRAP, CardAction, CardIcon, Missing, PageFrame, QuizCard, Segments, cn, textPresentation, type PaneView, type Segment } from "../🪟️chrome/🟦️.tsx";
+import { CARD_CHIP_WRAP, CardAction, CardIcon, Missing, PageFrame, QuizCard, Records, Segments, TABLE, cn, textPresentation, type PaneView, type Segment } from "../🪟️chrome/🟦️.tsx";
 import { HOME_PAGES, shownLeaderboard, type HeldLeaderboard, type QuizSession, type QuizState, type RefreshOutcome } from "../🧭️session/🟦️.ts";
 import { OnlineMark, PRESENCE_ANCHORS, PanePeers, usePresenceView } from "../👥️presence/🟦️.tsx";
 
@@ -33,7 +34,7 @@ export const POLL_BACKOFF_MAX_MS = 300_000;
 /** 🔢️ How many rows the leaderboard card shows before the own row. */
 export const BOARD_EXCERPT_SIZE = 5;
 
-/** 🔑️ A sortable column: a fixed one or the best score of one quiz. */
+/** 🔑️ A sortable column: a fixed one or the best run of one quiz, by its points. */
 export type LeaderboardKey = "rank" | "learner" | "total" | "badges" | "runs" | "last-activity" | `best:${string}`;
 
 /** ↕️ The order of the table. */
@@ -67,7 +68,7 @@ function sortValue(row: LeaderboardRow, key: LeaderboardKey, name: (row: Leaderb
     case "last-activity":
       return row.lastActivity;
     default:
-      return row.best[key.slice("best:".length)] ?? -1;
+      return row.best[key.slice("best:".length)]?.points ?? -1;
   }
 }
 
@@ -148,7 +149,7 @@ export interface LeaderboardColumn {
   readonly label: string;
 }
 
-/** 🏛️ The columns of the leaderboard page: rank, learner, total, the best score of every quiz, badges, runs and last
+/** 🏛️ The columns of the leaderboard page: rank, learner, total, the best run of every quiz (its points with its challenge), badges, runs and last
  * submission — or, on the leaderboard of the one quiz `only`, its points in place of the total and the bests, which
  * would say the same. */
 export function leaderboardColumns(catalog: CatalogView | undefined, text: QuizText, locale: QuizLocale, only?: Slug): readonly LeaderboardColumn[] {
@@ -195,7 +196,7 @@ function SortHeading(props: { readonly column: LeaderboardColumn; readonly sort:
   const { column, sort } = props;
   const chosen = sort.key === column.key;
   return (
-    <th scope="col" aria-sort={chosen ? sort.direction : undefined} className={props.className}>
+    <th {...TABLE.column} aria-sort={chosen ? sort.direction : undefined} className={props.className}>
       <button
         type="button"
         className={cn("quiz-target inline-flex cursor-pointer items-center gap-single border-0 bg-transparent p-0 text-left", props.quiet ? "font-medium text-inherit" : "font-semibold text-foreground", props.end && "flex-row-reverse")}
@@ -224,7 +225,7 @@ function Updated(props: { readonly board: HeldLeaderboard; readonly text: QuizTe
 function Gap(props: { readonly span: number }): ReactElement {
   return (
     <tr aria-hidden="true" className="border-t border-normal text-muted-foreground">
-      <td colSpan={props.span} className={cn(CELL, "text-center")}>
+      <td colSpan={props.span} data-cell="note" className={cn(CELL, "text-center")}>
         ⋯
       </td>
     </tr>
@@ -234,15 +235,21 @@ function Gap(props: { readonly span: number }): ReactElement {
 function BoardRow(props: { readonly row: LeaderboardRow; readonly mine: boolean; readonly name: string; readonly online: number | undefined; readonly text: QuizText; readonly locale: QuizLocale }): ReactElement {
   const { row, mine, name, online, text, locale } = props;
   return (
-    <tr className={cn("border-t border-normal", mine && "quiz-me")} aria-current={mine ? "true" : undefined}>
-      <td className={cn(CELL, NUMBER)}>{row.rank}</td>
-      <th scope="row" className={cn(CELL, "quiz-name text-left", mine ? "font-semibold" : "font-normal")}>
+    <tr {...TABLE.row} className={cn("border-t border-normal", mine && "quiz-me")} aria-current={mine ? "true" : undefined}>
+      <td {...TABLE.cell} data-cell="lead" className={cn(CELL, NUMBER)}>
+        {row.rank}
+      </td>
+      <th {...TABLE.name} data-cell="name" className={cn(CELL, "quiz-name text-left", mine ? "font-semibold" : "font-normal")}>
         {name}
         {mine ? <span className="font-normal text-muted-foreground"> ({text("quiz.leaderboard.you")})</span> : null}
         {online === undefined ? null : <OnlineMark colour={online} text={text} />}
       </th>
-      <td className={cn(CELL, NUMBER, "text-right")}>{formatPoints(row.total, locale)}</td>
-      <td className={cn(CELL, NUMBER, "text-right")}>{row.badges.length}</td>
+      <td {...TABLE.cell} data-cell="lead" className={cn(CELL, NUMBER, "text-right")}>
+        {formatPoints(row.total, locale)}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.leaderboard.badges")} className={cn(CELL, NUMBER, "text-right")}>
+        {row.badges.length}
+      </td>
     </tr>
   );
 }
@@ -295,17 +302,17 @@ export function LeaderboardCard(props: { readonly session: QuizSession; readonly
       ) : top.length === 0 ? (
         <p className="m-0 text-xs text-muted-foreground">{text(state.board.period === "all-time" && state.board.quiz === undefined ? "quiz.leaderboard.empty" : "quiz.leaderboard.emptyScope")}</p>
       ) : (
-        <div className="relative min-h-0 flex-1 overflow-auto">
-          <table className="w-full border-collapse text-sm">
+        <Records fold={19} className="min-h-0 flex-1">
+          <table {...TABLE.table} data-head="sort" className="quiz-fold w-full border-collapse text-sm">
             <caption className="sr-only">{text("quiz.leaderboard.topCaption")}</caption>
-            <thead>
-              <tr className="text-left text-muted-foreground">
+            <thead {...TABLE.group}>
+              <tr {...TABLE.row} className="text-left text-muted-foreground">
                 {shown.map((column) => (
                   <SortHeading key={column.key} column={column} sort={sort} onSort={(key) => setSort((present) => nextSort(present, key))} text={text} className={cn(head, column.end && "text-right")} quiet end={column.end} />
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody {...TABLE.group}>
               {sortLeaderboard(top, sort, name, locale).map((row) => (
                 <BoardRow key={row.tag} row={row} mine={row.tag === mine} name={name(row)} online={colours.get(row.tag)} text={text} locale={locale} />
               ))}
@@ -317,7 +324,7 @@ export function LeaderboardCard(props: { readonly session: QuizSession; readonly
               )}
             </tbody>
           </table>
-        </div>
+        </Records>
       )}
     </QuizCard>
   );
@@ -330,28 +337,36 @@ function PageRow(props: { readonly row: LeaderboardRow; readonly mine: boolean; 
     return badge === undefined ? id : `${textPresentation(badge.emoji)} ${localized(badge.label, locale)}`;
   };
   return (
-    <tr className={mine ? "quiz-me" : undefined} aria-current={mine ? "true" : undefined}>
-      <td className={cn(EDGE, NUMBER)}>{row.rank}</td>
-      <th scope="row" className={cn(EDGE, "quiz-name", mine ? "font-semibold" : "font-normal")}>
+    <tr {...TABLE.row} className={mine ? "quiz-me" : undefined} aria-current={mine ? "true" : undefined}>
+      <td {...TABLE.cell} data-cell="lead" className={cn(EDGE, NUMBER)}>
+        {row.rank}
+      </td>
+      <th {...TABLE.name} data-cell="name" className={cn(EDGE, "quiz-name", mine ? "font-semibold" : "font-normal")}>
         {learnerName(row.identity, row.tag, text)}
         {mine ? <span className="font-normal text-muted-foreground"> ({text("quiz.leaderboard.you")})</span> : null}
         {online === undefined ? null : <OnlineMark colour={online} text={text} />}
       </th>
-      <td className={cn(EDGE, NUMBER)}>{formatPoints(row.total, locale)}</td>
+      <td {...TABLE.cell} data-cell="lead" className={cn(EDGE, NUMBER, "quiz-board-total")}>
+        {formatPoints(row.total, locale)}
+      </td>
       {(props.bests ? (state.catalog?.quizzes ?? []) : []).map((quiz) => {
         const best = row.best[quiz.id];
         return (
-          <td key={quiz.id} className={cn(EDGE, NUMBER)}>
-            {best === undefined ? <Missing label={text("quiz.leaderboard.noBest")} /> : formatScore(best, locale)}
+          <td key={quiz.id} {...TABLE.cell} data-label={localized(quiz.title, locale)} className={cn(EDGE, NUMBER)}>
+            {best === undefined ? <Missing label={text("quiz.leaderboard.noBest")} /> : text("quiz.leaderboard.best", { points: formatPoints(best.points, locale), challenge: text(CHALLENGE_LABELS[best.challenge]) })}
           </td>
         );
       })}
-      <td className={EDGE}>
+      <td {...TABLE.cell} data-label={text("quiz.leaderboard.badges")} className={EDGE}>
         <span className="quiz-nowrap tabular-nums">{row.badges.length}</span>
         {row.badges.length === 0 ? null : <span className="text-muted-foreground"> {row.badges.map(badgeLabel).join(", ")}</span>}
       </td>
-      <td className={cn(EDGE, NUMBER)}>{row.runs}</td>
-      <td className={cn(EDGE, "quiz-nowrap")}>{formatInstant(row.lastActivity, locale)}</td>
+      <td {...TABLE.cell} data-label={text("quiz.leaderboard.runs")} className={cn(EDGE, NUMBER)}>
+        {row.runs}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.leaderboard.lastActivity")} className={cn(EDGE, "quiz-nowrap")}>
+        {formatInstant(row.lastActivity, locale)}
+      </td>
     </tr>
   );
 }
@@ -409,25 +424,25 @@ export function LeaderboardPage(props: { readonly session: QuizSession; readonly
               <span className="quiz-nowrap">{text("quiz.leaderboard.learners", { count: board.board.learners })}</span>
               {board.board.learners > rows.length ? <span className="quiz-nowrap text-muted-foreground">{text("quiz.leaderboard.shown", { count: rows.length })}</span> : null}
             </p>
-            <div className="relative max-w-full overflow-x-auto" role="region" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`} tabIndex={0}>
-              <table className="w-full border-collapse text-sm" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`}>
-                <thead>
-                  <tr>
+            <Records fold={bests ? 80 : 44} role="region" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`} tabIndex={0}>
+              <table {...TABLE.table} data-head="sort" className="quiz-fold w-full border-collapse text-sm" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`}>
+                <thead {...TABLE.group}>
+                  <tr {...TABLE.row}>
                     {shown.map((column) => (
                       <SortHeading key={column.key} column={column} sort={sort} onSort={(key) => setSort(nextSort(sort, key))} text={text} className={cn(EDGE, "quiz-nowrap border-b-2")} />
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody {...TABLE.group}>
                   {sortLeaderboard(rows, sort, name, locale).map((row) => (
                     <PageRow key={row.tag} row={row} mine={row.tag === mine} state={state} bests={bests} online={colours.get(row.tag)} text={text} locale={locale} />
                   ))}
                 </tbody>
                 {apart === undefined ? null : (
-                  <tbody data-board-own="">
+                  <tbody {...TABLE.group} data-board-own="">
                     <Gap span={shown.length} />
-                    <tr>
-                      <th scope="rowgroup" colSpan={shown.length} className={cn(EDGE, "text-xs font-semibold text-muted-foreground")}>
+                    <tr {...TABLE.row}>
+                      <th role="rowheader" scope="rowgroup" colSpan={shown.length} data-cell="note" className={cn(EDGE, "text-xs font-semibold text-muted-foreground")}>
                         {text("quiz.leaderboard.own")}
                       </th>
                     </tr>
@@ -435,7 +450,7 @@ export function LeaderboardPage(props: { readonly session: QuizSession; readonly
                   </tbody>
                 )}
               </table>
-            </div>
+            </Records>
             <p className="m-0 text-xs text-muted-foreground">{text("quiz.leaderboard.forFun")}</p>
           </>
         )}

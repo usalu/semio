@@ -36,7 +36,8 @@
             },
             "unit": "°C",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           },
           "items": [
             {
@@ -53,7 +54,8 @@
                 "en": "Living room",
                 "de": "Wohnzimmer"
               },
-              "value": 21
+              "value": 21,
+              "familiar": true
             },
             {
               "id": "bathroom",
@@ -107,7 +109,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -124,7 +127,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -165,6 +169,227 @@
           "tiny/❓️quiz/🔣️.json"
         ],
         "badges": []
+      }
+    },
+    {
+      "id": "catalog-with-least-challenges",
+      "definition": "Catalog",
+      "document": {
+        "schema": "semio.quiz.catalog/v1",
+        "id": "tiny-catalog",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "introduction": {
+          "title": {
+            "en": "Hi",
+            "de": "Hallo"
+          },
+          "paragraphs": [
+            {
+              "en": "Hi.",
+              "de": "Hallo."
+            }
+          ]
+        },
+        "quizzes": [
+          "tiny/❓️quiz/🔣️.json"
+        ],
+        "badges": [
+          {
+            "id": "perfect-on-easy",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-quiz",
+              "quiz": "tiny",
+              "challenge": "easy"
+            }
+          },
+          {
+            "id": "perfect-on-medium",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-quiz",
+              "quiz": "tiny",
+              "challenge": "medium"
+            }
+          },
+          {
+            "id": "perfect-on-hard",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-quiz",
+              "quiz": "tiny",
+              "challenge": "hard"
+            }
+          },
+          {
+            "id": "perfect-on-expert",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-quiz",
+              "quiz": "tiny",
+              "challenge": "expert"
+            }
+          },
+          {
+            "id": "sorted-on-expert",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-tasks",
+              "taskKind": "sorting",
+              "quiz": "tiny",
+              "challenge": "expert"
+            }
+          },
+          {
+            "id": "every-task-on-easy",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-tasks",
+              "challenge": "easy"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "quiz-with-short-labels-and-familiar-items",
+      "definition": "Quiz",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false,
+              "short": {
+                "en": "temperature",
+                "de": "Temperatur"
+              }
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "short": {
+                  "en": "ääääääääääääääääääääääääääääääääääääääää",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18,
+                "familiar": true
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "short": {
+                  "en": "ääääääääääääääääääääääääääääääääääääääää",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": false
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "short": {
+                  "en": "ääääääääääääääääääääääääääääääääääääääää",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5,
+                "familiar": false
+              }
+            ]
+          }
+        ]
       }
     }
   ],
@@ -207,7 +432,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -224,7 +450,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -278,7 +505,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -295,7 +523,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -349,7 +578,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -366,7 +596,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -420,7 +651,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -437,7 +669,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -490,7 +723,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -507,7 +741,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -561,7 +796,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -578,7 +814,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -632,7 +869,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -649,7 +887,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -703,7 +942,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -720,7 +960,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -793,7 +1034,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -810,7 +1052,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -865,7 +1108,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -882,7 +1126,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -936,7 +1181,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -991,7 +1237,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1008,7 +1255,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1063,6 +1311,79 @@
               },
               "unit": "°C",
               "scale": "exponential",
+              "prefixed": false,
+              "additive": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": true
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "quantity-without-additive",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
               "prefixed": false
             },
             "items": [
@@ -1080,7 +1401,367 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dimension-additive-as-text",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": true
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliance-power",
+            "title": {
+              "en": "Appliance power",
+              "de": "Geräteleistung"
+            },
+            "prompt": {
+              "en": "Match every appliance with its power.",
+              "de": "Ordne jedem Gerät seine Leistung zu."
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "linear",
+                  "prefixed": true,
+                  "additive": "yes"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "toaster",
+                "label": {
+                  "en": "Toaster",
+                  "de": "Toaster"
+                },
+                "values": {
+                  "power": 800
+                }
+              },
+              {
+                "id": "microwave",
+                "label": {
+                  "en": "Microwave",
+                  "de": "Mikrowelle"
+                },
+                "values": {
+                  "power": 800
+                }
+              },
+              {
+                "id": "oven",
+                "label": {
+                  "en": "Oven",
+                  "de": "Backofen"
+                },
+                "values": {
+                  "power": 3000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "item-short-beyond-forty-code-points",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18,
+                "short": {
+                  "en": "Bedroom",
+                  "de": "äääääääääääääääääääääääääääääääääääääääää"
+                }
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": true
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "item-familiar-as-text",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18,
+                "familiar": "yes"
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": true
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "quantity-short-without-german",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false,
+              "short": {
+                "en": "temperature"
+              }
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1134,7 +1815,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1151,7 +1833,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1205,7 +1888,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1222,7 +1906,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1275,7 +1960,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1292,7 +1978,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1347,7 +2034,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1364,7 +2052,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1418,7 +2107,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1439,7 +2129,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1493,7 +2184,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1510,7 +2202,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1543,6 +2236,10 @@
                 "label": {
                   "en": "Seasonal efficiency",
                   "de": "Jahresnutzungsgrad"
+                },
+                "short": {
+                  "en": "efficiency",
+                  "de": "Nutzungsgrad"
                 },
                 "unit": "%",
                 "min": 0,
@@ -1632,6 +2329,10 @@
                   "en": "Direct electric heating",
                   "de": "Elektrodirektheizung"
                 },
+                "short": {
+                  "en": "Direct electric",
+                  "de": "Direktstrom"
+                },
                 "description": {
                   "en": "Resistance heaters without storage or pump.",
                   "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -1644,6 +2345,10 @@
                 "label": {
                   "en": "Borehole with brine circuit",
                   "de": "Erdsonde mit Solekreislauf"
+                },
+                "short": {
+                  "en": "Borehole",
+                  "de": "Erdsonde"
                 },
                 "category": "heat-pump",
                 "explanation": {
@@ -1740,7 +2445,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1757,7 +2463,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1790,7 +2497,8 @@
                   },
                   "unit": "W",
                   "scale": "linear",
-                  "prefixed": true
+                  "prefixed": true,
+                  "additive": true
                 },
                 "icon": {
                   "emoji": "⚡",
@@ -1874,7 +2582,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -1891,7 +2600,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -1924,6 +2634,10 @@
                 "label": {
                   "en": "Seasonal efficiency",
                   "de": "Jahresnutzungsgrad"
+                },
+                "short": {
+                  "en": "efficiency",
+                  "de": "Nutzungsgrad"
                 },
                 "unit": "%",
                 "min": 0,
@@ -1999,6 +2713,10 @@
                   "en": "Direct electric heating",
                   "de": "Elektrodirektheizung"
                 },
+                "short": {
+                  "en": "Direct electric",
+                  "de": "Direktstrom"
+                },
                 "description": {
                   "en": "Resistance heaters without storage or pump.",
                   "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -2011,6 +2729,10 @@
                 "label": {
                   "en": "Borehole with brine circuit",
                   "de": "Erdsonde mit Solekreislauf"
+                },
+                "short": {
+                  "en": "Borehole",
+                  "de": "Erdsonde"
                 },
                 "category": "heat-pump",
                 "explanation": {
@@ -2107,7 +2829,8 @@
               },
               "unit": "°C",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "items": [
               {
@@ -2124,7 +2847,8 @@
                   "en": "Living room",
                   "de": "Wohnzimmer"
                 },
-                "value": 21
+                "value": 21,
+                "familiar": true
               },
               {
                 "id": "bathroom",
@@ -2157,7 +2881,8 @@
                   },
                   "unit": "W",
                   "scale": "linear",
-                  "prefixed": true
+                  "prefixed": true,
+                  "additive": true
                 }
               }
             ],
@@ -2312,6 +3037,4939 @@
           "tiny/❓️quiz/🔣️.json"
         ],
         "badges": []
+      }
+    },
+    {
+      "id": "badge-challenge-unknown",
+      "definition": "Catalog",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz.catalog/v1",
+        "id": "tiny-catalog",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "introduction": {
+          "title": {
+            "en": "Hi",
+            "de": "Hallo"
+          },
+          "paragraphs": [
+            {
+              "en": "Hi.",
+              "de": "Hallo."
+            }
+          ]
+        },
+        "quizzes": [
+          "tiny/❓️quiz/🔣️.json"
+        ],
+        "badges": [
+          {
+            "id": "starred",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-quiz",
+              "quiz": "tiny",
+              "challenge": "extreme"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "badge-challenge-not-a-text",
+      "definition": "Catalog",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz.catalog/v1",
+        "id": "tiny-catalog",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "introduction": {
+          "title": {
+            "en": "Hi",
+            "de": "Hallo"
+          },
+          "paragraphs": [
+            {
+              "en": "Hi.",
+              "de": "Hallo."
+            }
+          ]
+        },
+        "quizzes": [
+          "tiny/❓️quiz/🔣️.json"
+        ],
+        "badges": [
+          {
+            "id": "starred",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "perfect-tasks",
+              "challenge": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "badge-challenge-on-completed-quizzes",
+      "definition": "Catalog",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz.catalog/v1",
+        "id": "tiny-catalog",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "introduction": {
+          "title": {
+            "en": "Hi",
+            "de": "Hallo"
+          },
+          "paragraphs": [
+            {
+              "en": "Hi.",
+              "de": "Hallo."
+            }
+          ]
+        },
+        "quizzes": [
+          "tiny/❓️quiz/🔣️.json"
+        ],
+        "badges": [
+          {
+            "id": "starred",
+            "emoji": "⭐",
+            "label": {
+              "en": "Starred",
+              "de": "Ausgezeichnet"
+            },
+            "description": {
+              "en": "Starred.",
+              "de": "Ausgezeichnet."
+            },
+            "rule": {
+              "kind": "completed-quizzes",
+              "challenge": "hard"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "instances": [
+    {
+      "id": "challenge-easy",
+      "definition": "Challenge",
+      "document": "easy"
+    },
+    {
+      "id": "challenge-medium",
+      "definition": "Challenge",
+      "document": "medium"
+    },
+    {
+      "id": "challenge-hard",
+      "definition": "Challenge",
+      "document": "hard"
+    },
+    {
+      "id": "challenge-expert",
+      "definition": "Challenge",
+      "document": "expert"
+    },
+    {
+      "id": "quantity-additive",
+      "definition": "Quantity",
+      "document": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": true
+      }
+    },
+    {
+      "id": "quantity-not-additive",
+      "definition": "Quantity",
+      "document": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": false
+      }
+    },
+    {
+      "id": "quantity-with-a-short-label",
+      "definition": "Quantity",
+      "document": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "short": {
+          "en": "power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": true
+      }
+    },
+    {
+      "id": "short-text",
+      "definition": "ShortText",
+      "document": {
+        "en": "Kettle",
+        "de": "Wasserkocher"
+      }
+    },
+    {
+      "id": "short-text-of-forty-code-points",
+      "definition": "ShortText",
+      "document": {
+        "en": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "de": "ääääääääääääääääääääääääääääääääääääääää"
+      }
+    },
+    {
+      "id": "verdict-under",
+      "definition": "Verdict",
+      "document": "under"
+    },
+    {
+      "id": "verdict-over",
+      "definition": "Verdict",
+      "document": "over"
+    },
+    {
+      "id": "verdict-reversed",
+      "definition": "Verdict",
+      "document": "reversed"
+    },
+    {
+      "id": "sorting-item-short-and-familiar",
+      "definition": "SortingItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Electric kettle boiling a litre",
+          "de": "Wasserkocher, der einen Liter kocht"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "value": 2200,
+        "familiar": true
+      }
+    },
+    {
+      "id": "sorting-item-plain",
+      "definition": "SortingItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Electric kettle boiling a litre",
+          "de": "Wasserkocher, der einen Liter kocht"
+        },
+        "value": 2200
+      }
+    },
+    {
+      "id": "matching-item-short-and-not-familiar",
+      "definition": "MatchingItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "values": {
+          "power": 2200
+        },
+        "familiar": false
+      }
+    },
+    {
+      "id": "classification-item-short",
+      "definition": "ClassificationItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "category": "power"
+      }
+    },
+    {
+      "id": "category-short",
+      "definition": "Category",
+      "document": {
+        "id": "heat-pump",
+        "label": {
+          "en": "Heat pump",
+          "de": "Wärmepumpe"
+        },
+        "short": {
+          "en": "Pump",
+          "de": "Pumpe"
+        },
+        "profile": {
+          "investment": 30000
+        }
+      }
+    },
+    {
+      "id": "axis-short",
+      "definition": "Axis",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "unit": "CHF",
+        "min": 0,
+        "max": 40000,
+        "short": {
+          "en": "investment",
+          "de": "Investition"
+        }
+      }
+    },
+    {
+      "id": "sheet-item-short",
+      "definition": "SheetItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "icon": {
+          "emoji": "🫖",
+          "motion": "pulse"
+        }
+      }
+    },
+    {
+      "id": "sheet-item-plain",
+      "definition": "SheetItem",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        }
+      }
+    },
+    {
+      "id": "hint-compare-by-a-factor",
+      "definition": "CompareHint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-compare-by-a-factor-below-one",
+      "definition": "CompareHint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 0.004090909090909091,
+        "verdict": "reversed"
+      }
+    },
+    {
+      "id": "hint-compare-over",
+      "definition": "CompareHint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "over"
+      }
+    },
+    {
+      "id": "hint-compare-by-a-difference-of-a-dimension",
+      "definition": "CompareHint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "dimension": "power",
+        "difference": -2191,
+        "verdict": "reversed"
+      }
+    },
+    {
+      "id": "hint-compare-by-no-difference",
+      "definition": "CompareHint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "dimension": "power",
+        "difference": 0,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-profile",
+      "definition": "ProfileHint",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment"
+      }
+    },
+    {
+      "id": "hint-profile-above-an-anchor",
+      "definition": "ProfileHint",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "led",
+        "above": true
+      }
+    },
+    {
+      "id": "hint-profile-below-an-anchor",
+      "definition": "ProfileHint",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "led",
+        "above": false
+      }
+    },
+    {
+      "id": "hint-group-together",
+      "definition": "GroupHint",
+      "document": {
+        "kind": "group",
+        "item": "kettle",
+        "other": "led",
+        "together": true
+      }
+    },
+    {
+      "id": "hint-group-apart",
+      "definition": "GroupHint",
+      "document": {
+        "kind": "group",
+        "item": "kettle",
+        "other": "led",
+        "together": false
+      }
+    },
+    {
+      "id": "hint-category",
+      "definition": "CategoryHint",
+      "document": {
+        "kind": "category",
+        "item": "kettle",
+        "category": "gas-boiler"
+      }
+    },
+    {
+      "id": "hint-of-every-kind-compare",
+      "definition": "Hint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-of-every-kind-compare",
+      "definition": "Hint",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "dimension": "power",
+        "difference": -2191,
+        "verdict": "reversed"
+      }
+    },
+    {
+      "id": "hint-of-every-kind-profile",
+      "definition": "Hint",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment"
+      }
+    },
+    {
+      "id": "hint-of-every-kind-group",
+      "definition": "Hint",
+      "document": {
+        "kind": "group",
+        "item": "kettle",
+        "other": "led",
+        "together": true
+      }
+    },
+    {
+      "id": "hint-of-every-kind-category",
+      "definition": "Hint",
+      "document": {
+        "kind": "category",
+        "item": "kettle",
+        "category": "gas-boiler"
+      }
+    },
+    {
+      "id": "hint-of-every-kind-profile-with-an-anchor",
+      "definition": "Hint",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "led",
+        "above": true
+      }
+    },
+    {
+      "id": "sheet-axis-short-without-numbers",
+      "definition": "SheetAxis",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "short": {
+          "en": "investment",
+          "de": "Investition"
+        }
+      }
+    },
+    {
+      "id": "best",
+      "definition": "Best",
+      "document": {
+        "challenge": "hard",
+        "score": 0.5,
+        "points": 150
+      }
+    },
+    {
+      "id": "best-of-no-points",
+      "definition": "Best",
+      "document": {
+        "challenge": "easy",
+        "score": 0,
+        "points": 0
+      }
+    },
+    {
+      "id": "sheet-axis-with-numbers",
+      "definition": "SheetAxis",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "unit": "CHF",
+        "min": 0,
+        "max": 40000
+      }
+    },
+    {
+      "id": "sheet-axis-without-numbers",
+      "definition": "SheetAxis",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        }
+      }
+    },
+    {
+      "id": "sheet-classification-keys-shown",
+      "definition": "SheetClassificationTask",
+      "document": {
+        "kind": "classification",
+        "id": "systems",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "axes": [
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "description": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "profile": {
+              "investment": 30000
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-classification-keys-hidden-timed",
+      "definition": "SheetClassificationTask",
+      "document": {
+        "kind": "classification",
+        "id": "systems",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "axes": [
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "profile": {
+              "investment": 0.75
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          }
+        ],
+        "seconds": 38
+      }
+    },
+    {
+      "id": "sheet-sorting-keys-shown",
+      "definition": "SheetSortingTask",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "keys": [
+          9,
+          2200
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-sorting-keys-hidden",
+      "definition": "SheetSortingTask",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-sorting-keys-hidden-timed",
+      "definition": "SheetSortingTask",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "seconds": 54
+      }
+    },
+    {
+      "id": "sheet-dimension-with-cards",
+      "definition": "SheetDimension",
+      "document": {
+        "id": "power",
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "cards": [
+          2200,
+          9
+        ]
+      }
+    },
+    {
+      "id": "sheet-dimension-without-cards",
+      "definition": "SheetDimension",
+      "document": {
+        "id": "power",
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        }
+      }
+    },
+    {
+      "id": "sheet-matching-keys-shown",
+      "definition": "SheetMatchingTask",
+      "document": {
+        "kind": "matching",
+        "id": "appliances",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              2200,
+              9
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-matching-keys-hidden-timed",
+      "definition": "SheetMatchingTask",
+      "document": {
+        "kind": "matching",
+        "id": "appliances",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "seconds": 54
+      }
+    },
+    {
+      "id": "sheet-task-sorting-timed",
+      "definition": "SheetTask",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "seconds": 54
+      }
+    },
+    {
+      "id": "sheet-easy",
+      "definition": "Sheet",
+      "document": {
+        "quiz": "tiny",
+        "seed": 7,
+        "challenge": "easy",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "powers",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "keys": [
+              9,
+              2200
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "logarithmic",
+                  "prefixed": true,
+                  "additive": true
+                },
+                "cards": [
+                  2200,
+                  9
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "id": "systems",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "axes": [
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              }
+            ],
+            "categories": [
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "description": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "profile": {
+                  "investment": 30000
+                }
+              },
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-expert",
+      "definition": "Sheet",
+      "document": {
+        "quiz": "tiny",
+        "seed": 7,
+        "challenge": "expert",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "powers",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ],
+            "seconds": 54
+          }
+        ]
+      }
+    },
+    {
+      "id": "sorting-answer-order",
+      "definition": "SortingAnswer",
+      "document": {
+        "kind": "sorting",
+        "order": [
+          "led",
+          "kettle"
+        ]
+      }
+    },
+    {
+      "id": "sorting-answer-guesses",
+      "definition": "SortingAnswer",
+      "document": {
+        "kind": "sorting",
+        "order": [
+          "led",
+          "kettle"
+        ],
+        "guesses": {
+          "led": 5,
+          "kettle": 2000
+        }
+      }
+    },
+    {
+      "id": "matching-answer-assignments",
+      "definition": "MatchingAnswer",
+      "document": {
+        "kind": "matching",
+        "assignments": {
+          "power": {
+            "kettle": 0,
+            "led": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "matching-answer-guesses",
+      "definition": "MatchingAnswer",
+      "document": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "kettle": 2000.5,
+            "led": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "matching-answer-without-either",
+      "definition": "MatchingAnswer",
+      "document": {
+        "kind": "matching"
+      }
+    },
+    {
+      "id": "answer-matching-guesses",
+      "definition": "Answer",
+      "document": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "kettle": -3
+          }
+        }
+      }
+    },
+    {
+      "id": "classification-item-assigned",
+      "definition": "ClassificationItemResult",
+      "document": {
+        "item": "kettle",
+        "assigned": "heat-pump",
+        "correct": "gas-boiler",
+        "credit": 0.25
+      }
+    },
+    {
+      "id": "classification-item-unanswered",
+      "definition": "ClassificationItemResult",
+      "document": {
+        "item": "kettle",
+        "correct": "gas-boiler",
+        "credit": 0
+      }
+    },
+    {
+      "id": "sorting-item-keys-shown",
+      "definition": "SortingItemResult",
+      "document": {
+        "item": "kettle",
+        "value": 2200,
+        "position": 1,
+        "rank": 1
+      }
+    },
+    {
+      "id": "sorting-item-guessed",
+      "definition": "SortingItemResult",
+      "document": {
+        "item": "kettle",
+        "value": 2200,
+        "position": 1,
+        "rank": 1,
+        "guess": 2000,
+        "miss": false
+      }
+    },
+    {
+      "id": "sorting-item-unguessed",
+      "definition": "SortingItemResult",
+      "document": {
+        "item": "kettle",
+        "value": 2200,
+        "position": 1,
+        "rank": 1,
+        "miss": true
+      }
+    },
+    {
+      "id": "matching-item-keys-shown",
+      "definition": "MatchingItemResult",
+      "document": {
+        "item": "kettle",
+        "assigned": 2000,
+        "correct": 2200
+      }
+    },
+    {
+      "id": "matching-item-guessed",
+      "definition": "MatchingItemResult",
+      "document": {
+        "item": "kettle",
+        "assigned": 2000,
+        "correct": 2200,
+        "miss": false
+      }
+    },
+    {
+      "id": "matching-item-unanswered",
+      "definition": "MatchingItemResult",
+      "document": {
+        "item": "kettle",
+        "correct": 2200,
+        "miss": true
+      }
+    },
+    {
+      "id": "run-result",
+      "definition": "RunResult",
+      "document": {
+        "quiz": "tiny",
+        "challenge": "hard",
+        "score": 0.5,
+        "points": 150,
+        "tasks": [
+          {
+            "kind": "sorting",
+            "task": "powers",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "value": 2200,
+                "position": 1,
+                "rank": 1,
+                "guess": 2000,
+                "miss": false
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "task": "appliances",
+            "score": 0.5,
+            "dimensions": [
+              {
+                "dimension": "power",
+                "score": 0.5,
+                "items": [
+                  {
+                    "item": "kettle",
+                    "assigned": 2000,
+                    "correct": 2200,
+                    "miss": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "task": "systems",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "assigned": "heat-pump",
+                "correct": "gas-boiler",
+                "credit": 0.25
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "run-result-of-no-points",
+      "definition": "RunResult",
+      "document": {
+        "quiz": "tiny",
+        "challenge": "easy",
+        "score": 0,
+        "points": 0,
+        "tasks": []
+      }
+    },
+    {
+      "id": "command-start-run",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "command-open-task",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "command-open-task-at-the-epoch",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": 0
+      }
+    },
+    {
+      "id": "command-start-run-at-the-largest-safe-integer",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert",
+        "at": 9007199254740991
+      }
+    },
+    {
+      "id": "command-record-answer",
+      "definition": "Command",
+      "document": {
+        "type": "record-answer",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "answer": {
+          "kind": "sorting",
+          "order": [
+            "led",
+            "kettle"
+          ],
+          "guesses": {
+            "led": 5,
+            "kettle": 2000
+          }
+        },
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "rejection-run-untimed",
+      "definition": "Rejection",
+      "document": "run-untimed"
+    },
+    {
+      "id": "rejection-task-unopened",
+      "definition": "Rejection",
+      "document": "task-unopened"
+    },
+    {
+      "id": "rejection-time-up",
+      "definition": "Rejection",
+      "document": "time-up"
+    },
+    {
+      "id": "rejection-already-opened",
+      "definition": "Rejection",
+      "document": "already-opened"
+    },
+    {
+      "id": "event-run-started",
+      "definition": "Event",
+      "document": {
+        "type": "run-started",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert",
+        "revision": "6876ceae5322c0c292acdaa2b9e0f8c2745dab5c8a37b6a97dc834b2cf3b3d96",
+        "seed": 7,
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "event-task-opened",
+      "definition": "Event",
+      "document": {
+        "type": "task-opened",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "run-view-with-hints",
+      "definition": "RunView",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "easy",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "hints": {
+          "powers": [
+            {
+              "kind": "compare",
+              "item": "kettle",
+              "other": "led",
+              "factor": 244.44444444444446,
+              "verdict": "under"
+            }
+          ],
+          "appliances": [
+            {
+              "kind": "compare",
+              "item": "kettle",
+              "other": "led",
+              "dimension": "power",
+              "difference": -2191,
+              "verdict": "reversed"
+            }
+          ],
+          "systems": [
+            {
+              "kind": "profile",
+              "item": "kettle",
+              "category": "heat-pump",
+              "axis": "investment"
+            },
+            {
+              "kind": "group",
+              "item": "kettle",
+              "other": "led",
+              "together": true
+            },
+            {
+              "kind": "category",
+              "item": "kettle",
+              "category": "gas-boiler"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "run-view-timed",
+      "definition": "RunView",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "expert",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "opened": {
+          "powers": 1790000000000
+        }
+      }
+    },
+    {
+      "id": "run-view-timed-nothing-opened",
+      "definition": "RunView",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "expert",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "opened": {}
+      }
+    },
+    {
+      "id": "run-view-submitted",
+      "definition": "RunView",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "submitted",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "easy",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "result": {
+          "quiz": "tiny",
+          "challenge": "hard",
+          "score": 0.5,
+          "points": 150,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "powers",
+              "score": 0.5,
+              "items": [
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.5,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 0.5,
+                  "items": [
+                    {
+                      "item": "kettle",
+                      "assigned": 2000,
+                      "correct": 2200,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "systems",
+              "score": 0.5,
+              "items": [
+                {
+                  "item": "kettle",
+                  "assigned": "heat-pump",
+                  "correct": "gas-boiler",
+                  "credit": 0.25
+                }
+              ]
+            }
+          ]
+        },
+        "submittedAt": 1790000000001
+      }
+    },
+    {
+      "id": "run-summary-submitted",
+      "definition": "RunSummary",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "hard",
+        "status": "submitted",
+        "startedAt": 1790000000000,
+        "score": 0.5,
+        "points": 150,
+        "submittedAt": 1790000000001
+      }
+    },
+    {
+      "id": "run-summary-open",
+      "definition": "RunSummary",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "hard",
+        "status": "submitted",
+        "startedAt": 1790000000000
+      }
+    },
+    {
+      "id": "learner-view",
+      "definition": "LearnerView",
+      "document": {
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "identity": {
+          "kind": "anonymous"
+        },
+        "runs": [
+          {
+            "run": "2f55151519fd5525e633c83f7da0d69c",
+            "quiz": "tiny",
+            "challenge": "hard",
+            "status": "submitted",
+            "startedAt": 1790000000000,
+            "score": 0.5,
+            "points": 150,
+            "submittedAt": 1790000000001
+          },
+          {
+            "run": "2f55151519fd5525e633c83f7da0d69c",
+            "quiz": "tiny",
+            "challenge": "easy",
+            "status": "open",
+            "startedAt": 1790000000000
+          }
+        ],
+        "badges": [],
+        "best": {
+          "tiny": {
+            "challenge": "hard",
+            "score": 0.5,
+            "points": 150
+          }
+        },
+        "total": 150
+      }
+    },
+    {
+      "id": "leaderboard-row",
+      "definition": "LeaderboardRow",
+      "document": {
+        "rank": 1,
+        "tag": "0d07d623",
+        "identity": {
+          "kind": "anonymous"
+        },
+        "total": 150,
+        "reachedAt": 1790000000000,
+        "best": {
+          "tiny": {
+            "challenge": "hard",
+            "score": 0.5,
+            "points": 150
+          }
+        },
+        "badges": [],
+        "runs": 1,
+        "lastActivity": 1790000000000
+      }
+    },
+    {
+      "id": "badge-rule-perfect-quiz-least-challenge",
+      "definition": "BadgeRule",
+      "document": {
+        "kind": "perfect-quiz",
+        "quiz": "tiny",
+        "challenge": "medium"
+      }
+    },
+    {
+      "id": "badge-rule-perfect-tasks-least-challenge",
+      "definition": "BadgeRule",
+      "document": {
+        "kind": "perfect-tasks",
+        "taskKind": "sorting",
+        "challenge": "expert"
+      }
+    },
+    {
+      "id": "badge-rule-perfect-quiz-any-challenge",
+      "definition": "BadgeRule",
+      "document": {
+        "kind": "perfect-quiz",
+        "quiz": "tiny"
+      }
+    },
+    {
+      "id": "challenge-unknown",
+      "definition": "Challenge",
+      "violates": "enum",
+      "document": "extreme"
+    },
+    {
+      "id": "challenge-capitalised",
+      "definition": "Challenge",
+      "violates": "enum",
+      "document": "Easy"
+    },
+    {
+      "id": "challenge-a-number",
+      "definition": "Challenge",
+      "violates": "enum",
+      "document": 2
+    },
+    {
+      "id": "quantity-without-additive",
+      "definition": "Quantity",
+      "violates": "required",
+      "document": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true
+      }
+    },
+    {
+      "id": "quantity-additive-as-text",
+      "definition": "Quantity",
+      "violates": "type",
+      "document": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": "yes"
+      }
+    },
+    {
+      "id": "short-text-of-forty-one-code-points",
+      "definition": "ShortText",
+      "violates": "maxLength",
+      "document": {
+        "en": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "de": "Wasserkocher"
+      }
+    },
+    {
+      "id": "short-text-of-forty-one-german-code-points",
+      "definition": "ShortText",
+      "violates": "maxLength",
+      "document": {
+        "en": "Kettle",
+        "de": "äääääääääääääääääääääääääääääääääääääääää"
+      }
+    },
+    {
+      "id": "short-text-empty",
+      "definition": "ShortText",
+      "violates": "minLength",
+      "document": {
+        "en": "",
+        "de": "Wasserkocher"
+      }
+    },
+    {
+      "id": "short-text-without-german",
+      "definition": "ShortText",
+      "violates": "required",
+      "document": {
+        "en": "Kettle"
+      }
+    },
+    {
+      "id": "short-text-in-a-third-language",
+      "definition": "ShortText",
+      "violates": "additionalProperties",
+      "document": {
+        "en": "Kettle",
+        "de": "Wasserkocher",
+        "fr": "Bouilloire"
+      }
+    },
+    {
+      "id": "verdict-unknown",
+      "definition": "Verdict",
+      "violates": "enum",
+      "document": "wrong"
+    },
+    {
+      "id": "verdict-as-a-boolean",
+      "definition": "Verdict",
+      "violates": "enum",
+      "document": true
+    },
+    {
+      "id": "sorting-item-familiar-as-text",
+      "definition": "SortingItem",
+      "violates": "type",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Electric kettle boiling a litre",
+          "de": "Wasserkocher, der einen Liter kocht"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "value": 2200,
+        "familiar": "yes"
+      }
+    },
+    {
+      "id": "sorting-item-short-too-long",
+      "definition": "SortingItem",
+      "violates": "maxLength",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Electric kettle boiling a litre",
+          "de": "Wasserkocher, der einen Liter kocht"
+        },
+        "short": {
+          "en": "Electric kettle boiling a litre of water!",
+          "de": "Wasserkocher"
+        },
+        "value": 2200,
+        "familiar": true
+      }
+    },
+    {
+      "id": "matching-item-short-as-text",
+      "definition": "MatchingItem",
+      "violates": "type",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": "Kettle",
+        "values": {
+          "power": 2200
+        },
+        "familiar": false
+      }
+    },
+    {
+      "id": "classification-item-familiar",
+      "definition": "ClassificationItem",
+      "violates": "additionalProperties",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "category": "power",
+        "familiar": true
+      }
+    },
+    {
+      "id": "category-short-without-english",
+      "definition": "Category",
+      "violates": "required",
+      "document": {
+        "id": "heat-pump",
+        "label": {
+          "en": "Heat pump",
+          "de": "Wärmepumpe"
+        },
+        "short": {
+          "de": "Pumpe"
+        },
+        "profile": {
+          "investment": 30000
+        }
+      }
+    },
+    {
+      "id": "axis-short-empty",
+      "definition": "Axis",
+      "violates": "minLength",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "unit": "CHF",
+        "min": 0,
+        "max": 40000,
+        "short": {
+          "en": "investment",
+          "de": ""
+        }
+      }
+    },
+    {
+      "id": "sheet-item-familiar",
+      "definition": "SheetItem",
+      "violates": "additionalProperties",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "familiar": true
+      }
+    },
+    {
+      "id": "sheet-item-short-too-long",
+      "definition": "SheetItem",
+      "violates": "maxLength",
+      "document": {
+        "id": "kettle",
+        "label": {
+          "en": "Kettle",
+          "de": "Wasserkocher"
+        },
+        "short": {
+          "en": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "de": "Wasserkocher"
+        }
+      }
+    },
+    {
+      "id": "hint-compare-without-other",
+      "definition": "CompareHint",
+      "violates": "required",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "factor": 244.44444444444446,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-compare-without-verdict",
+      "definition": "CompareHint",
+      "violates": "required",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446
+      }
+    },
+    {
+      "id": "hint-compare-with-under",
+      "definition": "CompareHint",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "under",
+        "under": true
+      }
+    },
+    {
+      "id": "hint-compare-without-a-claim",
+      "definition": "CompareHint",
+      "violates": "oneOf",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-compare-by-a-factor-and-a-difference",
+      "definition": "CompareHint",
+      "violates": "oneOf",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "under",
+        "difference": 2191
+      }
+    },
+    {
+      "id": "hint-compare-verdict-unknown",
+      "definition": "CompareHint",
+      "violates": "enum",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "wrong-way"
+      }
+    },
+    {
+      "id": "hint-compare-verdict-as-a-boolean",
+      "definition": "CompareHint",
+      "violates": "enum",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": true
+      }
+    },
+    {
+      "id": "hint-profile-other-without-above",
+      "definition": "ProfileHint",
+      "violates": "dependencies",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "led"
+      }
+    },
+    {
+      "id": "hint-profile-above-without-other",
+      "definition": "ProfileHint",
+      "violates": "dependencies",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "above": true
+      }
+    },
+    {
+      "id": "hint-profile-above-as-text",
+      "definition": "ProfileHint",
+      "violates": "type",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "led",
+        "above": "yes"
+      }
+    },
+    {
+      "id": "hint-profile-other-not-a-slug",
+      "definition": "ProfileHint",
+      "violates": "pattern",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "other": "LED bulb",
+        "above": true
+      }
+    },
+    {
+      "id": "hint-compare-by-a-factor-of-zero",
+      "definition": "CompareHint",
+      "violates": "exclusiveMinimum",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 0,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-compare-with-a-direction",
+      "definition": "CompareHint",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "led",
+        "factor": 244.44444444444446,
+        "verdict": "under",
+        "direction": "high"
+      }
+    },
+    {
+      "id": "hint-compare-other-not-a-slug",
+      "definition": "CompareHint",
+      "violates": "pattern",
+      "document": {
+        "kind": "compare",
+        "item": "kettle",
+        "other": "LED bulb",
+        "factor": 244.44444444444446,
+        "verdict": "under"
+      }
+    },
+    {
+      "id": "hint-profile-without-axis",
+      "definition": "ProfileHint",
+      "violates": "required",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump"
+      }
+    },
+    {
+      "id": "hint-profile-with-the-value",
+      "definition": "ProfileHint",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "profile",
+        "item": "kettle",
+        "category": "heat-pump",
+        "axis": "investment",
+        "value": 30000
+      }
+    },
+    {
+      "id": "hint-group-without-together",
+      "definition": "GroupHint",
+      "violates": "required",
+      "document": {
+        "kind": "group",
+        "item": "kettle",
+        "other": "led"
+      }
+    },
+    {
+      "id": "hint-group-together-as-a-number",
+      "definition": "GroupHint",
+      "violates": "type",
+      "document": {
+        "kind": "group",
+        "item": "kettle",
+        "other": "led",
+        "together": 1
+      }
+    },
+    {
+      "id": "hint-category-with-its-description",
+      "definition": "CategoryHint",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "category",
+        "item": "kettle",
+        "category": "gas-boiler",
+        "description": {
+          "en": "Text",
+          "de": "Text"
+        }
+      }
+    },
+    {
+      "id": "hint-category-without-category",
+      "definition": "CategoryHint",
+      "violates": "required",
+      "document": {
+        "kind": "category",
+        "item": "kettle"
+      }
+    },
+    {
+      "id": "hint-magnitude-removed",
+      "definition": "Hint",
+      "violates": "oneOf",
+      "document": {
+        "kind": "magnitude",
+        "item": "kettle",
+        "direction": "high"
+      }
+    },
+    {
+      "id": "hint-misplaced-removed",
+      "definition": "Hint",
+      "violates": "oneOf",
+      "document": {
+        "kind": "misplaced",
+        "count": 2
+      }
+    },
+    {
+      "id": "hint-of-an-unknown-kind",
+      "definition": "Hint",
+      "violates": "oneOf",
+      "document": {
+        "kind": "warmer",
+        "item": "kettle"
+      }
+    },
+    {
+      "id": "best-without-challenge",
+      "definition": "Best",
+      "violates": "required",
+      "document": {
+        "score": 0.5,
+        "points": 150
+      }
+    },
+    {
+      "id": "best-of-negative-points",
+      "definition": "Best",
+      "violates": "minimum",
+      "document": {
+        "challenge": "hard",
+        "score": 0.5,
+        "points": -1
+      }
+    },
+    {
+      "id": "best-score-above-one",
+      "definition": "Best",
+      "violates": "maximum",
+      "document": {
+        "challenge": "hard",
+        "score": 1.5,
+        "points": 150
+      }
+    },
+    {
+      "id": "sheet-axis-unit-without-range",
+      "definition": "SheetAxis",
+      "violates": "dependencies",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "unit": "CHF"
+      }
+    },
+    {
+      "id": "sheet-axis-range-without-unit",
+      "definition": "SheetAxis",
+      "violates": "dependencies",
+      "document": {
+        "id": "investment",
+        "label": {
+          "en": "Investment",
+          "de": "Investition"
+        },
+        "min": 0,
+        "max": 40000
+      }
+    },
+    {
+      "id": "sheet-axis-without-label",
+      "definition": "SheetAxis",
+      "violates": "required",
+      "document": {
+        "id": "investment",
+        "unit": "CHF",
+        "min": 0,
+        "max": 40000
+      }
+    },
+    {
+      "id": "sheet-classification-zero-seconds",
+      "definition": "SheetClassificationTask",
+      "violates": "minimum",
+      "document": {
+        "kind": "classification",
+        "id": "systems",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "axes": [
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "description": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "profile": {
+              "investment": 30000
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          }
+        ],
+        "seconds": 0
+      }
+    },
+    {
+      "id": "sheet-sorting-keys-as-texts",
+      "definition": "SheetSortingTask",
+      "violates": "type",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "keys": [
+          "9",
+          "2200"
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-sorting-fractional-seconds",
+      "definition": "SheetSortingTask",
+      "violates": "type",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "keys": [
+          9,
+          2200
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "seconds": 54.5
+      }
+    },
+    {
+      "id": "sheet-sorting-item-with-value",
+      "definition": "SheetSortingTask",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "sorting",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "keys": [
+          9,
+          2200
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            },
+            "value": 2200
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-dimension-cards-as-texts",
+      "definition": "SheetDimension",
+      "violates": "type",
+      "document": {
+        "id": "power",
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "cards": [
+          "2200"
+        ]
+      }
+    },
+    {
+      "id": "sheet-matching-zero-seconds",
+      "definition": "SheetMatchingTask",
+      "violates": "minimum",
+      "document": {
+        "kind": "matching",
+        "id": "appliances",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              2200,
+              9
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ],
+        "seconds": 0
+      }
+    },
+    {
+      "id": "sheet-task-of-an-unknown-kind",
+      "definition": "SheetTask",
+      "violates": "oneOf",
+      "document": {
+        "kind": "ranking",
+        "id": "powers",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "prompt": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "keys": [
+          9,
+          2200
+        ],
+        "items": [
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "led",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-without-challenge",
+      "definition": "Sheet",
+      "violates": "required",
+      "document": {
+        "quiz": "tiny",
+        "seed": 7,
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "powers",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "keys": [
+              9,
+              2200
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "logarithmic",
+                  "prefixed": true,
+                  "additive": true
+                },
+                "cards": [
+                  2200,
+                  9
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "id": "systems",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "axes": [
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              }
+            ],
+            "categories": [
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "description": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "profile": {
+                  "investment": 30000
+                }
+              },
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sheet-at-an-unknown-challenge",
+      "definition": "Sheet",
+      "violates": "enum",
+      "document": {
+        "quiz": "tiny",
+        "seed": 7,
+        "challenge": "extreme",
+        "title": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "powers",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            },
+            "keys": [
+              9,
+              2200
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "logarithmic",
+                  "prefixed": true,
+                  "additive": true
+                },
+                "cards": [
+                  2200,
+                  9
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "led",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "id": "systems",
+            "title": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "prompt": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "axes": [
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              }
+            ],
+            "categories": [
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "description": {
+                  "en": "Text",
+                  "de": "Text"
+                },
+                "profile": {
+                  "investment": 30000
+                }
+              },
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Text",
+                  "de": "Text"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sorting-answer-guess-as-text",
+      "definition": "SortingAnswer",
+      "violates": "type",
+      "document": {
+        "kind": "sorting",
+        "order": [
+          "led"
+        ],
+        "guesses": {
+          "led": "5"
+        }
+      }
+    },
+    {
+      "id": "matching-answer-guess-as-text",
+      "definition": "MatchingAnswer",
+      "violates": "type",
+      "document": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "kettle": "2000"
+          }
+        }
+      }
+    },
+    {
+      "id": "matching-answer-guesses-per-item",
+      "definition": "MatchingAnswer",
+      "violates": "type",
+      "document": {
+        "kind": "matching",
+        "guesses": {
+          "kettle": 2000
+        }
+      }
+    },
+    {
+      "id": "matching-answer-guess-dimension-not-a-slug",
+      "definition": "MatchingAnswer",
+      "violates": "pattern",
+      "document": {
+        "kind": "matching",
+        "guesses": {
+          "Power": {
+            "kettle": 2000
+          }
+        }
+      }
+    },
+    {
+      "id": "matching-answer-with-order",
+      "definition": "MatchingAnswer",
+      "violates": "additionalProperties",
+      "document": {
+        "kind": "matching",
+        "order": [
+          "kettle"
+        ]
+      }
+    },
+    {
+      "id": "answer-of-an-unknown-kind",
+      "definition": "Answer",
+      "violates": "oneOf",
+      "document": {
+        "kind": "ranking",
+        "guesses": {}
+      }
+    },
+    {
+      "id": "classification-item-without-credit",
+      "definition": "ClassificationItemResult",
+      "violates": "required",
+      "document": {
+        "item": "kettle",
+        "assigned": "heat-pump",
+        "correct": "gas-boiler"
+      }
+    },
+    {
+      "id": "classification-item-with-a-miss",
+      "definition": "ClassificationItemResult",
+      "violates": "additionalProperties",
+      "document": {
+        "item": "kettle",
+        "assigned": "heat-pump",
+        "correct": "gas-boiler",
+        "credit": 0.25,
+        "miss": true
+      }
+    },
+    {
+      "id": "sorting-item-miss-as-text",
+      "definition": "SortingItemResult",
+      "violates": "type",
+      "document": {
+        "item": "kettle",
+        "value": 2200,
+        "position": 1,
+        "rank": 1,
+        "guess": 2000,
+        "miss": "yes"
+      }
+    },
+    {
+      "id": "sorting-item-guess-as-text",
+      "definition": "SortingItemResult",
+      "violates": "type",
+      "document": {
+        "item": "kettle",
+        "value": 2200,
+        "position": 1,
+        "rank": 1,
+        "guess": "2000",
+        "miss": false
+      }
+    },
+    {
+      "id": "matching-item-miss-as-number",
+      "definition": "MatchingItemResult",
+      "violates": "type",
+      "document": {
+        "item": "kettle",
+        "assigned": 2000,
+        "correct": 2200,
+        "miss": 1
+      }
+    },
+    {
+      "id": "matching-item-without-correct",
+      "definition": "MatchingItemResult",
+      "violates": "required",
+      "document": {
+        "item": "kettle",
+        "assigned": 2000,
+        "miss": false
+      }
+    },
+    {
+      "id": "run-result-without-challenge",
+      "definition": "RunResult",
+      "violates": "required",
+      "document": {
+        "quiz": "tiny",
+        "score": 0.5,
+        "points": 150,
+        "tasks": [
+          {
+            "kind": "sorting",
+            "task": "powers",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "value": 2200,
+                "position": 1,
+                "rank": 1,
+                "guess": 2000,
+                "miss": false
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "task": "appliances",
+            "score": 0.5,
+            "dimensions": [
+              {
+                "dimension": "power",
+                "score": 0.5,
+                "items": [
+                  {
+                    "item": "kettle",
+                    "assigned": 2000,
+                    "correct": 2200,
+                    "miss": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "task": "systems",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "assigned": "heat-pump",
+                "correct": "gas-boiler",
+                "credit": 0.25
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "run-result-without-points",
+      "definition": "RunResult",
+      "violates": "required",
+      "document": {
+        "quiz": "tiny",
+        "challenge": "hard",
+        "score": 0.5,
+        "tasks": [
+          {
+            "kind": "sorting",
+            "task": "powers",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "value": 2200,
+                "position": 1,
+                "rank": 1,
+                "guess": 2000,
+                "miss": false
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "task": "appliances",
+            "score": 0.5,
+            "dimensions": [
+              {
+                "dimension": "power",
+                "score": 0.5,
+                "items": [
+                  {
+                    "item": "kettle",
+                    "assigned": 2000,
+                    "correct": 2200,
+                    "miss": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "task": "systems",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "assigned": "heat-pump",
+                "correct": "gas-boiler",
+                "credit": 0.25
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "run-result-of-negative-points",
+      "definition": "RunResult",
+      "violates": "minimum",
+      "document": {
+        "quiz": "tiny",
+        "challenge": "hard",
+        "score": 0.5,
+        "points": -150,
+        "tasks": [
+          {
+            "kind": "sorting",
+            "task": "powers",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "value": 2200,
+                "position": 1,
+                "rank": 1,
+                "guess": 2000,
+                "miss": false
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "task": "appliances",
+            "score": 0.5,
+            "dimensions": [
+              {
+                "dimension": "power",
+                "score": 0.5,
+                "items": [
+                  {
+                    "item": "kettle",
+                    "assigned": 2000,
+                    "correct": 2200,
+                    "miss": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "task": "systems",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "assigned": "heat-pump",
+                "correct": "gas-boiler",
+                "credit": 0.25
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "run-result-with-a-difficulty",
+      "definition": "RunResult",
+      "violates": "additionalProperties",
+      "document": {
+        "quiz": "tiny",
+        "challenge": "hard",
+        "score": 0.5,
+        "points": 150,
+        "tasks": [
+          {
+            "kind": "sorting",
+            "task": "powers",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "value": 2200,
+                "position": 1,
+                "rank": 1,
+                "guess": 2000,
+                "miss": false
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "task": "appliances",
+            "score": 0.5,
+            "dimensions": [
+              {
+                "dimension": "power",
+                "score": 0.5,
+                "items": [
+                  {
+                    "item": "kettle",
+                    "assigned": 2000,
+                    "correct": 2200,
+                    "miss": false
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "task": "systems",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "kettle",
+                "assigned": "heat-pump",
+                "correct": "gas-boiler",
+                "credit": 0.25
+              }
+            ]
+          }
+        ],
+        "difficulty": "hard"
+      }
+    },
+    {
+      "id": "command-start-run-without-challenge",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "command-start-run-at-an-unknown-challenge",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "extreme",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "command-start-run-without-at",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert"
+      }
+    },
+    {
+      "id": "command-start-run-beyond-a-safe-integer",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "start-run",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert",
+        "at": 9007199254740992
+      }
+    },
+    {
+      "id": "event-run-started-beyond-a-safe-integer",
+      "definition": "Event",
+      "violates": "oneOf",
+      "document": {
+        "type": "run-started",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "expert",
+        "revision": "6876ceae5322c0c292acdaa2b9e0f8c2745dab5c8a37b6a97dc834b2cf3b3d96",
+        "seed": 7,
+        "at": 9007199254740992
+      }
+    },
+    {
+      "id": "command-open-task-without-at",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "open-task",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers"
+      }
+    },
+    {
+      "id": "command-open-task-before-the-epoch",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "open-task",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": -1
+      }
+    },
+    {
+      "id": "command-open-task-with-an-answer",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "open-task",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": 1790000000000,
+        "answer": {
+          "kind": "sorting",
+          "order": [
+            "led",
+            "kettle"
+          ],
+          "guesses": {
+            "led": 5,
+            "kettle": 2000
+          }
+        }
+      }
+    },
+    {
+      "id": "command-record-answer-without-at",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "record-answer",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "answer": {
+          "kind": "sorting",
+          "order": [
+            "led",
+            "kettle"
+          ],
+          "guesses": {
+            "led": 5,
+            "kettle": 2000
+          }
+        }
+      }
+    },
+    {
+      "id": "command-record-answer-at-a-fraction",
+      "definition": "Command",
+      "violates": "oneOf",
+      "document": {
+        "type": "record-answer",
+        "id": "6dee1523a032f0ee074eef9370767a6b",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "answer": {
+          "kind": "sorting",
+          "order": [
+            "led",
+            "kettle"
+          ],
+          "guesses": {
+            "led": 5,
+            "kettle": 2000
+          }
+        },
+        "at": 1790000000000.5
+      }
+    },
+    {
+      "id": "rejection-unknown",
+      "definition": "Rejection",
+      "violates": "enum",
+      "document": "time-over"
+    },
+    {
+      "id": "event-run-started-without-challenge",
+      "definition": "Event",
+      "violates": "oneOf",
+      "document": {
+        "type": "run-started",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "revision": "6876ceae5322c0c292acdaa2b9e0f8c2745dab5c8a37b6a97dc834b2cf3b3d96",
+        "seed": 7,
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "event-task-opened-without-task",
+      "definition": "Event",
+      "violates": "oneOf",
+      "document": {
+        "type": "task-opened",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "at": 1790000000000
+      }
+    },
+    {
+      "id": "event-task-opened-with-seconds",
+      "definition": "Event",
+      "violates": "oneOf",
+      "document": {
+        "type": "task-opened",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "task": "powers",
+        "at": 1790000000000,
+        "seconds": 54
+      }
+    },
+    {
+      "id": "run-view-with-no-hinted-task",
+      "definition": "RunView",
+      "violates": "minProperties",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "easy",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "hints": {}
+      }
+    },
+    {
+      "id": "run-view-with-an-empty-hint-list",
+      "definition": "RunView",
+      "violates": "minItems",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "easy",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "hints": {
+          "powers": []
+        }
+      }
+    },
+    {
+      "id": "run-view-opened-at-a-text",
+      "definition": "RunView",
+      "violates": "type",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "quiz": "tiny",
+        "status": "open",
+        "sheet": {
+          "quiz": "tiny",
+          "seed": 7,
+          "challenge": "expert",
+          "title": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "description": {
+            "en": "Text",
+            "de": "Text"
+          },
+          "tasks": [
+            {
+              "kind": "sorting",
+              "id": "powers",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "logarithmic",
+                "prefixed": true,
+                "additive": true
+              },
+              "keys": [
+                9,
+                2200
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "id": "appliances",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "dimensions": [
+                {
+                  "id": "power",
+                  "quantity": {
+                    "label": {
+                      "en": "Power",
+                      "de": "Leistung"
+                    },
+                    "unit": "W",
+                    "scale": "logarithmic",
+                    "prefixed": true,
+                    "additive": true
+                  },
+                  "cards": [
+                    2200,
+                    9
+                  ]
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                },
+                {
+                  "id": "led",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "id": "systems",
+              "title": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "prompt": {
+                "en": "Text",
+                "de": "Text"
+              },
+              "axes": [
+                {
+                  "id": "investment",
+                  "label": {
+                    "en": "Investment",
+                    "de": "Investition"
+                  },
+                  "unit": "CHF",
+                  "min": 0,
+                  "max": 40000
+                }
+              ],
+              "categories": [
+                {
+                  "id": "heat-pump",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "description": {
+                    "en": "Text",
+                    "de": "Text"
+                  },
+                  "profile": {
+                    "investment": 30000
+                  }
+                },
+                {
+                  "id": "gas-boiler",
+                  "label": {
+                    "en": "Text",
+                    "de": "Text"
+                  }
+                }
+              ],
+              "items": [
+                {
+                  "id": "kettle",
+                  "label": {
+                    "en": "Kettle",
+                    "de": "Wasserkocher"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "answers": {},
+        "startedAt": 1790000000000,
+        "opened": {
+          "powers": "now"
+        }
+      }
+    },
+    {
+      "id": "run-summary-without-challenge",
+      "definition": "RunSummary",
+      "violates": "required",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "status": "submitted",
+        "startedAt": 1790000000000,
+        "score": 0.5,
+        "points": 150,
+        "submittedAt": 1790000000001
+      }
+    },
+    {
+      "id": "run-summary-of-negative-points",
+      "definition": "RunSummary",
+      "violates": "minimum",
+      "document": {
+        "run": "2f55151519fd5525e633c83f7da0d69c",
+        "quiz": "tiny",
+        "challenge": "hard",
+        "status": "submitted",
+        "startedAt": 1790000000000,
+        "score": 0.5,
+        "points": -1,
+        "submittedAt": 1790000000001
+      }
+    },
+    {
+      "id": "learner-view-best-as-a-score",
+      "definition": "LearnerView",
+      "violates": "type",
+      "document": {
+        "learner": "bcbb595f01c5392d20cc6f763855fc9d",
+        "identity": {
+          "kind": "anonymous"
+        },
+        "runs": [
+          {
+            "run": "2f55151519fd5525e633c83f7da0d69c",
+            "quiz": "tiny",
+            "challenge": "hard",
+            "status": "submitted",
+            "startedAt": 1790000000000,
+            "score": 0.5,
+            "points": 150,
+            "submittedAt": 1790000000001
+          },
+          {
+            "run": "2f55151519fd5525e633c83f7da0d69c",
+            "quiz": "tiny",
+            "challenge": "easy",
+            "status": "open",
+            "startedAt": 1790000000000
+          }
+        ],
+        "badges": [],
+        "best": {
+          "tiny": 0.5
+        },
+        "total": 150
+      }
+    },
+    {
+      "id": "leaderboard-row-best-as-a-score",
+      "definition": "LeaderboardRow",
+      "violates": "type",
+      "document": {
+        "rank": 1,
+        "tag": "0d07d623",
+        "identity": {
+          "kind": "anonymous"
+        },
+        "total": 150,
+        "reachedAt": 1790000000000,
+        "best": {
+          "tiny": 0.5
+        },
+        "badges": [],
+        "runs": 1,
+        "lastActivity": 1790000000000
+      }
+    },
+    {
+      "id": "badge-rule-unknown-challenge",
+      "definition": "BadgeRule",
+      "violates": "oneOf",
+      "document": {
+        "kind": "perfect-quiz",
+        "quiz": "tiny",
+        "challenge": "extreme"
+      }
+    },
+    {
+      "id": "badge-rule-challenge-on-completed-quizzes",
+      "definition": "BadgeRule",
+      "violates": "oneOf",
+      "document": {
+        "kind": "completed-quizzes",
+        "challenge": "easy"
       }
     }
   ]

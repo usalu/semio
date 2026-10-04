@@ -15,11 +15,18 @@
  * never found while the actor rises, because perches are one-way platforms. {@link hopLanding} runs exactly this loop
  * ahead of time.
  *
- * @see ../../🧬️schema/🟦️.ts — `Point`, `Rect`, `Surface`, `Perch`, `TICKS_PER_SECOND`
+ * Walls are the perches turned by a quarter: {@link wallsOf} cuts the free stretches (pitches) out of the surveyed
+ * side edges, by the keep-outs in the band on the air side of each wall. The survey grows the box of every surface
+ * sideways and the box of every control by a few pixels, so the first {@link WALL_LIP} pixels beside a wall belong
+ * to the wall itself and block nothing. {@link segmentHits} and {@link segmentClear} are the line of sight of ropes
+ * and ladders: Liang–Barsky clipping of a segment against a box, in which only the inside of a box is in the way.
+ *
+ * @see ../../🧬️schema/🟦️.ts — `Point`, `Rect`, `Surface`, `Perch`, `Wall`, `Pitch`, `TICKS_PER_SECOND`
  * @see ./🦀️.rs — the Rust twin
+ * @see https://doi.org/10.1145/357332.357333 — Liang and Barsky, "A New Concept and Method for Line Clipping" (1984)
  */
 
-import { type Perch, type Point, type Rect, type Surface, TICKS_PER_SECOND, type Ticks } from "../../🧬️schema/🟦️.ts";
+import { type Perch, type Pitch, type Point, type Rect, type Surface, TICKS_PER_SECOND, type Ticks, type Wall } from "../../🧬️schema/🟦️.ts";
 
 //#region 🔖️Constants
 /** 🍎️ The downward acceleration of everything in flight, in pixels per second squared: a drop of 100 px takes a third of a second. */
@@ -42,6 +49,9 @@ export const HOP_DISTANCE = 160;
 
 /** ⏳️ The longest hop in ticks (0.75 s). */
 export const HOP_TICKS = 48;
+
+/** 🧱️ How many pixels beside a wall belong to the wall itself: the survey grows the box of every surface sideways by 4 px (5 px on a phone, where the stage is drawn at 0.8) and the box of a control that lies flush inside it by as much, and neither may block the wall; the 8 px around a focused control still do. */
+export const WALL_LIP = 6;
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
@@ -113,6 +123,90 @@ export function nearestPerch(perches: readonly Perch[], x: number, y: number): P
   return nearest;
 }
 //#endregion 🔖️Perches
+
+//#region 🔖️Walls
+/** 🚧️ Whether `keepout` reaches into the band `[low, high)` beside a wall; a box without area blocks nothing. */
+function flanks(keepout: Rect, low: number, high: number): boolean {
+  return keepout.height > 0 && Math.max(low, keepout.x) < Math.min(high, keepout.x + keepout.width);
+}
+
+/** 🗻️ The free stretches of every wall whose band lies inside `[0, width]`: its extent clipped to `[0, height]`, minus the y-extent of every keep-out that reaches into the band on its air side, from `WALL_LIP` to `clearance` pixels away from it (keep-outs in list order), keeping stretches at least `minimum` long; in wall order, then descending the wall. */
+export function wallsOf(walls: readonly Wall[], keepouts: readonly Rect[], width: number, height: number, clearance: number, minimum: number): Pitch[] {
+  const pitches: Pitch[] = [];
+  for (const wall of walls) {
+    const low = wall.side < 0 ? wall.x - clearance : wall.x + WALL_LIP;
+    const high = wall.side < 0 ? wall.x - WALL_LIP : wall.x + clearance;
+    if (wall.side < 0 ? low < 0 || wall.x > width : wall.x < 0 || high > width) continue;
+    const top = Math.max(wall.y0, 0);
+    const bottom = Math.min(wall.y1, height);
+    if (bottom <= top) continue;
+    let stretches: Stretch[] = [[top, bottom]];
+    for (const keepout of keepouts) if (flanks(keepout, low, high)) stretches = cut(stretches, keepout.y, keepout.y + keepout.height);
+    for (const [y0, y1] of stretches) if (y1 - y0 >= minimum) pitches.push({ wall: wall.id, surface: wall.surface, side: wall.side, x: wall.x, y0, y1 });
+  }
+  return pitches;
+}
+
+/** 📌️ The first pitch of `wall` that carries the height `y`, both ends included; `null` ≙ Rust `None`. */
+export function wallAt(pitches: readonly Pitch[], wall: string, y: number): Pitch | null {
+  for (const pitch of pitches) if (pitch.wall === wall && pitch.y0 <= y && y <= pitch.y1) return pitch;
+  return null;
+}
+
+/** 🧭️ The pitch whose nearest point is closest to `(x, y)` by squared distance, the first one among equals; `null` without pitches. Asked with the end of a perch it answers the wall that rises or drops beside it. */
+export function nearestWall(pitches: readonly Pitch[], x: number, y: number): Pitch | null {
+  let nearest: Pitch | null = null;
+  let least = Infinity;
+  for (const pitch of pitches) {
+    const dx = pitch.x - x;
+    const dy = Math.max(pitch.y0 - y, 0, y - pitch.y1);
+    const distance = dx * dx + dy * dy;
+    if (distance < least) {
+      nearest = pitch;
+      least = distance;
+    }
+  }
+  return nearest;
+}
+//#endregion 🔖️Walls
+
+//#region 🔖️Sight
+/** 🪡️ Whether the segment from `from` to `to` passes through the inside of `rect` grown by `margin` on every side (Liang–Barsky): per axis the segment is inside between two parameters, and it hits when those spans share more than a point within `[0, 1]`. Touching an edge or grazing a corner is no hit, a box without area is never hit, and a segment of no length hits the box its point lies inside. */
+export function segmentHits(from: Point, to: Point, rect: Rect, margin: number): boolean {
+  const left = rect.x - margin;
+  const right = rect.x + rect.width + margin;
+  const top = rect.y - margin;
+  const bottom = rect.y + rect.height + margin;
+  if (!(rect.width > 0 && rect.height > 0 && left < right && top < bottom)) return false;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  let enter = 0;
+  let leave = 1;
+  if (dx === 0) {
+    if (!(left < from.x && from.x < right)) return false;
+  } else {
+    const near = (left - from.x) / dx;
+    const far = (right - from.x) / dx;
+    enter = Math.max(enter, Math.min(near, far));
+    leave = Math.min(leave, Math.max(near, far));
+  }
+  if (dy === 0) {
+    if (!(top < from.y && from.y < bottom)) return false;
+  } else {
+    const near = (top - from.y) / dy;
+    const far = (bottom - from.y) / dy;
+    enter = Math.max(enter, Math.min(near, far));
+    leave = Math.min(leave, Math.max(near, far));
+  }
+  return enter < leave;
+}
+
+/** 🔭️ Whether the segment from `from` to `to` hits none of `rects`, each grown by `margin`: a clear line of sight. */
+export function segmentClear(from: Point, to: Point, rects: readonly Rect[], margin: number): boolean {
+  for (const rect of rects) if (segmentHits(from, to, rect, margin)) return false;
+  return true;
+}
+//#endregion 🔖️Sight
 
 //#region 🔖️Walking
 /** 👣️ The next x one tick later on the way to `goal` at `speed` pixels per second: a step of `max(speed, 0) ÷ 64`, or the goal itself when it is no farther than that. */

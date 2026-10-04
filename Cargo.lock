@@ -6052,6 +6052,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-print"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-validator",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-quiz"
 version = "0.1.0"
 dependencies = [

@@ -940,7 +940,22 @@
         "greet": -0.45,
         "cuddle": -0.4,
         "squabble": -0.5,
-        "sulk": -0.4
+        "sulk": -0.4,
+        "hang": -0.5,
+        "tumble": -0.5,
+        "glide": -0.5,
+        "aim": -0.5,
+        "reel": -0.5,
+        "climb": -0.5,
+        "mantle": -0.5,
+        "slide": -0.5,
+        "carry": -0.5,
+        "trick": -0.5,
+        "purr": -0.5,
+        "dizzy": -0.5,
+        "shrug": -0.5,
+        "scoot": -0.5,
+        "push": -0.5
       }
     },
     {
@@ -957,7 +972,22 @@
         "greet": -0.4,
         "cuddle": -0.35,
         "squabble": -0.5,
-        "sulk": -0.35
+        "sulk": -0.35,
+        "hang": -0.45,
+        "tumble": -0.45,
+        "glide": -0.45,
+        "aim": -0.45,
+        "reel": -0.45,
+        "climb": -0.45,
+        "mantle": -0.45,
+        "slide": -0.45,
+        "carry": -0.45,
+        "trick": -0.45,
+        "purr": -0.45,
+        "dizzy": -0.45,
+        "shrug": -0.45,
+        "scoot": -0.45,
+        "push": -0.45
       }
     },
     {
@@ -974,7 +1004,22 @@
         "greet": -0.05,
         "cuddle": 0.0,
         "squabble": -0.25,
-        "sulk": 0.0
+        "sulk": 0.0,
+        "hang": -0.1,
+        "tumble": -0.1,
+        "glide": -0.1,
+        "aim": -0.1,
+        "reel": -0.1,
+        "climb": -0.1,
+        "mantle": -0.1,
+        "slide": -0.1,
+        "carry": -0.1,
+        "trick": -0.1,
+        "purr": -0.1,
+        "dizzy": -0.1,
+        "shrug": -0.1,
+        "scoot": -0.1,
+        "push": -0.1
       }
     },
     {
@@ -991,7 +1036,22 @@
         "greet": 0.05,
         "cuddle": 0.1,
         "squabble": -0.15,
-        "sulk": 0.1
+        "sulk": 0.1,
+        "hang": 0.0,
+        "tumble": 0.0,
+        "glide": 0.0,
+        "aim": 0.0,
+        "reel": 0.0,
+        "climb": 0.0,
+        "mantle": 0.0,
+        "slide": 0.0,
+        "carry": 0.0,
+        "trick": 0.0,
+        "purr": 0.0,
+        "dizzy": 0.0,
+        "shrug": 0.0,
+        "scoot": 0.0,
+        "push": 0.0
       }
     },
     {
@@ -1008,7 +1068,22 @@
         "greet": 0.1,
         "cuddle": 0.15000000000000002,
         "squabble": -0.09999999999999999,
-        "sulk": 0.15000000000000002
+        "sulk": 0.15000000000000002,
+        "hang": 0.05,
+        "tumble": 0.05,
+        "glide": 0.05,
+        "aim": 0.05,
+        "reel": 0.05,
+        "climb": 0.05,
+        "mantle": 0.05,
+        "slide": 0.05,
+        "carry": 0.05,
+        "trick": 0.05,
+        "purr": 0.05,
+        "dizzy": 0.05,
+        "shrug": 0.05,
+        "scoot": 0.05,
+        "push": 0.05
       }
     },
     {
@@ -1025,7 +1100,22 @@
         "greet": 0.47,
         "cuddle": 0.5,
         "squabble": 0.27,
-        "sulk": 0.5
+        "sulk": 0.5,
+        "hang": 0.42,
+        "tumble": 0.42,
+        "glide": 0.42,
+        "aim": 0.42,
+        "reel": 0.42,
+        "climb": 0.42,
+        "mantle": 0.42,
+        "slide": 0.42,
+        "carry": 0.42,
+        "trick": 0.42,
+        "purr": 0.42,
+        "dizzy": 0.42,
+        "shrug": 0.42,
+        "scoot": 0.42,
+        "push": 0.42
       }
     },
     {
@@ -1042,7 +1132,22 @@
         "greet": 0.5,
         "cuddle": 0.5,
         "squabble": 0.30000000000000004,
-        "sulk": 0.5
+        "sulk": 0.5,
+        "hang": 0.45,
+        "tumble": 0.45,
+        "glide": 0.45,
+        "aim": 0.45,
+        "reel": 0.45,
+        "climb": 0.45,
+        "mantle": 0.45,
+        "slide": 0.45,
+        "carry": 0.45,
+        "trick": 0.45,
+        "purr": 0.45,
+        "dizzy": 0.45,
+        "shrug": 0.45,
+        "scoot": 0.45,
+        "push": 0.45
       }
     },
     {
@@ -1059,7 +1164,22 @@
         "greet": 0.5,
         "cuddle": 0.5,
         "squabble": 0.35,
-        "sulk": 0.5
+        "sulk": 0.5,
+        "hang": 0.5,
+        "tumble": 0.5,
+        "glide": 0.5,
+        "aim": 0.5,
+        "reel": 0.5,
+        "climb": 0.5,
+        "mantle": 0.5,
+        "slide": 0.5,
+        "carry": 0.5,
+        "trick": 0.5,
+        "purr": 0.5,
+        "dizzy": 0.5,
+        "shrug": 0.5,
+        "scoot": 0.5,
+        "push": 0.5
       }
     }
   ],
@@ -2399,6 +2519,1206 @@
       }
     },
     {
+      "id": "energetic-hang-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-hang-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-hang-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-hang-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-tumble-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-tumble-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-tumble-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-tumble-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-glide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-glide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5022,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "energetic-glide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-glide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-aim-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-aim-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4976,
+        "sociability": 0.5022,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "energetic-aim-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.452,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-aim-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-reel-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-reel-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4928,
+        "sociability": 0.5022,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "energetic-reel-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.356,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-reel-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-climb-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-climb-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4904,
+        "sociability": 0.5022,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "energetic-climb-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.30800000000000005,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-climb-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-mantle-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-mantle-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4904,
+        "sociability": 0.5022,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "energetic-mantle-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.30800000000000005,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-mantle-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-slide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-slide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4988,
+        "sociability": 0.5022,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "energetic-slide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.476,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-slide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-carry-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-carry-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4916,
+        "sociability": 0.5022,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "energetic-carry-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.332,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-carry-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-trick-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-trick-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.494,
+        "sociability": 0.5022,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "energetic-trick-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.38,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-trick-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-purr-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-purr-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.504,
+        "sociability": 0.44,
+        "curiosity": 0.514
+      }
+    },
+    {
+      "id": "energetic-purr-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.58,
+        "sociability": 0.0,
+        "curiosity": 0.78
+      }
+    },
+    {
+      "id": "energetic-purr-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 1.0,
+        "sociability": 0.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "energetic-dizzy-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-dizzy-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4988,
+        "sociability": 0.5022,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-dizzy-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.476,
+        "sociability": 0.544,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-dizzy-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-shrug-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-shrug-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4994,
+        "sociability": 0.5022,
+        "curiosity": 0.514
+      }
+    },
+    {
+      "id": "energetic-shrug-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.488,
+        "sociability": 0.544,
+        "curiosity": 0.78
+      }
+    },
+    {
+      "id": "energetic-shrug-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "energetic-scoot-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-scoot-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4928,
+        "sociability": 0.5022,
+        "curiosity": 0.48
+      }
+    },
+    {
+      "id": "energetic-scoot-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.356,
+        "sociability": 0.544,
+        "curiosity": 0.09999999999999998
+      }
+    },
+    {
+      "id": "energetic-scoot-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-push-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "energetic-push-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.4916,
+        "sociability": 0.5022,
+        "curiosity": 0.4
+      }
+    },
+    {
+      "id": "energetic-push-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.332,
+        "sociability": 0.544,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "energetic-push-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.9,
+        "sociability": 0.6,
+        "curiosity": 0.9
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
       "id": "sleepy-idle-0",
       "needs": {
         "energy": 0.5,
@@ -3279,6 +4599,1206 @@
       }
     },
     {
+      "id": "sleepy-hang-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-hang-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-hang-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-hang-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-tumble-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-tumble-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-tumble-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-tumble-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-glide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-glide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.502,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "sleepy-glide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-glide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-aim-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-aim-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4948,
+        "sociability": 0.502,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "sleepy-aim-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.396,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-aim-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-reel-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-reel-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4844,
+        "sociability": 0.502,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sleepy-reel-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.188,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-reel-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-climb-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-climb-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4792,
+        "sociability": 0.502,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sleepy-climb-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.08399999999999996,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-climb-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-mantle-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-mantle-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4792,
+        "sociability": 0.502,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sleepy-mantle-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.08399999999999996,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-mantle-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-slide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-slide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4974,
+        "sociability": 0.502,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "sleepy-slide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.448,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-slide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-carry-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-carry-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4818,
+        "sociability": 0.502,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "sleepy-carry-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.136,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-carry-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-trick-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-trick-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.487,
+        "sociability": 0.502,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sleepy-trick-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.24,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-trick-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-purr-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-purr-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.504,
+        "sociability": 0.44,
+        "curiosity": 0.508
+      }
+    },
+    {
+      "id": "sleepy-purr-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.58,
+        "sociability": 0.0,
+        "curiosity": 0.66
+      }
+    },
+    {
+      "id": "sleepy-purr-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 1.0,
+        "sociability": 0.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "sleepy-dizzy-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-dizzy-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4974,
+        "sociability": 0.502,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-dizzy-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.448,
+        "sociability": 0.54,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-dizzy-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-shrug-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-shrug-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4987,
+        "sociability": 0.502,
+        "curiosity": 0.508
+      }
+    },
+    {
+      "id": "sleepy-shrug-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.474,
+        "sociability": 0.54,
+        "curiosity": 0.66
+      }
+    },
+    {
+      "id": "sleepy-shrug-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "sleepy-scoot-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-scoot-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4844,
+        "sociability": 0.502,
+        "curiosity": 0.48
+      }
+    },
+    {
+      "id": "sleepy-scoot-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.188,
+        "sociability": 0.54,
+        "curiosity": 0.09999999999999998
+      }
+    },
+    {
+      "id": "sleepy-scoot-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-push-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sleepy-push-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.4818,
+        "sociability": 0.502,
+        "curiosity": 0.4
+      }
+    },
+    {
+      "id": "sleepy-push-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.136,
+        "sociability": 0.54,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sleepy-push-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.2,
+        "sociability": 0.5,
+        "curiosity": 0.3
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
       "id": "sociable-idle-0",
       "needs": {
         "energy": 0.5,
@@ -4156,6 +6676,1206 @@
         "energy": 0.0,
         "sociability": 0.0,
         "curiosity": 1.0
+      }
+    },
+    {
+      "id": "sociable-hang-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-hang-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-hang-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-hang-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "hang",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-tumble-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-tumble-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-tumble-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-tumble-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "tumble",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-glide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-glide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5026,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "sociable-glide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-glide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "glide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-aim-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-aim-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4964,
+        "sociability": 0.5026,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "sociable-aim-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.428,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-aim-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "aim",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-reel-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-reel-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4892,
+        "sociability": 0.5026,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sociable-reel-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.284,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-reel-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "reel",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-climb-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-climb-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4856,
+        "sociability": 0.5026,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sociable-climb-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.21199999999999997,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-climb-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "climb",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-mantle-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-mantle-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4856,
+        "sociability": 0.5026,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sociable-mantle-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.21199999999999997,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-mantle-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "mantle",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-slide-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-slide-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4982,
+        "sociability": 0.5026,
+        "curiosity": 0.46
+      }
+    },
+    {
+      "id": "sociable-slide-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.46399999999999997,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-slide-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "slide",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-carry-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-carry-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4874,
+        "sociability": 0.5026,
+        "curiosity": 0.44
+      }
+    },
+    {
+      "id": "sociable-carry-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.248,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-carry-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "carry",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-trick-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-trick-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.491,
+        "sociability": 0.5026,
+        "curiosity": 0.42
+      }
+    },
+    {
+      "id": "sociable-trick-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.31999999999999995,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-trick-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "trick",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-purr-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-purr-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.504,
+        "sociability": 0.44,
+        "curiosity": 0.511
+      }
+    },
+    {
+      "id": "sociable-purr-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.58,
+        "sociability": 0.0,
+        "curiosity": 0.72
+      }
+    },
+    {
+      "id": "sociable-purr-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "purr",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 1.0,
+        "sociability": 0.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "sociable-dizzy-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-dizzy-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4982,
+        "sociability": 0.5026,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-dizzy-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.46399999999999997,
+        "sociability": 0.552,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-dizzy-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "dizzy",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-shrug-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-shrug-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4991,
+        "sociability": 0.5026,
+        "curiosity": 0.511
+      }
+    },
+    {
+      "id": "sociable-shrug-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.482,
+        "sociability": 0.552,
+        "curiosity": 0.72
+      }
+    },
+    {
+      "id": "sociable-shrug-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "shrug",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 1.0
+      }
+    },
+    {
+      "id": "sociable-scoot-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-scoot-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4892,
+        "sociability": 0.5026,
+        "curiosity": 0.48
+      }
+    },
+    {
+      "id": "sociable-scoot-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.284,
+        "sociability": 0.552,
+        "curiosity": 0.09999999999999998
+      }
+    },
+    {
+      "id": "sociable-scoot-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "scoot",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-push-0",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 0,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      }
+    },
+    {
+      "id": "sociable-push-64",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.4874,
+        "sociability": 0.5026,
+        "curiosity": 0.4
+      }
+    },
+    {
+      "id": "sociable-push-1280",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 1280,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.248,
+        "sociability": 0.552,
+        "curiosity": 0.0
+      }
+    },
+    {
+      "id": "sociable-push-64000",
+      "needs": {
+        "energy": 0.5,
+        "sociability": 0.5,
+        "curiosity": 0.5
+      },
+      "activity": "push",
+      "ticks": 64000,
+      "temperament": {
+        "energy": 0.6,
+        "sociability": 0.8,
+        "curiosity": 0.6
+      },
+      "expected": {
+        "energy": 0.0,
+        "sociability": 1.0,
+        "curiosity": 0.0
       }
     }
   ],

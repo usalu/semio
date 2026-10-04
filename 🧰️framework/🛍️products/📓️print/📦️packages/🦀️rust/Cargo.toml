@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-print"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Event-sourced print chart mutations and native LaTeX inference"
+
+[package.metadata.semio]
+role = "product"
+id = "framework.print"
+
+[lib]
+path = "../../🦀️.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-schema-validator = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

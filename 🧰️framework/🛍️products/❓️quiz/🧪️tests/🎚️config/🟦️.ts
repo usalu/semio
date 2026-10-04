@@ -24,6 +24,7 @@ export default {
     environment: "node",
     include: [
       "../🌀️mt19937-generator/🟦️.ts",
+      "../🧗️challenge-ladder/🟦️.ts",
       "../🎴️sheet-randomization/🟦️.ts",
       "../🩺️document-validation/🟦️.ts",
       "../⚖️partial-credit-scoring/🟦️.ts",

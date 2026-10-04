@@ -1,11 +1,13 @@
 /** 📬️ Answer outbox and proctor wire: coalescing per (run, task), retries through transient failures under one command
- * id, exactly-once application by a proctor that deduplicates idempotency keys, persistence across a reload,
- * definitive verdicts, per-run settling with progress and cancellation — and the §9a envelope mapping.
+ * id, exactly-once application by a proctor that deduplicates idempotency keys, persistence across a reload (a start
+ * only with its challenge, an opening and an answer only with their instant), an opening kept before the answers of its
+ * task, definitive verdicts, per-run settling with progress and cancellation — and the §9a envelope mapping with the
+ * rejections of the challenges.
  */
 
 import { describe, expect, it } from "vitest";
 import { ServerCallError, decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, type CommandEnvelope, type CommandOutcome, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
-import { handleActorId, type Command, type RecordAnswerCommand } from "@semio-tech/quiz";
+import { WIRE_VERSION, handleActorId, type Command, type OpenTaskCommand, type RecordAnswerCommand } from "@semio-tech/quiz";
 import {
   Outbox,
   ProctorClient,
@@ -17,6 +19,7 @@ import {
   memoryStorageOrigin,
   newId,
   queryEnvelope,
+  quizInstance,
   quizRejection,
   retryTransient,
   type CommandVerdict,
@@ -31,7 +34,11 @@ const OTHER_RUN = "c".repeat(32);
 const encoder = new TextEncoder();
 
 function answer(task: string, order: readonly string[], run = RUN): RecordAnswerCommand {
-  return { type: "record-answer", id: newId(), learner: LEARNER, run, task, answer: { kind: "sorting", order } };
+  return { type: "record-answer", id: newId(), learner: LEARNER, run, task, answer: { kind: "sorting", order }, at: 1 };
+}
+
+function opening(task: string, run = RUN): OpenTaskCommand {
+  return { type: "open-task", id: newId(), learner: LEARNER, run, task, at: 1 };
 }
 
 function gate<T>(): { readonly promise: Promise<T>; readonly open: (value: T) => void } {
@@ -60,6 +67,7 @@ function deduplicatingProctor(): { readonly transport: HttpTransport; readonly e
   let rejection: string | undefined;
   const transport: HttpTransport = {
     async send(request) {
+      if (request.method === "GET" && request.path === "/instance") return reply(200, quizInstance());
       const envelope = decodeCommandEnvelope(JSON.parse(String(request.body)));
       envelopes.push(envelope);
       if (failures > 0) {
@@ -385,8 +393,8 @@ describe("📬️ answer outbox", () => {
       origin.tab(),
     );
     const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "pseudonym", handle: "Ada" } };
-    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
-    const again: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics" };
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "medium", at: 1_000 };
+    const again: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics", challenge: "medium", at: 1_000 };
     const first = answer("t1", ["a", "b"]);
     const second = answer("t1", ["b", "a"]);
     const submit: Command = { type: "submit-run", id: newId(), learner: LEARNER, run: RUN };
@@ -407,8 +415,8 @@ describe("📬️ answer outbox", () => {
   it("drops a discarded run from its start to its submission and keeps the registration and the other runs", () => {
     const outbox = outboxOver(async () => ({ kind: "accepted", events: [] }));
     const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "anonymous" } };
-    const other: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics" };
-    for (const command of [identify, { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" }, answer("t1", ["a"]), { type: "submit-run", id: newId(), learner: LEARNER, run: RUN }, other] satisfies Command[]) outbox.enqueue(command);
+    const other: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics", challenge: "medium", at: 1_000 };
+    for (const command of [identify, { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "medium", at: 1_000 }, answer("t1", ["a"]), { type: "submit-run", id: newId(), learner: LEARNER, run: RUN }, other] satisfies Command[]) outbox.enqueue(command);
     outbox.discard(RUN);
     expect(outbox.queued()).toEqual([identify, other]);
     outbox.forget(LEARNER);
@@ -430,9 +438,9 @@ describe("📬️ answer outbox", () => {
     );
     const right = outboxOver(async () => Promise.reject(new ProctorUnavailable("offline")), undefined, origin.tab());
     const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "pseudonym", handle: "Ada" } };
-    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "medium", at: 1_000 };
     const given = answer("t1", ["a", "b"]);
-    const stranger: Command = { type: "start-run", id: newId(), learner: "e".repeat(32), run: OTHER_RUN, quiz: "physics" };
+    const stranger: Command = { type: "start-run", id: newId(), learner: "e".repeat(32), run: OTHER_RUN, quiz: "physics", challenge: "medium", at: 1_000 };
     right.start();
     left.start();
     for (const command of [identify, start, given, stranger]) left.enqueue(command);
@@ -453,13 +461,75 @@ describe("📬️ answer outbox", () => {
   it("restores only commands it can read", () => {
     const area = memoryStorageOrigin().tab();
     const store = localStore(area, "test");
-    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "medium", at: 1_000 };
     store.put("outbox", start.id, { command: start, queuedAt: 2 });
     store.put("outbox", "no-run", { command: { type: "submit-run", id: "no-run", learner: LEARNER }, queuedAt: 1 });
     store.put("outbox", "no-identity", { command: { type: "identify-learner", id: "no-identity", learner: LEARNER }, queuedAt: 1 });
     store.put("outbox", "unknown", { command: { type: "erase-learner", id: "unknown", learner: LEARNER }, queuedAt: 1 });
     store.put("outbox", "other-key", { command: { ...start, id: newId() }, queuedAt: 1 });
     expect(outboxOver(async () => ({ kind: "accepted", events: [] }), undefined, area).queued()).toEqual([start]);
+  });
+
+  it("restores a start only with its challenge and the instant the learner acted, an opening or an answer only with that instant", () => {
+    const area = memoryStorageOrigin().tab();
+    const store = localStore(area, "test");
+    const { challenge: _, ...unchallenged } = { type: "start-run", id: "unchallenged", learner: LEARNER, run: RUN, quiz: "physics", challenge: "hard", at: 1_000 } as const;
+    const whole = [{ type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "expert", at: 1_000 } satisfies Command, opening("t1"), answer("t1", ["a", "b"])];
+    whole.forEach((command, index) => store.put("outbox", command.id, { command, queuedAt: 10 + index }));
+    const broken: readonly Record<string, unknown>[] = [
+      unchallenged,
+      { type: "start-run", id: "lenient", learner: LEARNER, run: RUN, quiz: "physics", challenge: "lenient", at: 1_000 },
+      { type: "start-run", id: "undated", learner: LEARNER, run: RUN, quiz: "physics", challenge: "hard" },
+      { type: "start-run", id: "beyond", learner: LEARNER, run: RUN, quiz: "physics", challenge: "hard", at: 2 ** 53 },
+      { type: "open-task", id: "untimed", learner: LEARNER, run: RUN, task: "t1" },
+      { type: "open-task", id: "fractional", learner: LEARNER, run: RUN, task: "t1", at: 1.5 },
+      { type: "open-task", id: "negative", learner: LEARNER, run: RUN, task: "t1", at: -1 },
+      { type: "open-task", id: "untasked", learner: LEARNER, run: RUN, at: 1 },
+      { type: "record-answer", id: "unstamped", learner: LEARNER, run: RUN, task: "t1", answer: { kind: "sorting", order: ["a"] } },
+      { type: "record-answer", id: "textual", learner: LEARNER, run: RUN, task: "t1", answer: { kind: "sorting", order: ["a"] }, at: "1" },
+    ];
+    for (const command of broken) store.put("outbox", String(command.id), { command, queuedAt: 1 });
+    expect(outboxOver(async () => ({ kind: "accepted", events: [] }), undefined, area).queued()).toEqual(whole);
+  });
+
+  it("keeps an opening before the answers of its task, supersedes only those answers and delivers the opening first, also after a reload", async () => {
+    const origin = memoryStorageOrigin();
+    const before = outboxOver(async () => ({ kind: "accepted", events: [] }), undefined, origin.tab());
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "expert", at: 1_000 };
+    const open = opening("t1");
+    const first = answer("t1", ["a", "b"]);
+    const other = opening("t2");
+    const second = answer("t1", ["b", "a"]);
+    const third = answer("t2", ["a", "b"]);
+    for (const command of [start, open, first, other, second, third]) before.enqueue(command);
+    expect(before.queued()).toEqual([start, open, other, second, third]);
+    expect(before.pendingAnswers(RUN)).toEqual({ t1: second.answer, t2: third.answer });
+    const sent: Command[] = [];
+    const after = outboxOver(
+      async (command) => {
+        sent.push(command);
+        return { kind: "accepted", events: [] };
+      },
+      undefined,
+      origin.tab(),
+    );
+    expect(after.queued()).toEqual([start, open, other, second, third]);
+    after.start();
+    await after.settled(RUN);
+    expect(sent).toEqual([start, open, other, second, third]);
+    expect(sent.findIndex((command) => command.id === open.id)).toBeLessThan(sent.findIndex((command) => command.type === "record-answer" && command.task === "t1"));
+    after.stop();
+  });
+
+  it("re-addresses an opening like every command and drops it with the rest of a discarded run", () => {
+    const outbox = outboxOver(async () => ({ kind: "accepted", events: [] }));
+    const open = opening("t1");
+    const elsewhere = opening("t1", OTHER_RUN);
+    for (const command of [open, answer("t1", ["a"]), elsewhere]) outbox.enqueue(command);
+    outbox.reassign(LEARNER, "d".repeat(32));
+    expect(outbox.queued(OTHER_RUN)).toEqual([{ ...elsewhere, learner: "d".repeat(32) }]);
+    outbox.discard(RUN);
+    expect(outbox.queued().map((command) => command.id)).toEqual([elsewhere.id]);
   });
 });
 
@@ -471,7 +541,7 @@ describe("🛂️ proctor wire (design §9a)", () => {
       commandId: command.id,
       idempotencyKey: command.id,
       kind: "quiz.identify-learner",
-      version: 1,
+      version: WIRE_VERSION,
       scope: "architecture",
       target: { tenant: "architecture", kind: "quiz-handle", id: handleActorId("ada l.") },
       principal: { kind: "anonymous" },
@@ -487,6 +557,7 @@ describe("🛂️ proctor wire (design §9a)", () => {
     const queries: unknown[] = [];
     const transport: HttpTransport = {
       send: async (request) => {
+        if (request.method === "GET" && request.path === "/instance") return reply(200, quizInstance());
         queries.push(JSON.parse(new TextDecoder().decode(decodeQueryEnvelope(JSON.parse(String(request.body))).arguments)));
         return reply(404, { kind: "notFound", message: "none" });
       },
@@ -507,12 +578,16 @@ describe("🛂️ proctor wire (design §9a)", () => {
   });
 
   it("maps learner commands onto the learner actor with the learner as principal", () => {
-    const command: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    const command: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics", challenge: "medium", at: 1_000 };
     const envelope = commandEnvelope(command, "architecture", 1);
     expect(envelope.target).toEqual({ tenant: "architecture", kind: "quiz-learner", id: LEARNER });
     expect(envelope.principal).toEqual({ kind: "user", id: LEARNER });
+    const open = opening("t1");
+    expect(commandEnvelope(open, "architecture", 1)).toMatchObject({ kind: "quiz.open-task", target: { tenant: "architecture", kind: "quiz-learner", id: LEARNER }, principal: { kind: "user", id: LEARNER }, idempotencyKey: open.id });
+    expect(JSON.parse(new TextDecoder().decode(commandEnvelope(open, "architecture", 1).payload))).toEqual(open);
+    expect(JSON.parse(new TextDecoder().decode(commandEnvelope(command, "architecture", 1).payload))).toEqual(command);
     const query = queryEnvelope({ type: "run", run: RUN }, "architecture", LEARNER);
-    expect(query).toMatchObject({ kind: "quiz.run", version: 1, scope: "architecture", principal: { kind: "user", id: LEARNER }, consistency: { kind: "authority" }, cursor: null });
+    expect(query).toMatchObject({ kind: "quiz.run", version: WIRE_VERSION, scope: "architecture", principal: { kind: "user", id: LEARNER }, consistency: { kind: "authority" }, cursor: null });
     expect(JSON.parse(new TextDecoder().decode(query.arguments))).toEqual({ type: "run", run: RUN });
   });
 
@@ -520,6 +595,9 @@ describe("🛂️ proctor wire (design §9a)", () => {
     expect(quizRejection({ kind: "invalid", detail: "rejected: run-open" }, [])).toBe("run-open");
     expect(quizRejection({ kind: "unauthorized", detail: "nope" }, [{ code: "handle-invalid", message: "" }])).toBe("handle-invalid");
     expect(quizRejection({ kind: "invalid", detail: "garbled-input" }, [])).toBeUndefined();
+    expect(quizRejection({ kind: "invalid", detail: "rejected: run-untimed" }, [])).toBe("run-untimed");
+    expect(quizRejection({ kind: "invalid", detail: "nope" }, [{ code: "task-unopened", message: "" }])).toBe("task-unopened");
+    expect(quizRejection({ kind: "invalid", detail: "quiz rejected the command: time-up" }, [])).toBe("time-up");
     expect(isTransient(new ProctorUnavailable("x"))).toBe(true);
     expect(isTransient(new ServerCallError(503, { kind: "actorUnavailable", message: "" }))).toBe(true);
     expect(isTransient(new ServerCallError(404, { kind: "notFound", message: "" }))).toBe(false);

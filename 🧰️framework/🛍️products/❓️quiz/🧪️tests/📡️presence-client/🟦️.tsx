@@ -37,6 +37,7 @@ import {
   presenceView,
   quizText,
   readPreferences,
+  challengeOf,
   usePresencePointer,
   localStore,
   memoryStorageOrigin,
@@ -56,6 +57,7 @@ import vectors from "../../🧫️fixtures/📡️presence-client/🔣️.json";
 /** 🔌️ A socket the test plays the proctor for: it records what the client sends and delivers what the test says. */
 class FakeSocket implements PresenceSocket {
   readyState = 1;
+  onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
@@ -87,6 +89,12 @@ class FakeSocket implements PresenceSocket {
   drop(): void {
     this.readyState = 3;
     this.onclose?.(new CloseEvent("close"));
+  }
+
+  /** 🔌️ The connection of a socket that was still connecting is established. */
+  open(): void {
+    this.readyState = 1;
+    this.onopen?.(new Event("open"));
   }
 
   states(): unknown[] {
@@ -244,6 +252,23 @@ describe("👥️ presence room", () => {
     room.stop();
     expect(socket.closed).toBe(true);
     expect(room.getSnapshot()).toMatchObject({ status: "stopped", members: [] });
+  });
+
+  it("leaves a socket that still connects only once it is open, so no connection is reported failed, and ignores what it says meanwhile", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: (state) => (cursorProblem(state) === undefined ? (state as CursorState) : undefined), timing: TIMING });
+    room.start();
+    const socket = proctor.sockets[0]!;
+    socket.readyState = 0;
+    room.stop();
+    expect(socket.closed).toBe(false);
+    expect(room.getSnapshot().status).toBe("stopped");
+    socket.open();
+    expect(socket.closed).toBe(true);
+    socket.welcome("r-late", 1, [{ session: "r-mira", colour: 3, surface: "home", state: { tag: learnerTag(MIRA) } }]);
+    expect(room.getSnapshot()).toMatchObject({ status: "stopped", members: [] });
+    await vi.advanceTimersByTimeAsync(TIMING.maxMs * 4);
+    expect(proctor.sockets).toHaveLength(1);
   });
 
   it("renders every batch — joins, moves and leaves — and keeps a refusal without closing", async () => {
@@ -799,7 +824,7 @@ describe("👁️ what the screens show", () => {
       <PresenceProvider view={view} setTask={() => undefined}>
         <LearnerCard {...common} {...card} />
         {CATALOG.quizzes.map((quiz) => (
-          <QuizCardView key={quiz.id} {...common} {...card} quiz={quiz} busy={false} act={() => undefined} />
+          <QuizCardView key={quiz.id} {...common} {...card} quiz={quiz} busy={false} act={() => undefined} challenge="medium" />
         ))}
         <LeaderboardCard {...common} {...card} />
         <LeaderboardPage {...common} view={{ opened: true, revealed: false }} />
@@ -842,6 +867,16 @@ describe("👁️ what the screens show", () => {
     const box = screen.getByRole("checkbox", { name: "Cursor der anderen anzeigen" }) as HTMLInputElement;
     expect(box.checked).toBe(false);
     fireEvent.click(box);
-    expect(onChange).toHaveBeenLastCalledWith({ theme: "dark", textSize: "large", showCursors: true, others: "submitted", animateIcons: true, pets: "calm", petsLiveliness: "calm", petsChosen: false, locale: undefined });
+    expect(onChange).toHaveBeenLastCalledWith({ theme: "dark", textSize: "large", showCursors: true, others: "submitted", animateIcons: true, iconsChosen: false, pets: "calm", petsLiveliness: "calm", petsChosen: false, petsPlay: true, petsMischief: true, challenges: {}, locale: undefined });
+    store.write("preferences", { challenges: { physics: "expert", heating: "easy" } });
+    expect(readPreferences(store).challenges).toEqual({ physics: "expert", heating: "easy" });
+    expect(["physics", "heating", "cooling"].map((quiz) => challengeOf(readPreferences(store), quiz))).toEqual(["expert", "easy", "medium"]);
+    store.write("preferences", { challenges: { physics: "lenient", "Not A Slug": "hard", "../heating": "hard", cooling: 3, demand: "hard" } });
+    expect(readPreferences(store).challenges).toEqual({ demand: "hard" });
+    for (const stored of [{}, { challenge: "expert" }, { challenges: "expert" }, { challenges: 3 }, { challenges: ["hard"] }]) {
+      store.write("preferences", stored);
+      expect(readPreferences(store).challenges, JSON.stringify(stored)).toEqual({});
+    }
+    expect(screen.queryByRole("group", { name: "Herausforderung" })).toBeNull();
   });
 });

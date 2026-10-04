@@ -9,7 +9,7 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use quiz::serde_json::{self, Map, Value};
     use quiz::{
-        catalog_view, decide_handle, decide_learner, empty_handle_state, empty_learner_state, evolve_handle, evolve_learner, learner_view, registration_rejection, run_seed, run_view, sheet_of, Answer, Catalog, ClassificationAnswer, Command, Decision, Event,
+        catalog_view, decide_handle, decide_learner, empty_handle_state, empty_learner_state, evolve_handle, evolve_learner, learner_view, registration_rejection, run_seed, run_view, sheet_of, Answer, Catalog, Challenge, ClassificationAnswer, Command, Decision, Event,
         Identity, LearnerContext, LearnerState, Limits, LoadedQuiz, MatchingAnswer, Quiz, SheetTask, SortingAnswer, Task, DEFAULT_LIMITS,
     };
     use semio_repo_test_host::{parse_json, Context, Outcome};
@@ -133,34 +133,44 @@ mod subject {
         serde_json::from_slice(&std::fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?).map_err(|error| format!("{}: {error}", path.display()))
     }
 
-    /// 💯️ The answer that scores a sheet task 1: every item in its category, ascending by value (ties in definition order), every item on a card of its own value.
+    /// 💯️ The answer that scores a sheet task 1: every item in its category, ascending by value (ties in definition order), every item on a card of its own value — and, where the keys are hidden, every item guessed at its true value.
     fn perfect_answer(task: &Task, sheet_task: &SheetTask) -> Result<Answer, String> {
         match (task, sheet_task) {
             (Task::Classification(task), SheetTask::Classification(sheet)) => Ok(Answer::Classification(ClassificationAnswer { assignments: sheet.items.iter().filter_map(|item| task.items.iter().find(|candidate| candidate.id == item.id).map(|candidate| (item.id.clone(), candidate.category.clone()))).collect() })),
             (Task::Sorting(task), SheetTask::Sorting(sheet)) => {
                 let mut order: Vec<(usize, f64, &String)> = task.items.iter().enumerate().filter(|(_, item)| sheet.items.iter().any(|presented| presented.id == item.id)).map(|(index, item)| (index, item.value, &item.id)).collect();
                 order.sort_by(|left, right| left.1.total_cmp(&right.1).then(left.0.cmp(&right.0)));
-                Ok(Answer::Sorting(SortingAnswer { order: order.into_iter().map(|(_, _, id)| id.clone()).collect(), guesses: BTreeMap::new() }))
+                let guesses = sheet.keys.is_none().then(|| order.iter().map(|(_, value, id)| ((*id).clone(), *value)).collect());
+                Ok(Answer::Sorting(SortingAnswer { order: order.into_iter().map(|(_, _, id)| id.clone()).collect(), guesses }))
             }
             (Task::Matching(task), SheetTask::Matching(sheet)) => {
+                let value = |item: &str, dimension: &str| task.items.iter().find(|candidate| candidate.id == item).and_then(|candidate| candidate.values.get(dimension).copied()).ok_or_else(|| format!("{item} has no value of {dimension}"));
+                if sheet.dimensions.iter().any(|dimension| dimension.cards.is_none()) {
+                    let mut guesses = BTreeMap::new();
+                    for dimension in &sheet.dimensions {
+                        guesses.insert(dimension.id.clone(), sheet.items.iter().map(|item| Ok((item.id.clone(), value(&item.id, &dimension.id)?))).collect::<Result<BTreeMap<_, _>, String>>()?);
+                    }
+                    return Ok(Answer::Matching(MatchingAnswer { assignments: None, guesses: Some(guesses) }));
+                }
                 let mut assignments = BTreeMap::new();
                 for dimension in &sheet.dimensions {
-                    let mut free: Vec<usize> = (0..dimension.cards.len()).collect();
+                    let deck = dimension.cards.as_deref().unwrap_or_default();
+                    let mut free: Vec<usize> = (0..deck.len()).collect();
                     let mut cards = BTreeMap::new();
                     for item in &sheet.items {
-                        let value = task.items.iter().find(|candidate| candidate.id == item.id).and_then(|candidate| candidate.values.get(&dimension.id)).ok_or_else(|| format!("{} has no value of {}", item.id, dimension.id))?;
-                        let position = free.iter().position(|&card| dimension.cards[card] == *value).ok_or_else(|| format!("{} has no card of its value", item.id))?;
+                        let value = value(&item.id, &dimension.id)?;
+                        let position = free.iter().position(|&card| deck[card] == value).ok_or_else(|| format!("{} has no card of its value", item.id))?;
                         cards.insert(item.id.clone(), free.remove(position));
                     }
                     assignments.insert(dimension.id.clone(), cards);
                 }
-                Ok(Answer::Matching(MatchingAnswer { assignments }))
+                Ok(Answer::Matching(MatchingAnswer { assignments: Some(assignments), guesses: None }))
             }
             _ => Err(format!("{} is not presented as its own kind", task.id())),
         }
     }
 
-    /// 🩹️ The perfect answer with exactly one mistake: the first item in the first wrong category, the smallest and the largest item exchanged, or the cards of the first item and of the first later item of another value exchanged in the first dimension.
+    /// 🩹️ The perfect answer with exactly one mistake: the first item in the first wrong category, the smallest and the largest item exchanged (with their guesses, where the keys are hidden), or the cards — the guesses, where they are hidden — of the first item and of the first later item of another value exchanged in the first dimension.
     fn flawed_answer(task: &Task, sheet_task: &SheetTask) -> Result<Answer, String> {
         let flawless = perfect_answer(task, sheet_task)?;
         let unsuitable = || format!("{} cannot carry a single mistake", task.id());
@@ -174,6 +184,12 @@ mod subject {
             (_, _, Answer::Sorting(mut answer)) => {
                 let last = answer.order.len().checked_sub(1).ok_or_else(unsuitable)?;
                 answer.order.swap(0, last);
+                let (smallest, largest) = (answer.order[last].clone(), answer.order[0].clone());
+                if let Some(guesses) = answer.guesses.as_mut() {
+                    let (low, high) = (*guesses.get(&smallest).ok_or_else(unsuitable)?, *guesses.get(&largest).ok_or_else(unsuitable)?);
+                    guesses.insert(smallest, high);
+                    guesses.insert(largest, low);
+                }
                 Ok(Answer::Sorting(answer))
             }
             (Task::Matching(task), SheetTask::Matching(sheet), Answer::Matching(mut answer)) => {
@@ -181,10 +197,19 @@ mod subject {
                 let value = |id: &String| task.items.iter().find(|candidate| candidate.id == *id).and_then(|candidate| candidate.values.get(dimension)).copied();
                 let first = &sheet.items.first().ok_or_else(unsuitable)?.id;
                 let other = &sheet.items.iter().skip(1).find(|item| value(&item.id) != value(first)).ok_or_else(unsuitable)?.id;
-                let cards = answer.assignments.get_mut(dimension).ok_or_else(unsuitable)?;
-                let (mine, theirs) = (*cards.get(first).ok_or_else(unsuitable)?, *cards.get(other).ok_or_else(unsuitable)?);
-                cards.insert(first.clone(), theirs);
-                cards.insert(other.clone(), mine);
+                fn exchanged<T: Copy>(chosen: Option<&mut BTreeMap<String, T>>, first: &String, other: &String) -> Option<()> {
+                    let chosen = chosen?;
+                    let (mine, theirs) = (*chosen.get(first)?, *chosen.get(other)?);
+                    chosen.insert(first.clone(), theirs);
+                    chosen.insert(other.clone(), mine);
+                    Some(())
+                }
+                match (answer.assignments.as_mut(), answer.guesses.as_mut()) {
+                    (_, Some(guesses)) => exchanged(guesses.get_mut(dimension), first, other),
+                    (Some(assignments), None) => exchanged(assignments.get_mut(dimension), first, other),
+                    (None, None) => None,
+                }
+                .ok_or_else(unsuitable)?;
                 Ok(Answer::Matching(answer))
             }
             _ => Err(unsuitable()),
@@ -196,10 +221,10 @@ mod subject {
         let learner = scenario["learner"].as_str().unwrap_or_default().to_string();
         let mut state = empty_learner_state(&learner);
         evolve_learner(&mut state, &Event::LearnerRegistered { learner: learner.clone(), identity: Identity::Anonymous, at: 0 });
-        let mut now = 0u64;
-        let mut decided = |state: &mut LearnerState, command: Command| -> Result<Vec<Event>, String> {
-            now += 1;
-            match decide_learner(state, &command, &LearnerContext { now, catalog, quizzes, limits: &DEFAULT_LIMITS }) {
+        let now = std::cell::Cell::new(0u64);
+        let decided = |state: &mut LearnerState, command: Command| -> Result<Vec<Event>, String> {
+            now.set(now.get() + 1);
+            match decide_learner(state, &command, &LearnerContext { now: now.get(), catalog, quizzes, limits: &DEFAULT_LIMITS }) {
                 Decision::Events(events) => {
                     for event in &events {
                         evolve_learner(state, event);
@@ -218,11 +243,15 @@ mod subject {
                 issued += 1;
                 format!("{:032x}", ((number as u128) << 64) + (issued << 32))
             };
-            decided(&mut state, Command::StartRun { id: id(), learner: learner.clone(), run: run_id.clone(), quiz: quiz_id.clone() })?;
-            for sheet_task in &sheet_of(quiz, run_seed(&run_id)).tasks {
+            let challenge = decode!(run["challenge"], Challenge)?;
+            decided(&mut state, Command::StartRun { id: id(), learner: learner.clone(), run: run_id.clone(), quiz: quiz_id.clone(), challenge, at: now.get() + 1 })?;
+            for sheet_task in &sheet_of(quiz, run_seed(&run_id), challenge).tasks {
                 let task = quiz.tasks.iter().find(|candidate| candidate.id() == sheet_task.id()).ok_or("a sheet task has no task")?;
                 let answer = if run["flaw"].as_str() == Some(sheet_task.id().as_str()) { flawed_answer(task, sheet_task)? } else { perfect_answer(task, sheet_task)? };
-                decided(&mut state, Command::RecordAnswer { id: id(), learner: learner.clone(), run: run_id.clone(), task: sheet_task.id().clone(), answer })?;
+                if sheet_task.seconds().is_some() {
+                    decided(&mut state, Command::OpenTask { id: id(), learner: learner.clone(), run: run_id.clone(), task: sheet_task.id().clone(), at: now.get() + 1 })?;
+                }
+                decided(&mut state, Command::RecordAnswer { id: id(), learner: learner.clone(), run: run_id.clone(), task: sheet_task.id().clone(), answer, at: now.get() + 1 })?;
             }
             let events = decided(&mut state, Command::SubmitRun { id: id(), learner: learner.clone(), run: run_id.clone() })?;
             scores.push(events.iter().find_map(|event| if let Event::RunSubmitted { result, .. } = event { Some(result.score) } else { None }).ok_or("a submission carries no result")?);

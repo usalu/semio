@@ -1,0 +1,2 @@
+import {compileNativeFinancialGrammar,compileNativeFinancialStock} from '../../../../../../../../../🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/💹️financial/🟦️.ts';
+if(process.argv[2]==='stock')await compileNativeFinancialStock(process.env.PRINT_NATIVE_GRAMMAR_WORK_DIR!);else await compileNativeFinancialGrammar(process.env.PRINT_NATIVE_GRAMMAR_WORK_DIR!);

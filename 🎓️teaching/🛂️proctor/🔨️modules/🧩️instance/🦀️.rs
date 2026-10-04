@@ -67,13 +67,14 @@ use axum::http::{header, HeaderMap, HeaderValue, Method, StatusCode, Uri};
 use axum::middleware::{from_fn_with_state, Next};
 use axum::response::{IntoResponse, Response};
 use axum::serve::ListenerExt;
+use quiz::WIRE_VERSION;
 use semio_framework_async::CancelToken;
 use server::contract::{CommandDescriptor, CommandEnvelope, CommandOutcome, ModuleManifest, OfflinePolicy, OpaqueJson, PolicyGrant, PolicyPoint, PolicyTemplate, QueryDescriptor, Rejection, Scope, ServerInstanceDefinition};
 use server::gateway::{undelayed, ClientAddressing, GatewayRouter, InstanceDisclosure, InstanceStores, NoDocumentAuthority, PresenceSettings, RouteGroups, Server, ServerError, ServerInstance, ServerModule, ServerState, PRESENCE_JOIN, PRESENCE_PUBLISH, PRESENCE_RESOURCE, PRESENCE_WATCH};
 use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, StorageError, StorageProfile};
 
-use crate::actors::{deciders, unrelayed, Admission, EnrollmentSaga, ProctorDeciders, ENROLL, HANDLE, IDENTIFY, LEARNER, PROCTOR_SERVICE, WIRE_VERSION};
+use crate::actors::{deciders, unrelayed, Admission, EnrollmentSaga, ProctorDeciders, ENROLL, HANDLE, IDENTIFY, LEARNER, PROCTOR_SERVICE};
 use crate::catalog::LoadedCatalog;
 use crate::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
 use crate::presence::Rooms;
@@ -205,6 +206,7 @@ pub fn manifest(tenant: &str) -> ModuleManifest {
         commands: vec![
             command(IDENTIFY, HANDLE, OfflinePolicy::AuthorityRequired),
             command("quiz.start-run", LEARNER, OfflinePolicy::AuthorityRequired),
+            command("quiz.open-task", LEARNER, OfflinePolicy::Optimistic),
             command("quiz.record-answer", LEARNER, OfflinePolicy::Optimistic),
             command("quiz.submit-run", LEARNER, OfflinePolicy::AuthorityRequired),
             command(ENROLL, LEARNER, OfflinePolicy::AuthorityRequired),
@@ -227,12 +229,12 @@ fn projection_of(kind: QueryKind) -> &'static str {
     }
 }
 
-/// 🎓️ The four command kinds — a registration on a handle or on the learner itself —, the six query
+/// 🎓️ The five command kinds — a registration on a handle or on the learner itself —, the six query
 /// kinds and the learner event streams. The handle streams are readable by nobody.
 pub fn learner_template(tenant: &str) -> PolicyTemplate {
     let grant = |point: PolicyPoint, resource: String, action: &str| PolicyGrant { point, resource, action: action.to_string() };
     let mut grants = vec![grant(PolicyPoint::CommandAdmission, format!("{HANDLE}/*"), IDENTIFY)];
-    grants.extend([IDENTIFY, "quiz.start-run", "quiz.record-answer", "quiz.submit-run"].map(|action| grant(PolicyPoint::CommandAdmission, format!("{LEARNER}/*"), action)));
+    grants.extend([IDENTIFY, "quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run"].map(|action| grant(PolicyPoint::CommandAdmission, format!("{LEARNER}/*"), action)));
     grants.extend(QueryKind::ALL.map(|kind| grant(PolicyPoint::QueryAccess, kind.wire().to_string(), "read")));
     grants.push(grant(PolicyPoint::EventDelivery, format!("stream:{tenant}/{LEARNER}/*"), "read"));
     grants.push(grant(PolicyPoint::Subscription, format!("stream:{tenant}/{LEARNER}/*"), "subscribe"));

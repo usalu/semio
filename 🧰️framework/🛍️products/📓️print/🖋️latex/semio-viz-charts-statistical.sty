@@ -684,9 +684,11 @@
         { \l_semio_viz_cb_w_fp } { \l_semio_viz_cb_h_fp }
         {
           fill = \semio_viz_palette:n
-            { \int_eval:n { ##1 + ####1 > \l_semio_viz_cb_i_int ? 1 : 2 } } ,
+            { \int_compare:nNnTF { ##1 + ####1 } > { \l_semio_viz_cb_i_int } { 1 } { 2 } } ,
           fill~opacity = 0.35 , draw = none
         }
+      \semio_viz_probe_geometry:nx { evaluation-region }
+        { ##1 , ####1 , \int_compare:nNnTF { ##1 + ####1 } > { \l_semio_viz_cb_i_int } { 1 } { 2 } }
     }
   }
 }

@@ -5,7 +5,7 @@
  * same time, so everything here is asserted about the rows of this spec's own learners and about the order of whatever
  * the board holds.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { answerRun, card, enter, expect, goHome, handle, pane, playQuiz, primary, quizOf, shownResults, submitRun, test, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { PAR, answerRun, card, enter, expect, goHome, handle, pane, playQuiz, primary, quizOf, shownResults, submitRun, test, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 /** 📋️ One row of the leaderboard: rank, the cell naming the learner, total, and whether it is the own row. */
 interface BoardRow {
@@ -35,9 +35,9 @@ async function play(device: Device, how: "perfect" | "flawed"): Promise<number> 
   await playQuiz(device, quiz.id);
   await answerRun(device, quiz, how);
   await submitRun(device);
-  const { score } = await shownResults(device);
+  const { points } = await shownResults(device);
   await goHome(device);
-  return score;
+  return points;
 }
 
 test("the leaderboard orders learners by total and updates on a watching device without a reload", async ({ device }) => {
@@ -54,14 +54,14 @@ test("the leaderboard orders learners by total and updates on a watching device 
 
   const strong = await device("de");
   await enter(strong, { kind: "pseudonym", handle: strongName });
-  expect(await play(strong, "perfect")).toBe(100);
+  expect(await play(strong, "perfect")).toBe(PAR.medium);
   await expect(row(strongName)).toBeVisible({ timeout: 40_000 });
 
   const partial = await device("en");
   await enter(partial, { kind: "pseudonym", handle: partialName });
-  const partialScore = await play(partial, "flawed");
-  expect(partialScore).toBeGreaterThan(0);
-  expect(partialScore).toBeLessThan(100);
+  const partialPoints = await play(partial, "flawed");
+  expect(partialPoints).toBeGreaterThan(0);
+  expect(partialPoints).toBeLessThan(PAR.medium);
   await expect(row(partialName)).toBeVisible({ timeout: 40_000 });
 
   const { rows: listed, learners } = await standings(watcher);
@@ -70,17 +70,17 @@ test("the leaderboard orders learners by total and updates on a watching device 
   for (let index = 1; index < listed.length; index++) expect(listed[index]!.total, `row ${index + 1} never outranks the row above`).toBeLessThanOrEqual(listed[index - 1]!.total);
   const strongRow = listed.find((entry) => entry.name.startsWith(strongName))!;
   const partialRow = listed.find((entry) => entry.name.startsWith(partialName))!;
-  expect(strongRow.total).toBe(100);
-  expect(partialRow.total).toBe(partialScore);
+  expect(strongRow.total).toBe(PAR.medium);
+  expect(partialRow.total).toBe(partialPoints);
   expect(strongRow.rank).toBeLessThan(partialRow.rank);
   expect(listed.filter((entry) => entry.own)).toEqual([]);
 
   await primary(card(strong.page, "board")).click();
   await expect(pane(strong.page, "board").locator('tbody tr[aria-current="true"]')).toContainText(strongName);
-  expect((await rows(strong)).filter((entry) => entry.own).map((entry) => entry.total)).toEqual([100]);
+  expect((await rows(strong)).filter((entry) => entry.own).map((entry) => entry.total)).toEqual([PAR.medium]);
 
-  expect(await play(partial, "perfect")).toBe(100);
-  await expect.poll(async () => (await rows(watcher)).find((entry) => entry.name.startsWith(partialName))?.total, { timeout: 40_000 }).toBe(100);
+  expect(await play(partial, "perfect")).toBe(PAR.medium);
+  await expect.poll(async () => (await rows(watcher)).find((entry) => entry.name.startsWith(partialName))?.total, { timeout: 40_000 }).toBe(PAR.medium);
 
   const choice = (group: string, name: string | RegExp): ReturnType<typeof board.locator> => board.getByRole("group", { name: group }).getByRole("button", { name });
   const category = (quiz: string): RegExp => new RegExp(`${quizOf(quiz).title.en.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}$`, "u");
@@ -94,13 +94,13 @@ test("the leaderboard orders learners by total and updates on a watching device 
     await expect(board.locator("[data-board-window]")).toBeVisible();
     await expect(row(strongName)).toBeVisible();
     await expect(row(partialName)).toBeVisible();
-    expect(await mine(), `${period}: both played heating to a perfect score a moment ago`).toEqual([100, 100]);
+    expect(await mine(), `${period}: both played heating to a perfect score a moment ago`).toEqual([PAR.medium, PAR.medium]);
   }
   await choice("Category", category("heating")).click();
   await expect(choice("Category", category("heating"))).toHaveAttribute("aria-pressed", "true");
   await expect(board.getByRole("columnheader", { name: "Points" })).toBeVisible();
   await expect(row(strongName)).toBeVisible();
-  expect(await mine()).toEqual([100, 100]);
+  expect(await mine()).toEqual([PAR.medium, PAR.medium]);
   await choice("Category", category("cooling")).click();
   await expect(choice("Category", category("cooling"))).toHaveAttribute("aria-pressed", "true");
   await expect(board.locator("[data-board-count], [data-board-empty]")).toBeVisible();
@@ -119,6 +119,6 @@ test("the leaderboard orders learners by total and updates on a watching device 
   const ascending = (await rows(watcher)).map((entry) => entry.total);
   expect(ascending.length).toBeGreaterThan(1);
   expect(ascending, "a click on a heading orders the table by its column").toEqual([...ascending].sort((left, right) => left - right));
-  expect(ascending.at(-1)).toBeGreaterThanOrEqual(100);
+  expect(ascending.at(-1)).toBeGreaterThanOrEqual(PAR.medium);
   expect(await watcher.page.evaluate(() => (window as unknown as { neverReloaded?: boolean }).neverReloaded)).toBe(true);
 });

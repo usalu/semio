@@ -1,0 +1,101 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-hierarchy-tree}[2026/09/05 v0.3.0 semio viz namespace hierarchy-tree families]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-hierarchy}
+\RequirePackage{semio-viz-family}
+
+\ExplSyntaxOn
+
+%region 🔖️Keys
+% 📋 `semio / viz / family / tree` and `… / phylogram`. Every key of
+% `semio / viz / hierarchy` (data, id, parent, value, path, delimiter, aggregate,
+% sort), of `semio / viz / hierarchy / layout` (size, nodeSize, separationSame,
+% separationOther, separationDepth, radial, radialOffset) and of
+% `semio / viz / hierarchy / render` (width, height, inset, orientation, link,
+% node, nodeRadius, nodeWidth, nodeHeight, labels, leafLabels, labelColumn, fill,
+% opacity, stroke, strokeWidth) is accepted; these are the family's own:
+%   lengthColumn  (phylogram: column with the branch length)  default `length`
+%   scale         (phylogram: `length` uses branch lengths, `depth` ignores them,
+%                  `equal` is a cladogram with every leaf on the last row) default `length`
+\tl_new:N \l_semio_viz_hierarchy_tree_lengthcol_tl
+\tl_new:N \l_semio_viz_hierarchy_tree_scale_tl
+\fp_new:N \l_semio_viz_hierarchy_tree_max_fp
+
+\keys_define:nn { semio / viz / family / tree } { }
+% ⚙️ `phylogram` adds the two branch-length keys to everything `tree` already accepts.
+\keys_define:nn { semio / viz / family / phylogram } {
+  lengthColumn .tl_set:N = \l_semio_viz_hierarchy_tree_lengthcol_tl,
+  scale        .tl_set:N = \l_semio_viz_hierarchy_tree_scale_tl,
+}
+%endregion 🔖️Keys
+
+%region 🔖️Families
+% 🌳 The Reingold-Tilford node-link tree: every top-down, bottom-up, left-right,
+% right-left and radial rooted tree, and with `node=box, link=orthogonal` the
+% organisation, family, pedigree, ancestor and descendant charts.
+\SemioVizFamily{tree}{
+  \semio_viz_hierarchy_family_setup:nnn { tree } { } {#1}
+  \semio_viz_hierarchy_family_layout:n { tree }
+  \semio_viz_hierarchy_family_draw_tree:
+}
+
+% 🧬 A tree whose ordinate is the accumulated branch length instead of the depth:
+% phylograms, chronograms and — with `scale=equal` — cladograms.
+\SemioVizFamily{phylogram}{
+  \tl_set:Nn \l_semio_viz_hierarchy_tree_lengthcol_tl { length }
+  \tl_set:Nn \l_semio_viz_hierarchy_tree_scale_tl { length }
+  \semio_viz_hierarchy_family_setup:nnn { phylogram }
+    { data = demo-hierarchy-branch, orientation = left-right, link = orthogonal,
+      node = dot, leafLabels = true } {#1}
+  \semio_viz_hierarchy_family_layout:n { tree }
+  \str_if_eq:VnF \l_semio_viz_hierarchy_tree_scale_tl { depth }
+    { \semio_viz_hierarchy_tree_branch_lengths: }
+  \semio_viz_hierarchy_family_draw_tree:
+}
+
+% 📏 Replaces the depth ordinate by the accumulated branch length, normalised on
+% the same extent the layout was given, so the tree still fills its frame.
+\cs_new_protected:Npn \semio_viz_hierarchy_tree_branch_lengths: {
+  \str_if_eq:VnTF \l_semio_viz_hierarchy_tree_scale_tl { equal }
+    {
+      \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+        \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+          { \int_compare:nNnTF { \semio_viz_hierarchy_nk:nn
+              { \c_semio_viz_hierarchy_family_tl } {##1} } = { 0 } { 1 } { 0 } }
+      }
+      \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+        \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+          { \fp_eval:n { \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl }
+              { hgt } { \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl }
+                { root } { 0 } }
+            - \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { hgt } {##1} } }
+      }
+    }
+    {
+      \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+        \semio_viz_table_cell:nnnN { \l_semio_viz_hierarchy_table_tl } {##1}
+          { \l_semio_viz_hierarchy_tree_lengthcol_tl } \l_semio_viz_hierarchy_cell_tl
+        \semio_viz_hierarchy_number:NN \l_semio_viz_hierarchy_cell_tl \l_semio_viz_hierarchy_own_fp
+        \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+          { \fp_eval:n { \l_semio_viz_hierarchy_own_fp
+            + \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { len }
+              { \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { pi } {##1} } } }
+      }
+    }
+  \fp_set:Nn \l_semio_viz_hierarchy_tree_max_fp { 0 }
+  \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+    \fp_set:Nn \l_semio_viz_hierarchy_tree_max_fp { max ( \l_semio_viz_hierarchy_tree_max_fp ,
+      \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { len } {##1} ) }
+  }
+  \semio_viz_hierarchy_map_pre:nn { \c_semio_viz_hierarchy_family_tl } {
+    \semio_viz_hierarchy_set:nnnn { \c_semio_viz_hierarchy_family_tl } { y } {##1}
+      { \fp_eval:n { \l_semio_viz_hierarchy_tree_max_fp == 0 ? 0 :
+        \semio_viz_hierarchy_get:nnn { \c_semio_viz_hierarchy_family_tl } { len } {##1}
+        / \l_semio_viz_hierarchy_tree_max_fp * \l_semio_viz_hierarchy_dy_fp } }
+  }
+}
+%endregion 🔖️Families
+
+\ExplSyntaxOff

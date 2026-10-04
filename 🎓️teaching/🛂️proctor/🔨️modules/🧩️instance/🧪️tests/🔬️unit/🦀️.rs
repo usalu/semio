@@ -12,8 +12,9 @@ fn admission(principal: Principal, target: &str, action: &str) -> PolicyRequest 
 #[test]
 fn the_manifest_declares_the_quiz_surface() {
     let manifest = manifest("proctor-fixture");
-    assert_eq!(manifest.commands.iter().map(|command| command.kind.as_str()).collect::<Vec<_>>(), ["quiz.identify-learner", "quiz.start-run", "quiz.record-answer", "quiz.submit-run", ENROLL]);
-    assert_eq!(manifest.commands.iter().map(|command| command.actor_kind.as_str()).collect::<Vec<_>>(), [HANDLE, LEARNER, LEARNER, LEARNER, LEARNER]);
+    assert_eq!(manifest.commands.iter().map(|command| command.kind.as_str()).collect::<Vec<_>>(), ["quiz.identify-learner", "quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run", ENROLL]);
+    assert_eq!(manifest.commands.iter().map(|command| command.actor_kind.as_str()).collect::<Vec<_>>(), [HANDLE, LEARNER, LEARNER, LEARNER, LEARNER, LEARNER]);
+    assert_eq!(manifest.commands.iter().map(|command| command.offline).collect::<Vec<_>>(), [OfflinePolicy::AuthorityRequired, OfflinePolicy::AuthorityRequired, OfflinePolicy::Optimistic, OfflinePolicy::Optimistic, OfflinePolicy::AuthorityRequired, OfflinePolicy::AuthorityRequired], "a device opens a task and answers while the proctor is away");
     assert_eq!(manifest.queries.iter().map(|query| (query.kind.as_str(), query.projection.as_str())).collect::<Vec<_>>(), [("quiz.catalog", "quiz.catalog"), ("quiz.learner", LEARNERS), ("quiz.run", RUNS), ("quiz.leaderboard", LEADERBOARD), ("quiz.crowd", CROWDS), ("quiz.handle", HANDLES)]);
     assert_eq!(manifest.projections, [STATES, LEARNERS, RUNS, LEADERBOARD, HANDLES, TALLIES, CROWDS, META]);
     assert_eq!(manifest.actor_kinds, [HANDLE, LEARNER]);
@@ -26,11 +27,12 @@ async fn every_caller_may_learn_and_only_the_proctor_may_enroll() {
     assert_eq!(proctor.definition().id, INSTANCE_ID);
     let policy = proctor.state().policy.read().unwrap();
     let service = Principal::ServiceAccount { id: PROCTOR_SERVICE.into() };
-    for (target, action) in [("quiz-handle/616461", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.start-run"), ("quiz-learner/l1", "quiz.record-answer"), ("quiz-learner/l1", "quiz.submit-run")] {
+    for (target, action) in [("quiz-handle/616461", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.identify-learner"), ("quiz-learner/l1", "quiz.start-run"), ("quiz-learner/l1", "quiz.open-task"), ("quiz-learner/l1", "quiz.record-answer"), ("quiz-learner/l1", "quiz.submit-run")] {
         assert!(policy.evaluate(&admission(Principal::Anonymous, target, action)).is_allowed(), "{action}");
     }
     assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-learner/l1", ENROLL)).is_allowed());
     assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", "quiz.start-run")).is_allowed());
+    assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", "quiz.open-task")).is_allowed());
     assert!(!policy.evaluate(&admission(Principal::Anonymous, "quiz-handle/616461", ENROLL)).is_allowed());
     assert!(policy.evaluate(&admission(service.clone(), "quiz-learner/l1", ENROLL)).is_allowed());
     assert!(!policy.evaluate(&admission(service, "quiz-handle/616461", ENROLL)).is_allowed());
@@ -51,7 +53,7 @@ async fn the_admission_the_bus_asks_is_the_one_the_deciders_hold_and_carries_the
     let module = ProctorModule::new(Arc::new(fixture()), Arc::clone(capped.admission()));
     let id = "0123456789abcdef0123456789abcdef";
     let start = |learner: &str| {
-        let command = quiz::Command::StartRun { id: id.into(), learner: learner.into(), run: id.into(), quiz: "power".into() };
+        let command = quiz::Command::StartRun { id: id.into(), learner: learner.into(), run: id.into(), quiz: "power".into(), challenge: quiz::Challenge::Medium, at: 0 };
         CommandEnvelope { payload: serde_json::to_vec(&command).expect("encoded"), ..addressed(LEARNER, learner, id, Some(id)) }
     };
     assert_eq!(module.command_admission(&start(id)), Ok(()));
@@ -127,7 +129,7 @@ async fn a_registration_is_the_one_command_counted_against_the_sign_up_allowance
     let of = |kind: &str, actor: &str| CommandEnvelope { kind: kind.into(), ..addressed(actor, id, id, Some(id)) };
     assert_eq!(module.command_allowance(&of(IDENTIFY, LEARNER)), Some(SIGN_UP), "an anonymous registration");
     assert_eq!(module.command_allowance(&of(IDENTIFY, HANDLE)), Some(SIGN_UP), "a handle claim");
-    for kind in ["quiz.start-run", "quiz.record-answer", "quiz.submit-run", ENROLL, "quiz.unknown"] {
+    for kind in ["quiz.start-run", "quiz.open-task", "quiz.record-answer", "quiz.submit-run", ENROLL, "quiz.unknown"] {
         assert_eq!(module.command_allowance(&of(kind, LEARNER)), None, "{kind}");
     }
     assert_eq!((IDENTIFY, SIGN_UP), ("quiz.identify-learner", "sign-up"));
@@ -140,7 +142,7 @@ fn addressed(kind: &str, id: &str, command: &str, idempotency: Option<&str>) -> 
     CommandEnvelope {
         command_id: CommandId(command.into()),
         kind: "quiz.start-run".into(),
-        version: 1,
+        version: WIRE_VERSION,
         target: ActorKey { tenant: TenantId("proctor-fixture".into()), kind: kind.into(), id: id.into() },
         scope: Scope("proctor-fixture".into()),
         principal: Principal::Anonymous,

@@ -9,6 +9,7 @@
 \RequirePackage{semio-viz-scale}\RequirePackage{semio-viz-format}\RequirePackage{semio-viz-mark}\RequirePackage{semio-viz-theme}\RequirePackage{semio-viz-probe}\RequirePackage{semio-viz-family}
 
 \ExplSyntaxOn
+\cs_generate_variant:Nn \regex_match:nnTF { nV }
 
 %region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-guide-orient }
@@ -64,7 +65,7 @@
 % Roles: domain, tick, tick-minor, grid, grid-minor, label, title.
 \tl_new:N \l_semio_viz_guide_style_tl
 
-\cs_new_protected:Npn \semio_viz_guide_style:nN #1#2 {
+\cs_new_protected:Npn \semio_viz_guide_theme_style:nN #1#2 {
   \str_case:nnF {#1} {
     { domain } {
       \semio_viz_theme_chrome:nN { border-emphasized } \l_semio_viz_guide_chrome_tl
@@ -104,16 +105,98 @@
     \tl_set_eq:NN #2 \l_semio_viz_guide_chrome_tl
   }
 }
+\tl_new:N \l_semio_viz_guide_stroke_tl
+\tl_new:N \l_semio_viz_guide_fill_tl
+\tl_new:N \l_semio_viz_guide_grid_stroke_tl
+\tl_new:N \l_semio_viz_guide_grid_dash_tl
+\tl_new:N \l_semio_viz_guide_stroke_width_tl
+\tl_new:N \l_semio_viz_guide_label_size_tl
+\tl_new:N \l_semio_viz_guide_title_size_tl
+\tl_new:N \l_semio_viz_guide_extra_style_tl
+\tl_new:N \l_semio_viz_guide_custom_color_tl
+\tl_new:N \l_semio_viz_guide_custom_hex_tl
+
+% 🧼 Clears every guide override before its keys are parsed.
+\cs_new_protected:Npn \semio_viz_guide_custom_reset: {
+  \tl_clear:N \l_semio_viz_guide_stroke_tl
+  \tl_clear:N \l_semio_viz_guide_fill_tl
+  \tl_clear:N \l_semio_viz_guide_grid_stroke_tl
+  \tl_clear:N \l_semio_viz_guide_grid_dash_tl
+  \tl_clear:N \l_semio_viz_guide_stroke_width_tl
+  \tl_clear:N \l_semio_viz_guide_label_size_tl
+  \tl_clear:N \l_semio_viz_guide_title_size_tl
+  \tl_clear:N \l_semio_viz_guide_extra_style_tl
+}
+
+% 🌈 Accepts a named TikZ color or an explicitly authored hexadecimal color.
+\cs_new_protected:Npn \semio_viz_guide_color:nN #1#2 {
+  \tl_set:Nx \l_semio_viz_guide_custom_hex_tl { \tl_to_str:n {#1} }
+  \regex_replace_all:nnN { [^a-zA-Z0-9] } {} \l_semio_viz_guide_custom_hex_tl
+  \regex_match:nVTF { \A [0-9a-fA-F]{6} \Z } \l_semio_viz_guide_custom_hex_tl {
+    \use:x { \exp_not:N \definecolor { semio-viz-guide-custom } { HTML } { \exp_not:V \l_semio_viz_guide_custom_hex_tl } }
+    \tl_set:Nn #2 { semio-viz-guide-custom }
+  } { \tl_set:Nn #2 {#1} }
+}
+\cs_generate_variant:Nn \semio_viz_guide_color:nN { VN }
+
+% 🎚️ Applies schema guide overrides after the selected theme role.
+\cs_new_protected:Npn \semio_viz_guide_style:nN #1#2 {
+  \semio_viz_guide_theme_style:nN {#1} #2
+  \str_case:nnF {#1} {
+    { label } { \tl_if_empty:NF \l_semio_viz_guide_fill_tl { \semio_viz_guide_color:VN \l_semio_viz_guide_fill_tl \l_semio_viz_guide_custom_color_tl \tl_put_right:Nx #2 { ,text=\exp_not:V \l_semio_viz_guide_custom_color_tl } }
+      \tl_if_empty:NF \l_semio_viz_guide_label_size_tl { \tl_put_right:Nx #2 { ,font=\exp_not:N \normalfont \exp_not:N \SemioSans \exp_not:N \fontsize {\l_semio_viz_guide_label_size_tl}{\fp_eval:n{1.2*\l_semio_viz_guide_label_size_tl}}\exp_not:N \selectfont } } }
+    { title } { \tl_if_empty:NF \l_semio_viz_guide_fill_tl { \semio_viz_guide_color:VN \l_semio_viz_guide_fill_tl \l_semio_viz_guide_custom_color_tl \tl_put_right:Nx #2 { ,text=\exp_not:V \l_semio_viz_guide_custom_color_tl } }
+      \tl_if_empty:NF \l_semio_viz_guide_title_size_tl { \tl_put_right:Nx #2 { ,font=\exp_not:N \normalfont \exp_not:N \SemioMono \exp_not:N \fontsize {\l_semio_viz_guide_title_size_tl}{\fp_eval:n{1.2*\l_semio_viz_guide_title_size_tl}}\exp_not:N \selectfont } } }
+  } {
+    \tl_if_empty:NF \l_semio_viz_guide_stroke_tl { \semio_viz_guide_color:VN \l_semio_viz_guide_stroke_tl \l_semio_viz_guide_custom_color_tl \tl_put_right:Nx #2 { ,draw=\exp_not:V \l_semio_viz_guide_custom_color_tl } }
+    \str_if_eq:nnT {#1}{grid} {
+      \tl_if_empty:NF \l_semio_viz_guide_grid_stroke_tl { \semio_viz_guide_color:VN \l_semio_viz_guide_grid_stroke_tl \l_semio_viz_guide_custom_color_tl \tl_put_right:Nx #2 { ,draw=\exp_not:V \l_semio_viz_guide_custom_color_tl } }
+      \tl_if_empty:NF \l_semio_viz_guide_grid_dash_tl { \semio_viz_guide_dash:VN \l_semio_viz_guide_grid_dash_tl \l_semio_viz_guide_dash_tl \tl_put_right:Nx #2 { ,dash~pattern=\exp_not:V \l_semio_viz_guide_dash_tl } }
+    }
+    \tl_if_empty:NF \l_semio_viz_guide_stroke_width_tl { \tl_put_right:Nx #2 { ,line~width=\l_semio_viz_guide_stroke_width_tl mm } }
+  }
+  \tl_put_right:Nx #2 { ,\exp_not:V \l_semio_viz_guide_extra_style_tl }
+}
 %endregion 🔖️Style
 
 %region 🔖️TickText
 % 🔢 Tick and legend text: the value through semio-viz-format's specifier grammar,
 % or the bare value when no specifier was given -- an empty spec is not the same
 % as the specifier `` and must not go through the formatter.
+\tl_new:N \l_semio_viz_guide_format_spec_tl
+\tl_new:N \l_semio_viz_guide_format_value_tl
+\tl_new:N \l_semio_viz_guide_dash_tl
+\clist_new:N \l_semio_viz_guide_dash_clist
+\int_new:N \l_semio_viz_guide_dash_index_int
+
+% 🧵 Converts numeric dash lengths into a TikZ dash pattern.
+\cs_new_protected:Npn \semio_viz_guide_dash:nN #1#2 {
+  \regex_match:nnTF {\A\s*[0-9]} {#1} {
+    \tl_set:Nn \l_semio_viz_guide_dash_tl {#1}
+    \tl_replace_all:Nnn \l_semio_viz_guide_dash_tl {~} {,}
+    \clist_set:NV \l_semio_viz_guide_dash_clist \l_semio_viz_guide_dash_tl
+    \tl_clear:N #2 \int_zero:N \l_semio_viz_guide_dash_index_int
+    \clist_map_inline:Nn \l_semio_viz_guide_dash_clist {\tl_put_right:Nx #2 {\int_if_even:nTF{\l_semio_viz_guide_dash_index_int}{on}{off}~##1mm~}\int_incr:N \l_semio_viz_guide_dash_index_int}
+  } {\tl_set:Nn #2 {#1}}
+}
+\cs_generate_variant:Nn \semio_viz_guide_dash:nN {VN}
+
+% 🗓️ Formats numeric and temporal labels in the explicitly selected locale.
 \cs_new_protected:Npn \semio_viz_guide_format:nnN #1#2#3 {
-  \tl_if_empty:nTF {#1}
-    { \tl_set:Nn #3 {#2} }
-    { \semio_viz_format:nnN {#1} {#2} #3 }
+  \tl_set:Nn \l_semio_viz_guide_format_spec_tl {#1}
+  \tl_replace_all:Nnn \l_semio_viz_guide_format_spec_tl {\%} {\c_percent_str}
+  \tl_set:Nx \l_semio_viz_guide_format_spec_tl {\l_semio_viz_guide_format_spec_tl}
+  \tl_if_empty:NTF \l_semio_viz_guide_format_spec_tl {\tl_set:Nn #3 {#2}} {
+    \regex_match:nVTF {\%[a-zA-Z]} \l_semio_viz_guide_format_spec_tl {
+      \tl_set:Nn \l_semio_viz_guide_format_value_tl {#2}
+      \regex_replace_once:nnN {Z\Z} {} \l_semio_viz_guide_format_value_tl
+      \regex_match:nnT {\A[-+]?[0-9]+(\.[0-9]+)?\Z} {#2} {
+        \semio_viz_scale_epoch_iso:nN {#2} \l_semio_viz_guide_format_value_tl
+        \tl_put_right:Nx \l_semio_viz_guide_format_value_tl {T\semio_viz_time_pad:nn{2}{\fp_to_int:n{floor((#2-floor(#2/86400000)*86400000)/3600000)}}:\semio_viz_time_pad:nn{2}{\fp_to_int:n{floor((#2-floor(#2/3600000)*3600000)/60000)}}:\semio_viz_time_pad:nn{2}{\fp_to_int:n{floor((#2-floor(#2/60000)*60000)/1000)}}}
+      }
+      \semio_viz_time_format:VVN \l_semio_viz_guide_format_spec_tl \l_semio_viz_guide_format_value_tl #3
+    } {\semio_viz_format:VnN \l_semio_viz_guide_format_spec_tl {#2} #3}
+  }
 }
 \cs_generate_variant:Nn \semio_viz_guide_format:nnN { VnN , VVN }
 %endregion 🔖️TickText
@@ -221,6 +304,16 @@
 \bool_new:N \l_semio_viz_axis_labels_bool
 
 \keys_define:nn { semio / viz / axis } {
+  stroke .tl_set:N = \l_semio_viz_guide_stroke_tl,
+  fill .tl_set:N = \l_semio_viz_guide_fill_tl,
+  strokeWidth .tl_set:N = \l_semio_viz_guide_stroke_width_tl,
+  labelSize .tl_set:N = \l_semio_viz_guide_label_size_tl,
+  titleSize .tl_set:N = \l_semio_viz_guide_title_size_tl,
+  gridStroke .tl_set:N = \l_semio_viz_guide_grid_stroke_tl,
+  gridDash .tl_set:N = \l_semio_viz_guide_grid_dash_tl,
+  style .tl_set:N = \l_semio_viz_guide_extra_style_tl,
+  domain .bool_set:N = \l_semio_viz_axis_domain_bool,
+  labelRotation .fp_set:N = \l_semio_viz_axis_label_rotate_fp,
   scale .tl_set:N = \l_semio_viz_axis_scale_tl,
   orient .tl_set:N = \l_semio_viz_axis_orient_tl,
   at .tl_set:N = \l_semio_viz_axis_at_tl,
@@ -258,6 +351,7 @@
 
 % ♻️ Puts every axis key back to its documented default before an option list is read.
 \cs_new_protected:Npn \semio_viz_guide_keys_reset: {
+  \semio_viz_guide_custom_reset:
   \tl_set:Nn \l_semio_viz_axis_scale_tl { x }
   \tl_set:Nn \l_semio_viz_axis_orient_tl { bottom }
   \tl_clear:N \l_semio_viz_axis_at_tl
@@ -658,19 +752,34 @@
 }
 
 % 🏷️ The axis title, set at the start, centre or end of the domain line by `titleAnchor`.
+
+% 🧭 Axis title position in the resolved Cartesian or angular frame.
+\cs_new_protected:Npn \semio_viz_guide_title_position: {
+  \bool_if:NTF \l_semio_viz_guide_polar_bool {
+    \fp_set:Nn \l_semio_viz_guide_b_fp { \l_semio_viz_axis_start_angle_fp+\l_semio_viz_guide_a_fp*(\l_semio_viz_axis_end_angle_fp-\l_semio_viz_axis_start_angle_fp) }
+    \fp_set:Nn \l_semio_viz_guide_px_fp { \l_semio_viz_guide_cx_fp+(\l_semio_viz_axis_outer_radius_fp+\l_semio_viz_axis_tick_size_fp+\l_semio_viz_axis_title_gap_fp)*cosd(\l_semio_viz_guide_b_fp) }
+    \fp_set:Nn \l_semio_viz_guide_py_fp { \l_semio_viz_guide_cy_fp+(\l_semio_viz_axis_outer_radius_fp+\l_semio_viz_axis_tick_size_fp+\l_semio_viz_axis_title_gap_fp)*sind(\l_semio_viz_guide_b_fp) }
+  } {
+    \fp_set:Nn \l_semio_viz_guide_px_fp { \l_semio_viz_guide_ax_fp+\l_semio_viz_guide_a_fp*(\l_semio_viz_guide_bx_fp-\l_semio_viz_guide_ax_fp)+\l_semio_viz_guide_nx_fp*(\l_semio_viz_axis_tick_size_fp+\l_semio_viz_axis_title_gap_fp) }
+    \fp_set:Nn \l_semio_viz_guide_py_fp { \l_semio_viz_guide_ay_fp+\l_semio_viz_guide_a_fp*(\l_semio_viz_guide_by_fp-\l_semio_viz_guide_ay_fp)+\l_semio_viz_guide_ny_fp*(\l_semio_viz_axis_tick_size_fp+\l_semio_viz_axis_title_gap_fp) }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_guide_probe_title: {
+  \semio_viz_probe_geometry:nx { axis-title } { \fp_use:N \l_semio_viz_guide_px_fp , \fp_use:N \l_semio_viz_guide_py_fp }
+}
 \cs_new_protected:Npn \semio_viz_guide_title_draw: {
   \tl_if_empty:NF \l_semio_viz_axis_title_tl {
     \str_case:VnF \l_semio_viz_axis_title_anchor_tl {
       { start } { \fp_set:Nn \l_semio_viz_guide_a_fp { 0 } }
       { end } { \fp_set:Nn \l_semio_viz_guide_a_fp { 1 } }
     } { \fp_set:Nn \l_semio_viz_guide_a_fp { 0.5 } }
+    \semio_viz_guide_title_position:
+    \semio_viz_guide_probe_title:
     \semio_viz_guide_style:nN { title } \l_semio_viz_guide_style_tl
     \use:x {
       \exp_not:N \node [ \exp_not:V \l_semio_viz_guide_style_tl , anchor=center ]
-        at ( \fp_eval:n { \l_semio_viz_guide_ax_fp + \l_semio_viz_guide_a_fp * ( \l_semio_viz_guide_bx_fp - \l_semio_viz_guide_ax_fp )
-                          + \l_semio_viz_guide_nx_fp * ( \l_semio_viz_axis_tick_size_fp + \l_semio_viz_axis_title_gap_fp ) } ,
-             \fp_eval:n { \l_semio_viz_guide_ay_fp + \l_semio_viz_guide_a_fp * ( \l_semio_viz_guide_by_fp - \l_semio_viz_guide_ay_fp )
-                          + \l_semio_viz_guide_ny_fp * ( \l_semio_viz_axis_tick_size_fp + \l_semio_viz_axis_title_gap_fp ) } )
+        at ( \fp_use:N \l_semio_viz_guide_px_fp , \fp_use:N \l_semio_viz_guide_py_fp )
         { \exp_not:V \l_semio_viz_axis_title_tl } ;
     }
   }
@@ -794,11 +903,36 @@
 \seq_new:N \l_semio_viz_legend_entries_seq
 \box_new:N \l_semio_viz_legend_box
 
+\clist_new:N \l_semio_viz_legend_tick_values_clist
+\tl_new:N \l_semio_viz_legend_side_tl
+\tl_new:N \l_semio_viz_legend_x_tl
+\tl_new:N \l_semio_viz_legend_y_tl
+\tl_new:N \l_semio_viz_legend_channel_tl
+\tl_new:N \l_semio_viz_legend_size_mode_tl
+\tl_new:N \l_semio_viz_legend_spacing_tl
+\tl_new:N \l_semio_viz_legend_mapped_tl
+\fp_new:N \l_semio_viz_legend_offset_fp
 \keys_define:nn { semio / viz / legend } {
+  stroke .tl_set:N = \l_semio_viz_guide_stroke_tl,
+  fill .tl_set:N = \l_semio_viz_guide_fill_tl,
+  strokeWidth .tl_set:N = \l_semio_viz_guide_stroke_width_tl,
+  labelSize .tl_set:N = \l_semio_viz_guide_label_size_tl,
+  titleSize .tl_set:N = \l_semio_viz_guide_title_size_tl,
+  gridStroke .tl_set:N = \l_semio_viz_guide_grid_stroke_tl,
+  gridDash .tl_set:N = \l_semio_viz_guide_grid_dash_tl,
+  style .tl_set:N = \l_semio_viz_guide_extra_style_tl,
+  tickValues .clist_set:N = \l_semio_viz_legend_tick_values_clist,
+  tickFormat .tl_set:N = \l_semio_viz_legend_format_tl,
+  x .tl_set:N = \l_semio_viz_legend_x_tl,
+  y .tl_set:N = \l_semio_viz_legend_y_tl,
+  spacing .tl_set:N = \l_semio_viz_legend_spacing_tl,
+  offset .fp_set:N = \l_semio_viz_legend_offset_fp,
+  channel .tl_set:N = \l_semio_viz_legend_channel_tl,
+  sizeMode .tl_set:N = \l_semio_viz_legend_size_mode_tl,
   scale .tl_set:N = \l_semio_viz_legend_scale_tl,
   kind .tl_set:N = \l_semio_viz_legend_kind_tl,
   title .tl_set:N = \l_semio_viz_legend_title_tl,
-  orient .tl_set:N = \l_semio_viz_legend_orient_tl,
+  orient .code:n = { \str_case:nnF {#1} { {top}{\tl_set:Nn \l_semio_viz_legend_orient_tl {horizontal}\tl_set:Nn \l_semio_viz_legend_side_tl {top}} {bottom}{\tl_set:Nn \l_semio_viz_legend_orient_tl {horizontal}\tl_set:Nn \l_semio_viz_legend_side_tl {bottom}} {left}{\tl_set:Nn \l_semio_viz_legend_orient_tl {vertical}\tl_set:Nn \l_semio_viz_legend_side_tl {left}} {right}{\tl_set:Nn \l_semio_viz_legend_orient_tl {vertical}\tl_set:Nn \l_semio_viz_legend_side_tl {right}} } {\tl_set:Nn \l_semio_viz_legend_orient_tl {#1}} },
   at .tl_set:N = \l_semio_viz_legend_at_tl,
   columns .int_set:N = \l_semio_viz_legend_columns_int,
   ticks .int_set:N = \l_semio_viz_legend_ticks_int,
@@ -813,6 +947,10 @@
 
 % ♻️ Puts every legend key back to its documented default before an option list is read.
 \cs_new_protected:Npn \semio_viz_legend_keys_reset: {
+  \semio_viz_guide_custom_reset:
+  \clist_clear:N \l_semio_viz_legend_tick_values_clist
+  \tl_clear:N \l_semio_viz_legend_side_tl \tl_clear:N \l_semio_viz_legend_x_tl \tl_clear:N \l_semio_viz_legend_y_tl \tl_clear:N \l_semio_viz_legend_channel_tl \tl_clear:N \l_semio_viz_legend_spacing_tl
+  \tl_set:Nn \l_semio_viz_legend_size_mode_tl {area} \fp_zero:N \l_semio_viz_legend_offset_fp
   \tl_set:Nn \l_semio_viz_legend_scale_tl { x }
   \tl_set:Nn \l_semio_viz_legend_kind_tl { swatch }
   \tl_clear:N \l_semio_viz_legend_title_tl
@@ -832,14 +970,17 @@
 % 📏 Width of typeset legend text in millimetres, so a horizontal legend advances
 % by what the label actually occupies instead of a guessed column width.
 \cs_new_protected:Npn \semio_viz_legend_text_width:nN #1#2 {
-  \hbox_set:Nn \l_semio_viz_legend_box { \normalfont \c_semio_viz_theme_font_label_tl #1 }
-  \fp_set:Nn #2 { \dim_to_fp:n { \box_wd:N \l_semio_viz_legend_box } / \dim_to_fp:n { 1mm } }
+  \pgfinterruptpicture
+  \hbox_gset:Nn \l_semio_viz_legend_box { \normalfont \c_semio_viz_theme_font_label_tl \tl_if_empty:NF \l_semio_viz_guide_label_size_tl { \fontsize{\l_semio_viz_guide_label_size_tl}{\fp_eval:n{1.2*\l_semio_viz_guide_label_size_tl}}\selectfont } #1 }
+  \endpgfinterruptpicture
+  \fp_set:Nn #2 { 100 * \dim_to_fp:n { \box_wd:N \l_semio_viz_legend_box } / \dim_to_fp:n { 100mm } }
 }
 
 % 📋 The entries the legend will show: the explicit list, the scale's levels, or its ticks when the
 % legend is a gradient or a size ramp.
 \cs_new_protected:Npn \semio_viz_legend_entries: {
   \seq_clear:N \l_semio_viz_legend_entries_seq
+  \clist_if_empty:NTF \l_semio_viz_legend_tick_values_clist {
   \str_case:VnF \l_semio_viz_legend_kind_tl {
     { gradient } {
       \semio_viz_guide_scale_ticks:VnN \l_semio_viz_legend_scale_tl
@@ -853,6 +994,7 @@
     \exp_args:NV \semio_viz_guide_domain_items:nN \l_semio_viz_legend_scale_tl
       \l_semio_viz_legend_entries_seq
   }
+  } {\seq_set_from_clist:NN \l_semio_viz_legend_entries_seq \l_semio_viz_legend_tick_values_clist}
 }
 
 % 🟦 One categorical entry: its glyph and its label, both anchored on the entry origin.
@@ -860,7 +1002,7 @@
   \str_case:VnF \l_semio_viz_legend_kind_tl {
     { line } {
       \use:x {
-        \exp_not:N \draw [ \exp_not:V \l_semio_viz_legend_color_tl , line~width=\semio_viz_theme_stroke: ]
+        \exp_not:N \draw [ \exp_not:V \l_semio_viz_legend_color_tl , line~width=\tl_if_empty:NTF \l_semio_viz_guide_stroke_width_tl {\semio_viz_theme_stroke:}{\l_semio_viz_guide_stroke_width_tl mm},\str_if_eq:VnT \l_semio_viz_legend_channel_tl {dash}{dash~pattern=\exp_not:V \l_semio_viz_guide_dash_tl},\exp_not:V \l_semio_viz_guide_extra_style_tl ]
           ( \fp_eval:n { \l_semio_viz_legend_col_fp } ,
             \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } )
           -- ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp } ,
@@ -868,13 +1010,9 @@
       }
     }
     { symbol } {
-      \use:x {
-        \exp_not:N \node [ \exp_not:V \l_semio_viz_legend_symbol_tl , fill=\exp_not:V \l_semio_viz_legend_color_tl ,
-                           draw=none , inner~sep=0pt ,
-                           minimum~size=\fp_eval:n { \l_semio_viz_legend_swatch_fp } mm ]
-          at ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp / 2 } ,
-               \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp / 2 } ) {} ;
-      }
+      \semio_viz_path_begin:nnn {\l_semio_viz_legend_col_fp+\l_semio_viz_legend_swatch_fp/2}{\l_semio_viz_legend_row_fp+\l_semio_viz_legend_swatch_fp/2}{\c_true_bool}
+      \exp_args:NV \semio_viz_symbol_draw:nn \l_semio_viz_legend_symbol_tl {\l_semio_viz_legend_swatch_fp^2}
+      \use:x {\exp_not:N \path [fill=\exp_not:V \l_semio_viz_legend_color_tl,draw=none,\exp_not:V \l_semio_viz_guide_extra_style_tl] \exp_not:V \l_semio_viz_path_tikz_tl;}
     }
     { pattern } {
       \use:x {
@@ -897,7 +1035,7 @@
     }
   } {
     \use:x {
-      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ]
+      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ,\exp_not:V \l_semio_viz_guide_extra_style_tl ]
         ( \fp_eval:n { \l_semio_viz_legend_col_fp } , \fp_eval:n { \l_semio_viz_legend_row_fp } )
         rectangle ( \fp_eval:n { \l_semio_viz_legend_col_fp + \l_semio_viz_legend_swatch_fp } ,
                     \fp_eval:n { \l_semio_viz_legend_row_fp + \l_semio_viz_legend_swatch_fp } ) ;
@@ -909,11 +1047,25 @@
   }
 }
 
+% 📏 Reserves the authored font em line box above each legend row.
+\cs_new:Npn \semio_viz_legend_line_extent:n #1 {
+  \fp_eval:n {max(\l_semio_viz_legend_swatch_fp,
+    \str_if_eq:nnTF{#1}{title}
+      {\tl_if_empty:NTF\l_semio_viz_guide_title_size_tl{7.2}{\l_semio_viz_guide_title_size_tl}}
+      {\tl_if_empty:NTF\l_semio_viz_guide_label_size_tl{6.6}{\l_semio_viz_guide_label_size_tl}}
+    *\dim_to_fp:n{1pt}/\dim_to_fp:n{1mm})}
+}
+
 % 🎨 The categorical legend: one swatch and label per entry, down a column or across `columns`.
 \cs_new_protected:Npn \semio_viz_legend_categorical: {
   \int_zero:N \l_semio_viz_legend_index_int
   \seq_map_inline:Nn \l_semio_viz_legend_entries_seq {
     \semio_viz_theme_color:nN { \l_semio_viz_legend_index_int } \l_semio_viz_legend_color_tl
+    \semio_viz_scale_value:VnN \l_semio_viz_legend_scale_tl {##1} \l_semio_viz_legend_mapped_tl
+    \str_case:VnF \l_semio_viz_legend_channel_tl {
+      {shape}{\tl_set_eq:NN \l_semio_viz_legend_symbol_tl \l_semio_viz_legend_mapped_tl}
+      {dash}{\semio_viz_guide_dash:VN \l_semio_viz_legend_mapped_tl \l_semio_viz_guide_dash_tl}
+    } {\regex_match:nVTF {\A[-+]?[0-9]+(\.[0-9]+)?\Z} \l_semio_viz_legend_mapped_tl {} {\semio_viz_guide_color:VN \l_semio_viz_legend_mapped_tl \l_semio_viz_legend_color_tl}}
     \str_if_eq:VnT \l_semio_viz_legend_orient_tl { vertical }
       {
         \fp_set:Nn \l_semio_viz_legend_col_fp { \l_semio_viz_legend_x_fp
@@ -922,7 +1074,7 @@
         \fp_set:Nn \l_semio_viz_legend_row_fp { \l_semio_viz_legend_y_fp
           - \l_semio_viz_legend_swatch_fp
           - \int_div_truncate:nn { \l_semio_viz_legend_index_int } { \l_semio_viz_legend_columns_int }
-            * ( \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_item_gap_fp ) }
+            * ( \semio_viz_legend_line_extent:n{label} + \l_semio_viz_legend_item_gap_fp ) }
       }
     \str_if_eq:VnT \l_semio_viz_legend_orient_tl { horizontal }
       {
@@ -959,8 +1111,11 @@
   \int_step_inline:nn { \l_semio_viz_legend_slices_int } {
     \semio_viz_theme_ramp_color:nN
       { \fp_eval:n { ( ##1 - 0.5 ) / \l_semio_viz_legend_slices_int } } \l_semio_viz_legend_color_tl
+    \tl_set:Nx \l_semio_viz_legend_mapped_tl {\fp_eval:n{\l_semio_viz_guide_lo_fp+(##1-0.5)/\l_semio_viz_legend_slices_int*(\l_semio_viz_guide_hi_fp-\l_semio_viz_guide_lo_fp)}}
+    \semio_viz_scale_value:VVN \l_semio_viz_legend_scale_tl \l_semio_viz_legend_mapped_tl \l_semio_viz_legend_mapped_tl
+    \regex_match:nVTF {\A[-+]?[0-9]+(\.[0-9]+)?\Z} \l_semio_viz_legend_mapped_tl {} {\semio_viz_guide_color:VN \l_semio_viz_legend_mapped_tl \l_semio_viz_legend_color_tl}
     \use:x {
-      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ]
+      \exp_not:N \fill [ \exp_not:V \l_semio_viz_legend_color_tl ,\exp_not:V \l_semio_viz_guide_extra_style_tl ]
         ( \fp_eval:n { \l_semio_viz_legend_x_fp + ( ##1 - 1 ) / \l_semio_viz_legend_slices_int * \l_semio_viz_legend_length_fp } ,
           \fp_eval:n { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp } )
         rectangle ( \fp_eval:n { \l_semio_viz_legend_x_fp + ##1 / \l_semio_viz_legend_slices_int * \l_semio_viz_legend_length_fp } ,
@@ -999,6 +1154,7 @@
   \seq_map_inline:Nn \l_semio_viz_legend_entries_seq {
     \semio_viz_guide_style:nN { domain } \l_semio_viz_guide_style_tl
     \semio_viz_scale_map:VnN \l_semio_viz_legend_scale_tl {##1} \l_semio_viz_legend_value_fp
+    \str_if_eq:VnT \l_semio_viz_legend_size_mode_tl {area} {\fp_set:Nn \l_semio_viz_legend_value_fp {sqrt(max(0,\l_semio_viz_legend_value_fp)/pi)}}
     \fp_set:Nn \l_semio_viz_legend_col_fp
       { \l_semio_viz_legend_x_fp + \l_semio_viz_legend_width_fp + \l_semio_viz_legend_value_fp }
     \fp_set:Nn \l_semio_viz_legend_row_fp { \l_semio_viz_legend_y_fp - \l_semio_viz_legend_swatch_fp }
@@ -1036,6 +1192,11 @@
       \fp_set:Nn \l_semio_viz_legend_y_fp { \l_semio_viz_height_fp - 2 }
     }
     { \semio_viz_guide_pair:VNN \l_semio_viz_legend_at_tl \l_semio_viz_legend_x_fp \l_semio_viz_legend_y_fp }
+  \str_case:Vn \l_semio_viz_legend_channel_tl { {fill}{\tl_set:Nn \l_semio_viz_legend_kind_tl {swatch}} {stroke}{\tl_set:Nn \l_semio_viz_legend_kind_tl {line}} {dash}{\tl_set:Nn \l_semio_viz_legend_kind_tl {line}} {shape}{\tl_set:Nn \l_semio_viz_legend_kind_tl {symbol}} {size}{\tl_set:Nn \l_semio_viz_legend_kind_tl {size}} }
+  \str_case:Vn \l_semio_viz_legend_side_tl { {top}{\fp_set:Nn \l_semio_viz_legend_y_fp {\l_semio_viz_height_fp+\l_semio_viz_legend_offset_fp}} {bottom}{\fp_set:Nn \l_semio_viz_legend_y_fp {-\l_semio_viz_legend_offset_fp}} {left}{\fp_set:Nn \l_semio_viz_legend_x_fp {-\l_semio_viz_legend_length_fp-\l_semio_viz_legend_offset_fp}} {right}{\fp_set:Nn \l_semio_viz_legend_x_fp {\l_semio_viz_width_fp+\l_semio_viz_legend_offset_fp}} }
+  \tl_if_empty:NF \l_semio_viz_legend_x_tl {\fp_set:Nn \l_semio_viz_legend_x_fp {\l_semio_viz_legend_x_tl}}
+  \tl_if_empty:NF \l_semio_viz_legend_y_tl {\fp_set:Nn \l_semio_viz_legend_y_fp {\l_semio_viz_legend_y_tl}}
+  \tl_if_empty:NF \l_semio_viz_legend_spacing_tl {\fp_set:Nn \l_semio_viz_legend_item_gap_fp {max(0,\l_semio_viz_legend_spacing_tl-\l_semio_viz_legend_swatch_fp)}}
   \tl_if_empty:NF \l_semio_viz_legend_title_tl {
     \semio_viz_guide_style:nN { title } \l_semio_viz_guide_labelstyle_tl
     \use:x {
@@ -1043,7 +1204,7 @@
         at ( \fp_eval:n { \l_semio_viz_legend_x_fp } , \fp_eval:n { \l_semio_viz_legend_y_fp } )
         { \exp_not:V \l_semio_viz_legend_title_tl } ;
     }
-    \fp_sub:Nn \l_semio_viz_legend_y_fp { \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_item_gap_fp }
+    \fp_sub:Nn \l_semio_viz_legend_y_fp { \semio_viz_legend_line_extent:n{title} + \l_semio_viz_legend_item_gap_fp }
   }
   \semio_viz_legend_entries:
   \fp_zero:N \l_semio_viz_legend_width_fp

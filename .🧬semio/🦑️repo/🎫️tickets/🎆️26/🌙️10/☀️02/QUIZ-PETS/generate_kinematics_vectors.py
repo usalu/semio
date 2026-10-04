@@ -45,7 +45,7 @@ GAZE = load(os.path.join(PETS, "🧪️tests", "👀️gaze-tracking", "🐍️.
 
 
 def write(directory, document):
-    """💾️ Writes one fixture as indented UTF-8 JSON with a trailing newline."""
+    """💾️ Writes one fixture as indented UTF-8 JSON with a trailing newline: beside the old file first, then renamed over it, because a file a running test watcher holds cannot be truncated on Windows."""
     path = os.path.join(PETS, "🧫️fixtures", directory, "🔣️.json")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     payload = (json.dumps(document, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode("utf-8")
@@ -54,8 +54,9 @@ def write(directory, document):
         return
     for _ in range(20):
         try:
-            with open(path, "wb") as handle:
+            with open(path + ".new", "wb") as handle:
                 handle.write(payload)
+            os.replace(path + ".new", path)
             break
         except OSError as error:
             print("retrying %s after %s" % (os.path.relpath(path, ROOT), error))
@@ -110,15 +111,34 @@ def trigonometry():
     clamps = [("inside", 0.5, 0, 1), ("below", -0.25, 0, 1), ("above", 1.75, 0, 1), ("at-low", 0, 0, 1), ("at-high", 1, 0, 1), ("negative-range", -3.5, -2, -1), ("inside-negative-range", -1.5, -2, -1), ("equal-bounds", 7, 3, 3), ("crossed-below", -5, 2, -2), ("crossed-between", 0, 2, -2), ("crossed-above", 5, 2, -2), ("affinity-floor", -0.9, -0.6, 1), ("wide", 123456.789, -1000000, 1000000)]
     lerps = [("start", 2, 10, 0), ("end", 2, 10, 1), ("middle", 2, 10, 0.5), ("quarter", 2, 10, 0.25), ("before", 2, 10, -0.5), ("beyond", 2, 10, 1.5), ("descending", 10, 2, 0.3), ("level", 4, 4, 0.7), ("across-zero", -1, 1, 0.75), ("pixels", -22.5, 13.25, 0.125), ("degrees", 28, -28, 0.6)]
     smoothsteps = [("before", -1), ("zero", 0), ("tenth", 0.1), ("quarter", 0.25), ("half", 0.5), ("three-quarters", 0.75), ("nine-tenths", 0.9), ("one", 1), ("beyond", 2), ("eighth", 0.125)]
+    points = [("origin", 0, 0), ("along-x", 0, 3), ("along-y", 2, 0), ("against-x", 0, -5), ("against-y", -7, 0)]
+    points += [("diagonal-%s-%s" % (signed(y), signed(x)), y, x) for y in (1, -1) for x in (1, -1)]
+    points += [("octant-%s-%s" % (signed(y), signed(x)), y, x) for y, x in ((1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2))]
+    points += [("below-diagonal", 2**52 - 1, 2**52), ("above-diagonal", 2**52, 2**52 - 1), ("below-negative-diagonal", -(2**52), 2**52 - 1)]
+    points += [("barely-above-x", 1e-300, 1), ("barely-below-x", -1e-300, 1), ("barely-beside-y", 1, 1e-300), ("barely-above-against-x", 1e-300, -1), ("barely-below-against-x", -1e-300, -1), ("huge-over-tiny", 1e300, 1e-300), ("tiny-over-huge", -1e-300, 1e300), ("both-tiny", 3e-300, -4e-300), ("both-huge", -3e300, 4e300)]
+    points += [("lean-right", 19.2, 33.25), ("lean-left", -19.2, 33.25), ("lean-at-the-cone", 33.25, 19.2), ("rope-up-left", -150, -72), ("rope-up-right", -150, 72), ("ladder-steep", 1, 0.14), ("ladder-true", 1, 0.25), ("ladder-flat", 1, 0.4), ("thirds", 0.1, 0.3), ("pixels", -37.5, 112.25), ("worst-ratio", 0.2718, 1)]
+    arctangents = [{"id": identifier, "y": y, "x": x, "reference": TRIGONOMETRY.direction(y, x)} for identifier, y, x in points]
+    for vector in arctangents:
+        vector["expected"] = TRIGONOMETRY.arctangent(vector)
+    grids = [{"id": "lattice", "span": 12, "step": 1}, {"id": "pixels", "span": 8, "step": 4.75}, {"id": "tenths", "span": 10, "step": 0.3}]
+    for vector in grids:
+        vector["expected"] = TRIGONOMETRY.lattice(vector)
+    arguments = [("below-zero", -1), ("zero", 0), ("one-tick", 0.015625), ("tenth", 0.1), ("quarter", 0.25), ("half", 0.5), ("widest-gap-below-one", 0.6943795), ("one", 1), ("just-above-one", 1.0625), ("one-and-a-half", 1.5), ("two", 2), ("three", 3), ("widest-gap", 3.336225), ("five", 5), ("ten", 10), ("hundred", 100), ("million", 1000000), ("huge", 1e300), ("tiny", 1e-300)]
+    decays = [{"id": identifier, "x": x, "reference": TRIGONOMETRY.decay(x)} for identifier, x in arguments]
+    for vector in decays:
+        vector["expected"] = TRIGONOMETRY.faded(vector)
     write(
         "📐️turn-trigonometry",
         {
-            "$comment": comment("📐️turn-trigonometry", "numpy.sin, numpy.cos, numpy.clip and numpy's polyval"),
+            "$comment": comment("📐️turn-trigonometry", "numpy.sin, numpy.cos, numpy.arctan2, numpy.exp, numpy.clip and numpy's polyval"),
             "angles": unique(angles),
             "sweeps": unique(sweeps),
             "clamps": unique([{"id": identifier, "value": value, "low": low, "high": high, "expected": TRIGONOMETRY.clamp(value, low, high)} for identifier, value, low, high in clamps]),
             "lerps": unique([{"id": identifier, "from": start, "to": end, "amount": amount, "expected": TRIGONOMETRY.lerp(start, end, amount)} for identifier, start, end, amount in lerps]),
             "smoothsteps": unique([{"id": identifier, "amount": amount, "expected": TRIGONOMETRY.smoothstep(amount)} for identifier, amount in smoothsteps]),
+            "arctangents": unique(arctangents),
+            "arctangentGrids": unique(grids),
+            "decays": unique(decays),
         },
     )
 

@@ -683,12 +683,141 @@
   \int_step_inline:nn { \l_semio_viz_network_m_int } { \semio_viz_net_link_draw:n {##1} }
 }
 % ✏️ Draws edge #1 as a loop, a straight segment or a curve, whichever its endpoints and bend ask for.
+
+% 🎯 Boundary-aware directed graph prefix, retaining the original cubic tangent.
+\clist_map_inline:nn { sx,sy,tx,ty,cx,cy,r,lo,hi,t,px,py,qx,qy,distance,corner,outline,cax,cay,cbx,cby } {
+  \fp_new:c { l_semio_viz_net_tip_#1_fp }
+}
+\cs_new_protected:Npn \semio_viz_net_tip_point: {
+  \fp_compare:nNnTF { abs(\l_semio_viz_net_c_fp) } < { 1e-9 } {
+    \fp_set:Nn \l_semio_viz_net_tip_px_fp { \l_semio_viz_net_tip_sx_fp+\l_semio_viz_net_tip_t_fp*(\l_semio_viz_net_tip_tx_fp-\l_semio_viz_net_tip_sx_fp) }
+    \fp_set:Nn \l_semio_viz_net_tip_py_fp { \l_semio_viz_net_tip_sy_fp+\l_semio_viz_net_tip_t_fp*(\l_semio_viz_net_tip_ty_fp-\l_semio_viz_net_tip_sy_fp) }
+  } {
+    \fp_set:Nn \l_semio_viz_net_tip_px_fp { (1-\l_semio_viz_net_tip_t_fp)^3*\l_semio_viz_net_tip_sx_fp+3*(1-\l_semio_viz_net_tip_t_fp)*\l_semio_viz_net_tip_t_fp*\l_semio_viz_net_tip_cx_fp+\l_semio_viz_net_tip_t_fp^3*\l_semio_viz_net_tip_tx_fp }
+    \fp_set:Nn \l_semio_viz_net_tip_py_fp { (1-\l_semio_viz_net_tip_t_fp)^3*\l_semio_viz_net_tip_sy_fp+3*(1-\l_semio_viz_net_tip_t_fp)*\l_semio_viz_net_tip_t_fp*\l_semio_viz_net_tip_cy_fp+\l_semio_viz_net_tip_t_fp^3*\l_semio_viz_net_tip_ty_fp }
+  }
+}
+\cs_new_protected:Npn \semio_viz_net_tip_distance: {
+  \fp_set:Nn \l_semio_viz_net_tip_qx_fp { abs(\l_semio_viz_net_tip_px_fp-\l_semio_viz_net_tip_tx_fp) }
+  \fp_set:Nn \l_semio_viz_net_tip_qy_fp { abs(\l_semio_viz_net_tip_py_fp-\l_semio_viz_net_tip_ty_fp) }
+  \str_case:VnF \l_semio_viz_net_shape_tl {
+    { square } {
+      \fp_sub:Nn \l_semio_viz_net_tip_qx_fp { \l_semio_viz_net_tip_r_fp }
+      \fp_sub:Nn \l_semio_viz_net_tip_qy_fp { \l_semio_viz_net_tip_r_fp }
+      \fp_set:Nn \l_semio_viz_net_tip_distance_fp { sqrt(max(\l_semio_viz_net_tip_qx_fp,0)^2+max(\l_semio_viz_net_tip_qy_fp,0)^2)+min(max(\l_semio_viz_net_tip_qx_fp,\l_semio_viz_net_tip_qy_fp),0) }
+    }
+    { box } {
+      \fp_set:Nn \l_semio_viz_net_tip_corner_fp { min(.4,\l_semio_viz_net_tip_r_fp) }
+      \fp_sub:Nn \l_semio_viz_net_tip_qx_fp { 2.1*\l_semio_viz_net_tip_r_fp-\l_semio_viz_net_tip_corner_fp }
+      \fp_sub:Nn \l_semio_viz_net_tip_qy_fp { \l_semio_viz_net_tip_r_fp-\l_semio_viz_net_tip_corner_fp }
+      \fp_set:Nn \l_semio_viz_net_tip_distance_fp { sqrt(max(\l_semio_viz_net_tip_qx_fp,0)^2+max(\l_semio_viz_net_tip_qy_fp,0)^2)+min(max(\l_semio_viz_net_tip_qx_fp,\l_semio_viz_net_tip_qy_fp),0)-\l_semio_viz_net_tip_corner_fp }
+    }
+    { diamond } {
+      \fp_set:Nn \l_semio_viz_net_tip_corner_fp { max(1e-15,1.3*\l_semio_viz_net_tip_r_fp) }
+      \fp_set:Nn \l_semio_viz_net_tip_cax_fp { min(1,max(0,(\l_semio_viz_net_tip_qx_fp-\l_semio_viz_net_tip_qy_fp+\l_semio_viz_net_tip_corner_fp)/(2*\l_semio_viz_net_tip_corner_fp))) }
+      \fp_set:Nn \l_semio_viz_net_tip_distance_fp { sqrt((\l_semio_viz_net_tip_qx_fp-\l_semio_viz_net_tip_corner_fp*\l_semio_viz_net_tip_cax_fp)^2+(\l_semio_viz_net_tip_qy_fp-\l_semio_viz_net_tip_corner_fp*(1-\l_semio_viz_net_tip_cax_fp))^2)*(\l_semio_viz_net_tip_qx_fp+\l_semio_viz_net_tip_qy_fp<\l_semio_viz_net_tip_corner_fp?-1:1) }
+    }
+  } {
+    \fp_set:Nn \l_semio_viz_net_tip_distance_fp { sqrt(\l_semio_viz_net_tip_qx_fp^2+\l_semio_viz_net_tip_qy_fp^2)-\l_semio_viz_net_tip_r_fp }
+  }
+}
+\cs_new_protected:Npn \semio_viz_net_directed_draw:n #1 {
+  \fp_set:Nn \l_semio_viz_net_tip_sx_fp { \semio_viz_net_nx:n { \semio_viz_network_n:nn { es } {#1} } }
+  \fp_set:Nn \l_semio_viz_net_tip_sy_fp { \semio_viz_net_ny:n { \semio_viz_network_n:nn { es } {#1} } }
+  \fp_set:Nn \l_semio_viz_net_tip_tx_fp { \semio_viz_net_nx:n { \semio_viz_network_n:nn { et } {#1} } }
+  \fp_set:Nn \l_semio_viz_net_tip_ty_fp { \semio_viz_net_ny:n { \semio_viz_network_n:nn { et } {#1} } }
+  \fp_set:Nn \l_semio_viz_net_tip_cx_fp { (\l_semio_viz_net_tip_sx_fp+\l_semio_viz_net_tip_tx_fp)/2-\l_semio_viz_net_c_fp*(\l_semio_viz_net_tip_ty_fp-\l_semio_viz_net_tip_sy_fp) }
+  \fp_set:Nn \l_semio_viz_net_tip_cy_fp { (\l_semio_viz_net_tip_sy_fp+\l_semio_viz_net_tip_ty_fp)/2+\l_semio_viz_net_c_fp*(\l_semio_viz_net_tip_tx_fp-\l_semio_viz_net_tip_sx_fp) }
+  \semio_viz_net_node_size:n { \semio_viz_network_n:nn { et } {#1} }
+  \fp_set_eq:NN \l_semio_viz_net_tip_r_fp \l_semio_viz_net_v_fp
+  \fp_set:Nn \l_semio_viz_net_tip_outline_fp { 50*\dim_to_fp:n{\semio@stroke@hairline}/\dim_to_fp:n{100mm} }
+  \fp_zero:N \l_semio_viz_net_tip_lo_fp
+  \fp_set:Nn \l_semio_viz_net_tip_hi_fp { 1 }
+  \int_step_inline:nn { 36 } {
+    \fp_set:Nn \l_semio_viz_net_tip_t_fp { (\l_semio_viz_net_tip_lo_fp+\l_semio_viz_net_tip_hi_fp)/2 }
+    \semio_viz_net_tip_point:
+    \semio_viz_net_tip_distance:
+    \fp_compare:nNnTF { \l_semio_viz_net_tip_distance_fp } > { \l_semio_viz_net_tip_outline_fp }
+      { \fp_set_eq:NN \l_semio_viz_net_tip_lo_fp \l_semio_viz_net_tip_t_fp }
+      { \fp_set_eq:NN \l_semio_viz_net_tip_hi_fp \l_semio_viz_net_tip_t_fp }
+  }
+  \fp_set:Nn \l_semio_viz_net_tip_t_fp { (\l_semio_viz_net_tip_lo_fp+\l_semio_viz_net_tip_hi_fp)/2 }
+  \semio_viz_net_tip_point:
+  \fp_compare:nNnTF { abs(\l_semio_viz_net_c_fp) } < { 1e-9 } {
+    \semio_viz_net_draw_link:nnnnn { \l_semio_viz_net_tip_sx_fp } { \l_semio_viz_net_tip_sy_fp } { \l_semio_viz_net_tip_px_fp } { \l_semio_viz_net_tip_py_fp } { \l_semio_viz_net_e_fp }
+  } {
+    \fp_set:Nn \l_semio_viz_net_tip_cax_fp { \l_semio_viz_net_tip_sx_fp+\l_semio_viz_net_tip_t_fp*(\l_semio_viz_net_tip_cx_fp-\l_semio_viz_net_tip_sx_fp) }
+    \fp_set:Nn \l_semio_viz_net_tip_cay_fp { \l_semio_viz_net_tip_sy_fp+\l_semio_viz_net_tip_t_fp*(\l_semio_viz_net_tip_cy_fp-\l_semio_viz_net_tip_sy_fp) }
+    \fp_set:Nn \l_semio_viz_net_tip_cbx_fp { (1-\l_semio_viz_net_tip_t_fp)^2*\l_semio_viz_net_tip_sx_fp+(2*\l_semio_viz_net_tip_t_fp-\l_semio_viz_net_tip_t_fp^2)*\l_semio_viz_net_tip_cx_fp }
+    \fp_set:Nn \l_semio_viz_net_tip_cby_fp { (1-\l_semio_viz_net_tip_t_fp)^2*\l_semio_viz_net_tip_sy_fp+(2*\l_semio_viz_net_tip_t_fp-\l_semio_viz_net_tip_t_fp^2)*\l_semio_viz_net_tip_cy_fp }
+    \use:x {
+      \exp_not:N \draw [ draw=\l_semio_viz_net_stroke_tl , line~width=\fp_eval:n{max(.05,\l_semio_viz_net_e_fp)}mm , -{Latex[length=1.1mm,width=.9mm]} ]
+      (\fp_use:N\l_semio_viz_net_tip_sx_fp,\fp_use:N\l_semio_viz_net_tip_sy_fp)
+      .. controls (\fp_use:N\l_semio_viz_net_tip_cax_fp,\fp_use:N\l_semio_viz_net_tip_cay_fp)
+      and (\fp_use:N\l_semio_viz_net_tip_cbx_fp,\fp_use:N\l_semio_viz_net_tip_cby_fp)
+      .. (\fp_use:N\l_semio_viz_net_tip_px_fp,\fp_use:N\l_semio_viz_net_tip_py_fp);
+    }
+    \semio_viz_probe_geometry:nx { directed-curve } {
+      \fp_eval:n{round(\l_semio_viz_net_tip_sx_fp,4)},\fp_eval:n{round(\l_semio_viz_net_tip_sy_fp,4)},
+      \fp_eval:n{round(\l_semio_viz_net_tip_cax_fp,4)},\fp_eval:n{round(\l_semio_viz_net_tip_cay_fp,4)},
+      \fp_eval:n{round(\l_semio_viz_net_tip_cbx_fp,4)},\fp_eval:n{round(\l_semio_viz_net_tip_cby_fp,4)},
+      \fp_eval:n{round(\l_semio_viz_net_tip_px_fp,4)},\fp_eval:n{round(\l_semio_viz_net_tip_py_fp,4)},
+      \fp_eval:n{round(\l_semio_viz_net_e_fp,4)},\l_semio_viz_net_stroke_tl,arrow
+    }
+  }
+}
+
+
+% 🔄 Directed self-loop follows the visible circle arc to the target glyph boundary.
+\fp_new:N \l_semio_viz_net_loop_radius_fp
+\fp_new:N \l_semio_viz_net_loop_center_y_fp
+\fp_new:N \l_semio_viz_net_loop_start_fp
+\fp_new:N \l_semio_viz_net_loop_end_fp
+\cs_new_protected:Npn \semio_viz_net_directed_loop:n #1 {
+  \fp_set:Nn \l_semio_viz_net_tip_tx_fp { \semio_viz_net_nx:n {#1} }
+  \fp_set:Nn \l_semio_viz_net_tip_ty_fp { \semio_viz_net_ny:n {#1} }
+  \semio_viz_net_node_size:n {#1}
+  \fp_set_eq:NN \l_semio_viz_net_tip_r_fp \l_semio_viz_net_v_fp
+  \fp_set:Nn \l_semio_viz_net_loop_radius_fp { 1.1*\l_semio_viz_net_tip_r_fp }
+  \fp_set:Nn \l_semio_viz_net_loop_center_y_fp { \l_semio_viz_net_tip_ty_fp+1.4*\l_semio_viz_net_tip_r_fp }
+  \fp_set:Nn \l_semio_viz_net_tip_outline_fp { 50*\dim_to_fp:n{\semio@stroke@hairline}/\dim_to_fp:n{100mm} }
+  \fp_set:Nn \l_semio_viz_net_tip_lo_fp { 180 }
+  \fp_set:Nn \l_semio_viz_net_tip_hi_fp { 270 }
+  \int_step_inline:nn { 36 } {
+    \fp_set:Nn \l_semio_viz_net_tip_t_fp { (\l_semio_viz_net_tip_lo_fp+\l_semio_viz_net_tip_hi_fp)/2 }
+    \fp_set:Nn \l_semio_viz_net_tip_px_fp { \l_semio_viz_net_tip_tx_fp+\l_semio_viz_net_loop_radius_fp*cosd(\l_semio_viz_net_tip_t_fp) }
+    \fp_set:Nn \l_semio_viz_net_tip_py_fp { \l_semio_viz_net_loop_center_y_fp+\l_semio_viz_net_loop_radius_fp*sind(\l_semio_viz_net_tip_t_fp) }
+    \semio_viz_net_tip_distance:
+    \fp_compare:nNnTF { \l_semio_viz_net_tip_distance_fp } > { \l_semio_viz_net_tip_outline_fp }
+      { \fp_set_eq:NN \l_semio_viz_net_tip_lo_fp \l_semio_viz_net_tip_t_fp }
+      { \fp_set_eq:NN \l_semio_viz_net_tip_hi_fp \l_semio_viz_net_tip_t_fp }
+  }
+  \fp_set:Nn \l_semio_viz_net_loop_start_fp { 540-(\l_semio_viz_net_tip_lo_fp+\l_semio_viz_net_tip_hi_fp)/2 }
+  \fp_set:Nn \l_semio_viz_net_loop_end_fp { 360+(\l_semio_viz_net_tip_lo_fp+\l_semio_viz_net_tip_hi_fp)/2 }
+  \use:x {
+    \exp_not:N \draw [ draw=\l_semio_viz_net_stroke_tl , line~width=\fp_eval:n{max(.05,\l_semio_viz_net_e_fp)}mm , -{Latex[length=1.1mm,width=.9mm]} ]
+    (\fp_eval:n{\l_semio_viz_net_tip_tx_fp+\l_semio_viz_net_loop_radius_fp*cosd(\l_semio_viz_net_loop_start_fp)},\fp_eval:n{\l_semio_viz_net_loop_center_y_fp+\l_semio_viz_net_loop_radius_fp*sind(\l_semio_viz_net_loop_start_fp)})
+    arc [ start~angle=\fp_use:N\l_semio_viz_net_loop_start_fp , end~angle=\fp_use:N\l_semio_viz_net_loop_end_fp , radius=\fp_use:N\l_semio_viz_net_loop_radius_fp mm ];
+  }
+  \semio_viz_probe_geometry:nx { directed-loop } {
+    \fp_eval:n{round(\l_semio_viz_net_tip_tx_fp,4)},\fp_eval:n{round(\l_semio_viz_net_loop_center_y_fp,4)},
+    \fp_eval:n{round(\l_semio_viz_net_loop_radius_fp,4)},\fp_eval:n{round(\l_semio_viz_net_loop_start_fp,4)},\fp_eval:n{round(\l_semio_viz_net_loop_end_fp,4)},
+    \fp_eval:n{round(\l_semio_viz_net_e_fp,4)},\l_semio_viz_net_stroke_tl,arrow
+  }
+}
+
+
 \cs_new_protected:Npn \semio_viz_net_link_draw:n #1 {
   \semio_viz_net_link_style:n {#1}
   \int_compare:nNnTF { \semio_viz_network_n:nn { es } {#1} } = { \semio_viz_network_n:nn { et } {#1} }
-    { \semio_viz_net_loop_draw:n { \semio_viz_network_n:nn { es } {#1} } }
+    { \bool_if:NTF \l_semio_viz_net_directed_bool
+        { \semio_viz_net_directed_loop:n { \semio_viz_network_n:nn { es } {#1} } }
+        { \semio_viz_net_loop_draw:n { \semio_viz_network_n:nn { es } {#1} } } }
     {
       \fp_set:Nn \l_semio_viz_net_c_fp { \semio_viz_net_bend:n {#1} }
+      \bool_if:NTF \l_semio_viz_net_directed_bool
+        { \semio_viz_net_directed_draw:n {#1} }
+        {
       \fp_compare:nNnTF { abs( \l_semio_viz_net_c_fp ) } < { 1e-9 }
         {
           \semio_viz_net_draw_link:nnnnn
@@ -705,6 +834,7 @@
             { \semio_viz_net_nx:n { \semio_viz_network_n:nn { et } {#1} } }
             { \semio_viz_net_ny:n { \semio_viz_network_n:nn { et } {#1} } }
             { \l_semio_viz_net_e_fp } { \l_semio_viz_net_c_fp }
+        }
         }
     }
 }
@@ -796,7 +926,7 @@
         }
     }
     {
-      \semio_viz_layout_run:VVnV \l_semio_viz_net_layout_tl \l_semio_viz_net_data_tl
+      \semio_viz_layout_structure:VVnV \l_semio_viz_net_layout_tl \l_semio_viz_net_data_tl
         { semio-net-layout } \l_semio_viz_net_layopts_tl
     }
 }
@@ -1471,7 +1601,7 @@
 % 🌲 The tree modes: layered layout, glyph and colour by mode.
 \cs_new_protected:Npn \semio_viz_ds_tree_draw: {
   \semio_viz_ds_edges_build:
-  \semio_viz_layout_run:nnnn { layered } { semio-net-structure } { semio-net-tree }
+  \semio_viz_layout_structure:nnnn { layered } { semio-net-structure } { semio-net-tree }
     { orientation = vertical , sweeps = 4 }
   \semio_viz_network_components:
   \semio_viz_net_extremes:

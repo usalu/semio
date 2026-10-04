@@ -218,9 +218,9 @@ fn thinking_sorting_drafts_carry_guesses_validated_like_values() {
     let slugs = thinking(&json!({"power": {"kind": "sorting", "order": ["s0"], "guesses": {"S0": 1, "s-1": 2}}}));
     assert_eq!(thinking_issues(&slugs), [problem("/answers/power/guesses/S0", IssueCode::SlugInvalid)]);
     let mut infinite = thinking(&json!({"power": {"kind": "sorting", "order": ["s0"], "guesses": {"s0": 1}}}));
-    if let Some(ThinkingAnswer::Sorting(answer)) = infinite.answers.get_mut("power") {
-        answer.guesses.insert("s1".to_string(), f64::NAN);
-        answer.guesses.insert("s2".to_string(), f64::NEG_INFINITY);
+    if let Some(ThinkingAnswer::Sorting(SortingAnswer { guesses: Some(guesses), .. })) = infinite.answers.get_mut("power") {
+        guesses.insert("s1".to_string(), f64::NAN);
+        guesses.insert("s2".to_string(), f64::NEG_INFINITY);
     }
     assert_eq!(thinking_issues(&infinite), [problem("/answers/power/guesses/s1", IssueCode::TypeInvalid), problem("/answers/power/guesses/s2", IssueCode::TypeInvalid)]);
     let many: serde_json::Map<String, serde_json::Value> = (0..=THINKING_LIMIT).map(|index| (format!("s{index}"), json!(index as f64 * 1.5))).collect();

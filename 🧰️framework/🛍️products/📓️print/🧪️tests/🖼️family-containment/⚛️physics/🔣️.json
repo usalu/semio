@@ -1,0 +1,26 @@
+{
+  "frame": [80, 40],
+  "tolerance": 0.25,
+  "minimumLabelGap": 0.4,
+  "potentialPathPoints": 121,
+  "potentialCaptionGap": 0.4,
+  "potentialViewportFraction": 0.65,
+  "cases": [
+    {"id":"force-stock","kind":"free-body-diagram","options":"","canvas":[60,40],"forceScale":5,"forces":[[4,90],[4,270],[2.6,0],[1.4,180]]},
+    {"id":"force-custom","labels":["A","B","C"],"mathGlyphs":["α","π"],"kind":"force-diagram","options":"width=75,height=32,body=disc,bodySize=12,scale=8,forces={3/45/A \\(\\alpha\\),5/225/B \\(\\pi\\),2/90/C}","canvas":[75,32],"forceScale":8,"forces":[[3,45],[5,225],[2,90]]},
+    {"id":"decomposition-stock","kind":"vector-decomposition-diagram","options":"","canvas":[60,40],"forceScale":5,"forces":[[4,90],[4,270],[2.6,0],[1.4,180]]},
+    {"id":"motion-stock","kind":"motion-diagram","options":"","canvas":[60,40],"labels":["t0","t1","t2","t3","t4"]},
+    {"id":"motion-custom","mathGlyphs":["α","π"],"kind":"motion-diagram","options":"width=72,height=28,bodySize=10,frames={-12/-8/A \\(\\alpha\\),0/0/B \\(\\pi\\),30/16/C}","canvas":[72,28],"labels":["A","B","C"]},
+    {"id":"levels-stock","transitionLabels":["Lyman","Balmer"],"mathGlyphs":["α","α"],"transitionPairs":[[2,1],[3,2]],"energies":[-13.6,-3.4,-1.51,-0.85,-0.54],"kind":"energy-level-diagram","options":"axes=false,grid=false","canvas":[60,40],"labels":["n=1","n=2","n=3","n=4","n=5"]},
+    {"id":"levels-custom","transitionLabels":["A","B","C"],"mathGlyphs":["α","π","γ"],"transitionPairs":[[2,1],[4,2],[1,2]],"energies":[0,0.01,0.02,4],"kind":"energy-level-diagram","options":"width=75,height=30,axes=false,grid=false,levels={0/ground \\(\\gamma\\),0.01/first,0.02/second,4/upper},transitions={2/1/A \\(\\alpha\\),4/2/B \\(\\pi\\),1/2/C}","canvas":[75,30],"labels":["ground","first","second","upper"]},
+    {"id":"potential-stock","energies":[-13.6,-3.4,-1.51,-0.85,-0.54],"potential":[0.5,0,-3,3],"kind":"potential-energy-diagram","options":"axes=false,grid=false","canvas":[60,40],"labels":["n=1","n=2","n=3","n=4","n=5"]},
+    {"id":"potential-custom","energies":[-7,0,6],"potential":[2,-8,-4,4],"kind":"potential-energy-diagram","options":"width=75,height=30,axes=false,grid=false,domain={-4,4},expr={2*\\SemioX*\\SemioX-8},levels={-7/A,0/B,6/C}","canvas":[75,30],"labels":["A","B","C"]},
+    {"id":"band-stock","energies":[-4,-1.2,0.8,3],"kind":"band-diagram","options":"axes=false,grid=false","canvas":[60,40],"labels":["valence","conduction"]},
+    {"id":"band-custom","energies":[-12,-8,4,7],"explicitRange":[-15,10],"kind":"band-diagram","options":"width=72,height=30,axes=false,grid=false,bands={-12/-8/lower,4/7/upper},range={-15,10}","canvas":[72,30],"labels":["lower","upper"]},
+    {"id":"lens-stock","kind":"lens-diagram","options":"","canvas":[60,40],"optics":[18,40,12]},
+    {"id":"mirror-stock","kind":"mirror-diagram","options":"","canvas":[60,40],"optics":[18,40,12]},
+    {"id":"lens-custom","kind":"lens-diagram","options":"width=75,height=30,focal=-12,objectDistance=35,objectHeight=18","canvas":[75,30],"optics":[-12,35,18]},
+    {"id":"sphere-stock","kind":"poincare-sphere","options":"","canvas":[60,40],"sphere":[24,35,25],"states":[[1,0,0],[0,1,0],[0,0,1],[0.5,0.5,0.7]]},
+    {"id":"sphere-custom","kind":"poincare-sphere","options":"width=72,height=28,radius=35,azimuth=70,elevation=-15,meridians=5,parallels=3,states={1/1/0/A,-1/0/1/B,0/0/0/Z}","canvas":[72,28],"sphere":[35,70,-15],"states":[[1,1,0],[-1,0,1],[0,0,0]]}
+  ]
+}

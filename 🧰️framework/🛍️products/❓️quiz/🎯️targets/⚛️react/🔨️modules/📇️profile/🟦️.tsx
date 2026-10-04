@@ -1,5 +1,5 @@
 /** 📇️ The learner on home: the card with the totals, who else is online and the way to switch identity, and the
- * profile page behind it — totals and the rank on the all-time leaderboard of every quiz, every run with its status, score and dates (the result of a submitted run,
+ * profile page behind it — totals and the rank on the all-time leaderboard of every quiz, every run with its status, challenge, score, points and dates (the result of a submitted run,
  * the way back into an open one), and the badges earned with their days. Both are pure views over session state; the
  * profile is personal, so presence shares no cursor on it. Switching identity always asks first: an anonymous learner
  * gives up the only key to the progress and has to say so, a pseudonymous or named one is told how to come back.
@@ -9,14 +9,15 @@
  */
 
 import { useId, useState, type ReactElement } from "react";
-import { learnerTag, type RunSummary } from "@semio-tech/quiz";
+import { challengeRules, learnerTag, type RunSummary } from "@semio-tech/quiz";
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
+import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { formatDate, formatInstant, formatPoints, formatScore } from "../📏️quantity/🟦️.ts";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
 import { awardOf } from "../🏅️badges/🟦️.tsx";
 import { ownRow } from "../🏆️leaderboard/🟦️.tsx";
 import type { Act } from "../📖️quiz-page/🟦️.tsx";
-import { CardAction, CardIcon, Dialog, Facts, Glyph, Missing, PageFrame, QuizCard, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { CardAction, CardIcon, Dialog, Facts, Glyph, Missing, PageFrame, QuizCard, Records, TABLE, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS, PresenceList } from "../👥️presence/🟦️.tsx";
 import { HOME_PAGES, overallLeaderboard, type QuizSession, type QuizState } from "../🧭️session/🟦️.ts";
 
@@ -126,20 +127,34 @@ function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy:
   const quiz = state.catalog?.quizzes.find((candidate) => candidate.id === run.quiz);
   const cell = "border-b border-normal px-single py-single text-left align-top";
   return (
-    <tr>
-      <th scope="row" className={cn(cell, "quiz-name font-normal")}>
+    <tr {...TABLE.row}>
+      <th {...TABLE.name} data-cell="name" className={cn(cell, "quiz-name font-normal")}>
         {quiz === undefined ? run.quiz : localized(quiz.title, locale)}
       </th>
-      <td className={cn(cell, "quiz-nowrap")}>{text(STATUS[run.status])}</td>
-      <td className={cn(cell, "quiz-nowrap tabular-nums")}>{run.score === undefined ? <Missing label={text("quiz.learner.noScore")} /> : formatScore(run.score, locale)}</td>
-      <td className={cn(cell, "quiz-nowrap tabular-nums")}>{formatInstant(run.startedAt, locale)}</td>
-      <td className={cn(cell, "quiz-nowrap tabular-nums")}>{run.submittedAt === undefined ? <Missing label={text("quiz.learner.notSubmitted")} /> : formatInstant(run.submittedAt, locale)}</td>
-      <td className={cn(cell, "quiz-nowrap")}>
+      <td {...TABLE.cell} data-label={text("quiz.learner.status")} className={cn(cell, "quiz-nowrap")}>
+        {text(STATUS[run.status])}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.learner.challenge")} className={cn(cell, "quiz-nowrap")}>
+        {text(CHALLENGE_LABELS[run.challenge])}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.learner.score")} className={cn(cell, "quiz-nowrap tabular-nums")}>
+        {run.score === undefined ? <Missing label={text("quiz.learner.noScore")} /> : formatScore(run.score, locale)}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.learner.points")} className={cn(cell, "quiz-nowrap tabular-nums")}>
+        {run.points === undefined ? <Missing label={text("quiz.learner.noPoints")} /> : text("quiz.learner.pointsOf", { points: formatPoints(run.points, locale), par: formatPoints(challengeRules(run.challenge).par, locale) })}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.learner.started")} className={cn(cell, "quiz-nowrap tabular-nums")}>
+        {formatInstant(run.startedAt, locale)}
+      </td>
+      <td {...TABLE.cell} data-label={text("quiz.learner.submitted")} className={cn(cell, "quiz-nowrap tabular-nums")}>
+        {run.submittedAt === undefined ? <Missing label={text("quiz.learner.notSubmitted")} /> : formatInstant(run.submittedAt, locale)}
+      </td>
+      <td {...TABLE.cell} data-cell="lead" className={cn(cell, "quiz-nowrap")}>
         {run.status === "submitted" ? (
           <CardAction onClick={() => session.open({ screen: "results", run: run.run })}>{text("quiz.learner.viewResult")}</CardAction>
         ) : run.status === "open" ? (
           <CardAction primary disabled={busy} onClick={() => act((signal) => session.resumeRun(run.run, signal))}>
-            {text("quiz.home.resume")}
+            {text("quiz.home.resume", { challenge: text(CHALLENGE_LABELS[run.challenge]) })}
           </CardAction>
         ) : null}
       </td>
@@ -159,7 +174,7 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
     return award === undefined ? [] : [{ badge, award }];
   });
   const head = "border-b-2 border-normal px-single py-single text-left font-semibold quiz-nowrap";
-  const columns = ["quiz.learner.quiz", "quiz.learner.status", "quiz.learner.score", "quiz.learner.started", "quiz.learner.submitted"] as const;
+  const columns = ["quiz.learner.quiz", "quiz.learner.status", "quiz.learner.challenge", "quiz.learner.score", "quiz.learner.points", "quiz.learner.started", "quiz.learner.submitted"] as const;
   return (
     <PageFrame page={HOME_PAGES.learner} wide>
       <QuizCard id={`${id}-profile`} card="profile" icon={<CardIcon icon="user" />} title={shown.name} footerRight={<SwitchIdentity {...props} />}>
@@ -171,27 +186,27 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
         {runs.length === 0 ? (
           <p className="m-0 text-sm text-muted-foreground">{text("quiz.learner.noRuns")}</p>
         ) : (
-          <div className="relative max-w-full overflow-x-auto">
-            <table className="w-full border-collapse text-sm" aria-labelledby={`${id}-runs`}>
-              <thead>
-                <tr>
+          <Records fold={60}>
+            <table {...TABLE.table} className="quiz-fold w-full border-collapse text-sm" aria-labelledby={`${id}-runs`}>
+              <thead {...TABLE.group}>
+                <tr {...TABLE.row}>
                   {columns.map((column) => (
-                    <th key={column} scope="col" className={head}>
+                    <th key={column} {...TABLE.column} className={head}>
                       {text(column)}
                     </th>
                   ))}
-                  <th scope="col" className={head}>
+                  <th {...TABLE.column} className={head}>
                     <span className="sr-only">{text("quiz.learner.actions")}</span>
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody {...TABLE.group}>
                 {runs.map((run) => (
                   <RunRow key={run.run} {...props} run={run} />
                 ))}
               </tbody>
             </table>
-          </div>
+          </Records>
         )}
       </QuizCard>
       <QuizCard id={`${id}-badges`} card="learner-badges" icon={<CardIcon icon="award" />} title={text("quiz.learner.badges")}>

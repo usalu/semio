@@ -1,13 +1,13 @@
 import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join } from "node:path";
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { classifyPackageSource, fileKindIdForSourcePath, fixedSourceDispositionDecision, implementationLeafBasenameFinding, loadCatalogTaxonomy, scopedFileKindIdForSourcePath, taxonomyFileKindIsImplementation } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
-import { parseVizTaxonomyLeaves, verifyVisualizationCoverage, visualizationTemplates } from "../../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { parseVizTaxonomyLeaves, verifyVisualizationCoverage, visualizationTemplates, vizGeneratedFiles } from "../../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { stagePrintSources } from "../../../../🔨️modules/📥️source-staging/🟦️.ts";
 import { printFontDescriptors, printFontSearchPaths, stagePrintFonts } from "../../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 import { printDocumentOutputDirectory } from "../../../../🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
@@ -18,7 +18,7 @@ const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
 const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexRoot = join(productRoot, "🖋️latex");
-const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? join(packageRoot, "dist");
+const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? (process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "print-pipeline") : join(packageRoot, "dist"));
 
 /** 🧬️ Loads one print scope's owned schema module and asserts its canonical identity. */
 function printSchemaModule(modulePath: string, schemaId: string): Record<string, unknown> {
@@ -41,6 +41,8 @@ export function verifyPrintToolchainManifest(): void {
 
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
 export async function verifyPrintPipelineQuick(): Promise<void> {
+  verifyPrintApiFreshness();
+  await verifyPrintPdfGlyphPolicy();
   await verifyPrintCommandBoundaries();
   await verifyPrintDocumentCatalog();
   await verifyPrintBundleContract();
@@ -155,6 +157,26 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   verifyVisualizationCoverage();
 }
 
+/** 🔓️ Rejects copied stale API metadata against the generator and independent AJV equality. */
+export function verifyPrintApiFreshness(): void {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")) as { readonly cases: readonly { readonly id: string; readonly path?: readonly (string | number)[]; readonly value?: unknown; readonly suffix?: string; readonly fresh: boolean }[] };
+  const expected = vizGeneratedFiles().find(file => file.path.endsWith("/🔣️viz-api.json"))!.content;
+  const require = createRequire(import.meta.url), validate = new (require("ajv").default)({ strict: false }).compile({ const: expected });
+  for (const vector of fixture.cases) {
+    const document = JSON.parse(expected);
+    if (vector.path) {
+      let parent = document;
+      for (const part of vector.path.slice(0, -1)) parent = parent[part];
+      parent[vector.path.at(-1)!] = vector.value;
+    }
+    const candidate = `${JSON.stringify(document, null, 2)}\n${vector.suffix ?? ""}`;
+    assert.equal(validate(candidate), vector.fresh, `${vector.id}: independent AJV equality`);
+    if (vector.fresh) assert.doesNotThrow(() => verifyVisualizationCoverage(candidate), vector.id);
+    else assert.throws(() => verifyVisualizationCoverage(candidate), /stale|unmarked/, vector.id);
+  }
+  console.log(`[DEBUG] API freshness: ${fixture.cases.length} copied metadata cases compared with AJV PASS`);
+}
+
 /** 📥️ Verifies canonical macro materialization and pre-mutation collision rejection. */
 export function verifyPrintMacroStaging(): void {
   const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🖨️macro-staging");
@@ -239,30 +261,69 @@ export async function verifyPrintMacroStagingNative(): Promise<void> {
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
 
-/** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
-async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
+/** 🪪️ Requires published text to contain no replacement markers or Unicode noncharacters. */
+function assertPrintPdfGlyphs(text: string, source: string): void {
+  for (const glyph of text) {
+    const point = glyph.codePointAt(0)!;
+    if (point === 0xFFFD || point >= 0xFDD0 && point <= 0xFDEF || (point & 0xFFFF) >= 0xFFFE) assert.fail(`${source}: invalid published glyph U+${point.toString(16).toUpperCase().padStart(4, "0")}`);
+  }
+}
+
+/** 🔎️ Opens an authored PDF with the independent reader and its native matrix provider. */
+async function openPrintPdf(path: string) {
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
   (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  return await getDocument({ data: new Uint8Array(readFileSync(path)) }).promise;
+}
+
+/** 🧩️ Checks a neutral glyph policy and an optional actual missing-glyph compiler counterexample. */
+async function verifyPrintPdfGlyphPolicy(): Promise<void> {
+  const policy = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️pdf-consumption.json"), "utf8")).glyphPolicy as { accepted: string[]; rejectedCodePoints: number[] };
+  const before = process.env.SEMIO_PRINT_GLYPH_REGRESSION_PDF;
+  if (before) {
+    const pdf = await openPrintPdf(before);
+    let observed = 0;
+    try {
+      for (let page = 1; page <= pdf.numPages; page++) {
+        const current = await pdf.getPage(page), text = (await current.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" ");
+        if (text.includes("\uFFFF")) { observed++; assert.throws(() => assertPrintPdfGlyphs(text, `${basename(before)}:${page}`), /invalid published glyph/); }
+        current.cleanup();
+      }
+      assert.ok(observed > 0, "actual compiler counterexample has no observed U+FFFF");
+      console.log(`[print] PDF.js missing-glyph counterexample: ${observed} pages rejected PASS`);
+    } finally { await pdf.destroy(); }
+  }
+  for (const text of policy.accepted) assert.doesNotThrow(() => assertPrintPdfGlyphs(text, "neutral accepted glyphs"));
+  for (const point of policy.rejectedCodePoints) assert.throws(() => assertPrintPdfGlyphs(String.fromCodePoint(point), "neutral rejected glyph"), /invalid published glyph/);
+  console.log(`[print] Published glyph policy: ${policy.accepted.length} accepted cases, ${policy.rejectedCodePoints.length} rejected scalars PASS`);
+}
+
+/** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
+async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
   const expected = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️pdf-consumption.json"), "utf8"));
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
   let count = 0;
   for (const template of templates) for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(printDocumentOutputDirectory(template.id), name))) }).promise;
+    const pdf = await openPrintPdf(join(printDocumentOutputDirectory(template.id), name));
     try {
       assert.ok(pdf.numPages >= expected.minimumPages, `${name}: empty document`);
       const texts: string[] = [];
       for (let index = 1; index <= pdf.numPages; index++) {
         const page = await pdf.getPage(index);
-        texts.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
+        const text = (await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" ");
+        assertPrintPdfGlyphs(text, `${name}:${index}`);
+        texts.push(text);
         page.cleanup();
       }
       assert.ok(texts.join(" ").trim(), `${name}: no readable text`);
       if (template.id === "viz-api") for (const text of contract.vizText) assert.ok(texts.join(" ").includes(text), `${name}: missing ${text}`);
       count++;
+      console.log(`[print] Consumed ${collection} ${template.id}/${name}: ${pdf.numPages} pages PASS (${count}/${expected[collection]})`);
     } finally { await pdf.destroy(); }
   }
   assert.equal(count, expected[collection]);
+  console.log(`[print] PDF.js consumption ${collection}: ${count} PDFs PASS`);
 }
 
 /** 🧪️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
@@ -299,6 +360,14 @@ export async function verifyPrintFontStaging(output = outputRoot): Promise<void>
       const key = GlobalFonts.registerFromPath(path, "nx-font-fixture-" + row.family);
       assert.ok(key, row.family); GlobalFonts.remove(key);
     }
+    const repeated = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️font-publication.json"), "utf8"));
+    const identity = () => catalog.map((row: any) => { const stat = statSync(join(staged, row.texFilename), { bigint: true }); return [stat.ino.toString(), stat.birthtimeNs.toString()]; });
+    const original = identity(), registrations = catalog.map((row: any) => GlobalFonts.registerFromPath(join(staged, row.texFilename), "nx-live-font-fixture-" + row.family));
+    try {
+      assert.ok(registrations.every(Boolean));
+      for (let round = 0; round < repeated.rounds; round++) await Promise.all(Array.from({ length: repeated.concurrent }, () => stagePrintFonts(root)));
+      assert.deepEqual(identity(), original, "Identical live fonts must retain file identity");
+    } finally { for (const key of registrations) if (key) GlobalFonts.remove(key); }
     writeFileSync(join(staged, "stale.ttf"), "stale");
     await stagePrintFonts(root);
     assert.equal(existsSync(join(staged, "stale.ttf")), false);

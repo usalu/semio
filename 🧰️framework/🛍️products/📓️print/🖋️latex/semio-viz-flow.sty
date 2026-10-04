@@ -685,4 +685,86 @@
 }
 %endregion 🔖️ParallelSets
 
+% 🌊 Authored flow tables publish node bounds or link endpoints from the flow kernel.
+\cs_new_protected:Npn \semio_viz_flow_table:nnnn #1#2#3#4 {
+  \semio_viz_layout_table_load:nn {#2} {#4}
+  \semio_viz_layout_defaults:n {nodeWidth=16,nodePadding=8,iterations=6,align=justify,stages={}}
+  \semio_viz_layout_column:n {value}
+  \semio_viz_layout_positive:n {nodeWidth}
+  \tl_set:Nx \l_semio_viz_layout_keys_tl {source={\semio_viz_layout_option:n {source}},target={\semio_viz_layout_option:n {target}},weight={\semio_viz_layout_option:n {value}},x1={\semio_viz_layout_option:n {width}},y1={\semio_viz_layout_option:n {height}}}
+  \semio_viz_layout_translate:nn {nodeWidth} {node-width}
+  \semio_viz_layout_translate:nn {nodePadding} {node-padding}
+  \semio_viz_layout_translate:nn {iterations} {iterations}
+  \semio_viz_layout_translate:nn {align} {node-align}
+  \str_if_eq:nnTF {#1} {alluvial}
+    {
+      \clist_set:Nx \l_semio_viz_flow_stages_clist {\semio_viz_layout_option:n {stages}}
+      \int_compare:nNnF {\clist_count:N \l_semio_viz_flow_stages_clist} > {1}
+        {\msg_fatal:nnn {semio-viz} {authored-layout-control} {stages}}
+      \semio_viz_table_new:nn {chart-layout-alluvial-edges} {source,target,value}
+      \prop_clear:N \l_semio_viz_flow_table_edges_prop
+      \seq_clear:N \l_semio_viz_flow_table_pairs_seq
+      \seq_map_inline:Nn \l_semio_viz_layout_rows_seq {
+        \semio_viz_layout_row:n {##1}
+        \int_step_inline:nn {\clist_count:N \l_semio_viz_flow_stages_clist-1} {
+          \tl_set:Nx \l_semio_viz_layout_a_tl
+            {{\clist_item:Nn \l_semio_viz_flow_stages_clist {####1}:\exp_args:Ne \semio_viz_layout_cell:n {\clist_item:Nn \l_semio_viz_flow_stages_clist {####1}}}
+             {\clist_item:Nn \l_semio_viz_flow_stages_clist {####1+1}:\exp_args:Ne \semio_viz_layout_cell:n {\clist_item:Nn \l_semio_viz_flow_stages_clist {####1+1}}}}
+          \prop_get:NVNTF \l_semio_viz_flow_table_edges_prop \l_semio_viz_layout_a_tl \l_semio_viz_layout_b_tl
+            {\prop_put:NVx \l_semio_viz_flow_table_edges_prop \l_semio_viz_layout_a_tl {\fp_eval:n {\l_semio_viz_layout_b_tl+\semio_viz_layout_field:n {value}}}}
+            {
+              \prop_put:NVx \l_semio_viz_flow_table_edges_prop \l_semio_viz_layout_a_tl {\semio_viz_layout_field:n {value}}
+              \seq_put_right:NV \l_semio_viz_flow_table_pairs_seq \l_semio_viz_layout_a_tl
+            }
+        }
+      }
+      \seq_map_inline:Nn \l_semio_viz_flow_table_pairs_seq {
+        \prop_get:NnN \l_semio_viz_flow_table_edges_prop {##1} \l_semio_viz_layout_b_tl
+        \use:x {\exp_not:N \semio_viz_flow_table_edge:nnn \exp_not:n {##1} {\exp_not:V \l_semio_viz_layout_b_tl}}
+      }
+      \tl_put_right:Nn \l_semio_viz_layout_keys_tl {,source=source,target=target,weight=value}
+      \use:x {\exp_not:N \semio_viz_layout_structure:nnnn {alluvial} {chart-layout-alluvial-edges} {chart-layout-flow-result} {\exp_not:V \l_semio_viz_layout_keys_tl}}
+    }
+    {\use:x {\exp_not:N \semio_viz_layout_structure:nnnn {sankey} {#2} {chart-layout-flow-result} {\exp_not:V \l_semio_viz_layout_keys_tl}}}
+  \str_if_eq:eeTF {\semio_viz_layout_option:n {output}} {nodes}
+    {
+      \clist_set:Nn \l_semio_viz_layout_output_cols_clist {id,value,x,y,x2,y2,depth}
+      \int_step_inline:nn {\l_semio_viz_network_n_int} {
+        \prop_clear:N \l_semio_viz_layout_row_prop
+        \semio_viz_layout_set:nn {id} {\semio_viz_network_id:n {##1}}
+        \semio_viz_layout_set:nn {value} {\fp_eval:n {\semio_viz_network_f:nn {nv} {##1}}}
+        \semio_viz_layout_set:nn {x} {\fp_eval:n {\semio_viz_network_f:nn {nx} {##1}}}
+        \semio_viz_layout_set:nn {y} {\fp_eval:n {\semio_viz_network_f:nn {ny} {##1}}}
+        \semio_viz_layout_set:nn {x2} {\fp_eval:n {\semio_viz_network_f:nn {nxb} {##1}}}
+        \semio_viz_layout_set:nn {y2} {\fp_eval:n {\semio_viz_network_f:nn {nyb} {##1}}}
+        \semio_viz_layout_set:nn {depth} {\semio_viz_network_n:nn {nd} {##1}}
+        \semio_viz_layout_put:
+      }
+    }
+    {
+      \clist_set:Nn \l_semio_viz_layout_output_cols_clist {source,target,value,x,y,x2,y2,width}
+      \int_step_inline:nn {\l_semio_viz_network_m_int} {
+        \prop_clear:N \l_semio_viz_layout_row_prop
+        \semio_viz_layout_set:nn {source} {\semio_viz_network_id:n {\semio_viz_network_n:nn {es} {##1}}}
+        \semio_viz_layout_set:nn {target} {\semio_viz_network_id:n {\semio_viz_network_n:nn {et} {##1}}}
+        \semio_viz_layout_set:nn {value} {\fp_eval:n {\semio_viz_network_f:nn {ew} {##1}}}
+        \semio_viz_layout_set:nn {x} {\fp_eval:n {\semio_viz_network_f:nn {nxb} {\semio_viz_network_n:nn {es} {##1}}}}
+        \semio_viz_layout_set:nn {y} {\fp_eval:n {\semio_viz_network_f:nn {ly} {##1}}}
+        \semio_viz_layout_set:nn {x2} {\fp_eval:n {\semio_viz_network_f:nn {nx} {\semio_viz_network_n:nn {et} {##1}}}}
+        \semio_viz_layout_set:nn {y2} {\fp_eval:n {\semio_viz_network_f:nn {lyb} {##1}}}
+        \semio_viz_layout_set:nn {width} {\fp_eval:n {\semio_viz_network_f:nn {lw} {##1}}}
+        \semio_viz_layout_put:
+      }
+    }
+  \semio_viz_layout_store:n {#3}
+}
+\clist_new:N \l_semio_viz_flow_stages_clist
+\prop_new:N \l_semio_viz_flow_table_edges_prop
+\seq_new:N \l_semio_viz_flow_table_pairs_seq
+\cs_new_protected:Npn \semio_viz_flow_table_edge:nnn #1#2#3
+  {\semio_viz_table_row:nn {chart-layout-alluvial-edges} {{#1},{#2},{#3}}}
+\clist_map_inline:nn {sankey,alluvial} {
+  \cs_new_protected:cpn {semio_viz_layout_table_#1:nnn} ##1##2##3
+    {\semio_viz_flow_table:nnnn {#1} {##1} {##2} {##3}}
+}
 \ExplSyntaxOff

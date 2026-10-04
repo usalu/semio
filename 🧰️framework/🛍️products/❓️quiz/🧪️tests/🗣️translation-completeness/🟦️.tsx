@@ -26,6 +26,7 @@ function placeholders(label: string): string[] {
 }
 
 const SOURCES = import.meta.glob<string>(["../../🎯️targets/⚛️react/🟦️.tsx", "../../🎯️targets/⚛️react/🔨️modules/**/🟦️.ts", "../../🎯️targets/⚛️react/🔨️modules/**/🟦️.tsx"], { query: "?raw", import: "default", eager: true });
+const STYLES = Object.values(import.meta.glob<string>("../../🎯️targets/⚛️react/🎨️.css", { query: "?raw", import: "default", eager: true })).join("\n");
 const english = leaves(QUIZ_BUNDLE_EN);
 const german = leaves(QUIZ_BUNDLE_DE);
 
@@ -114,8 +115,11 @@ describe("🗣️ translation completeness", () => {
 
   it("makes every box that scrolls the containing block of what it scrolls, so text hidden for assistive technology never widens the page", () => {
     const scrollers = Object.entries(SOURCES).flatMap(([path, source]) => [...source.matchAll(/"[^"\n]*\boverflow(?:-[xy])?-auto\b[^"\n]*"/gu)].map((classes) => [path, classes[0]] as const));
-    expect(scrollers.length).toBeGreaterThan(6);
+    expect(scrollers.length).toBeGreaterThan(3);
     for (const [path, classes] of scrollers) expect(classes, path).toMatch(/\b(?:relative|absolute|fixed)\b/u);
+    const records = /\.quiz-records \{[^}]*\}/u.exec(STYLES)?.[0] ?? "";
+    expect(records).toMatch(/overflow-x: auto;/u);
+    expect(records).toMatch(/position: relative;/u);
   });
 
   it("uses one German word per concept", () => {

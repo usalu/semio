@@ -23,6 +23,19 @@ class GenerateScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "native-grammar") {
+      const { tmpdir } = await import("node:os");
+      const { join } = await import("node:path");
+      const workDir = process.env.PRINT_NATIVE_GRAMMAR_WORK_DIR ?? join(tmpdir(), "semio-print-native-grammar");
+      if (segments.includes("--families-only")) {
+        const { compileNativeFamilyContainment } = await import("../../🧪️tests/🖼️family-containment/🟦️.ts");
+        await compileNativeFamilyContainment(workDir);
+        return;
+      }
+      const { compileNativeGrammar } = await import("../../🧪️tests/🧬️native-chart-grammar/🟦️.ts");
+      await compileNativeGrammar(this.repoRoot, workDir, !segments.includes("--grammar-only"));
+      return;
+    }
     await new PrintPipelineVerificationCommand(this.root, this.repoRoot).run(segments);
   }
 }

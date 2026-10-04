@@ -21,10 +21,10 @@
 //! | `PROCTOR_LIMIT_SOCKETS` | WebSockets open in total | `8192` |
 //! | `PROCTOR_LIMIT_IN_FLIGHT` | requests served at once in total | `2048` |
 //! | `PROCTOR_MAX_LEARNERS` | registrations in total (anonymous learners and claimed handles); one beyond it is `roster-full` | `100000` |
-//! | `PROCTOR_MAX_RUNS` | submitted runs per learner over all quizzes; a start beyond it is `runs-exhausted` | `1000` |
+//! | `PROCTOR_MAX_RUNS` | runs one learner started over all quizzes (open, submitted or voided); a start beyond it is `runs-exhausted` | `1000` |
 //!
 //! The two caps are the configurable totals of the quiz core's `Limits`; its other two — 200
-//! submitted runs per learner and quiz, 2000 recorded answers per run — are fixed. None is reached by
+//! started runs per learner and quiz, 2000 recorded answers per run — are fixed. None is reached by
 //! a class of three hundred playing every quiz dozens of times; they bound what one client can make
 //! the proctor store ([`ProctorConfig::caps`]).
 //!

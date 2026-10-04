@@ -1,0 +1,3171 @@
+{
+  "cases": [
+    {
+      "name": "linear-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "log-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "log",
+        "domain": [
+          1,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "log-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "log",
+        "domain": [
+          1,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "log-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "log",
+        "domain": [
+          1,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "pow-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "pow",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "pow-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "pow",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "pow-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "pow",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sqrt-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "sqrt",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sqrt-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "sqrt",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sqrt-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "sqrt",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "symlog-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "symlog",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "symlog-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "symlog",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "symlog-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "symlog",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "identity-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "identity",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "identity-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "identity",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "identity-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "identity",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantile-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantile",
+        "domain": [
+          0,
+          1,
+          4,
+          5,
+          9,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantile-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantile",
+        "domain": [
+          0,
+          1,
+          4,
+          5,
+          9,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantile-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantile",
+        "domain": [
+          0,
+          1,
+          4,
+          5,
+          9,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantize-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantize",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantize-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantize",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "quantize-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "quantize",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "threshold-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "threshold",
+        "domain": [
+          3,
+          7
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "threshold-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "threshold",
+        "domain": [
+          3,
+          7
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "threshold-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "threshold",
+        "domain": [
+          3,
+          7
+        ],
+        "range": [
+          10,
+          20,
+          30
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "invalid-date"
+        },
+        {
+          "kind": "value",
+          "value": "1970-01-01T00:00:00.005Z"
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "invalid-date"
+        },
+        {
+          "kind": "value",
+          "value": "1970-01-01T00:00:00.005Z"
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "invalid-date"
+        },
+        {
+          "kind": "value",
+          "value": "1970-01-01T00:00:00.005Z"
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "ordinal-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "ordinal",
+        "domain": [
+          0,
+          5
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "ordinal-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "ordinal",
+        "domain": [
+          0,
+          5
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "ordinal-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "ordinal",
+        "domain": [
+          0,
+          5
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-color-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-color-paint",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": "hotpink"
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-color-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "linear-color-boolean",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": false
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-color-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-color-paint",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": "hotpink"
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-color-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "sequential-color-boolean",
+      "spec": {
+        "name": "unknown",
+        "kind": "sequential",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": false
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-color-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-color-paint",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": "hotpink"
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-color-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "diverging-color-boolean",
+      "spec": {
+        "name": "unknown",
+        "kind": "diverging",
+        "domain": [
+          0,
+          5,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": false
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-color-default",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {}
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-color-paint",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": "hotpink"
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-color-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": null
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "temporal-color-boolean",
+      "spec": {
+        "name": "unknown",
+        "kind": "temporal",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": false
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "ordinal-string-domain",
+      "spec": {
+        "name": "unknown",
+        "kind": "ordinal",
+        "domain": [
+          "a",
+          "b"
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": "missing"
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": "a"
+        },
+        {
+          "kind": "value",
+          "value": "b"
+        },
+        {
+          "kind": "value",
+          "value": "c"
+        },
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "color-reverse-null-fallback",
+      "spec": {
+        "name": "unknown",
+        "kind": "linear",
+        "domain": [
+          0,
+          10
+        ],
+        "range": [
+          "red",
+          "blue"
+        ],
+        "options": {
+          "unknown": null,
+          "reverse": true,
+          "nice": true,
+          "clamp": true
+        }
+      },
+      "inputs": [
+        {
+          "kind": "value",
+          "value": null
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "nan"
+        },
+        {
+          "kind": "value",
+          "value": "bad"
+        },
+        {
+          "kind": "value",
+          "value": "5"
+        },
+        {
+          "kind": "value",
+          "value": 5
+        },
+        {
+          "kind": "value",
+          "value": false
+        },
+        {
+          "kind": "value",
+          "value": true
+        },
+        {
+          "kind": "value",
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "rejections": [
+    {
+      "name": "band-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "band",
+        "domain": [
+          "a",
+          "b"
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      }
+    },
+    {
+      "name": "band-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "band",
+        "domain": [
+          "a",
+          "b"
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      }
+    },
+    {
+      "name": "point-numeric",
+      "spec": {
+        "name": "unknown",
+        "kind": "point",
+        "domain": [
+          "a",
+          "b"
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": -5
+        }
+      }
+    },
+    {
+      "name": "point-null",
+      "spec": {
+        "name": "unknown",
+        "kind": "point",
+        "domain": [
+          "a",
+          "b"
+        ],
+        "range": [
+          0,
+          100
+        ],
+        "options": {
+          "unknown": null
+        }
+      }
+    }
+  ]
+}

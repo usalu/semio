@@ -1,0 +1,5 @@
+import {renderGrammarChecks} from '../../../../../../../../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts';
+const checks=(await renderGrammarChecks()).filter(check=>check.name.startsWith('grammar/axis-'));
+let failures=0;for(const check of checks){try{const subject=await check.subject(),oracle=await check.oracle();const same=(a,b)=>typeof a==='number'&&typeof b==='number'?Math.abs(a-b)<1e-8:JSON.stringify(a)===JSON.stringify(b);const normalized=(v)=>typeof v==='number'?Math.round(v*1e8)/1e8:Array.isArray(v)?v.map(normalized):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>[k,normalized(x)])):v;const passed=JSON.stringify(normalized(subject))===JSON.stringify(normalized(oracle));if(!passed)failures++;console.log('[DEBUG] '+JSON.stringify({name:check.name,passed,subject,oracle}));}catch(error){failures++;console.log('[DEBUG] '+JSON.stringify({name:check.name,error:String(error)}));}}
+console.log('[DEBUG] '+JSON.stringify({checks:checks.length,failures}));process.exit(failures?1:0);
+

@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { rawConicEqualArea, rawEquirectangular, rawMercator, vizGeoBounds, vizGeoFitExtent, vizGeoFitSize, vizGeoProjection, vizProjection, type VizGeoGeometry, type VizProjectionKind, type VizProjectionSettings, type VizRawProjection } from "../../🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🟦️.ts";
+import { rawConicEqualArea, rawEquirectangular, rawMercator, vizGeoBounds, vizGeoFitExtent, vizGeoFitSize, vizGeoProjection, vizProjection, type VizGeoGeometry, type VizProjectionKind, type VizProjectionSettings, type VizRawProjection } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../🌍️geo-projections/🟦️.ts";
 // #endregion 🔌️Adapters
 

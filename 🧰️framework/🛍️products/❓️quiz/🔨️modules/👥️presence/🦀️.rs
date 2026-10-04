@@ -11,7 +11,7 @@
 
 use crate::schema::{ClassificationAnswer, Cursor, CursorState, Identity, Place, PresenceState, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
 use crate::validation::{is_slug, normalize_handle, pointer, IssueCode, ValidationIssue};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// 🏠️ The catalog-wide presence room: who is online and where.
 pub fn roster_scope(catalog: &str) -> String {
@@ -133,8 +133,8 @@ pub fn thinking_issues(state: &ThinkingState) -> Vec<ValidationIssue> {
                     }
                 }
                 let path = format!("{base}/guesses");
-                limit(&mut issues, path.clone(), guesses.len());
-                for (item, guess) in guesses {
+                limit(&mut issues, path.clone(), guesses.as_ref().map_or(0, BTreeMap::len));
+                for (item, guess) in guesses.iter().flatten() {
                     if !is_slug(item) {
                         issues.push(ValidationIssue { path: pointer(&path, item), code: IssueCode::SlugInvalid });
                     }

@@ -1,0 +1,4 @@
+import {legendSceneChecks} from '../../../../../../../../../🧰️framework/🛍️products/📓️print/🧪️tests/🎬️render-scene/🧭️legend/🟦️.ts';
+function equal(a:unknown,b:unknown):boolean{if(typeof a==='number'&&typeof b==='number')return Math.abs(a-b)<1e-4;if(Array.isArray(a)&&Array.isArray(b))return a.length===b.length&&a.every((value,index)=>equal(value,b[index]));if(a&&b&&typeof a==='object'&&typeof b==='object'){const av=a as Record<string,unknown>,bv=b as Record<string,unknown>;return Object.keys(av).length===Object.keys(bv).length&&Object.keys(av).every(key=>equal(av[key],bv[key]));}return a===b;}
+const failures:string[]=[];for(const check of legendSceneChecks()){if(!equal(await check.subject(),await check.oracle()))failures.push(check.name);}
+console.log('[DEBUG] canonical authored line-box vectors '+JSON.stringify({checks:legendSceneChecks().length,failures}));if(failures.length)throw Error(failures.join('\n'));

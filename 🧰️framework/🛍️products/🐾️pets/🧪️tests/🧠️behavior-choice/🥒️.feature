@@ -6,8 +6,7 @@ Feature: A pet chooses what to do next by weights, and no activity is a dead end
   then (design §1, §5.6). What an idle pet does next is one weighted draw: `activityWeights(actor, species,
   situation)` gives every activity a weight (0 = not eligible) from the limits of the mode (`MODE_LIMITS`), the
   needs of the actor and what goes on around it, and `randomPick` takes one index. `dwellOf(activity, mode, unit)`
-  says how long an activity lasts, `moodOf(activity)` which mood it eases towards, `encounterOf(affinity, unit)`
-  what two pets do when they meet — friends mostly cuddle, rivals mostly squabble, everyone else mostly greets —
+  says how long an activity lasts, `encounterOf(affinity, unit)` what two pets do when they meet — friends mostly cuddle, rivals mostly squabble, everyone else mostly greets —
   `followersOf(activity)` which activity may follow which, and `castOf(cast, capacity, epoch, seed)` who is on
   stage (design §4.6, §5.2, §5.4, §5.5).
 
@@ -17,16 +16,17 @@ Feature: A pet chooses what to do next by weights, and no activity is a dead end
   of a cast is `numpy.roll`. The activity graph is judged by `scipy.sparse.csgraph`: breadth-first search from
   every activity names everything reachable from it, and `connected_components(connection="strong")` must find
   exactly one component — from every activity a pet can get to every other one, so it can never be stuck. The
-  tables themselves (limits, weights, dwells, moods, encounter shares, followers) are this product's own tuning;
+  tables themselves (limits, weights, dwells, encounter shares, followers) are this product's own tuning;
   the oracle restates them from the design text with numpy arithmetic, so the committed numbers, the TypeScript
   twin (`@semio-tech/pets`) and the Rust twin (`pets` crate) are held to one reading. Floats compare within 1e-9,
   indices, ticks, names and counts exactly.
 
   The committed situations cover both lively modes and the still one, quiet times, a full and an empty mover
-  budget, a perch without room, a species without a fidget, a watched and a tired pet, and company on its surface
+  budget, a perch without room, a species without a fidget, a watched and a tired pet, company on its surface
   (which makes a pet restless: the weight of a hop grows with every neighbour, so a crowd thins out where another
-  perch is open); 256 decisions per situation show what a mode feels like (a rested pet in calm stays idle in more
-  than half of them).
+  perch is open) and a trick of its own on offer for a whim (rare in calm, more often in lively, never in a quiet
+  time or a still stage); 256 decisions per situation show what a mode feels like (a rested pet in calm stays idle
+  in more than half of them).
 
   The vectors shared://🧠️behavior-choice/🔣️.json are generated, never hand-edited, from the Python reference in
   this directory, from the repository root:
@@ -47,7 +47,7 @@ Feature: A pet chooses what to do next by weights, and no activity is a dead end
   Scenario: The weights of an idle pet follow its needs and its surroundings
     Given the committed vectors shared://🧠️behavior-choice/🔣️.json
     When activityWeights is taken of every committed situation
-    Then every implementation projects the same eleven weights per situation, 0 for every activity that is not eligible
+    Then every implementation projects the same twenty-six weights per situation, 0 for every activity that is not eligible
 
   @id-picks
   @level-fundamental
@@ -73,14 +73,6 @@ Feature: A pet chooses what to do next by weights, and no activity is a dead end
     When dwellOf is taken of every committed activity and mode at every committed unit
     Then every implementation projects the same ticks, low + floor((high − low) × unit)
 
-  @id-moods
-  @level-fundamental
-  @mode-differential
-  Scenario: Every activity has its mood
-    Given the committed vectors shared://🧠️behavior-choice/🔣️.json
-    When moodOf is taken of every activity
-    Then every implementation projects the same mood per activity, from −0.8 for a squabble to 1 for a cuddle
-
   @id-encounters
   @level-fundamental
   @mode-differential
@@ -95,7 +87,7 @@ Feature: A pet chooses what to do next by weights, and no activity is a dead end
   Scenario: Every activity is reachable from every other one
     Given the committed vectors shared://🧠️behavior-choice/🔣️.json
     When followersOf is read for every activity and the graph is searched from every activity
-    Then every implementation projects the committed followers, the reachable set scipy finds from every activity — all eleven — and one strongly connected component
+    Then every implementation projects the committed followers, the reachable set scipy finds from every activity — all twenty-six — and one strongly connected component
 
   @id-casts
   @level-fundamental

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { printSansMetrics } from "./📏️metrics/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
@@ -21,6 +23,7 @@ export async function stagePrintFonts(workspace = getWorkspaceRoot()): Promise<{
     const source = join(workspace, product, "🖼️assets/🔤️font", font.directory, font.filename);
     const bytes = readFileSync(source);
     if (bytes.length < 12 || bytes.readUInt32BE(0) !== 0x00010000) throw new Error(`Print font is not TTF: ${source}`);
+    if (font.family === "Anta" && createHash("sha256").update(bytes).digest("hex") !== printSansMetrics().sha256) throw new Error("Tracked Anta metrics require generate-font-metrics");
     if (files.has(font.texFilename)) throw new Error(`Duplicate print font: ${font.texFilename}`);
     files.set(font.texFilename, source);
   }

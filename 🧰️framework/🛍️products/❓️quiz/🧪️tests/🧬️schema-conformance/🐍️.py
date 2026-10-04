@@ -7,7 +7,10 @@ fixture, a JSON pointer with ``*`` wildcards and a ``$defs`` entry), every quiz 
 ``🎓️teaching``, and the committed rejected quizzes and catalogs, each of which must break the schema. Only
 the quizzes and catalogs are projected, because only they have an owned validator on the subject side
 (``quizIssues``/``catalogIssues``); every other typed document is still validated here and fails the
-oracle phase when it breaks the contract.
+oracle phase when it breaks the contract. The committed ``instances`` hold every definition the
+challenges added or changed (``Challenge``, the hints, ``Best``, the sheet types, the answers and item
+results, ``RunResult``, commands, events, rejections and views) to the schema from both sides: an
+instance that names no rule must conform, one that names a rule must break the schema at it.
 
 @see https://python-jsonschema.readthedocs.io/en/stable/validate/
 @see ../../🧬️schema/🔣️.json
@@ -128,7 +131,23 @@ def rejected_quizzes(ctx):
         if not any(line.endswith(": %s" % vector["violates"]) for line in broken):
             raise AssertionError("rejected-quizzes/%s: expected a %s violation, the schema reports %r" % (vector["id"], vector["violates"], broken))
         produced[vector["id"]] = False
+    typed_instances(vectors["instances"])
     return Outcome(produced)
+
+
+def typed_instances(instances):
+    """🧩️ Every committed instance of a typed definition without an owned validator: one that names no rule must conform, one that names a rule must break the schema at it."""
+    covered = {}
+    for vector in instances:
+        broken = violations(vector["definition"], vector["document"])
+        if "violates" not in vector and broken:
+            raise AssertionError("instances/%s: the instance is not a %s — %s" % (vector["id"], vector["definition"], "; ".join(broken)))
+        if "violates" in vector and not any(line.endswith(": %s" % vector["violates"]) for line in broken):
+            raise AssertionError("instances/%s: expected a %s violation, the schema reports %r" % (vector["id"], vector["violates"], broken))
+        covered.setdefault(vector["definition"], set()).add("violates" in vector)
+    one_sided = sorted(definition for definition, sides in covered.items() if sides != {True, False})
+    if one_sided:
+        raise AssertionError("instances: %s lack a conforming or a broken instance" % ", ".join(one_sided))
 
 
 # endregion 🔖️Handlers

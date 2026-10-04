@@ -13,7 +13,7 @@ pub(crate) fn fixture() -> LoadedCatalog {
 }
 
 fn quiz_document(id: &str) -> String {
-    format!(r#"{{"schema":"semio.quiz/v1","id":"{id}","emoji":"🧪","title":{{"en":"T","de":"T"}},"description":{{"en":"D","de":"D"}},"tasks":[{{"kind":"sorting","id":"order","title":{{"en":"T","de":"T"}},"prompt":{{"en":"P","de":"P"}},"quantity":{{"label":{{"en":"L","de":"L"}},"unit":"W","scale":"linear","prefixed":false}},"items":[{{"id":"a","label":{{"en":"A","de":"A"}},"value":1}},{{"id":"b","label":{{"en":"B","de":"B"}},"value":2}}]}}]}}"#)
+    format!(r#"{{"schema":"semio.quiz/v1","id":"{id}","emoji":"🧪","title":{{"en":"T","de":"T"}},"description":{{"en":"D","de":"D"}},"tasks":[{{"kind":"sorting","id":"order","title":{{"en":"T","de":"T"}},"prompt":{{"en":"P","de":"P"}},"quantity":{{"label":{{"en":"L","de":"L"}},"unit":"W","scale":"linear","prefixed":false,"additive":false}},"items":[{{"id":"a","label":{{"en":"A","de":"A"}},"value":1}},{{"id":"b","label":{{"en":"B","de":"B"}},"value":2}}]}}]}}"#)
 }
 
 fn catalog_document(entries: &[&str]) -> String {

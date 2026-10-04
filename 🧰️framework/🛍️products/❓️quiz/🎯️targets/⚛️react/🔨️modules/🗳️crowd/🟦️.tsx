@@ -7,7 +7,8 @@
  * **How.** Everything is a figure. The answers of a task are a small chart per item ({@link AnswerFigure}): one column
  * per category, place or value, as tall as the share of the submitted runs that chose it, the percentage on its cap;
  * the learners thinking along right now are dots in their presence colours on the same chart; ● marks the learner's
- * own answer, whose column wears the accent, and — once there is a result — ✓ the correct one. The scores of all runs
+ * own answer, whose column wears the accent — a guessed value the column of the authored value the crowd tallies it
+ * under, by the core's own rule —, and — once there is a result — ✓ the correct one. The scores of all runs
  * are a histogram over the ten score bins ({@link ScoreFigure}) with the learner's own bin in the accent. Sheets differ
  * per learner, so everything is semantic, keyed by item id and by category, place or value, never by position on a
  * sheet. Every figure is a real table or list whose cells say their numbers in words, so nothing depends on colour, on
@@ -15,15 +16,15 @@
  * its size whatever the crowd puts into it.
  *
  * @see ../../../../🧬️schema/🔣️.json — `CrowdView`, `ThinkingState`
- * @see ../../../../🔨️modules/👁️views/🟦️.ts — `crowdView`, `scoreBin`, `placeBin`
+ * @see ../../../../🔨️modules/👁️views/🟦️.ts — `crowdView`, `scoreBin`, `placeBin`, `nearestOf`
  * @see ../📊️plot/🟦️.tsx — the column every figure is drawn with
  */
 
 import { useId, type ReactElement, type ReactNode } from "react";
-import { CROWD_SCORE_BINS, placeBin, scoreBin, thinkingCrowd, valueKey, type Answer, type CrowdItem, type CrowdView, type Icon, type SheetTask, type Slug, type TaskKind, type TaskResult, type ThinkingItem, type ThinkingState } from "@semio-tech/quiz";
+import { CROWD_SCORE_BINS, challengeRules, nearestOf, placeBin, scoreBin, thinkingCrowd, valueKey, type Answer, type CrowdItem, type CrowdView, type Icon, type RunView, type SheetTask, type Slug, type TaskKind, type TaskResult, type ThinkingItem, type ThinkingState } from "@semio-tech/quiz";
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { formatNumber, formatQuantity, formatScore, withUnit } from "../📏️quantity/🟦️.ts";
-import { BodyButton, IconLabel, Missing } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, IconLabel, Missing, Records, TABLE } from "../🪟️chrome/🟦️.tsx";
 import { Column, columnShare, formatShare, peakOf } from "../📊️plot/🟦️.tsx";
 import { paintStyle, usePresenceView } from "../👥️presence/🟦️.tsx";
 
@@ -42,11 +43,18 @@ export type CrowdPlace = "run" | "quiz" | "results";
 export type CrowdGate = "open" | "asked" | "locked" | "off";
 
 /** 🔐️ The gate of `place` for a learner who chose `others`: results are open, a quiz's page is once the learner has
- * `submitted` a run of that quiz, a run never is by itself; where it is not, an ask opens it. */
-export function crowdGate(others: OthersChoice, place: CrowdPlace, facts: { readonly asked: boolean; readonly submitted: boolean }): CrowdGate {
-  if (others === "never") return "off";
+ * `submitted` a run of that quiz, a run never is by itself; where it is not, an ask opens it. While a run of the quiz
+ * that hides the keys is open (`hidden`) the others are not offered in the run nor on the quiz's page: they would show
+ * the keys. */
+export function crowdGate(others: OthersChoice, place: CrowdPlace, facts: { readonly asked: boolean; readonly submitted: boolean; readonly hidden: boolean }): CrowdGate {
+  if (others === "never" || (facts.hidden && place !== "results")) return "off";
   if (others === "always" || place === "results" || (place === "quiz" && facts.submitted)) return "open";
   return facts.asked ? "asked" : "locked";
+}
+
+/** 🙈️ Whether `view` is an open run whose challenge hides the keys, so the others' answers must not show beside it. */
+export function keysHidden(view: RunView): boolean {
+  return view.status === "open" && !challengeRules(view.sheet.challenge).keys;
 }
 
 /** 👀️ Whether a gate lets the others show. */
@@ -204,9 +212,18 @@ function choicesOf(input: AnswerFigureInput, submitted: readonly CrowdItem[], th
       const dimension = task.dimensions.find((candidate) => candidate.id === input.dimension);
       const cards = dimension?.cards ?? [];
       const scored = result?.kind === "matching" ? (result.dimensions.find((candidate) => candidate.dimension === input.dimension)?.items ?? []) : [];
-      const drafted = answer?.kind === "matching" && input.dimension !== undefined ? answer.assignments[input.dimension] : undefined;
-      const keys = new Set([...cards.filter(Number.isFinite).map(valueKey), ...submitted.flatMap((item) => (item.counts ?? []).map((entry) => entry.key)), ...thinking.flatMap((item) => (item.votes ?? []).map((vote) => vote.key))]);
-      const key = (value: number | undefined): string | undefined => (value === undefined || !Number.isFinite(value) ? undefined : valueKey(value));
+      const drafted = (item: Slug): number | undefined => {
+        if (answer?.kind !== "matching" || input.dimension === undefined) return undefined;
+        const index = answer.assignments?.[input.dimension]?.[item];
+        return index === undefined ? answer.guesses?.[input.dimension]?.[item] : cards[index];
+      };
+      const authored = [...cards, ...scored.map((entry) => entry.correct), ...submitted.flatMap((item) => (item.counts ?? []).map((entry) => Number(entry.key)))].filter(Number.isFinite);
+      const keys = new Set([...authored.map(valueKey), ...thinking.flatMap((item) => (item.votes ?? []).map((vote) => vote.key))]);
+      const key = (value: number | undefined): string | undefined => {
+        if (value === undefined || !Number.isFinite(value)) return undefined;
+        const tallied = dimension === undefined ? value : nearestOf(authored, dimension.quantity.scale, value);
+        return tallied === undefined ? undefined : valueKey(tallied);
+      };
       const bare = dimension !== undefined && !dimension.quantity.prefixed && dimension.quantity.unit !== "";
       return {
         columns: [...keys].sort((left, right) => Number(left) - Number(right)).map((value) => ({ key: value, label: dimension === undefined ? value : bare ? formatNumber(Number(value), locale) : formatQuantity(Number(value), dimension.quantity, locale) })),
@@ -214,7 +231,7 @@ function choicesOf(input: AnswerFigureInput, submitted: readonly CrowdItem[], th
         order: sheet,
         count: counted,
         live: voted,
-        own: (item) => key(scored.find((entry) => entry.item === item)?.assigned ?? (drafted?.[item] === undefined ? undefined : cards[drafted[item]])),
+        own: (item) => key(scored.find((entry) => entry.item === item)?.assigned ?? drafted(item)),
         correct: (item) => key(scored.find((entry) => entry.item === item)?.correct),
       };
     }
@@ -223,7 +240,7 @@ function choicesOf(input: AnswerFigureInput, submitted: readonly CrowdItem[], th
 
 /** 🏗️ The answer figure of one task: a row per item of the learner's sheet — a sorting in the learner's own order, so
  * the learner's marks run down the diagonal —, a column per category in sheet order, per place, or per value given by
- * anyone, ascending. */
+ * anyone or known to be authored (a card, a true value of the result), ascending. */
 export function answerFigure(input: AnswerFigureInput): AnswerFigureModel {
   const { task, crowd, locale } = input;
   const submitted = crowd?.tasks.find((candidate) => candidate.task === task.id && candidate.dimension === input.dimension)?.items ?? [];
@@ -296,14 +313,24 @@ function Caption(props: { readonly title: string; readonly facts: readonly React
   );
 }
 
+/** 📏️ The width in rem below which a figure of `tracks` columns folds: the least its items and its columns need side
+ * by side (`.quiz-plot`: 9em and 3.5em each, at its text size of three quarters of a rem). */
+export function plotFold(tracks: number): number {
+  return (9 + 3.5 * tracks) * 0.75;
+}
+
 /** 🖼️ The answers of one task as a figure named `name`: a table with a row per item and a column per category, place
  * or value; every cell says its share, count and marks in words and draws them as a column, its cap and the marks
- * under its baseline. `title` heads it (a matching's quantity), else "What everyone answered". */
+ * under its baseline. `title` heads it (a matching's quantity), else "What everyone answered". Where its card is too
+ * narrow for the items beside the columns, every item stands on a line above its columns and each column says below
+ * its marks what it stands for; the many value cards of a matching then show only the columns somebody chose or that
+ * are marked (`data-sparse`), since a column that names itself needs no place among the others. */
 export function AnswerFigure(props: AnswerFigureInput & { readonly name: string; readonly title?: string; readonly text: QuizText }): ReactElement {
   const { text, locale } = props;
   const figure = answerFigure(props);
   const sorting = figure.kind === "sorting";
-  const marked = (mark: (cell: AnswerCell) => boolean): boolean => figure.rows.some((row) => row.cells.some(mark));
+  const tracks = figure.columns.length + (sorting ? 1 : 0);
+  const marked =(mark: (cell: AnswerCell) => boolean): boolean => figure.rows.some((row) => row.cells.some(mark));
   const legend: readonly (readonly [string, ReactNode, string])[] = [
     ...(marked((cell) => cell.own) ? [["own", "●", text("quiz.crowd.own")] as const] : []),
     ...(marked((cell) => cell.correct) ? [["correct", "✓", text("quiz.crowd.correct")] as const] : []),
@@ -312,15 +339,15 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
   return (
     <figure data-crowd-figure="answers" data-task={props.task.id} data-dimension={props.dimension} data-runs={figure.runs} data-thinkers={figure.thinkers} className="quiz-figure m-0 flex min-w-0 flex-col gap-single">
       <Caption title={`${props.title ?? text("quiz.crowd.title")}${figure.unit === undefined ? "" : ` (${figure.unit})`}`} facts={[text("quiz.crowd.runs", { count: figure.runs }), ...(figure.thinkers > 0 ? [text("quiz.crowd.thinking", { count: figure.thinkers })] : [])]} />
-      <div className="relative max-w-full overflow-x-auto">
-        <table className="quiz-plot" aria-label={props.name} style={{ ["--quiz-plot-columns" as string]: String(figure.columns.length + (sorting ? 1 : 0)) }}>
-          <thead>
-            <tr>
-              <th scope="col" className="quiz-plot-item">
+      <Records fold={plotFold(tracks)}>
+        <table {...TABLE.table} className="quiz-plot" data-sparse={figure.kind === "matching" ? "" : undefined} aria-label={props.name} style={{ ["--quiz-plot-columns" as string]: String(tracks) }}>
+          <thead {...TABLE.group}>
+            <tr {...TABLE.row}>
+              <th {...TABLE.column} className="quiz-plot-item">
                 {text("quiz.results.item")}
               </th>
               {figure.columns.map((column, place) => (
-                <th key={column.key} scope="col">
+                <th key={column.key} {...TABLE.column}>
                   {sorting ? (
                     <>
                       <span className="sr-only">{text("quiz.crowd.place", { place: column.label })}</span>
@@ -336,24 +363,22 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
                   )}
                 </th>
               ))}
-              {sorting ? (
-                <th scope="col">{text("quiz.crowd.meanPlace")}</th>
-              ) : null}
+              {sorting ? <th {...TABLE.column}>{text("quiz.crowd.meanPlace")}</th> : null}
             </tr>
           </thead>
-          <tbody>
+          <tbody {...TABLE.group}>
             {figure.rows.map((row, place) => (
-              <tr key={row.item} data-crowd-item={row.item} data-answers={row.answers}>
-                <th scope="row" className="quiz-plot-item">
+              <tr key={row.item} {...TABLE.row} data-crowd-item={row.item} data-answers={row.answers}>
+                <th {...TABLE.name} className="quiz-plot-item">
                   <IconLabel icon={row.icon} order={place}>
                     {row.label}
                   </IconLabel>
                 </th>
-                {row.cells.map((cell) => {
+                {row.cells.map((cell, column) => {
                   const share = formatShare(cell.share, locale);
                   const sentence = [text("quiz.crowd.cell", { share, count: cell.count, answers: row.answers }), ...(cell.own ? [text("quiz.crowd.own")] : []), ...(cell.correct ? [text("quiz.crowd.correct")] : []), ...(cell.tags.length > 0 ? [text("quiz.crowd.liveCount", { count: cell.tags.length })] : [])].join(", ");
                   return (
-                    <td key={cell.key} data-key={cell.key} data-count={cell.count} data-own={cell.own ? "" : undefined} data-correct={cell.correct ? "" : undefined} data-live={cell.tags.length > 0 ? cell.tags.length : undefined} title={sentence}>
+                    <td key={cell.key} {...TABLE.cell} data-label={figure.columns[column]?.label} data-empty={cell.count > 0 || cell.own || cell.correct || cell.tags.length > 0 ? undefined : ""} data-key={cell.key} data-count={cell.count} data-own={cell.own ? "" : undefined} data-correct={cell.correct ? "" : undefined} data-live={cell.tags.length > 0 ? cell.tags.length : undefined} title={sentence}>
                       <span className="sr-only">{sentence}</span>
                       <Column share={cell.share} label={cell.count > 0 ? share : undefined} emphasis={cell.own} />
                       <span aria-hidden="true" className="quiz-plot-marks">
@@ -364,12 +389,16 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
                     </td>
                   );
                 })}
-                {sorting ? <td className="quiz-plot-mean tabular-nums">{row.mean === undefined ? <Missing label={text("quiz.crowd.nobody")} /> : formatNumber(row.mean, locale)}</td> : null}
+                {sorting ? (
+                  <td {...TABLE.cell} data-label={text("quiz.crowd.meanPlace")} className="quiz-plot-mean tabular-nums">
+                    {row.mean === undefined ? <Missing label={text("quiz.crowd.nobody")} /> : formatNumber(row.mean, locale)}
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </Records>
       {legend.length === 0 ? null : (
         <ul role="list" aria-hidden="true" className="m-0 flex list-none flex-wrap gap-x-double gap-y-single p-0 text-xs text-muted-foreground">
           {legend.map(([key, mark, label]) => (

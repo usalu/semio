@@ -16,8 +16,8 @@
 
 import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type RefObject } from "react";
 import type { QuizLocale, QuizText } from "../🌐️i18n/🟦️.ts";
-import { formatNumber, withUnit } from "../📏️quantity/🟦️.ts";
-import { Missing } from "../🪟️chrome/🟦️.tsx";
+import { formatNumber, formatScore, withUnit } from "../📏️quantity/🟦️.ts";
+import { Missing, Records, TABLE } from "../🪟️chrome/🟦️.tsx";
 
 //#region 📐️Geometry
 /** 📐️ The circle a diagram is drawn in, in SVG user units. */
@@ -44,7 +44,7 @@ export function radarAngle(index: number, count: number): number {
   return (2 * Math.PI * index) / count;
 }
 
-/** 📍️ The point at `fraction` of the radius along spoke `index` of `count`. */
+/** 🎯️ The point at `fraction` of the radius along spoke `index` of `count`. */
 export function radarPoint(frame: RadarFrame, index: number, count: number, fraction: number): RadarPoint {
   const angle = radarAngle(index, count);
   return { x: frame.cx + frame.radius * fraction * Math.sin(angle), y: frame.cy - frame.radius * fraction * Math.cos(angle) };
@@ -61,10 +61,10 @@ function pointList(points: readonly RadarPoint[]): string {
 //#endregion 📐️Geometry
 
 //#region 🏷️Labels
-/** 📏️ The advance width of a text in SVG user units. */
+/** ↔️ The advance width of a text in SVG user units. */
 export type TextMeasure = (text: string) => number;
 
-/** ▭️ An axis-aligned box in SVG user units. */
+/** 📦️ An axis-aligned box in SVG user units. */
 export interface RadarBox {
   readonly x: number;
   readonly y: number;
@@ -101,7 +101,7 @@ export interface RadarLayout {
 /** 🔠️ The label font size as a share of the surrounding text size. */
 export const RADAR_LABEL_EM = 0.85;
 
-/** 📐️ The layout's proportions in label font sizes: view box padding, spoke end to label, line height, space between
+/** ⚖️ The layout's proportions in label font sizes: view box padding, spoke end to label, line height, space between
  * labels, the radius range, the smallest radius that still keeps a side label's longest word whole, the room side
  * labels get before the circle grows, and the least room they keep. */
 export const RADAR_METRICS = { pad: 0.4, gap: 0.5, line: 1.3, spacing: 0.3, minRadius: 3, maxRadius: 7.5, wordRadius: 2, side: 6, minSide: 3 } as const;
@@ -113,11 +113,11 @@ const LETTER = /\p{L}/u;
 const VOWEL = /[aeiouyàáâãäåæèéêëìíîïòóôõöøùúûüýÿœ]/iu;
 const FIT_TOLERANCE = 1e-6;
 const HYPHEN_BREAK = /(?<=-)(?=[^-])/u;
-const NARROW = new Set("iljI|.,:;'!·ı¡");
-const SLIM = new Set('frt()[]{}°¹²³"*`‘’‚');
-const WIDE = new Set("mwæMW");
-const BROAD = new Set("ÆŒœ¼½¾");
-const MEDIUM = new Set("/&€$£#+=<>_~?–-");
+const NARROW = /* @__PURE__ */ new Set("iljI|.,:;'!·ı¡");
+const SLIM = /* @__PURE__ */ new Set('frt()[]{}°¹²³"*`‘’‚');
+const WIDE = /* @__PURE__ */ new Set("mwæMW");
+const BROAD = /* @__PURE__ */ new Set("ÆŒœ¼½¾");
+const MEDIUM = /* @__PURE__ */ new Set("/&€$£#+=<>_~?–-");
 const charWidths = new Map<string, number>();
 
 function charEm(char: string): number {
@@ -156,7 +156,7 @@ export function estimateTextWidth(text: string, fontSize: number): number {
 
 let canvas: OffscreenCanvasRenderingContext2D | null | undefined;
 
-/** 📏️ Measures text at `fontSize` in the CSS font `family` with a 2D canvas, which shapes text like the SVG around it;
+/** 🖌️ Measures text at `fontSize` in the CSS font `family` with a 2D canvas, which shapes text like the SVG around it;
  * falls back to {@link estimateTextWidth} where no canvas exists. */
 export function textMeasure(fontSize: number, family: string): TextMeasure {
   canvas ??= typeof OffscreenCanvas === "undefined" ? null : new OffscreenCanvas(1, 1).getContext("2d");
@@ -325,7 +325,7 @@ function startLabel(lines: readonly string[], x: number, y: number, lineHeight: 
   return { lines, box: { x, y, width: Math.max(0, ...lines.map(measure)), height: lines.length * lineHeight }, x, anchor: "start" };
 }
 
-/** 🗺️ Lays out a diagram with one label per spoke for `width` user units, with labels at `fontSize`.
+/** 🗂️ Lays out a diagram with one label per spoke for `width` user units, with labels at `fontSize`.
  *
  * Proportions come from {@link RADAR_METRICS}. The side labels first get room for up to `side` font sizes (at least
  * their longest word), the circle takes the rest within `minRadius` and `maxRadius` — down to `wordRadius` when that
@@ -360,7 +360,7 @@ export function radarLayout(labels: readonly string[], width: number, fontSize: 
 //#endregion 🏷️Labels
 
 //#region 🕸️Chart
-/** 🕸️ One localized spoke of a diagram. */
+/** 🦴️ One localized spoke of a diagram. */
 export interface RadarAxis {
   readonly id: string;
   readonly label: string;
@@ -441,9 +441,11 @@ function RadarText(props: { readonly className: string; readonly label: RadarLab
   );
 }
 
-/** 🕸️ The spider diagram of `values` over `axes`, named `name`, laid out for the width it gets, with its value table. */
-export function RadarChart(props: { readonly name: string; readonly axes: readonly RadarAxis[]; readonly values: Readonly<Record<string, number>>; readonly text: QuizText; readonly locale: QuizLocale }): ReactElement {
-  const { name, axes, values, text, locale } = props;
+/** 🌐️ The spider diagram of `values` over `axes`, named `name`, laid out for the width it gets, with its value table. A
+ * `normalised` diagram (the keys are hidden) draws shares of each axis range and says them as percentages, without
+ * units, ranges or values. */
+export function RadarChart(props: { readonly name: string; readonly axes: readonly RadarAxis[]; readonly values: Readonly<Record<string, number>>; readonly normalised?: boolean; readonly text: QuizText; readonly locale: QuizLocale }): ReactElement {
+  const { name, axes, values, normalised = false, text, locale } = props;
   const titleId = useId();
   const figure = useRef<HTMLElement>(null);
   const ruler = useRef<HTMLSpanElement>(null);
@@ -455,7 +457,8 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
   }, [labelKey, space]);
   const { frame } = layout;
   const count = axes.length;
-  const shown = (axis: RadarAxis): string => (axis.id in values ? withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit) : text("quiz.radar.missing"));
+  const shown = (axis: RadarAxis): string => (!(axis.id in values) ? text("quiz.radar.missing") : normalised ? formatScore(radarFraction(values[axis.id] ?? 0, axis.min, axis.max), locale) : withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit));
+  const headings = normalised ? (["quiz.radar.axis", "quiz.radar.share"] as const) : (["quiz.radar.axis", "quiz.radar.value", "quiz.radar.minimum", "quiz.radar.maximum"] as const);
   const reading = text("quiz.radar.values", { values: axes.map((axis) => text("quiz.radar.entry", { axis: axis.label, value: shown(axis) })).join("; ") });
   return (
     <figure ref={figure} className="quiz-radar m-0 flex flex-col gap-single">
@@ -483,41 +486,44 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
           ))}
         </g>
       </svg>
-      <details className="text-sm">
+      <details className="min-w-0 text-sm">
         <summary className="quiz-target flex cursor-pointer items-center">{text("quiz.radar.table")}</summary>
-        <div className="relative max-w-full overflow-x-auto">
-          <table className="w-full border-collapse">
+        <Records fold={28}>
+          <table {...TABLE.table} className="quiz-fold w-full border-collapse text-sm">
             <caption className="sr-only">{text("quiz.radar.label", { name })}</caption>
-            <thead>
-              <tr>
-                <th scope="col" className={VALUE_HEAD}>
-                  {text("quiz.radar.axis")}
-                </th>
-                <th scope="col" className={VALUE_HEAD}>
-                  {text("quiz.radar.value")}
-                </th>
-                <th scope="col" className={VALUE_HEAD}>
-                  {text("quiz.radar.minimum")}
-                </th>
-                <th scope="col" className={VALUE_HEAD}>
-                  {text("quiz.radar.maximum")}
-                </th>
+            <thead {...TABLE.group}>
+              <tr {...TABLE.row}>
+                {headings.map((heading) => (
+                  <th key={heading} {...TABLE.column} className={VALUE_HEAD}>
+                    {text(heading)}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody {...TABLE.group}>
               {axes.map((axis) => (
-                <tr key={axis.id}>
-                  <th scope="row" className={VALUE_ROW_HEAD}>
+                <tr key={axis.id} {...TABLE.row}>
+                  <th {...TABLE.name} data-cell="name" className={VALUE_ROW_HEAD}>
                     {axis.label}
                   </th>
-                  <td className={VALUE_CELL}>{axis.id in values ? shown(axis) : <Missing label={text("quiz.radar.missing")} />}</td>
-                  <td className={VALUE_CELL}>{withUnit(formatNumber(axis.min, locale), axis.unit)}</td>
-                  <td className={VALUE_CELL}>{withUnit(formatNumber(axis.max, locale), axis.unit)}</td>
+                  <td {...TABLE.cell} data-label={text(normalised ? "quiz.radar.share" : "quiz.radar.value")} className={VALUE_CELL}>
+                    {axis.id in values ? shown(axis) : <Missing label={text("quiz.radar.missing")} />}
+                  </td>
+                  {normalised ? null : (
+                    <>
+                      <td {...TABLE.cell} data-label={text("quiz.radar.minimum")} className={VALUE_CELL}>
+                        {withUnit(formatNumber(axis.min, locale), axis.unit)}
+                      </td>
+                      <td {...TABLE.cell} data-label={text("quiz.radar.maximum")} className={VALUE_CELL}>
+                        {withUnit(formatNumber(axis.max, locale), axis.unit)}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Records>
       </details>
     </figure>
   );

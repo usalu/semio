@@ -3,7 +3,38 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { answerComplete, answerRejection, catalogIssues, quizIssues, sheetOf, type Answer, type Quiz, type SheetTask, type ValidationIssue } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import {
+  CHALLENGES,
+  DEFAULT_LIMITS,
+  REJECTIONS,
+  VERDICTS,
+  answerComplete,
+  answerRejection,
+  catalogIssues,
+  catalogView,
+  challengeRules,
+  crowdView,
+  decideLearner,
+  emptyLearnerState,
+  evolveLearner,
+  leaderboard,
+  learnerView,
+  quizIssues,
+  runSeed,
+  runView,
+  sheetOf,
+  transcript,
+  type Answer,
+  type Catalog,
+  type Challenge,
+  type Command,
+  type Event,
+  type LearnerContext,
+  type LearnerState,
+  type Quiz,
+  type SheetTask,
+  type ValidationIssue,
+} from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 type Mutable = Record<string, any>;
 
@@ -55,7 +86,7 @@ function physics(): Mutable {
         id: "power",
         title: T("Power", "Leistung"),
         prompt: T("Sort", "Sortiere"),
-        quantity: { label: T("Power", "Leistung"), unit: "W", scale: "logarithmic", prefixed: true },
+        quantity: { label: T("Power", "Leistung"), unit: "W", scale: "logarithmic", prefixed: true, additive: true },
         items: [
           { id: "tea-light", label: T("Tea light", "Teelicht"), value: 30 },
           { id: "kettle", label: T("Kettle", "Wasserkocher"), value: 2000 },
@@ -68,8 +99,8 @@ function physics(): Mutable {
         title: T("Walls", "Wände"),
         prompt: T("Match", "Zuordnen"),
         dimensions: [
-          { id: "u-value", quantity: { label: T("U-value", "U-Wert"), unit: "W/(m²K)", scale: "linear", prefixed: false } },
-          { id: "demand", quantity: { label: T("Demand", "Bedarf"), unit: "kWh/(m²a)", scale: "logarithmic", prefixed: false } },
+          { id: "u-value", quantity: { label: T("U-value", "U-Wert"), unit: "W/(m²K)", scale: "linear", prefixed: false, additive: false } },
+          { id: "demand", quantity: { label: T("Demand", "Bedarf"), unit: "kWh/(m²a)", scale: "logarithmic", prefixed: false, additive: false } },
         ],
         items: [
           { id: "old-wall", label: T("Old wall", "Altbauwand"), values: { "u-value": 1.4, demand: 250 } },
@@ -158,6 +189,17 @@ describe("quizIssues", () => {
     ["an unknown scale", (quiz) => (quiz.tasks[1].quantity.scale = "decibel"), [{ path: "/tasks/1/quantity/scale", code: "value-invalid" }]],
     ["a too long unit", (quiz) => (quiz.tasks[1].quantity.unit = "W".repeat(33)), [{ path: "/tasks/1/quantity/unit", code: "length-invalid" }]],
     ["a non-boolean prefix flag", (quiz) => (quiz.tasks[1].quantity.prefixed = "yes"), [{ path: "/tasks/1/quantity/prefixed", code: "type-invalid" }]],
+    ["a non-boolean additive flag", (quiz) => (quiz.tasks[2].dimensions[1].quantity.additive = 1), [{ path: "/tasks/2/dimensions/1/quantity/additive", code: "type-invalid" }]],
+    ["a quantity without its additive flag", (quiz) => delete quiz.tasks[1].quantity.additive, [{ path: "/tasks/1/quantity/additive", code: "required" }]],
+    ["a short item label of 41 code points", (quiz) => (quiz.tasks[1].items[0].short = T("t".repeat(41), "Teelicht")), [{ path: "/tasks/1/items/0/short/en", code: "length-invalid" }]],
+    ["a short quantity label of 41 code points in German", (quiz) => (quiz.tasks[2].dimensions[0].quantity.short = T("U", "ü".repeat(41))), [{ path: "/tasks/2/dimensions/0/quantity/short/de", code: "length-invalid" }]],
+    ["an empty short axis label", (quiz) => (quiz.tasks[0].axes[0].short = T("", "Heizen")), [{ path: "/tasks/0/axes/0/short/en", code: "length-invalid" }]],
+    ["a short category label without German", (quiz) => (quiz.tasks[0].categories[0].short = { en: "Passive" }), [{ path: "/tasks/0/categories/0/short/de", code: "required" }]],
+    ["a short label that is no text", (quiz) => (quiz.tasks[0].items[0].short = "Villa"), [{ path: "/tasks/0/items/0/short", code: "type-invalid" }]],
+    ["a short label on a matching item with a third language", (quiz) => (quiz.tasks[2].items[1].short = { en: "Passive", de: "Passiv", fr: "Passif" }), [{ path: "/tasks/2/items/1/short/fr", code: "property-unknown" }]],
+    ["a short label on a task", (quiz) => (quiz.tasks[1].short = T("Power")), [{ path: "/tasks/1/short", code: "property-unknown" }]],
+    ["a non-boolean familiar flag", (quiz) => (quiz.tasks[2].items[0].familiar = "yes"), [{ path: "/tasks/2/items/0/familiar", code: "type-invalid" }]],
+    ["a familiar flag on a classification item", (quiz) => (quiz.tasks[0].items[0].familiar = true), [{ path: "/tasks/0/items/0/familiar", code: "property-unknown" }]],
     ["an empty profile", (quiz) => (quiz.tasks[0].categories[0].profile = {}), [{ path: "/tasks/0/categories/0/profile", code: "properties-too-few" }, ...["cooling", "cost", "heating"].map((axis) => ({ path: `/tasks/0/categories/0/profile/${axis}`, code: "profile-incomplete" }))]],
     ["a profile key with a slash", (quiz) => (quiz.tasks[0].categories[0].profile["a/b~c"] = 1), [{ path: "/tasks/0/categories/0/profile/a~1b~0c", code: "axis-unknown" }, { path: "/tasks/0/categories/0/profile/a~1b~0c", code: "slug-invalid" }]],
     ["no matching values", (quiz) => (quiz.tasks[2].items[0].values = {}), [{ path: "/tasks/2/items/0/values", code: "properties-too-few" }, { path: "/tasks/2/items/0/values/demand", code: "value-missing" }, { path: "/tasks/2/items/0/values/u-value", code: "value-missing" }]],
@@ -188,6 +230,25 @@ describe("quizIssues", () => {
 
   it("counts emoji length in code points, so joined and flagged emojis and 16 code points pass", () => {
     for (const emoji of ["🧑‍🏫", "❄️", "🇨🇭", "🧲".repeat(16)]) expect(checkedQuiz(mutated((quiz) => (quiz.emoji = emoji))), emoji).toEqual([]);
+  });
+
+  it("accepts short labels of up to 40 code points on quantities, axes, categories and items, and familiar flags on sorting and matching items", () => {
+    expect(
+      checkedQuiz(
+        mutated((quiz) => {
+          quiz.tasks[0].axes[0].short = T("heating", "Heizen");
+          quiz.tasks[0].categories[2].short = T("x".repeat(40), "ß".repeat(40));
+          quiz.tasks[0].items[1].short = T("🧲".repeat(40), "Büro");
+          quiz.tasks[1].quantity.short = T("power", "Leistung");
+          quiz.tasks[1].items[2].short = T("Plant", "Kraftwerk");
+          quiz.tasks[1].items[0].familiar = true;
+          quiz.tasks[1].items[1].familiar = false;
+          quiz.tasks[2].dimensions[1].quantity.short = T("demand", "Bedarf");
+          quiz.tasks[2].items[0].short = T("Old wall", "Altbau");
+          quiz.tasks[2].items[0].familiar = true;
+        }),
+      ),
+    ).toEqual([]);
   });
 
   it("accepts zero and negative values on linear scales and a draw equal to the item count", () => {
@@ -228,6 +289,16 @@ describe("catalogIssues", () => {
     expect(checkedCatalog(catalog(), quizzes)).toEqual([]);
   });
 
+  it("accepts every challenge as the least challenge of a perfect-quiz and a perfect-tasks rule", () => {
+    for (const challenge of CHALLENGES) {
+      const document = catalog();
+      document.badges[0].rule.challenge = challenge;
+      document.badges[1].rule.challenge = challenge;
+      document.badges[2].rule.challenge = challenge;
+      expect(checkedCatalog(document, quizzes)).toEqual([]);
+    }
+  });
+
   const cases: readonly [string, (catalog: Mutable) => void, readonly Quiz[], readonly ValidationIssue[]][] = [
     ["a foreign schema", (document) => (document.schema = "semio.quiz/v1"), quizzes, [{ path: "/schema", code: "value-invalid" }]],
     ["no quizzes", (document) => (document.quizzes = []), [], [{ path: "/badges/0/rule/quiz", code: "quiz-unknown" }, { path: "/badges/1/rule", code: "badge-unreachable" }, { path: "/badges/2/rule/quiz", code: "quiz-unknown" }, { path: "/quizzes", code: "items-too-few" }]],
@@ -243,6 +314,10 @@ describe("catalogIssues", () => {
     ["a badge on an unknown quiz", (document) => (document.badges[0].rule.quiz = "cooling"), quizzes, [{ path: "/badges/0/rule/quiz", code: "quiz-unknown" }]],
     ["a selector on an unknown quiz", (document) => (document.badges[2].rule.quiz = "cooling"), quizzes, [{ path: "/badges/2/rule/quiz", code: "quiz-unknown" }]],
     ["a selector no task matches", (document) => (document.badges[2].rule.quiz = "heating"), quizzes, [{ path: "/badges/2/rule", code: "badge-unreachable" }]],
+    ["a least challenge that is no challenge", (document) => (document.badges[0].rule.challenge = "legendary"), quizzes, [{ path: "/badges/0/rule/challenge", code: "value-invalid" }]],
+    ["a least challenge that is no string", (document) => (document.badges[2].rule.challenge = 3), quizzes, [{ path: "/badges/2/rule/challenge", code: "value-invalid" }]],
+    ["a least challenge on completed quizzes", (document) => (document.badges[3].rule.challenge = "hard"), quizzes, [{ path: "/badges/3/rule/challenge", code: "property-unknown" }]],
+    ["a least challenge beside an unknown quiz", (document) => Object.assign(document.badges[0].rule, { quiz: "cooling", challenge: "hard" }), quizzes, [{ path: "/badges/0/rule/quiz", code: "quiz-unknown" }]],
     ["loaded quizzes that do not match the paths", (document) => document, [quizzes[0]!], [{ path: "/quizzes", code: "quiz-count-mismatch" }]],
     ["two quizzes with one id", (document) => document, [quizzes[0]!, quizzes[0]!], [{ path: "/quizzes/1", code: "duplicate-id" }]],
   ];
@@ -257,7 +332,7 @@ describe("catalogIssues", () => {
 
 describe("answers", () => {
   const quiz = physics() as Quiz;
-  const sheet = sheetOf(quiz, 5489);
+  const sheet = sheetOf(quiz, 5489, "medium");
   const task = (kind: SheetTask["kind"]): SheetTask => sheet.tasks.find((candidate) => candidate.kind === kind)!;
   const classification = task("classification");
   const sorting = task("sorting");
@@ -305,5 +380,244 @@ describe("answers", () => {
     expect(answerComplete(matching, { kind: "matching", assignments: { "u-value": { "old-wall": 1, "passive-wall": 0 } } })).toBe(false);
     expect(answerComplete(matching, { kind: "matching", assignments: { "u-value": { "old-wall": 1, "passive-wall": 0 }, demand: { "old-wall": 0 } } })).toBe(false);
     expect(answerComplete(matching, { kind: "matching", assignments: { "u-value": { "old-wall": 1, "passive-wall": 0 }, demand: { "old-wall": 0, "passive-wall": 1 } } })).toBe(true);
+  });
+});
+
+describe("answers by challenge", () => {
+  const quiz = physics() as Quiz;
+  const task = (challenge: Challenge, kind: SheetTask["kind"]): SheetTask => sheetOf(quiz, 5489, challenge).tasks.find((candidate) => candidate.kind === kind)!;
+  const SHOWN = ["easy", "medium"] as const;
+  const HIDDEN = ["hard", "expert"] as const;
+  const order = ["tea-light", "kettle", "plant"];
+  const cards = { "u-value": { "old-wall": 1, "passive-wall": 0 }, demand: { "old-wall": 0, "passive-wall": 1 } };
+  const guessed = { "u-value": { "old-wall": 1.2, "passive-wall": 0.1 }, demand: { "old-wall": 300, "passive-wall": 20 } };
+
+  it("takes a sorting without guesses where the keys show and refuses any guesses there, also none at all", () => {
+    for (const challenge of SHOWN) {
+      const sorting = task(challenge, "sorting");
+      expect(answerRejection(sorting, { kind: "sorting", order })).toBeUndefined();
+      expect(answerComplete(sorting, { kind: "sorting", order })).toBe(true);
+      for (const guesses of [{}, { kettle: 2000 }, { "tea-light": 30, kettle: 2000, plant: 1.4e9 }, null, 7]) expect(answerRejection(sorting, { kind: "sorting", order, guesses } as unknown as Answer), JSON.stringify(guesses)).toBe("answer-invalid");
+    }
+  });
+
+  it("takes a sorting with guesses where the keys are hidden: of presented items, finite, positive on a logarithmic scale, in non-decreasing order", () => {
+    for (const challenge of HIDDEN) {
+      const sorting = task(challenge, "sorting");
+      const valid: readonly (Readonly<Record<string, number>> | undefined)[] = [undefined, {}, { kettle: 5 }, { "tea-light": 1, plant: 1 }, { "tea-light": 1e-9, kettle: 2, plant: 1e30 }, { "tea-light": 7, kettle: 7, plant: 7 }];
+      for (const guesses of valid) expect(answerRejection(sorting, { kind: "sorting", order, ...(guesses ? { guesses } : {}) }), JSON.stringify(guesses)).toBeUndefined();
+      const invalid: readonly unknown[] = [{ lamp: 5 }, { kettle: 0 }, { kettle: -3 }, { kettle: Number.NaN }, { kettle: Number.POSITIVE_INFINITY }, { kettle: "5" }, { kettle: null }, { "tea-light": 9, kettle: 3 }, { "tea-light": 9, plant: 8.999 }, [], null, 5, "x"];
+      for (const guesses of invalid) expect(answerRejection(sorting, { kind: "sorting", order, guesses } as unknown as Answer), JSON.stringify(guesses)).toBe("answer-invalid");
+      expect(answerRejection(sorting, { kind: "sorting", order: order.slice(1), guesses: { kettle: 5 } })).toBe("answer-invalid");
+    }
+  });
+
+  it("allows zero and negative guesses on a linear scale only", () => {
+    const linear = structuredClone(physics());
+    linear.tasks[1].quantity.scale = "linear";
+    for (const challenge of HIDDEN) {
+      const sorting = sheetOf(linear as Quiz, 5489, challenge).tasks.find((candidate) => candidate.kind === "sorting")!;
+      expect(answerRejection(sorting, { kind: "sorting", order, guesses: { "tea-light": -40, kettle: 0, plant: 0.5 } })).toBeUndefined();
+      expect(answerRejection(sorting, { kind: "sorting", order, guesses: { kettle: Number.NEGATIVE_INFINITY } })).toBe("answer-invalid");
+      const matching = task(challenge, "matching");
+      expect(answerRejection(matching, { kind: "matching", guesses: { "u-value": { "old-wall": -1, "passive-wall": 0 } } })).toBeUndefined();
+      expect(answerRejection(matching, { kind: "matching", guesses: { demand: { "old-wall": 0 } } })).toBe("answer-invalid");
+      expect(answerRejection(matching, { kind: "matching", guesses: { demand: { "old-wall": -1 } } })).toBe("answer-invalid");
+    }
+  });
+
+  it("completes a sorting whose keys are hidden only with a guess for every item", () => {
+    for (const challenge of HIDDEN) {
+      const sorting = task(challenge, "sorting");
+      expect(answerComplete(sorting)).toBe(false);
+      expect(answerComplete(sorting, { kind: "sorting", order })).toBe(false);
+      expect(answerComplete(sorting, { kind: "sorting", order, guesses: {} })).toBe(false);
+      expect(answerComplete(sorting, { kind: "sorting", order, guesses: { "tea-light": 30, plant: 1e9 } })).toBe(false);
+      expect(answerComplete(sorting, { kind: "sorting", order, guesses: { "tea-light": 30, kettle: 2000, plant: 1e9 } })).toBe(true);
+      expect(answerComplete(sorting, { kind: "matching", guesses: {} })).toBe(false);
+    }
+  });
+
+  it("takes card assignments and no guesses for a matching where the keys show", () => {
+    for (const challenge of SHOWN) {
+      const matching = task(challenge, "matching");
+      expect(answerRejection(matching, { kind: "matching", assignments: cards })).toBeUndefined();
+      expect(answerRejection(matching, { kind: "matching", assignments: {} })).toBeUndefined();
+      expect(answerComplete(matching, { kind: "matching", assignments: cards })).toBe(true);
+      expect(answerRejection(matching, { kind: "matching" })).toBe("answer-invalid");
+      expect(answerRejection(matching, { kind: "matching", guesses: guessed })).toBe("answer-invalid");
+      expect(answerRejection(matching, { kind: "matching", guesses: {} })).toBe("answer-invalid");
+      expect(answerRejection(matching, { kind: "matching", assignments: cards, guesses: guessed })).toBe("answer-invalid");
+      expect(answerRejection(matching, { kind: "matching", assignments: cards, guesses: {} })).toBe("answer-invalid");
+      expect(answerComplete(matching, { kind: "matching", guesses: guessed })).toBe(false);
+    }
+  });
+
+  it("takes guesses and no card assignments for a matching where the keys are hidden: of presented dimensions and items, finite, positive on a logarithmic scale", () => {
+    for (const challenge of HIDDEN) {
+      const matching = task(challenge, "matching");
+      const valid: readonly Answer[] = [{ kind: "matching" }, { kind: "matching", guesses: {} }, { kind: "matching", guesses: { demand: {} } }, { kind: "matching", guesses: { demand: { "old-wall": 1e-12 } } }, { kind: "matching", guesses: guessed }, { kind: "matching", guesses: { "u-value": { "old-wall": 3, "passive-wall": 3 } } }];
+      for (const answer of valid) expect(answerRejection(matching, answer), JSON.stringify(answer)).toBeUndefined();
+      const invalid: readonly unknown[] = [
+        { kind: "matching", assignments: cards },
+        { kind: "matching", assignments: {} },
+        { kind: "matching", assignments: {}, guesses: guessed },
+        { kind: "matching", guesses: { cost: { "old-wall": 1 } } },
+        { kind: "matching", guesses: { demand: { attic: 1 } } },
+        { kind: "matching", guesses: { demand: { "old-wall": 0 } } },
+        { kind: "matching", guesses: { demand: { "old-wall": Number.NaN } } },
+        { kind: "matching", guesses: { "u-value": { "old-wall": Number.POSITIVE_INFINITY } } },
+        { kind: "matching", guesses: { "u-value": { "old-wall": "1.4" } } },
+        { kind: "matching", guesses: { "u-value": 1.4 } },
+        { kind: "matching", guesses: [] },
+        { kind: "matching", guesses: null },
+        { kind: "sorting", order: [], guesses: {} },
+      ];
+      for (const answer of invalid) expect(answerRejection(matching, answer as Answer), JSON.stringify(answer)).toBe("answer-invalid");
+    }
+  });
+
+  it("completes a matching whose keys are hidden only with a guess for every item in every dimension", () => {
+    for (const challenge of HIDDEN) {
+      const matching = task(challenge, "matching");
+      expect(answerComplete(matching)).toBe(false);
+      expect(answerComplete(matching, { kind: "matching" })).toBe(false);
+      expect(answerComplete(matching, { kind: "matching", guesses: {} })).toBe(false);
+      expect(answerComplete(matching, { kind: "matching", guesses: { "u-value": guessed["u-value"] } })).toBe(false);
+      expect(answerComplete(matching, { kind: "matching", guesses: { ...guessed, demand: { "old-wall": 300 } } })).toBe(false);
+      expect(answerComplete(matching, { kind: "matching", guesses: guessed })).toBe(true);
+      expect(answerComplete(matching, { kind: "matching", assignments: cards })).toBe(false);
+    }
+  });
+
+  it("validates and completes a classification alike at every challenge", () => {
+    for (const challenge of CHALLENGES) {
+      const classification = task(challenge, "classification");
+      const drawn = classification.items.map((item) => item.id);
+      expect(answerRejection(classification, { kind: "classification", assignments: {} })).toBeUndefined();
+      expect(answerRejection(classification, { kind: "classification", assignments: { [drawn[0]!]: "modern" } })).toBe("answer-invalid");
+      expect(answerComplete(classification, { kind: "classification", assignments: { [drawn[0]!]: "old" } })).toBe(false);
+      expect(answerComplete(classification, { kind: "classification", assignments: Object.fromEntries(drawn.map((id) => [id, "old"])) })).toBe(true);
+    }
+  });
+});
+
+describe("the contract of a run at every challenge — what the core emits is what the schema admits", () => {
+  const definition = (name: string) => AJV.getSchema(`${SCHEMA.$id}#/$defs/${name}`)!;
+  const admits = (name: string, value: unknown): void => {
+    const validate = definition(name);
+    expect(validate(JSON.parse(JSON.stringify(value))), `${name}: ${JSON.stringify(validate.errors)}`).toBe(true);
+  };
+  const quiz = physics() as Quiz;
+  const [learner, run, command] = ["1".repeat(32), "2".repeat(32), "3".repeat(32)];
+  const context = (now: number): LearnerContext => ({ now, catalog: catalog() as Catalog, quizzes: { physics: { quiz, revision: "a".repeat(64) } }, limits: DEFAULT_LIMITS });
+
+  /** 🎬️ A whole run at a challenge: every command, every event it decided, and the state after each. */
+  function played(challenge: Challenge): { readonly commands: Command[]; readonly events: Event[]; readonly states: LearnerState[] } {
+    const sheet = sheetOf(quiz, runSeed(run), challenge);
+    const { keys, timed } = challengeRules(challenge);
+    const answers = sheet.tasks.map((sheetTask): Answer => {
+      const ids = sheetTask.items.map((item) => item.id);
+      if (sheetTask.kind === "classification") return { kind: "classification", assignments: Object.fromEntries(ids.slice(timed ? 1 : 0).map((id) => [id, "old"])) };
+      if (sheetTask.kind === "sorting") return keys ? { kind: "sorting", order: ids } : { kind: "sorting", order: ids, guesses: Object.fromEntries(ids.slice(0, timed ? 1 : ids.length).map((id) => [id, 5e12])) };
+      return keys ? { kind: "matching", assignments: Object.fromEntries(sheetTask.dimensions.map((dimension) => [dimension.id, Object.fromEntries(ids.map((id, index) => [id, index]))])) } : { kind: "matching", guesses: Object.fromEntries(sheetTask.dimensions.map((dimension) => [dimension.id, Object.fromEntries(ids.slice(0, timed ? 1 : ids.length).map((id, index) => [id, 1 + index]))])) };
+    });
+    const commands: Command[] = [
+      { type: "identify-learner", id: command, learner, identity: { kind: "anonymous" } },
+      { type: "start-run", id: command, learner, run, quiz: "physics", challenge, at: 500 },
+      ...sheet.tasks.flatMap((sheetTask, index): Command[] => [...(timed ? [{ type: "open-task" as const, id: command, learner, run, task: sheetTask.id, at: 1_000 + index }] : []), { type: "record-answer", id: command, learner, run, task: sheetTask.id, answer: answers[index]!, at: 2_000 + index }]),
+      { type: "submit-run", id: command, learner, run },
+    ];
+    const events: Event[] = [];
+    const states: LearnerState[] = [emptyLearnerState(learner)];
+    for (const [index, step] of commands.entries()) {
+      const decision = decideLearner(states.at(-1)!, step, context(1_000 + index * 500));
+      if ("rejection" in decision) throw new Error(`${challenge} ${step.type}: ${decision.rejection}`);
+      events.push(...decision.events);
+      states.push(decision.events.reduce(evolveLearner, states.at(-1)!));
+    }
+    return { commands, events, states };
+  }
+
+  it("admits every sheet, with its keys, cards, axes and seconds as the challenge has them", () => {
+    for (const challenge of CHALLENGES) for (let seed = 0; seed < 25; seed++) admits("Sheet", sheetOf(quiz, seed, challenge));
+    expect(definition("Sheet")({ ...sheetOf(quiz, 1, "medium"), challenge: undefined })).toBe(false);
+    expect(definition("Sheet")({ ...sheetOf(quiz, 1, "medium"), challenge: "legendary" })).toBe(false);
+    expect(definition("SheetAxis")({ id: "heating", label: T("Heating"), unit: "kWh" })).toBe(false);
+    expect(definition("SheetAxis")({ id: "heating", label: T("Heating"), min: 0, max: 1 })).toBe(false);
+    expect(definition("SheetAxis")({ id: "heating", label: T("Heating") })).toBe(true);
+    expect(definition("SheetAxis")({ id: "heating", label: T("Heating"), unit: "kWh", min: 0, max: 1 })).toBe(true);
+  });
+
+  it("admits every command, event, result and view of a whole run at every challenge", () => {
+    for (const challenge of CHALLENGES) {
+      const { commands, events, states } = played(challenge);
+      for (const step of commands) admits("Command", step);
+      for (const event of events) admits("Event", event);
+      expect(events.map((event) => event.type)).toContain("run-submitted");
+      expect(events.some((event) => event.type === "task-opened")).toBe(challenge === "expert");
+      for (const event of events) if (event.type === "run-submitted") admits("RunResult", event.result);
+      const view = catalogView(catalog() as Catalog, [quiz]);
+      for (const state of states.slice(2)) {
+        admits("RunView", runView(state, run, context(0).quizzes));
+        admits("LearnerView", learnerView(state, view));
+      }
+      const record = transcript(states.at(-1)!)!;
+      admits("Leaderboard", leaderboard([record], view, { period: "all-time" }, 0, learner));
+      admits("CrowdView", crowdView(quiz, [states.at(-1)!.runs[0]!.result!]));
+    }
+  });
+
+  it("admits the hints of an easy run and refuses what the contract excludes", () => {
+    const { states } = played("easy");
+    const open = states.at(-2)!;
+    const hinted = runView(open, run, context(0).quizzes)!;
+    expect(hinted.hints).toBeDefined();
+    admits("RunView", hinted);
+    for (const hints of Object.values(hinted.hints!)) for (const hint of hints) admits("Hint", hint);
+    expect(definition("Hint")({ kind: "misplaced", count: 1 })).toBe(false);
+    expect(definition("Hint")({ kind: "magnitude", item: "kettle", direction: "high" })).toBe(false);
+    for (const verdict of VERDICTS) expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 0.001, verdict }), verdict).toBe(true);
+    expect(definition("Verdict")("sideways")).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "old-wall", other: "passive-wall", dimension: "u-value", difference: -0.5, verdict: "over" })).toBe(true);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 0.001, under: true })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 0.001, verdict: "sideways" })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 0.001 })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 2, difference: 1, verdict: "under" })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", verdict: "under" })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", other: "plant", factor: 0, verdict: "under" })).toBe(false);
+    expect(definition("Hint")({ kind: "compare", item: "kettle", factor: 2, verdict: "under" })).toBe(false);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating" })).toBe(true);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating", other: "villa", above: true })).toBe(true);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating", other: "villa", above: false })).toBe(true);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating", other: "villa" })).toBe(false);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating", above: true })).toBe(false);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old", axis: "heating", other: "villa", above: "yes" })).toBe(false);
+    expect(definition("Hint")({ kind: "profile", item: "kettle", category: "old" })).toBe(false);
+    expect(definition("SheetItem")({ id: "kettle", label: T("Kettle"), short: T("Kettle") })).toBe(true);
+    expect(definition("SheetItem")({ id: "kettle", label: T("Kettle"), short: T("k".repeat(41)) })).toBe(false);
+    expect(definition("SheetItem")({ id: "kettle", label: T("Kettle"), familiar: true })).toBe(false);
+    expect(definition("SheetAxis")({ id: "heating", label: T("Heating"), short: T("heating") })).toBe(true);
+    expect(definition("ShortText")(T("k".repeat(40), "🧲".repeat(40)))).toBe(true);
+    expect(definition("ShortText")(T("k".repeat(41)))).toBe(false);
+    expect(definition("Hint")({ kind: "group", item: "kettle", other: "plant", together: false })).toBe(true);
+    expect(definition("Hint")({ kind: "group", item: "kettle", other: "plant", together: "no" })).toBe(false);
+    expect(definition("Hint")({ kind: "category", item: "kettle", category: "old" })).toBe(true);
+    expect(definition("Hint")({ kind: "category", item: "kettle", category: "old", count: 1 })).toBe(false);
+    expect(definition("Quantity")({ label: T("Power"), unit: "W", scale: "logarithmic", prefixed: true, additive: true })).toBe(true);
+    expect(definition("Quantity")({ label: T("Power"), unit: "W", scale: "logarithmic", prefixed: true })).toBe(false);
+    expect(definition("RunView")({ ...hinted, hints: {} })).toBe(false);
+    expect(definition("Rejection")("time-up") && definition("Rejection")("task-unopened") && definition("Rejection")("run-untimed") && definition("Rejection")("already-opened")).toBe(true);
+    expect(definition("Command")({ type: "start-run", id: command, learner, run, quiz: "physics", at: 1 })).toBe(false);
+    expect(definition("Command")({ type: "start-run", id: command, learner, run, quiz: "physics", challenge: "hard" })).toBe(false);
+    expect(definition("Command")({ type: "start-run", id: command, learner, run, quiz: "physics", challenge: "hard", at: 2 ** 53 - 1 })).toBe(true);
+    expect(definition("Command")({ type: "start-run", id: command, learner, run, quiz: "physics", challenge: "hard", at: 2 ** 53 })).toBe(false);
+    expect(definition("Command")({ type: "record-answer", id: command, learner, run, task: "power", answer: { kind: "sorting", order: [] } })).toBe(false);
+    expect(definition("Command")({ type: "open-task", id: command, learner, run, task: "power" })).toBe(false);
+    expect(definition("Best")({ challenge: "hard", score: 0.5, points: 150 })).toBe(true);
+    expect(definition("Best")({ challenge: "hard", score: 0.5 })).toBe(false);
+    for (const rejection of REJECTIONS) expect(definition("Rejection")(rejection), rejection).toBe(true);
+    for (const challenge of CHALLENGES) expect(definition("Challenge")(challenge), challenge).toBe(true);
+    expect(definition("Challenge")("legendary")).toBe(false);
   });
 });

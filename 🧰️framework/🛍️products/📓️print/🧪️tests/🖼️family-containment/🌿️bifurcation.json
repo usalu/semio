@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "bifurcation-stock", "options": "", "width": 60, "height": 40, "from": 2.5, "to": 4, "columns": 120, "settle": 120, "keep": 60, "start": 0.2 },
+    { "id": "bifurcation-custom", "options": "width=70,height=35,from=2.5,to=3.4,columns=4,settle=8,keep=4,start=0.25", "width": 70, "height": 35, "from": 2.5, "to": 3.4, "columns": 4, "settle": 8, "keep": 4, "start": 0.25 }
+  ],
+  "tolerance": 0.0001,
+  "stableLimit": 3.4
+}

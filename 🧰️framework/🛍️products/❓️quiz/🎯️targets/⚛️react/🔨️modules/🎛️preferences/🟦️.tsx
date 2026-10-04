@@ -9,16 +9,23 @@
  * while they are off, so the switch on every screen brings them back as they were. That the learner chose is a fact of
  * its own (`petsChosen`), because the preferences are stored as a whole on every change: only the pets' choice and the
  * pets' switch set it, a device that asks for reduced motion decides the default until then, and the choice holds on
- * every device afterwards.
+ * every device afterwards. Whether calm and lively pets answer clicks and can be picked up (`petsPlay`) and whether
+ * they may play with the page (`petsMischief`) are two more of the learner's yes-or-no, both yes until the learner says
+ * no; under the pets' row the settings also play with the pets on stage without a pointer. The challenge the learner
+ * chose last on a quiz's page is remembered per quiz as well — the next run of that quiz, from its page or its card,
+ * starts at it, while a quiz never chosen on starts at medium, so an expert run on one quiz never makes another one
+ * expert by a click — but it is chosen on that page, not in the settings.
  */
 
 import { Fragment, useId, type ReactElement } from "react";
+import { useMediaQuery } from "@semio-tech/ui-react/chrome";
+import { isSlug, type Challenge, type Slug } from "@semio-tech/quiz";
 import { QUIZ_LOCALES, isQuizLocale, quizText, type QuizLabelKey, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
-import { isRecord, type LocalStore } from "../💾️persistence/🟦️.ts";
-import { BodyButton, CardAction, CardIcon, PageFrame, QuizCard, Segments, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { isChallenge, isRecord, type LocalStore } from "../💾️persistence/🟦️.ts";
+import { BodyButton, CardAction, CardIcon, PageFrame, QuizCard, Segments, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
 import { OTHERS_CHOICES, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
-import { PET_CHOICES, effectivePetMode, usePetCast, usePetsForced, usePetsReduced, type PetChoice, type PetLiveliness } from "../🐾️pets/🟦️.tsx";
+import { PET_CHOICES, PetsPlay, effectivePetMode, usePetCast, usePetsForced, usePetsReduced, type PetChoice, type PetLiveliness } from "../🐾️pets/🟦️.tsx";
 import { HOME_PAGES } from "../🧭️session/🟦️.ts";
 
 /** 🌓️ A colour theme choice. */
@@ -27,14 +34,14 @@ export type ThemeChoice = "system" | "light" | "dark";
 /** 🔠️ A text size choice. */
 export type TextSize = "normal" | "large" | "larger" | "largest";
 
-/** 🌓️ Every {@link ThemeChoice} with its label. */
+/** 🎨️ Every {@link ThemeChoice} with its label. */
 export const THEME_CHOICES: readonly { readonly value: ThemeChoice; readonly label: QuizLabelKey }[] = [
   { value: "system", label: "quiz.preferences.themeSystem" },
   { value: "light", label: "quiz.preferences.themeLight" },
   { value: "dark", label: "quiz.preferences.themeDark" },
 ];
 
-/** 🔠️ Every {@link TextSize} with its label and the factor it scales text by. */
+/** 🔡️ Every {@link TextSize} with its label and the factor it scales text by. */
 export const TEXT_SIZES: readonly { readonly value: TextSize; readonly label: QuizLabelKey; readonly scale: number }[] = [
   { value: "normal", label: "quiz.preferences.textNormal", scale: 1 },
   { value: "large", label: "quiz.preferences.textLarge", scale: 1.125 },
@@ -51,7 +58,7 @@ export const PET_CHOICE_LABELS: { readonly [C in PetChoice]: QuizLabelKey } = { 
 /** 👥️ The label of every {@link OthersChoice}. */
 export const OTHERS_CHOICE_LABELS: { readonly [C in OthersChoice]: QuizLabelKey } = { never: "quiz.preferences.othersNever", submitted: "quiz.preferences.othersSubmitted", always: "quiz.preferences.othersAlways" };
 
-/** 🎛️ The display preferences of one device. */
+/** 📱️ The display preferences of one device. */
 export interface QuizPreferences {
   readonly locale?: QuizLocale;
   readonly theme: ThemeChoice;
@@ -59,14 +66,20 @@ export interface QuizPreferences {
   readonly showCursors: boolean;
   readonly others: OthersChoice;
   readonly animateIcons: boolean;
+  readonly iconsChosen: boolean;
   readonly pets: PetChoice;
   readonly petsLiveliness: PetLiveliness;
   readonly petsChosen: boolean;
+  readonly petsPlay: boolean;
+  readonly petsMischief: boolean;
+  readonly challenges: { readonly [quiz: Slug]: Challenge };
 }
 
 /** 💾️ The stored preferences, falling back to the system theme, normal text, others' cursors shown, others' answers
- * once the learner submitted, animated icons, and calm pets that count as
- * chosen only when the store says so. */
+ * once the learner submitted, animated icons and calm pets — both of which count as chosen only when the store says
+ * so —, pets that answer clicks and can be picked up and that may play with the page (each on unless the store says
+ * `false`; neither is a choice of liveliness, so neither marks one), and the challenge last chosen per quiz — only the
+ * entries whose quiz is a slug and whose challenge is one of the four. */
 export function readPreferences(store: LocalStore): QuizPreferences {
   const stored = store.read("preferences");
   const record = isRecord(stored) ? stored : {};
@@ -78,37 +91,63 @@ export function readPreferences(store: LocalStore): QuizPreferences {
     showCursors: record.showCursors !== false,
     others: OTHERS_CHOICES.some((choice) => choice === record.others) ? (record.others as OthersChoice) : "submitted",
     animateIcons: record.animateIcons !== false,
+    iconsChosen: record.iconsChosen === true,
     pets,
     petsLiveliness: pets !== "off" ? pets : PET_CHOICES.some((choice) => choice !== "off" && choice === record.petsLiveliness) ? (record.petsLiveliness as PetLiveliness) : "calm",
     petsChosen: record.petsChosen === true,
+    petsPlay: record.petsPlay !== false,
+    petsMischief: record.petsMischief !== false,
+    challenges: isRecord(record.challenges) ? Object.fromEntries(Object.entries(record.challenges).filter((entry): entry is [Slug, Challenge] => isSlug(entry[0]) && isChallenge(entry[1]))) : {},
   };
 }
 
-/** 🔁️ The preferences with a choice the learner made for the pets, in the preferences or with the switch on every
+/** ⛰️ The challenge a run of `quiz` starts at: the one last chosen for it, medium until one is. */
+export function challengeOf(preferences: QuizPreferences, quiz: Slug): Challenge {
+  return Object.hasOwn(preferences.challenges, quiz) ? preferences.challenges[quiz]! : "medium";
+}
+
+/** 🧗️ The preferences with `challenge` chosen for `quiz`, every other quiz keeping its own. */
+export function withChallenge(preferences: QuizPreferences, quiz: Slug, challenge: Challenge): QuizPreferences {
+  return { ...preferences, challenges: { ...preferences.challenges, [quiz]: challenge } };
+}
+
+/** 🎞️ Whether the icons play their microanimations: what the learner chose, and until they choose, what the device
+ * asks for — still on a device that asks for reduced motion, moving on every other. */
+export function effectiveIconMotion(animate: boolean, chosen: boolean, reducedMotion: boolean): boolean {
+  return chosen ? animate : !reducedMotion;
+}
+
+/** ✨️ The preferences with a choice the learner made for the icons: it is marked as chosen, so it holds whatever the
+ * device asks for. */
+export function withIcons(preferences: QuizPreferences, animate: boolean): QuizPreferences {
+  return { ...preferences, animateIcons: animate, iconsChosen: true };
+}
+
+/** 🐕️ The preferences with a choice the learner made for the pets, in the preferences or with the switch on every
  * screen: it is marked as chosen, so it holds whatever the device asks for, and a choice that shows the pets is also
  * the liveliness they come back with after they were switched off. Nothing else marks a choice as chosen. */
 export function withPets(preferences: QuizPreferences, pets: PetChoice): QuizPreferences {
   return { ...preferences, pets, petsLiveliness: pets === "off" ? preferences.petsLiveliness : pets, petsChosen: true };
 }
 
-/** 💾️ Stores the preferences. */
+/** 💽️ Stores the preferences. */
 export function writePreferences(store: LocalStore, preferences: QuizPreferences): void {
   store.write("preferences", preferences);
 }
 
-/** 🔠️ The factor text is scaled by. */
+/** 🔍️ The factor text is scaled by. */
 export function textScale(size: TextSize): number {
   return TEXT_SIZES.find((entry) => entry.value === size)?.scale ?? 1;
 }
 
-/** 🗣️ The language switch: one pressed button per language, each named in its own language; a `compact` one — the
+/** 🔀️ The language switch: one pressed button per language, each named in its own language; a `compact` one — the
  * navbar's — shows the language codes (EN, DE) below tablet width. */
 export function LanguageSwitch(props: { readonly locale: QuizLocale; readonly text: QuizText; readonly onChange: (locale: QuizLocale) => void; readonly compact?: boolean }): ReactElement {
   const { locale, text, onChange, compact } = props;
   return <Segments label={text("quiz.preferences.language")} options={QUIZ_LOCALES.map((option) => ({ value: option, label: text(LOCALE_NAMES[option]), lang: option, ...(compact ? { short: option.toUpperCase() } : {}) }))} value={locale} onChange={onChange} />;
 }
 
-/** 🗣️ One text in every offered language, each part marked with its language, joined by a middle dot. */
+/** 🌈️ One text in every offered language, each part marked with its language, joined by a middle dot. */
 export function EveryLanguage(props: { readonly label: QuizLabelKey }): ReactElement {
   return (
     <>
@@ -122,7 +161,7 @@ export function EveryLanguage(props: { readonly label: QuizLabelKey }): ReactEle
   );
 }
 
-/** 🗣️ The same text as {@link EveryLanguage} as one string, for where markup cannot go (the document title). */
+/** 🧵️ The same text as {@link EveryLanguage} as one string, for where markup cannot go (the document title). */
 export function everyLanguage(label: QuizLabelKey): string {
   return QUIZ_LOCALES.map((locale) => quizText(locale)(label)).join(" · ");
 }
@@ -145,11 +184,16 @@ export function LanguageChoice(props: { readonly onChoose: (locale: QuizLocale) 
   );
 }
 
-/** 🎛️ Language, theme, text size, pets and when the others' answers show as labelled segmented choices — the pets'
+/** 🎚️ Language, theme, text size, pets and when the others' answers show as labelled segmented choices — the pets'
  * choice is the one in effect, so a learner who has not chosen sees the device's default; under it the names of those
  * on stage right now and, when the device forces its own colours, the word that this is why none show, or, when it asks
- * for reduced motion, the word that this is why they stay still until the learner chooses —; others' cursors and the
- * animated icons as checkboxes. */
+ * for reduced motion, the word that this is why they stay still until the learner chooses —; below it whether the pets
+ * answer clicks and can be picked up and whether they may play with the page, as checkboxes that are off and say why
+ * while the pets are off or still, and while they may play, the play with the pets on stage ({@link PetsPlay}, drawn
+ * by the half of the pets' glue that came with them); others' cursors and the animated icons as checkboxes, the icons'
+ * being the motion in effect with the same word under it on such a device. In a narrow card the name of each choice
+ * stands above it; in a wider one the names are a column on the left and every control starts at the same place right
+ * of it (`.quiz-settings`). */
 export function PreferencesPanel(props: { readonly preferences: QuizPreferences; readonly locale: QuizLocale; readonly text: QuizText; readonly onChange: (preferences: QuizPreferences) => void }): ReactElement {
   const { preferences, locale, text, onChange } = props;
   const cast = usePetCast();
@@ -157,10 +201,15 @@ export function PreferencesPanel(props: { readonly preferences: QuizPreferences;
   const pets = effectivePetMode(preferences.pets, preferences.petsChosen, motionless);
   const forced = usePetsForced() && pets !== "off";
   const reduced = motionless && !preferences.petsChosen && pets !== "off" && !forced;
-  const row = "flex flex-wrap items-center gap-x-double gap-y-single";
-  const name = "min-w-[6em] text-xs text-muted-foreground";
+  const resting = pets === "off" || pets === "still";
+  const restingId = useId();
+  const still = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const icons = effectiveIconMotion(preferences.animateIcons, preferences.iconsChosen, still);
+  const row = "quiz-setting";
+  const name = "quiz-setting-name text-xs text-muted-foreground";
+  const allowance = cn("quiz-target flex w-fit items-center gap-single text-sm", resting ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer");
   return (
-    <div className="flex flex-col gap-double">
+    <div className="quiz-settings">
       <div className={row}>
         <span className={name} aria-hidden="true">
           {text("quiz.preferences.language")}
@@ -184,10 +233,24 @@ export function PreferencesPanel(props: { readonly preferences: QuizPreferences;
           {text("quiz.preferences.pets")}
         </span>
         <Segments label={text("quiz.preferences.pets")} options={PET_CHOICES.map((choice) => ({ value: choice, label: text(PET_CHOICE_LABELS[choice]) }))} value={pets} onChange={(choice) => onChange(withPets(preferences, choice))} />
-        {forced ? <p className="m-0 basis-full text-xs text-muted-foreground">{text("quiz.preferences.petsForced")}</p> : null}
-        {reduced ? <p className="m-0 basis-full text-xs text-muted-foreground">{text("quiz.preferences.petsReduced")}</p> : null}
-        {cast.length === 0 ? null : <p className="m-0 basis-full text-xs text-muted-foreground">{text("quiz.preferences.petsCast", { names: cast.join(" · ") })}</p>}
+        {forced ? <p className="m-0 text-xs text-muted-foreground">{text("quiz.preferences.petsForced")}</p> : null}
+        {reduced ? <p className="m-0 text-xs text-muted-foreground">{text("quiz.preferences.petsReduced")}</p> : null}
+        {cast.length === 0 ? null : <p className="m-0 text-xs text-muted-foreground">{text("quiz.preferences.petsCast", { names: cast.join(" · ") })}</p>}
       </div>
+      <label className={allowance} data-pets-allow="play">
+        <input type="checkbox" className="quiz-check" checked={!resting && preferences.petsPlay} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsPlay: event.target.checked })} />
+        {text("quiz.preferences.petsPlay")}
+      </label>
+      <label className={allowance} data-pets-allow="mischief">
+        <input type="checkbox" className="quiz-check" checked={!resting && preferences.petsMischief} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsMischief: event.target.checked })} />
+        {text("quiz.preferences.petsMischief")}
+      </label>
+      {resting ? (
+        <p id={restingId} className="m-0 text-xs text-muted-foreground">
+          {text("quiz.preferences.petsResting")}
+        </p>
+      ) : null}
+      <PetsPlay text={text} row={row} name={name} />
       <div className={row}>
         <span className={name} aria-hidden="true">
           {text("quiz.preferences.others")}
@@ -199,14 +262,15 @@ export function PreferencesPanel(props: { readonly preferences: QuizPreferences;
         {text("quiz.preferences.cursors")}
       </label>
       <label className="quiz-target flex w-fit cursor-pointer items-center gap-single text-sm">
-        <input type="checkbox" className="quiz-check" checked={preferences.animateIcons} onChange={(event) => onChange({ ...preferences, animateIcons: event.target.checked })} />
+        <input type="checkbox" className="quiz-check" checked={icons} onChange={(event) => onChange(withIcons(preferences, event.target.checked))} />
         {text("quiz.preferences.motion")}
       </label>
+      {still && !preferences.iconsChosen ? <p className="m-0 text-xs text-muted-foreground">{text("quiz.preferences.motionReduced")}</p> : null}
     </div>
   );
 }
 
-/** 🎛️ Language, theme, text size and cursors as a card: beside the first visit and on the preferences page. */
+/** 🧰️ Language, theme, text size and cursors as a card: beside the first visit and on the preferences page. */
 export function PreferencesPanelCard(props: { readonly preferences: QuizPreferences; readonly locale: QuizLocale; readonly text: QuizText; readonly onChange: (preferences: QuizPreferences) => void }): ReactElement {
   const id = useId();
   return (
@@ -241,7 +305,7 @@ export function PreferencesCard(props: { readonly text: QuizText; readonly revea
   );
 }
 
-/** 🎛️ The preferences page behind its card: personal, so presence shares no cursor on it. */
+/** 📃️ The preferences page behind its card: personal, so presence shares no cursor on it. */
 export function PreferencesPage(props: { readonly preferences: QuizPreferences; readonly locale: QuizLocale; readonly text: QuizText; readonly onChange: (preferences: QuizPreferences) => void; readonly view: PaneView }): ReactElement {
   const { view: _view, ...panel } = props;
   return (

@@ -2037,7 +2037,7 @@ pub mod app {
         Ok(ArtifactInferenceCancellationGuard(cancellation_id.to_owned()))
     }
 
-    pub(crate) fn inference_cancelled(cancellation_id: &str) -> Result<bool, ArtifactInferenceExecutionError> {
+    pub fn inference_cancelled(cancellation_id: &str) -> Result<bool, ArtifactInferenceExecutionError> {
         cancelled_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned")).map(|cancelled| cancelled.contains(cancellation_id))
     }
 

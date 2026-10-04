@@ -5,7 +5,9 @@
   "required": [
     "owner",
     "files",
-    "cancelReason"
+    "cancelReason",
+    "cancellation",
+    "replacement"
   ],
   "properties": {
     "owner": {
@@ -22,6 +24,71 @@
     "cancelReason": {
       "type": "string",
       "minLength": 1
+    },
+    "cancellation": {
+      "const": {
+        "point": "identical-eof",
+        "outcome": "rejected",
+        "unchanged": true
+      }
+    },
+    "replacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "transient",
+        "permanent",
+        "cancellation",
+        "persistent",
+        "initial"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "transient": {
+          "const": {
+            "code": "EPERM",
+            "failures": 2,
+            "outcome": "published"
+          }
+        },
+        "permanent": {
+          "const": {
+            "code": "EIO",
+            "outcome": "rejected",
+            "unchanged": true
+          }
+        },
+        "cancellation": {
+          "const": {
+            "code": "EBUSY",
+            "outcome": "rejected",
+            "unchanged": true
+          }
+        },
+        "persistent": {
+          "const": {
+            "code": "EPERM",
+            "timeoutMs": 5000,
+            "outcome": "rejected",
+            "unchanged": true
+          }
+        },
+        "initial": {
+          "const": {
+            "absentBefore": true,
+            "code": "EPERM",
+            "failures": 2,
+            "outcome": "published"
+          }
+        }
+      }
     }
   }
 }

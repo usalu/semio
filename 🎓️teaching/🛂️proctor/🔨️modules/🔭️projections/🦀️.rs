@@ -14,8 +14,8 @@
 //! recompute them.
 //!
 //! **Bounded work per event.** Nothing here walks every learner. A batch loads only the states of
-//! the learners it touches (one indexed read each) and writes them back; an answer rewrites its
-//! learner's state and run view and nothing else. A learner view is rewritten only by the facts
+//! the learners it touches (one indexed read each) and writes them back; an opened task or an answer
+//! rewrites its learner's state and run view and nothing else. A learner view is rewritten only by the facts
 //! that can change it, and a transcript only by a registration, a submission or a badge.
 //!
 //! **The leaderboards** are the [`Board`]: every transcript, kept in memory next to the
@@ -86,7 +86,7 @@ pub const FINGERPRINT_KEY: &str = "catalog";
 pub const LEARNER_COUNT_KEY: &str = "learners";
 /// 🧬️ The revision of what the projector folds; raising it rebuilds every store an earlier
 /// projector built, exactly like a changed catalog does.
-pub const PROJECTOR_REVISION: u32 = 5;
+pub const PROJECTOR_REVISION: u32 = 6;
 /// 📦️ Events folded per transaction.
 pub const BATCH: usize = 256;
 
@@ -428,15 +428,17 @@ impl Projector {
                 fold.ranked.insert(learner.clone());
             }
             Event::RunSubmitted { result, .. } => {
-                fold.crowds.entry(result.quiz.clone()).or_insert_with(|| mirror.crowds.get(&result.quiz).cloned().unwrap_or_default()).fold(result);
+                if let Some(loaded) = self.catalog.current().get(&result.quiz) {
+                    fold.crowds.entry(result.quiz.clone()).or_insert_with(|| mirror.crowds.get(&result.quiz).cloned().unwrap_or_default()).fold(&loaded.quiz, result);
+                }
                 fold.ranked.insert(learner.clone());
             }
             Event::BadgeAwarded { .. } => {
                 fold.ranked.insert(learner.clone());
             }
-            Event::RunStarted { .. } | Event::RunVoided { .. } | Event::AnswerRecorded { .. } => {}
+            Event::RunStarted { .. } | Event::RunVoided { .. } | Event::TaskOpened { .. } | Event::AnswerRecorded { .. } => {}
         }
-        if !matches!(fact, Event::AnswerRecorded { .. }) {
+        if !matches!(fact, Event::TaskOpened { .. } | Event::AnswerRecorded { .. }) {
             fold.viewed.insert(learner.clone());
         }
         if let Some(run) = run_of(&fact) {
@@ -519,7 +521,7 @@ fn write<T: Serialize>(projection: &str, key: &str, value: &T) -> Result<Project
 /// 🎽️ The run a fact is about, if any.
 pub fn run_of(fact: &Event) -> Option<&String> {
     match fact {
-        Event::RunStarted { run, .. } | Event::RunVoided { run, .. } | Event::AnswerRecorded { run, .. } | Event::RunSubmitted { run, .. } | Event::BadgeAwarded { run, .. } => Some(run),
+        Event::RunStarted { run, .. } | Event::RunVoided { run, .. } | Event::TaskOpened { run, .. } | Event::AnswerRecorded { run, .. } | Event::RunSubmitted { run, .. } | Event::BadgeAwarded { run, .. } => Some(run),
         Event::LearnerRegistered { .. } => None,
     }
 }

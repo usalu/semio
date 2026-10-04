@@ -9,16 +9,18 @@
 //! value that fails its structure is not judged any further, and an id that is not a slug does not count as declared.
 //! Then the document rules follow: `duplicate-id`, `unknown-reference`, `bone-order`, `key-order`, `loop-seam`,
 //! `ease-range`, `out-of-range`, `self-bond`, `duplicate-bond`, `missing-gait-clip`, `float-hover`, `empty-cast`,
-//! `duplicate-scene`.
+//! `duplicate-scene`, `duplicate-entry`, `lasts-then`, `missing-gear-clip`, `missing-activity-clip`, `floater-gear`.
 //!
 //! @see <https://www.rfc-editor.org/rfc/rfc6901> — JSON Pointer
 //! @see ../../🧬️schema/🔣️.json — the structure mirrored here
 //! @see ../../README.md — the table of codes, the pointer each one is reported at and the rule behind it
 //! @see ../✅️validation/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Activity, Bond, Bone, Cast, Channel, Clip, Ensemble, Face, Gait, Key, Locomotion, Menagerie, Part, Repertoire, Shape, Species, Text, Track, ACTIVITIES, ENSEMBLE_SCHEMA, MENAGERIE_SCHEMA};
+use crate::schema::{
+    Activity, Bond, Bone, Cast, Channel, Clip, Emitter, Ensemble, Face, Gait, Gear, Key, Locomotion, Menagerie, Part, Party, Reaction, Repertoire, Shape, Species, SpeciesState, Text, Track, Trait, Trick, ACTIVITIES, ENSEMBLE_SCHEMA, MENAGERIE_SCHEMA,
+};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
 
 //#region 🔖️Findings
@@ -46,6 +48,11 @@ pub enum IssueCode {
     FloatHover,
     EmptyCast,
     DuplicateScene,
+    DuplicateEntry,
+    LastsThen,
+    MissingGearClip,
+    MissingActivityClip,
+    FloaterGear,
 }
 
 impl IssueCode {
@@ -72,6 +79,11 @@ impl IssueCode {
             Self::FloatHover => "float-hover",
             Self::EmptyCast => "empty-cast",
             Self::DuplicateScene => "duplicate-scene",
+            Self::DuplicateEntry => "duplicate-entry",
+            Self::LastsThen => "lasts-then",
+            Self::MissingGearClip => "missing-gear-clip",
+            Self::MissingActivityClip => "missing-activity-clip",
+            Self::FloaterGear => "floater-gear",
         }
     }
 }
@@ -86,6 +98,8 @@ pub struct Issue {
 
 const SLUG_MAX: usize = 64;
 const SEAM_SLACK: f64 = 1e-9;
+const PARTICLES_MAX: u32 = 32;
+const OWED_ACTIVITIES: [Activity; 6] = [Activity::Hang, Activity::Tumble, Activity::Purr, Activity::Dizzy, Activity::Shrug, Activity::Push];
 
 /// 🧷️ A JSON pointer one step below `base`, escaping `~` and `/`.
 fn at(base: &str, key: impl Display) -> String {
@@ -186,6 +200,15 @@ impl Findings {
                     None => entry,
                 };
                 self.report(&repeated, IssueCode::DuplicateId);
+            }
+        }
+    }
+
+    /// 👥️ Reports `duplicate-entry` at every entry of a list that repeats an earlier one.
+    fn distinct<T: PartialEq>(&mut self, entries: &[Option<T>], path: &str) {
+        for (index, entry) in entries.iter().enumerate() {
+            if entry.is_some() && entries[..index].contains(entry) {
+                self.report(&at(path, index), IssueCode::DuplicateEntry);
             }
         }
     }
@@ -430,8 +453,137 @@ fn locomotion(value: &Locomotion, path: &str, findings: &mut Findings, played: &
     }
 }
 
-/// 🧬️ A species; hands its id on when that is a slug.
-fn species<'a>(value: &'a Species, path: &str, findings: &mut Findings) -> Option<&'a str> {
+/// ✨️ The emitters of a species, each on a bone of the rig, with 1…32 particles, a positive life, a speed of zero or more and a spread in [0, 1]; hands the emitter ids on.
+fn emitters<'a>(value: &'a [Emitter], path: &str, findings: &mut Findings, bone_ids: &BTreeSet<&str>) -> BTreeSet<&'a str> {
+    let ids: Vec<Option<&str>> = value
+        .iter()
+        .enumerate()
+        .map(|(index, emitter)| {
+            let entry = at(path, index);
+            findings.reference(&emitter.bone, &at(&entry, "bone"), Some(bone_ids));
+            findings.number(emitter.x, &at(&entry, "x"));
+            findings.number(emitter.y, &at(&entry, "y"));
+            shape(&emitter.shape, &at(&entry, "shape"), findings);
+            if let Some(width) = emitter.stroke_width {
+                findings.positive(width, &at(&entry, "strokeWidth"), false);
+            }
+            if !(1..=PARTICLES_MAX).contains(&emitter.count) {
+                findings.report(&at(&entry, "count"), IssueCode::OutOfRange);
+            }
+            findings.positive(emitter.life, &at(&entry, "life"), false);
+            findings.positive(emitter.speed, &at(&entry, "speed"), true);
+            findings.within(emitter.spread, &at(&entry, "spread"), 0.0, 1.0);
+            findings.slug(&emitter.id, &at(&entry, "id"))
+        })
+        .collect();
+    findings.unique(&ids, path, Some("id"));
+    ids.into_iter().flatten().collect()
+}
+
+/// 🔦️ The states of a species: at least one, each with an optional tint, overlay clip and emitter of the species; a state that lasts names the state it gives way to; hands the state ids on.
+fn states<'a>(value: &'a [SpeciesState], path: &str, findings: &mut Findings, clip_ids: &BTreeSet<&str>, emitter_ids: &BTreeSet<&str>) -> BTreeSet<&'a str> {
+    let ids: Vec<Option<&str>> = value
+        .iter()
+        .enumerate()
+        .map(|(index, state)| {
+            let entry = at(path, index);
+            findings.text(&state.name, &at(&entry, "name"));
+            if let Some(tint) = &state.tint {
+                let tint_path = at(&entry, "tint");
+                for (name, color) in [("body", &tint.body), ("accent", &tint.accent), ("detail", &tint.detail)] {
+                    if color.as_ref().is_some_and(|color| !is_color(color)) {
+                        findings.report(&at(&tint_path, name), IssueCode::OutOfRange);
+                    }
+                }
+            }
+            if let Some(clip) = &state.clip {
+                findings.reference(clip, &at(&entry, "clip"), Some(clip_ids));
+            }
+            if let Some(emitter) = &state.emitter {
+                findings.reference(emitter, &at(&entry, "emitter"), Some(emitter_ids));
+            }
+            if let Some(lasts) = state.lasts {
+                findings.positive(lasts, &at(&entry, "lasts"), false);
+                if state.then.is_none() {
+                    findings.report(&at(&entry, "then"), IssueCode::LastsThen);
+                }
+            }
+            findings.slug(&state.id, &at(&entry, "id"))
+        })
+        .collect();
+    if ids.is_empty() {
+        findings.report(path, IssueCode::ItemsTooFew);
+    }
+    findings.unique(&ids, path, Some("id"));
+    let known: BTreeSet<&str> = ids.into_iter().flatten().collect();
+    for (index, state) in value.iter().enumerate() {
+        if let Some(then) = &state.then {
+            findings.reference(then, &at(&at(path, index), "then"), Some(&known));
+        }
+    }
+    known
+}
+
+/// 🪄️ The tricks of a species: a clip, distinct cues, an optional emitter, the states a trick is on offer in and the state it leaves; hands the trick ids on.
+fn tricks<'a>(value: &'a [Trick], path: &str, findings: &mut Findings, clip_ids: &BTreeSet<&str>, emitter_ids: &BTreeSet<&str>, state_ids: &BTreeSet<&str>) -> BTreeSet<&'a str> {
+    let ids: Vec<Option<&str>> = value
+        .iter()
+        .enumerate()
+        .map(|(index, trick)| {
+            let entry = at(path, index);
+            findings.text(&trick.name, &at(&entry, "name"));
+            findings.reference(&trick.clip, &at(&entry, "clip"), Some(clip_ids));
+            findings.distinct(&trick.cues.iter().copied().map(Some).collect::<Vec<_>>(), &at(&entry, "cues"));
+            if let Some(emitter) = &trick.emitter {
+                findings.reference(emitter, &at(&entry, "emitter"), Some(emitter_ids));
+            }
+            if let Some(from) = &trick.from {
+                let from_path = at(&entry, "from");
+                let offered: Vec<Option<&str>> = from.iter().enumerate().map(|(member, state)| findings.reference(state, &at(&from_path, member), Some(state_ids))).collect();
+                findings.distinct(&offered, &from_path);
+            }
+            if let Some(to) = &trick.to {
+                findings.reference(to, &at(&entry, "to"), Some(state_ids));
+            }
+            findings.slug(&trick.id, &at(&entry, "id"))
+        })
+        .collect();
+    findings.unique(&ids, path, Some("id"));
+    ids.into_iter().flatten().collect()
+}
+
+/// 🎒️ The activities a gear brings; a species that owns the gear has a clip for each of them.
+fn brings(gear: Gear) -> &'static [Activity] {
+    match gear {
+        Gear::Climb => &[Activity::Climb, Activity::Mantle, Activity::Slide],
+        Gear::Ladder => &[Activity::Carry, Activity::Climb],
+        Gear::Grapple => &[Activity::Aim, Activity::Reel],
+        Gear::Parachute => &[Activity::Glide],
+    }
+}
+
+/// 🧰️ The gear of a species: distinct entries, none that needs ground under its feet for a floater, and for each the clips of the activities it brings.
+fn gear(value: &[Gear], path: &str, findings: &mut Findings, floats: bool, played: &[Activity]) {
+    findings.distinct(&value.iter().copied().map(Some).collect::<Vec<_>>(), path);
+    for (index, owned) in value.iter().enumerate() {
+        if floats && *owned != Gear::Parachute {
+            findings.report(&at(path, index), IssueCode::FloaterGear);
+        }
+        if brings(*owned).iter().any(|activity| !played.contains(activity)) {
+            findings.report(&at(path, index), IssueCode::MissingGearClip);
+        }
+    }
+}
+
+/// 🪪️ What a menagerie knows of a species whose id is a slug: the id, its state ids and its trick ids.
+struct Kind<'a> {
+    id: &'a str,
+    states: BTreeSet<&'a str>,
+    tricks: BTreeSet<&'a str>,
+}
+
+/// 🧬️ A species; hands its id, its state ids and its trick ids on when the id is a slug.
+fn species<'a>(value: &'a Species, path: &str, findings: &mut Findings) -> Option<Kind<'a>> {
     findings.text(&value.name, &at(path, "name"));
     findings.text(&value.thing, &at(path, "thing"));
     let grounds = at(path, "grounds");
@@ -451,13 +603,39 @@ fn species<'a>(value: &'a Species, path: &str, findings: &mut Findings) -> Optio
     let part_ids = parts(&value.parts, &at(path, "parts"), findings, &bone_ids);
     face(&value.face, &at(path, "face"), findings, &bone_ids, &part_ids);
     let clip_ids = clips(&value.clips, &at(path, "clips"), findings, &bone_ids);
-    let played = repertoire(&value.repertoire, &at(path, "repertoire"), findings, &clip_ids);
+    let repertoire_path = at(path, "repertoire");
+    let played = repertoire(&value.repertoire, &repertoire_path, findings, &clip_ids);
+    for activity in OWED_ACTIVITIES {
+        if !played.contains(&activity) {
+            findings.report(&at(&repertoire_path, activity.as_str()), IssueCode::MissingActivityClip);
+        }
+    }
     locomotion(&value.locomotion, &at(path, "locomotion"), findings, &played);
     let temperament = at(path, "temperament");
     for (name, trait_value) in [("energy", value.temperament.energy), ("sociability", value.temperament.sociability), ("curiosity", value.temperament.curiosity)] {
         findings.within(trait_value, &at(&temperament, name), 0.0, 1.0);
     }
-    findings.slug(&value.id, &at(path, "id"))
+    let emitter_ids = emitters(&value.emitters, &at(path, "emitters"), findings, &bone_ids);
+    let state_ids = states(&value.states, &at(path, "states"), findings, &clip_ids, &emitter_ids);
+    let trick_ids = tricks(&value.tricks, &at(path, "tricks"), findings, &clip_ids, &emitter_ids, &state_ids);
+    let purr = at(path, "purr");
+    findings.reference(&value.purr.clip, &at(&purr, "clip"), Some(&clip_ids));
+    if let Some(emitter) = &value.purr.emitter {
+        findings.reference(emitter, &at(&purr, "emitter"), Some(&emitter_ids));
+    }
+    gear(&value.gear, &at(path, "gear"), findings, value.locomotion.gait == Gait::Float, &played);
+    let grip = findings.positive(value.grip, &at(path, "grip"), false);
+    if grip.is_some_and(|grip| value.size.height > 0.0 && grip > value.size.height) {
+        findings.report(&at(path, "grip"), IssueCode::OutOfRange);
+    }
+    let reach = findings.positive(value.reach, &at(path, "reach"), true);
+    if reach.is_some_and(|reach| value.size.width > 0.0 && reach > value.size.width) {
+        findings.report(&at(path, "reach"), IssueCode::OutOfRange);
+    }
+    if let Some(canopy) = &value.canopy {
+        shape(canopy, &at(path, "canopy"), findings);
+    }
+    findings.slug(&value.id, &at(path, "id")).map(|id| Kind { id, states: state_ids, tricks: trick_ids })
 }
 //#endregion 🔖️Species
 
@@ -503,6 +681,90 @@ fn casts(value: &[Cast], path: &str, findings: &mut Findings, species_ids: Optio
     }
 }
 
+/// 🔎️ One side of a reaction: a species of the menagerie when it names one, a state and a trick of that species (of some species of the menagerie when it names none) and a positive time held; hands on the species it names when the menagerie knows it, `anyone` when it names none.
+fn side<'a, 'k>(value: &Trait, path: &str, findings: &mut Findings, kinds: Option<&'k BTreeMap<&'a str, &'k Kind<'a>>>, anyone: Option<&'k Kind<'a>>) -> Option<&'k Kind<'a>> {
+    let kind = match &value.species {
+        Some(species) => {
+            let known: Option<BTreeSet<&str>> = kinds.map(|kinds| kinds.keys().copied().collect());
+            let named = findings.reference(species, &at(path, "species"), known.as_ref());
+            named.and_then(|named| kinds.and_then(|kinds| kinds.get(named).copied()))
+        }
+        None => anyone,
+    };
+    if let Some(state) = &value.state {
+        findings.reference(state, &at(path, "state"), kind.map(|kind| &kind.states));
+    }
+    if let Some(trick) = &value.trick {
+        findings.reference(trick, &at(path, "trick"), kind.map(|kind| &kind.tricks));
+    }
+    if let Some(held) = value.held {
+        findings.positive(held, &at(path, "held"), false);
+    }
+    kind
+}
+
+/// ⚗️ The chemistry: unique reaction ids, sides that name species of the menagerie (or nobody: anyone) with states and tricks of those species, a third side `unless` like them, the bounds of an affinity in [−1, 1] with the low one first, positive distances and periods, a chance in [0, 1] and at least one effect, each on one side with a state or trick of that side's species, an amount in [0, 1] and a rapport step in [−1, 1].
+fn chemistry<'a>(value: &[Reaction], path: &str, findings: &mut Findings, kinds: Option<&'a BTreeMap<&'a str, &'a Kind<'a>>>) {
+    let union = kinds.map(|kinds| Kind { id: "", states: kinds.values().flat_map(|kind| kind.states.iter().copied()).collect(), tricks: kinds.values().flat_map(|kind| kind.tricks.iter().copied()).collect() });
+    let anyone = union.as_ref();
+    let ids: Vec<Option<&str>> = value
+        .iter()
+        .enumerate()
+        .map(|(index, reaction)| {
+            let entry = at(path, index);
+            let when = side(&reaction.when, &at(&entry, "when"), findings, kinds, anyone);
+            let near = side(&reaction.near, &at(&entry, "near"), findings, kinds, anyone);
+            if let Some(unless) = &reaction.unless {
+                side(unless, &at(&entry, "unless"), findings, kinds, anyone);
+            }
+            if let Some(ends) = &reaction.affinity {
+                let bounds = at(&entry, "affinity");
+                for (number, end) in ends.iter().enumerate() {
+                    findings.within(*end, &at(&bounds, number), -1.0, 1.0);
+                }
+                match ends.as_slice() {
+                    [low, high] => {
+                        if low > high {
+                            findings.report(&bounds, IssueCode::OutOfRange);
+                        }
+                    }
+                    _ => findings.report(&bounds, IssueCode::LengthInvalid),
+                }
+            }
+            findings.positive(reaction.within, &at(&entry, "within"), false);
+            findings.positive(reaction.every, &at(&entry, "every"), false);
+            if let Some(chance) = reaction.chance {
+                findings.within(chance, &at(&entry, "chance"), 0.0, 1.0);
+            }
+            let then = at(&entry, "then");
+            for (member, effect) in reaction.then.iter().enumerate() {
+                let effect_path = at(&then, member);
+                let kind = match effect.on {
+                    Party::When => when,
+                    Party::Near => near,
+                };
+                if let Some(state) = &effect.state {
+                    findings.reference(state, &at(&effect_path, "state"), kind.map(|kind| &kind.states));
+                }
+                if let Some(trick) = &effect.trick {
+                    findings.reference(trick, &at(&effect_path, "trick"), kind.map(|kind| &kind.tricks));
+                }
+                if let Some(amount) = effect.amount {
+                    findings.within(amount, &at(&effect_path, "amount"), 0.0, 1.0);
+                }
+                if let Some(rapport) = effect.rapport {
+                    findings.within(rapport, &at(&effect_path, "rapport"), -1.0, 1.0);
+                }
+            }
+            if reaction.then.is_empty() {
+                findings.report(&then, IssueCode::ItemsTooFew);
+            }
+            findings.slug(&reaction.id, &at(&entry, "id"))
+        })
+        .collect();
+    findings.unique(&ids, path, Some("id"));
+}
+
 /// 📇️ The head every document shares: its schema identifier, id and title.
 fn head(schema: &str, id: &str, title: &Text, findings: &mut Findings, expected: &str) {
     if schema != expected {
@@ -519,19 +781,25 @@ pub fn species_issues(document: &Species) -> Vec<Issue> {
     findings.finish()
 }
 
-/// 🎪️ The findings of a menagerie document: its species, their unique ids, and bonds and casts that name them.
+/// 🎪️ The findings of a menagerie document: its species, their unique ids, and bonds, casts and reactions that name them.
 pub fn menagerie_issues(document: &Menagerie) -> Vec<Issue> {
     let mut findings = Findings::default();
     head(&document.schema, &document.id, &document.title, &mut findings, MENAGERIE_SCHEMA);
-    let ids: Vec<Option<&str>> = document.species.iter().enumerate().map(|(index, entry)| species(entry, &at("/species", index), &mut findings)).collect();
+    let found: Vec<Option<Kind<'_>>> = document.species.iter().enumerate().map(|(index, entry)| species(entry, &at("/species", index), &mut findings)).collect();
+    let ids: Vec<Option<&str>> = found.iter().map(|kind| kind.as_ref().map(|kind| kind.id)).collect();
     findings.unique(&ids, "/species", Some("id"));
-    let known: BTreeSet<&str> = ids.into_iter().flatten().collect();
+    let mut kinds: BTreeMap<&str, &Kind<'_>> = BTreeMap::new();
+    for kind in found.iter().flatten() {
+        kinds.entry(kind.id).or_insert(kind);
+    }
+    let known: BTreeSet<&str> = kinds.keys().copied().collect();
     bonds(&document.bonds, "/bonds", &mut findings, Some(&known));
     casts(&document.casts, "/casts", &mut findings, Some(&known));
+    chemistry(&document.chemistry, "/chemistry", &mut findings, Some(&kinds));
     findings.finish()
 }
 
-/// 🗂️ The findings of an ensemble document: unique species paths, bonds and casts (whose species ids resolve only in the assembled menagerie).
+/// 🗂️ The findings of an ensemble document: unique species paths, bonds, casts and reactions (whose species, states and tricks resolve only in the assembled menagerie).
 pub fn ensemble_issues(document: &Ensemble) -> Vec<Issue> {
     let mut findings = Findings::default();
     head(&document.schema, &document.id, &document.title, &mut findings, ENSEMBLE_SCHEMA);
@@ -539,13 +807,14 @@ pub fn ensemble_issues(document: &Ensemble) -> Vec<Issue> {
     findings.unique(&paths, "/species", None);
     bonds(&document.bonds, "/bonds", &mut findings, None);
     casts(&document.casts, "/casts", &mut findings, None);
+    chemistry(&document.chemistry, "/chemistry", &mut findings, None);
     findings.finish()
 }
 
 /// 🧺️ The menagerie an ensemble describes, given its species documents in the order of the ensemble's paths; a species' `$schema` hint stays behind.
 pub fn assemble_menagerie(ensemble: &Ensemble, species: &[Species]) -> Menagerie {
     let members = species.iter().map(|member| Species { json_schema: None, ..member.clone() }).collect();
-    Menagerie { json_schema: None, schema: MENAGERIE_SCHEMA.to_string(), id: ensemble.id.clone(), title: ensemble.title.clone(), species: members, bonds: ensemble.bonds.clone(), casts: ensemble.casts.clone() }
+    Menagerie { json_schema: None, schema: MENAGERIE_SCHEMA.to_string(), id: ensemble.id.clone(), title: ensemble.title.clone(), species: members, bonds: ensemble.bonds.clone(), casts: ensemble.casts.clone(), chemistry: ensemble.chemistry.clone() }
 }
 //#endregion 🔖️Documents
 

@@ -116,8 +116,8 @@ export async function renderPrintPanelGlass(options: { readonly manifestPath: st
   const scale = panelRenderDpi / pointsPerInch;
   const blurSigma = Math.max(1.5, (style.blurPixels * scale) / 9);
   const { createCanvas, Path2D, DOMMatrix } = loadPdfCanvas();
-  (globalThis as { Path2D?: typeof Path2D }).Path2D ??= Path2D;
-  (globalThis as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix ??= DOMMatrix;
+  (globalThis as unknown as { Path2D?: typeof Path2D }).Path2D ??= Path2D;
+  (globalThis as unknown as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix ??= DOMMatrix;
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const sharp = (await import("sharp")).default;
   const document = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(options.pdfPath)), useSystemFonts: true }).promise;
@@ -131,7 +131,7 @@ export async function renderPrintPanelGlass(options: { readonly manifestPath: st
       const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
       const context = canvas.getContext("2d");
       if (!context) throw new Error("panel glass canvas 2d unavailable");
-      await page.render({ canvas, canvasContext: context, viewport }).promise;
+      await page.render({ canvas: canvas as unknown as HTMLCanvasElement, canvasContext: context as unknown as CanvasRenderingContext2D, viewport }).promise;
       rendered = { png: canvas.toBuffer("image/png"), widthPt: (page.view[2] ?? 0) - (page.view[0] ?? 0), heightPt: (page.view[3] ?? 0) - (page.view[1] ?? 0) };
       pageCache.set(entry.page, rendered);
     }

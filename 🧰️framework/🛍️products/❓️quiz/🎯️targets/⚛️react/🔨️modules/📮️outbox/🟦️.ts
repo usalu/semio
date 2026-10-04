@@ -1,13 +1,15 @@
 /** 📮️ The persisted local-only outbox of the commands the proctor has not decided yet, shared by every tab of the site.
  *
  * An answer applies locally at once and its `record-answer` command waits here until the proctor has decided it; so does
- * every command the device decided by itself while the proctor was away (a registration, a started run, a submission).
+ * every command the device decided by itself while the proctor was away (a registration, a started run, an opened task,
+ * a submission). A stored command comes back only whole: a start with its challenge, an opening and an answer with the
+ * instant the learner acted.
  * Each command is its own storage record (keyed by command id), so tabs never overwrite each other's queued commands;
  * every tab merges the others' records as they appear, change or disappear, so each holds the union of all tabs' queues
  * in queued-at order. Per (run, task) only the latest queued answer stays — the proctor keeps the latest anyway —
  * except that a command already on the wire is never replaced, so a delivered answer is never mistaken for a newer one;
  * no other command is ever superseded. Delivery is one at a time in queued-at order — a run is started before its
- * answers arrive and submitted after them — retried with jittered backoff through connection shortages under the
+ * answers arrive, a task is opened before its answers and a run is submitted after them — retried with jittered backoff through connection shortages under the
  * command's own id (the idempotency key), so the same command delivered by two tabs is applied once. Before every
  * attempt a tab checks that the record still exists: another tab may have delivered or superseded it meanwhile. A
  * proctor that asks to slow down (a rate limit) is not asked again before its wait is over — neither by the backoff nor
@@ -19,7 +21,7 @@
 
 import { retryWithJitteredBackoff } from "@semio-tech/framework";
 import type { Answer, Command, Id, RecordAnswerCommand, Slug } from "@semio-tech/quiz";
-import { isRecord, type LocalChange, type LocalStore } from "../💾️persistence/🟦️.ts";
+import { isChallenge, isRecord, isTimestamp, type LocalChange, type LocalStore } from "../💾️persistence/🟦️.ts";
 import { isTransient, pause, retryWait, type CommandVerdict, type RetryTiming } from "../🛂️proctor/🟦️.ts";
 
 /** 📮️ One queued command and when it was queued. */
@@ -72,9 +74,11 @@ function restoredCommand(value: unknown): Command | undefined {
     case "identify-learner":
       return isRecord(value.identity) && typeof value.identity.kind === "string" ? (value as unknown as Command) : undefined;
     case "start-run":
-      return typeof value.run === "string" && typeof value.quiz === "string" ? (value as unknown as Command) : undefined;
+      return typeof value.run === "string" && typeof value.quiz === "string" && isChallenge(value.challenge) && isTimestamp(value.at) ? (value as unknown as Command) : undefined;
+    case "open-task":
+      return typeof value.run === "string" && typeof value.task === "string" && isTimestamp(value.at) ? (value as unknown as Command) : undefined;
     case "record-answer":
-      return typeof value.run === "string" && typeof value.task === "string" && isRecord(value.answer) ? (value as unknown as Command) : undefined;
+      return typeof value.run === "string" && typeof value.task === "string" && isRecord(value.answer) && isTimestamp(value.at) ? (value as unknown as Command) : undefined;
     case "submit-run":
       return typeof value.run === "string" ? (value as unknown as Command) : undefined;
     default:

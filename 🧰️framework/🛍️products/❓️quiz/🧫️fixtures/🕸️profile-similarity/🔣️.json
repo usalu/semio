@@ -23,6 +23,10 @@
             "en": "Seasonal efficiency",
             "de": "Jahresnutzungsgrad"
           },
+          "short": {
+            "en": "efficiency",
+            "de": "Nutzungsgrad"
+          },
           "unit": "%",
           "min": 0,
           "max": 400
@@ -107,6 +111,10 @@
             "en": "Direct electric heating",
             "de": "Elektrodirektheizung"
           },
+          "short": {
+            "en": "Direct electric",
+            "de": "Direktstrom"
+          },
           "description": {
             "en": "Resistance heaters without storage or pump.",
             "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -119,6 +127,10 @@
           "label": {
             "en": "Borehole with brine circuit",
             "de": "Erdsonde mit Solekreislauf"
+          },
+          "short": {
+            "en": "Borehole",
+            "de": "Erdsonde"
           },
           "category": "heat-pump",
           "explanation": {
@@ -258,6 +270,10 @@
             "en": "Seasonal efficiency",
             "de": "Jahresnutzungsgrad"
           },
+          "short": {
+            "en": "efficiency",
+            "de": "Nutzungsgrad"
+          },
           "unit": "%",
           "min": 0,
           "max": 400
@@ -351,6 +367,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -406,6 +426,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -552,6 +576,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -607,6 +635,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -753,6 +785,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -808,6 +844,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -954,6 +994,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -1009,6 +1053,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -1155,6 +1203,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -1210,6 +1262,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -1356,6 +1412,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -1411,6 +1471,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -1557,6 +1621,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -1612,6 +1680,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -1850,6 +1922,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -1944,6 +2020,2031 @@
           }
         ]
       }
+    },
+    {
+      "id": "hidden-keys-all-correct",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "gas-boiler",
+          "lake-water-network": "district-heating"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "district-heating",
+            "correct": "district-heating",
+            "credit": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "hidden-keys-near-profile-miss",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "gas-boiler",
+          "lake-water-network": "gas-boiler"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.9124799296962495,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "gas-boiler",
+            "correct": "district-heating",
+            "credit": 0.5623996484812476
+          }
+        ]
+      }
+    },
+    {
+      "id": "hidden-keys-far-profile-miss",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "gas-boiler",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "gas-boiler",
+          "lake-water-network": "district-heating"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.8,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "gas-boiler",
+            "correct": "heat-pump",
+            "credit": 0
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "district-heating",
+            "correct": "district-heating",
+            "credit": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "hidden-keys-unprofiled-assigned",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "electric-resistance",
+          "lake-water-network": "district-heating"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.8,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "electric-resistance",
+            "correct": "gas-boiler",
+            "credit": 0
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "district-heating",
+            "correct": "district-heating",
+            "credit": 1
+          }
+        ]
+      }
+    }
+  ],
+  "timed": [
+    {
+      "id": "complete",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "gas-boiler",
+          "lake-water-network": "district-heating"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "district-heating",
+            "correct": "district-heating",
+            "credit": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "complete-with-a-near-miss",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "night-storage-heater": "electric-resistance",
+          "condensing-gas": "gas-boiler",
+          "lake-water-network": "gas-boiler"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.9124799296962495,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "assigned": "electric-resistance",
+            "correct": "electric-resistance",
+            "credit": 1,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "gas-boiler",
+            "correct": "district-heating",
+            "credit": 0.5623996484812476
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-items-left-out",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "air-source": "heat-pump",
+          "condensing-gas": "gas-boiler"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.6,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "assigned": "heat-pump",
+            "correct": "heat-pump",
+            "credit": 1
+          },
+          {
+            "item": "night-storage-heater",
+            "correct": "electric-resistance",
+            "credit": 0,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "assigned": "gas-boiler",
+            "correct": "gas-boiler",
+            "credit": 1
+          },
+          {
+            "item": "lake-water-network",
+            "correct": "district-heating",
+            "credit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "left-out-beside-a-near-miss",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "wood-pellets",
+          "lake-water-network": "gas-boiler"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.3124799296962495,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "assigned": "wood-pellets",
+            "correct": "wood-pellets",
+            "credit": 1
+          },
+          {
+            "item": "air-source",
+            "correct": "heat-pump",
+            "credit": 0
+          },
+          {
+            "item": "night-storage-heater",
+            "correct": "electric-resistance",
+            "credit": 0,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "correct": "gas-boiler",
+            "credit": 0
+          },
+          {
+            "item": "lake-water-network",
+            "assigned": "gas-boiler",
+            "correct": "district-heating",
+            "credit": 0.5623996484812476
+          }
+        ]
+      }
+    },
+    {
+      "id": "no-item-assigned",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {}
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "correct": "wood-pellets",
+            "credit": 0
+          },
+          {
+            "item": "air-source",
+            "correct": "heat-pump",
+            "credit": 0
+          },
+          {
+            "item": "night-storage-heater",
+            "correct": "electric-resistance",
+            "credit": 0,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "correct": "gas-boiler",
+            "credit": 0
+          },
+          {
+            "item": "lake-water-network",
+            "correct": "district-heating",
+            "credit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "unanswered",
+      "task": "heating-systems",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "heating-systems",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "pellet-stove",
+            "correct": "wood-pellets",
+            "credit": 0
+          },
+          {
+            "item": "air-source",
+            "correct": "heat-pump",
+            "credit": 0
+          },
+          {
+            "item": "night-storage-heater",
+            "correct": "electric-resistance",
+            "credit": 0,
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          },
+          {
+            "item": "condensing-gas",
+            "correct": "gas-boiler",
+            "credit": 0
+          },
+          {
+            "item": "lake-water-network",
+            "correct": "district-heating",
+            "credit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "profile-free-one-item-left-out",
+      "task": "cooling-strategies",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "cooling-strategies",
+        "title": {
+          "en": "Cooling strategies",
+          "de": "Kühlstrategien"
+        },
+        "prompt": {
+          "en": "Is the measure passive or active?",
+          "de": "Ist die Massnahme passiv oder aktiv?"
+        },
+        "categories": [
+          {
+            "id": "active",
+            "label": {
+              "en": "Active",
+              "de": "Aktiv"
+            }
+          },
+          {
+            "id": "passive",
+            "label": {
+              "en": "Passive",
+              "de": "Passiv"
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "chiller",
+            "label": {
+              "en": "Chiller",
+              "de": "Kältemaschine"
+            }
+          },
+          {
+            "id": "night-ventilation",
+            "label": {
+              "en": "Night ventilation",
+              "de": "Nachtlüftung"
+            }
+          },
+          {
+            "id": "split-unit",
+            "label": {
+              "en": "Split unit",
+              "de": "Split-Klimagerät"
+            }
+          }
+        ],
+        "seconds": 54
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "chiller": "active",
+          "night-ventilation": "active"
+        }
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "cooling-strategies",
+        "score": 0.3333333333333333,
+        "items": [
+          {
+            "item": "chiller",
+            "assigned": "active",
+            "correct": "active",
+            "credit": 1
+          },
+          {
+            "item": "night-ventilation",
+            "assigned": "active",
+            "correct": "passive",
+            "credit": 0
+          },
+          {
+            "item": "split-unit",
+            "correct": "active",
+            "credit": 0,
+            "explanation": {
+              "en": "A split unit runs a refrigeration cycle.",
+              "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "profile-free-unanswered",
+      "task": "cooling-strategies",
+      "sheetTask": {
+        "kind": "classification",
+        "id": "cooling-strategies",
+        "title": {
+          "en": "Cooling strategies",
+          "de": "Kühlstrategien"
+        },
+        "prompt": {
+          "en": "Is the measure passive or active?",
+          "de": "Ist die Massnahme passiv oder aktiv?"
+        },
+        "categories": [
+          {
+            "id": "active",
+            "label": {
+              "en": "Active",
+              "de": "Aktiv"
+            }
+          },
+          {
+            "id": "passive",
+            "label": {
+              "en": "Passive",
+              "de": "Passiv"
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "chiller",
+            "label": {
+              "en": "Chiller",
+              "de": "Kältemaschine"
+            }
+          },
+          {
+            "id": "night-ventilation",
+            "label": {
+              "en": "Night ventilation",
+              "de": "Nachtlüftung"
+            }
+          },
+          {
+            "id": "split-unit",
+            "label": {
+              "en": "Split unit",
+              "de": "Split-Klimagerät"
+            }
+          }
+        ],
+        "seconds": 54
+      },
+      "expected": {
+        "kind": "classification",
+        "task": "cooling-strategies",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "chiller",
+            "correct": "active",
+            "credit": 0
+          },
+          {
+            "item": "night-ventilation",
+            "correct": "passive",
+            "credit": 0
+          },
+          {
+            "item": "split-unit",
+            "correct": "active",
+            "credit": 0,
+            "explanation": {
+              "en": "A split unit runs a refrigeration cycle.",
+              "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+            }
+          }
+        ]
+      }
     }
   ],
   "degraded": [
@@ -1970,6 +4071,10 @@
             "label": {
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
             },
             "unit": "%",
             "min": 0,
@@ -2056,6 +4161,10 @@
               "en": "Borehole with brine circuit",
               "de": "Erdsonde mit Solekreislauf"
             },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
+            },
             "category": "heat-pump",
             "explanation": {
               "en": "A brine circuit feeds a heat pump.",
@@ -2114,6 +4223,10 @@
             "label": {
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
             },
             "unit": "%",
             "min": 0,
@@ -2307,6 +4420,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -2391,6 +4508,10 @@
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
             },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
             "description": {
               "en": "Resistance heaters without storage or pump.",
               "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -2403,6 +4524,10 @@
             "label": {
               "en": "Borehole with brine circuit",
               "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
             },
             "category": "heat-pump",
             "explanation": {
@@ -2475,6 +4600,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -2530,6 +4659,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -2639,6 +4772,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -2723,6 +4860,10 @@
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
             },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
             "description": {
               "en": "Resistance heaters without storage or pump.",
               "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -2735,6 +4876,10 @@
             "label": {
               "en": "Borehole with brine circuit",
               "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
             },
             "category": "heat-pump",
             "explanation": {
@@ -2807,6 +4952,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -2862,6 +5011,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -2967,6 +5120,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -3051,6 +5208,10 @@
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
             },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
             "description": {
               "en": "Resistance heaters without storage or pump.",
               "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -3063,6 +5224,10 @@
             "label": {
               "en": "Borehole with brine circuit",
               "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
             },
             "category": "heat-pump",
             "explanation": {
@@ -3135,6 +5300,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -3190,6 +5359,10 @@
             "label": {
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
             },
             "description": {
               "en": "Resistance heaters without storage or pump.",
@@ -3299,6 +5472,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -3383,6 +5560,10 @@
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
             },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
             "description": {
               "en": "Resistance heaters without storage or pump.",
               "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -3395,6 +5576,10 @@
             "label": {
               "en": "Borehole with brine circuit",
               "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
             },
             "category": "heat-pump",
             "explanation": {
@@ -3467,6 +5652,10 @@
               "en": "Seasonal efficiency",
               "de": "Jahresnutzungsgrad"
             },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
             "unit": "%",
             "min": 0,
             "max": 400
@@ -3523,6 +5712,10 @@
               "en": "Direct electric heating",
               "de": "Elektrodirektheizung"
             },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
             "description": {
               "en": "Resistance heaters without storage or pump.",
               "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -3569,6 +5762,1004 @@
         "score": 0,
         "items": []
       }
+    },
+    {
+      "id": "unanswered-untimed",
+      "task": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
+            "unit": "%",
+            "min": 0,
+            "max": 400
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            },
+            "unit": "g/kWh",
+            "min": 0,
+            "max": 300
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 350,
+              "investment": 30000,
+              "emissions": 40
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 95,
+              "investment": 12000,
+              "emissions": 250
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "description": {
+              "en": "Heat delivered through a network.",
+              "de": "Wärme aus einem Netz."
+            },
+            "profile": {
+              "seasonal-efficiency": 90,
+              "investment": 18000,
+              "emissions": 120
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 85,
+              "investment": 25000,
+              "emissions": 30
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
+            "description": {
+              "en": "Resistance heaters without storage or pump.",
+              "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "ground-source",
+            "label": {
+              "en": "Borehole with brine circuit",
+              "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
+            },
+            "category": "heat-pump",
+            "explanation": {
+              "en": "A brine circuit feeds a heat pump.",
+              "de": "Ein Solekreislauf speist eine Wärmepumpe."
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            },
+            "category": "heat-pump"
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            },
+            "category": "gas-boiler"
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            },
+            "category": "district-heating"
+          },
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            },
+            "category": "wood-pellets"
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            },
+            "category": "electric-resistance",
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          }
+        ],
+        "draw": 5
+      },
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
+            "unit": "%",
+            "min": 0,
+            "max": 400
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            },
+            "unit": "g/kWh",
+            "min": 0,
+            "max": 300
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 85,
+              "investment": 25000,
+              "emissions": 30
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 350,
+              "investment": 30000,
+              "emissions": 40
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
+            "description": {
+              "en": "Resistance heaters without storage or pump.",
+              "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "description": {
+              "en": "Heat delivered through a network.",
+              "de": "Wärme aus einem Netz."
+            },
+            "profile": {
+              "seasonal-efficiency": 90,
+              "investment": 18000,
+              "emissions": 120
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 95,
+              "investment": 12000,
+              "emissions": 250
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-unknown-category",
+      "task": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
+            "unit": "%",
+            "min": 0,
+            "max": 400
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            },
+            "unit": "g/kWh",
+            "min": 0,
+            "max": 300
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 350,
+              "investment": 30000,
+              "emissions": 40
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 95,
+              "investment": 12000,
+              "emissions": 250
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "description": {
+              "en": "Heat delivered through a network.",
+              "de": "Wärme aus einem Netz."
+            },
+            "profile": {
+              "seasonal-efficiency": 90,
+              "investment": 18000,
+              "emissions": 120
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 85,
+              "investment": 25000,
+              "emissions": 30
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
+            "description": {
+              "en": "Resistance heaters without storage or pump.",
+              "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "ground-source",
+            "label": {
+              "en": "Borehole with brine circuit",
+              "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
+            },
+            "category": "heat-pump",
+            "explanation": {
+              "en": "A brine circuit feeds a heat pump.",
+              "de": "Ein Solekreislauf speist eine Wärmepumpe."
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            },
+            "category": "heat-pump"
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            },
+            "category": "gas-boiler"
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            },
+            "category": "district-heating"
+          },
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            },
+            "category": "wood-pellets"
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            },
+            "category": "electric-resistance",
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          }
+        ],
+        "draw": 5
+      },
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "pellet-stove": "solar-thermal"
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-unknown-item",
+      "task": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            },
+            "short": {
+              "en": "efficiency",
+              "de": "Nutzungsgrad"
+            },
+            "unit": "%",
+            "min": 0,
+            "max": 400
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            },
+            "unit": "CHF",
+            "min": 0,
+            "max": 40000
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            },
+            "unit": "g/kWh",
+            "min": 0,
+            "max": 300
+          }
+        ],
+        "categories": [
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 350,
+              "investment": 30000,
+              "emissions": 40
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 95,
+              "investment": 12000,
+              "emissions": 250
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "description": {
+              "en": "Heat delivered through a network.",
+              "de": "Wärme aus einem Netz."
+            },
+            "profile": {
+              "seasonal-efficiency": 90,
+              "investment": 18000,
+              "emissions": 120
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 85,
+              "investment": 25000,
+              "emissions": 30
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            },
+            "description": {
+              "en": "Resistance heaters without storage or pump.",
+              "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "ground-source",
+            "label": {
+              "en": "Borehole with brine circuit",
+              "de": "Erdsonde mit Solekreislauf"
+            },
+            "short": {
+              "en": "Borehole",
+              "de": "Erdsonde"
+            },
+            "category": "heat-pump",
+            "explanation": {
+              "en": "A brine circuit feeds a heat pump.",
+              "de": "Ein Solekreislauf speist eine Wärmepumpe."
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            },
+            "category": "heat-pump"
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            },
+            "category": "gas-boiler"
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            },
+            "category": "district-heating"
+          },
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            },
+            "category": "wood-pellets"
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            },
+            "category": "electric-resistance",
+            "explanation": {
+              "en": "It heats with electricity directly.",
+              "de": "Er heizt direkt mit Strom."
+            }
+          }
+        ],
+        "draw": 5
+      },
+      "sheetTask": {
+        "kind": "classification",
+        "id": "heating-systems",
+        "title": {
+          "en": "Heating systems",
+          "de": "Heizsysteme"
+        },
+        "prompt": {
+          "en": "Assign every installation to its heating system.",
+          "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "axes": [
+          {
+            "id": "seasonal-efficiency",
+            "label": {
+              "en": "Seasonal efficiency",
+              "de": "Jahresnutzungsgrad"
+            }
+          },
+          {
+            "id": "investment",
+            "label": {
+              "en": "Investment",
+              "de": "Investition"
+            }
+          },
+          {
+            "id": "emissions",
+            "label": {
+              "en": "Emissions",
+              "de": "Emissionen"
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2125,
+              "investment": 0.625,
+              "emissions": 0.1
+            }
+          },
+          {
+            "id": "heat-pump",
+            "label": {
+              "en": "Heat pump",
+              "de": "Wärmepumpe"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.875,
+              "investment": 0.75,
+              "emissions": 0.13333333333333333
+            }
+          },
+          {
+            "id": "electric-resistance",
+            "label": {
+              "en": "Direct electric heating",
+              "de": "Elektrodirektheizung"
+            },
+            "short": {
+              "en": "Direct electric",
+              "de": "Direktstrom"
+            }
+          },
+          {
+            "id": "district-heating",
+            "label": {
+              "en": "District heating",
+              "de": "Fernwärme"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.225,
+              "investment": 0.45,
+              "emissions": 0.4
+            }
+          },
+          {
+            "id": "gas-boiler",
+            "label": {
+              "en": "Gas boiler",
+              "de": "Gaskessel"
+            },
+            "profile": {
+              "seasonal-efficiency": 0.2375,
+              "investment": 0.3,
+              "emissions": 0.8333333333333334
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "pellet-stove",
+            "label": {
+              "en": "Silo with automatic feed",
+              "de": "Silo mit automatischer Förderung"
+            }
+          },
+          {
+            "id": "air-source",
+            "label": {
+              "en": "Outdoor fan unit",
+              "de": "Aussengerät mit Ventilator"
+            }
+          },
+          {
+            "id": "night-storage-heater",
+            "label": {
+              "en": "Night storage heater",
+              "de": "Nachtspeicherofen"
+            }
+          },
+          {
+            "id": "condensing-gas",
+            "label": {
+              "en": "Condensing boiler on the gas grid",
+              "de": "Brennwertkessel am Gasnetz"
+            }
+          },
+          {
+            "id": "lake-water-network",
+            "label": {
+              "en": "Lake water network connection",
+              "de": "Anschluss an ein Seewassernetz"
+            }
+          }
+        ],
+        "seconds": 70
+      },
+      "answer": {
+        "kind": "classification",
+        "assignments": {
+          "ground-source": "heat-pump"
+        }
+      },
+      "expected": null
     }
   ]
 }

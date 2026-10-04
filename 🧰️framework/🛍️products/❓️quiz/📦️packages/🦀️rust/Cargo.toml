@@ -22,9 +22,11 @@ sut = ["dep:serde_json"]
 
 [dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
+# 🎯️ `float_roundtrip`: quiz documents are read correctly rounded, as `JSON.parse` and Python read them (`3.828e26` is
+# otherwise read one double low, and the twins' sheets and verdicts part).
+serde_json = { workspace = true, optional = true, features = ["float_roundtrip"] }
 
 [dev-dependencies]
-serde_json = { workspace = true }
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 # 🔮️ Third-party oracle of the handle tables: NFC, NFKC and the composition of pairs.
 unicode-normalization = "0.1.25"

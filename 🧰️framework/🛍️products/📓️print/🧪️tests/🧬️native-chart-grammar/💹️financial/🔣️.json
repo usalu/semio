@@ -1,0 +1,173 @@
+{
+  "frame": [
+    80,
+    40
+  ],
+  "columns": [
+    "t",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "rows": [
+    [
+      1,
+      10,
+      14,
+      8,
+      12,
+      40
+    ],
+    [
+      2,
+      12,
+      18,
+      10,
+      16,
+      50
+    ],
+    [
+      3,
+      16,
+      18,
+      4,
+      6,
+      30
+    ],
+    [
+      4,
+      6,
+      24,
+      4,
+      22,
+      60
+    ],
+    [
+      5,
+      22,
+      24,
+      8,
+      10,
+      45
+    ],
+    [
+      6,
+      10,
+      16,
+      6,
+      14,
+      70
+    ]
+  ],
+  "stockClose": [
+    11,
+    10,
+    9,
+    12,
+    13,
+    11,
+    14,
+    15
+  ],
+  "cases": [
+    {
+      "id": "stock-moving",
+      "kind": "moving-average-chart",
+      "window": 3,
+      "deviation": 2,
+      "stock": true,
+      "band": false
+    },
+    {
+      "id": "stock-bollinger",
+      "kind": "bollinger-band-chart",
+      "window": 3,
+      "deviation": 2,
+      "stock": true,
+      "band": true
+    },
+    {
+      "id": "custom-one",
+      "kind": "bollinger-band-chart",
+      "window": 1,
+      "deviation": 2,
+      "stock": false,
+      "band": true
+    },
+    {
+      "id": "custom-two",
+      "kind": "bollinger-band-chart",
+      "window": 2,
+      "deviation": 1.5,
+      "stock": false,
+      "band": true
+    },
+    {
+      "id": "custom-four",
+      "kind": "bollinger-band-chart",
+      "window": 4,
+      "deviation": 2,
+      "stock": false,
+      "band": true
+    },
+    {
+      "id": "custom-wide",
+      "kind": "bollinger-band-chart",
+      "window": 20,
+      "deviation": 2,
+      "stock": false,
+      "band": true
+    },
+    {
+      "id": "custom-zero",
+      "kind": "bollinger-band-chart",
+      "window": 3,
+      "deviation": 0,
+      "stock": false,
+      "band": true
+    }
+  ],
+  "stockKinds": [
+    "line-price-chart",
+    "candlestick-chart",
+    "ohlc-chart",
+    "hlc-chart",
+    "kagi-chart",
+    "renko-chart",
+    "point-and-figure-chart",
+    "heikin-ashi-chart",
+    "volume-bar-chart",
+    "volume-profile",
+    "price-volume-chart",
+    "moving-average-chart",
+    "bollinger-band-chart",
+    "macd-plot",
+    "rsi-plot",
+    "momentum-plot",
+    "drawdown-chart",
+    "equity-curve",
+    "return-chart",
+    "cumulative-return-chart",
+    "risk-return-scatterplot",
+    "efficient-frontier",
+    "portfolio-allocation-chart",
+    "waterfall-chart",
+    "bridge-chart",
+    "pandl-bridge",
+    "revenue-bridge",
+    "variance-chart",
+    "actual-vs-budget-chart",
+    "bullet-chart",
+    "kpi-chart",
+    "supply-demand-graph",
+    "lorenz-curve",
+    "phillips-curve",
+    "production-possibility-frontier",
+    "indifference-curve",
+    "engel-curve",
+    "yield-curve",
+    "term-structure-chart"
+  ]
+}

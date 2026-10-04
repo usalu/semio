@@ -34,7 +34,7 @@
 //! poisons the actor: its state records the failure, every later command answers
 //! `actorUnavailable` with it and the cause goes to stderr. Nothing is skipped silently.
 //!
-//! **Wire mapping** (design §9a): command kind `quiz.<type>`, version `1`, command id and
+//! **Wire mapping** (design §9a): command kind `quiz.<type>`, version [`WIRE_VERSION`] of the contract, command id and
 //! idempotency key = the quiz command id, tenant and scope = the catalog id, target
 //! `quiz-learner/<learner>` for every command but a pseudonym or name `identify-learner`, which
 //! targets `quiz-handle/<handle actor id>`; event kind `quiz.<type>` with the quiz event JSON as
@@ -47,7 +47,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use quiz::{Command, Event, HandleState, Identity, LearnerContext, LearnerState, Limits};
+use quiz::{Command, Event, HandleState, Identity, LearnerContext, LearnerState, Limits, WIRE_VERSION};
 use semio_framework_dispatch_macros::dyn_enum_close;
 use serde::{Deserialize, Serialize};
 use server::authority::{ActorState, Decider, Decision, DecisionContext, Saga};
@@ -72,11 +72,9 @@ pub const ENROLL: &str = "quiz.enroll-learner";
 pub const RUN_SUBMITTED: &str = "quiz.run-submitted";
 /// 🤖️ The service account the proctor's own workflows act as.
 pub const PROCTOR_SERVICE: &str = "proctor";
-/// 🔢️ The wire version of every quiz command and query kind.
-pub const WIRE_VERSION: u32 = 1;
 /// 🧬️ The revision of the deciders' folds and of the encoding of their state bytes; a snapshot of
 /// another revision is ignored and the stream replayed.
-pub const STATE_FORMAT: u32 = 1;
+pub const STATE_FORMAT: u32 = 2;
 
 /// 🏷️ `quiz.<type>` of a quiz command.
 pub fn command_kind(command: &Command) -> String {

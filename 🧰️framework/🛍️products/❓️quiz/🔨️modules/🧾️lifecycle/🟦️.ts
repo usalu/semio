@@ -1,4 +1,4 @@
-/** 🧾️ The learner lifecycle as pure deciders: the handle streams that register pseudonyms and names exactly once, and the runs, answers, submissions and badges of one learner.
+/** 🧾️ The learner lifecycle as pure deciders: the handle streams that register pseudonyms and names exactly once, and the runs, opened tasks, answers, submissions and badges of one learner.
  *
  * `decide*` turns a command into events or a rejection at the decision time `now`; `evolve*` folds one event into the
  * state. The proctor wraps both in framework deciders; idempotency by command id is the framework's. Every decision
@@ -6,11 +6,21 @@
  * caps of {@link Limits}, so no stream grows without bound. A claimed handle is recalled by a read, never by a
  * command: recalling writes nothing.
  *
+ * A run carries the challenge it was started at; every sheet is rebuilt at that challenge. The device keeps the time:
+ * `start-run`, `open-task` and `record-answer` carry the instant the learner acted. A decider lowers every claim to
+ * `CLOCK_LEAD` past its own clock and raises it to its floor (0 for the start, the run's start for an opening and an
+ * untimed answer, the task's opening for a timed answer), then applies the limit of a timed task to those instants
+ * alone. A device decides at its own clock, so its claims never meet the lead: the device's deputy and the proctor —
+ * deciding again at delivery, after a connection shortage — reach the same verdict whatever the delay, as long as the
+ * device's clock runs less than the lead ahead of the proctor's; a claim dated further ahead buys no time.
+ *
  * @see ../../README.md — the run lifecycle table, the handle policy and the caps
+ * @see ../⛰️challenge/🟦️.ts — the rules of a challenge and the instant a learner acted
  * @see ./🦀️.rs — the Rust twin
  */
-import type { Answer, BadgeAward, Catalog, Event, IdentifyLearnerCommand, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Command, Timestamp } from "../../🧬️schema/🟦️.ts";
+import type { Answer, BadgeAward, Catalog, Challenge, Event, IdentifyLearnerCommand, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Command, Timestamp } from "../../🧬️schema/🟦️.ts";
 import { earnedBadges } from "../🏅️badges/🟦️.ts";
+import { acted, challengeRules } from "../⛰️challenge/🟦️.ts";
 import { runSeed } from "../🎲️randomness/🟦️.ts";
 import { sheetOf } from "../🃏️sheet/🟦️.ts";
 import { scoreRun } from "../📏️scoring/🟦️.ts";
@@ -28,15 +38,17 @@ export type LoadedQuiz = { readonly quiz: Quiz; readonly revision: string };
 /** 🧭️ What a learner decision reads besides the state: the decision time, the catalog, its quizzes by id and the caps. */
 export type LearnerContext = { readonly now: Timestamp; readonly catalog: Catalog; readonly quizzes: Readonly<Record<string, LoadedQuiz>>; readonly limits: Limits };
 
-/** 🏃️ One run of a learner as the learner stream built it; `recorded` counts every answer recorded, also the replaced ones. */
+/** 🏃️ One run of a learner as the learner stream built it; `recorded` counts every answer recorded, also the replaced ones; `opened` holds when each opened task of a timed run was opened and stays empty on an untimed one. */
 export type RunState = {
   readonly run: string;
   readonly quiz: string;
+  readonly challenge: Challenge;
   readonly revision: string;
   readonly seed: number;
   readonly status: RunStatus;
   readonly answers: Readonly<Record<string, Answer>>;
   readonly recorded: number;
+  readonly opened: Readonly<Record<string, Timestamp>>;
   readonly result?: RunResult;
   readonly startedAt: Timestamp;
   readonly submittedAt?: Timestamp;
@@ -98,43 +110,58 @@ function register(state: LearnerState, command: IdentifyLearnerCommand, context:
   return { events: [{ type: "learner-registered", learner: state.learner, identity: { kind: "anonymous" }, at: context.now }] };
 }
 
-/** ▶️ Starts a run, voiding an open run of the same quiz whose revision is stale; refused once the learner submitted its cap of runs. */
+/** ▶️ Starts a run at the command's challenge at the instant the learner started it, lowered to the lead past the decision time. An open run of the same quiz at the current revision refuses the start at its own challenge (`run-open`, the client resumes it) and is voided by a start at another one; a stale open run is voided whatever the challenge. Refused once the learner started its cap of runs, open, submitted and voided alike. */
 function startRun(state: LearnerState, command: Extract<Command, { type: "start-run" }>, context: LearnerContext): Decision {
   if (state.identity === undefined) return { rejection: "unknown-learner" };
   if (!Object.hasOwn(context.quizzes, command.quiz)) return { rejection: "unknown-quiz" };
   const existing = runOf(state, command.run);
   if (existing) return { rejection: existing.status === "open" ? "run-open" : "run-closed" };
   const open = state.runs.find((run) => run.quiz === command.quiz && run.status === "open");
-  if (open && !stale(open, context)) return { rejection: "run-open" };
-  const submitted = state.runs.filter((run) => run.status === "submitted");
-  if (submitted.length >= context.limits.runs || submitted.filter((run) => run.quiz === command.quiz).length >= context.limits.runsPerQuiz) return { rejection: "runs-exhausted" };
-  const started: Event = { type: "run-started", learner: state.learner, run: command.run, quiz: command.quiz, revision: context.quizzes[command.quiz]!.revision, seed: runSeed(command.run), at: context.now };
+  if (open && !stale(open, context) && open.challenge === command.challenge) return { rejection: "run-open" };
+  if (state.runs.length >= context.limits.runs || state.runs.filter((run) => run.quiz === command.quiz).length >= context.limits.runsPerQuiz) return { rejection: "runs-exhausted" };
+  const started: Event = { type: "run-started", learner: state.learner, run: command.run, quiz: command.quiz, challenge: command.challenge, revision: context.quizzes[command.quiz]!.revision, seed: runSeed(command.run), at: acted(command.at, 0, context.now) };
   return { events: open ? [{ type: "run-voided", learner: state.learner, run: open.run, at: context.now }, started] : [started] };
 }
 
-/** ✍️ Records the latest answer to a task of an open, current run; refused once the run recorded its cap of answers. */
+/** ⏱️ Opens a task of an open, current, timed run at the instant the learner acted, raised to the run's start: its clock starts. A task opens once (`already-opened`); a run without a clock refuses (`run-untimed`). */
+function openTask(state: LearnerState, command: Extract<Command, { type: "open-task" }>, context: LearnerContext): Decision {
+  const run = runOf(state, command.run);
+  if (!run) return { rejection: "unknown-run" };
+  if (run.status !== "open") return { rejection: "run-closed" };
+  if (stale(run, context)) return { rejection: "quiz-revised" };
+  if (!challengeRules(run.challenge).timed) return { rejection: "run-untimed" };
+  if (!sheetOf(context.quizzes[run.quiz]!.quiz, run.seed, run.challenge).tasks.some((task) => task.id === command.task)) return { rejection: "unknown-task" };
+  if (Object.hasOwn(run.opened, command.task)) return { rejection: "already-opened" };
+  return { events: [{ type: "task-opened", learner: state.learner, run: run.run, task: command.task, at: acted(command.at, run.startedAt, context.now) }] };
+}
+
+/** ✍️ Records the latest answer to a task of an open, current run at the instant the learner acted; refused once the run recorded its cap of answers. On a timed run the task must be opened (`task-unopened`) and the instant, raised to the opening, must lie within the task's seconds of it (`time-up`); on an untimed run the instant is raised to the run's start. */
 function recordAnswer(state: LearnerState, command: Extract<Command, { type: "record-answer" }>, context: LearnerContext): Decision {
   const run = runOf(state, command.run);
   if (!run) return { rejection: "unknown-run" };
   if (run.status !== "open") return { rejection: "run-closed" };
   if (stale(run, context)) return { rejection: "quiz-revised" };
   if (run.recorded >= context.limits.answersPerRun) return { rejection: "answers-exhausted" };
-  const sheetTask = sheetOf(context.quizzes[run.quiz]!.quiz, run.seed).tasks.find((task) => task.id === command.task);
+  const sheetTask = sheetOf(context.quizzes[run.quiz]!.quiz, run.seed, run.challenge).tasks.find((task) => task.id === command.task);
   if (!sheetTask) return { rejection: "unknown-task" };
+  const opened = challengeRules(run.challenge).timed ? (Object.hasOwn(run.opened, command.task) ? run.opened[command.task]! : undefined) : run.startedAt;
+  if (opened === undefined) return { rejection: "task-unopened" };
+  const at = acted(command.at, opened, context.now);
+  if (sheetTask.seconds !== undefined && at - opened > sheetTask.seconds * 1000) return { rejection: "time-up" };
   const rejection = answerRejection(sheetTask, command.answer);
   if (rejection) return { rejection };
-  return { events: [{ type: "answer-recorded", learner: state.learner, run: run.run, task: command.task, answer: command.answer, at: context.now }] };
+  return { events: [{ type: "answer-recorded", learner: state.learner, run: run.run, task: command.task, answer: command.answer, at }] };
 }
 
-/** 📨️ Scores a complete open run and awards the badges it newly earns; a stale run is voided instead. */
+/** 📨️ Scores an open run and awards the badges it newly earns; a stale run is voided instead. An untimed run must be complete (`run-incomplete`); a timed run is scored as it stands, what is missing as a miss. */
 function submitRun(state: LearnerState, command: Extract<Command, { type: "submit-run" }>, context: LearnerContext): Decision {
   const run = runOf(state, command.run);
   if (!run) return { rejection: "unknown-run" };
   if (run.status !== "open") return { rejection: "run-closed" };
   if (stale(run, context)) return { events: [{ type: "run-voided", learner: state.learner, run: run.run, at: context.now }] };
   const quiz = context.quizzes[run.quiz]!.quiz;
-  const sheet = sheetOf(quiz, run.seed);
-  if (!sheet.tasks.every((task) => answerComplete(task, Object.hasOwn(run.answers, task.id) ? run.answers[task.id] : undefined))) return { rejection: "run-incomplete" };
+  const sheet = sheetOf(quiz, run.seed, run.challenge);
+  if (!challengeRules(run.challenge).timed && !sheet.tasks.every((task) => answerComplete(task, Object.hasOwn(run.answers, task.id) ? run.answers[task.id] : undefined))) return { rejection: "run-incomplete" };
   const result = scoreRun(quiz, sheet, run.answers);
   if (!result) return { rejection: "run-incomplete" };
   const results = [...state.runs.flatMap((candidate) => (candidate.result ? [candidate.result] : [])), result];
@@ -150,7 +177,7 @@ function submitRun(state: LearnerState, command: Extract<Command, { type: "submi
   };
 }
 
-/** 🧑‍⚖️ Decides a command of this learner: the registration of an anonymous learner, start-run, record-answer or submit-run. A command of malformed ids is `id-invalid`, a command of another learner `unknown-learner`. */
+/** 🧑‍⚖️ Decides a command of this learner: the registration of an anonymous learner, start-run, open-task, record-answer or submit-run. A command of malformed ids is `id-invalid`, a command of another learner `unknown-learner`. */
 export function decideLearner(state: LearnerState, command: Command, context: LearnerContext): Decision {
   const malformed = commandRejection(command);
   if (malformed) return { rejection: malformed };
@@ -160,6 +187,8 @@ export function decideLearner(state: LearnerState, command: Command, context: Le
       return register(state, command, context);
     case "start-run":
       return startRun(state, command, context);
+    case "open-task":
+      return openTask(state, command, context);
     case "record-answer":
       return recordAnswer(state, command, context);
     case "submit-run":
@@ -179,9 +208,11 @@ export function evolveLearner(state: LearnerState, event: Event): LearnerState {
     case "learner-registered":
       return { ...state, identity: event.identity };
     case "run-started":
-      return { ...state, runs: [...state.runs, { run: event.run, quiz: event.quiz, revision: event.revision, seed: event.seed, status: "open", answers: {}, recorded: 0, startedAt: event.at }] };
+      return { ...state, runs: [...state.runs, { run: event.run, quiz: event.quiz, challenge: event.challenge, revision: event.revision, seed: event.seed, status: "open", answers: {}, recorded: 0, opened: {}, startedAt: event.at }] };
     case "run-voided":
       return { ...state, runs: withRun(state, event.run, (run) => ({ ...run, status: "voided" })) };
+    case "task-opened":
+      return { ...state, runs: withRun(state, event.run, (run) => ({ ...run, opened: { ...run.opened, [event.task]: event.at } })) };
     case "answer-recorded":
       return { ...state, runs: withRun(state, event.run, (run) => ({ ...run, answers: { ...run.answers, [event.task]: event.answer }, recorded: run.recorded + 1 })) };
     case "run-submitted":

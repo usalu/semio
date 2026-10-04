@@ -1,4 +1,4 @@
-/** 📐️ Unit suite of the pets trigonometry: exact landmarks, symmetries and periods, accuracy against numpy's committed answers and against gl-matrix rotations, the scalar blends, and the ban on platform transcendentals.
+/** 📐️ Unit suite of the pets trigonometry: exact landmarks, symmetries and periods, accuracy against numpy's committed answers and against gl-matrix rotations, the arctangent and the rational decay within their stated errors, the scalar blends, and the ban on platform transcendentals.
  *
  * @see ../../🟦️.ts — the module under test
  * @see ../../../../🧫️fixtures/📐️turn-trigonometry/🔣️.json — numpy's answers (case 📐️turn-trigonometry)
@@ -8,7 +8,7 @@ import { mat2d } from "gl-matrix";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
-import { clamp, cosTurns, lerp, sinTurns, smoothstep } from "../../🟦️.ts";
+import { atanTurns, clamp, cosTurns, fastNegExp, lerp, sinTurns, smoothstep } from "../../🟦️.ts";
 
 type Vectors = {
   readonly angles: readonly { readonly id: string; readonly numerator: number; readonly denominator: number; readonly expected: { readonly sine: number; readonly cosine: number }; readonly bits: { readonly sine: string; readonly cosine: string } }[];
@@ -16,6 +16,9 @@ type Vectors = {
   readonly clamps: readonly { readonly id: string; readonly value: number; readonly low: number; readonly high: number; readonly expected: number }[];
   readonly lerps: readonly { readonly id: string; readonly from: number; readonly to: number; readonly amount: number; readonly expected: number }[];
   readonly smoothsteps: readonly { readonly id: string; readonly amount: number; readonly expected: number }[];
+  readonly arctangents: readonly { readonly id: string; readonly y: number; readonly x: number; readonly reference: number; readonly expected: { readonly turns: number; readonly bits: string } }[];
+  readonly arctangentGrids: readonly { readonly id: string; readonly span: number; readonly step: number; readonly expected: readonly number[] }[];
+  readonly decays: readonly { readonly id: string; readonly x: number; readonly reference: number; readonly expected: { readonly value: number; readonly bits: string } }[];
 };
 
 const VECTORS = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/📐️turn-trigonometry/🔣️.json", import.meta.url), "utf8")) as Vectors;
@@ -142,6 +145,130 @@ describe("sinTurns and cosTurns", () => {
       worst = Math.max(worst, Math.abs(cosTurns(turns) - rotation[0]), Math.abs(sinTurns(turns) - rotation[1]));
     }
     expect(worst).toBeLessThanOrEqual(BOUND);
+  });
+});
+
+/** ⭕️ How far two directions in turns lie apart around the circle. */
+function around(left: number, right: number): number {
+  const apart = left - right - Math.floor(left - right + 0.5);
+  return Math.abs(apart);
+}
+
+/** 🕸️ How many points a side of the lattices of the sweeps has at the level of the run. */
+const SIDE = sampled(40, 200, 800);
+
+describe("atanTurns", () => {
+  it("gives exactly 0, ¼, ½ and −¼ along the axes, 0 at the origin and never a negative zero", () => {
+    expect(Object.is(atanTurns(0, 0), 0)).toBe(true);
+    expect(Object.is(atanTurns(-0, -0), 0)).toBe(true);
+    expect(Object.is(atanTurns(0, 3), 0)).toBe(true);
+    expect(Object.is(atanTurns(-0, 3), 0)).toBe(true);
+    expect(Object.is(atanTurns(-1e-300, 1e300), 0)).toBe(true);
+    expect(atanTurns(2, 0)).toBe(0.25);
+    expect(atanTurns(0, -5)).toBe(0.5);
+    expect(atanTurns(-0, -5)).toBe(0.5);
+    expect(atanTurns(-7, 0)).toBe(-0.25);
+  });
+
+  it("stays inside (−½, ½] and gives ½ where the direction rounds to −½", () => {
+    expect(atanTurns(-1e-300, -1)).toBe(0.5);
+    expect(atanTurns(-5e-324, -1e300)).toBe(0.5);
+    for (let row = -12; row <= 12; row++) {
+      for (let column = -12; column <= 12; column++) {
+        expect(atanTurns(row * 0.3, column * 0.3)).toBeGreaterThan(-0.5);
+        expect(atanTurns(row * 0.3, column * 0.3)).toBeLessThanOrEqual(0.5);
+      }
+    }
+  });
+
+  it("is odd in y, mirrored in x and blind to doubling, exactly", () => {
+    for (let row = -12; row <= 12; row++) {
+      for (let column = -12; column <= 12; column++) {
+        const y = row * 0.3;
+        const x = column * 0.3;
+        const turns = atanTurns(y, x);
+        expect(atanTurns(2 * y, 2 * x)).toBe(turns);
+        expect(atanTurns(y / 1024, x / 1024)).toBe(turns);
+        if (turns !== 0.5) expect(atanTurns(-y, x) + turns).toBe(0);
+        if (y > 0 && x > 0) expect(atanTurns(y, -x)).toBe(0.5 - turns);
+        if (y > 0 && x > y) expect(atanTurns(x, y)).toBe(0.25 - turns);
+      }
+    }
+  });
+
+  it("rises with the angle inside every octant", () => {
+    for (let step = 0; step < SIDE; step++) expect(atanTurns((step + 1) / SIDE, 1)).toBeGreaterThan(atanTurns(step / SIDE, 1));
+    for (let step = 0; step < SIDE; step++) expect(atanTurns(1, step / SIDE)).toBeGreaterThan(atanTurns(1, (step + 1) / SIDE));
+  });
+
+  it("matches numpy's arctangent of every committed point within 2e-6 turns and reproduces the committed 64-bit pattern", () => {
+    expect(VECTORS.arctangents.length).toBeGreaterThan(30);
+    for (const vector of VECTORS.arctangents) {
+      expect(around(atanTurns(vector.y, vector.x), vector.reference), vector.id).toBeLessThanOrEqual(2e-6);
+      expect(bits(atanTurns(vector.y, vector.x)), vector.id).toBe(vector.expected.bits);
+    }
+  });
+
+  it("reproduces every committed lattice bit for bit", () => {
+    let compared = 0;
+    for (const vector of VECTORS.arctangentGrids) {
+      const side = 2 * vector.span + 1;
+      expect(vector.expected.length).toBe(side * side);
+      for (let row = 0; row < side; row++) for (let column = 0; column < side; column++) expect(atanTurns((row - vector.span) * vector.step, (column - vector.span) * vector.step), vector.id).toBe(vector.expected[row * side + column]);
+      compared += side * side;
+    }
+    expect(compared).toBeGreaterThan(1000);
+  });
+
+  it("stays within 2e-6 turns of the platform arctangent over a lattice and comes close to that bound", () => {
+    let worst = 0;
+    for (let row = -SIDE; row <= SIDE; row++) for (let column = -SIDE; column <= SIDE; column++) worst = Math.max(worst, around(atanTurns(row * 0.37, column * 0.37), Math.atan2(row * 0.37, column * 0.37) / (2 * Math.PI)));
+    expect(worst).toBeLessThanOrEqual(2e-6);
+    expect(worst).toBeGreaterThan(1.5e-6);
+  });
+
+  it("finds the angle sinTurns and cosTurns were taken of", () => {
+    let worst = 0;
+    for (let step = -SIDE * 8; step <= SIDE * 8; step++) worst = Math.max(worst, around(atanTurns(sinTurns(step / (SIDE * 16 + 1)), cosTurns(step / (SIDE * 16 + 1))), step / (SIDE * 16 + 1)));
+    expect(worst).toBeLessThanOrEqual(2e-6);
+  });
+});
+
+describe("fastNegExp", () => {
+  it("is 1 at and below 0, 0 at infinity, and falls all the way in between without reaching 0", () => {
+    expect(fastNegExp(0)).toBe(1);
+    expect(fastNegExp(-3)).toBe(1);
+    expect(fastNegExp(Number.NaN)).toBe(1);
+    expect(fastNegExp(Number.POSITIVE_INFINITY)).toBe(0);
+    let before = 1;
+    for (let step = 1; step <= 4096; step++) {
+      const value = fastNegExp(step / 128);
+      expect(value).toBeLessThan(before);
+      expect(value).toBeGreaterThan(0);
+      before = value;
+    }
+  });
+
+  it("matches numpy's exponential of every committed argument within the stated gaps and reproduces the committed 64-bit pattern", () => {
+    expect(VECTORS.decays.length).toBeGreaterThan(15);
+    for (const vector of VECTORS.decays) {
+      expect(Math.abs(fastNegExp(vector.x) - vector.reference), vector.id).toBeLessThanOrEqual(vector.x <= 1 ? 6e-4 : 1.9e-2);
+      expect(bits(fastNegExp(vector.x)), vector.id).toBe(vector.expected.bits);
+    }
+  });
+
+  it("stays within 6e-4 of the platform exponential up to 1 and within 1.9e-2 beyond", () => {
+    let near = 0;
+    let far = 0;
+    for (let step = 0; step <= SIDE * 100; step++) {
+      const x = step / (SIDE * 5);
+      const gap = Math.abs(fastNegExp(x) - Math.exp(-x));
+      if (x <= 1) near = Math.max(near, gap);
+      far = Math.max(far, gap);
+    }
+    expect(near).toBeLessThanOrEqual(6e-4);
+    expect(far).toBeLessThanOrEqual(1.9e-2);
+    expect(far).toBeGreaterThan(1.8e-2);
   });
 });
 

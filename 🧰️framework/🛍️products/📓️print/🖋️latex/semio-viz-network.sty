@@ -8,6 +8,7 @@
 \RequirePackage{semio-viz-probe}
 
 \ExplSyntaxOn
+\cs_if_exist:NF \str_compare:eNeTF { \prg_generate_conditional_variant:Nnn \str_compare:nNn { eNe } { TF } }
 
 %region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-force }
@@ -949,6 +950,13 @@
         { 1 - \l_semio_viz_network_alpha_min_fp ** ( 1 / 300 ) }
     }
   \semio_viz_network_phyllotaxis:
+  \tl_if_empty:NF \l_semio_viz_network_initial_table_tl {
+    \seq_map_indexed_inline:Nn \l_semio_viz_layout_rows_seq {
+      \semio_viz_layout_row:n {##2}
+      \semio_viz_network_fset:nnn {x} {##1} {\semio_viz_layout_cell:n {x}}
+      \semio_viz_network_fset:nnn {y} {##1} {\semio_viz_layout_cell:n {y}}
+    }
+  }
   \semio_viz_network_link_init:
   \fp_set_eq:NN \l_semio_viz_network_run_alpha_fp \l_semio_viz_network_alpha_fp
   \int_step_inline:nn { \l_semio_viz_network_force_iter_int } { \semio_viz_network_force_tick: }
@@ -1000,7 +1008,7 @@
         {
           \seq_sort:Nn \l_semio_viz_network_sorted_seq
             {
-              \str_compare:nNnTF { \semio_viz_network_id:n {##1} } > { \semio_viz_network_id:n {##2} }
+              \str_compare:eNeTF { \semio_viz_network_id:n {##1} } > { \semio_viz_network_id:n {##2} }
                 { \sort_return_swapped: } { \sort_return_same: }
             }
         }
@@ -1017,7 +1025,7 @@
         {
           \seq_sort:Nn \l_semio_viz_network_sorted_seq
             {
-              \str_compare:nNnTF { \semio_viz_network_group:n {##1} } > { \semio_viz_network_group:n {##2} }
+              \str_compare:eNeTF { \semio_viz_network_group:n {##1} } > { \semio_viz_network_group:n {##2} }
                 { \sort_return_swapped: } { \sort_return_same: }
             }
         }
@@ -1747,6 +1755,15 @@
   \semio_viz_network_use:nn {#1} {#3}
   \semio_viz_network_keys:nNn { layout / chord } \c_semio_viz_network_chord_defaults_tl {#3}
   \semio_viz_network_matrix_build:
+  \bool_if:NT \l_semio_viz_network_table_transpose_bool {
+    \int_step_inline:nn {\l_semio_viz_network_n_int} {
+      \int_step_inline:nnnn {##1+1} {1} {\l_semio_viz_network_n_int} {
+        \fp_set:Nn \l_semio_viz_network_dx_fp {\semio_viz_network_mat:nn {##1} {####1}}
+        \semio_viz_network_fset:nnn {mat_##1} {####1} {\semio_viz_network_mat:nn {####1} {##1}}
+        \semio_viz_network_fset:nnn {mat_####1} {##1} {\l_semio_viz_network_dx_fp}
+      }
+    }
+  }
   \semio_viz_network_fp_ensure:nn { gsum } { \l_semio_viz_network_n_int }
   \semio_viz_network_fp_ensure:nn { ga } { \l_semio_viz_network_n_int }
   \semio_viz_network_fp_ensure:nn { gb } { \l_semio_viz_network_n_int }
@@ -2047,4 +2064,133 @@
 \NewDocumentCommand \SemioVizGraphRandom { } { \semio_viz_network_random: }
 %endregion 🔖️PublicApi
 
+% 🕸 Authored graph bindings and controls enter the existing numerical graph kernels.
+\bool_new:N \l_semio_viz_network_table_links_bool
+\bool_new:N \l_semio_viz_network_table_transpose_bool
+\tl_new:N \l_semio_viz_network_initial_table_tl
+\cs_new_protected:Npn \semio_viz_network_table:nnnn #1#2#3#4 {
+  \semio_viz_layout_table_load:nn {#2} {#4}
+  \bool_set_false:N \l_semio_viz_network_table_links_bool
+  \bool_set_false:N \l_semio_viz_network_table_transpose_bool
+  \tl_clear:N \l_semio_viz_network_initial_table_tl
+  \semio_viz_layout_defaults:n {origin=0,vertical=false,layerGap=20,nodeGap=12,sweeps=4,seed=1,alpha=1,velocityDecay=0.4,charge=-30,distance=30,iterations=300,padAngle=0,transpose=false}
+  \str_if_eq:nnT {#1} {chord} {
+    \prop_if_in:NnF \l_semio_viz_layout_options_prop {radius}
+      {\prop_put:Nnx \l_semio_viz_layout_options_prop {radius} {min(\semio_viz_layout_option:n {width},\semio_viz_layout_option:n {height})/2}}
+    \str_if_eq:eeT {\semio_viz_layout_option:n {transpose}} {true}
+      {\bool_set_true:N \l_semio_viz_network_table_transpose_bool}
+  }
+  \tl_set:Nx \l_semio_viz_layout_keys_tl {source={\semio_viz_layout_option:n {source}},target={\semio_viz_layout_option:n {target}},weight={\semio_viz_layout_option:n {value}},id={\semio_viz_layout_option:n {id}}}
+  \clist_if_in:NeTF \l_semio_viz_layout_cols_clist {\semio_viz_layout_option:n {source}}
+    {\bool_set_true:N \l_semio_viz_network_table_links_bool}
+    {
+      \semio_viz_table_new:nn {chart-layout-empty-edges} {source,target}
+      \tl_put_right:Nn \l_semio_viz_layout_keys_tl {,nodes={#2},edges=chart-layout-empty-edges}
+      \clist_if_in:NnT \l_semio_viz_layout_cols_clist {x} {
+        \clist_if_in:NnT \l_semio_viz_layout_cols_clist {y} {\tl_set:Nn \l_semio_viz_network_initial_table_tl {#2}}
+      }
+    }
+  \str_case:nn {#1} {
+    {force} {
+      \clist_map_inline:nn {seed,alpha,iterations} {\semio_viz_layout_translate:nn {##1} {##1}}
+      \semio_viz_layout_translate:nn {velocityDecay} {velocity-decay}
+      \semio_viz_layout_translate:nn {charge} {many-body-strength}
+      \semio_viz_layout_translate:nn {distance} {link-distance}
+      \semio_viz_layout_translate:nn {radius} {collide-radius}
+      \tl_put_right:Nx \l_semio_viz_layout_keys_tl {,forces={many-body,center,link},center-x={\semio_viz_layout_option:n {width}/2},center-y={\semio_viz_layout_option:n {height}/2}}
+      \prop_if_in:NnT \l_semio_viz_layout_options_prop {radius} {\tl_put_right:Nn \l_semio_viz_layout_keys_tl {,forces={many-body,center,link,collide}}}
+    }
+    {arc} {
+      \use:x {\exp_not:N \semio_viz_network_use:nn {#2} {\exp_not:V \l_semio_viz_layout_keys_tl}}
+      \tl_put_right:Nx \l_semio_viz_layout_keys_tl {,spacing={\semio_viz_layout_option:n {width}/max(1,\l_semio_viz_network_n_int-1)},origin-x={\str_if_eq:eeTF {\semio_viz_layout_option:n {vertical}} {true} {0} {\semio_viz_layout_option:n {origin}}},origin-y={\str_if_eq:eeTF {\semio_viz_layout_option:n {vertical}} {true} {\semio_viz_layout_option:n {origin}} {0}},orientation={\str_if_eq:eeTF {\semio_viz_layout_option:n {vertical}} {true} {vertical} {horizontal}}}
+    }
+    {dag} {
+      \semio_viz_layout_translate:nn {layerGap} {dx}
+      \semio_viz_layout_translate:nn {nodeGap} {spacing}
+      \semio_viz_layout_translate:nn {sweeps} {sweeps}
+    }
+    {chord} {\semio_viz_layout_translate:nn {padAngle} {pad-angle}}
+  }
+  \use:x {\exp_not:N \semio_viz_layout_structure:nnnn {\str_if_eq:nnTF {#1} {dag} {layered} {#1}} {#2} {chart-layout-network-result} {\exp_not:V \l_semio_viz_layout_keys_tl}}
+  \str_if_eq:nnTF {#1} {chord}
+    {\semio_viz_network_table_chords:}
+    {
+      \str_if_eq:eeTF {\semio_viz_layout_option:n {output}} {links}
+        {
+          \clist_set:Nn \l_semio_viz_layout_output_cols_clist {source,target,x,y,x2,y2}
+          \int_step_inline:nn {\l_semio_viz_network_m_int} {
+            \prop_clear:N \l_semio_viz_layout_row_prop
+            \int_set:Nn \l_tmpa_int {\semio_viz_network_n:nn {es} {##1}}
+            \int_set:Nn \l_tmpb_int {\semio_viz_network_n:nn {et} {##1}}
+            \semio_viz_layout_set:nn {source} {\semio_viz_network_id:n {\l_tmpa_int}}
+            \semio_viz_layout_set:nn {target} {\semio_viz_network_id:n {\l_tmpb_int}}
+            \semio_viz_layout_set:nn {x} {\fp_eval:n {\semio_viz_network_f:nn {x} {\l_tmpa_int}}}
+            \semio_viz_layout_set:nn {y} {\fp_eval:n {\semio_viz_network_f:nn {y} {\l_tmpa_int}}}
+            \semio_viz_layout_set:nn {x2} {\fp_eval:n {\semio_viz_network_f:nn {x} {\l_tmpb_int}}}
+            \semio_viz_layout_set:nn {y2} {\fp_eval:n {\semio_viz_network_f:nn {y} {\l_tmpb_int}}}
+            \semio_viz_layout_put:
+          }
+        }
+        {
+          \bool_if:NTF \l_semio_viz_network_table_links_bool
+            {\clist_set:Nn \l_semio_viz_layout_output_cols_clist {id,x,y}}
+            {\clist_set_eq:NN \l_semio_viz_layout_output_cols_clist \l_semio_viz_layout_cols_clist}
+          \int_step_inline:nn {\l_semio_viz_network_n_int} {
+            \prop_clear:N \l_semio_viz_layout_row_prop
+            \bool_if:NF \l_semio_viz_network_table_links_bool {
+              \tl_set:Nx \l_semio_viz_layout_row_tl {\seq_item:Nn \l_semio_viz_layout_rows_seq {##1}}
+              \semio_viz_layout_row:V \l_semio_viz_layout_row_tl
+            }
+            \semio_viz_layout_set:nn {id} {\semio_viz_network_id:n {##1}}
+            \semio_viz_layout_set:nn {x} {\fp_eval:n {\semio_viz_network_f:nn {x} {##1}}}
+            \semio_viz_layout_set:nn {y} {\fp_eval:n {\semio_viz_network_f:nn {y} {##1}}}
+            \semio_viz_layout_put:
+          }
+        }
+    }
+  \semio_viz_layout_store:n {#3}
+  \tl_clear:N \l_semio_viz_network_initial_table_tl
+  \bool_set_false:N \l_semio_viz_network_table_transpose_bool
+}
+\cs_new_protected:Npn \semio_viz_network_table_chords: {
+  \clist_set:Nn \l_semio_viz_layout_output_cols_clist {source,target,value,startAngle,endAngle,targetStartAngle,targetEndAngle,radius}
+  \str_if_eq:eeTF {\semio_viz_layout_option:n {output}} {groups}
+    {
+      \clist_set:Nn \l_semio_viz_layout_output_cols_clist {id,value,startAngle,endAngle}
+      \int_step_inline:nn {\l_semio_viz_network_n_int} {
+        \prop_clear:N \l_semio_viz_layout_row_prop
+        \semio_viz_layout_set:nn {id} {\semio_viz_network_id:n {##1}}
+        \semio_viz_layout_set:nn {value} {\fp_eval:n {\semio_viz_network_f:nn {gsum} {##1}}}
+        \semio_viz_layout_set:nn {startAngle} {\fp_eval:n {\semio_viz_network_f:nn {ga} {##1}}}
+        \semio_viz_layout_set:nn {endAngle} {\fp_eval:n {\semio_viz_network_f:nn {gb} {##1}}}
+        \semio_viz_layout_put:
+      }
+    }
+    {
+      \int_step_inline:nn {\l_semio_viz_network_n_int} {
+        \int_step_inline:nnnn {##1} {1} {\l_semio_viz_network_n_int} {
+          \fp_compare:nNnT {\semio_viz_network_mat:nn {##1} {####1}+\semio_viz_network_mat:nn {####1} {##1}} > {0} {
+            \int_set:Nn \l_tmpa_int {##1} \int_set:Nn \l_tmpb_int {####1}
+            \fp_compare:nNnT {\semio_viz_network_mat:nn {##1} {####1}} < {\semio_viz_network_mat:nn {####1} {##1}}
+              {\int_set:Nn \l_tmpa_int {####1} \int_set:Nn \l_tmpb_int {##1}}
+            \prop_clear:N \l_semio_viz_layout_row_prop
+            \semio_viz_layout_set:nn {source} {\semio_viz_network_id:n {\l_tmpa_int}}
+            \semio_viz_layout_set:nn {target} {\semio_viz_network_id:n {\l_tmpb_int}}
+            \semio_viz_layout_set:nn {value} {\fp_eval:n {\semio_viz_network_mat:nn {\l_tmpa_int} {\l_tmpb_int}}}
+            \semio_viz_layout_set:nn {startAngle} {\fp_eval:n {\semio_viz_network_f:nn {sga_\int_use:N \l_tmpa_int} {\l_tmpb_int}}}
+            \semio_viz_layout_set:nn {endAngle} {\fp_eval:n {\semio_viz_network_f:nn {sgb_\int_use:N \l_tmpa_int} {\l_tmpb_int}}}
+            \semio_viz_layout_set:nn {targetStartAngle} {\fp_eval:n {\semio_viz_network_f:nn {sga_\int_use:N \l_tmpb_int} {\l_tmpa_int}}}
+            \semio_viz_layout_set:nn {targetEndAngle} {\fp_eval:n {\semio_viz_network_f:nn {sgb_\int_use:N \l_tmpb_int} {\l_tmpa_int}}}
+            \semio_viz_layout_set:nn {radius} {\fp_eval:n {\semio_viz_layout_option:n {radius}}}
+            \semio_viz_layout_put:
+          }
+        }
+      }
+    }
+}
+\clist_map_inline:nn {arc,dag,force,chord} {
+  \cs_new_protected:cpn {semio_viz_layout_table_#1:nnn} ##1##2##3
+    {\semio_viz_network_table:nnnn {#1} {##1} {##2} {##3}}
+}
+\semio_viz_layout_define:nn {dag} {\semio_viz_layout_structure:nnnn {layered} {#1} {#2} {#3}}
 \ExplSyntaxOff

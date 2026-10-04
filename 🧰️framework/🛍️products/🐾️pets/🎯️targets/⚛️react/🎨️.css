@@ -1,5 +1,5 @@
 /* 🐾️ Pets: the decorative layer and the paints of a depiction. Plain CSS: a host needs no utility framework for it.
-   The layer never takes pointer events, never changes layout and is hidden where its colours would be overridden or
+   The layer takes no pointer events (only its touch pads do), never changes layout and is hidden where its colours would be overridden or
    wasted: under forced colours and in print. Motion is written by script, frame by frame; nothing here animates. */
 
 .pet-layer {
@@ -30,6 +30,23 @@
   overflow: visible;
   transform-origin: 0 0;
   will-change: transform;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* What the pets bring along: the ladders that stand on the stage (behind the actors) and the particles of their tricks
+   and states (in front of them), each one drawing at the layer's origin, in the units of the stage and scaled to the
+   size the pets are drawn at. The tools an actor carries (`pet-gear`) live inside its own drawing and need no rule:
+   they take its place, size, opacity and palette. */
+.pet-ladders,
+.pet-effects {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  transform-origin: 0 0;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -76,6 +93,32 @@
 
 .pet-pupil {
   fill: var(--pet-pupil, #001117);
+}
+
+/* The learner's hand. The layer never takes the pointer, so it cannot show a cursor of its own. While the learner holds
+   a pet the hand marks the root element of the document with `data-pet-held` (an attribute, which a watcher of class
+   changes, such as the layer's own survey, does not hear) and every element shows the grabbing hand, since the pointer
+   crosses anything while it drags. While the pointer only rests on a pet that can be picked up, the hand puts the
+   cursor on the one element under the pointer itself: that state comes and goes whenever the pointer passes a pet, and
+   a browser restyles every element a rule could reach whenever an attribute the rule names changes, whatever its value.
+   So no rule here names `data-pet-cursor`, the root's account of which hand shows. */
+[data-pet-held],
+[data-pet-held] * {
+  cursor: grabbing !important;
+}
+
+/* Touch pads: on a device whose pointer is coarse, while the learner may play with the pets, a pad over every
+   grounded pet takes the touch, so that a finger drags the pet instead of panning the page, and neither selects nor
+   calls up a menu. The only part of the layer that takes pointer events; placed and sized by script. */
+.pet-pad {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 @media (forced-colors: active) {

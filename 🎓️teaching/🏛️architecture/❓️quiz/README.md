@@ -9,18 +9,35 @@ config, the operator verbs and the tests read them there.
 | Path | What |
 |---|---|
 | `🔣️.json` | the catalog: introduction, quiz paths (relative to this file), badges |
-| `🟦️.ts`, `🌐️.html` | the site entry: `mountQuiz(root, { proctor: <baked proctor origin or "">, tenant: "architecture", material })` |
+| `🟦️.ts`, `🌐️.html` | the site entry: `mountQuiz(root, { proctor: <baked proctor origin or "">, tenant: "architecture", material, logo, legal: site.legal, pets: () => import("../🐾️pets/🟦️.ts")… })` — `logo` the emblem, `legal` the imprint and privacy links of `🚀️deploy/🔣️.json`, `pets` the menagerie loaded lazily (see [Pets](#pets)) |
 | `📚️catalog/🟦️.ts` | the material the site hands the quiz: the catalog and the quizzes it names, imported statically in catalog order, so the page shows the catalog at once and goes on working [while the proctor is away](#while-the-proctor-is-away) |
 | `🎨️.css` | the brand layer: the semio palette compiled to custom properties, its fonts shipped with the build |
 | `🏗️builder/🌐️vite/🟦️.ts` | Vite configuration: host HTML, `CNAME`, aliases; `build` bakes `VITE_PROCTOR_URL`, seals the document with its Content-Security-Policy and emits `robots.txt` and `manifest.webmanifest`; `serve` proxies the gateway routes to the dev proctor |
 | `📦️packages/🟦️typescript` | `@teaching/architecture-quiz`: `package.json`, `📋️project.json`, `📜️script.ts` |
-| `🧪️tests/🧪️catalog/🟦️.ts` | the catalog and every quiz validate in the TS core and against the draft-07 contract (ajv); the material module ships exactly these documents |
+| `🧪️tests/🧪️catalog/🟦️.ts` | the catalog and every quiz validate in the TS core and against the draft-07 contract (ajv); the material module ships exactly these documents; every badge for perfection asks for medium or harder |
 | `🧪️tests/🧪️deploy/🟦️.ts` | `🚀️deploy/🔣️.json` holds to its schema (ajv); no deployment file drifts from it and seeded drifts are found; the Dockerfile, `compose.yaml` and the workflow (parsed with `yaml`), the Caddyfile, the CDN artifact check and the bundle for the proctor host (its `.env` and steps) hold what the runbook promises |
 | `🧪️tests/🧱️local-stack/🟦️.ts` | waiting for a server, stopping an owned command, and the static origin of the rehearsal (against Vite's preview server) |
-| `🧪️tests/🐾️pet-cast/🟦️.ts` | the pets fit the quizzes: every species and the ensemble of `../🐾️pets` validate (ajv and the pets product), grounds exist in the quiz files, every quiz and the home screen have a cast (see [Pets](#pets)) |
+| `🧪️tests/🐾️pet-cast/🟦️.ts` | the pets fit the quizzes: every species and the ensemble of `../🐾️pets` validate (ajv and the pets product), grounds exist in the quiz files, every quiz and the home screen have a cast; every state is reachable and leads back, tricks and gear have their clips, the chemistry names what exists and looks and rests within sane bounds (see [Pets](#pets)) |
 | `🧱️stack/🟦️.ts` | the local stack: `dev` (proctor and site in one terminal) and the parts the end-to-end gate boots its stacks from |
 | `🎭️e2e/` | the end-to-end gate (`🟦️.ts`), its Playwright projects (`🎚️config`) and the learner the specs drive (`🚶️learner`) |
 | `🚀️deploy/` | `🔣️.json` (hosts, image, port) and its contract (`🧬️schema/🔣️.json`), `Dockerfile` with its build context (`Dockerfile.dockerignore`), `compose.yaml`, `Caddyfile` and the operator verbs (`🟦️.ts`): `publish`, `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle`, `docker-image-publish`, `deploy-check` |
+
+## Challenges
+
+A learner plays every run at one of four challenges, chosen on the quiz's page (the device remembers the choice; `medium`
+at first). The catalog's introduction explains them to learners; the rules live in the quiz core (`CHALLENGE_RULES`), so
+the proctor and the device decide alike, and the quiz files say nothing about them, so their revisions stay.
+
+| Challenge | The keys | While playing | Points per quiz at most |
+|---|---|---|---|
+| easy | shown: the ladder of values a sorting is placed on, the cards of a matching, category descriptions and diagram numbers | beside a value placed farther off than its set's reach — on a logarithmic scale a factor of 1000, or half the orders of magnitude the values span where that is less; on a linear scale half their range — a question doubts the relation the learner's own keys claim between it and another item (preferably one placed right and familiar, the one whose relation is the most wrong), naming items by their short labels: a claim the wrong way round as "Are you sure “Burning tea light” is higher in power than “Kettle”?", amounts that add up as "Are you sure 10 × “Person sitting still” together only add up to the power of 1 × “Kettle”?" (the keys claim too little) or "Are you sure it takes 1,000 × “Burning tea light” to add up to the power of 1 × “Kettle”?" (too much), other quantities as "…only / really 1,000 times as high in U-value as…", linear ones as "…only / really 5 °C higher in … than…", always naming the quantity (German "in puncto U-Wert"), huge counts in words or as "1.1 × 10¹⁶"; beside a misplaced item of a classification: whether it is higher or lower than a standard placed right on one axis of the spider profile it was put into, or fits that profile with the axis at its value, else whether it and another item belong to the same or to different categories, else whether it belongs to the category it was put into, with that category's description. At most three hints per task, the most wrong first. A hint never states the truth and never says only "too high" or "how many" | 100 |
+| medium | shown | nothing | 200 |
+| hard | hidden: a typed estimate per value to sort or match; descriptions and diagram numbers gone | an estimate beyond the reach scores as a miss | 300 |
+| expert | hidden, as hard | every task runs against its own clock from *Start the clock*; the run may be submitted with tasks unanswered, which score as misses | 400 |
+
+A run earns its score times the points of its challenge; per quiz the run with the most points counts, and the
+leaderboard sums those. Every badge of this catalog but `completionist` asks for a perfect result at medium or harder
+(`"challenge": "medium"` on its rule), so the hints of easy earn none.
 
 ## Develop
 
@@ -41,8 +58,10 @@ Run everything from `.vscode/launch.json` (groups `3_dev` and `4_gate`):
 
 `dev` (`🧱️stack/🟦️.ts`) runs the whole stack in one terminal:
 
-1. A proctor that already answers `GET /instance` on `PROCTOR_PORT` is reused, and never stopped by this command.
-   Otherwise the proctor is built (a first build takes minutes; a progress line follows every ten seconds) and launched
+1. A proctor that already answers `GET /instance` on `PROCTOR_PORT` is reused, and never stopped by this command; when
+   it serves another quiz contract than the site (an older build, say), the command says so in one `[WARN]` line — the
+   site then sends it nothing and keeps everything on the device — and stopping it and running `dev` again builds the
+   current one. Otherwise the proctor is built (a first build takes minutes; a progress line follows every ten seconds) and launched
    with the defaults of `@teaching/proctor:dev`: the same data directory `.🧬semio/🎓️teaching/proctor-dev/` and this catalog.
    That directory is disposable development data. When it holds a database of a storage format this proctor does not read
    (the proctor refuses such a file, and there is no migration), `dev` and `@teaching/proctor:dev` move it aside to
@@ -52,11 +71,20 @@ Run everything from `.vscode/launch.json` (groups `3_dev` and `4_gate`):
    delete `.🧬semio/🎓️teaching/proctor-dev/`.
 2. The command waits until the proctor answers ready. If the proctor exits first, the command fails and says so.
 3. The site's dev server starts (`dev-site`). A site that already answers on its port is reused the same way.
-4. One Ctrl+C, a termination or a closed terminal stops both, with every process they started. If one of the two exits,
-   the other is stopped as well.
+4. The proctor this command launched is supervised, each step said in one `[stack]` line. Whenever a Rust source of a
+   crate it is built from changes (cargo's own resolution of the teaching workspace names those crates), it is built
+   anew while the running one serves and then launched in its place — a build that fails leaves the running one
+   serving; whenever the catalog or one of its quizzes changes, it is launched anew; whenever it ends by itself, it is
+   launched again after one second, then ever more patiently, at most every half minute. Every such swap is a short
+   absence of the proctor, which the site tolerates like any other. `TEACHING_ARCHITECTURE_QUIZ_WATCH=off` stops the
+   following (and the site's reloads).
+5. One Ctrl+C, a termination or a closed terminal stops both, with every process they started. If the site exits, the
+   proctor is stopped as well.
 
 The dev site bakes no proctor origin and proxies `/instance`, `/commands`, `/queries`, `/actors` (WebSocket event streams
-included) and `/scopes` to `http://127.0.0.1:${PROCTOR_PORT:-8791}`, so the browser talks to one origin in dev.
+included) and `/scopes` to `http://127.0.0.1:${PROCTOR_PORT:-8791}`, so the browser talks to one origin in dev. A proctor
+that goes away while a socket is proxied never takes the dev server along, also under Bun 1.3, whose sockets lack the
+`destroySoon` the proxy ends them with (`semioServeUpgradeVitePlugin`).
 
 ### End-to-end gate
 
@@ -97,13 +125,15 @@ seconds; a whole test may take ten minutes.
 | `🪪️first-visit` | introduction, then anonymous, pseudonym or name; a known pseudonym recalls its progress on a fresh device; switching identity asks first |
 | `🥞️layered-home` | the nine cards around the leaderboard, the live screen-sized pages behind the glass that the mouse pans between the cards and that come to the screen, clear, on a card (on a device that reports reduced motion too), hash and Escape, and the navbar's ways — the overview, back and forward along the trail, up from a run to its quiz — around what the quizzes are about in its middle |
 | `🎯️quiz-runs` | every quiz to a perfect score and every badge; one mistake per task for partial credit (the classification mistake is dragged with the mouse) |
+| `⛰️challenge-levels` | physics at every challenge: easy with the keys on the ladder and, beside each value placed far off until it is fixed, a question asserted by its structure with items named by their short labels (extremes exchanged: the order question without a number, the larger first, against an item placed right; the two largest exchanged: "together only add up to" and "it takes", no long digit runs), exactly three on a sorting placed upside down, nothing general anywhere (100 points, no badge); easy on a matching (both exchanged cards asked for their order, on two quantities the one named, in German "in puncto Heizlast") and on spider profiles (above or below a standard placed right on the named axis, else the profile's value), in English and German; medium (200 points and the physics badges), hard with typed guesses (300 points; one guess far off costs score and shows as a miss), expert behind a clock per task driven past its deadline with Playwright's page clock (read-only, open tasks score nothing, points of 400) |
 | `🏆️live-leaderboard` | rows ordered by total, arriving on a watching device without a reload; the same learners on today's, this week's and this month's leaderboard and on the one of the quiz they played; a column heading clicked to sort |
 | `🗣️both-languages` | every screen, the document's language and title and the notice of what is stored in English and German, switched both ways; the language follows the browser and is asked for when the browser names neither |
-| `🐕️pet-walk` | the pets: on the home screen within seconds, hidden from assistive technology and never the target of a click; the cast of a quiz on its page and in its run; `still` and `off`; reduced motion as the default only (motionless until the learner chooses, calm pets that walk afterwards) |
+| `🐕️pet-walk` | the pets: on the home screen within seconds, hidden from assistive technology and never a hit target of their own; a click says hello, then asks for a trick, then for a purr; picked up, a pet hangs and, let go high, opens its parachute and lands; circling a pet changes its state; no two pets overlap during a lively minute with drags; a control under a pet keeps its click; the settings' play group and the footer switch work by keyboard; the cast of a quiz on its page and in its run; `still` and `off`; reduced motion as the default only (still pets that answer no hand until the learner chooses, calm pets that walk afterwards) |
 | `📱️phone` | 375 × 812: home as a list, one quiz played |
 | `👥️shared-presence` | two devices: online count, cursors, what the other thinks, what everyone answered (runs alone) |
 | `🔌️connection-shortage` | a reload mid-run; the proctor stopped and started again mid-run (runs alone) |
 | `📴️proctor-away` | the proctor stopped before a learner ever arrives: a pseudonym taken, a quiz played to its score, feedback and badges, the result kept over a reload, all on the device; the proctor started again: the connection calms, a fresh device finds the same learner with the same result; a pseudonym the proctor already knew continues as its holder (runs alone) |
+| `🛟️proctor-faults` | the proctor dies between every two tasks of an expert run and in the moment the run is submitted: full points, no notice, a fresh device finds the run; a proctor of an older contract (its `GET /instance` answered one version lower in the browser) is sent no command and no query while the device decides a whole run, one of a newer contract shows the page out of date with a reload, and once they agree everything arrives (runs alone) |
 
 Each run keeps its stacks under the git-ignored `.🧬semio/🎓️teaching/architecture-quiz-e2e/<run>/` and deletes that
 directory when it passes. A failed run keeps it — the proctor and site logs per topology, and `report/` with Playwright's
@@ -128,8 +158,9 @@ the preferences or with the switch on every screen holds whatever the device ask
 | the model and the layer | `🧰️framework/🛍️products/🐾️pets` (`@semio-tech/pets`, `@semio-tech/pets-react`) |
 | judging rigs and casts by eye | launch row `🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories` (Claude preview `architecture-pets-stories`), http://127.0.0.1:6074/ |
 
-In a release build the pets are three lazy script chunks and one lazy stylesheet beside the entry (the menagerie, the
-render target with the model, their shared constants, the paints), all content-hashed under `assets/` and loaded from
+In a release build the pets are four lazy script chunks and one lazy stylesheet beside the entry (the menagerie, the
+render target with the model, their shared constants, the half of the quiz's glue that comes with the pets — the layer
+as the quiz sets it up and "Play with the pets" —, the paints), all content-hashed under `assets/` and loaded from
 the site's own origin, so the document's Content-Security-Policy needs nothing new and the entry script budget is not
 charged with them. `🧪️tests/🐾️pet-cast` holds the menagerie to the quiz files; `🧪️tests/🐕️pet-walk` drives the pets in
 both topologies of the end-to-end gate.
@@ -145,13 +176,16 @@ on the device (the deputy, see the quiz product's README, *While the proctor is 
 | answers | everything is decided by the proctor, as before; the header says *All answers saved* |
 | does not answer (not deployed yet, down, behind a firewall the learner is outside of, no network) | the catalog shows at once; a learner takes an identity, starts quizzes, answers, submits, sees the score, the feedback and the badges — decided and saved in the browser's storage. The header says *Quiz server not reachable – everything is saved on this device* (with the number of commands still to send), the leaderboard shows this device's own standing and says so, the others online and what they answered are not there |
 | answers again | everything waiting is sent in the order it happened, each command once; the proctor decides it again and its views replace the device's (its clock, its score). A pseudonym or name the proctor already knew continues as its holder, and the learner is told |
+| serves another quiz contract (an older deployment, a newer one the page predates) | it is sent nothing and treated as away, as above; a newer proctor shows *This page is older than the quiz server* with *Reload page*. Once the two agree — the proctor or the page was replaced — everything waiting arrives |
+| dies again and again, also in the middle of a submission | nothing is lost and nothing is told: whatever it did not decide the device decides, and the proctor decides it again once it is back |
 
 A learner waits at most three seconds for a proctor that says nothing before the device decides. What is saved on the
 device stays there until the proctor has it: a learner who clears the browser's data before that loses it. The proctor
 scores every run itself, so the leaderboard never trusts a device.
 
-The gate proves it in a real browser in both topologies (`🧪️tests/📴️proctor-away`); the unit proofs are in the quiz
-product (`🚶️learner-journey`, `🫡️deputy-decisions`, `📬️outbox-delivery`).
+The gate proves it in a real browser in both topologies (`🧪️tests/📴️proctor-away`, `🧪️tests/🛟️proctor-faults`); the
+unit proofs are in the quiz product (`🚶️learner-journey`, `🫡️deputy-decisions`, `📬️outbox-delivery`,
+`🤝️wire-version`).
 
 ## Proof of concept by hand
 
@@ -236,7 +270,11 @@ number, and stops at the first failure or at Ctrl+C (whatever a step created is 
    end-to-end gate and every test and spec;
 3. the catalog and every quiz are valid in the Rust core (`proctor check`);
 4. the site builds for the production proctor and is the CDN artifact: entry points, a document sealed by its
-   Content-Security-Policy, hashed assets, no source map or development leftover, within the size budget;
+   Content-Security-Policy, hashed assets, no source map or development leftover, within the size budget
+   (`QUIZ_SITE_BUDGET`: what the document links — the entry script 260 000 B and the stylesheet 60 000 B gzip — and
+   4 MB on disk; a run with its results and the pets are lazy chunks the first screen does not wait for, so they are
+   not charged: on 2026-10-03 the entry weighed 253 374 B, the run chunk 13 867 B, the results chunk 3 217 B and the
+   quiz's half of the pets' glue 1 499 B);
 5. the proctor image builds;
 6. the image is what it claims (labels, unprivileged account, no shell, the stack files inside) and serves the API as the
    site meets it, read-only and without capabilities;

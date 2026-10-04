@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/print/chart/mutation",
+  "title": "Change Chart Value",
+  "type": "object",
+  "required": ["path"],
+  "properties": {
+    "path": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "string", "minLength": 1, "not": { "enum": ["__proto__", "constructor", "prototype"] } } },
+    "value": {}
+  },
+  "additionalProperties": false
+}

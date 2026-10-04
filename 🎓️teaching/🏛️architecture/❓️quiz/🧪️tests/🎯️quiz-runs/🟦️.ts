@@ -5,7 +5,7 @@
  * partial credit, strictly between nothing and everything, and no badge.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../🔣️.json — the catalog and its badges */
-import { CATALOG, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, pane, percent, playQuiz, primary, quizOf, screen, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { CATALOG, PAR, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, pane, playQuiz, primary, quizOf, screen, shownBest, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 test("every quiz is playable to a perfect score, and the perfect runs earn every badge of the catalog", async ({ device }) => {
   const learner = await device("en");
@@ -28,7 +28,7 @@ test("every quiz is playable to a perfect score, and the perfect runs earn every
     expect(await screen(learner.page, "results").locator("[data-earned] h3").allInnerTexts()).toEqual(earned.map((badge) => badge.label.en));
 
     await goHome(learner);
-    expect(percent(await card(learner.page, quiz.id).locator("li", { hasText: "%" }).innerText())).toBe(100);
+    expect(await shownBest(learner, quiz.id)).toEqual({ challenge: "medium", points: PAR.medium, par: PAR.medium });
     await expect(card(learner.page, "badges").locator("li[data-earned]")).toHaveCount(badgesFor(played).length);
   }
 
@@ -62,7 +62,7 @@ for (const id of ["physics", "demand"]) {
     }
     await expect(screen(learner.page, "results").locator("[data-earned]")).toHaveCount(0);
     await goHome(learner);
-    expect(percent(await card(learner.page, quiz.id).locator("li", { hasText: "%" }).innerText())).toBe(results.score);
+    expect(await shownBest(learner, quiz.id)).toEqual({ challenge: "medium", points: results.points, par: PAR.medium });
     await expect(card(learner.page, "badges").locator("li[data-earned]")).toHaveCount(0);
   });
 }

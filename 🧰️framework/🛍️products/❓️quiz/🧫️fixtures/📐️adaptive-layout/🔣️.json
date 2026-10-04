@@ -1,0 +1,47 @@
+{
+  "schema": "semio.quiz.adaptive-layout/v1",
+  "description": "How the parts of a quiz client lay themselves out for the room they have. A part measures its room — the inline size of the container it lies in: the body of its card, the interaction of its task, the list of its rows — in rem of the root text size, so a learner's larger text gets the layout of the narrower room it leaves; the width of the window is never asked. Every tier names the part (the class its rule starts with), the room it measures, the width in rem from which the roomier layout holds, and what the layout is below and from that width. A control that fits beside what it belongs to stands on the same line, left and right; below the tier it stands on a line of its own. A table folds into a list of records in a room at most as wide as its fold in rem: the one query of every folding table is 36em of a frame whose font size is fold/36 rem. A figure of what everyone answered folds below the width its items and columns need side by side: (item + column × tracks) em at its text size in rem. The source order of every part is its reading order in every layout. The devices name what a learner sees of the reference site at the normal text size in a window that wide.",
+  "rooms": {
+    "quiz-card": "[data-slot=\"quiz-card-content\"]",
+    "quiz-task": ".quiz-task",
+    "quiz-rows": ".quiz-rows",
+    "quiz-records": ".quiz-records"
+  },
+  "tiers": [
+    { "part": "quiz-steps", "room": "quiz-card", "from": 40, "below": "a list, each task's title left and its state right", "above": "chips in a row" },
+    { "part": "quiz-run-head", "room": "quiz-card", "from": 64, "below": "the progress below the tasks", "above": "the tasks left and the progress right of one line" },
+    { "part": "quiz-chip", "room": "quiz-rows", "from": 30, "below": "the select below the label", "above": "the label left and the select right of one line" },
+    { "part": "quiz-classify", "room": "quiz-task", "from": 84, "below": "the pool above the bins", "above": "the pool beside the bins" },
+    { "part": "quiz-sort", "room": "quiz-rows", "from": 36, "below": "the label on the first line, the guess and the move buttons on the second", "above": "label, guess and move buttons on one line" },
+    { "part": "quiz-sort", "room": "quiz-rows", "from": 56, "below": "what a guess reads as below its field", "above": "what a guess reads as beside its field, in a column that is always there" },
+    { "part": "quiz-slot", "room": "quiz-rows", "from": 30, "below": "the select and the remove button below the label", "above": "the label left, the select and the remove button right of one line" },
+    { "part": "quiz-match", "room": "quiz-task", "from": 64, "below": "the value cards above the rows", "above": "the value cards in a column beside the rows" },
+    { "part": "quiz-result", "room": "quiz-card", "from": 84, "below": "a task's figures below its tables", "above": "a task's figures beside its tables" },
+    { "part": "quiz-settings", "room": "quiz-card", "from": 28, "below": "the name of a preference above its control", "above": "the names in a column left of the controls" },
+    { "part": "quiz-kinds", "room": "quiz-card", "from": 44, "below": "the ways to appear below each other", "above": "the ways to appear side by side" }
+  ],
+  "fold": { "room": "quiz-records", "query": 36, "unit": "em", "yardstick": 36 },
+  "plot": {
+    "item": 9,
+    "column": 3.5,
+    "size": 0.75,
+    "vectors": [
+      { "tracks": 2, "fold": 12 },
+      { "tracks": 6, "fold": 22.5 },
+      { "tracks": 11, "fold": 35.625 },
+      { "tracks": 17, "fold": 51.375 }
+    ]
+  },
+  "order": {
+    "quiz-chip": ["grip", "label", "select"],
+    "quiz-sort": ["grip", "place", "label", "key", "up", "down"],
+    "quiz-sort-guessed": ["place", "label", "guess"],
+    "quiz-slot": ["label", "select", "remove"]
+  },
+  "devices": [
+    { "device": "phone", "width": 375, "height": 812, "touch": true, "steps": "list", "pool": "stacked", "classification": "stacked", "sorting": "stacked", "matching": "stacked", "slot": "stacked", "results": "records" },
+    { "device": "tablet", "width": 768, "height": 1024, "touch": true, "steps": "chips", "pool": "line", "classification": "stacked", "sorting": "line", "matching": "stacked", "slot": "line", "results": "records" },
+    { "device": "desktop", "width": 1280, "height": 800, "touch": false, "steps": "chips", "pool": "line", "classification": "stacked", "sorting": "line", "matching": "panes", "slot": "line", "results": "table" },
+    { "device": "wide desktop", "width": 1920, "height": 1080, "touch": false, "steps": "chips", "pool": "line", "classification": "panes", "sorting": "line", "matching": "panes", "slot": "line", "results": "table" }
+  ]
+}

@@ -126,9 +126,33 @@ mod subject {
         projected(projection)
     }
 
-    /// 🚫️ The unbroken bases accepted and every rejected document rejected.
+    /// 🧩️ Whether the typed twin of a definition decodes a document — a definition the twins tag by `kind` through the union that carries the tag; a definition without a twin is an error.
+    fn twin_decodes(definition: &str, document: &Value) -> Result<bool, String> {
+        let union = match definition {
+            "CompareHint" | "ProfileHint" | "GroupHint" | "CategoryHint" => "Hint",
+            "SheetClassificationTask" | "SheetSortingTask" | "SheetMatchingTask" => "SheetTask",
+            "SortingAnswer" | "MatchingAnswer" => "Answer",
+            other => other,
+        };
+        macro_rules! decodes {
+            ($($name:ident),*) => {
+                match union {
+                    $(stringify!($name) => Ok(serde_json::from_value::<quiz::$name>(document.clone()).is_ok()),)*
+                    _ => Err(format!("no typed twin is named {definition}")),
+                }
+            };
+        }
+        decodes!(Challenge, Quantity, ShortText, Verdict, SortingItem, MatchingItem, ClassificationItem, Category, Axis, SheetItem, Hint, Best, SheetAxis, SheetDimension, SheetTask, Sheet, Answer, ClassificationItemResult, SortingItemResult, MatchingItemResult, RunResult, Command, Rejection, Event, RunView, RunSummary, LearnerView, LeaderboardRow, BadgeRule)
+    }
+
+    /// 🚫️ The unbroken bases accepted and every rejected document rejected; every conforming typed instance must decode into its twin, which is checked and not projected.
     pub fn rejected_quizzes(ctx: &Context) -> Result<Outcome, String> {
         let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(REJECTED)?).map_err(|error| error.to_string())?;
+        for vector in vectors["instances"].as_array().ok_or("the vectors carry no instances")?.iter().filter(|vector| vector.get("violates").is_none()) {
+            if !twin_decodes(vector["definition"].as_str().unwrap_or_default(), &vector["document"])? {
+                return Err(format!("instances/{}: the typed twin refuses a conforming {}", vector["id"], vector["definition"]));
+            }
+        }
         let mut projection = Map::new();
         for vector in vectors["accepted"].as_array().into_iter().flatten().chain(vectors["rejected"].as_array().into_iter().flatten()) {
             let quizzes: Vec<Value> = vector["document"]["quizzes"].as_array().into_iter().flatten().filter_map(Value::as_str).filter_map(|path| vectors["quizzes"].get(path).cloned()).collect();

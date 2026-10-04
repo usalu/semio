@@ -4,11 +4,11 @@
  * @see ../../🔨️modules/🃏️sheet/🟦️.ts
  */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { type Quiz, sheetOf } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type Challenge, type Quiz, sheetOf } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🃏️sheet-assembly/🔣️.json";
 
-type Vectors = { readonly quizzes: readonly Quiz[]; readonly sheets: readonly { readonly id: string; readonly quiz: string; readonly seed: number }[] };
+type Vectors = { readonly quizzes: readonly Quiz[]; readonly sheets: readonly { readonly id: string; readonly quiz: string; readonly seed: number; readonly challenge: Challenge }[] };
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
@@ -22,7 +22,7 @@ export default defineTestAdapter({
       subject: (ctx) => {
         const committed = vectors(ctx);
         const quizzes = new Map(committed.quizzes.map((quiz) => [quiz.id, quiz]));
-        return { projection: Object.fromEntries(committed.sheets.map((vector) => [vector.id, sheetOf(quizzes.get(vector.quiz)!, vector.seed)])) };
+        return { projection: Object.fromEntries(committed.sheets.map((vector) => [vector.id, sheetOf(quizzes.get(vector.quiz)!, vector.seed, vector.challenge)])) };
       },
     },
   },

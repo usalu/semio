@@ -5,9 +5,11 @@
 //! @see ../../../../🧫️fixtures/🤝️bond-dynamics/🔣️.json
 
 use super::*;
+use crate::feeling::at_rest;
+use crate::gesture::{no_hover, COLD};
 use crate::randomness::{random_pick, random_unit};
 use crate::schema::tests::{assert_same, entries, fixture, json, number, typed};
-use crate::schema::{Bond, Face, Facing, Gait, Gaze, Locomotion, Palette, Repertoire, Size, Text, PET_MODES};
+use crate::schema::{Bond, Face, Facing, Footing, Gait, Gaze, Locomotion, Mood, Palette, Purr, Repertoire, Size, SpeciesState, Text, PET_MODES};
 use serde_json::Value;
 
 const TOLERANCE: f64 = 1e-9;
@@ -15,7 +17,7 @@ const SECOND: Ticks = TICKS_PER_SECOND;
 const SOURCE: &str = include_str!("../../🦀️.rs");
 const RESTED: Needs = Needs { energy: 0.9, sociability: 0.5, curiosity: 0.6 };
 const WEARY: Needs = Needs { energy: 0.3, sociability: 0.5, curiosity: 0.6 };
-const OPEN: Situation = Situation { mode: PetMode::Calm, quiet: false, movers: 0, fidgeters: 0, roam: true, hops: true, crowd: 0, watched: false };
+const OPEN: Situation = Situation { mode: PetMode::Calm, quiet: false, movers: 0, fidgeters: 0, roam: true, hops: true, crowd: 0, watched: false, whims: false };
 const EVEN: Temperament = Temperament { energy: 0.5, sociability: 0.5, curiosity: 0.5 };
 const HALF: Needs = Needs { energy: 0.5, sociability: 0.5, curiosity: 0.5 };
 
@@ -23,10 +25,15 @@ fn feeling(needs: Needs) -> Actor {
     Actor {
         species: "blob".to_string(),
         perch: None,
+        host: None,
+        pitch: None,
+        grip: 384.0,
+        footing: Footing::Air,
         x: 0.0,
         y: 0.0,
         vx: 0.0,
         vy: 0.0,
+        tilt: 0.0,
         facing: Facing::Right,
         faced: 0,
         activity: Activity::Idle,
@@ -37,11 +44,21 @@ fn feeling(needs: Needs) -> Actor {
         clip: None,
         gaze: Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 },
         blink: 0,
-        mood: 0.0,
         needs,
         opacity: 1.0,
         leaving: false,
         draws: 0,
+        feeling: at_rest(Mood::Content, 0),
+        state: "resting".to_string(),
+        state_since: 0,
+        former: "resting".to_string(),
+        trick: None,
+        warmth: COLD,
+        hover: no_hover(0),
+        hang: None,
+        chute: None,
+        rope: None,
+        emitters: Vec::new(),
     }
 }
 
@@ -62,11 +79,20 @@ fn kind(fidgets: bool) -> Species {
         repertoire: Repertoire { fidget: fidgets.then(|| vec!["fidget".to_string()]), ..Repertoire::default() },
         locomotion: Locomotion { gait: Gait::Walk, speed: 40.0, hover: None },
         temperament: EVEN,
+        states: vec![SpeciesState { id: "resting".to_string(), name: Text { en: "Resting".to_string(), de: "In Ruhe".to_string() }, tint: None, clip: None, emitter: None, lasts: None, then: None }],
+        tricks: Vec::new(),
+        purr: Purr { clip: "fidget".to_string(), emitter: None },
+        emitters: Vec::new(),
+        gear: Vec::new(),
+        grip: 36.0,
+        reach: 10.0,
+        canopy: None,
+        mood: Mood::Content,
     }
 }
 
 fn bonded(bonds: Vec<Bond>) -> Menagerie {
-    Menagerie { json_schema: None, schema: crate::schema::MENAGERIE_SCHEMA.to_string(), id: "bonds".to_string(), title: Text { en: "Bonds".to_string(), de: "Bande".to_string() }, species: Vec::new(), bonds, casts: Vec::new() }
+    Menagerie { json_schema: None, schema: crate::schema::MENAGERIE_SCHEMA.to_string(), id: "bonds".to_string(), title: Text { en: "Bonds".to_string(), de: "Bande".to_string() }, species: Vec::new(), bonds, casts: Vec::new(), chemistry: Vec::new() }
 }
 
 fn bond(a: &str, b: &str, affinity: f64) -> Bond {
@@ -87,7 +113,7 @@ fn weighed(vector: &Value) -> [f64; ACTIVITIES.len()] {
     activity_weights(
         &feeling(typed(&vector["needs"])),
         &kind(flag("fidgets")),
-        Situation { mode: typed(&vector["mode"]), quiet: flag("quiet"), movers: count("movers"), fidgeters: count("fidgeters"), roam: flag("roam"), hops: flag("hops"), crowd: count("crowd"), watched: flag("watched") },
+        Situation { mode: typed(&vector["mode"]), quiet: flag("quiet"), movers: count("movers"), fidgeters: count("fidgeters"), roam: flag("roam"), hops: flag("hops"), crowd: count("crowd"), watched: flag("watched"), whims: flag("whims") },
     )
 }
 
@@ -127,7 +153,7 @@ fn tables_are_read_in_activities_order() {
 #[test]
 fn still_allows_nothing_at_all() {
     let still = json(&MODE_LIMITS.still);
-    assert_eq!(still.as_object().map(|limits| limits.len()), Some(11));
+    assert_eq!(still.as_object().map(|limits| limits.len()), Some(12));
     for (name, value) in still.as_object().into_iter().flatten() {
         assert!(number(value) == 0.0, "{name}");
     }
@@ -175,12 +201,14 @@ fn every_mode_of_the_schema_has_limits_under_its_wire_name() {
 fn an_idle_pet_only_chooses_idle_fidget_walk_hop_or_sleep() {
     let weights = activity_weights(&feeling(WEARY), &kind(true), OPEN);
     assert_eq!(weights.len(), ACTIVITIES.len());
-    for activity in [Activity::Fall, Activity::Land, Activity::Greet, Activity::Cuddle, Activity::Squabble, Activity::Sulk] {
+    let chosen = [Activity::Idle, Activity::Fidget, Activity::Walk, Activity::Hop, Activity::Sleep];
+    for activity in ACTIVITIES.into_iter().filter(|activity| !chosen.contains(activity)) {
         assert!(weight_of(&weights, activity) == 0.0, "{activity:?}");
     }
-    for activity in [Activity::Idle, Activity::Fidget, Activity::Walk, Activity::Hop, Activity::Sleep] {
+    for activity in chosen {
         assert!(weight_of(&weights, activity) > 0.0, "{activity:?}");
     }
+    assert_eq!(ACTIVITIES[11..].iter().map(Activity::as_str).collect::<Vec<_>>(), ["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]);
 }
 
 #[test]
@@ -199,7 +227,7 @@ fn a_rested_pet_in_calm_is_slightly_active() {
 
 #[test]
 fn a_still_pet_and_a_quiet_pet_rest() {
-    let only_idle = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let only_idle = ACTIVITIES.map(|activity| if activity == Activity::Idle { 1.0 } else { 0.0 });
     assert_eq!(activity_weights(&feeling(Needs { energy: 0.0, sociability: 1.0, curiosity: 1.0 }), &kind(true), Situation { mode: PetMode::Still, ..OPEN }), only_idle);
     assert_eq!(activity_weights(&feeling(RESTED), &kind(true), Situation { quiet: true, ..OPEN }), only_idle);
     let tired = activity_weights(&feeling(WEARY), &kind(true), Situation { quiet: true, ..OPEN });
@@ -324,23 +352,12 @@ fn dwells_stay_inside_their_ranges() {
 }
 
 #[test]
-fn every_activity_has_the_mood_of_the_design() {
-    assert_eq!([mood_of(Activity::Cuddle), mood_of(Activity::Greet), mood_of(Activity::Idle), mood_of(Activity::Squabble), mood_of(Activity::Sulk), mood_of(Activity::Sleep)], [1.0, 0.7, 0.3, -0.8, -0.6, 0.1]);
-    for activity in ACTIVITIES {
-        assert!(mood_of(activity).abs() <= 1.0, "{activity:?}");
-    }
-}
-
-#[test]
-fn dwells_and_moods_answer_the_committed_vectors() {
+fn dwells_answer_the_committed_vectors() {
     let vectors = fixture("behavior-choice");
     for vector in group(&vectors, "dwells") {
         let (activity, mode): (Activity, PetMode) = (typed(&vector["activity"]), typed(&vector["mode"]));
         let dwells: Vec<Ticks> = entries(&vector["units"]).iter().map(|unit| dwell_of(activity, mode, number(unit))).collect();
         assert_eq!(dwells, typed::<Vec<Ticks>>(&vector["expected"]), "{}", id(vector));
-    }
-    for vector in group(&vectors, "moods") {
-        assert!(mood_of(typed(&vector["id"])) == number(&vector["expected"]), "{}", id(vector));
     }
 }
 
@@ -371,7 +388,8 @@ fn followers_are_listed_in_activities_order_and_idle_follows_everything() {
     }
     let before = |follower: Activity| ACTIVITIES.into_iter().filter(|&activity| followers_of(activity).contains(&follower)).collect::<Vec<_>>();
     assert_eq!(before(Activity::Sulk), [Activity::Squabble]);
-    assert_eq!(before(Activity::Land), [Activity::Hop, Activity::Fall]);
+    assert_eq!(before(Activity::Land), [Activity::Hop, Activity::Fall, Activity::Tumble, Activity::Glide]);
+    assert_eq!(ACTIVITIES.into_iter().filter(|&activity| !followers_of(activity).contains(&Activity::Hang)).collect::<Vec<_>>(), [Activity::Hang]);
 }
 
 #[test]

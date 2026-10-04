@@ -1,0 +1,1377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/print/chart/inference",
+  "title": "Print Chart Inference",
+  "type": "object",
+  "required": [
+    "tikz",
+    "diagnostics",
+    "complete"
+  ],
+  "properties": {
+    "tikz": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      }
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "plan": {
+      "$ref": "#/$defs/Plan"
+    },
+    "scene": {
+      "$ref": "#/$defs/Scene"
+    }
+  },
+  "$defs": {
+    "Diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Plan": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "frame",
+        "theme",
+        "items"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "frame": {
+          "$ref": "#/$defs/Frame"
+        },
+        "theme": {
+          "$ref": "#/$defs/Theme"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RenderItem"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Vec2": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Frame": {
+      "type": "object",
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "properties": {
+        "x0": {
+          "type": "number"
+        },
+        "y0": {
+          "type": "number"
+        },
+        "x1": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Rgba": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "Dash": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "Palette": {
+      "type": "object",
+      "required": [
+        "appearance",
+        "categorical",
+        "schemes"
+      ],
+      "properties": {
+        "appearance": {
+          "enum": [
+            "light",
+            "dark"
+          ]
+        },
+        "categorical": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "schemes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Theme": {
+      "type": "object",
+      "required": [
+        "name",
+        "appearance",
+        "palette",
+        "strokes",
+        "fonts",
+        "typography",
+        "chrome"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "appearance": {
+          "enum": [
+            "light",
+            "dark"
+          ]
+        },
+        "palette": {
+          "$ref": "#/$defs/Palette"
+        },
+        "strokes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "chrome": {
+          "type": "object",
+          "required": [
+            "border-normal",
+            "border-emphasized",
+            "foreground"
+          ],
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "RenderItem": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "tikzStyle": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "cx",
+            "cy",
+            "r"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            },
+            "r": {
+              "type": "number"
+            },
+            "tikzStyle": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "tikzStyle": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "points"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polygon"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Vec2"
+              }
+            },
+            "tikzStyle": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "commands"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathCommand"
+              }
+            },
+            "tikzStyle": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x",
+            "y",
+            "content",
+            "size"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "fill": {
+              "type": "string"
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "dash": {
+              "$ref": "#/$defs/Dash"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Frame"
+            },
+            "cap": {
+              "enum": [
+                "butt",
+                "round",
+                "square"
+              ]
+            },
+            "join": {
+              "enum": [
+                "miter",
+                "round",
+                "bevel"
+              ]
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "content": {
+              "type": "string"
+            },
+            "size": {
+              "type": "number"
+            },
+            "anchor": {
+              "enum": [
+                "start",
+                "middle",
+                "end"
+              ]
+            },
+            "tikzStyle": {
+              "type": "string"
+            },
+            "baseline": {
+              "enum": [
+                "alphabetic",
+                "middle",
+                "top",
+                "bottom"
+              ],
+              "default": "middle"
+            },
+            "font": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PathCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "moveTo"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "lineTo"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "quadraticCurveTo"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "bezierCurveTo"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "arc"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 6,
+              "maxItems": 6
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "arcTo"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 5,
+              "maxItems": 5
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "rect"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "args"
+          ],
+          "properties": {
+            "op": {
+              "const": "closePath"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 0,
+              "maxItems": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "move"
+            },
+            "to": {
+              "$ref": "#/$defs/Vec2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "to": {
+              "$ref": "#/$defs/Vec2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "ctrl",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quad"
+            },
+            "ctrl": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "to": {
+              "$ref": "#/$defs/Vec2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "ctrl1",
+            "ctrl2",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cubic"
+            },
+            "ctrl1": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "ctrl2": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "to": {
+              "$ref": "#/$defs/Vec2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "rx",
+            "ry",
+            "rotation",
+            "largeArc",
+            "sweep",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arc"
+            },
+            "rx": {
+              "type": "number"
+            },
+            "ry": {
+              "type": "number"
+            },
+            "rotation": {
+              "type": "number"
+            },
+            "largeArc": {
+              "type": "boolean"
+            },
+            "sweep": {
+              "type": "boolean"
+            },
+            "to": {
+              "$ref": "#/$defs/Vec2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "close"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "DrawingNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "cx",
+            "cy",
+            "rx",
+            "ry"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            },
+            "rx": {
+              "type": "number"
+            },
+            "ry": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "cx",
+            "cy",
+            "r"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            },
+            "r": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "points"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polygon"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Vec2"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "segments"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "segments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathSegment"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x",
+            "y",
+            "content",
+            "size"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "content": {
+              "type": "string"
+            },
+            "size": {
+              "type": "number"
+            },
+            "anchor": {
+              "enum": [
+                "start",
+                "middle",
+                "end"
+              ]
+            },
+            "baseline": {
+              "enum": [
+                "alphabetic",
+                "middle",
+                "top",
+                "bottom"
+              ]
+            },
+            "font": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "children"
+          ],
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "GradientStop": {
+      "type": "object",
+      "required": [
+        "offset",
+        "color"
+      ],
+      "properties": {
+        "offset": {
+          "type": "number"
+        },
+        "color": {
+          "$ref": "#/$defs/Rgba"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Fill": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "color"
+          ],
+          "properties": {
+            "kind": {
+              "const": "solid"
+            },
+            "color": {
+              "$ref": "#/$defs/Rgba"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "x1",
+            "y1",
+            "x2",
+            "y2",
+            "stops"
+          ],
+          "properties": {
+            "kind": {
+              "const": "linearGradient"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "x2": {
+              "type": "number"
+            },
+            "y2": {
+              "type": "number"
+            },
+            "stops": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GradientStop"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "cx",
+            "cy",
+            "r",
+            "stops"
+          ],
+          "properties": {
+            "kind": {
+              "const": "radialGradient"
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            },
+            "r": {
+              "type": "number"
+            },
+            "stops": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GradientStop"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Stroke": {
+      "type": "object",
+      "required": [
+        "color",
+        "width",
+        "cap",
+        "join"
+      ],
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Rgba"
+        },
+        "width": {
+          "type": "number"
+        },
+        "cap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "join": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        },
+        "dash": {
+          "$ref": "#/$defs/Dash"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SceneNode": {
+      "type": "object",
+      "required": [
+        "transform",
+        "node"
+      ],
+      "properties": {
+        "transform": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "node": {
+          "$ref": "#/$defs/DrawingNode"
+        },
+        "fill": {
+          "$ref": "#/$defs/Fill"
+        },
+        "stroke": {
+          "$ref": "#/$defs/Stroke"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "clip": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PathSegment"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Scene": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "nodes"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SceneNode"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "complete": {
+          "const": true
+        },
+        "tikz": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "complete",
+        "tikz",
+        "diagnostics"
+      ],
+      "properties": {
+        "complete": {
+          "const": false
+        },
+        "tikz": {
+          "const": ""
+        },
+        "diagnostics": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

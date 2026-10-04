@@ -86,6 +86,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust",

@@ -32,6 +32,7 @@ import {
   newId,
   pollDelay,
   proctorTransport,
+  quizInstance,
   quizText,
   rejoinDelay,
   retryAfterMs,
@@ -59,7 +60,7 @@ const LEARNER = "a".repeat(32);
 const RUN = "b".repeat(32);
 
 function answer(task: string): RecordAnswerCommand {
-  return { type: "record-answer", id: newId(), learner: LEARNER, run: RUN, task, answer: { kind: "sorting", order: ["a", "b"] } };
+  return { type: "record-answer", id: newId(), learner: LEARNER, run: RUN, task, answer: { kind: "sorting", order: ["a", "b"] }, at: 1 };
 }
 
 function Poller(props: { readonly refresh: () => Promise<RefreshOutcome>; readonly intervalMs: number }): null {
@@ -227,7 +228,8 @@ describe("🚦️ retrying a busy proctor", () => {
   it("shows a busy proctor as busy — reachable, no alert — and as unreachable only when it does not answer at all", async () => {
     const encoder = new TextEncoder();
     const replies: (() => never | { readonly status: number; readonly text: () => Promise<string>; readonly bytes: () => Promise<Uint8Array> })[] = [];
-    const client = new ProctorClient(() => ({ send: async () => replies.shift()!() }), "limits");
+    const agreeing = JSON.stringify(quizInstance());
+    const client = new ProctorClient(() => ({ send: async (request) => (request.path === "/instance" ? { status: 200, text: async () => agreeing, bytes: async () => encoder.encode(agreeing) } : replies.shift()!()) }), "limits");
     const ok = () => {
       const payload = JSON.stringify(encodeQueryResult({ kind: "snapshot", value: encoder.encode(JSON.stringify({ rows: [], learners: 0 })), frontier: null }));
       return { status: 200, text: async () => payload, bytes: async () => encoder.encode(payload) };
@@ -308,7 +310,7 @@ describe("🚦️ presence sockets", () => {
     const room = new PresenceRoom<CursorState>({
       url: "ws://proctor.test/x",
       connect: () => {
-        const socket = { readyState: 1, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined, openedAt: Date.now() - started } as PresenceSocket & { readonly openedAt: number };
+        const socket = { readyState: 1, onopen: null, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined, openedAt: Date.now() - started } as PresenceSocket & { readonly openedAt: number };
         sockets.push(socket);
         return socket;
       },

@@ -885,7 +885,16 @@ export function vizCoverageReport(): {
 }
 
 /** 🧪️ Checks the whole visualization catalogue: taxonomy coverage, gallery, schema and public API examples. */
-export function verifyVisualizationCoverage(): void {
+/** 🔓️ Compares machine API metadata with the current owned generator's exact bytes. */
+export function vizApiReferenceFindings(metadata?: string): readonly string[] {
+  const path = "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json";
+  const expected = `${JSON.stringify({ _comment: GENERATED_NOTE, ...vizApiReference() }, null, 2)}\n`;
+  const actual = metadata ?? readFileSync(join(getWorkspaceRoot(), path), "utf8");
+  if (actual !== expected) return [`stale ${path}`];
+  return marksItselfGenerated(path, actual) ? [] : [`unmarked ${path}`];
+}
+
+export function verifyVisualizationCoverage(metadata?: string): void {
   const report = vizCoverageReport();
   const leaves = parseVizTaxonomyLeaves(readFileSync(VIZ_TAXONOMY_PATH, "utf8"));
   const taxonomy = JSON.parse(readFileSync(join(productRoot, "🖼️assets/🔣️viz-taxonomy.json"), "utf8")) as { readonly id: string; readonly section: string }[];
@@ -901,6 +910,7 @@ export function verifyVisualizationCoverage(): void {
   assert.deepEqual(report.unknownDemoTables, []);
   assert.deepEqual(leaves.filter((leaf) => !parseVizCovers(VIZ_GALLERY_DIR).has(leaf)), []);
   assert.deepEqual(assertVizApi().missing, []);
+  assert.deepEqual(vizApiReferenceFindings(metadata), []);
   console.log(`[TRACE] print: viz coverage ${report.leaves}/${report.leaves} leaves through ${report.kinds} kinds, API ${VIZ_API_COMMANDS.length}/${VIZ_API_COMMANDS.length}`);
   if (report.unknownFamilies.length > 0) console.log(`[TRACE] print: ${report.unknownFamilies.length} families still awaiting a \\SemioVizFamily registration: ${report.unknownFamilies.slice(0, 8).join(" ")}…`);
 }

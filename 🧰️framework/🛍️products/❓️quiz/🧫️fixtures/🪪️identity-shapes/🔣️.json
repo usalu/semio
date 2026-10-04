@@ -845,7 +845,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-basics"
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": null
     },
@@ -861,7 +863,8 @@
         "answer": {
           "kind": "sorting",
           "order": []
-        }
+        },
+        "at": 1790000000000
       },
       "expected": null
     },
@@ -884,7 +887,9 @@
         "id": "8D2DA7FCDF49DBF0FD1242B79EC6322D",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-basics"
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -968,7 +973,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-basics"
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -980,7 +987,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "../5be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-basics"
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1021,7 +1030,8 @@
         "answer": {
           "kind": "sorting",
           "order": []
-        }
+        },
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1044,7 +1054,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "Cooling-Basics"
+        "quiz": "Cooling-Basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1056,7 +1068,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-"
+        "quiz": "cooling-",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1068,7 +1082,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling--basics"
+        "quiz": "cooling--basics",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1080,7 +1096,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": ""
+        "quiz": "",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1092,7 +1110,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+        "quiz": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1104,7 +1124,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+        "quiz": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": null
     },
@@ -1116,7 +1138,9 @@
         "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
         "learner": "b525be33f05cd0437910b126061dbfcd",
         "run": "0145ed8bab360a86b1cbce7cf7dded23",
-        "quiz": "cooling-basics\n"
+        "quiz": "cooling-basics\n",
+        "challenge": "hard",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1132,7 +1156,8 @@
         "answer": {
           "kind": "sorting",
           "order": []
-        }
+        },
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },
@@ -1148,7 +1173,185 @@
         "answer": {
           "kind": "sorting",
           "order": []
-        }
+        },
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-loads",
+        "at": 1790000000000
+      },
+      "expected": null
+    },
+    {
+      "id": "start-run-expert-longest-quiz",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "quiz": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+        "challenge": "expert",
+        "at": 1790000000000
+      },
+      "expected": null
+    },
+    {
+      "id": "start-run-at-the-largest-safe-integer",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 9007199254740991
+      },
+      "expected": null
+    },
+    {
+      "id": "start-run-at-the-epoch",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 0
+      },
+      "expected": null
+    },
+    {
+      "id": "start-run-beyond-a-safe-integer",
+      "definition": "Command",
+      "document": {
+        "type": "start-run",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "quiz": "cooling-basics",
+        "challenge": "hard",
+        "at": 9007199254740992
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-beyond-a-safe-integer",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-loads",
+        "at": 9007199254740992
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "record-answer-at-the-largest-unsigned-64-bit-integer",
+      "definition": "Command",
+      "document": {
+        "type": "record-answer",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-loads",
+        "answer": {
+          "kind": "sorting",
+          "order": []
+        },
+        "at": 18446744073709551615
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-id-uppercase",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8D2DA7FCDF49DBF0FD1242B79EC6322D",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-loads",
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-learner-short",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfc",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-loads",
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-run-line-feed",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23\n",
+        "task": "cooling-loads",
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-task-with-slash",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling/loads",
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-task-trailing-hyphen",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "cooling-",
+        "at": 1790000000000
+      },
+      "expected": "id-invalid"
+    },
+    {
+      "id": "open-task-task-65-characters",
+      "definition": "Command",
+      "document": {
+        "type": "open-task",
+        "id": "8d2da7fcdf49dbf0fd1242b79ec6322d",
+        "learner": "b525be33f05cd0437910b126061dbfcd",
+        "run": "0145ed8bab360a86b1cbce7cf7dded23",
+        "task": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+        "at": 1790000000000
       },
       "expected": "id-invalid"
     },

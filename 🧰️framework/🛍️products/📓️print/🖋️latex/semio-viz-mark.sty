@@ -1772,6 +1772,8 @@
 %   symbol (tl, circle)         d3 symbol drawn inside an icon mark
 %   file (tl, empty)            image file of an image mark
 %   extent (tl, empty)          `lo,hi` span of a reference band, bracket or brace
+\tl_new:N \l_semio_viz_mark_cap_tl
+\tl_new:N \l_semio_viz_mark_join_tl
 \tl_new:N \l_semio_viz_mark_fill_tl
 \tl_new:N \l_semio_viz_mark_stroke_tl
 \tl_new:N \l_semio_viz_mark_width_tl
@@ -1812,6 +1814,8 @@
 \bool_new:N \l_semio_viz_mark_outer_set_bool
 
 \keys_define:nn { semio / viz / mark } {
+  cap .choices:nn = {butt,round,square}{\tl_set_eq:NN\l_semio_viz_mark_cap_tl\l_keys_choice_tl},
+  join .choices:nn = {miter,round,bevel}{\tl_set_eq:NN\l_semio_viz_mark_join_tl\l_keys_choice_tl},
   size        .fp_set:N   = \l_semio_viz_mark_size_fp,
   fill        .tl_set:N   = \l_semio_viz_mark_fill_tl,
   stroke      .tl_set:N   = \l_semio_viz_mark_stroke_tl,
@@ -1856,6 +1860,8 @@
 
 % ♻️ Puts every mark key back to its documented default before an option list is read.
 \cs_new_protected:Npn \semio_viz_mark_keys_reset: {
+  \tl_set:Nn \l_semio_viz_mark_cap_tl {butt}
+  \tl_set:Nn \l_semio_viz_mark_join_tl {miter}
   \fp_set:Nn \l_semio_viz_mark_size_fp { 6 }
   \tl_set:Nn \l_semio_viz_mark_fill_tl { \semio_viz_theme_color:n { 0 } }
   \tl_set:Nn \l_semio_viz_mark_stroke_tl { semio-chrome-border-emphasized }
@@ -1950,7 +1956,7 @@
     { both }  { \tl_put_right:Nx \l_semio_viz_mark_opts_tl
                   { {Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]}-{Latex[length=\exp_not:V \l_semio_viz_mark_arrow_size_tl]} , } }
   }
-  \tl_put_right:Nx \l_semio_viz_mark_opts_tl { opacity= \fp_to_decimal:N \l_semio_viz_mark_opacity_fp }
+  \tl_put_right:Nx \l_semio_viz_mark_opts_tl {line~cap=\l_semio_viz_mark_cap_tl,line~join=\l_semio_viz_mark_join_tl,fill~opacity=\fp_eval:n{\l_semio_viz_mark_opacity_fp*\semio_viz_color_alpha:n{\l_semio_viz_mark_fill_tl}},draw~opacity=\fp_eval:n{\l_semio_viz_mark_opacity_fp*\semio_viz_color_alpha:n{\l_semio_viz_mark_stroke_tl}} }
 }
 
 % 🌀 The `rotate around` option of the current mark, built with a catcode-12 colon so that

@@ -1,0 +1,21 @@
+import {readFileSync,writeFileSync,renameSync,mkdirSync} from 'node:fs';
+const root='C:/git/semio/🧰️framework/🛍️products/📓️print',base=root+'/🧪️tests/🧬️native-chart-grammar',folder=base+'/💹️financial';mkdirSync(folder,{recursive:true});
+let fixture=JSON.parse(readFileSync(base+'/💹️financial.json','utf8'));fixture.stockKinds=[...readFileSync(root+'/🧾️template/📊️viz-gallery/💹️viz-17.tex','utf8').matchAll(/\\SemioVizChart\{([^}]+)\}/g)].map(match=>match[1]);writeFileSync(folder+'/🔣️.json',JSON.stringify(fixture,null,2)+'\n');
+let s=readFileSync(base+'/💹️financial.ts','utf8').replace('from "../../🔨️','from "../../../🔨️').replace('from "./💹️financial.json"','from "./🔣️.json"').replace('import { mean, variance }','import { scaleLinear } from "d3-scale";\nimport { mean, variance }');
+s=s.replace('if(entry.band)keys.push(',String.raw`const lows=entry.stock?[9,10,8,9,11,10,11,13]:fixture.rows.map(row=>row[3]!),highs=entry.stock?[12,13,11,12,14,13,15,16]:fixture.rows.map(row=>row[2]!);
+      const upper=means.map((value,index)=>value+entry.deviation*deviations[index]!),lower=means.map((value,index)=>value-entry.deviation*deviations[index]!);
+      const x=scaleLinear([1,values.length],[10,fixture.frame[0]-4]),y=scaleLinear([Math.min(...lows,...(entry.band?lower:[])),Math.max(...highs,...(entry.band?upper:[]))],[8,fixture.frame[1]-4]);
+      keys.push(["financial/mean-points",means.flatMap((value,index)=>[x(index+1),y(value)])]);
+      if(entry.band)keys.push(["financial/upper-points",upper.flatMap((value,index)=>[x(index+1),y(value)])],["financial/lower-points",lower.flatMap((value,index)=>[x(index+1),y(value)])],`);
+s+=String.raw`
+/** 🏛️ Compiles every authored stock kind of taxonomy 17 after numerical overlay proof. */
+export async function compileNativeFinancialStock(workDir:string):Promise<void>{
+  for(const theme of ["light","dark"]){
+    const body=fixture.stockKinds.map(kind=>({raw:"\\clearpage\\SemioVizProbeBegin{native-financial-stock}{"+kind+"}\\begin{VizFigure}[width=80,height=40]\\SemioVizChart{"+kind+"}\\end{VizFigure}"}));
+    await compileVizProbeDocument({case:"native-financial-stock",scenario:"financial-stock",documentClass:"semio",documentClassOptions:"type=paper,language=en,theme="+theme,packages:["semio-viz"],geometry:true,preamble:["\\title{Stock Financial Grammar}","\\author{Semio}","\\date{}","\\errorcontextlines=200"],body},{workDir:join(workDir,theme),scenario:undefined,keepWorkDir:true});
+  }
+  console.log("[native-grammar] "+fixture.stockKinds.length+" authored financial/economic stock kinds compiled in 2 themes");
+}
+`;writeFileSync(folder+'/🟦️.ts',s);
+let path=root+'/🖋️latex/semio-viz-charts-financial.sty';s=readFileSync(path,'utf8');s=s.replace('\\semio_viz_fin_overlay_map:NN \\l_semio_viz_fin_aux_seq \\l_semio_viz_fin_mean_points_seq','\\semio_viz_fin_overlay_map:NN \\l_semio_viz_fin_aux_seq \\l_semio_viz_fin_mean_points_seq\n  \\semio_viz_probe_values:nx {financial/mean-points}{\\seq_use:Nn\\l_semio_viz_fin_mean_points_seq{,}}');s=s.replace('\\semio_viz_fin_overlay_map:NN \\l_semio_viz_fin_lower_seq \\l_semio_viz_fin_lower_points_seq','\\semio_viz_fin_overlay_map:NN \\l_semio_viz_fin_lower_seq \\l_semio_viz_fin_lower_points_seq\n    \\semio_viz_probe_values:nx {financial/upper-points}{\\seq_use:Nn\\l_semio_viz_fin_upper_points_seq{,}}\n    \\semio_viz_probe_values:nx {financial/lower-points}{\\seq_use:Nn\\l_semio_viz_fin_lower_points_seq{,}}');writeFileSync(import.meta.dir+'/financial.sty',s);renameSync(import.meta.dir+'/financial.sty',path);
+let runner=readFileSync(base+'/🟦️.ts','utf8');runner=runner.replace('import fixture from "./🔣️.json";','import fixture from "./🔣️.json";\nimport {compileNativeFinancialGrammar} from "./💹️financial/🟦️.ts";');runner=runner.replace('  await compileNativeLegendGrammar(join(workDir, "legends"));','  await compileNativeLegendGrammar(join(workDir, "legends"));\n  await compileNativeFinancialGrammar(join(workDir,"financial"));');writeFileSync(import.meta.dir+'/runner.ts',runner);renameSync(import.meta.dir+'/runner.ts',base+'/🟦️.ts');

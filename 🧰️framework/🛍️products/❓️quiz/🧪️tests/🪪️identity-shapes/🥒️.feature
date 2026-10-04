@@ -9,7 +9,12 @@ Feature: Ids and handles are held to their shapes before anything is decided or 
   Ids. A learner, run and command id is exactly 32 lowercase hex characters (`isId`), a quiz and task id a
   slug of at most 64 characters (`isSlug`). `commandRejection` answers `id-invalid` for a command with any
   other id, `queryRejection` the same for a query (the optional caller of a leaderboard query included) and
-  `handle-invalid` for a `handle` query whose handle the policy refuses.
+  `handle-invalid` for a `handle` query whose handle the policy refuses. `start-run` names its challenge,
+  `start-run`, `record-answer` and `open-task` carry the instant the learner acted; `open-task` holds its
+  ids and its task slug to the same shapes. An instant beyond the largest timestamp (2^53 − 1, the largest
+  integer every language reads exactly) is `id-invalid` too. A challenge out of its shape or an instant that
+  is no non-negative integer is a malformed command, never a rejection, and no vector carries one
+  (challenge design §3.3).
 
   Handles. `normalizeHandle` first collapses every run of `White_Space` (the 25 code points of the Unicode
   property, written out in both cores) to one space, trims, and turns the typographic apostrophe U+2019

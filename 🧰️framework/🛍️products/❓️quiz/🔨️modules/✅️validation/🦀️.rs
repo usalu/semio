@@ -24,7 +24,7 @@
 //! @see ../../🧬️schema/🔣️.json — the constraints mirrored here
 //! @see ../✅️validation/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetTask, SortingTask, Task, Icon, Text};
+use crate::schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetMatchingTask, SheetTask, SortingTask, Task, Icon, Text, MAX_TIMESTAMP, SHORT_LENGTH};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -182,41 +182,66 @@ pub fn catalog_issues(catalog: &Catalog, quizzes: &[Quiz]) -> Vec<ValidationIssu
 }
 
 /// 🚧️ `answer-invalid` unless the answer fits the sheet task: the kind matches, every referenced
-/// item, category and dimension exists, card indices are in range and unique per dimension, and a
-/// sorting order is a permutation of the sheet items whose guesses name sheet items, are finite
-/// (positive on a logarithmic quantity) and stand in non-decreasing order along `order` (ties allowed,
-/// unguessed items unconstrained). Partial classification and matching answers are valid.
+/// item, category and dimension exists and a sorting order is a permutation of the sheet items. Where
+/// the sheet task shows the keys a sorting carries no guesses and a matching its card assignments
+/// (indices in range and unique per dimension) and no guesses; where it hides them a sorting's guesses
+/// name sheet items, are finite (positive on a logarithmic quantity) and stand in non-decreasing order
+/// along `order` (ties allowed, unguessed items unconstrained), and a matching carries guesses per
+/// sheet dimension and item that fit the dimension's scale and no assignments. Partial classification
+/// and matching answers are valid.
 pub fn answer_rejection(sheet_task: &SheetTask, answer: &Answer) -> Option<Rejection> {
     let valid = match (sheet_task, answer) {
         (SheetTask::Classification(task), Answer::Classification(answer)) => answer.assignments.iter().all(|(item, category)| presented(&task.items, item) && task.categories.iter().any(|candidate| &candidate.id == category)),
         (SheetTask::Sorting(task), Answer::Sorting(answer)) => {
-            let guessed = answer.order.iter().filter_map(|item| answer.guesses.get(item)).collect::<Vec<_>>();
             answer.order.len() == task.items.len()
                 && answer.order.iter().collect::<BTreeSet<_>>().len() == answer.order.len()
                 && answer.order.iter().all(|item| presented(&task.items, item))
-                && answer.guesses.iter().all(|(item, guess)| presented(&task.items, item) && guess.is_finite() && (task.quantity.scale == Scale::Linear || *guess > 0.0))
-                && guessed.windows(2).all(|pair| pair[0] <= pair[1])
+                && match (&task.keys, &answer.guesses) {
+                    (_, None) => true,
+                    (Some(_), Some(_)) => false,
+                    (None, Some(guesses)) => {
+                        let guessed = answer.order.iter().filter_map(|item| guesses.get(item)).collect::<Vec<_>>();
+                        guesses.iter().all(|(item, &guess)| presented(&task.items, item) && guess_fits(guess, task.quantity.scale)) && guessed.windows(2).all(|pair| pair[0] <= pair[1])
+                    }
+                }
         }
-        (SheetTask::Matching(task), Answer::Matching(answer)) => answer.assignments.iter().all(|(dimension, assignment)| {
-            task.dimensions.iter().find(|candidate| &candidate.id == dimension).is_some_and(|dimension| {
-                let mut used = BTreeSet::new();
-                assignment.iter().all(|(item, &card)| presented(&task.items, item) && card < dimension.cards.len() && used.insert(card))
-            })
-        }),
+        (SheetTask::Matching(task), Answer::Matching(answer)) => match (cardless(task), &answer.assignments, &answer.guesses) {
+            (true, None, None) => true,
+            (true, None, Some(guesses)) => guesses.iter().all(|(dimension, guessed)| task.dimensions.iter().find(|candidate| &candidate.id == dimension).is_some_and(|dimension| guessed.iter().all(|(item, &guess)| presented(&task.items, item) && guess_fits(guess, dimension.quantity.scale)))),
+            (false, Some(assignments), None) => assignments.iter().all(|(dimension, assignment)| {
+                task.dimensions.iter().find(|candidate| &candidate.id == dimension).is_some_and(|dimension| {
+                    let (count, mut used) = (dimension.cards.as_ref().map_or(0, Vec::len), BTreeSet::new());
+                    assignment.iter().all(|(item, &card)| presented(&task.items, item) && card < count && used.insert(card))
+                })
+            }),
+            _ => false,
+        },
         _ => false,
     };
     (!valid).then_some(Rejection::AnswerInvalid)
 }
 
-/// ☑️ Whether an answer completes its sheet task: every item classified, every item matched in every
-/// dimension; a recorded sorting of the same kind is always complete.
+/// ☑️ Whether an answer completes its sheet task: every item classified; every item matched in every
+/// dimension, with a card where the keys show and a guess where they are hidden; a recorded sorting
+/// where the keys show, a guess for every item where they are hidden.
 pub fn answer_complete(sheet_task: &SheetTask, answer: Option<&Answer>) -> bool {
     match (sheet_task, answer) {
         (SheetTask::Classification(task), Some(Answer::Classification(answer))) => task.items.iter().all(|item| answer.assignments.contains_key(&item.id)),
-        (SheetTask::Sorting(_), Some(Answer::Sorting(_))) => true,
-        (SheetTask::Matching(task), Some(Answer::Matching(answer))) => task.dimensions.iter().all(|dimension| answer.assignments.get(&dimension.id).is_some_and(|assignment| task.items.iter().all(|item| assignment.contains_key(&item.id)))),
+        (SheetTask::Sorting(task), Some(Answer::Sorting(answer))) => task.keys.is_some() || answer.guesses.as_ref().is_some_and(|guesses| task.items.iter().all(|item| guesses.contains_key(&item.id))),
+        (SheetTask::Matching(task), Some(Answer::Matching(answer))) => task.dimensions.iter().all(|dimension| match &dimension.cards {
+            Some(_) => answer.assignments.as_ref().and_then(|assignments| assignments.get(&dimension.id)).is_some_and(|assignment| task.items.iter().all(|item| assignment.contains_key(&item.id))),
+            None => answer.guesses.as_ref().and_then(|guesses| guesses.get(&dimension.id)).is_some_and(|guessed| task.items.iter().all(|item| guessed.contains_key(&item.id))),
+        }),
         _ => false,
     }
+}
+
+fn guess_fits(guess: f64, scale: Scale) -> bool {
+    guess.is_finite() && (scale != Scale::Logarithmic || guess > 0.0)
+}
+
+fn cardless(task: &SheetMatchingTask) -> bool {
+    task.dimensions.iter().any(|dimension| dimension.cards.is_none())
 }
 
 /// 🐍️ Whether `value` is a slug: `^[a-z0-9]+(?:-[a-z0-9]+)*$` and at most 64 characters.
@@ -230,12 +255,15 @@ pub fn is_id(value: &str) -> bool {
 }
 
 /// 🛃️ `id-invalid` unless every id a command carries has its shape: the command, learner and run ids
-/// are ids, the quiz and task ids slugs.
+/// are ids, the quiz and task ids slugs, and every `at` lies at most at [`MAX_TIMESTAMP`] (as in the
+/// TypeScript twin, so no view ever carries an integer a TypeScript reader cannot hold exactly). A
+/// challenge that is no challenge or an instant that is no `u64` is a malformed command, never a
+/// rejection: serde refuses to decode it.
 pub fn command_rejection(command: &Command) -> Option<Rejection> {
     let valid = match command {
         Command::IdentifyLearner { id, learner, .. } => is_id(id) && is_id(learner),
-        Command::StartRun { id, learner, run, quiz } => is_id(id) && is_id(learner) && is_id(run) && is_slug(quiz),
-        Command::RecordAnswer { id, learner, run, task, .. } => is_id(id) && is_id(learner) && is_id(run) && is_slug(task),
+        Command::StartRun { id, learner, run, quiz, at, .. } => is_id(id) && is_id(learner) && is_id(run) && is_slug(quiz) && *at <= MAX_TIMESTAMP,
+        Command::OpenTask { id, learner, run, task, at } | Command::RecordAnswer { id, learner, run, task, at, .. } => is_id(id) && is_id(learner) && is_id(run) && is_slug(task) && *at <= MAX_TIMESTAMP,
         Command::SubmitRun { id, learner, run } => is_id(id) && is_id(learner) && is_id(run),
     };
     (!valid).then_some(Rejection::IdInvalid)
@@ -363,6 +391,21 @@ fn presented(items: &[SheetItem], id: &str) -> bool {
     items.iter().any(|item| item.id == id)
 }
 
+#[derive(Clone, Copy)]
+struct Head<'a> {
+    id: &'a str,
+    label: &'a Text,
+    short: Option<&'a Text>,
+    icon: Option<&'a Icon>,
+    explanation: Option<&'a Text>,
+}
+
+impl<'a> Head<'a> {
+    fn of(id: &'a str, label: &'a Text, short: Option<&'a Text>, icon: Option<&'a Icon>, explanation: Option<&'a Text>) -> Self {
+        Self { id, label, short, icon, explanation }
+    }
+}
+
 #[derive(Default)]
 struct Issues(Vec<ValidationIssue>);
 
@@ -410,6 +453,13 @@ impl Issues {
         }
     }
 
+    fn short(&mut self, base: &str, short: Option<&Text>) {
+        if let Some(short) = short {
+            self.length(format!("{base}/short/en"), &short.en, 1, SHORT_LENGTH);
+            self.length(format!("{base}/short/de"), &short.de, 1, SHORT_LENGTH);
+        }
+    }
+
     fn at_least(&mut self, path: String, count: usize, minimum: usize, code: IssueCode) {
         if count < minimum {
             self.push(path, code);
@@ -428,23 +478,25 @@ impl Issues {
 
     fn quantity(&mut self, base: &str, quantity: &Quantity) {
         self.text(&format!("{base}/label"), &quantity.label);
+        self.short(base, quantity.short.as_ref());
         self.length(format!("{base}/unit"), &quantity.unit, 1, 32);
     }
 
-    fn head(&mut self, base: &str, id: &str, label: &Text, icon: Option<&Icon>, explanation: Option<&Text>) {
-        self.slug(format!("{base}/id"), id);
-        self.text(&format!("{base}/label"), label);
-        self.icon(base, icon);
-        self.optional_text(&format!("{base}/explanation"), explanation);
+    fn head(&mut self, base: &str, head: Head<'_>) {
+        self.slug(format!("{base}/id"), head.id);
+        self.text(&format!("{base}/label"), head.label);
+        self.short(base, head.short);
+        self.icon(base, head.icon);
+        self.optional_text(&format!("{base}/explanation"), head.explanation);
     }
 
-    fn items_and_draw<'a>(&mut self, base: &str, draw: Option<usize>, heads: impl ExactSizeIterator<Item = (&'a str, &'a Text, Option<&'a Icon>, Option<&'a Text>)> + Clone) {
+    fn items_and_draw<'a>(&mut self, base: &str, draw: Option<usize>, heads: impl ExactSizeIterator<Item = Head<'a>> + Clone) {
         let count = heads.len();
         self.at_least(format!("{base}/items"), count, 2, IssueCode::ItemsTooFew);
-        for (index, (id, label, icon, explanation)) in heads.clone().enumerate() {
-            self.head(&format!("{base}/items/{index}"), id, label, icon, explanation);
+        for (index, head) in heads.clone().enumerate() {
+            self.head(&format!("{base}/items/{index}"), head);
         }
-        self.unique(&format!("{base}/items"), heads.map(|(id, _, _, _)| id));
+        self.unique(&format!("{base}/items"), heads.map(|head| head.id));
         match draw {
             Some(draw) if draw < 2 => self.push(format!("{base}/draw"), IssueCode::BelowMinimum),
             Some(draw) if draw > count => self.push(format!("{base}/draw"), IssueCode::DrawExceedsItems),
@@ -465,6 +517,7 @@ impl Issues {
             let path = format!("{base}/axes/{index}");
             self.slug(format!("{path}/id"), &axis.id);
             self.text(&format!("{path}/label"), &axis.label);
+            self.short(&path, axis.short.as_ref());
             self.length(format!("{path}/unit"), &axis.unit, 1, 32);
             if axis.max <= axis.min {
                 self.push(format!("{path}/max"), IssueCode::AxisRangeInvalid);
@@ -484,12 +537,13 @@ impl Issues {
                 self.push(path, IssueCode::CategoryUnknown);
             }
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| Head::of(&item.id, &item.label, item.short.as_ref(), item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn category(&mut self, base: &str, category: &Category, has_axes: bool, axis_ids: &BTreeSet<&str>, ranges: &BTreeMap<&str, (f64, f64)>) {
         self.slug(format!("{base}/id"), &category.id);
         self.text(&format!("{base}/label"), &category.label);
+        self.short(base, category.short.as_ref());
         self.icon(base, category.icon.as_ref());
         self.optional_text(&format!("{base}/description"), category.description.as_ref());
         let Some(profile) = &category.profile else { return };
@@ -524,7 +578,7 @@ impl Issues {
                 self.push(format!("{base}/items/{index}/value"), IssueCode::ValueNotPositive);
             }
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| Head::of(&item.id, &item.label, item.short.as_ref(), item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn matching(&mut self, base: &str, task: &MatchingTask) {
@@ -544,7 +598,7 @@ impl Issues {
         for (index, item) in task.items.iter().enumerate() {
             self.values(&format!("{base}/items/{index}/values"), item, &scales);
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| Head::of(&item.id, &item.label, item.short.as_ref(), item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn values(&mut self, path: &str, item: &MatchingItem, scales: &BTreeMap<&str, Scale>) {
@@ -570,9 +624,9 @@ impl Issues {
         self.text(&format!("{base}/label"), &badge.label);
         self.text(&format!("{base}/description"), &badge.description);
         let (quiz, task_kind) = match &badge.rule {
-            BadgeRule::PerfectQuiz { quiz } => (Some(quiz), None),
-            BadgeRule::PerfectTasks { task_kind, quiz } => (quiz.as_ref(), *task_kind),
-            BadgeRule::CompletedQuizzes => return,
+            BadgeRule::PerfectQuiz { quiz, .. } => (Some(quiz), None),
+            BadgeRule::PerfectTasks { task_kind, quiz, .. } => (quiz.as_ref(), *task_kind),
+            BadgeRule::CompletedQuizzes {} => return,
         };
         if quiz.is_some_and(|quiz| !self.slug(format!("{base}/rule/quiz"), quiz)) {
             return;

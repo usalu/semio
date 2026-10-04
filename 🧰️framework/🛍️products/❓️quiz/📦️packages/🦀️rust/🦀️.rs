@@ -6,6 +6,9 @@ pub mod schema;
 #[path = "../../🔨️modules/🎲️randomness/🦀️.rs"]
 pub mod randomness;
 
+#[path = "../../🔨️modules/⛰️challenge/🦀️.rs"]
+pub mod challenge;
+
 #[path = "../../🔨️modules/🃏️sheet/🦀️.rs"]
 pub mod sheet;
 

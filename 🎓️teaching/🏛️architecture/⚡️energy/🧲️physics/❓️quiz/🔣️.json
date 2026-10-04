@@ -6,34 +6,38 @@
   "title": { "en": "Physical Understanding", "de": "Physikalisches Verständnis" },
   "description": {
     "en": "Tell power from energy and develop a feeling for orders of magnitude – from a tea light to the Sun, from one phone charge to the world's annual energy consumption.",
-    "de": "Leistung von Energie unterscheiden und ein Gefühl für Größenordnungen entwickeln – vom Teelicht bis zur Sonne, von einer Handyladung bis zum Jahresenergieverbrauch der Welt."
+    "de": "Leistung von Arbeit unterscheiden und ein Gefühl für Größenordnungen entwickeln – vom Teelicht bis zur Sonne, von einer Handyladung bis zum Jahresenergieverbrauch der Welt."
   },
   "tasks": [
     {
       "kind": "classification",
       "id": "power-or-energy",
-      "title": { "en": "Power or Energy?", "de": "Leistung oder Energie?" },
+      "title": { "en": "Power or Energy?", "de": "Leistung oder Arbeit?" },
       "icon": { "emoji": "⚡", "motion": "pulse" },
       "prompt": {
         "en": "Decide for each quantity whether it is a power (a rate: energy per unit of time, measured in watts) or an energy or energy demand (an amount, measured in watt-hours, joules or kilocalories; demands per year such as kWh/a count as energy demand).",
-        "de": "Entscheide für jede Größe, ob sie eine Leistung ist (Energie pro Zeit, gemessen in Watt) oder eine Energie bzw. ein Energiebedarf (eine Menge, gemessen in Wattstunden, Joule oder Kilokalorien; Bedarfe pro Jahr wie kWh/a zählen als Energiebedarf)."
+        "de": "Entscheide für jede Größe, ob sie eine Leistung ist (Energie pro Zeit, gemessen in Watt) oder Arbeit (eine Energiemenge, gemessen in Wattstunden, Joule oder Kilokalorien; auch Jahresbedarfe wie kWh/a zählen dazu)."
       },
       "categories": [
         {
           "id": "power",
           "label": { "en": "Power", "de": "Leistung" },
+          "icon": { "emoji": "⚡", "motion": "pulse" },
           "description": { "en": "A rate: how fast energy is converted (1\u00a0W\u00a0=\u00a01\u00a0J/s).", "de": "Energie pro Zeit: wie schnell Energie umgesetzt wird (1\u00a0W\u00a0=\u00a01\u00a0J/s)." }
         },
         {
           "id": "energy",
-          "label": { "en": "Energy (demand)", "de": "Energie(bedarf)" },
-          "description": { "en": "An amount: how much energy is converted in total (Wh, J, kcal).", "de": "Eine Menge: wie viel Energie insgesamt umgesetzt wird (Wh, J, kcal)." }
+          "label": { "en": "Energy (demand)", "de": "Arbeit" },
+          "short": { "en": "Energy", "de": "Arbeit" },
+          "icon": { "emoji": "🔋", "motion": "bounce" },
+          "description": { "en": "An amount: how much energy is converted in total (Wh, J, kcal).", "de": "Eine übertragene Energiemenge (Wh, J, kcal)." }
         }
       ],
       "items": [
         {
           "id": "tea-light",
           "label": { "en": "Heat output of a burning tea light", "de": "Wärmeabgabe eines brennenden Teelichts" },
+          "icon": { "emoji": "🕯️", "motion": "float" },
           "category": "power",
           "explanation": {
             "en": "About 35\u00a0W: roughly 12\u00a0g of paraffin (≈\u00a012\u00a0Wh/g) burn in about 4\u00a0hours, and heat per unit of time is a power. Source: calorific value of paraffin; Wikipedia “Teelicht” (30–40\u00a0W).",
@@ -43,6 +47,7 @@
         {
           "id": "kettle",
           "label": { "en": "Rated power of an electric kettle", "de": "Nennleistung eines Wasserkochers" },
+          "icon": { "emoji": "🫖", "motion": "bounce" },
           "category": "power",
           "explanation": {
             "en": "About 2\u00a0kW according to the rating plate; a 230\u00a0V/16\u00a0A socket allows at most 3.7\u00a0kW. The power tells how fast the kettle heats, not how much energy it uses.",
@@ -52,6 +57,8 @@
         {
           "id": "resting-person",
           "label": { "en": "Heat given off by a person sitting still", "de": "Wärmeabgabe eines ruhig sitzenden Menschen" },
+          "short": { "en": "Heat given off by a sitting person", "de": "Wärmeabgabe eines sitzenden Menschen" },
+          "icon": { "emoji": "🧘", "motion": "pulse" },
           "category": "power",
           "explanation": {
             "en": "About 100\u00a0W: 1\u00a0met\u00a0=\u00a058\u00a0W per m² of skin\u00a0×\u00a01.8\u00a0m² (ISO 7730, ISO 8996). The matching energy is the daily food intake of about 2,300\u00a0kcal\u00a0≈\u00a02.7\u00a0kWh.",
@@ -61,6 +68,7 @@
         {
           "id": "pv-module-peak",
           "label": { "en": "Peak rating of a solar module in kWp", "de": "Spitzenleistung eines Solarmoduls in kWp" },
+          "icon": { "emoji": "🔆", "motion": "pulse" },
           "category": "power",
           "explanation": {
             "en": "About 0.43\u00a0kWp for a 2\u00a0m² module: the electrical power under standard test conditions (1,000\u00a0W/m², 25\u00a0°C; IEC 60904-3). The “p” stands for peak, not for an amount.",
@@ -70,6 +78,7 @@
         {
           "id": "heating-load",
           "label": { "en": "Design heating load of a house", "de": "Heizlast eines Hauses" },
+          "icon": { "emoji": "🏠", "motion": "pulse" },
           "category": "power",
           "explanation": {
             "en": "About 18\u00a0kW for an unrenovated 1960s single-family house (110\u00a0m²\u00a0×\u00a0160\u00a0W/m²): the heat flow needed on the coldest design day (DIN EN 12831).",
@@ -79,6 +88,8 @@
         {
           "id": "nuclear-unit",
           "label": { "en": "Electrical output of a nuclear power plant unit", "de": "Elektrische Leistung eines Kernkraftwerksblocks" },
+          "short": { "en": "Output of a nuclear power plant unit", "de": "Leistung eines Kernkraftwerksblocks" },
+          "icon": { "emoji": "☢️", "motion": "spin" },
           "category": "power",
           "explanation": {
             "en": "About 1.4\u00a0GW: Isar 2 delivered 1,410\u00a0MW net until April 2023. Power plants are rated by their power; their annual generation is an energy.",
@@ -88,6 +99,8 @@
         {
           "id": "car-engine",
           "label": { "en": "Rated output of a car engine in horsepower (PS)", "de": "Motorleistung eines Autos in PS" },
+          "short": { "en": "Car engine output in horsepower", "de": "Motorleistung eines Autos in PS" },
+          "icon": { "emoji": "🏎️", "motion": "sway" },
           "category": "power",
           "explanation": {
             "en": "About 100\u00a0kW\u00a0=\u00a0136\u00a0PS (1\u00a0PS\u00a0=\u00a0735.5\u00a0W): horsepower is an old unit of power.",
@@ -97,6 +110,7 @@
         {
           "id": "wallbox",
           "label": { "en": "Charging power of a home wall box", "de": "Ladeleistung einer Wallbox" },
+          "icon": { "emoji": "🔌", "motion": "bounce" },
           "category": "power",
           "explanation": {
             "en": "11\u00a0kW\u00a0=\u00a03 phases\u00a0×\u00a0230\u00a0V\u00a0×\u00a016\u00a0A: the rate at which the car battery is filled.",
@@ -106,6 +120,8 @@
         {
           "id": "household-electricity",
           "label": { "en": "Annual electricity use of a two-person household", "de": "Jahresstromverbrauch eines Zwei-Personen-Haushalts" },
+          "short": { "en": "Annual electricity use of two people", "de": "Jahresstromverbrauch zweier Personen" },
+          "icon": { "emoji": "💡", "motion": "pulse" },
           "category": "energy",
           "explanation": {
             "en": "About 2,500\u00a0kWh per year (Stromspiegel für Deutschland): an amount summed over a year. Divided by 8,760\u00a0h it corresponds to an average power of only about 0.3\u00a0kW.",
@@ -115,6 +131,8 @@
         {
           "id": "ev-battery",
           "label": { "en": "Usable capacity of an electric car battery", "de": "Nutzbare Kapazität eines E-Auto-Akkus" },
+          "short": { "en": "Capacity of an electric car battery", "de": "Kapazität eines E-Auto-Akkus" },
+          "icon": { "emoji": "🚙", "motion": "bounce" },
           "category": "energy",
           "explanation": {
             "en": "About 60\u00a0kWh (e.g. VW ID.3: 58\u00a0kWh net): a stored amount of energy. With an 11\u00a0kW wall box it takes 60\u00a0÷\u00a011\u00a0≈\u00a05.5\u00a0hours to fill.",
@@ -124,6 +142,8 @@
         {
           "id": "heating-oil-litre",
           "label": { "en": "Energy content of one litre of heating oil", "de": "Energieinhalt eines Liters Heizöl" },
+          "short": { "en": "Energy in a litre of heating oil", "de": "Energieinhalt eines Liters Heizöl" },
+          "icon": { "emoji": "🛢️", "motion": "sway" },
           "category": "energy",
           "explanation": {
             "en": "About 10\u00a0kWh: net calorific value of heating oil EL\u00a0≈\u00a042.6\u00a0MJ/kg\u00a0×\u00a00.845\u00a0kg/l (DIN 51603-1).",
@@ -133,15 +153,18 @@
         {
           "id": "heating-demand-house",
           "label": { "en": "Annual heating demand of an unrenovated single-family house", "de": "Jahres-Heizwärmebedarf eines unsanierten Einfamilienhauses" },
+          "short": { "en": "Annual heating demand of an old house", "de": "Jahres-Heizwärmebedarf eines Altbaus" },
+          "icon": { "emoji": "🏚️", "motion": "sway" },
           "category": "energy",
           "explanation": {
             "en": "About 33,000\u00a0kWh per year for a 1960s house (110\u00a0m²\u00a0×\u00a0303\u00a0kWh/(m²·a); IWU, the Institute for Housing and Environment, German residential building typology 2015, type EFH_E): an annual amount, i.e. an energy demand.",
-            "de": "Rund 33.000\u00a0kWh pro Jahr für ein Haus der 1960er-Jahre (110\u00a0m²\u00a0×\u00a0303\u00a0kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also ein Energiebedarf."
+            "de": "Rund 33.000\u00a0kWh pro Jahr für ein Haus der 1960er-Jahre (110\u00a0m²\u00a0×\u00a0303\u00a0kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also Arbeit über ein Jahr."
           }
         },
         {
           "id": "chocolate-bar",
           "label": { "en": "Food energy of a 100\u00a0g chocolate bar", "de": "Brennwert einer 100-g-Tafel Schokolade" },
+          "icon": { "emoji": "🍫", "motion": "flip" },
           "category": "energy",
           "explanation": {
             "en": "About 540\u00a0kcal\u00a0≈\u00a00.63\u00a0kWh (1\u00a0kcal\u00a0=\u00a01.163\u00a0Wh) according to the nutrition label: kilocalories measure energy.",
@@ -151,6 +174,8 @@
         {
           "id": "pv-annual-yield",
           "label": { "en": "Annual yield of a 10\u00a0kWp rooftop solar system", "de": "Jahresertrag einer 10-kWp-Solaranlage auf dem Dach" },
+          "short": { "en": "Annual yield of a rooftop solar system", "de": "Jahresertrag einer Dach-Solaranlage" },
+          "icon": { "emoji": "🌤️", "motion": "float" },
           "category": "energy",
           "explanation": {
             "en": "About 9,500\u00a0kWh per year: roughly 950\u00a0kWh per kWp in Germany (Fraunhofer ISE, Recent Facts about Photovoltaics in Germany). Peak power times full-load hours gives energy.",
@@ -160,6 +185,8 @@
         {
           "id": "phone-charge",
           "label": { "en": "One full smartphone charge", "de": "Eine volle Smartphone-Ladung" },
+          "short": { "en": "Full smartphone charge", "de": "Volle Smartphone-Ladung" },
+          "icon": { "emoji": "📱", "motion": "bounce" },
           "category": "energy",
           "explanation": {
             "en": "About 15\u00a0Wh: a 4,000\u00a0mAh battery at 3.85\u00a0V stores 15.4\u00a0Wh, a stored amount of energy.",
@@ -169,10 +196,12 @@
         {
           "id": "energy-certificate",
           "label": { "en": "Primary energy demand stated in an energy performance certificate", "de": "Primärenergiebedarf im Energieausweis" },
+          "short": { "en": "Primary energy in an energy certificate", "de": "Primärenergiebedarf im Energieausweis" },
+          "icon": { "emoji": "📜", "motion": "sway" },
           "category": "energy",
           "explanation": {
             "en": "Given in kWh per m² and year (German Buildings Energy Act, GEG, § 85): an energy demand related to floor area and one year, not a power.",
-            "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): ein auf Fläche und Jahr bezogener Energiebedarf, keine Leistung."
+            "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): Arbeit bezogen auf Fläche und Jahr, keine Leistung."
           }
         }
       ],
@@ -187,12 +216,15 @@
         "en": "Sort the powers in ascending order, smallest first. Quantity: power in watts (W); the values span about 25 orders of magnitude.",
         "de": "Sortiere die Leistungen aufsteigend, die kleinste zuerst. Größe: Leistung in Watt (W); die Werte umfassen rund 25 Größenordnungen."
       },
-      "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true },
+      "quantity": { "label": { "en": "Power", "de": "Leistung" }, "unit": "W", "scale": "logarithmic", "prefixed": true, "additive": true },
       "items": [
         {
           "id": "tea-light",
           "label": { "en": "Burning tea light (heat)", "de": "Brennendes Teelicht (Wärme)" },
+          "short": { "en": "Burning tea light", "de": "Brennendes Teelicht" },
+          "icon": { "emoji": "🕯️", "motion": "float" },
           "value": 35,
+          "familiar": true,
           "explanation": {
             "en": "About 35\u00a0W (30–40\u00a0W): roughly 12\u00a0g of paraffin burn in about 4\u00a0hours (Wikipedia “Teelicht”).",
             "de": "Rund 35\u00a0W (30–40\u00a0W): etwa 12\u00a0g Paraffin verbrennen in rund 4\u00a0Stunden (Wikipedia „Teelicht“)."
@@ -201,7 +233,10 @@
         {
           "id": "resting-person",
           "label": { "en": "Person sitting still (body heat)", "de": "Ruhig sitzender Mensch (Körperwärme)" },
+          "short": { "en": "Person sitting still", "de": "Ruhig sitzender Mensch" },
+          "icon": { "emoji": "🧘", "motion": "pulse" },
           "value": 100,
+          "familiar": true,
           "explanation": {
             "en": "About 100\u00a0W: 1\u00a0met\u00a0=\u00a058\u00a0W/m²\u00a0×\u00a01.8\u00a0m² of skin (ISO 7730). A lecture hall with 100 students is a 10\u00a0kW heater.",
             "de": "Rund 100\u00a0W: 1\u00a0met\u00a0=\u00a058\u00a0W/m²\u00a0×\u00a01,8\u00a0m² Haut (ISO 7730). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
@@ -210,6 +245,8 @@
         {
           "id": "sunlight-square-metre",
           "label": { "en": "Sunlight on 1\u00a0m² at noon on a clear summer day", "de": "Sonnenlicht auf 1\u00a0m² an einem klaren Sommermittag" },
+          "short": { "en": "Summer noon sunlight on a square metre", "de": "Mittagssonne auf einem Quadratmeter" },
+          "icon": { "emoji": "🔆", "motion": "pulse" },
           "value": 1000,
           "explanation": {
             "en": "About 1\u00a0kW (1,000\u00a0W): the standard irradiance for testing solar modules (IEC 60904-3); a module with 20% efficiency turns 200\u00a0W of it into electricity.",
@@ -219,7 +256,9 @@
         {
           "id": "kettle",
           "label": { "en": "Electric kettle", "de": "Wasserkocher" },
+          "icon": { "emoji": "🫖", "motion": "bounce" },
           "value": 2000,
+          "familiar": true,
           "explanation": {
             "en": "About 2\u00a0kW (2,000\u00a0W) according to the rating plate; a 230\u00a0V/16\u00a0A socket allows at most 3.7\u00a0kW.",
             "de": "Rund 2\u00a0kW (2.000\u00a0W) laut Typenschild; eine 230-V/16-A-Steckdose erlaubt höchstens 3,7\u00a0kW."
@@ -228,7 +267,9 @@
         {
           "id": "wallbox",
           "label": { "en": "Wall box charging an electric car", "de": "Wallbox beim Laden eines E-Autos" },
+          "icon": { "emoji": "🔌", "motion": "bounce" },
           "value": 11000,
+          "familiar": true,
           "explanation": {
             "en": "11\u00a0kW\u00a0=\u00a03\u00a0×\u00a0230\u00a0V\u00a0×\u00a016\u00a0A, the most common home charging power in Germany.",
             "de": "11\u00a0kW\u00a0=\u00a03\u00a0×\u00a0230\u00a0V\u00a0×\u00a016\u00a0A, die häufigste Ladeleistung zu Hause in Deutschland."
@@ -237,6 +278,8 @@
         {
           "id": "heating-load-old-house",
           "label": { "en": "Design heating load of an unrenovated 1960s single-family house", "de": "Heizlast eines unsanierten Einfamilienhauses der 1960er-Jahre" },
+          "short": { "en": "Heating load of an unrenovated house", "de": "Heizlast eines unsanierten Hauses" },
+          "icon": { "emoji": "🏚️", "motion": "sway" },
           "value": 18000,
           "explanation": {
             "en": "About 18\u00a0kW: 110\u00a0m²\u00a0×\u00a0160\u00a0W/m² (envelope of IWU type EFH_E, −12\u00a0°C design temperature, DIN EN 12831) – the power of nine kettles.",
@@ -246,7 +289,10 @@
         {
           "id": "car-engine",
           "label": { "en": "Car engine at full throttle (136\u00a0PS)", "de": "Automotor unter Volllast (136\u00a0PS)" },
+          "short": { "en": "Car engine at full throttle", "de": "Automotor unter Volllast" },
+          "icon": { "emoji": "🏎️", "motion": "sway" },
           "value": 100000,
+          "familiar": true,
           "explanation": {
             "en": "100\u00a0kW\u00a0=\u00a0136\u00a0PS (1\u00a0PS\u00a0=\u00a0735.5\u00a0W), a typical mid-size car.",
             "de": "100\u00a0kW\u00a0=\u00a0136\u00a0PS (1\u00a0PS\u00a0=\u00a0735,5\u00a0W), ein typisches Mittelklasseauto."
@@ -255,6 +301,8 @@
         {
           "id": "wind-turbine",
           "label": { "en": "Modern onshore wind turbine at rated wind speed", "de": "Moderne Windenergieanlage an Land bei Nennwind" },
+          "short": { "en": "Onshore wind turbine at rated wind", "de": "Windenergieanlage an Land bei Nennwind" },
+          "icon": { "emoji": "💨", "motion": "float" },
           "value": 5000000,
           "explanation": {
             "en": "About 5\u00a0MW: the 635 turbines installed on land in Germany in 2024 averaged 5.1\u00a0MW (3,251\u00a0MW; Deutsche WindGuard 2025).",
@@ -264,6 +312,8 @@
         {
           "id": "ice-train",
           "label": { "en": "ICE 3 high-speed train at full power", "de": "ICE-3-Hochgeschwindigkeitszug unter Volllast" },
+          "short": { "en": "ICE 3 train at full power", "de": "ICE 3 unter Volllast" },
+          "icon": { "emoji": "🚄", "motion": "bounce" },
           "value": 8000000,
           "explanation": {
             "en": "8\u00a0MW traction power (DB class 403), as much as 1.6 wind turbines deliver at rated wind speed.",
@@ -273,6 +323,8 @@
         {
           "id": "nuclear-unit",
           "label": { "en": "Nuclear power plant unit (electrical, Isar 2)", "de": "Kernkraftwerksblock (elektrisch, Isar 2)" },
+          "short": { "en": "Nuclear power plant unit", "de": "Kernkraftwerksblock" },
+          "icon": { "emoji": "☢️", "motion": "spin" },
           "value": 1410000000,
           "explanation": {
             "en": "1.41\u00a0GW (1,410\u00a0MW) net electrical output (Isar 2, shut down in April 2023); its reactor released about 3.95\u00a0GW of heat.",
@@ -282,6 +334,8 @@
         {
           "id": "germany-electricity",
           "label": { "en": "Germany's average electricity consumption", "de": "Deutschlands mittlerer Stromverbrauch" },
+          "short": { "en": "Germany’s average electricity use", "de": "Deutschlands mittlerer Stromverbrauch" },
+          "icon": { "emoji": "🏙️", "motion": "pulse" },
           "value": 60000000000,
           "explanation": {
             "en": "About 60\u00a0GW: gross electricity consumption of 527\u00a0TWh in 2024 divided by 8,784\u00a0hours (AG Energiebilanzen 2025), about 43 nuclear units.",
@@ -291,6 +345,8 @@
         {
           "id": "world-primary-power",
           "label": { "en": "Humanity's average primary energy use", "de": "Mittlerer Primärenergieverbrauch der Menschheit" },
+          "short": { "en": "Humanity’s primary energy use", "de": "Primärenergieverbrauch der Menschheit" },
+          "icon": { "emoji": "🌍", "motion": "spin" },
           "value": 18700000000000,
           "explanation": {
             "en": "About 19\u00a0TW: 592\u00a0EJ in 2024 (Energy Institute, Statistical Review of World Energy 2025) divided by one year.",
@@ -300,6 +356,7 @@
         {
           "id": "sunlight-on-earth",
           "label": { "en": "Sunlight intercepted by the Earth", "de": "Von der Erde aufgefangenes Sonnenlicht" },
+          "icon": { "emoji": "🌅", "motion": "float" },
           "value": 174000000000000000,
           "explanation": {
             "en": "About 174\u00a0PW: solar constant 1,361\u00a0W/m²\u00a0×\u00a0Earth's cross-section π\u00a0×\u00a0(6,371\u00a0km)², about 9,000 times humanity's energy use.",
@@ -309,6 +366,8 @@
         {
           "id": "sun",
           "label": { "en": "Total radiant power of the Sun", "de": "Gesamte Strahlungsleistung der Sonne" },
+          "short": { "en": "Sun", "de": "Sonne" },
+          "icon": { "emoji": "☀️", "motion": "spin" },
           "value": 3.828e26,
           "explanation": {
             "en": "382.8\u00a0YW (3.828\u00a0×\u00a010²⁶\u00a0W, IAU 2015 nominal solar luminosity); the Earth catches less than a billionth of it.",
@@ -327,12 +386,15 @@
         "en": "Sort the amounts of energy in ascending order, smallest first. Quantity: energy in watt-hours (Wh); the values span about 16 orders of magnitude.",
         "de": "Sortiere die Energiemengen aufsteigend, die kleinste zuerst. Größe: Energie in Wattstunden (Wh); die Werte umfassen rund 16 Größenordnungen."
       },
-      "quantity": { "label": { "en": "Energy", "de": "Energie" }, "unit": "Wh", "scale": "logarithmic", "prefixed": true },
+      "quantity": { "label": { "en": "Energy", "de": "Energie" }, "unit": "Wh", "scale": "logarithmic", "prefixed": true, "additive": true },
       "items": [
         {
           "id": "phone-charge",
           "label": { "en": "One full smartphone charge", "de": "Eine volle Smartphone-Ladung" },
+          "short": { "en": "Full smartphone charge", "de": "Volle Smartphone-Ladung" },
+          "icon": { "emoji": "📱", "motion": "bounce" },
           "value": 15,
+          "familiar": true,
           "explanation": {
             "en": "About 15\u00a0Wh: a 4,000\u00a0mAh battery at 3.85\u00a0V stores 15.4\u00a0Wh.",
             "de": "Rund 15\u00a0Wh: ein Akku mit 4.000\u00a0mAh bei 3,85\u00a0V speichert 15,4\u00a0Wh."
@@ -341,7 +403,10 @@
         {
           "id": "boil-water",
           "label": { "en": "Heating 1\u00a0litre of water from 20\u00a0°C to boiling", "de": "1\u00a0Liter Wasser von 20\u00a0°C zum Kochen bringen" },
+          "short": { "en": "Litre of water brought to the boil", "de": "Aufgekochter Liter Wasser" },
+          "icon": { "emoji": "♨️", "motion": "pulse" },
           "value": 93,
+          "familiar": true,
           "explanation": {
             "en": "About 93\u00a0Wh: 4.19\u00a0kJ/(kg·K)\u00a0×\u00a01\u00a0kg\u00a0×\u00a080\u00a0K\u00a0=\u00a0335\u00a0kJ; a 2\u00a0kW kettle needs about 3\u00a0minutes plus losses.",
             "de": "Rund 93\u00a0Wh: 4,19\u00a0kJ/(kg·K)\u00a0×\u00a01\u00a0kg\u00a0×\u00a080\u00a0K\u00a0=\u00a0335\u00a0kJ; ein 2-kW-Wasserkocher braucht dafür knapp 3\u00a0Minuten plus Verluste."
@@ -350,7 +415,9 @@
         {
           "id": "chocolate-bar",
           "label": { "en": "Food energy of a 100\u00a0g chocolate bar", "de": "Brennwert einer 100-g-Tafel Schokolade" },
+          "icon": { "emoji": "🍫", "motion": "flip" },
           "value": 628,
+          "familiar": true,
           "explanation": {
             "en": "About 540\u00a0kcal\u00a0≈\u00a0628\u00a0Wh (1\u00a0kcal\u00a0=\u00a01.163\u00a0Wh) according to the nutrition label.",
             "de": "Rund 540\u00a0kcal\u00a0≈\u00a0628\u00a0Wh (1\u00a0kcal\u00a0=\u00a01,163\u00a0Wh) laut Nährwerttabelle."
@@ -359,7 +426,10 @@
         {
           "id": "daily-food",
           "label": { "en": "Daily food energy of an adult", "de": "Täglicher Nahrungsenergiebedarf eines Erwachsenen" },
+          "short": { "en": "Daily food energy of an adult", "de": "Tagesration eines Erwachsenen" },
+          "icon": { "emoji": "🍽️", "motion": "sway" },
           "value": 2700,
+          "familiar": true,
           "explanation": {
             "en": "About 2,300\u00a0kcal\u00a0≈\u00a02.7\u00a0kWh (reference values of the German Nutrition Society, DGE, for moderate activity, about 1,900–2,500\u00a0kcal); it keeps 100\u00a0W of body heat going for 24\u00a0hours.",
             "de": "Rund 2.300\u00a0kcal\u00a0≈\u00a02,7\u00a0kWh (DGE-Referenzwerte bei mäßiger Aktivität, etwa 1.900–2.500\u00a0kcal); damit laufen 100\u00a0W Körperwärme 24\u00a0Stunden lang."
@@ -368,7 +438,10 @@
         {
           "id": "heating-oil-litre",
           "label": { "en": "One litre of heating oil", "de": "Ein Liter Heizöl" },
+          "short": { "en": "Litre of heating oil", "de": "Liter Heizöl" },
+          "icon": { "emoji": "🛢️", "motion": "sway" },
           "value": 10000,
+          "familiar": true,
           "explanation": {
             "en": "About 10\u00a0kWh: net calorific value 42.6\u00a0MJ/kg\u00a0×\u00a00.845\u00a0kg/l (DIN 51603-1).",
             "de": "Rund 10\u00a0kWh: Heizwert 42,6\u00a0MJ/kg\u00a0×\u00a00,845\u00a0kg/l (DIN 51603-1)."
@@ -377,7 +450,10 @@
         {
           "id": "ev-battery",
           "label": { "en": "Usable capacity of an electric car battery", "de": "Nutzbare Kapazität eines E-Auto-Akkus" },
+          "short": { "en": "Full electric car battery", "de": "Voller E-Auto-Akku" },
+          "icon": { "emoji": "🚙", "motion": "bounce" },
           "value": 60000,
+          "familiar": true,
           "explanation": {
             "en": "About 60\u00a0kWh (e.g. VW ID.3: 58\u00a0kWh net), enough for roughly 350\u00a0km.",
             "de": "Rund 60\u00a0kWh (z. B. VW ID.3: 58\u00a0kWh netto), genug für rund 350\u00a0km."
@@ -386,7 +462,10 @@
         {
           "id": "petrol-tank",
           "label": { "en": "A full 50-litre tank of petrol", "de": "Eine volle 50-Liter-Tankfüllung Benzin" },
+          "short": { "en": "Full tank of petrol", "de": "Volle Tankfüllung Benzin" },
+          "icon": { "emoji": "⛽", "motion": "pulse" },
           "value": 440000,
+          "familiar": true,
           "explanation": {
             "en": "About 440\u00a0kWh: 50\u00a0l\u00a0×\u00a08.8\u00a0kWh/l (42.7\u00a0MJ/kg\u00a0×\u00a00.745\u00a0kg/l), seven times the car battery, yet an engine turns only about a quarter of it into motion.",
             "de": "Rund 440\u00a0kWh: 50\u00a0l\u00a0×\u00a08,8\u00a0kWh/l (42,7\u00a0MJ/kg\u00a0×\u00a00,745\u00a0kg/l), siebenmal der Autoakku, doch ein Motor setzt nur etwa ein Viertel davon in Bewegung um."
@@ -395,6 +474,8 @@
         {
           "id": "household-electricity",
           "label": { "en": "Annual electricity use of a two-person household", "de": "Jahresstromverbrauch eines Zwei-Personen-Haushalts" },
+          "short": { "en": "Annual electricity use of two people", "de": "Jahresstromverbrauch zweier Personen" },
+          "icon": { "emoji": "💡", "motion": "pulse" },
           "value": 2500000,
           "explanation": {
             "en": "About 2.5\u00a0MWh (2,500\u00a0kWh) per year (Stromspiegel für Deutschland).",
@@ -404,6 +485,8 @@
         {
           "id": "heating-demand-house",
           "label": { "en": "Annual heating demand of an unrenovated 1960s single-family house", "de": "Jahres-Heizwärmebedarf eines unsanierten Einfamilienhauses der 1960er-Jahre" },
+          "short": { "en": "Annual heating demand of an old house", "de": "Jahres-Heizwärmebedarf eines Altbaus" },
+          "icon": { "emoji": "🏚️", "motion": "sway" },
           "value": 33000000,
           "explanation": {
             "en": "About 33\u00a0MWh: 110\u00a0m²\u00a0×\u00a0303\u00a0kWh/(m²·a) (IWU German residential building typology 2015, type EFH_E), thirteen times the household electricity.",
@@ -413,6 +496,8 @@
         {
           "id": "wind-turbine-year",
           "label": { "en": "Annual yield of a modern onshore wind turbine", "de": "Jahresertrag einer modernen Windenergieanlage an Land" },
+          "short": { "en": "Annual yield of a wind turbine", "de": "Jahresertrag einer Windenergieanlage" },
+          "icon": { "emoji": "💨", "motion": "float" },
           "value": 10000000000,
           "explanation": {
             "en": "About 10\u00a0GWh: 5\u00a0MW\u00a0×\u00a0about 2,000\u00a0full-load hours, the electricity of about 4,000 two-person households.",
@@ -422,6 +507,8 @@
         {
           "id": "germany-primary-energy",
           "label": { "en": "Germany's annual primary energy consumption", "de": "Jährlicher Primärenergieverbrauch Deutschlands" },
+          "short": { "en": "Germany’s primary energy use per year", "de": "Deutschlands Primärenergie pro Jahr" },
+          "icon": { "emoji": "🏙️", "motion": "pulse" },
           "value": 2925000000000000,
           "explanation": {
             "en": "About 2.925\u00a0PWh (2,925\u00a0TWh): 10,529\u00a0PJ in 2024 (AG Energiebilanzen 2025).",
@@ -431,6 +518,8 @@
         {
           "id": "world-primary-energy",
           "label": { "en": "The world's annual primary energy consumption", "de": "Jährlicher Primärenergieverbrauch der Welt" },
+          "short": { "en": "Global primary energy use per year", "de": "Weltweite Primärenergie pro Jahr" },
+          "icon": { "emoji": "🌍", "motion": "spin" },
           "value": 164400000000000000,
           "explanation": {
             "en": "About 164.4\u00a0PWh (164,400\u00a0TWh): 592\u00a0EJ in 2024 (Energy Institute, Statistical Review of World Energy 2025). The Sun delivers this much to the Earth in about one hour.",

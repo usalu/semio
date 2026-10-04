@@ -30,7 +30,9 @@ semio-framework-async = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
+# 🎯️ `float_roundtrip`: catalogs, commands and stored events are read correctly rounded, as the device reads them, so
+# the proctor deals the device's sheets (`3.828e26` is otherwise read one double low).
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 axum = { version = "0.8" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "fs", "signal", "sync"] }
 # 🗄️ The workspace's one SQLite binding (a workspace may link a single native `sqlite3`), bundled so

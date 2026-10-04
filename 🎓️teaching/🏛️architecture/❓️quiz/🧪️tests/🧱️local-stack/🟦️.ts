@@ -7,7 +7,11 @@
  * data of another storage format: it reads the format row the proctor stamps (the proctor's own source is the oracle
  * for the format it reads), sets the launcher's own disposable folder aside and starts fresh, saying so once, and leaves
  * a folder the developer named alone, with one message that says how to go on — the dev command ends over it with that
- * line and status 1, not with a stack trace.
+ * line and status 1, not with a stack trace. The proctor the dev command runs is supervised: built anew for a changed
+ * Rust source of a crate it is built from (cargo's own resolution is the oracle for which those are), launched anew for
+ * a changed catalog or quiz, and launched again ever more patiently when it ends by itself. And the dev server survives
+ * its proctor: a proctor that answers an upgrade without upgrading — as one that restarts or goes away does — never
+ * takes it along, also where sockets lack `destroySoon` (Bun 1.3), whose soft ending is held to Node's own.
  * @see ../../🧱️stack/🟦️.ts — the stack under test
  * @see ../../../../🛂️proctor/🏗️bootstrap/🟦️.ts — the dev launcher of the proctor
  * @see ../../../../🛂️proctor/🔨️modules/🗄️storage/🦀️.rs — `FORMAT_SCHEMA`, `FORMAT_VERSION`
@@ -15,14 +19,17 @@
  * @see https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site */
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { createServer } from "node:http";
+import { connect, createServer as createNetServer, type AddressInfo, type Socket } from "node:net";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { preview } from "vite";
+import { createServer as createViteServer, preview } from "vite";
+import { destroySoon, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { afterEach, describe, expect, it } from "vitest";
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
 import { QUIZ_E2E_PORTS, endToEndPlan } from "../../🎭️e2e/🟦️.ts";
-import { SITE_MEDIA_TYPES, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../../🧱️stack/🟦️.ts";
-import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { SITE_MEDIA_TYPES, awaitReady, catalogFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
+import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 
 const scratch: string[] = [];
 const closing: (() => Promise<unknown>)[] = [];
@@ -94,6 +101,31 @@ describe("the command line of the end-to-end gate", () => {
     expect(new Set(ports).size).toBe(ports.length);
     for (const port of ports) expect([6061, deployment.proctor.port]).not.toContain(port);
   });
+});
+
+describe("the supervision of the dev proctor", () => {
+  it("launches a proctor that ended by itself again after one second, then ever more patiently, at most every half minute", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 20].map(relaunchDelay)).toEqual([1_000, 2_000, 4_000, 8_000, 16_000, 30_000, 30_000, 30_000]);
+  });
+
+  it("follows the catalog and every quiz it lists, and the catalog alone when it cannot be read", () => {
+    const root = directory({ "site/🔣️.json": JSON.stringify({ quizzes: ["../energy/a/🔣️.json", "b.json", 3] }), "broken/🔣️.json": "{" });
+    expect(catalogFiles(join(root, "site", "🔣️.json"))).toEqual([join(root, "site", "🔣️.json"), resolve(root, "energy", "a", "🔣️.json"), join(root, "site", "b.json")]);
+    expect(catalogFiles(join(root, "broken", "🔣️.json"))).toEqual([join(root, "broken", "🔣️.json")]);
+  });
+
+  it("builds anew for a changed Rust source or manifest only, never for build output or installed packages", () => {
+    expect(["🔨️modules/🎭️actors/🦀️.rs", "📦️packages\\🦀️rust\\Cargo.toml", "🧬️schema/🦀️.rs"].map(proctorSourceChanged)).toEqual([true, true, true]);
+    expect(["🧬️schema/🔣️.json", "🟦️.ts", "target/debug/build/x.rs", "node_modules/a/b.rs", "dist/Cargo.toml", "Cargo.lock"].map(proctorSourceChanged)).toEqual([false, false, false, false, false, false]);
+  });
+
+  it("follows the owner of every crate of this repository the proctor is built from, as cargo resolves it, and nothing twice", async () => {
+    const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
+    const roots = await proctorSourceDirectories(repoRoot);
+    for (const owner of [["🎓️teaching", "🛂️proctor"], ["🧰️framework", "🛍️products", "❓️quiz"], ["🧰️framework", "🛍️products", "🖥️server"]]) expect(roots).toContain(join(repoRoot, ...owner));
+    expect(roots.every((root) => root.startsWith(repoRoot) && existsSync(root) && !root.includes("📦️packages"))).toBe(true);
+    expect(roots.some((root, index) => roots.some((other, at) => at !== index && root.startsWith(`${other}${sep}`)))).toBe(false);
+  }, 120_000);
 });
 
 describe("an owned command of the local stack", () => {
@@ -277,6 +309,66 @@ describe("development data of another storage format", () => {
       process.exitCode = status;
     }
   });
+});
+
+describe("a dev server whose proctor goes away while it proxies a socket", () => {
+  /** 🔌️ A socket pair on loopback: what `serve` is handed for each connection, and the client end's events in order. */
+  async function socketPair(serve: (socket: Socket) => void): Promise<string[]> {
+    const seen: string[] = [];
+    const server = createNetServer(serve);
+    closing.push(() => new Promise((closed) => server.close(closed)));
+    await new Promise<void>((listening) => server.listen(0, "127.0.0.1", listening));
+    const client = connect((server.address() as AddressInfo).port, "127.0.0.1");
+    client.on("data", (chunk) => seen.push(`data:${String(chunk)}`));
+    await new Promise<void>((closed) => {
+      client.on("end", () => seen.push("end"));
+      client.on("close", () => {
+        seen.push("close");
+        closed();
+      });
+    });
+    return seen;
+  }
+
+  it("ends a socket softly as Node's own destroySoon does: what was written arrives, then the end, then the close", async () => {
+    const ours = await socketPair((socket) => {
+      socket.write("bye");
+      destroySoon(socket);
+    });
+    const node = await socketPair((socket) => {
+      socket.write("bye");
+      (socket as Socket & { destroySoon(): void }).destroySoon();
+    });
+    expect(ours).toEqual(node);
+    expect(ours).toEqual(["data:bye", "end", "close"]);
+  });
+
+  it("keeps serving when the proctor answers an upgrade without upgrading, also where sockets lack destroySoon", async () => {
+    const backend = createServer((_, answer) => answer.end("http"));
+    backend.on("upgrade", (_request, socket) => socket.end("HTTP/1.1 503 Service Unavailable\r\ncontent-length: 4\r\nconnection: close\r\n\r\ngone"));
+    closing.push(() => new Promise((closed) => backend.close(closed)));
+    await new Promise<void>((listening) => backend.listen(0, "127.0.0.1", listening));
+    const root = directory({ "index.html": "<!doctype html><title>site</title>" });
+    const site = await createViteServer({ configFile: false, root, logLevel: "silent", plugins: [semioServeUpgradeVitePlugin()], server: { host: "127.0.0.1", port: 0, hmr: false, proxy: { "/scopes": { target: `http://127.0.0.1:${(backend.address() as AddressInfo).port}`, ws: true } } } });
+    closing.push(() => site.close());
+    site.httpServer!.prependListener("upgrade", (_request: unknown, socket: { destroySoon?: unknown }) => {
+      socket.destroySoon = undefined;
+    });
+    await site.listen();
+    const origin = site.resolvedUrls!.local[0]!.replace(/\/$/u, "");
+    const port = Number(new URL(origin).port);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const answered = await new Promise<string>((done) => {
+        let text = "";
+        const socket = connect(port, "127.0.0.1", () => socket.write("GET /scopes/a/presence/ws HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n"));
+        socket.on("data", (chunk) => (text += String(chunk)));
+        socket.on("close", () => done(text));
+        socket.on("error", () => done(text));
+      });
+      expect(answered).toMatch(/^HTTP\/1\.1 503/u);
+    }
+    expect(await httpAnswers(origin, 5_000)).toBe(true);
+  }, 30_000);
 });
 
 describe("the static origin of the release rehearsal", () => {

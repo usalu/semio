@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use pets::serde_json::{self, json, Map, Value};
-    use pets::{clamp, cos_turns, lerp, sin_turns, smoothstep};
+    use pets::{atan_turns, clamp, cos_turns, fast_neg_exp, lerp, sin_turns, smoothstep};
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
     const VECTORS: &str = "shared://📐️turn-trigonometry/🔣️.json";
@@ -90,13 +90,46 @@ mod subject {
     pub fn smoothsteps(ctx: &Context) -> Result<Outcome, String> {
         keyed(&group(ctx, "smoothsteps")?, |vector| Ok(json!(smoothstep(number(vector, "amount")?))))
     }
+
+    /// 🎯️ The direction of every committed point in turns, with its bit pattern.
+    pub fn arctangents(ctx: &Context) -> Result<Outcome, String> {
+        keyed(&group(ctx, "arctangents")?, |vector| {
+            let turns = atan_turns(number(vector, "y")?, number(vector, "x")?);
+            Ok(json!({"turns": turns, "bits": bits(turns)}))
+        })
+    }
+
+    /// 🕸️ The directions of every point `(column × step, row × step)` of each committed lattice, row by row from `−span` to `span`.
+    pub fn arctangent_grids(ctx: &Context) -> Result<Outcome, String> {
+        keyed(&group(ctx, "arctangentGrids")?, |vector| {
+            let (span, step) = (whole(vector, "span")?, number(vector, "step")?);
+            let turns: Vec<f64> = (-span..=span).flat_map(|row| (-span..=span).map(move |column| atan_turns(row as f64 * step, column as f64 * step))).collect();
+            Ok(json!(turns))
+        })
+    }
+
+    /// 📉️ The rational decay of every committed argument, with its bit pattern.
+    pub fn decays(ctx: &Context) -> Result<Outcome, String> {
+        keyed(&group(ctx, "decays")?, |vector| {
+            let value = fast_neg_exp(number(vector, "x")?);
+            Ok(json!({"value": value, "bits": bits(value)}))
+        })
+    }
 }
 
 /// 🧭️ Subject role only — the oracle is numpy in `🐍️.py`.
 pub fn adapter() -> Adapter {
     let built = Adapter::new("rust");
     #[cfg(feature = "sut")]
-    let built =
-        built.subject("angles", subject::angles).subject("bit-patterns", subject::bit_patterns).subject("sweeps", subject::sweeps).subject("clamps", subject::clamps).subject("lerps", subject::lerps).subject("smoothsteps", subject::smoothsteps);
+    let built = built
+        .subject("angles", subject::angles)
+        .subject("bit-patterns", subject::bit_patterns)
+        .subject("sweeps", subject::sweeps)
+        .subject("clamps", subject::clamps)
+        .subject("lerps", subject::lerps)
+        .subject("smoothsteps", subject::smoothsteps)
+        .subject("arctangents", subject::arctangents)
+        .subject("arctangent-grids", subject::arctangent_grids)
+        .subject("decays", subject::decays);
     built
 }

@@ -123,7 +123,7 @@ fn envelope(command: &Value) -> Value {
     json!({
         "commandId": command["id"],
         "kind": format!("quiz.{kind}"),
-        "version": 1,
+        "version": quiz::WIRE_VERSION,
         "target": target,
         "scope": TENANT,
         "principal": principal,
@@ -179,7 +179,7 @@ fn rejected(base: &str, sent: &Value) -> String {
 
 fn query_envelope(query: &Value) -> Value {
     let kind = query["type"].as_str().expect("type");
-    json!({ "queryId": id(0), "kind": format!("quiz.{kind}"), "version": 1, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null })
+    json!({ "queryId": id(0), "kind": format!("quiz.{kind}"), "version": quiz::WIRE_VERSION, "scope": TENANT, "principal": { "kind": "anonymous" }, "arguments": bytes(&query.to_string()), "consistency": { "kind": "authority" }, "cursor": null })
 }
 
 fn query(base: &str, query: &Value) -> (u16, Value) {
@@ -324,48 +324,83 @@ fn quiz_document(quiz: &str) -> Value {
     serde_json::from_str(&std::fs::read_to_string(fixtures().join(file)).expect("quiz file")).expect("quiz json")
 }
 
-/// 💯️ The perfect answer to one presented task, read off the quiz file's solutions.
+/// 💯️ The perfect answer to one presented task, read off the quiz file's solutions: the keys
+/// assigned where the sheet shows them, the true values guessed where it hides them.
 fn perfect(quiz: &Value, presented: &Value) -> Value {
     let task = quiz["tasks"].as_array().expect("tasks").iter().find(|task| task["id"] == presented["id"]).expect("task");
     let solution = |item: &Value| task["items"].as_array().expect("items").iter().find(|candidate| candidate["id"] == item["id"]).expect("item").clone();
     let shown = presented["items"].as_array().expect("sheet items");
+    let key = |item: &Value| item["id"].as_str().expect("id").to_string();
     match presented["kind"].as_str().expect("kind") {
         "sorting" => {
             let mut order: Vec<Value> = shown.iter().map(solution).collect();
             order.sort_by(|left, right| left["value"].as_f64().unwrap_or_default().total_cmp(&right["value"].as_f64().unwrap_or_default()));
-            json!({ "kind": "sorting", "order": order.iter().map(|item| item["id"].clone()).collect::<Vec<_>>() })
+            let mut answer = json!({ "kind": "sorting", "order": order.iter().map(|item| item["id"].clone()).collect::<Vec<_>>() });
+            if presented.get("keys").is_none() {
+                answer["guesses"] = Value::Object(order.iter().map(|item| (key(item), item["value"].clone())).collect());
+            }
+            answer
         }
-        "classification" => json!({ "kind": "classification", "assignments": shown.iter().map(|item| (item["id"].as_str().expect("id").to_string(), solution(item)["category"].clone())).collect::<serde_json::Map<_, _>>() }),
+        "classification" => json!({ "kind": "classification", "assignments": shown.iter().map(|item| (key(item), solution(item)["category"].clone())).collect::<serde_json::Map<_, _>>() }),
         _ => {
-            let dimensions = presented["dimensions"].as_array().expect("dimensions").iter().map(|dimension| {
-                let cards = dimension["cards"].as_array().expect("cards");
-                let mut used = Vec::new();
-                let assignment: serde_json::Map<String, Value> = shown
-                    .iter()
-                    .map(|item| {
-                        let value = &solution(item)["values"][dimension["id"].as_str().expect("dimension id")];
-                        let card = (0..cards.len()).find(|card| cards[*card].as_f64() == value.as_f64() && !used.contains(card)).expect("a card of that value");
-                        used.push(card);
-                        (item["id"].as_str().expect("id").to_string(), json!(card))
-                    })
-                    .collect();
-                (dimension["id"].as_str().expect("dimension id").to_string(), Value::Object(assignment))
-            });
-            json!({ "kind": "matching", "assignments": dimensions.collect::<serde_json::Map<_, _>>() })
+            let mut answer = json!({ "kind": "matching" });
+            for dimension in presented["dimensions"].as_array().expect("dimensions") {
+                let id = dimension["id"].as_str().expect("dimension id");
+                let value = |item: &Value| solution(item)["values"][id].clone();
+                let (member, given): (&str, serde_json::Map<String, Value>) = match dimension["cards"].as_array() {
+                    Some(cards) => {
+                        let mut used = Vec::new();
+                        let assigned = shown.iter().map(|item| {
+                            let card = (0..cards.len()).find(|card| cards[*card].as_f64() == value(item).as_f64() && !used.contains(card)).expect("a card of that value");
+                            used.push(card);
+                            (key(item), json!(card))
+                        });
+                        ("assignments", assigned.collect())
+                    }
+                    None => ("guesses", shown.iter().map(|item| (key(item), value(item))).collect()),
+                };
+                answer[member][id] = Value::Object(given);
+            }
+            answer
         }
     }
 }
 
-fn record(learner: &str, run: &str, task: &Value, answer: &Value, seed: u32) -> Value {
-    json!({ "type": "record-answer", "id": id(seed), "learner": learner, "run": run, "task": task["id"], "answer": answer })
+/// 🕰️ The wall clock in milliseconds: the clock the proctor in this process decides by.
+fn now() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as u64)
 }
 
-/// 🏁️ Play a whole perfect run and return the submission's events.
-fn play(base: &str, learner: &str, run: &str, quiz: &str, seed: u32) -> Vec<Value> {
-    accepted(base, &json!({ "type": "start-run", "id": id(seed), "learner": learner, "run": run, "quiz": quiz }));
+/// ✍️ A `record-answer` the learner made just now.
+fn record(learner: &str, run: &str, task: &Value, answer: &Value, seed: u32) -> Value {
+    json!({ "type": "record-answer", "id": id(seed), "learner": learner, "run": run, "task": task["id"], "answer": answer, "at": now() })
+}
+
+/// 🎬️ A `start-run` of `quiz` at `challenge` the learner made just now.
+fn start(learner: &str, run: &str, quiz: &str, challenge: &str, seed: u32) -> Value {
+    json!({ "type": "start-run", "id": id(seed), "learner": learner, "run": run, "quiz": quiz, "challenge": challenge, "at": now() })
+}
+
+/// ⏱️ An `open-task` the device dates `at`.
+fn open_task(learner: &str, run: &str, task: &Value, at: u64, seed: u32) -> Value {
+    json!({ "type": "open-task", "id": id(seed), "learner": learner, "run": run, "task": task["id"], "at": at })
+}
+
+/// 📤️ A `submit-run`.
+fn submit(learner: &str, run: &str, seed: u32) -> Value {
+    json!({ "type": "submit-run", "id": id(seed), "learner": learner, "run": run })
+}
+
+/// 🏁️ Play a whole perfect run at `challenge` — on a timed run opening each task right before its
+/// answer — and return the submission's events.
+fn play(base: &str, learner: &str, run: &str, quiz: &str, challenge: &str, seed: u32) -> Vec<Value> {
+    accepted(base, &start(learner, run, quiz, challenge, seed));
     let sheet = view(base, &json!({ "type": "run", "run": run }))["sheet"].clone();
     let document = quiz_document(quiz);
     for (index, task) in sheet["tasks"].as_array().expect("tasks").iter().enumerate() {
+        if task.get("seconds").is_some() {
+            accepted(base, &open_task(learner, run, task, now(), seed + 30 + index as u32));
+        }
         accepted(base, &record(learner, run, task, &perfect(&document, task), seed + 1 + index as u32));
     }
     accepted(base, &json!({ "type": "submit-run", "id": id(seed + 50), "learner": learner, "run": run }))
@@ -381,6 +416,8 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let (status, _, instance) = get(&base, "/instance", &[]);
     let instance: Value = serde_json::from_str(&instance).expect("instance json");
     assert_eq!((status, instance["id"].as_str(), instance["modules"][0]["id"].as_str()), (200, Some("teaching-proctor"), Some("teaching.proctor")));
+    let declared: Vec<(String, u64)> = ["commands", "queries"].iter().flat_map(|group| instance["modules"][0][group].as_array().expect("kinds").iter().map(|kind| (kind["kind"].as_str().expect("kind").to_string(), kind["version"].as_u64().expect("version")))).collect();
+    assert!(declared.len() == 12 && declared.iter().all(|(kind, version)| kind.starts_with("quiz.") && *version == u64::from(quiz::WIRE_VERSION)), "a client agrees on the contract by the versions GET /instance declares: {declared:?}");
 
     let catalog = view(&base, &json!({ "type": "catalog" }));
     assert_eq!(catalog["id"], TENANT);
@@ -413,12 +450,12 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     assert_eq!(serde_json::from_str::<Vec<Value>>(&registered).expect("event records").len(), 1, "recalling a handle appended nothing to its learner");
 
     let run = id(0x100);
-    let events = accepted(&base, &json!({ "type": "start-run", "id": id(10), "learner": ada, "run": run, "quiz": "power" }));
-    assert_eq!((events[0]["type"].as_str(), events[0]["revision"].as_str().map(str::len)), (Some("run-started"), Some(64)));
+    let events = accepted(&base, &start(&ada, &run, "power", "medium", 10));
+    assert_eq!((events[0]["type"].as_str(), events[0]["challenge"].as_str(), events[0]["revision"].as_str().map(str::len)), (Some("run-started"), Some("medium"), Some(64)));
     let open = view(&base, &json!({ "type": "run", "run": run }));
     assert_eq!((open["status"].as_str(), open["sheet"]["tasks"].as_array().map(Vec::len), open["answers"].as_object().map(|answers| answers.len())), (Some("open"), Some(2), Some(0)));
-    assert_eq!(open["sheet"]["seed"], events[0]["seed"]);
-    assert!(!open["sheet"].to_string().contains("\"value\""), "the sheet carries no solutions");
+    assert_eq!((&open["sheet"]["seed"], open["sheet"]["challenge"].as_str()), (&events[0]["seed"], Some("medium")));
+    assert!(!open["sheet"].to_string().contains("\"value\""), "the sheet never says which item a number belongs to");
 
     let document = quiz_document("power");
     let tasks = open["sheet"]["tasks"].as_array().expect("tasks").clone();
@@ -438,16 +475,30 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     assert_eq!(submitted[0]["result"]["score"], json!(1.0));
     assert_eq!(submitted.iter().skip(1).map(|event| event["badge"].as_str().expect("badge")).collect::<Vec<_>>(), ["perfect-power", "sorter"]);
     assert_eq!(rejected(&base, &json!({ "type": "submit-run", "id": id(25), "learner": ada, "run": run })), "run-closed");
-    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(26), "learner": ada, "run": id(0x101), "quiz": "cooling" })), "unknown-quiz");
-    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(27), "learner": id(0xdead), "run": id(0x102), "quiz": "power" })), "unknown-learner");
+    assert_eq!(rejected(&base, &start(&ada, &id(0x101), "cooling", "medium", 26)), "unknown-quiz");
+    assert_eq!(rejected(&base, &start(&id(0xdead), &id(0x102), "power", "medium", 27)), "unknown-learner");
+    let mut unchallenged = start(&ada, &id(0x103), "power", "medium", 28);
+    unchallenged.as_object_mut().expect("a command").remove("challenge");
+    assert!(rejected(&base, &unchallenged).starts_with("command-malformed"), "a run starts at a challenge");
+    unchallenged["challenge"] = json!("legendary");
+    assert!(rejected(&base, &unchallenged).starts_with("command-malformed"), "one of the four");
+    let mut undated = start(&ada, &id(0x103), "power", "hard", 29);
+    undated.as_object_mut().expect("a command").remove("at");
+    assert!(rejected(&base, &undated).starts_with("command-malformed"), "a run starts at the instant the device claims");
+    for (at, refusal) in [(json!(-1), "command-malformed"), (json!(1.5), "command-malformed"), (json!(u64::MAX), "id-invalid"), (json!(quiz::MAX_TIMESTAMP + 1), "id-invalid")] {
+        undated["at"] = at.clone();
+        assert!(rejected(&base, &undated).starts_with(refusal), "an instant {at} beyond a safe integer is refused: {refusal}");
+    }
 
     let finished = view(&base, &json!({ "type": "run", "run": run }));
-    assert_eq!((finished["status"].as_str(), finished["result"]["score"].as_f64(), finished["submittedAt"].is_u64()), (Some("submitted"), Some(1.0), true));
+    assert_eq!((finished["status"].as_str(), finished["result"]["score"].as_f64(), finished["result"]["challenge"].as_str(), finished["result"]["points"].as_f64(), finished["submittedAt"].is_u64()), (Some("submitted"), Some(1.0), Some("medium"), Some(200.0), true));
     let learner = view(&base, &json!({ "type": "learner", "learner": ada }));
-    assert_eq!((learner["best"]["power"].as_f64(), learner["total"].as_f64()), (Some(1.0), Some(100.0)));
+    assert_eq!((&learner["best"]["power"], learner["total"].as_f64()), (&json!({ "challenge": "medium", "score": 1.0, "points": 200.0 }), Some(200.0)));
+    assert_eq!((learner["runs"][0]["challenge"].as_str(), learner["runs"][0]["points"].as_f64()), (Some("medium"), Some(200.0)));
     assert_eq!(learner["badges"].as_array().expect("badges").iter().map(|award| award["badge"].as_str().expect("badge")).collect::<Vec<_>>(), ["perfect-power", "sorter"]);
     let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": ada }));
-    assert_eq!(board["rows"].as_array().expect("rows").iter().map(|row| (row["rank"].as_u64(), row["tag"].as_str(), row["total"].as_f64())).collect::<Vec<_>>(), [(Some(1), Some(quiz::learner_tag(&ada).as_str()), Some(100.0))]);
+    assert_eq!(board["rows"].as_array().expect("rows").iter().map(|row| (row["rank"].as_u64(), row["tag"].as_str(), row["total"].as_f64())).collect::<Vec<_>>(), [(Some(1), Some(quiz::learner_tag(&ada).as_str()), Some(200.0))]);
+    assert_eq!(board["rows"][0]["best"], learner["best"], "a row names the challenge and the points of each best");
     assert_eq!((board["learners"].as_u64(), &board["own"]), (Some(1), &board["rows"][0]), "the board counts the ranked learners and answers the caller's own row");
     assert_eq!(board.as_object().map(|board| board.keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>()), Some(["learners", "own", "period", "rows", "submissions"].into()), "the all-time board is exactly its period, its top rows, its counts and the caller's row");
     assert_eq!((board["period"].as_str(), board["submissions"].as_u64()), (Some("all-time"), Some(1)));
@@ -485,15 +536,15 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let after = (view(&base, &json!({ "type": "learner", "learner": ada })), view(&base, &json!({ "type": "run", "run": run })), view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": ada })), view(&base, &json!({ "type": "handle", "handle": " ADA  lovelace" })));
     assert_eq!(after, before, "the reopened SQLite file answers the same views");
     assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(6), "learner": other, "identity": { "kind": "pseudonym", "handle": "ADA LOVELACE" } })), "handle-claimed", "the handle is still held after a restart");
-    let completed = play(&base, &ada, &id(0x200), "homes", 30);
+    let completed = play(&base, &ada, &id(0x200), "homes", "medium", 30);
     assert!(completed.iter().any(|event| event["badge"] == "complete"), "{completed:?}");
     let (_, _, stream) = get(&base, &format!("/actors/{TENANT}/quiz-learner/{ada}/events"), &[]);
     let sequences: Vec<u64> = serde_json::from_str::<Vec<Value>>(&stream).expect("records").iter().map(|record| record["seq"].as_u64().expect("seq")).collect();
     assert_eq!(sequences, (1..=sequences.len() as u64).collect::<Vec<_>>(), "the restarted authority appends after its history");
     let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time" }));
-    assert_eq!((board["rows"][0]["total"].as_f64(), board["rows"][0]["badges"].as_array().map(Vec::len), board["submissions"].as_u64()), (Some(200.0), Some(3), Some(2)));
+    assert_eq!((board["rows"][0]["total"].as_f64(), board["rows"][0]["badges"].as_array().map(Vec::len), board["submissions"].as_u64()), (Some(400.0), Some(3), Some(2)));
     let homes = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "quiz": "homes", "learner": ada }));
-    assert_eq!((homes["own"]["total"].as_f64(), homes["own"]["best"].clone(), homes["own"]["runs"].as_u64(), homes["own"]["badges"].clone(), homes["submissions"].as_u64()), (Some(100.0), json!({ "homes": 1.0 }), Some(1), json!(["complete"]), Some(2)), "the board of one quiz is made of that quiz's runs and the badges they earned: {homes}");
+    assert_eq!((homes["own"]["total"].as_f64(), homes["own"]["best"].clone(), homes["own"]["runs"].as_u64(), homes["own"]["badges"].clone(), homes["submissions"].as_u64()), (Some(200.0), json!({ "homes": { "challenge": "medium", "score": 1.0, "points": 200.0 } }), Some(1), json!(["complete"]), Some(2)), "the board of one quiz is made of that quiz's runs and the badges they earned: {homes}");
     running.shut_down();
 }
 
@@ -656,8 +707,11 @@ fn learners_see_what_the_others_think_live_and_what_they_answered() {
     share(&mut thinker, &revised);
     until(&mut peer, |frame| carries(frame, &thinker_session, &revised));
     until(&mut home, |frame| sees(frame, &thinking, &thinker_session, &revised));
-    share(&mut thinker, &json!({ "tag": ada_tag, "answers": { "sources": { "kind": "matching", "values": { "hours": { "rooftop-pv": 10000 } } } } }));
-    assert_eq!(refusal(&mut thinker), "value-unknown /answers/sources/values/hours/rooftop-pv");
+    share(&mut thinker, &json!({ "tag": ada_tag, "answers": { "sources": { "kind": "matching", "values": { "capacity": { "rooftop-pv": -10000 } } } } }));
+    assert_eq!(refusal(&mut thinker), "value-invalid /answers/sources/values/capacity/rooftop-pv");
+    let guessing = json!({ "tag": ada_tag, "answers": { "appliances": { "kind": "sorting", "order": ["laptop", "kettle"], "guesses": { "laptop": 60, "kettle": 2200 } }, "sources": { "kind": "matching", "values": { "capacity": { "rooftop-pv": 12000 }, "hours": { "rooftop-pv": 1000 } } } } });
+    share(&mut thinker, &guessing);
+    until(&mut peer, |frame| carries(frame, &thinker_session, &guessing));
 
     let mut dragger = presence(address, &quiz_room, "run", &local).expect("joins the quiz room");
     let (dragger_session, _) = welcome(&mut dragger);
@@ -680,13 +734,19 @@ fn learners_see_what_the_others_think_live_and_what_they_answered() {
     assert_eq!(serde_json::from_str::<Value>(&crowd(&base)).expect("crowd json")["runs"], 0, "a quiz nobody submitted has an empty crowd");
     assert_eq!(query(&base, &json!({ "type": "crowd", "quiz": "cooling" })).0, 404);
     let (ada_run, grace_run) = (id(0x100), id(0x101));
-    play(&base, &ada, &ada_run, "power", 100);
-    accepted(&base, &json!({ "type": "start-run", "id": id(40), "learner": grace, "run": grace_run, "quiz": "power" }));
+    play(&base, &ada, &ada_run, "power", "medium", 100);
+    accepted(&base, &start(&grace, &grace_run, "power", "hard", 40));
     let document = quiz_document("power");
     for (index, task) in view(&base, &json!({ "type": "run", "run": grace_run }))["sheet"]["tasks"].as_array().expect("tasks").iter().enumerate() {
         let mut answer = perfect(&document, task);
         if let Some(order) = answer.get_mut("order").and_then(Value::as_array_mut) {
             order.reverse();
+            let mut values: Vec<f64> = answer["guesses"].as_object().expect("guesses").values().map(|value| value.as_f64().expect("a guess")).collect();
+            values.sort_by(f64::total_cmp);
+            answer["guesses"] = Value::Object(answer["order"].as_array().expect("order").iter().zip(values).map(|(item, value)| (item.as_str().expect("id").to_string(), json!(value))).collect());
+        }
+        for guessed in answer.get_mut("guesses").and_then(Value::as_object_mut).into_iter().flat_map(|dimensions| dimensions.values_mut()).filter_map(Value::as_object_mut) {
+            guessed.values_mut().for_each(|guess| *guess = json!(guess.as_f64().expect("a guess") * 1.5));
         }
         accepted(&base, &record(&grace, &grace_run, task, &answer, 41 + index as u32));
     }
@@ -712,6 +772,394 @@ fn learners_see_what_the_others_think_live_and_what_they_answered() {
 
     let running = boot(&data.0, development());
     assert_eq!(crowd(&running.base), oracle, "the crowd survives a restart");
+    running.shut_down();
+}
+
+/// 🧩️ The presented task of `kind` in the sheet of a run view.
+fn task_of(run: &Value, kind: &str) -> Value {
+    run["sheet"]["tasks"].as_array().expect("tasks").iter().find(|task| task["kind"] == kind).expect("a task of that kind").clone()
+}
+
+#[test]
+fn every_challenge_deals_its_own_sheet_and_earns_its_own_points() {
+    let data = scratch("challenges");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let ada = id(0xada);
+    accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada" } }));
+    let (power, homes) = (quiz_document("power"), quiz_document("homes"));
+    let run_view = |run: &str| view(&base, &json!({ "type": "run", "run": run }));
+    let mut keys: Vec<f64> = power["tasks"][0]["items"].as_array().expect("items").iter().map(|item| item["value"].as_f64().expect("a value")).collect();
+    keys.sort_by(f64::total_cmp);
+
+    let easy = id(0x100);
+    accepted(&base, &start(&ada, &easy, "power", "easy", 10));
+    let opened = run_view(&easy);
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    assert_eq!((&sorting["keys"], opened["sheet"]["challenge"].as_str()), (&json!(keys), Some("easy")), "an easy sheet shows the ascending keys of a sorting");
+    assert!(matching["dimensions"].as_array().expect("dimensions").iter().all(|dimension| dimension["cards"].is_array()), "and the cards of a matching");
+    assert!(opened.get("opened").is_none() && opened.get("hints").is_none() && !opened["sheet"].to_string().contains("\"seconds\""), "an untimed run without answers has neither a clock nor hints: {opened}");
+    let mut reversed = perfect(&power, &sorting);
+    reversed["order"].as_array_mut().expect("order").reverse();
+    accepted(&base, &record(&ada, &easy, &sorting, &reversed, 11));
+    assert_eq!(
+        run_view(&easy)["hints"]["appliances"],
+        json!([
+            { "kind": "compare", "item": "heat-pump", "other": "phone-charger", "factor": 5.0 / 3000.0, "verdict": "reversed" },
+            { "kind": "compare", "item": "kettle", "other": "phone-charger", "factor": 50.0 / 3000.0, "verdict": "reversed" },
+            { "kind": "compare", "item": "phone-charger", "other": "heat-pump", "factor": 3000.0 / 5.0, "verdict": "reversed" },
+        ]),
+        "with every key far off and the order reversed, each claim points the wrong way; of the four misses the three most wrong stand (the kettle's ties with the laptop's and comes first), in the learner's order"
+    );
+    accepted(&base, &record(&ada, &easy, &sorting, &perfect(&power, &sorting), 12));
+    assert!(run_view(&easy).get("hints").is_none(), "a right answer earns no hint");
+    accepted(&base, &record(&ada, &easy, &matching, &perfect(&power, &matching), 13));
+    let submitted = accepted(&base, &submit(&ada, &easy, 14));
+    let result = submitted[0]["result"].clone();
+    assert_eq!((result["challenge"].as_str(), result["score"].as_f64(), result["points"].as_f64()), (Some("easy"), Some(1.0), Some(100.0)));
+    assert_eq!(submitted[1..].iter().map(|event| event["badge"].as_str().expect("a badge")).collect::<Vec<_>>(), ["sorter"], "a perfect easy run earns no badge that asks for medium or harder");
+
+    let medium = id(0x101);
+    accepted(&base, &start(&ada, &medium, "power", "medium", 20));
+    let opened = run_view(&medium);
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    assert_eq!(sorting["keys"], json!(keys), "a medium sheet shows the keys as well");
+    let mut guessed = perfect(&power, &sorting);
+    guessed["guesses"] = json!({ "kettle": 2000 });
+    assert_eq!(rejected(&base, &record(&ada, &medium, &sorting, &guessed, 21)), "answer-invalid", "where the keys show there is nothing to guess");
+    accepted(&base, &record(&ada, &medium, &sorting, &reversed, 22));
+    assert!(run_view(&medium).get("hints").is_none(), "a medium run gives no hints");
+    accepted(&base, &record(&ada, &medium, &matching, &perfect(&power, &matching), 23));
+    let result = accepted(&base, &submit(&ada, &medium, 24))[0]["result"].clone();
+    assert_eq!((result["challenge"].as_str(), result["score"].as_f64(), result["points"].as_f64()), (Some("medium"), Some(0.5), Some(100.0)), "a reversed sorting and a perfect matching: {result}");
+
+    let hard = id(0x102);
+    accepted(&base, &start(&ada, &hard, "power", "hard", 30));
+    let opened = run_view(&hard);
+    let sheet = opened["sheet"].to_string();
+    assert!(!sheet.contains("\"value\"") && !sheet.contains("\"keys\"") && !sheet.contains("\"cards\"") && !sheet.contains("\"seconds\""), "a hard sheet carries no number at all: {sheet}");
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    assert_eq!(rejected(&base, &record(&ada, &hard, &matching, &json!({ "kind": "matching", "assignments": { "capacity": { "rooftop-pv": 0 } } }), 31)), "answer-invalid", "where the keys are hidden there is no card to assign");
+    let mut guessed = perfect(&power, &sorting);
+    guessed["guesses"]["heat-pump"] = json!(3.0e7);
+    accepted(&base, &record(&ada, &hard, &sorting, &guessed, 32));
+    accepted(&base, &record(&ada, &hard, &matching, &perfect(&power, &matching), 33));
+    let hard_result = accepted(&base, &submit(&ada, &hard, 34))[0]["result"].clone();
+    let scored = hard_result["tasks"].as_array().expect("tasks").iter().find(|task| task["kind"] == "sorting").expect("the sorting")["items"].clone();
+    assert_eq!(scored.as_array().expect("items").iter().map(|item| (item["item"].as_str().expect("item"), item["guess"].as_f64(), item["miss"].as_bool())).collect::<Vec<_>>(), [("phone-charger", Some(5.0), Some(false)), ("laptop", Some(50.0), Some(false)), ("kettle", Some(2000.0), Some(false)), ("heat-pump", Some(3.0e7), Some(true))], "a guess four decades off misses");
+    let score = hard_result["score"].as_f64().expect("a score");
+    assert!(hard_result["challenge"] == "hard" && 0.5 < score && score < 1.0 && hard_result["points"].as_f64() == Some(score * 300.0), "the miss costs every pair it touches, the rest is scored: {hard_result}");
+
+    let (paced, timed) = (id(0x103), id(0x104));
+    accepted(&base, &start(&ada, &paced, "homes", "medium", 40));
+    let systems = task_of(&run_view(&paced), "classification");
+    assert_eq!(rejected(&base, &open_task(&ada, &paced, &systems, now(), 41)), "run-untimed");
+    let switched = accepted(&base, &start(&ada, &timed, "homes", "expert", 42));
+    assert_eq!(switched.iter().map(|event| (event["type"].as_str().expect("type"), event["run"].as_str().expect("run"))).collect::<Vec<_>>(), [("run-voided", paced.as_str()), ("run-started", timed.as_str())], "another challenge voids the open run of the quiz");
+    assert_eq!(rejected(&base, &start(&ada, &id(0x105), "homes", "expert", 43)), "run-open", "the open run of the same challenge is resumed, not replaced");
+    let opened = run_view(&timed);
+    let systems = task_of(&opened, "classification");
+    assert_eq!((systems["seconds"].as_u64(), &opened["opened"]), (Some(30 + 8 * 4), &json!({})), "an expert task allows thirty seconds and eight per item, and none is opened yet");
+    assert!(systems["axes"].as_array().expect("axes").iter().all(|axis| axis.as_object().is_some_and(|axis| axis.keys().all(|key| ["id", "label", "short"].contains(&key.as_str())))) && systems["axes"][1]["short"] == json!({ "en": "cost", "de": "Kosten" }) && !opened["sheet"].to_string().contains("\"value\""), "an expert diagram shows shape only: {systems}");
+    let shown = systems["items"].as_array().expect("items");
+    let category = |item: &Value| homes["tasks"][0]["items"].as_array().expect("items").iter().find(|candidate| candidate["id"] == item["id"]).expect("item")["category"].clone();
+    let partial = json!({ "kind": "classification", "assignments": shown[..2].iter().map(|item| (item["id"].as_str().expect("id").to_string(), category(item))).collect::<serde_json::Map<_, _>>() });
+    assert_eq!(rejected(&base, &record(&ada, &timed, &systems, &partial, 44)), "task-unopened", "the clock starts before the first answer");
+    let opened_at = now() + 120_000;
+    let opening = accepted(&base, &open_task(&ada, &timed, &systems, opened_at, 45));
+    assert_eq!((opening[0]["type"].as_str(), opening[0]["at"].as_u64()), (Some("task-opened"), Some(opened_at)), "the device keeps the time: an opening it dates two minutes ahead, within the lead, counts as it claims");
+    assert_eq!(rejected(&base, &open_task(&ada, &timed, &systems, now(), 46)), "already-opened", "a task opens once; a repeat is refused and stores no receipt");
+    let dated = |seed: u32, at: u64| {
+        let mut sent = record(&ada, &timed, &systems, &partial, seed);
+        sent["at"] = json!(at);
+        sent
+    };
+    assert_eq!(accepted(&base, &dated(47, 0))[0]["at"].as_u64(), Some(opened_at), "an answer dated before its task opened counts from the opening");
+    let limit = opened_at + systems["seconds"].as_u64().expect("seconds") * 1000;
+    assert_eq!(accepted(&base, &dated(48, limit))[0]["at"].as_u64(), Some(limit), "an answer made at the last instant counts, whenever it arrives");
+    assert_eq!(rejected(&base, &dated(49, limit + 1)), "time-up", "an answer made one millisecond later is refused, whenever it arrives");
+    assert_eq!(run_view(&timed)["opened"], json!({ "systems": opened_at }));
+    let expert_result = accepted(&base, &submit(&ada, &timed, 50))[0]["result"].clone();
+    let unanswered = expert_result["tasks"][0]["items"].as_array().expect("items").iter().filter(|item| item.get("assigned").is_none()).count();
+    let score = expert_result["score"].as_f64().expect("a score");
+    assert!(expert_result["challenge"] == "expert" && unanswered == 2 && 0.0 < score && score < 1.0 && expert_result["points"].as_f64() == Some(score * 400.0), "a timed run is submitted with what was answered: {expert_result}");
+
+    let learner = view(&base, &json!({ "type": "learner", "learner": ada }));
+    let runs: Vec<(&str, &str, Option<f64>)> = learner["runs"].as_array().expect("runs").iter().map(|run| (run["challenge"].as_str().expect("challenge"), run["status"].as_str().expect("status"), run["points"].as_f64())).collect();
+    assert_eq!(runs, [("expert", "submitted", expert_result["points"].as_f64()), ("medium", "voided", None), ("hard", "submitted", hard_result["points"].as_f64()), ("medium", "submitted", Some(100.0)), ("easy", "submitted", Some(100.0))]);
+    let best = json!({ "power": { "challenge": "hard", "score": hard_result["score"], "points": hard_result["points"] }, "homes": { "challenge": "expert", "score": expert_result["score"], "points": expert_result["points"] } });
+    let total = hard_result["points"].as_f64().expect("points") + expert_result["points"].as_f64().expect("points");
+    assert_eq!((&learner["best"], learner["total"].as_f64()), (&best, Some(total)), "the best of a quiz is its run with the most points, a perfect easy run earns fewer than a good hard one");
+    let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": ada }));
+    assert_eq!((&board["own"]["best"], board["own"]["total"].as_f64()), (&best, Some(total)), "the board ranks by the same points: {board}");
+    let (offline, device) = (id(0x106), now() - 600_000);
+    let mut late = start(&ada, &offline, "power", "expert", 51);
+    late["at"] = json!(device);
+    assert_eq!(accepted(&base, &late)[0]["at"].as_u64(), Some(device), "a run started offline keeps the device's start, however late it arrives");
+    let appliances = task_of(&run_view(&offline), "matching");
+    assert_eq!(accepted(&base, &open_task(&ada, &offline, &appliances, 0, 52))[0]["at"].as_u64(), Some(device), "an opening is raised to the device's start, not to the delivery");
+    let ranking = task_of(&run_view(&offline), "sorting");
+    let sent = now();
+    let lowered = accepted(&base, &open_task(&ada, &offline, &ranking, sent + 3_600_000, 53))[0]["at"].as_u64().expect("at");
+    assert!(sent + quiz::CLOCK_LEAD <= lowered && lowered <= now() + quiz::CLOCK_LEAD, "an opening dated an hour ahead is lowered to five minutes past the proctor's clock, so it buys no time: {lowered}");
+    let views =|base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": easy }), json!({ "type": "run", "run": hard }), json!({ "type": "run", "run": timed }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada })].map(|asked| view(base, &asked));
+    let before = views(&base);
+    running.shut_down();
+
+    let running = boot(&data.0, development());
+    assert_eq!(views(&running.base), before, "challenges, opened tasks, points and bests survive a restart");
+    running.shut_down();
+}
+
+/// 🧾️ The receipts the proctor serving `data` keeps for `learner`: one per accepted command, none per refusal.
+fn receipts(data: &Path, learner: &str) -> u64 {
+    let database = proctor::storage::Database::open_read_only(data).expect("a read-only handle beside the serving proctor");
+    database.erasure(&[proctor::actors::learner_key(TENANT, learner)]).expect("the rows of the learner").actors[0].receipts
+}
+
+/// 📐️ The concordance score of authored `values` in ascending order when only the pairs of items `known` keep their
+/// weight: every pair touching another item is discordant, its weight the distance of the two values in decades.
+fn concordance(values: &[f64], known: impl Fn(usize) -> bool) -> f64 {
+    let pairs = (0..values.len()).flat_map(|left| (left + 1..values.len()).map(move |right| (left, right)));
+    let (total, kept) = pairs.fold((0.0, 0.0), |(total, kept), (left, right)| {
+        let weight = (values[right].log10() - values[left].log10()).abs();
+        (total + weight, if known(left) && known(right) { kept + weight } else { kept })
+    });
+    kept / total
+}
+
+/// 🗳️ Scored items by id: the guess or assigned value and the miss mark.
+type Scored = std::collections::BTreeMap<String, (Option<f64>, Option<bool>)>;
+
+/// 🔎️ The [`Scored`] items of `task` in a run result, of the matching `dimension` when one is named.
+fn scored(result: &Value, task: &str, dimension: Option<&str>) -> Scored {
+    let task = result["tasks"].as_array().expect("tasks").iter().find(|scored| scored["task"] == task).expect("the scored task");
+    let items = match dimension {
+        Some(dimension) => &task["dimensions"].as_array().expect("dimensions").iter().find(|scored| scored["dimension"] == dimension).expect("the scored dimension")["items"],
+        None => &task["items"],
+    };
+    items.as_array().expect("items").iter().map(|item| (item["item"].as_str().expect("item").to_string(), (item.get("guess").or_else(|| item.get("assigned")).and_then(Value::as_f64), item["miss"].as_bool()))).collect()
+}
+
+#[test]
+fn expert_and_hard_runs_clock_guess_and_score_sortings_and_matchings_from_the_instants_the_device_claims() {
+    let data = scratch("clock");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let ada = id(0xada);
+    accepted(&base, &sign_up(1, &ada));
+    let power = quiz_document("power");
+    let run_view = |run: &str| view(&base, &json!({ "type": "run", "run": run }));
+
+    let timed = id(0x100);
+    let begun = start(&ada, &timed, "power", "expert", 10);
+    let started_at = begun["at"].as_u64().expect("at");
+    accepted(&base, &begun);
+    let opened = run_view(&timed);
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    assert_eq!((sorting["seconds"].as_u64(), matching["seconds"].as_u64()), (Some(30 + 12 * 4), Some(30 + 12 * 3 * 2)), "a sorting allows twelve seconds per item, a matching twelve per item and dimension");
+    assert!(sorting.get("keys").is_none() && matching["dimensions"].as_array().expect("dimensions").iter().all(|dimension| dimension.get("cards").is_none()), "an expert sheet hides the keys: {opened}");
+
+    let kept = receipts(&data.0, &ada);
+    let mut malformed = open_task(&ada, &timed, &sorting, started_at, 11);
+    for at in [json!(-1), json!(2.5), json!("soon"), Value::Null] {
+        malformed["at"] = at.clone();
+        assert!(rejected(&base, &malformed).starts_with("command-malformed"), "an opening dated {at} is no command");
+    }
+    malformed.as_object_mut().expect("a command").remove("at");
+    assert!(rejected(&base, &malformed).starts_with("command-malformed"), "an opening is dated");
+    for at in [json!(quiz::MAX_TIMESTAMP + 1), json!(u64::MAX)] {
+        malformed["at"] = at.clone();
+        assert!(rejected(&base, &malformed).starts_with("id-invalid"), "an opening dated {at}, beyond a safe integer, is refused");
+    }
+    malformed["at"] = json!(started_at);
+    malformed["task"] = json!("Appliances");
+    assert!(rejected(&base, &malformed).starts_with("id-invalid"), "a task is a slug");
+    malformed.as_object_mut().expect("a command").remove("task");
+    assert!(rejected(&base, &malformed).starts_with("command-malformed"), "an opening names its task");
+    let mut undated = record(&ada, &timed, &sorting, &perfect(&power, &sorting), 12);
+    for (at, refusal) in [(json!(-1), "command-malformed"), (json!(1.5), "command-malformed"), (json!(quiz::MAX_TIMESTAMP + 1), "id-invalid")] {
+        undated["at"] = at.clone();
+        assert!(rejected(&base, &undated).starts_with(refusal), "an answer dated {at} is refused: {refusal}");
+    }
+    assert_eq!(receipts(&data.0, &ada), kept, "a command refused at admission stores no receipt");
+
+    let sorting_opened = started_at + 1_000;
+    assert_eq!(accepted(&base, &open_task(&ada, &timed, &sorting, sorting_opened, 13))[0]["at"].as_u64(), Some(sorting_opened));
+    assert_eq!(receipts(&data.0, &ada), kept + 1, "an opening stores its receipt");
+    for repeat in 0..5u32 {
+        assert_eq!(rejected(&base, &open_task(&ada, &timed, &sorting, sorting_opened + u64::from(repeat) * 7_000, 14 + repeat)), "already-opened");
+    }
+    assert_eq!(receipts(&data.0, &ada), kept + 1, "a repeated opening is refused, so the receipts do not grow");
+    let mut partial = perfect(&power, &sorting);
+    partial["guesses"] = json!({ "phone-charger": 5, "laptop": 50 });
+    let sorting_limit = sorting_opened + 78_000;
+    let mut sorted = record(&ada, &timed, &sorting, &partial, 20);
+    sorted["at"] = json!(sorting_limit);
+    assert_eq!(accepted(&base, &sorted)[0]["at"].as_u64(), Some(sorting_limit), "a partial sorting made at the last instant counts");
+    let mut late = record(&ada, &timed, &sorting, &perfect(&power, &sorting), 21);
+    late["at"] = json!(sorting_limit + 1);
+    assert_eq!(rejected(&base, &late), "time-up", "the whole sorting made a millisecond later is refused");
+
+    let matching_opened = started_at + 5_000;
+    accepted(&base, &open_task(&ada, &timed, &matching, matching_opened, 22));
+    let capacities = json!({ "kind": "matching", "guesses": { "capacity": perfect(&power, &matching)["guesses"]["capacity"].clone() } });
+    let mut guessed = record(&ada, &timed, &matching, &capacities, 23);
+    guessed["at"] = json!(matching_opened + 10_000);
+    assert_eq!(accepted(&base, &guessed)[0]["at"].as_u64(), Some(matching_opened + 10_000), "the capacities guessed in time count");
+    let mut late = record(&ada, &timed, &matching, &perfect(&power, &matching), 24);
+    late["at"] = json!(matching_opened + 102_001);
+    assert_eq!(rejected(&base, &late), "time-up", "the hours guessed after the matching's 102 seconds are refused");
+    assert_eq!(run_view(&timed)["opened"], json!({ "appliances": sorting_opened, "sources": matching_opened }));
+
+    let result = accepted(&base, &submit(&ada, &timed, 25))[0]["result"].clone();
+    let missed = |guess: Option<f64>| (guess, Some(guess.is_none()));
+    assert_eq!(scored(&result, "appliances", None), Scored::from([("phone-charger", Some(5.0)), ("laptop", Some(50.0)), ("kettle", None), ("heat-pump", None)].map(|(item, guess)| (item.to_string(), missed(guess)))), "an unguessed item misses: {result}");
+    assert_eq!(scored(&result, "sources", Some("capacity")), Scored::from([("rooftop-pv", 1e4), ("wind-turbine", 3e6), ("nuclear-plant", 1.4e9)].map(|(item, guess)| (item.to_string(), (Some(guess), Some(false))))));
+    assert_eq!(scored(&result, "sources", Some("hours")), Scored::from(["rooftop-pv", "wind-turbine", "nuclear-plant"].map(|item| (item.to_string(), (None, Some(true))))), "a dimension left unguessed misses everywhere");
+    let sorting_score = concordance(&[5.0, 50.0, 2000.0, 3000.0], |index| index < 2);
+    let score = result["score"].as_f64().expect("a score");
+    assert!(result["challenge"] == "expert" && (score - (sorting_score + 0.5) / 2.0).abs() < 1e-12 && result["points"].as_f64() == Some(score * 400.0), "only the pair of the two guessed items keeps its weight, the matching scores a half: {result}");
+    assert_eq!(rejected(&base, &open_task(&ada, &timed, &matching, matching_opened, 26)), "run-closed", "a submitted run opens nothing");
+
+    let hard = id(0x101);
+    accepted(&base, &start(&ada, &hard, "power", "hard", 30));
+    let opened = run_view(&hard);
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    assert_eq!(rejected(&base, &open_task(&ada, &hard, &sorting, now(), 31)), "run-untimed", "a hard run has no clock");
+    let mut off = perfect(&power, &matching);
+    off["guesses"]["capacity"]["rooftop-pv"] = json!(1e7);
+    accepted(&base, &record(&ada, &hard, &sorting, &perfect(&power, &sorting), 32));
+    accepted(&base, &record(&ada, &hard, &matching, &off, 33));
+    let result = accepted(&base, &submit(&ada, &hard, 34))[0]["result"].clone();
+    assert_eq!(scored(&result, "sources", Some("capacity")), Scored::from([("rooftop-pv", 1e7, true), ("wind-turbine", 3e6, false), ("nuclear-plant", 1.4e9, false)].map(|(item, guess, miss)| (item.to_string(), (Some(guess), Some(miss))))), "a capacity guessed a thousandfold misses: the reach is the root of the capacities' spread: {result}");
+    assert!(scored(&result, "sources", Some("hours")).values().all(|(_, miss)| *miss == Some(false)) && scored(&result, "appliances", None).values().all(|(_, miss)| *miss == Some(false)));
+    let capacity = concordance(&[1e4, 3e6, 1.4e9], |index| index > 0);
+    let score = result["score"].as_f64().expect("a score");
+    assert!(result["challenge"] == "hard" && (score - (1.0 + (capacity + 1.0) / 2.0) / 2.0).abs() < 1e-12 && result["points"].as_f64() == Some(score * 300.0), "the miss costs every pair it touches: {result}");
+    running.shut_down();
+}
+
+#[test]
+fn an_easy_run_questions_far_off_cards_and_misplaced_items_until_it_closes() {
+    let data = scratch("hints");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let ada = id(0xada);
+    accepted(&base, &sign_up(1, &ada));
+    let (power, homes) = (quiz_document("power"), quiz_document("homes"));
+    let run_view = |run: &str| view(&base, &json!({ "type": "run", "run": run }));
+
+    let easy = id(0x100);
+    accepted(&base, &start(&ada, &easy, "power", "easy", 10));
+    let opened = run_view(&easy);
+    let (sorting, matching) = (task_of(&opened, "sorting"), task_of(&opened, "matching"));
+    let item = |task: &Value, id: &str| task["items"].as_array().expect("items").iter().find(|item| item["id"] == id).expect("a presented item").clone();
+    assert_eq!((item(&matching, "nuclear-plant")["short"].clone(), matching["dimensions"][1]["quantity"]["short"].clone()), (json!({ "en": "Nuclear", "de": "AKW" }), json!({ "en": "hours", "de": "Stunden" })), "short labels reach the sheet for the hints to name");
+    assert!(item(&sorting, "kettle").get("familiar").is_none() && !opened.to_string().contains("familiar"), "whether an item is familiar stays with the proctor: {sorting}");
+    let mut misordered = perfect(&power, &sorting);
+    let order = misordered["order"].as_array_mut().expect("order");
+    order.swap(1, 3);
+    assert_eq!(order, &[json!("phone-charger"), json!("heat-pump"), json!("kettle"), json!("laptop")]);
+    accepted(&base, &record(&ada, &easy, &sorting, &misordered, 11));
+    assert_eq!(
+        run_view(&easy)["hints"]["appliances"],
+        json!([
+            { "kind": "compare", "item": "heat-pump", "other": "kettle", "factor": 50.0 / 2000.0, "verdict": "reversed" },
+            { "kind": "compare", "item": "laptop", "other": "phone-charger", "factor": 3000.0 / 5.0, "verdict": "over" },
+        ]),
+        "the charger and the kettle on their own keys claim ×60 equally wrong for the heat pump and the laptop; the familiar kettle wins over the charger's smaller claim for the heat pump, and the laptop takes the charger the heat pump does not name"
+    );
+    accepted(&base, &record(&ada, &easy, &sorting, &perfect(&power, &sorting), 12));
+    let mut swapped = perfect(&power, &matching);
+    let capacity = swapped["assignments"]["capacity"].as_object_mut().expect("capacity cards");
+    let (wind, nuclear) = (capacity["wind-turbine"].clone(), capacity["nuclear-plant"].clone());
+    capacity.insert("wind-turbine".into(), nuclear);
+    capacity.insert("nuclear-plant".into(), wind);
+    let hours = swapped["assignments"]["hours"].as_object_mut().expect("hours cards");
+    let (pv, nuclear) = (hours["rooftop-pv"].clone(), hours["nuclear-plant"].clone());
+    hours.insert("rooftop-pv".into(), nuclear);
+    hours.insert("nuclear-plant".into(), pv);
+    accepted(&base, &record(&ada, &easy, &matching, &swapped, 13));
+    let capacity = [
+        json!({ "kind": "compare", "item": "nuclear-plant", "other": "rooftop-pv", "dimension": "capacity", "factor": 300.0, "verdict": "under" }),
+        json!({ "kind": "compare", "item": "wind-turbine", "other": "rooftop-pv", "dimension": "capacity", "factor": 140_000.0, "verdict": "over" }),
+    ];
+    let place = |hint: &Value| matching["items"].as_array().expect("items").iter().position(|item| item["id"] == hint["item"]);
+    let mut hours = [
+        json!({ "kind": "compare", "item": "nuclear-plant", "other": "wind-turbine", "dimension": "hours", "difference": -1050.0, "verdict": "reversed" }),
+        json!({ "kind": "compare", "item": "rooftop-pv", "other": "wind-turbine", "dimension": "hours", "difference": 5800.0, "verdict": "reversed" }),
+    ];
+    hours.sort_by_key(place);
+    let first = capacity.iter().min_by_key(|hint| place(hint)).expect("a capacity hint").clone();
+    assert_eq!(
+        run_view(&easy)["hints"]["sources"],
+        json!([first, hours[0], hours[1]]),
+        "each far-off card is questioned against the item whose card is right: a nuclear plant only 300 times a rooftop understates, a wind turbine 140 000 times a rooftop overstates, full-load hours swapped point the other way; of the four the three most wrong stand — both of the hours, 6850 h off, and of the capacities, equally ×467 off, the first in sheet order — per dimension in sheet order"
+    );
+    assert_eq!(run_view(&easy)["hints"].as_object().map(|hinted| hinted.keys().cloned().collect::<Vec<_>>()), Some(vec!["sources".to_string()]), "a right sorting earns no hint beside the matching's");
+    let result = accepted(&base, &submit(&ada, &easy, 14))[0]["result"].clone();
+    let closed = run_view(&easy);
+    assert!(closed.get("hints").is_none() && closed["status"] == "submitted", "a submitted run hints at nothing: {closed}");
+    assert_eq!(scored(&result, "sources", Some("capacity")).values().filter(|(_, miss)| miss.is_some()).count(), 0, "where the keys show an assignment carries no miss mark: {result}");
+
+    let classified = id(0x101);
+    accepted(&base, &start(&ada, &classified, "homes", "easy", 20));
+    let systems = task_of(&run_view(&classified), "classification");
+    let place = |hint: &Value| systems["items"].as_array().expect("items").iter().position(|item| item["id"] == hint["item"]);
+    let in_sheet_order = |mut hints: Vec<Value>| {
+        hints.sort_by_key(place);
+        json!({ "systems": hints })
+    };
+    let misplaced = |moves: &[(&str, &str)]| {
+        let mut answer = perfect(&homes, &systems);
+        for (item, category) in moves {
+            answer["assignments"][*item] = json!(category);
+        }
+        answer
+    };
+    accepted(&base, &record(&ada, &classified, &systems, &misplaced(&[("air-to-water", "gas-boiler"), ("pellets", "heat-pump")]), 21));
+    assert_eq!(
+        run_view(&classified)["hints"],
+        in_sheet_order(vec![json!({ "kind": "profile", "item": "air-to-water", "category": "gas-boiler", "axis": "efficiency" }), json!({ "kind": "profile", "item": "pellets", "category": "heat-pump", "axis": "efficiency", "other": "condensing", "above": true })]),
+        "a misplaced item is asked about the profile on the axis farthest off relative to its reach (a tie takes the first axis): the pellets as a heat pump would lie above the condensing boiler, rightly placed, though they lie below it; the air-to-water unit as a gas boiler has nobody in between"
+    );
+    let systems_axes = systems["axes"].as_array().expect("axes");
+    assert_eq!((systems_axes[1]["short"].clone(), systems["items"].as_array().expect("items").iter().find(|item| item["id"] == "air-to-water").expect("the unit")["short"].clone()), (json!({ "en": "cost", "de": "Kosten" }), json!({ "en": "Air unit", "de": "Luftgerät" })));
+    accepted(&base, &record(&ada, &classified, &systems, &misplaced(&[("air-to-water", "wood-stove")]), 26));
+    assert_eq!(run_view(&classified)["hints"], json!({ "systems": [{ "kind": "profile", "item": "air-to-water", "category": "wood-stove", "axis": "efficiency", "other": "condensing", "above": false }] }), "as a wood stove the heat pump would lie below the condensing boiler");
+    accepted(&base, &record(&ada, &classified, &systems, &misplaced(&[("air-to-water", "gas-boiler"), ("pellets", "district-heating")]), 22));
+    assert_eq!(run_view(&classified)["hints"], in_sheet_order(vec![json!({ "kind": "profile", "item": "air-to-water", "category": "gas-boiler", "axis": "efficiency" }), json!({ "kind": "category", "item": "pellets", "category": "district-heating" })]), "district heating has no profile, and nobody else stands there or belongs with the pellets: the category itself is questioned");
+    accepted(&base, &record(&ada, &classified, &systems, &misplaced(&[("condensing", "district-heating"), ("pellets", "district-heating")]), 23));
+    assert_eq!(run_view(&classified)["hints"], in_sheet_order(vec![json!({ "kind": "group", "item": "condensing", "other": "pellets", "together": true }), json!({ "kind": "group", "item": "pellets", "other": "condensing", "together": true })]), "two of different systems put together");
+    accepted(&base, &record(&ada, &classified, &systems, &misplaced(&[("ground-source", "district-heating")]), 24));
+    assert_eq!(run_view(&classified)["hints"], json!({ "systems": [{ "kind": "group", "item": "ground-source", "other": "air-to-water", "together": false }] }), "two heat pumps put apart");
+    let switched = accepted(&base, &start(&ada, &id(0x102), "homes", "medium", 25));
+    assert_eq!(switched[0]["type"], "run-voided");
+    let voided = run_view(&classified);
+    assert!(voided.get("hints").is_none() && voided["status"] == "voided", "a voided run hints at nothing: {voided}");
+    running.shut_down();
+}
+
+#[test]
+fn switching_the_challenge_back_and_forth_ends_in_runs_exhausted() {
+    let data = scratch("switching");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let grace = id(0x9ace);
+    accepted(&base, &sign_up(1, &grace));
+    let per_quiz = 200u32;
+    for started in 0..per_quiz {
+        let challenge = if started.is_multiple_of(2) { "easy" } else { "medium" };
+        let events = accepted(&base, &start(&grace, &id(0x1_0000 + started), "power", challenge, 0x2_0000 + started));
+        assert_eq!(events.iter().map(|event| event["type"].as_str().expect("type")).collect::<Vec<_>>(), if started == 0 { vec!["run-started"] } else { vec!["run-voided", "run-started"] }, "start {started}");
+    }
+    assert_eq!(rejected(&base, &start(&grace, &id(0x3_0000), "power", "hard", 0x3_0001)), "runs-exhausted", "every started run counts against the cap of the quiz, the voided ones too");
+    assert_eq!(rejected(&base, &start(&grace, &id(0x3_0002), "power", "medium", 0x3_0003)), "run-open", "the open run is still resumed");
+    let learner = view(&base, &json!({ "type": "learner", "learner": grace }));
+    let statuses: Vec<&str> = learner["runs"].as_array().expect("runs").iter().map(|run| run["status"].as_str().expect("status")).collect();
+    assert_eq!((statuses.len(), statuses.iter().filter(|status| **status == "voided").count(), statuses[0]), (per_quiz as usize, per_quiz as usize - 1, "open"), "the learner's runs stop growing at the cap");
+    assert_eq!(accepted(&base, &start(&grace, &id(0x3_0004), "homes", "hard", 0x3_0005))[0]["type"], "run-started", "the cap is per quiz");
     running.shut_down();
 }
 
@@ -753,7 +1201,7 @@ fn the_operator_probes_backs_up_while_serving_and_restores_elsewhere() {
 
     let (ada, run) = (id(0xada), id(0x100));
     accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada" } }));
-    play(&base, &ada, &run, "power", 10);
+    play(&base, &ada, &run, "power", "medium", 10);
     let views = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": run }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada" }), json!({ "type": "catalog" })].map(|asked| view(base, &asked));
     let before = views(&base);
 
@@ -769,7 +1217,7 @@ fn the_operator_probes_backs_up_while_serving_and_restores_elsewhere() {
     assert!(!operator(&data.0, port, &["backup", &file.to_string_lossy()], b"").0, "a backup is never overwritten");
     assert_eq!(files(&data.0).iter().filter(|name| name.contains(".backup-") || name.contains(".partial-")).count(), 0, "the spool file is gone");
 
-    play(&base, &ada, &id(0x200), "homes", 100);
+    play(&base, &ada, &id(0x200), "homes", "medium", 100);
     assert_ne!(views(&base), before, "the proctor kept committing after the backup");
     assert!(!operator(&data.0, port, &["restore", "-"], &backup).0, "a serving proctor's database is never replaced");
     running.shut_down();
@@ -778,7 +1226,7 @@ fn the_operator_probes_backs_up_while_serving_and_restores_elsewhere() {
     assert!(operator(&elsewhere.0, port, &["restore", "-"], &backup).0, "the backup restores into an empty directory");
     let restored = boot(&elsewhere.0, development());
     assert_eq!(views(&restored.base), before, "the proctor started on the copy answers the views of the moment the backup was taken");
-    let completed = play(&restored.base, &ada, &id(0x300), "homes", 200);
+    let completed = play(&restored.base, &ada, &id(0x300), "homes", "medium", 200);
     assert!(completed.iter().any(|event| event["badge"] == "complete"), "the restored authority appends after its history: {completed:?}");
     restored.shut_down();
 
@@ -797,8 +1245,8 @@ fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
     let (ada, grace) = (id(0xada), id(0x9ace));
     accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "name", "handle": NAME } }));
     accepted(&base, &json!({ "type": "identify-learner", "id": id(2), "learner": grace, "identity": { "kind": "anonymous" } }));
-    play(&base, &ada, &id(0x100), "power", 10);
-    play(&base, &grace, &id(0x101), "power", 100);
+    play(&base, &ada, &id(0x100), "power", "medium", 10);
+    play(&base, &grace, &id(0x101), "power", "medium", 100);
     let others = |base: &str| [json!({ "type": "learner", "learner": grace }), json!({ "type": "run", "run": id(0x101) })].map(|asked| view(base, &asked));
     let before = others(&base);
     let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": grace }));
@@ -829,7 +1277,7 @@ fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
     assert_eq!((board["learners"].as_u64(), board["own"]["rank"].as_u64(), board["rows"].as_array().map(Vec::len)), (Some(1), Some(1), Some(1)), "the erased scores are gone from the board: {board}");
     assert!(!board.to_string().contains(NAME) && !board.to_string().contains(&tag), "{board}");
     assert_eq!(view(&base, &json!({ "type": "crowd", "quiz": "power" }))["runs"], 1, "and from the crowd");
-    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(20), "learner": ada, "run": id(0x102), "quiz": "power" })), "unknown-learner");
+    assert_eq!(rejected(&base, &start(&ada, &id(0x102), "power", "medium", 20)), "unknown-learner");
     let successor = id(0xb0b);
     let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(21), "learner": successor, "identity": { "kind": "pseudonym", "handle": NAME } }));
     assert_eq!((events[0]["type"].as_str(), events[0]["learner"].as_str()), (Some("learner-registered"), Some(successor.as_str())), "somebody else takes the freed handle");
@@ -860,8 +1308,8 @@ fn the_operator_prunes_the_registrations_nobody_played_under_and_every_player_st
     let register = |seed: u32, learner: &str, identity: Value| accepted(&base, &json!({ "type": "identify-learner", "id": id(seed), "learner": learner, "identity": identity }));
     register(1, &ada, json!({ "kind": "name", "handle": "Ada Lovelace" }));
     register(2, &grace, json!({ "kind": "anonymous" }));
-    play(&base, &ada, &id(0x100), "power", 10);
-    play(&base, &grace, &id(0x101), "power", 100);
+    play(&base, &ada, &id(0x100), "power", "medium", 10);
+    play(&base, &grace, &id(0x101), "power", "medium", 100);
     for junk in 0..40 {
         register(0x6000 + junk, &id(0x5000 + junk), json!({ "kind": "anonymous" }));
     }
@@ -876,7 +1324,7 @@ fn the_operator_prunes_the_registrations_nobody_played_under_and_every_player_st
         register(0x6300 + spare, &ada, json!({ "kind": "pseudonym", "handle": format!("Spare Number {spare}") }));
     }
     register(3, &linus, json!({ "kind": "name", "handle": "Linus Halfway" }));
-    accepted(&base, &json!({ "type": "start-run", "id": id(4), "learner": linus, "run": id(0x400), "quiz": "power" }));
+    accepted(&base, &start(&linus, &id(0x400), "power", "medium", 4));
     let players = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": id(0x100) }), json!({ "type": "learner", "learner": grace }), json!({ "type": "leaderboard", "period": "all-time", "learner": grace }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada lovelace" })].map(|asked| view(base, &asked));
     let before = players(&base);
     assert_eq!(view(&base, &json!({ "type": "handle", "handle": "junk number 07" }))["holder"]["learner"], id(0x5107).as_str());
@@ -919,7 +1367,7 @@ fn the_operator_prunes_the_registrations_nobody_played_under_and_every_player_st
     for free in ["Junk Number 07", "Hoard Number 3", "Spare Number 1", "Linus Halfway"] {
         assert_eq!(view(&base, &json!({ "type": "handle", "handle": free })), json!({ "display": free }), "the handle is free");
     }
-    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(5), "learner": linus, "run": id(0x401), "quiz": "power" })), "unknown-learner");
+    assert_eq!(rejected(&base, &start(&linus, &id(0x401), "power", "medium", 5)), "unknown-learner");
     let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(0x6007), "learner": id(0x5007), "identity": { "kind": "anonymous" } }));
     assert_eq!(events.len(), 1, "a pruned learner id and its command id are unknown again, not a replay");
     for (seed, successor, handle) in [(6, id(0xb0b), "junk number 07"), (7, id(0xb0c), "Spare Number 1")] {
@@ -948,25 +1396,33 @@ fn sign_up(seed: u32, learner: &str) -> Value {
 }
 
 /// 📏️ The size of the largest `record-answer` body a catalog can produce: every item of every task
-/// answered, encoded as the client sends it.
+/// answered — with a guess of the longest a number can be written where the keys are hidden —,
+/// encoded as the client sends it.
 fn largest_answer(catalog: &Path) -> usize {
     let read = |path: &Path| -> Value { serde_json::from_str(&std::fs::read_to_string(path).unwrap_or_else(|error| panic!("{}: {error}", path.display()))).expect("json") };
     let ids = |values: &Value| -> Vec<String> { values.as_array().map(|values| values.iter().map(|value| value["id"].as_str().expect("id").to_string()).collect()).unwrap_or_default() };
     let (learner, run) = (id(0xffff_ffff), id(0xffff_fffe));
+    let longest = json!(-1.234_567_890_123_456_7e-300);
     let mut largest = 0;
     for quiz in read(catalog)["quizzes"].as_array().expect("quizzes") {
         let document = read(&catalog.parent().expect("a directory").join(quiz.as_str().expect("a quiz path")));
         for task in document["tasks"].as_array().expect("tasks") {
             let items = ids(&task["items"]);
-            let answer = match task["kind"].as_str().expect("kind") {
-                "sorting" => json!({ "kind": "sorting", "order": items }),
+            let guessed = || Value::Object(items.iter().map(|item| (item.clone(), longest.clone())).collect());
+            let answers = match task["kind"].as_str().expect("kind") {
+                "sorting" => vec![json!({ "kind": "sorting", "order": items }), json!({ "kind": "sorting", "order": items, "guesses": guessed() })],
                 "classification" => {
                     let category = ids(&task["categories"]).into_iter().max_by_key(String::len).expect("a category");
-                    json!({ "kind": "classification", "assignments": items.iter().map(|item| (item.clone(), json!(category))).collect::<serde_json::Map<_, _>>() })
+                    vec![json!({ "kind": "classification", "assignments": items.iter().map(|item| (item.clone(), json!(category))).collect::<serde_json::Map<_, _>>() })]
                 }
-                _ => json!({ "kind": "matching", "assignments": ids(&task["dimensions"]).into_iter().map(|dimension| (dimension, Value::Object(items.iter().enumerate().map(|(card, item)| (item.clone(), json!(1000 + card))).collect()))).collect::<serde_json::Map<_, _>>() }),
+                _ => vec![
+                    json!({ "kind": "matching", "assignments": ids(&task["dimensions"]).into_iter().map(|dimension| (dimension, Value::Object(items.iter().enumerate().map(|(card, item)| (item.clone(), json!(1000 + card))).collect()))).collect::<serde_json::Map<_, _>>() }),
+                    json!({ "kind": "matching", "guesses": ids(&task["dimensions"]).into_iter().map(|dimension| (dimension, guessed())).collect::<serde_json::Map<_, _>>() }),
+                ],
             };
-            largest = largest.max(envelope(&record(&learner, &run, task, &answer, 0xffff_fffd)).to_string().len());
+            for answer in answers {
+                largest = largest.max(envelope(&record(&learner, &run, task, &answer, 0xffff_fffd)).to_string().len());
+            }
         }
     }
     largest
@@ -1001,7 +1457,7 @@ fn an_anonymous_caller_can_neither_read_nor_occupy_an_enrollment_key() {
     let named = json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada Lovelace" } });
     let probes = |key: &str| {
         let occupying = envelope(&json!({ "type": "identify-learner", "id": key, "learner": intruder, "identity": { "kind": "anonymous" } }));
-        let elsewhere = envelope(&json!({ "type": "start-run", "id": key, "learner": intruder, "run": id(0x666), "quiz": "power" }));
+        let elsewhere = envelope(&json!({ "type": "start-run", "id": key, "learner": intruder, "run": id(0x666), "quiz": "power", "challenge": "medium", "at": now() }));
         let mut relayed = elsewhere.clone();
         relayed["kind"] = json!("quiz.enroll-learner");
         relayed["principal"] = json!({ "kind": "serviceAccount", "id": "proctor" });
@@ -1031,7 +1487,7 @@ fn an_anonymous_caller_can_neither_read_nor_occupy_an_enrollment_key() {
     let events = accepted(&base, &named);
     assert_eq!((events[0]["type"].as_str(), events[0]["learner"].as_str()), (Some("learner-registered"), Some(ada.as_str())));
     assert_eq!(view(&base, &json!({ "type": "learner", "learner": ada }))["identity"]["handle"], "Ada Lovelace", "the real sign-up is relayed although its key was asked for first");
-    assert_eq!(accepted(&base, &json!({ "type": "start-run", "id": id(2), "learner": ada, "run": id(0x100), "quiz": "power" }))[0]["type"], "run-started");
+    assert_eq!(accepted(&base, &start(&ada, &id(0x100), "power", "medium", 2))[0]["type"], "run-started");
     running.shut_down();
 }
 
@@ -1044,18 +1500,18 @@ fn a_command_for_an_id_no_actor_can_have_is_refused_before_it_costs_anything() {
     accepted(&base, &sign_up(1, &learner));
     let long = "a".repeat(4000);
     for (seed, target) in [long.as_str(), "not-a-learner-id", "0000000000000000000000000000000G", "", " ", "enroll:proctor-fixture:roster:1"].into_iter().enumerate() {
-        let mut sent = envelope(&json!({ "type": "start-run", "id": id(100 + seed as u32), "learner": learner, "run": id(200 + seed as u32), "quiz": "power" }));
+        let mut sent = envelope(&start(&learner, &id(200 + seed as u32), "power", "medium", 100 + seed as u32));
         sent["target"]["id"] = json!(target);
         let (status, outcome) = post(&base, "/commands", &sent);
         assert_eq!((status, outcome["status"].as_str(), outcome["reason"]["kind"].as_str()), (200, Some("rejected"), Some("invalid")), "{outcome}");
         assert!(outcome["reason"]["detail"].as_str().is_some_and(|detail| detail.starts_with("id-invalid")), "target {:?}: {outcome}", &target[..target.len().min(40)]);
     }
-    let mut keyed = envelope(&json!({ "type": "start-run", "id": id(300), "learner": learner, "run": id(301), "quiz": "power" }));
+    let mut keyed = envelope(&start(&learner, &id(301), "power", "medium", 300));
     keyed["commandId"] = json!("k".repeat(4000));
     keyed["idempotencyKey"] = keyed["commandId"].clone();
     let (_, outcome) = post(&base, "/commands", &keyed);
     assert_eq!((outcome["status"].as_str(), outcome["reason"]["kind"].as_str()), (Some("rejected"), Some("invalid")), "an oversized key is no key: {outcome}");
-    assert_eq!(accepted(&base, &json!({ "type": "start-run", "id": id(400), "learner": learner, "run": id(401), "quiz": "power" }))[0]["type"], "run-started", "the learner is untouched by the refusals");
+    assert_eq!(accepted(&base, &start(&learner, &id(401), "power", "medium", 400))[0]["type"], "run-started", "the learner is untouched by the refusals");
     running.shut_down();
 }
 
@@ -1064,7 +1520,7 @@ fn a_body_past_the_limit_is_refused_and_the_largest_real_command_is_far_below_it
     let limit = Limits::default().body_bytes.expect("the production limits cap the body");
     for catalog in [fixtures().join("📚️catalog/🔣️.json"), Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🏛️architecture/❓️quiz/🔣️.json")] {
         let largest = largest_answer(&catalog);
-        assert!(largest > 1000 && largest * 4 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", catalog.display());
+        assert!(largest > 1000 && largest * 3 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", catalog.display());
     }
     let data = scratch("edge-body");
     let running = boot(&data.0, development());
@@ -1152,7 +1608,7 @@ fn sign_ups_are_counted_per_address_by_what_they_register_and_a_spent_allowance_
     let (status, _, refused) = sent(&json!({ "type": "identify-learner", "id": id(5), "learner": id(0xd1), "identity": { "kind": "name", "handle": "Dee" } }), &hall);
     assert_eq!((status, refused["allowance"].as_str()), (429, Some("sign-up")), "a handle claim is a sign-up like an anonymous one");
 
-    let (status, _, started) = sent(&json!({ "type": "start-run", "id": id(40), "learner": ada, "run": id(0x100), "quiz": "power" }), &hall);
+    let (status, _, started) = sent(&start(&ada, &id(0x100), "power", "medium", 40), &hall);
     assert_eq!((status, started["status"].as_str()), (200, Some("accepted")), "who is registered plays on: only sign-ups are spent: {started}");
     let (status, _, recalled) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "handle", "handle": "ada lovelace" })), &hall);
     assert_eq!((status, serde_json::from_str::<Value>(&text(&recalled["value"])).expect("a view")["holder"]["learner"].as_str().map(str::to_string)), (200, Some(ada)), "and a returning learner is recalled by a read, which is no sign-up");
@@ -1162,7 +1618,7 @@ fn sign_ups_are_counted_per_address_by_what_they_register_and_a_spent_allowance_
     }
     let (status, _, refused) = sent(&sign_up(53, &id(0x803)), &script);
     assert_eq!((status, refused["allowance"].as_str()), (429, Some("sign-up")), "another address has an allowance of its own, and no more");
-    nothing(&json!({ "type": "start-run", "id": id(54), "learner": id(0x804), "run": id(0x101), "quiz": "power" }), &script, "unknown-learner");
+    nothing(&start(&id(0x804), &id(0x101), "power", "medium", 54), &script, "unknown-learner");
     running.shut_down();
     assert_eq!(registrations(&data.0), 6, "three registrations per address were made, whatever was asked");
 }

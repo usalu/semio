@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
-import { CAST_STREAM, ROTATION_STREAM, STAGE_STREAM, randomBetween, randomPick, randomUnit, randomWords, unitOf, weightedIndex } from "../../🟦️.ts";
+import { CAST_STREAM, CHEMISTRY_STREAM, GEAR_STREAM, MISCHIEF_STREAM, ROTATION_STREAM, STAGE_STREAM, randomBetween, randomPick, randomUnit, randomWords, unitOf, weightedIndex } from "../../🟦️.ts";
 
 type Vectors = {
   readonly words: readonly { readonly id: string; readonly key: readonly number[]; readonly count: number; readonly expected: readonly number[] }[];
@@ -182,9 +182,9 @@ describe("the reserved streams", () => {
     expect([unitOf(0), unitOf(2147483648), unitOf(4294967295)]).toEqual([0, 0.5, 1 - 2 ** -32]);
   });
 
-  it("names three streams at the top of the 32-bit range, apart from each other and from every species", () => {
-    expect([STAGE_STREAM, CAST_STREAM, ROTATION_STREAM]).toEqual([0xffffffff, 0xfffffffe, 0xfffffffd]);
-    const words = [STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, 0, 1, 2].map((stream) => randomWords([SEED, stream, 0], 1)[0]!);
+  it("names six streams at the top of the 32-bit range, apart from each other and from every species", () => {
+    expect([STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, CHEMISTRY_STREAM, GEAR_STREAM, MISCHIEF_STREAM]).toEqual([0xffffffff, 0xfffffffe, 0xfffffffd, 0xfffffffc, 0xfffffffb, 0xfffffffa]);
+    const words = [STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, CHEMISTRY_STREAM, GEAR_STREAM, MISCHIEF_STREAM, 0, 1, 2].map((stream) => randomWords([SEED, stream, 0], 1)[0]!);
     expect(new Set(words).size).toBe(words.length);
   });
 });

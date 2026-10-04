@@ -20,6 +20,11 @@ import {
   thinkingIssues,
   thinkingProblem,
   thinkingScope,
+  points,
+  scoreRun,
+  sheetOf,
+  type Answer,
+  type Challenge,
   type Quiz,
   type RunResult,
   type SheetTask,
@@ -57,15 +62,15 @@ const QUIZ: Quiz = {
   description: T("Physics"),
   tasks: [
     { kind: "classification", id: "units", title: T("Units"), prompt: T("Classify"), categories: [{ id: "power", label: T("Power") }, { id: "energy", label: T("Energy") }], items: [{ id: "watt", label: T("W"), category: "power" }, { id: "kwh", label: T("kWh"), category: "energy" }, { id: "joule", label: T("J"), category: "energy" }] },
-    { kind: "sorting", id: "power", title: T("Power"), prompt: T("Sort"), quantity: { label: T("P"), unit: "W", scale: "logarithmic", prefixed: true }, items: [{ id: "bulb", label: T("Bulb"), value: 60 }, { id: "kettle", label: T("Kettle"), value: 2000 }, { id: "plant", label: T("Plant"), value: 1e9 }, { id: "phone", label: T("Phone"), value: 5 }], draw: 3 },
+    { kind: "sorting", id: "power", title: T("Power"), prompt: T("Sort"), quantity: { label: T("P"), unit: "W", scale: "logarithmic", prefixed: true, additive: true }, items: [{ id: "bulb", label: T("Bulb"), value: 60 }, { id: "kettle", label: T("Kettle"), value: 2000 }, { id: "plant", label: T("Plant"), value: 1e9 }, { id: "phone", label: T("Phone"), value: 5 }], draw: 3 },
     {
       kind: "matching",
       id: "walls",
       title: T("Walls"),
       prompt: T("Match"),
       dimensions: [
-        { id: "u", quantity: { label: T("U"), unit: "W/(m²K)", scale: "linear", prefixed: false } },
-        { id: "demand", quantity: { label: T("Demand"), unit: "kWh/(m²a)", scale: "logarithmic", prefixed: false } },
+        { id: "u", quantity: { label: T("U"), unit: "W/(m²K)", scale: "linear", prefixed: false, additive: false } },
+        { id: "demand", quantity: { label: T("Demand"), unit: "kWh/(m²a)", scale: "logarithmic", prefixed: false, additive: false } },
       ],
       items: [
         { id: "old", label: T("Old"), values: { u: 1.4, demand: 250 } },
@@ -91,12 +96,15 @@ function matched(dimensions: Readonly<Record<string, Readonly<Record<string, num
   return { kind: "matching", task: "walls", score: 0, dimensions: Object.entries(dimensions).map(([dimension, items]) => ({ dimension, score: 0, items: Object.entries(items).map(([item, assigned]) => ({ item, assigned, correct: assigned })) })) };
 }
 
+/** 🏁️ The head of a plain result: a run of the physics quiz at medium that scored 0. */
+const RUN = { quiz: "physics", challenge: "medium", score: 0, points: 0 } as const;
+
 const RESULTS: readonly RunResult[] = [
-  { quiz: "physics", score: 0, tasks: [classified({ watt: "power", kwh: "power" }), sorted(["kettle", "bulb", "plant"]), matched({ u: { old: 1.4, new: 0.5 }, demand: { old: 10, new: 9 } })] },
-  { quiz: "physics", score: 0, tasks: [classified({ watt: "energy", joule: "energy" }), sorted(["phone", "bulb"]), matched({ u: { old: 1.4, new: 0.2, mid: 0.5 }, demand: { old: 9, new: 9, mid: 10 } })] },
-  { quiz: "heating", score: 0, tasks: [classified({ watt: "power", kwh: "power", joule: "power" }), sorted(["bulb", "plant"])] },
-  { quiz: "physics", score: 0, tasks: [classified({ kwh: "energy" }), { ...classified({ bulb: "power" }), task: "power" }] },
-  { quiz: "physics", score: 0, tasks: [sorted(["plant"])] },
+  { ...RUN, tasks: [classified({ watt: "power", kwh: "power" }), sorted(["kettle", "bulb", "plant"]), matched({ u: { old: 1.4, new: 0.5 }, demand: { old: 10, new: 9 } })] },
+  { ...RUN, tasks: [classified({ watt: "energy", joule: "energy" }), sorted(["phone", "bulb"]), matched({ u: { old: 1.4, new: 0.2, mid: 0.5 }, demand: { old: 9, new: 9, mid: 10 } })] },
+  { ...RUN, quiz: "heating", tasks: [classified({ watt: "power", kwh: "power", joule: "power" }), sorted(["bulb", "plant"])] },
+  { ...RUN, tasks: [classified({ kwh: "energy" }), { ...classified({ bulb: "power" }), task: "power" }] },
+  { ...RUN, tasks: [sorted(["plant"])] },
 ];
 
 describe("valueKey", () => {
@@ -207,9 +215,11 @@ describe("crowdView", () => {
   });
 
   it("bins the run scores, the task scores and a matching's dimension scores of each result's first task result", () => {
-    const scored = (run: number, units: number, power: number, u: number, demand: number | undefined): RunResult => ({
+    const scored = (run: number, units: number, power: number, u: number, demand: number | undefined, challenge: Challenge = "medium"): RunResult => ({
       quiz: "physics",
+      challenge,
       score: run,
+      points: points(run, challenge),
       tasks: [
         { ...classified({ watt: "power" }), score: units },
         { ...sorted(["bulb", "plant"]), score: power },
@@ -217,7 +227,7 @@ describe("crowdView", () => {
         { kind: "matching", task: "walls", score: 0.5, dimensions: [{ dimension: "u", score: u, items: [] }, ...(demand === undefined ? [] : [{ dimension: "demand", score: demand, items: [] }]), { dimension: "u", score: 1, items: [] }] },
       ],
     });
-    const crowd = crowdView(QUIZ, [scored(0, 0.095, 0.1, 0.895, 0.9), scored(0.995, 1, 0.0949, 0.8949, undefined), scored(0.5, 0.55, 0.59, 0.6, 0.25), { quiz: "physics", score: 0.42, tasks: [] }, { quiz: "heating", score: 1, tasks: [] }]);
+    const crowd = crowdView(QUIZ, [scored(0, 0.095, 0.1, 0.895, 0.9, "easy"), scored(0.995, 1, 0.0949, 0.8949, undefined, "hard"), scored(0.5, 0.55, 0.59, 0.6, 0.25, "expert"), { ...RUN, score: 0.42, points: 84, tasks: [] }, { ...RUN, quiz: "heating", score: 1, points: 200, tasks: [] }]);
     expect(AJV_CROWD(crowd), JSON.stringify(AJV_CROWD.errors)).toBe(true);
     expect(crowd.scores).toEqual([1, 0, 0, 0, 1, 1, 0, 0, 0, 1]);
     expect(crowd.tasks.map((task) => task.scores)).toEqual([
@@ -231,19 +241,19 @@ describe("crowdView", () => {
   });
 
   it("counts a sorting item's places against the places a sheet presents, whatever the length of each order", () => {
-    const order = (length: number, first: string): RunResult => ({ quiz: "physics", score: 0, tasks: [sorted([first, ...["a", "b", "c", "d", "e", "f"].slice(0, length - 1)])] });
+    const order = (length: number, first: string): RunResult => ({ ...RUN, tasks: [sorted([first, ...["a", "b", "c", "d", "e", "f"].slice(0, length - 1)])] });
     const overdrawn: Quiz = { ...QUIZ, tasks: QUIZ.tasks.map((task) => (task.kind === "sorting" ? { ...task, draw: 9 } : task)) };
-    const results: RunResult[] = [order(1, "bulb"), order(2, "bulb"), order(3, "bulb"), order(7, "bulb"), ...[["a", "bulb"], ["a", "bulb", "b"], ["a", "b", "bulb", "c"], ["a", "b", "c", "d", "e", "f", "bulb"]].map((ids) => ({ quiz: "physics", score: 0, tasks: [sorted(ids)] }))];
+    const results: RunResult[] = [order(1, "bulb"), order(2, "bulb"), order(3, "bulb"), order(7, "bulb"), ...[["a", "bulb"], ["a", "bulb", "b"], ["a", "b", "bulb", "c"], ["a", "b", "c", "d", "e", "f", "bulb"]].map((ids) => ({ ...RUN, tasks: [sorted(ids)] }))];
     expect(crowdView(QUIZ, results).tasks[1]!.items).toEqual([{ item: "bulb", answers: 8, meanPosition: (0 + 0 + 0 + 0 + 1 + 0.5 + 2 / 3 + 1) / 8, places: [4, 2, 2] }]);
     expect(crowdView(overdrawn, results).tasks[1]!.items[0]!.places).toEqual([4, 0, 2, 2]);
     for (const quiz of [QUIZ, overdrawn]) for (const item of crowdView(quiz, results).tasks[1]!.items) expect(item.places!.reduce((sum, count) => sum + count, 0)).toBe(item.answers);
   });
 
   it("orders value keys and category keys by code point, and merges -0 with 0", () => {
-    const results: RunResult[] = [100, 9, 10, 0.5, -0, 0, 1e21].map((value) => ({ quiz: "physics", score: 0, tasks: [matched({ u: { old: value } })] }));
+    const results: RunResult[] = [100, 9, 10, 0.5, -0, 0, 1e21].map((value) => ({ ...RUN, tasks: [matched({ u: { old: value } })] }));
     const u = crowdView(QUIZ, results).tasks[2]!;
     expect(u.items[0]!.counts).toEqual([{ key: "0", count: 2 }, { key: "0.5", count: 1 }, { key: "10", count: 1 }, { key: "100", count: 1 }, { key: "1e+21", count: 1 }, { key: "9", count: 1 }]);
-    const categories = crowdView(QUIZ, ["b", "B", "a", "ä", "aa"].map((assigned) => ({ quiz: "physics", score: 0, tasks: [classified({ watt: assigned })] }))).tasks[0]!;
+    const categories = crowdView(QUIZ, ["b", "B", "a", "ä", "aa"].map((assigned) => ({ ...RUN, tasks: [classified({ watt: assigned })] }))).tasks[0]!;
     expect(categories.items[0]!.counts!.map((count) => count.key)).toEqual(["B", "a", "aa", "b", "ä"]);
   });
 
@@ -253,7 +263,7 @@ describe("crowdView", () => {
     const results: RunResult[] = Array.from({ length: 40 }, () => {
       const length = 1 + (random.next() % 4);
       const order = ids.slice(0, length).sort(() => 0).map((_, index, all) => all[(index + (random.next() % length)) % length]!);
-      return { quiz: "physics", score: 0, tasks: [sorted([...new Set(order)])] };
+      return { ...RUN, tasks: [sorted([...new Set(order)])] };
     });
     const crowd = crowdView(QUIZ, results).tasks[1]!;
     for (const id of ids) {
@@ -274,6 +284,139 @@ describe("crowdView", () => {
       if (positions.length === 0) expect(item).toBeUndefined();
       else expect(item).toEqual({ item: id, answers: positions.length, meanPosition: positions.reduce((sum, position) => sum + position, 0) / positions.length, places });
     }
+  });
+});
+
+describe("crowdView — guesses, misses and unanswered items", () => {
+  /** 🔮️ A matching result of guesses per dimension and item: `undefined` for an item left unguessed. */
+  function guessedMatch(dimensions: Readonly<Record<string, Readonly<Record<string, number | undefined>>>>): RunResult["tasks"][number] {
+    return { kind: "matching", task: "walls", score: 0, dimensions: Object.entries(dimensions).map(([dimension, items]) => ({ dimension, score: 0, items: Object.entries(items).map(([item, assigned]) => ({ item, ...(assigned === undefined ? {} : { assigned }), correct: 1, miss: assigned === undefined })) })) };
+  }
+
+  /** 🪜️ A sorting result of a sheet that hid the keys: the items in order, each with its guess, `undefined` for none. */
+  function guessedSort(guesses: readonly (readonly [string, number | undefined])[]): RunResult["tasks"][number] {
+    return { kind: "sorting", task: "power", score: 0, items: guesses.map(([item, guess], position) => ({ item, value: 0, position, rank: position, ...(guess === undefined ? {} : { guess }), miss: guess === undefined })) };
+  }
+
+  it("counts a guessed matching value under the nearest authored value of the dimension, measured on its scale", () => {
+    const crowd = crowdView(QUIZ, [
+      { ...RUN, challenge: "hard", tasks: [guessedMatch({ u: { old: 1.39, new: 0.36, mid: 0.34 }, demand: { old: 60, new: 9.4, mid: 9.6 } })] },
+      { ...RUN, challenge: "expert", tasks: [guessedMatch({ u: { old: 1e6, new: -50, mid: 0.5 }, demand: { old: 1e-9, new: 1e30, mid: 10 } })] },
+    ]);
+    expect(crowd.tasks[2]).toEqual({
+      task: "walls",
+      kind: "matching",
+      dimension: "u",
+      scores: zeros(2),
+      items: [
+        { item: "old", answers: 2, counts: [{ key: "1.4", count: 2 }] },
+        { item: "new", answers: 2, counts: [{ key: "0.2", count: 1 }, { key: "0.5", count: 1 }] },
+        { item: "mid", answers: 2, counts: [{ key: "0.2", count: 1 }, { key: "0.5", count: 1 }] },
+      ],
+    });
+    expect(crowd.tasks[3]!.items).toEqual([
+      { item: "old", answers: 2, counts: [{ key: "250", count: 1 }, { key: "9", count: 1 }] },
+      { item: "new", answers: 2, counts: [{ key: "250", count: 1 }, { key: "9", count: 1 }] },
+      { item: "mid", answers: 2, counts: [{ key: "10", count: 2 }] },
+    ]);
+    expect(AJV_CROWD(crowd), JSON.stringify(AJV_CROWD.errors)).toBe(true);
+  });
+
+  it("takes the smaller of two equally near authored values, and looks among every authored item, drawn or not", () => {
+    const tied: Quiz = {
+      ...QUIZ,
+      tasks: [
+        {
+          kind: "matching",
+          id: "walls",
+          title: T("Walls"),
+          prompt: T("Match"),
+          draw: 2,
+          dimensions: [
+            { id: "u", quantity: { label: T("U"), unit: "u", scale: "linear", prefixed: false, additive: false } },
+            { id: "demand", quantity: { label: T("D"), unit: "d", scale: "logarithmic", prefixed: false, additive: false } },
+          ],
+          items: [
+            { id: "old", label: T("Old"), values: { u: 3, demand: 1000 } },
+            { id: "new", label: T("New"), values: { u: 1, demand: 10 } },
+            { id: "mid", label: T("Mid"), values: { u: 8, demand: 1e7 } },
+          ],
+        },
+      ],
+    };
+    const crowd = crowdView(tied, [{ ...RUN, challenge: "hard", tasks: [guessedMatch({ u: { old: 2, new: 5.5, mid: 5.6 }, demand: { old: 100, new: 1e5, mid: 99.9 } })] }]);
+    expect(crowd.tasks[0]!.items.map((item) => item.counts![0]!.key)).toEqual(["1", "3", "8"]);
+    expect(crowd.tasks[1]!.items.map((item) => item.counts![0]!.key)).toEqual(["10", "1000", "10"]);
+  });
+
+  it("counts a card value under itself and an unanswered item nowhere", () => {
+    const crowd = crowdView(QUIZ, [
+      { ...RUN, tasks: [matched({ u: { old: 0.36, new: 0.2 } })] },
+      { ...RUN, challenge: "expert", tasks: [guessedMatch({ u: { old: 0.36, new: undefined, mid: undefined }, demand: { old: undefined, new: undefined, mid: undefined } })] },
+      { ...RUN, challenge: "expert", tasks: [{ kind: "classification", task: "units", score: 0, items: [{ item: "watt", correct: "power", credit: 0 }, { item: "kwh", assigned: "power", correct: "energy", credit: 0 }] }] },
+    ]);
+    expect(crowd.tasks[2]!.items).toEqual([
+      { item: "old", answers: 2, counts: [{ key: "0.36", count: 1 }, { key: "0.5", count: 1 }] },
+      { item: "new", answers: 1, counts: [{ key: "0.2", count: 1 }] },
+    ]);
+    expect(crowd.tasks[3]).toEqual({ task: "walls", kind: "matching", dimension: "demand", scores: zeros(1), items: [] });
+    expect(crowd.tasks[0]).toEqual({ task: "units", kind: "classification", scores: zeros(1), items: [{ item: "kwh", answers: 1, counts: [{ key: "power", count: 1 }] }] });
+    expect(AJV_CROWD(crowd), JSON.stringify(AJV_CROWD.errors)).toBe(true);
+  });
+
+  it("adds the score of a sorting nobody guessed in and none of its places, and counts a guessed sorting as before", () => {
+    const unanswered = guessedSort([["kettle", undefined], ["bulb", undefined], ["plant", undefined]]);
+    const guessed = guessedSort([["bulb", 40], ["plant", undefined], ["kettle", undefined]]);
+    const crowd = crowdView(QUIZ, [
+      { ...RUN, challenge: "expert", tasks: [{ ...unanswered, score: 0 }] },
+      { ...RUN, challenge: "expert", tasks: [{ ...guessed, score: 0.35 }] },
+      { ...RUN, challenge: "medium", tasks: [{ ...sorted(["plant", "kettle", "bulb"]), score: 0.99 }] },
+    ]);
+    expect(crowd.tasks[1]).toEqual({
+      task: "power",
+      kind: "sorting",
+      scores: [1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+      items: [
+        { item: "bulb", answers: 2, meanPosition: 0.5, places: [1, 0, 1] },
+        { item: "kettle", answers: 2, meanPosition: 0.75, places: [0, 1, 1] },
+        { item: "plant", answers: 2, meanPosition: 0.25, places: [1, 1, 0] },
+      ],
+    });
+    expect(crowdView(QUIZ, [{ ...RUN, challenge: "expert", tasks: [unanswered] }]).tasks[1]).toEqual({ task: "power", kind: "sorting", scores: zeros(1), items: [] });
+    expect(AJV_CROWD(crowd), JSON.stringify(AJV_CROWD.errors)).toBe(true);
+  });
+
+  it("aggregates the results the core scores at every challenge for one seed: the same items, whatever was shown", () => {
+    const whole: Quiz = { ...QUIZ, tasks: QUIZ.tasks.map((task) => (task.kind === "sorting" ? { ...task, draw: undefined } : task)) as Quiz["tasks"] };
+    const answers = (challenge: Challenge): Record<string, Answer> => {
+      const sheet = sheetOf(whole, 77, challenge);
+      return Object.fromEntries(
+        sheet.tasks.map((sheetTask): [string, Answer] => {
+          if (sheetTask.kind === "classification") return [sheetTask.id, { kind: "classification", assignments: { watt: "power", kwh: "energy", joule: "energy" } }];
+          if (sheetTask.kind === "sorting") return [sheetTask.id, sheetTask.keys ? { kind: "sorting", order: ["phone", "bulb", "kettle", "plant"] } : { kind: "sorting", order: ["phone", "bulb", "kettle", "plant"], guesses: { phone: 4, bulb: 70, kettle: 1500, plant: 2e9 } }];
+          const truth = (dimension: string, item: string) => whole.tasks.flatMap((task) => (task.kind === "matching" ? task.items : [])).find((candidate) => candidate.id === item)!.values[dimension]!;
+          const perDimension = (value: (dimension: string, cards: readonly number[] | undefined, item: string) => number) => Object.fromEntries(sheetTask.dimensions.map((dimension) => [dimension.id, Object.fromEntries(sheetTask.items.map((item) => [item.id, value(dimension.id, dimension.cards, item.id)]))]));
+          return [sheetTask.id, sheetTask.dimensions[0]!.cards ? { kind: "matching", assignments: perDimension((dimension, cards, item) => cards!.indexOf(truth(dimension, item))) } : { kind: "matching", guesses: perDimension((dimension, _, item) => truth(dimension, item) * 1.01) }];
+        }),
+      );
+    };
+    const results = (["easy", "medium", "hard", "expert"] as const).map((challenge) => scoreRun(whole, sheetOf(whole, 77, challenge), answers(challenge))!);
+    expect(results.map((result) => [result.challenge, result.score, result.points])).toEqual([
+      ["easy", 1, 100],
+      ["medium", 1, 200],
+      ["hard", 1, 300],
+      ["expert", 1, 400],
+    ]);
+    const crowd = crowdView(whole, results);
+    expect(AJV_CROWD(crowd), JSON.stringify(AJV_CROWD.errors)).toBe(true);
+    expect(crowd.runs).toBe(4);
+    expect(crowd.scores).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 4]);
+    expect(crowd).toEqual(crowdView(whole, [results[1]!, results[1]!, results[1]!, results[1]!]));
+    expect(crowd.tasks[2]!.items).toEqual([
+      { item: "old", answers: 4, counts: [{ key: "1.4", count: 4 }] },
+      { item: "new", answers: 4, counts: [{ key: "0.2", count: 4 }] },
+      { item: "mid", answers: 4, counts: [{ key: "0.5", count: 4 }] },
+    ]);
   });
 });
 
@@ -447,8 +590,8 @@ describe("cursors on items and drags", () => {
 describe("thinkingCrowd", () => {
   const head = { title: T("Task"), prompt: T("Task") };
   const units: SheetTask = { kind: "classification", id: "units", ...head, categories: [{ id: "power", label: T("Power") }, { id: "energy", label: T("Energy") }], items: [{ id: "watt", label: T("W") }, { id: "kwh", label: T("kWh") }] };
-  const power: SheetTask = { kind: "sorting", id: "power", ...head, quantity: { label: T("P"), unit: "W", scale: "logarithmic", prefixed: true }, items: [{ id: "plant", label: T("Plant") }, { id: "bulb", label: T("Bulb") }, { id: "phone", label: T("Phone") }] };
-  const walls: SheetTask = { kind: "matching", id: "walls", ...head, dimensions: [{ id: "u", quantity: { label: T("U"), unit: "u", scale: "linear", prefixed: false }, cards: [1.4, 0.2] }, { id: "demand", quantity: { label: T("D"), unit: "d", scale: "logarithmic", prefixed: false }, cards: [9, 250] }], items: [{ id: "old", label: T("Old") }, { id: "new", label: T("New") }] };
+  const power: SheetTask = { kind: "sorting", id: "power", ...head, quantity: { label: T("P"), unit: "W", scale: "logarithmic", prefixed: true, additive: true }, items: [{ id: "plant", label: T("Plant") }, { id: "bulb", label: T("Bulb") }, { id: "phone", label: T("Phone") }] };
+  const walls: SheetTask = { kind: "matching", id: "walls", ...head, dimensions: [{ id: "u", quantity: { label: T("U"), unit: "u", scale: "linear", prefixed: false, additive: false }, cards: [1.4, 0.2] }, { id: "demand", quantity: { label: T("D"), unit: "d", scale: "logarithmic", prefixed: false, additive: false }, cards: [9, 250] }], items: [{ id: "old", label: T("Old") }, { id: "new", label: T("New") }] };
   const states: readonly ThinkingState[] = [
     { tag: "0000000a", answers: { units: { kind: "classification", assignments: { watt: "power", joule: "energy" } } } },
     { tag: "0000000b", answers: { units: { kind: "classification", assignments: { watt: "energy", kwh: "energy" } }, power: { kind: "sorting", order: ["phone", "bulb"] }, walls: { kind: "matching", values: { u: { old: 0.2, new: 1.4 }, demand: { new: 250 } } } } },
@@ -502,6 +645,24 @@ describe("thinkingCrowd", () => {
       const state = { tag: "0000000f", answers: { [sheetTask.id]: thinkingAnswer(sheetTask, answer)! } };
       expect(thinkingProblem(state)).toBeUndefined();
     }
+  });
+
+  it("carries guessed numbers of a matching whose keys are hidden as the values they are, and refuses card indices there", () => {
+    if (walls.kind !== "matching") throw new Error("kind");
+    const hidden: SheetTask = { ...walls, dimensions: walls.dimensions.map(({ cards: _, ...dimension }) => dimension) };
+    expect(thinkingAnswer(hidden, { kind: "matching", guesses: { u: { old: 1.3 }, demand: { new: 240, old: 8 } } })).toEqual({ kind: "matching", values: { u: { old: 1.3 }, demand: { new: 240, old: 8 } } });
+    expect(thinkingAnswer(hidden, { kind: "matching" })).toEqual({ kind: "matching", values: {} });
+    expect(thinkingAnswer(hidden, { kind: "matching", assignments: { u: { old: 0 } } })).toBeUndefined();
+    expect(thinkingAnswer(walls, { kind: "matching", guesses: { u: { old: 1.3 } } })).toBeUndefined();
+    expect(thinkingAnswer(hidden, { kind: "matching", guesses: { demand: { new: 0 } } })).toBeUndefined();
+    const guessing = { tag: "0000000e", answers: { walls: thinkingAnswer(hidden, { kind: "matching", guesses: { u: { old: 1.3, new: 0.2 } } })! } };
+    expect(thinkingProblem(guessing)).toBeUndefined();
+    expect(thinkingCrowd([guessing], hidden)[0]!.items).toEqual([
+      { item: "old", tags: ["0000000e"], votes: [{ key: "1.3", tags: ["0000000e"] }] },
+      { item: "new", tags: ["0000000e"], votes: [{ key: "0.2", tags: ["0000000e"] }] },
+    ]);
+    const guessedSorting = thinkingAnswer({ ...power }, { kind: "sorting", order: ["phone", "bulb", "plant"], guesses: { phone: 4, plant: 1e9 } });
+    expect(guessedSorting).toEqual({ kind: "sorting", order: ["phone", "bulb", "plant"], guesses: { phone: 4, plant: 1e9 } });
   });
 
   it("does not depend on the order of different tags and is empty without drafts", () => {

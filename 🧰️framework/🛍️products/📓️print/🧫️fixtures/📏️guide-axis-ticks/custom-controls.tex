@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{semio-viz-guide}
+\ExplSyntaxOn
+\NewDocumentEnvironment{ProbeFrame}{}{
+  \bool_set_true:N \l_semio_viz_in_figure_bool
+  \fp_set:Nn \l_semio_viz_width_fp {80}
+  \fp_set:Nn \l_semio_viz_height_fp {40}
+  \fp_set:Nn \l_semio_viz_pad_fp {8}
+  \begin{tikzpicture}[x=1mm,y=1mm]
+}{\end{tikzpicture}\bool_set_false:N \l_semio_viz_in_figure_bool}
+\ExplSyntaxOff
+\begin{document}
+\SemioVizLocale{de}
+\SemioVizProbeBegin{guide-axis-ticks}{custom-controls}
+\SemioVizProbeOn
+\SemioVizScale{x}{linear}{0,10}{8,78}
+\SemioVizScale{paint}{ordinal}{a,b}{red,blue}
+\SemioVizScale{glyph}{ordinal}{a,b}{triangle,wye}
+\SemioVizScale{dash}{ordinal}{a,b}{{2,1},{1,2}}
+\SemioVizScale{ramp}{linear}{0,10}{red,blue}
+\begin{ProbeFrame}
+\SemioVizAxis[scale=x,orient=top,tickValues={0,5,10},tickFormat=.1f,tickSize=2,stroke={\#ff0000},fill={\#008000},strokeWidth=0.4,labelSize=8,titleSize=10,labelRotation=15,grid=true,gridStroke={\#0000ff},gridDash={2,1},title={Wert}]
+\SemioVizLegend[scale=paint,orient=right,tickValues={a,b},channel=fill,x=84,y=35,swatchSize=3,labelSize=8,title={Farben}]
+\SemioVizLegend[scale=glyph,orient=bottom,channel=shape,x=8,y=0,swatchSize=3]
+\SemioVizLegend[scale=dash,orient=left,channel=dash,x=-8,y=35,swatchSize=3,strokeWidth=0.4]
+\SemioVizLegend[scale=ramp,kind=gradient,x=8,y=-10,length=24,tickValues={0,5,10},tickFormat=.1f]
+\end{ProbeFrame}
+\ExplSyntaxOn
+\semio_viz_guide_format:nnN{.1f}{0.5}\l_semio_viz_guide_label_tl
+\exp_args:NnV\SemioVizProbeString{format/de}\l_semio_viz_guide_label_tl
+\semio_viz_guide_format:nnN{\%Y-\%m-\%d~\%H:\%M}{1735732800000}\l_semio_viz_guide_label_tl
+\exp_args:NnV\SemioVizProbeString{format/time}\l_semio_viz_guide_label_tl
+\semio_viz_scale_value:nnN{ramp}{5}\l_semio_viz_legend_mapped_tl
+\use:x{\exp_not:N\convertcolorspec{named}{\exp_not:V\l_semio_viz_legend_mapped_tl}{RGB}\exp_not:N\l_semio_viz_legend_color_tl}
+\exp_args:NnV\SemioVizProbeValues{legend-color/mid}\l_semio_viz_legend_color_tl
+\ExplSyntaxOff
+\end{document}

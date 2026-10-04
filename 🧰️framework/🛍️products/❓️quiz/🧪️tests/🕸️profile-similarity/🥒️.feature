@@ -20,6 +20,15 @@ Feature: A classification answer earns full credit for hits and profile similari
   all correct, a near profile miss, the farthest miss (exactly 0), a mid-range miss, an unprofiled
   category assigned, an unprofiled category missed, and everything wrong; a profile-free task where
   every miss earns 0; and a task whose two profiles are identical, so `d_max = 0` and a miss earns 0.
+  The credit is always the task's: four of the heating vectors are repeated on the sheet task a challenge
+  that hides the keys presents (challenge design §3.2: axes without numbers, categories without
+  descriptions, profiles as shares of the axis ranges) and earn exactly what they earn where the keys show.
+
+  A sheet task that carries `seconds` is timed (challenge design §3.4): its answer may leave items
+  unassigned or be absent, and such an item earns 0 and carries no `assigned` category, the score staying
+  the mean over every sheet item. The `timed` group covers a complete answer, one with a near miss, two
+  items left out, an item left out beside a near miss, nothing assigned, no answer, and a profile-free
+  task with one item left out and with no answer; every score is recomputed with `numpy.mean`.
 
   Design §13 (revisions after audit) adds how both cores degrade on inputs that bypass validation: an
   answer that §5 holds invalid or incomplete, or a sheet task the task cannot resolve, scores none (and a
@@ -41,10 +50,18 @@ Feature: A classification answer earns full credit for hits and profile similari
     Then every implementation projects the same credits and the same mean score per vector within 1e-12
     And the farthest profile miss and every unprofiled miss earn exactly 0
 
+  @id-timed
+  @level-fundamental
+  @mode-differential
+  Scenario: Items left unassigned on a timed sheet task earn nothing
+    Given the committed timed vectors of shared://🕸️profile-similarity/🔣️.json
+    When every complete, partial or absent answer is scored against its task and timed sheet task
+    Then every implementation projects the same credits, the same unassigned items and the same mean score per vector within 1e-12
+
   @id-degraded
   @level-fundamental
   @mode-error
   Scenario: Inputs that bypass validation degrade identically — scored or none, never a throw or NaN
     Given the committed degraded vectors of shared://🕸️profile-similarity/🔣️.json
     When every degraded vector is scored against its own task and sheet task
-    Then every implementation projects the same result, or none for an unknown category, an incomplete answer or a wrong kind, exactly 0 for a sheet without items, and partial credit computed over the complete profiles only
+    Then every implementation projects the same result, or none for an unknown category or item (timed or not), an incomplete or absent untimed answer or a wrong kind, exactly 0 for a sheet without items, and partial credit computed over the complete profiles only

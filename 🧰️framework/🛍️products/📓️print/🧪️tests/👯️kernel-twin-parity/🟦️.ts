@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
-import { scaleLinear, scaleLog, vizConvexHull, vizGeoProjection } from "../../🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🟦️.ts";
+import { scaleLinear, scaleLog, vizConvexHull, vizGeoProjection } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import chordLatex from "../🪢️network-chord/🟦️.ts";
 import chordTwin from "../🎗️network-chord-twin/🟦️.ts";
 import circularLatex from "../⭕️network-circular-arc/🟦️.ts";

@@ -15,7 +15,7 @@
 \seq_new:N \l_semio_viz_chem_rec_seq
 % ✂️ Splits one slash-separated record #1 into the shared field sequence.
 \cs_new_protected:Npn \semio_viz_chem_record:n #1
-  { \seq_set_split:Nnx \l_semio_viz_chem_rec_seq { / } {#1} }
+  { \seq_set_split:Nnn \l_semio_viz_chem_rec_seq { / } {#1} }
 % 🔢 Expands to field #1 of the record most recently split.
 \cs_new:Npn \semio_viz_chem_field:n #1
   { \seq_item:Nn \l_semio_viz_chem_rec_seq {#1} }
@@ -62,19 +62,29 @@
         atoms={ a1/0/0/ , a2/7/4/ , a3/14/0/ , a4/21/4/ , a5/28/0/O , a6/14/-8/N } ,
         bonds={ a1/a2/1/plain , a2/a3/2/plain , a3/a4/1/plain , a4/a5/2/plain , a3/a6/1/wedge } ,
         lonePairs={ a5/2 , a6/1 } ,
-        arrow={ 34/0/48/0/Δ }
+        arrow={ 34/0/48/0/\ensuremath{\Delta} }
       }
       {#1}
     \prop_clear:N \l_semio_viz_chem_ax_prop
     \prop_clear:N \l_semio_viz_chem_ay_prop
+    \semio_viz_sci_fit_reset:
     \clist_map_inline:Nn \l_semio_viz_chem_atoms_clist
       {
         \semio_viz_chem_record:n {##1}
+        \semio_viz_sci_fit_point:nn {\semio_viz_chem_field:n{2}} {\semio_viz_chem_field:n{3}}
         \prop_put:Nxx \l_semio_viz_chem_ax_prop
           { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 2 } }
         \prop_put:Nxx \l_semio_viz_chem_ay_prop
           { \semio_viz_chem_field:n { 1 } } { \semio_viz_chem_field:n { 3 } }
       }
+    \str_if_eq:VnT \l_semio_viz_chem_mode_tl { reaction } {
+      \clist_map_inline:Nn \l_semio_viz_chem_arrow_clist {
+        \semio_viz_chem_record:n {##1}
+        \semio_viz_sci_fit_point:nn {\semio_viz_chem_field:n{1}} {\semio_viz_chem_field:n{2}}
+        \semio_viz_sci_fit_point:nn {\semio_viz_chem_field:n{3}} {\semio_viz_chem_field:n{4}}
+      }
+    }
+    \semio_viz_sci_fit_begin:
     \clist_map_inline:Nn \l_semio_viz_chem_bonds_clist
       {
         \semio_viz_chem_record:n {##1}
@@ -94,6 +104,7 @@
       }
     \str_if_eq:VnT \l_semio_viz_chem_mode_tl { lewis } { \semio_viz_chem_pairs: }
     \str_if_eq:VnT \l_semio_viz_chem_mode_tl { reaction } { \semio_viz_chem_arrow: }
+    \end{scope}
   }
 % 🔗 Looks up the two atoms of the pending bond record and draws it as a solid wedge, a widening hash ladder, or plain parallel lines, then reports its endpoints and order.
 \cs_new_protected:Npn \semio_viz_chem_bond:
@@ -329,7 +340,7 @@
     \semio_viz_sci_enter:nnn { sci-orbital }
       {
         mode=molecular-orbital , lobes=2 , domain={-1,1} , range={-8,8} , axes=false , grid=false ,
-        levels={ -1/-2/1s/1 , 1/-2/1s/1 , 0/-5/σ/2 , 0/4/σ*/0 } ,
+        levels={ -1/-2/1s/1 , 1/-2/1s/1 , 0/-5/\(\sigma\)/2 , 0/4/\(\sigma\)*/0 } ,
         shells={ 1s/2/2 , 2s/2/2 , 2p/4/6 , 3s/1/2 }
       }
       {#1}
@@ -348,7 +359,7 @@
       {
         \semio_viz_chem_record:n {##1}
         \fp_set:Nn \l_semio_viz_sci_a_fp
-          { ( \semio_viz_chem_field:n { 1 } + 1 ) * \l_semio_viz_sci_w_fp / 2 }
+          { 6 + ( \semio_viz_chem_field:n { 1 } + 1 ) * ( \l_semio_viz_sci_w_fp - 12 ) / 2 }
         \draw [ semio~sci~curve ]
           ( \fp_eval:n { \l_semio_viz_sci_a_fp - 6 } ,
             \semio_viz_sci_my:n { \semio_viz_chem_field:n { 2 } } ) --

@@ -1106,10 +1106,10 @@
       "networkDuringExecution": false
     },
     {
-      "id": "print-viz-kernel-twin",
+      "id": "print-viz-inference-twin",
       "kind": "cross-semio-implementation",
       "ecosystem": "javascript",
-      "package": "@semio-tech/print-viz-kernel",
+      "package": "@semio-tech/print-viz-inference",
       "version": "workspace",
       "capabilities": [
         "viz-kernel-twin-parity",
@@ -1126,7 +1126,7 @@
       "rationale": "The second implementation of the semio visualization kernel, written in TypeScript against the same specification as the LaTeX packages and adjudicated module by module against d3 in its own harness. It is registered as a SUPPLEMENT, never as independent evidence: it shares this repository, this specification and these authors with the subject it is compared to. What it buys is the one comparison d3 cannot make - the two copies of the kernel drifting apart, including where d3 has no opinion.",
       "engine": {
         "family": "semio",
-        "implementation": "@semio-tech/print-viz-kernel",
+        "implementation": "@semio-tech/print-viz-inference",
         "version": "workspace"
       },
       "productionReachable": false,
@@ -1270,7 +1270,7 @@
       "capabilities": [
         "viz-render-scene-graph"
       ],
-      "rationale": "The TypeScript twin of the kernel (🔨️modules/📊️viz-kernel) renders a taxonomy §79 chart specification into the dependency-free 2D scene graph of 🧰️framework/🔨️modules/◻️2d and, from the same resolved item list, into TikZ source text. Nothing in d3 adjudicates that stage: d3 has no scene graph, no TikZ emitter and no notion of a chart specification — its shape generators stop at a path string, and vega's scenegraph is bound to its own view-composition sizing model rather than to a published algorithm, so comparing against it would measure a different specification. The arithmetic underneath the renderer is separately adjudicated against the registered d3 oracles by the kernel's own differential harness (237 checks over thirteen modules, `bun ./📜️script.ts test` in 📊️viz-kernel/📦️packages/🟦️typescript), so this decision covers only the specification-to-primitive step: the primitive census, the rectangles the scales imply, one TikZ statement per resolved item, and that two option sets of one mark do not render identically.",
+      "rationale": "The TypeScript twin of the kernel (🧬️schema/💡️inferences) renders a taxonomy §79 chart specification into the dependency-free 2D scene graph of 🧰️framework/🔨️modules/◻️2d and, from the same resolved item list, into TikZ source text. Nothing in d3 adjudicates that stage: d3 has no scene graph, no TikZ emitter and no notion of a chart specification — its shape generators stop at a path string, and vega's scenegraph is bound to its own view-composition sizing model rather than to a published algorithm, so comparing against it would measure a different specification. The arithmetic underneath the renderer is separately adjudicated against the registered d3 oracles by the kernel's own differential harness (237 checks over thirteen modules, `bun ./📜️script.ts test` in 🧬️schema/💡️inferences/📦️packages/🟦️typescript), so this decision covers only the specification-to-primitive step: the primitive census, the rectangles the scales imply, one TikZ statement per resolved item, and that two option sets of one mark do not render identically.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"

@@ -34,6 +34,14 @@ Feature: The submitted runs of a quiz aggregate into the same crowd view everywh
   prints it — so the energy density `120` sorts before `15`; a one-item order (possible only for a
   result that bypassed the sheet) puts its item at normalized position 0 and place 0.
 
+  One crowd serves every challenge (challenge design §3.6): the bins take the score — the accuracy — of
+  runs at every challenge. Where a sheet task hid its cards a matching item's `assigned` value is a guess
+  (its result carries `miss`): it counts under the nearest value among all authored items of the task for
+  that dimension, nearest on the quantity's scale (`log10` on a logarithmic one), the smaller value of two
+  equally near. An item a timed run left unanswered — a classification or matching item result without
+  `assigned` — counts nowhere, and a sorting task result without any guess where the keys were hidden is a
+  task without an answer: it adds its score to the bins and nothing to the places.
+
   The results are real: the lifecycle reference scored them from perfect, worst and mixed answers to
   real sheets of the energy quiz (all three kinds, three tasks drawing fewer items than they define;
   heating oil and diesel equal in both matching dimensions, wood pellets and firewood sharing a CO₂
@@ -44,7 +52,10 @@ Feature: The submitted runs of a quiz aggregate into the same crowd view everywh
   0.8949, 0.895, 0.9, 0.995, 1; some without the second dimension, none with the room temperatures),
   orders the reference scored that are shorter and longer than the six power ratings and three room
   temperatures a sheet presents (1, 2, 3, 5, 6, 7 and 8 items, with halves that round up), and a result
-  that repeats a task, a dimension and items and carries a task result of another kind.
+  that repeats a task, a dimension and items and carries a task result of another kind. Further vectors
+  mix runs at all four challenges, tally guessed appliance powers and lifespans of the icon quiz (equally
+  near values, values beyond every authored one) and guessed energy densities nearer to another value on
+  the logarithmic scale than on a linear one, and leave tasks and items unanswered on expert runs.
 
   The vectors shared://📊️crowd-view/🔣️.json are generated, never hand-edited, from the Python reference
   in this directory, from the repository root:

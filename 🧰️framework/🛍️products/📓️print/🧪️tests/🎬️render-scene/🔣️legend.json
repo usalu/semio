@@ -1,0 +1,400 @@
+{
+  "width": 100,
+  "height": 60,
+  "nativeFontFaces": {
+    "titles": [
+      "Legende",
+      "Key"
+    ],
+    "labels": [
+      "AV",
+      "Äpfel"
+    ],
+    "title": "ShareTechMono-Regular",
+    "label": "Anta-Regular"
+  },
+  "scales": [
+    {
+      "name": "c",
+      "kind": "ordinal",
+      "domain": [
+        "a",
+        "bb",
+        "ccc"
+      ],
+      "range": [
+        "red",
+        "blue",
+        "green"
+      ]
+    },
+    {
+      "name": "letters",
+      "kind": "ordinal",
+      "domain": [
+        "AV",
+        "To",
+        "fi",
+        "Äpfel"
+      ],
+      "range": [
+        "red",
+        "blue",
+        "green",
+        "black"
+      ]
+    },
+    {
+      "name": "n",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        16
+      ]
+    },
+    {
+      "name": "size",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        1,
+        9
+      ]
+    },
+    {
+      "name": "paint",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "blue",
+        "red"
+      ]
+    },
+    {
+      "name": "shapes",
+      "kind": "ordinal",
+      "domain": [
+        "a",
+        "bb",
+        "ccc"
+      ],
+      "range": [
+        "circle",
+        "square",
+        "triangle"
+      ]
+    },
+    {
+      "name": "dash",
+      "kind": "ordinal",
+      "domain": [
+        "a",
+        "bb",
+        "ccc"
+      ],
+      "range": [
+        "2 1",
+        "3 2",
+        "1 1"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "default",
+      "scale": "c",
+      "options": {},
+      "nativeOrigins": [
+        [
+          74,
+          55.4
+        ],
+        [
+          74,
+          51.6
+        ],
+        [
+          74,
+          47.8
+        ]
+      ]
+    },
+    {
+      "id": "columns",
+      "scale": "c",
+      "options": {
+        "at": "10,50",
+        "columns": 2,
+        "swatchSize": 4,
+        "itemGap": 2,
+        "labelGap": 3,
+        "length": 40
+      },
+      "nativeOrigins": [
+        [
+          10,
+          46
+        ],
+        [
+          30,
+          46
+        ],
+        [
+          10,
+          40
+        ]
+      ]
+    },
+    {
+      "id": "horizontal-metrics",
+      "scale": "letters",
+      "options": {
+        "at": "10,40",
+        "orient": "horizontal",
+        "labelSize": 14,
+        "swatchSize": 3,
+        "itemGap": 1,
+        "labelGap": 2
+      }
+    },
+    {
+      "id": "top",
+      "scale": "c",
+      "options": {
+        "at": "10,20",
+        "orient": "top",
+        "offset": 4
+      }
+    },
+    {
+      "id": "bottom",
+      "scale": "c",
+      "options": {
+        "orient": "bottom",
+        "offset": 5,
+        "x": 7,
+        "y": 9
+      }
+    },
+    {
+      "id": "left",
+      "scale": "c",
+      "options": {
+        "orient": "left",
+        "offset": 3
+      }
+    },
+    {
+      "id": "right",
+      "scale": "c",
+      "options": {
+        "orient": "right",
+        "offset": 4
+      }
+    },
+    {
+      "id": "title",
+      "scale": "c",
+      "title": {
+        "en": "Key",
+        "de": "Schlüssel"
+      },
+      "options": {
+        "at": "10,50",
+        "title": "Legende",
+        "titleSize": 16
+      }
+    },
+    {
+      "id": "tick-overrides",
+      "scale": "c",
+      "tickValues": [
+        "bb"
+      ],
+      "options": {
+        "tickValues": "a,ccc",
+        "spacing": 8
+      }
+    },
+    {
+      "id": "categorical-numeric-domain",
+      "scale": "n",
+      "options": {}
+    },
+    {
+      "id": "gradient",
+      "scale": "paint",
+      "options": {
+        "kind": "gradient",
+        "at": "5,40",
+        "length": 48,
+        "swatchSize": 4,
+        "ticks": 3,
+        "format": ".1f"
+      }
+    },
+    {
+      "id": "numeric-gradient",
+      "scale": "n",
+      "options": {
+        "kind": "gradient",
+        "at": "5,40",
+        "ticks": 3
+      }
+    },
+    {
+      "id": "size-area",
+      "scale": "size",
+      "options": {
+        "kind": "size",
+        "at": "10,40",
+        "ticks": 3,
+        "itemGap": 2
+      }
+    },
+    {
+      "id": "size-radius",
+      "scale": "size",
+      "options": {
+        "kind": "size",
+        "sizeMode": "radius",
+        "at": "10,40",
+        "ticks": 3
+      }
+    },
+    {
+      "id": "pattern",
+      "scale": "c",
+      "options": {
+        "kind": "pattern",
+        "at": "10,40",
+        "swatchSize": 4,
+        "hatchLines": 5
+      }
+    },
+    {
+      "id": "symbol",
+      "scale": "c",
+      "options": {
+        "kind": "symbol",
+        "symbol": "diamond",
+        "at": "10,40",
+        "swatchSize": 4
+      }
+    },
+    {
+      "id": "shape-channel",
+      "scale": "shapes",
+      "options": {
+        "kind": "gradient",
+        "channel": "shape",
+        "at": "10,40"
+      }
+    },
+    {
+      "id": "stroke-channel",
+      "scale": "c",
+      "options": {
+        "kind": "gradient",
+        "channel": "stroke",
+        "at": "10,40",
+        "strokeWidth": 0.6
+      }
+    },
+    {
+      "id": "dash-channel",
+      "scale": "dash",
+      "options": {
+        "channel": "dash",
+        "at": "10,40"
+      }
+    },
+    {
+      "id": "style",
+      "scale": "c",
+      "title": {
+        "en": "Key",
+        "de": "Schlüssel"
+      },
+      "options": {
+        "at": "10,40",
+        "style": "opacity=0.25",
+        "labelSize": 12,
+        "titleSize": 16,
+        "fill": "red"
+      }
+    },
+    {
+      "id": "formatted",
+      "scale": "n",
+      "options": {
+        "kind": "line",
+        "format": ".2f"
+      }
+    },
+    {
+      "id": "scale-option",
+      "scale": "c",
+      "options": {
+        "scale": "letters",
+        "at": "10,40"
+      }
+    },
+    {
+      "id": "vertical-metrics",
+      "scale": "letters",
+      "options": {
+        "at": "10,40",
+        "labelSize": 14,
+        "swatchSize": 3,
+        "itemGap": 1,
+        "labelGap": 2
+      }
+    },
+    {
+      "id": "native-foreground-light",
+      "scale": "c",
+      "options": {},
+      "appearance": "light",
+      "title": {
+        "en": "Palette",
+        "de": "Palette"
+      },
+      "expectedTextFill": "#001117"
+    },
+    {
+      "id": "native-foreground-dark",
+      "scale": "c",
+      "options": {},
+      "appearance": "dark",
+      "title": {
+        "en": "Palette",
+        "de": "Palette"
+      },
+      "expectedTextFill": "#f7f3e3"
+    },
+    {
+      "id": "native-foreground-override",
+      "scale": "c",
+      "options": {
+        "fill": "#123456"
+      },
+      "appearance": "dark",
+      "title": {
+        "en": "Palette",
+        "de": "Palette"
+      },
+      "expectedTextFill": "#123456"
+    }
+  ]
+}

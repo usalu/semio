@@ -5,6 +5,12 @@
 \RequirePackage{xparse}
 
 \ExplSyntaxOn
+% 🧬 Typed row tokens preserve null and booleans independently of authored strings.
+\NewDocumentCommand \SemioVizNull { } { }
+\NewDocumentCommand \SemioVizString { m } {#1}
+\NewDocumentCommand \SemioVizUndefined { } { }
+\NewDocumentCommand \SemioVizNaN { } { }
+\NewDocumentCommand \SemioVizBoolean { m } {#1}
 
 %region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-table }

@@ -18,6 +18,7 @@ Inputs are integers or short decimals on purpose: every JSON reader forms the sa
 import copy
 import importlib.util
 import json
+import math
 import os
 import subprocess
 import sys
@@ -31,7 +32,7 @@ PETS = os.path.join(ROOT, "🧰️framework", "🛍️products", "🐾️pets")
 HOST = os.path.join(ROOT, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🧪️test", "🖥️host", "🐍️.py")
 SCRATCH = os.path.join(TICKET, "🗑️generated", "wp-e")
 COMMAND = ".venv/Scripts/python.exe .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/generate_behavior_vectors.py"
-ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"]
+ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk", "hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]
 
 
 # region 🔖️Plumbing
@@ -64,8 +65,9 @@ def dump(path, document):
         return
     for _ in range(20):
         try:
-            with open(path, "wb") as handle:
+            with open(path + ".new", "wb") as handle:
                 handle.write(payload)
+            os.replace(path + ".new", path)
             break
         except OSError as error:
             print("retrying %s after %s" % (os.path.relpath(path, ROOT), error))
@@ -121,20 +123,68 @@ def extra_clips():
     ]
 
 
-def species(reference, id_, english, german, width, height, palette, locomotion, temperament, repertoire):
-    """🧬️ One species of the trace troupe: the reference rig with its own name, box, colours, gait, character and repertoire."""
+GEAR_CLIPS = {"climb": {"climb": "stroll", "mantle": "stroll", "slide": "tumble"}, "ladder": {"carry": "stroll", "climb": "stroll"}, "grapple": {"aim": "stretch", "reel": "stretch"}, "parachute": {"glide": "breathe"}}
+EPISODES = ["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]
+
+
+def named(english, german):
+    """🌍️ A text in both languages."""
+    return {"en": english, "de": german}
+
+
+def condition(id_, english, german, **more):
+    """🔦️ One state of a troupe species; the first of a species is its resting state."""
+    return {"id": id_, "name": named(english, german), **more}
+
+
+def feat(id_, english, german, clip, cues, **more):
+    """🪄️ One trick of a troupe species; ``source`` is written as ``from``."""
+    if "source" in more:
+        more["from"] = more.pop("source")
+    return {"id": id_, "name": named(english, german), "clip": clip, "cues": cues, **more}
+
+
+def emitter(id_, bone, x, y, shape, fill, stroke, motion, count, life, speed, spread, width=None):
+    """✨️ One emitter of a troupe species."""
+    document = {"id": id_, "bone": bone, "x": x, "y": y, "shape": shape, "fill": fill, "stroke": stroke}
+    if width is not None:
+        document["strokeWidth"] = width
+    document.update({"motion": motion, "count": count, "life": life, "speed": speed, "spread": spread})
+    return document
+
+
+def species(reference, id_, english, german, width, height, palette, locomotion, temperament, repertoire, gear, mood, states=None, tricks=None, emitters=None, hum=None, grounds=None):
+    """🧬️ One species of the trace troupe: the reference rig with its own name, box, colours, gait, character, repertoire, gear, resting mood, states, tricks, emitters and the topics of the page it plays with.
+
+    The members of the second round: the states, tricks and emitters given (one resting state and nothing else when
+    none are given), a purr on the cuddle clip with the emitter ``hum`` names, the grip at nine tenths of the height,
+    the reach at a quarter of the width, for every activity the rules owe (hang, tumble, purr, dizzy, shrug, push,
+    and what the gear brings) the nearest clip of the rig, and the grounds given (none when none are given).
+    """
     document = copy.deepcopy(reference)
     document.pop("$schema", None)
     document["id"] = id_
     document["name"] = {"en": english, "de": german}
     document["thing"] = {"en": "blob", "de": "Klecks"}
-    document["grounds"] = []
+    document["grounds"] = [] if grounds is None else grounds
     document["size"] = {"width": width, "height": height}
     document["palette"] = {"body": palette[0], "accent": palette[1], "detail": palette[2]}
     document["clips"] = document["clips"] + extra_clips()
-    document["repertoire"] = repertoire
+    owed = {"hang": repertoire["idle"][0], "tumble": "tumble", "purr": "nuzzle", "dizzy": "wiggle", "shrug": "stretch", "push": "bristle"}
+    for owned in gear:
+        owed.update(GEAR_CLIPS[owned])
+    document["repertoire"] = {**repertoire, **{activity: [owed[activity]] for activity in EPISODES if activity in owed}}
     document["locomotion"] = locomotion
     document["temperament"] = {"energy": temperament[0], "sociability": temperament[1], "curiosity": temperament[2]}
+    if states is not None:
+        document["states"] = states
+    document["tricks"] = [] if tricks is None else tricks
+    document["emitters"] = [] if emitters is None else emitters
+    document["purr"] = {"clip": "nuzzle"} if hum is None else {"clip": "nuzzle", "emitter": hum}
+    document["gear"] = gear
+    document["grip"] = round(height * 0.9, 1)
+    document["reach"] = round(width * 0.25, 1)
+    document["mood"] = mood
     return document
 
 
@@ -144,20 +194,64 @@ def troupe():
     mossy walks and is everybody's darling; sparky hops and never sits still; thorny walks and picks quarrels;
     pebble walks slowly and dozes; misty floats above its perch. mossy and sparky are friends, mossy and thorny are
     rivals, and the other bonds lie in between, so every kind of encounter occurs.
+
+    Their minds: mossy climbs a ladder of three states (calm, glowing, radiant) by circling and has two click tricks,
+    a show-off and a shake trick; sparky winds up by circling or shaking and boings when clicked or stroked; thorny
+    bristles; pebble has no trick at all (a click is answered with a hello); misty drizzles for a while when clicked.
+    Five reactions use what the chemistry can say: a side of any species, a state held for a while, a trick being
+    performed, a third party that holds a reaction back, affinity bounds, a chance and an activity it sets off.
+
+    Their topics of a page (a "meadow" quiz of the mischief scripts): mossy plays with the task about moss, thorny
+    with anything of the meadow (a ground of the quiz), misty with the task about rain; sparky and pebble with nothing.
     """
     with open(os.path.join(TICKET, "reference-species.json"), encoding="utf-8") as handle:
         reference = json.load(handle)
     social = {"greet": ["wave"], "cuddle": ["nuzzle"], "squabble": ["bristle"], "sulk": ["mope"], "sleep": ["doze"], "land": ["squash"], "fall": ["tumble"]}
+    star = {"kind": "path", "d": "M 0 -3 L 1 -1 L 3 0 L 1 1 L 0 3 L -1 1 L -3 0 L -1 -1 Z"}
+    dot = {"kind": "ellipse", "cx": 0, "cy": 0, "rx": 1.5, "ry": 1.5}
+    drop = {"kind": "ellipse", "cx": 0, "cy": 0, "rx": 0.8, "ry": 1.6}
+    rungs = ["calm", "glowing", "radiant"]
+    mossy = {
+        "states": [
+            condition("calm", "Calm", "Ruhig"),
+            condition("glowing", "Glowing", "Glimmend", tint={"body": "#35c9b8"}, emitter="sparkle", lasts=20, then="calm"),
+            condition("radiant", "Radiant", "Strahlend", tint={"body": "#7ee8d9", "accent": "#fccf05"}, clip="bob", emitter="sparkle", lasts=10, then="glowing"),
+        ],
+        "tricks": [
+            feat("cheer", "Cheer", "Jubeln", "stretch", ["click", "whim"], emitter="sparkle", mood="happy"),
+            feat("twirl", "Twirl", "Drehen", "wiggle", ["click"], to="glowing"),
+            feat("brighten", "Brighten", "Aufleuchten", "stretch", ["circle"], source=rungs, mood="proud"),
+            feat("dim", "Dim", "Dämpfen", "wiggle", ["countercircle"], source=rungs),
+            feat("bow", "Bow", "Verbeugen", "wave", ["show"], mood="proud"),
+            feat("shake-off", "Shake off", "Abschütteln", "wiggle", ["shake"], to="calm", mood="grumpy"),
+        ],
+        "emitters": [emitter("sparkle", "tuft", 0, -4, star, "accent", "none", "burst", 6, 0.8, 40, 1), emitter("hum", "body", 0, -14, dot, "detail", "ink", "rise", 3, 1.2, 14, 0.1, width=1)],
+        "hum": "hum",
+        "grounds": ["meadow/moss"],
+    }
+    sparky = {
+        "states": [condition("ready", "Ready", "Bereit"), condition("wound", "Wound up", "Aufgezogen", tint={"accent": "#ffe8a3"}, lasts=8, then="ready")],
+        "tricks": [feat("boing", "Boing", "Boing", "stretch", ["click", "stroke"], mood="playful"), feat("wind", "Wind up", "Aufziehen", "wiggle", ["circle", "shake"], source=["ready"], to="wound"), feat("zap", "Zap", "Zisch", "bristle", ["whim", "show"], emitter="spark", mood="playful")],
+        "emitters": [emitter("spark", "tuft", 0, -3, {"kind": "line", "x1": 0, "y1": 0, "x2": 0, "y2": -3}, "none", "accent", "burst", 5, 0.5, 60, 1, width=1.5)],
+    }
+    thorny = {"states": [condition("prickly", "Prickly", "Stachelig")], "tricks": [feat("bristle-up", "Bristle up", "Sträuben", "bristle", ["click"], mood="grumpy"), feat("huff", "Huff", "Schnauben", "stretch", ["whim"])], "grounds": ["meadow"]}
+    pebble = {"states": [condition("stone", "Stone", "Stein")]}
+    misty = {
+        "states": [condition("mist", "Mist", "Nebel"), condition("drizzle", "Drizzle", "Nieseln", tint={"body": "#8fb8c9"}, emitter="drops", lasts=6, then="mist")],
+        "tricks": [feat("rain", "Rain", "Regnen", "wiggle", ["click"], to="drizzle"), feat("swirl", "Swirl", "Wirbeln", "wiggle", ["whim", "show"], mood="playful")],
+        "emitters": [emitter("drops", "body", 0, 6, drop, "detail", "none", "fall", 6, 0.7, 30, 0.1)],
+        "grounds": ["meadow/rain"],
+    }
     return {
         "schema": "semio.pets.menagerie/v1",
         "id": "trace-troupe",
         "title": {"en": "Trace troupe", "de": "Spurentruppe"},
         "species": [
-            species(reference, "mossy", "Mossy, the moss blob", "Mossy, der Moosklecks", 40, 30, ["#1e9b8d", "#34d1bf", "#fa9500"], {"gait": "walk", "speed": 36}, [0.6, 0.8, 0.6], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle", "stretch"], **social}),
-            species(reference, "sparky", "Sparky, the spark blob", "Sparky, der Funkenklecks", 36, 28, ["#fa9500", "#ffd166", "#ef476f"], {"gait": "hop", "speed": 48}, [0.9, 0.6, 0.9], {"idle": ["breathe"], "hop": ["bounce"], "fidget": ["wiggle", "stretch"], **social}),
-            species(reference, "thorny", "Thorny, the thorn blob", "Thorny, der Dornenklecks", 42, 32, ["#7a5195", "#bc5090", "#ffa600"], {"gait": "walk", "speed": 32}, [0.6, 0.7, 0.5], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["stretch"], **social}),
-            species(reference, "pebble", "Pebble, the stone blob", "Pebble, der Steinklecks", 44, 28, ["#6c757d", "#adb5bd", "#343a40"], {"gait": "walk", "speed": 24}, [0.2, 0.5, 0.3], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle"], "greet": ["wave"], "sleep": ["doze"]}),
-            species(reference, "misty", "Misty, the mist blob", "Misty, der Nebelklecks", 40, 30, ["#a8dadc", "#f1faee", "#457b9d"], {"gait": "float", "speed": 22, "hover": 14}, [0.5, 0.5, 0.6], {"idle": ["bob"], "walk": ["bob"], "fidget": ["wiggle"], **social}),
+            species(reference, "mossy", "Mossy, the moss blob", "Mossy, der Moosklecks", 40, 30, ["#1e9b8d", "#34d1bf", "#fa9500"], {"gait": "walk", "speed": 36}, [0.6, 0.8, 0.6], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle", "stretch"], **social}, ["climb", "ladder", "grapple", "parachute"], "happy", **mossy),
+            species(reference, "sparky", "Sparky, the spark blob", "Sparky, der Funkenklecks", 36, 28, ["#fa9500", "#ffd166", "#ef476f"], {"gait": "hop", "speed": 48}, [0.9, 0.6, 0.9], {"idle": ["breathe"], "hop": ["bounce"], "fidget": ["wiggle", "stretch"], **social}, ["grapple", "parachute"], "playful", **sparky),
+            species(reference, "thorny", "Thorny, the thorn blob", "Thorny, der Dornenklecks", 42, 32, ["#7a5195", "#bc5090", "#ffa600"], {"gait": "walk", "speed": 32}, [0.6, 0.7, 0.5], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["stretch"], **social}, ["climb"], "grumpy", **thorny),
+            species(reference, "pebble", "Pebble, the stone blob", "Pebble, der Steinklecks", 44, 28, ["#6c757d", "#adb5bd", "#343a40"], {"gait": "walk", "speed": 24}, [0.2, 0.5, 0.3], {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle"], "greet": ["wave"], "sleep": ["doze"]}, [], "sleepy", **pebble),
+            species(reference, "misty", "Misty, the mist blob", "Misty, der Nebelklecks", 40, 30, ["#a8dadc", "#f1faee", "#457b9d"], {"gait": "float", "speed": 22, "hover": 14}, [0.5, 0.5, 0.6], {"idle": ["bob"], "walk": ["bob"], "fidget": ["wiggle"], **social}, ["parachute"], "content", **misty),
         ],
         "bonds": [
             {"between": ["mossy", "sparky"], "affinity": 0.8},
@@ -171,6 +265,13 @@ def troupe():
             {"scene": "home", "core": ["mossy", "sparky", "thorny"], "rotation": ["pebble", "misty"]},
             {"scene": "meadow", "core": ["pebble", "misty"], "rotation": ["mossy"]},
         ],
+        "chemistry": [
+            {"id": "drizzle-dampens-anyone", "when": {"species": "misty", "state": "drizzle"}, "near": {}, "within": 60, "every": 10, "then": [{"on": "near", "mood": "sad", "amount": 0.4}, {"on": "when", "rapport": -0.05}]},
+            {"id": "a-glowing-moss-warms-its-friends", "when": {"species": "mossy", "state": "glowing", "held": 2}, "near": {}, "within": 120, "affinity": [0.4, 1], "every": 20, "then": [{"on": "near", "mood": "happy", "amount": 0.5}, {"on": "near", "encounter": "cuddle"}]},
+            {"id": "tricks-annoy-thorny", "when": {"activity": "trick"}, "near": {"species": "thorny"}, "within": 100, "every": 15, "then": [{"on": "near", "mood": "grumpy", "amount": 0.4}, {"on": "near", "activity": "walk"}]},
+            {"id": "a-purr-lulls-pebble", "when": {"species": "pebble"}, "near": {"activity": "purr"}, "within": 120, "every": 12, "chance": 0.5, "then": [{"on": "when", "activity": "sleep"}, {"on": "near", "mood": "sleepy", "amount": 0.3}]},
+            {"id": "a-zap-startles-misty", "when": {"species": "sparky", "trick": "zap"}, "near": {"species": "misty"}, "within": 100, "unless": {"species": "mossy"}, "every": 10, "then": [{"on": "near", "mood": "scared", "amount": 0.5}, {"on": "near", "trick": "swirl"}]},
+        ],
     }
 
 
@@ -181,9 +282,9 @@ def troupe():
 UNITS = [0, 0.125, 0.25, 0.5, 0.75, 0.999999, 1 - 2**-32]
 
 
-def situation(id_, mode, energy, curiosity, quiet=False, movers=0, fidgeters=0, roam=True, hops=True, watched=False, fidgets=True, crowd=0):
+def situation(id_, mode, energy, curiosity, quiet=False, movers=0, fidgeters=0, roam=True, hops=True, watched=False, fidgets=True, crowd=0, whims=False):
     """🧭️ One situation an idle pet decides in."""
-    return {"id": id_, "mode": mode, "quiet": quiet, "movers": movers, "fidgeters": fidgeters, "roam": roam, "hops": hops, "crowd": crowd, "watched": watched, "fidgets": fidgets, "needs": {"energy": energy, "sociability": 0.5, "curiosity": curiosity}}
+    return {"id": id_, "mode": mode, "quiet": quiet, "movers": movers, "fidgeters": fidgeters, "roam": roam, "hops": hops, "crowd": crowd, "watched": watched, "whims": whims, "fidgets": fidgets, "needs": {"energy": energy, "sociability": 0.5, "curiosity": curiosity}}
 
 
 def situations():
@@ -215,6 +316,11 @@ def situations():
         situation("lively-quiet-tired", "lively", 0.3, 0.6, quiet=True),
         situation("still-rested", "still", 0.9, 0.6),
         situation("still-exhausted", "still", 0, 1),
+        situation("calm-a-whim-on-offer", "calm", 0.9, 0.6, whims=True),
+        situation("lively-a-whim-on-offer", "lively", 0.9, 0.6, whims=True),
+        situation("lively-tired-a-whim-on-offer", "lively", 0.25, 0.6, whims=True),
+        situation("lively-quiet-a-whim-on-offer", "lively", 0.9, 0.6, quiet=True, whims=True),
+        situation("still-a-whim-on-offer", "still", 0.9, 0.6, whims=True),
     ]
 
 
@@ -249,7 +355,6 @@ def behavior(menagerie):
     if not (rested["idle"] > 128 and rested["fidget"] > 0 and rested["walk"] > 0 and rested["sleep"] == 0):
         raise AssertionError("a rested pet in calm must stay idle in more than half of its decisions and still fidget and walk now and then: %r" % rested)
     dwells = [{"id": "%s-%s" % (activity, mode), "activity": activity, "mode": mode, "units": UNITS, "expected": [oracle.dwell(activity, mode, mark) for mark in UNITS]} for activity in ACTIVITIES for mode in ["still", "calm", "lively"]]
-    moods = [{"id": activity, "expected": oracle.MOODS[index]} for index, activity in enumerate(ACTIVITIES)]
     sixteenths = [index / 16 + 1 / 32 for index in range(16)]
     affinities = [-1, -0.6, -0.45, -0.3, -0.29, -0.2, -0.1, 0, 0.1, 0.16, 0.3, 0.39, 0.4, 0.6, 0.8, 0.9, 1]
     encounters = []
@@ -275,7 +380,6 @@ def behavior(menagerie):
             "picks": unique(picks),
             "decisions": unique(decisions),
             "dwells": unique(dwells),
-            "moods": unique(moods),
             "encounters": unique(encounters),
             "graph": unique(graph),
             "casts": unique(casts),
@@ -363,12 +467,61 @@ CARD_B = {"id": "card-b", "x0": 600, "x1": 1100, "y": 300}
 CARD_C = {"id": "card-c", "x0": 260, "x1": 900, "y": 520}
 KEEPOUTS = [{"x": 380, "y": 270, "width": 60, "height": 28}, {"x": 1120, "y": 680, "width": 160, "height": 40}, {"x": 300, "y": 330, "width": 400, "height": 150}]
 SILHOUETTE = [{"id": "tab", "x0": 200, "x1": 330, "y": 300}, {"id": "body", "x0": 200, "x1": 900, "y": 326}, {"id": "footer", "x0": 6, "x1": 1274, "y": 694}, FLOOR]
+LEDGE = {"id": "ledge", "x0": 600, "x1": 644, "y": 300}
 SOLIDS = [{"x": 0, "y": 0, "width": 1280, "height": 34}, {"x": 207, "y": 326, "width": 686, "height": 44}, {"x": 196, "y": 300, "width": 138, "height": 26}, {"x": 196, "y": 326, "width": 708, "height": 174}, {"x": -4, "y": 694, "width": 1288, "height": 26}]
 
 
 def surveyed(surfaces, keepouts=None, width=WIDTH, height=HEIGHT):
-    """🗺️ A survey of the stage."""
-    return {"kind": "surveyed", "width": width, "height": height, "surfaces": surfaces, "keepouts": KEEPOUTS if keepouts is None else keepouts}
+    """🗺️ A survey of the stage (no walls, no fixtures)."""
+    return {"kind": "surveyed", "width": width, "height": height, "surfaces": surfaces, "keepouts": KEEPOUTS if keepouts is None else keepouts, "walls": [], "fixtures": []}
+
+
+def pointed(x, y, over="free"):
+    """🖱️ The pointer at a position, over free space unless said otherwise."""
+    return {"kind": "pointed", "x": x, "y": y, "over": over}
+
+
+def tapped(x, y):
+    """👆️ A click of the learner: a press and its release at one position."""
+    return [{"kind": "pressed", "x": x, "y": y, "pointer": "mouse"}, {"kind": "released", "x": x, "y": y}]
+
+
+PLAY = {"kind": "permitted", "play": True, "mischief": False}
+
+
+def circled(second, cx, cy, radius, turns, way=1, rate=1):
+    """🌀️ The pointer circling round a point from a second on: `turns` turns at `rate` turns per second, clockwise on screen (`way` 1) or counter-clockwise (−1), one sample per tick, in quarter pixels."""
+    ticks = int(turns * SECOND / rate)
+    return [{"at": int(second * SECOND) + tick, "events": [pointed(round(4 * (cx + radius * math.cos(way * 2 * math.pi * rate * tick / SECOND))) / 4, round(4 * (cy + radius * math.sin(way * 2 * math.pi * rate * tick / SECOND))) / 4)]} for tick in range(ticks + 1)]
+
+
+def stroked(second, cx, cy, reach, strokes, hertz=2):
+    """🖐️ The pointer stroking across a point from a second on: `strokes` back-and-forth strokes of ±`reach` pixels at `hertz` strokes per second, one sample per tick, in quarter pixels."""
+    ticks = int(strokes * SECOND / hertz)
+    return [{"at": int(second * SECOND) + tick, "events": [pointed(round(4 * (cx + reach * math.sin(2 * math.pi * hertz * tick / SECOND))) / 4, cy)]} for tick in range(ticks + 1)]
+
+
+LOW_LEDGE = {"id": "low-ledge", "x0": 598, "x1": 650, "y": 500}
+
+
+def pressed(second, x, y):
+    """🫳️ A press of the learner's mouse at a position."""
+    return at(second, {"kind": "pressed", "x": x, "y": y, "pointer": "mouse"})
+
+
+def dragging(second, start, end, ticks):
+    """✊️ The pointer of an open press dragged in a straight line from `start` to `end` over `ticks` ticks from a second on, one sample per tick, in quarter pixels."""
+    return [{"at": int(second * SECOND) + tick, "events": [{"kind": "dragged", "x": round(4 * (start[0] + (end[0] - start[0]) * tick / ticks)) / 4, "y": round(4 * (start[1] + (end[1] - start[1]) * tick / ticks)) / 4}]} for tick in range(1, ticks + 1)]
+
+
+def released(second, x, y):
+    """🎈️ The open press released at a position."""
+    return at(second, {"kind": "released", "x": x, "y": y})
+
+
+def tossed(second, species):
+    """🎾️ A deed of the keyboard: the pet tossed to the top of the stage."""
+    return at(second, {"kind": "played", "species": species, "deed": "toss"})
 
 
 def shifted(surface, dx, dy):
@@ -381,6 +534,41 @@ def at(second, *events):
     return {"at": int(second * SECOND), "events": list(events)}
 
 
+def carded(cards, floor=True, width=WIDTH, height=HEIGHT):
+    """🃏️ A survey of cards: their tops are surfaces, their boxes keep-outs and both of their sides walls; with the floor unless said otherwise."""
+    surfaces = [{"id": card["id"], "x0": card["x0"], "x1": card["x1"], "y": card["y0"]} for card in cards] + ([{"id": "floor", "x0": 0, "x1": width, "y": height}] if floor else [])
+    keepouts = [{"x": card["x0"], "y": card["y0"], "width": card["x1"] - card["x0"], "height": card["y1"] - card["y0"]} for card in cards]
+    walls = [wall for card in cards for wall in ({"id": card["id"] + "-left", "surface": card["id"], "side": -1, "x": card["x0"], "y0": card["y0"], "y1": card["y1"]}, {"id": card["id"] + "-right", "surface": card["id"], "side": 1, "x": card["x1"], "y0": card["y0"], "y1": card["y1"]})]
+    return {"kind": "surveyed", "width": width, "height": height, "surfaces": surfaces, "keepouts": keepouts, "walls": walls, "fixtures": []}
+
+
+def page(scroll=0, without=()):
+    """📰️ A page of two columns of cards, 30 px between the cards of a column (no room on their tops) and an 80 px gutter between the columns, scrolled by ``scroll`` pixels; the last cards run on below the stage."""
+    return [{"id": column + str(row), "x0": x0, "x1": x1, "y0": y0 - scroll, "y1": y1 - scroll} for column, x0, x1 in (("l", 40, 600), ("r", 680, 1240)) for row, (y0, y1) in enumerate(((60, 250), (280, 470), (500, 900))) if column + str(row) not in without]
+
+
+def shelf(dx=0):
+    """🗄️ A shelf 90 px above the ground on a card whose wall ends 30 px above it: too high to hop to, no wall to climb from the ground."""
+    return [{"id": "shelf", "x0": 500 + dx, "x1": 820 + dx, "y0": 600, "y1": 660}, {"id": "ground", "x0": 0, "x1": WIDTH, "y0": 690, "y1": 760}]
+
+
+COLUMN = [{"id": "c0", "x0": 400, "x1": 880, "y0": 550, "y1": 600}, {"id": "c1", "x0": 400, "x1": 880, "y0": 630, "y1": 760}]
+TASK_CARD = {"id": "tasks", "x0": 300, "x1": 980, "y0": 300, "y1": 460}
+MEADOW_ROWS = [
+    {"id": "row-moss", "key": "meadow/moss", "x": 308, "y": 306, "width": 664, "height": 28},
+    {"id": "row-thorns", "key": "meadow/thorns", "x": 308, "y": 338, "width": 664, "height": 28},
+    {"id": "row-rain", "key": "meadow/rain", "x": 308, "y": 370, "width": 664, "height": 28},
+]
+MISCHIEF = {"kind": "permitted", "play": True, "mischief": True}
+
+
+def quizzed(fixtures, cards=(TASK_CARD,)):
+    """📋️ A survey of the cards of a quiz page (their tops surfaces with the floor, their boxes keep-outs, their sides walls) whose task rows are marked for the pets to play with."""
+    survey = carded(list(cards))
+    survey["fixtures"] = fixtures
+    return survey
+
+
 def scripts(menagerie):
     """📜️ The scripted event logs of the stage-trace case."""
     choice = case("🧠️behavior-choice")
@@ -391,7 +579,7 @@ def scripts(menagerie):
     scroll = [{"at": 30 * SECOND + 8 * index, "events": [surveyed([shifted(surface, 0, -4 * (index + 1)) if surface["id"] != "floor" else surface for surface in world], [{**keepout, "y": keepout["y"] - 4 * (index + 1)} if keepout["y"] < 600 else keepout for keepout in KEEPOUTS])]} for index in range(16)]
     scrolled = [shifted(surface, 0, -64) if surface["id"] != "floor" else surface for surface in world]
     lifted = [{**keepout, "y": keepout["y"] - 64} if keepout["y"] < 600 else keepout for keepout in KEEPOUTS]
-    pokes = [at(20 + 4 * index, {"kind": "poked", "x": 40 + 60 * index, "y": 705 if index % 2 == 0 else 285}) for index in range(21)]
+    clicks = [at(20 + 4 * index, *tapped(40 + 60 * index, 705 if index % 2 == 0 else 285)) for index in range(21)]
     return [
         {
             "id": "calm-home",
@@ -400,11 +588,11 @@ def scripts(menagerie):
             "every": 10 * SECOND,
             "steps": [
                 at(0, surveyed(world), lineup(home, 6, 0, 11)),
-                at(10, {"kind": "pointed", "x": 200, "y": 250}),
-                at(11, {"kind": "pointed", "x": 900, "y": 400}),
+                at(10, pointed(200, 250)),
+                at(11, pointed(900, 400)),
                 at(30, {"kind": "unpointed"}),
-                at(62, {"kind": "pointed", "x": 640, "y": 700}),
-                at(62.5, {"kind": "pointed", "x": 660, "y": 690}),
+                at(62, pointed(640, 700)),
+                at(62.5, pointed(660, 690)),
                 at(120, {"kind": "glanced", "points": [{"x": 100, "y": 100}, {"x": 1200, "y": 600}]}),
                 at(150, {"kind": "glanced", "points": []}),
             ],
@@ -449,7 +637,8 @@ def scripts(menagerie):
                 at(15, {"kind": "tuned", "mode": "still"}),
                 at(20, {"kind": "summoned", "species": ["mossy", "misty", "pebble"]}),
                 at(25, surveyed([CARD_A, CARD_C, FLOOR])),
-                at(27, {"kind": "poked", "x": 640, "y": 700}),
+                at(26, PLAY),
+                at(27, *tapped(640, 700)),
                 at(40, {"kind": "tuned", "mode": "lively"}),
                 at(80, {"kind": "tuned", "mode": "calm"}),
                 at(95, {"kind": "tuned", "mode": "still"}),
@@ -474,11 +663,11 @@ def scripts(menagerie):
             ],
         },
         {
-            "id": "pokes-and-glances",
+            "id": "clicks-and-glances",
             "seed": 77,
             "ticks": 150 * SECOND,
             "every": 10 * SECOND,
-            "steps": [at(0, surveyed(world), lineup(home, 6, 0, 77)), at(10, {"kind": "glanced", "points": [{"x": 640, "y": 100}]}), *pokes, at(110, {"kind": "pointed", "x": 300, "y": 700}), at(125, {"kind": "pointed", "x": 800, "y": 290})],
+            "steps": [at(0, surveyed(world), lineup(home, 6, 0, 77), PLAY), at(10, {"kind": "glanced", "points": [{"x": 640, "y": 100}]}), *clicks, at(110, pointed(300, 700)), at(125, pointed(800, 290))],
         },
         {
             "id": "narrow-stage",
@@ -514,10 +703,10 @@ def scripts(menagerie):
             "every": 10 * SECOND,
             "steps": [
                 at(0, surveyed([{"id": "floor", "x0": 0, "x1": 375, "y": 667}], [], width=375, height=667), {"kind": "summoned", "species": ["mossy", "misty"]}),
-                *[at(10 + 8 * index, {"kind": "pointed", "x": 30 + 35 * index, "y": 640}) for index in range(10)],
+                *[at(10 + 8 * index, pointed(30 + 35 * index, 640)) for index in range(10)],
                 at(100, {"kind": "unpointed"}),
-                at(105, {"kind": "tuned", "mode": "still"}, {"kind": "pointed", "x": 100, "y": 640}),
-                at(110, {"kind": "pointed", "x": 250, "y": 640}),
+                at(105, {"kind": "tuned", "mode": "still"}, pointed(100, 640)),
+                at(110, pointed(250, 640)),
             ],
         },
         {
@@ -527,12 +716,12 @@ def scripts(menagerie):
             "every": 10 * SECOND,
             "steps": [
                 at(0, surveyed(world), lineup(home, 6, 0, 133)),
-                *[at(8 + 3 * index, {"kind": "pointed", "x": 60 + 41 * index, "y": [285, 505, 705][index % 3]}) for index in range(30)],
-                *[at(8 + 3 * index + 1.25, {"kind": "pointed", "x": 1240 - 41 * index, "y": [705, 285, 505][index % 3]}) for index in range(30)],
+                *[at(8 + 3 * index, pointed(60 + 41 * index, [285, 505, 705][index % 3])) for index in range(30)],
+                *[at(8 + 3 * index + 1.25, pointed(1240 - 41 * index, [705, 285, 505][index % 3])) for index in range(30)],
                 at(100, {"kind": "hushed", "quiet": True}),
-                *[at(101 + 2 * index, {"kind": "pointed", "x": 100 + 110 * index, "y": 505}) for index in range(10)],
+                *[at(101 + 2 * index, pointed(100 + 110 * index, 505)) for index in range(10)],
                 at(122, {"kind": "hushed", "quiet": False}),
-                *[at(123 + 0.03125 * index, {"kind": "pointed", "x": 640 + (600 if index % 4 < 2 else -600), "y": 400}) for index in range(256)],
+                *[at(123 + 0.03125 * index, pointed(640 + (600 if index % 4 < 2 else -600), 400)) for index in range(256)],
                 at(140, {"kind": "unpointed"}),
             ],
         },
@@ -559,6 +748,226 @@ def scripts(menagerie):
                 at(110, {"kind": "tuned", "mode": "lively"}),
             ],
         },
+        {
+            "id": "clicks-and-purrs",
+            "seed": 155,
+            "ticks": 60 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, surveyed([LEDGE], []), {"kind": "summoned", "species": ["mossy"]}, PLAY),
+                *[at(3 + 0.5 * index, *tapped(622, 285)) for index in range(10)],
+                *[at(20 + 0.5 * index, *tapped(622, 285)) for index in range(3)],
+                *stroked(30, 622, 285, 18, 6),
+                at(34, {"kind": "unpointed"}),
+                at(40, {"kind": "permitted", "play": False, "mischief": False}, *tapped(622, 285)),
+                at(41, {"kind": "tuned", "mode": "still"}, PLAY, *tapped(622, 285)),
+                at(42, {"kind": "tuned", "mode": "calm"}),
+            ],
+        },
+        {
+            "id": "circles-and-states",
+            "seed": 166,
+            "ticks": 90 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, surveyed([LEDGE], []), {"kind": "summoned", "species": ["mossy"]}, PLAY),
+                *circled(5, 622, 285, 72, 2.5),
+                *circled(15, 622, 285, 72, 2.5),
+                at(18, {"kind": "unpointed"}),
+                *circled(22, 622, 285, 72, 2.5, way=-1),
+                at(25, {"kind": "unpointed"}),
+                *circled(28, 622, 285, 72, 2.5, way=-1),
+                at(31, {"kind": "unpointed"}),
+                *circled(40, 622, 285, 72, 2.5, rate=1.5),
+                at(42, {"kind": "unpointed"}),
+            ],
+        },
+        {
+            "id": "chemistry-and-moods",
+            "seed": 177,
+            "ticks": 120 * SECOND,
+            "every": 10 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, surveyed([{"id": "perch-%d" % index, "x0": 420 + 70 * index, "x1": 470 + 70 * index, "y": 400} for index in [1, 2]], []), {"kind": "summoned", "species": ["mossy", "sparky"]}, PLAY),
+                at(3, surveyed([{"id": "perch-%d" % index, "x0": 420 + 70 * index, "x1": 470 + 70 * index, "y": 400} for index in range(5)], []), {"kind": "summoned", "species": ["mossy", "sparky", "thorny", "pebble", "misty"]}),
+                at(4, {"kind": "played", "species": "misty", "deed": "trick"}),
+                at(12, {"kind": "played", "species": "mossy", "deed": "trick"}),
+                at(14, {"kind": "played", "species": "mossy", "deed": "trick"}),
+                at(24, {"kind": "played", "species": "sparky", "deed": "trick"}),
+                at(30, {"kind": "played", "species": "mossy", "deed": "pet"}),
+                at(60, {"kind": "hushed", "quiet": True}, {"kind": "played", "species": "misty", "deed": "trick"}),
+                at(80, {"kind": "hushed", "quiet": False}),
+                at(90, {"kind": "played", "species": "misty", "deed": "trick"}, {"kind": "played", "species": "sparky", "deed": "hello"}),
+            ],
+        },
+        {
+            "id": "drag-and-drop",
+            "seed": 188,
+            "ticks": 40 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, surveyed([LEDGE, CARD_C, FLOOR], []), {"kind": "summoned", "species": ["mossy"]}, PLAY),
+                pressed(4, 622, 285),
+                *dragging(4, (622, 285), (900, 160), 64),
+                released(7, 900, 160),
+                pressed(20, 300, 700),
+                released(20.5, 300, 700),
+            ],
+        },
+        {
+            "id": "throw-into-a-crowd",
+            "seed": 199,
+            "ticks": 60 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, surveyed([LEDGE, FLOOR], []), {"kind": "summoned", "species": ["mossy", "sparky", "thorny", "pebble", "misty"]}, PLAY),
+                pressed(6, 622, 285),
+                *dragging(6, (622, 285), (700, 240), 24),
+                *dragging(6.375, (700, 240), (760, 420), 12),
+                released(6.5625, 760, 420),
+            ],
+        },
+        {
+            "id": "chute-landings",
+            "seed": 211,
+            "ticks": 90 * SECOND,
+            "every": 10 * SECOND,
+            "steps": [
+                at(0, surveyed(world, []), lineup(home, 6, 0, 211), PLAY),
+                *[tossed(5 + 7 * index, species) for index, species in enumerate(["mossy", "sparky", "thorny", "pebble", "misty"])],
+                at(50, {"kind": "hushed", "quiet": True}),
+                tossed(52, "mossy"),
+                at(60, {"kind": "hushed", "quiet": False}, {"kind": "permitted", "play": False, "mischief": False}),
+                tossed(61, "sparky"),
+            ],
+        },
+        {
+            "id": "heads",
+            "seed": 222,
+            "ticks": 30 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, surveyed([LEDGE, LOW_LEDGE, FLOOR], []), {"kind": "summoned", "species": ["mossy", "pebble"]}, PLAY),
+                pressed(3, 622, 285),
+                *dragging(3, (622, 285), (624, 280), 8),
+                released(4, 624, 280),
+            ],
+        },
+        {
+            "id": "crowded-reseat",
+            "seed": 233,
+            "ticks": 70 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, surveyed([CARD_B, FLOOR], []), lineup(home, 6, 0, 233)),
+                at(10, surveyed([{**CARD_B, "x1": 820}, FLOOR], [])),
+                at(20, surveyed([{**CARD_B, "x1": 700}, FLOOR], [])),
+                at(30, surveyed([CARD_B, FLOOR], [])),
+                at(35, surveyed([shifted(CARD_B, 40, -30), FLOOR], [])),
+                at(40, surveyed([shifted(CARD_B, 40, -30), FLOOR], [{"x": 700, "y": 200, "width": 60, "height": 70}])),
+                at(50, surveyed([{**CARD_B, "x0": 900}, FLOOR], [])),
+                at(60, surveyed([CARD_B, FLOOR], [])),
+            ],
+        },
+        {
+            "id": "cancel-and-permit",
+            "seed": 244,
+            "ticks": 40 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, surveyed([LEDGE, CARD_C, FLOOR], []), {"kind": "summoned", "species": ["mossy"]}, PLAY),
+                pressed(3, 622, 285),
+                *dragging(3, (622, 285), (640, 200), 32),
+                at(4, {"kind": "cancelled"}),
+                pressed(10, 622, 285),
+                *dragging(10, (622, 285), (680, 180), 32),
+                at(12, {"kind": "permitted", "play": False, "mischief": False}),
+                at(18, PLAY),
+                pressed(19, 622, 285),
+                *dragging(19, (622, 285), (660, 200), 16),
+                at(20, {"kind": "tuned", "mode": "still"}),
+                at(22, {"kind": "tuned", "mode": "calm"}),
+            ],
+        },
+        {
+            "id": "gutter-life",
+            "seed": 3,
+            "ticks": 60 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded(page()), {"kind": "summoned", "species": ["mossy", "sparky", "thorny", "pebble", "misty"]})],
+        },
+        {
+            "id": "ladder-up",
+            "seed": 1,
+            "ticks": 72 * SECOND,
+            "every": 6 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded(shelf()[1:], floor=False), {"kind": "summoned", "species": ["mossy"]}), at(3, carded(shelf(), floor=False))],
+        },
+        {
+            "id": "toppled-ladder",
+            "seed": 1,
+            "ticks": 75 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded(shelf()[1:], floor=False), {"kind": "summoned", "species": ["mossy"]}), at(3, carded(shelf(), floor=False)), at(67.5, carded(shelf(160), floor=False))],
+        },
+        {
+            "id": "missed-hook",
+            "seed": 1,
+            "ticks": 48 * SECOND,
+            "every": 4 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded(shelf()[1:], floor=False), {"kind": "summoned", "species": ["sparky"]}), at(3, carded(shelf(), floor=False))],
+        },
+        {
+            "id": "grappling-rope",
+            "seed": 3,
+            "ticks": 20 * SECOND,
+            "every": 2 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded(shelf()[1:], floor=False), {"kind": "summoned", "species": ["sparky"]}), at(3, carded(shelf(), floor=False))],
+        },
+        {
+            "id": "gap-crossing",
+            "seed": 7,
+            "ticks": 20 * SECOND,
+            "every": 2 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, carded([]), {"kind": "summoned", "species": ["thorny"]}), at(3, carded(COLUMN))],
+        },
+        {
+            "id": "scrolled-climber",
+            "seed": 1,
+            "ticks": 20 * SECOND,
+            "every": 2 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, carded(page()), {"kind": "summoned", "species": ["mossy", "thorny", "sparky"]}),
+                *[at(8 + step / 8, carded(page(step + 1))) for step in range(4)],
+                at(9, carded(page(260))),
+                at(12, carded(page(260, without=("r2",)))),
+            ],
+        },
+        {
+            "id": "idle-learner-prank",
+            "seed": 301,
+            "ticks": 80 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, quizzed(MEADOW_ROWS), {"kind": "summoned", "species": ["mossy", "thorny"]}, MISCHIEF), at(1, pointed(640, 600)), at(1.5, {"kind": "unpointed"})],
+        },
+        {
+            "id": "reclaimed-prank",
+            "seed": 302,
+            "ticks": 80 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [at(0, {"kind": "tuned", "mode": "lively"}, quizzed(MEADOW_ROWS), {"kind": "summoned", "species": ["mossy", "pebble"]}, MISCHIEF), at(1, pointed(640, 600)), at(1.5, {"kind": "unpointed"}), at(50, {"kind": "reclaimed", "fixture": "row-moss"})],
+        },
+        {
+            "id": "scene-change-prank",
+            "seed": 303,
+            "ticks": 80 * SECOND,
+            "every": 5 * SECOND,
+            "steps": [
+                at(0, {"kind": "tuned", "mode": "lively"}, quizzed(MEADOW_ROWS), {"kind": "summoned", "species": ["thorny", "pebble"]}, MISCHIEF),
+                at(50, {"kind": "reclaimed", "fixture": "row-rain"}, {"kind": "summoned", "species": ["pebble", "misty"]}),
+                at(50.125, carded(page())),
+            ],
+        },
     ]
 
 
@@ -574,6 +983,14 @@ def traces(menagerie):
     subprocess.run(["bun", os.path.join(TICKET, "record_stage_trace.ts"), inputs, outputs], check=True, cwd=ROOT)
     with open(outputs, encoding="utf-8") as handle:
         recorded = json.load(handle)
+    committed = os.path.join(PETS, "🧫️fixtures", "🎪️stage-trace", "🔣️.json")
+    if "--rerecord" not in sys.argv and os.path.exists(committed):
+        with open(committed, encoding="utf-8") as handle:
+            before = {log["id"]: log["expected"] for log in json.load(handle)["scripts"]}
+        moved = [log["id"] for log in logs if log["id"] in before and before[log["id"]] != recorded[log["id"]]]
+        if moved:
+            raise AssertionError("the recorded traces differ from the committed ones (%s); pass --rerecord when the stage's behaviour was changed on purpose" % ", ".join(moved))
+        print("traces as committed: %d of %d scripts" % (sum(1 for log in logs if log["id"] in before), len(logs)))
     document = {
         "$comment": "Generated by `%s`: the menagerie and the scripts are composed there, every `expected` trace is recorded from the TypeScript subject (record_stage_trace.ts) and checked by 🧪️tests/🎪️stage-trace/🐍️.py — never edit by hand." % COMMAND,
         "menagerie": menagerie,
@@ -588,14 +1005,15 @@ def traces(menagerie):
 
 # region 🔖️Entry
 def main():
-    """🚀️ Writes the menagerie for the storyboard (``--troupe``) or every fixture of the three cases."""
+    """🚀️ Writes the menagerie for the storyboard (``--troupe``), the fixtures of the two table cases only (``--tables``: nothing is recorded from the stage) or every fixture of the three cases."""
     menagerie = troupe()
     if "--troupe" in sys.argv:
         dump(os.path.join(SCRATCH, "menagerie.json"), menagerie)
         return
     behavior(menagerie)
     bonds(menagerie)
-    traces(menagerie)
+    if "--tables" not in sys.argv:
+        traces(menagerie)
 
 
 if __name__ == "__main__":

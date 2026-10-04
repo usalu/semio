@@ -7,7 +7,7 @@ use super::*;
 use crate::schema::tests::{assert_same, entries, fixture, json, typed};
 use serde_json::{json, Value};
 
-const CODES: [IssueCode; 20] = [
+const CODES: [IssueCode; 25] = [
     IssueCode::TypeInvalid,
     IssueCode::Required,
     IssueCode::PropertyUnknown,
@@ -28,6 +28,11 @@ const CODES: [IssueCode; 20] = [
     IssueCode::FloatHover,
     IssueCode::EmptyCast,
     IssueCode::DuplicateScene,
+    IssueCode::DuplicateEntry,
+    IssueCode::LastsThen,
+    IssueCode::MissingGearClip,
+    IssueCode::MissingActivityClip,
+    IssueCode::FloaterGear,
 ];
 
 fn issues_of(definition: &str, document: &Value) -> Option<Vec<Issue>> {
@@ -65,7 +70,7 @@ fn base_menagerie() -> Menagerie {
 #[test]
 fn every_accepted_document_decodes_and_has_no_finding() {
     let vectors = fixture("schema-conformance");
-    assert_eq!(entries(&vectors["accepted"]).len(), 21);
+    assert_eq!(entries(&vectors["accepted"]).len(), 33);
     for vector in entries(&vectors["accepted"]) {
         assert_eq!(issues_of(definition_of(vector), document_of(&vectors, vector)), Some(Vec::new()), "{}", vector["id"]);
     }
@@ -74,7 +79,7 @@ fn every_accepted_document_decodes_and_has_no_finding() {
 #[test]
 fn every_structurally_broken_document_is_refused_by_the_twin_or_by_the_validator() {
     let vectors = fixture("schema-conformance");
-    assert_eq!(entries(&vectors["structural"]).len(), 26);
+    assert_eq!(entries(&vectors["structural"]).len(), 57);
     let mut judged = Vec::new();
     for vector in entries(&vectors["structural"]) {
         match issues_of(definition_of(vector), &vector["document"]) {
@@ -92,7 +97,7 @@ fn every_structurally_broken_document_is_refused_by_the_twin_or_by_the_validator
 #[test]
 fn every_rule_document_yields_the_committed_findings() {
     let vectors = fixture("schema-conformance");
-    assert_eq!(entries(&vectors["rules"]).len(), 63);
+    assert_eq!(entries(&vectors["rules"]).len(), 134);
     let mut reported = BTreeSet::new();
     for vector in entries(&vectors["rules"]) {
         let issues = issues_of(definition_of(vector), &vector["document"]).unwrap_or_else(|| panic!("{}: the twin refuses a document of sound structure", vector["id"]));
@@ -205,6 +210,46 @@ fn a_number_that_is_not_finite_is_a_type_finding_and_is_not_judged_any_further()
     key.value = f64::NAN;
     let base = "/clips/0/tracks/0/keys/0";
     assert_eq!(species_issues(&eased), [issue(&format!("{base}/ease/0"), IssueCode::TypeInvalid), issue(&format!("{base}/ease/2"), IssueCode::EaseRange), issue(&format!("{base}/value"), IssueCode::TypeInvalid)]);
+}
+
+#[test]
+fn the_numbers_of_states_emitters_grip_reach_and_chemistry_are_judged_like_every_other_number() {
+    let vectors = fixture("schema-conformance");
+    let mut species: Species = typed(&vectors["species"][0]["document"]);
+    assert!(species_issues(&species).is_empty());
+    species.grip = f64::NAN;
+    species.reach = f64::INFINITY;
+    species.emitters[0].life = f64::NAN;
+    species.emitters[0].x = f64::NEG_INFINITY;
+    species.emitters[1].spread = f64::NAN;
+    species.states[1].lasts = Some(f64::NAN);
+    assert_eq!(
+        species_issues(&species),
+        [
+            issue("/emitters/0/life", IssueCode::TypeInvalid),
+            issue("/emitters/0/x", IssueCode::TypeInvalid),
+            issue("/emitters/1/spread", IssueCode::TypeInvalid),
+            issue("/grip", IssueCode::TypeInvalid),
+            issue("/reach", IssueCode::TypeInvalid),
+            issue("/states/1/lasts", IssueCode::TypeInvalid)
+        ]
+    );
+    let mut menagerie: Menagerie = typed(&vectors["menagerie"]);
+    assert!(menagerie_issues(&menagerie).is_empty());
+    menagerie.chemistry[0].within = f64::NAN;
+    menagerie.chemistry[0].chance = Some(f64::INFINITY);
+    menagerie.chemistry[0].then[0].amount = Some(f64::NAN);
+    menagerie.chemistry[0].then[2].rapport = Some(f64::NEG_INFINITY);
+    assert_eq!(
+        menagerie_issues(&menagerie),
+        [issue("/chemistry/0/chance", IssueCode::TypeInvalid), issue("/chemistry/0/then/0/amount", IssueCode::TypeInvalid), issue("/chemistry/0/then/2/rapport", IssueCode::TypeInvalid), issue("/chemistry/0/within", IssueCode::TypeInvalid)]
+    );
+    let mut sized = base_species();
+    sized.size.height = f64::NAN;
+    sized.size.width = 0.0;
+    sized.grip = 1000.0;
+    sized.reach = 1000.0;
+    assert_eq!(species_issues(&sized), [issue("/size/height", IssueCode::TypeInvalid), issue("/size/width", IssueCode::OutOfRange)]);
 }
 
 #[test]

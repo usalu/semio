@@ -1,0 +1,40 @@
+{
+  "title": "Quiz End to End Fault Tolerance",
+  "emoji": "🛟️",
+  "status": "closed",
+  "description": "Get quiz working end to end and thoroughly tested, with and without a connection to the proctor; the proctor must be able to go offline at any time (completely fault tolerant). Fix the reported runtime crashes: QuizSession.rehint reading 'hints' of undefined (from loadRun), RunScreen keysHidden reading 'keys' of undefined, and presence WebSocket noise ('WebSocket is closed before the connection is established').",
+  "goal": "🎯runningframework🎯runningproducts",
+  "client": "claude-code",
+  "llm": "opus-5-5",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open and ticket_close returned a malformed result (structuredContent null) on 2026-10-03 and changed nothing. Closed manually on 2026-10-03.",
+  "summary": "The quiz works end to end with and without its proctor, and with a proctor of another build. The reported crashes came from a stale dev proctor (from before the challenge levels) and a client that both spoke wire version 1. The contract gained $defs/WireVersion (2) with TS and Rust twins, used by the proctor and the client; the new language-agnostic case 🤝️wire-version pins the schema's fingerprint to it. ProctorClient agrees with the proctor through GET /instance: an incompatible proctor is sent nothing and counts as away (transient: the outbox keeps waiting, the deputy decides, a recheck every 30 s). Views are shape-checked and unreadable answers are shortages. UI: an out-of-date banner with reload, a ScreenBoundary per screen, presence sockets closed only once open. The dev stack supervises its proctor (rebuild on a Rust change, relaunch on a catalog change or crash, a warning for a reused proctor of another contract), and semioServeUpgradeVitePlugin keeps the dev server alive under Bun 1.3 when the proctor goes away. Fixed the collapsed home cards (display:contents host) that kept 🥞️layered-home red. New e2e spec 🛟️proctor-faults. Gates: React 839/839, core TS 415, Rust 177, parity 132/132, proctor 90+15+21, site 234/234, typecheck clean; e2e all projects green in both topologies except 🐕️pet-walk, which assumed the collapsed card geometry and is being adapted by the active QUIZ-PETS session (informed, accepted). See 📓️report.md.",
+  "files": {
+    "created": [
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🤝️wire-version/{🥒️.feature,🐍️.py,🟦️.ts,🦀️.rs}",
+      "🧰️framework/🛍️products/❓️quiz/🧫️fixtures/🤝️wire-version/🔣️.json",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🛟️proctor-faults/🟦️.ts",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️03/QUIZ-END-TO-END-FAULT-TOLERANCE/{📓️plan.md,📓️report.md,upgrade_socket_probe.ts}"
+    ],
+    "updated": [
+      "🧰️framework/🛍️products/❓️quiz/🧬️schema/{🔣️.json,🟦️.ts,🦀️.rs}",
+      "🧰️framework/🛍️products/❓️quiz/README.md",
+      "🧰️framework/🛍️products/❓️quiz/🔮️oracles/🔣️.json",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/{🟦️.tsx,🎨️.css}",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/{🛂️proctor,🧭️session,💾️persistence,👥️presence,🌐️i18n}/🟦️.ts(x)",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/{🚶️learner-journey,📬️outbox-delivery,🎭️identity-step,🚦️rate-limits,🌍️language-choice,🐾️pet-companions,🚏️navigation,🔏️privacy-notice,📡️presence-client}/🟦️.tsx",
+      "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "🎓️teaching/🛂️proctor/README.md",
+      "🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts",
+      "🎓️teaching/🛂️proctor/🔨️modules/{🎭️actors,❓️queries,🧩️instance}/🦀️.rs and their 🧪️tests/🔬️unit/🦀️.rs",
+      "🎓️teaching/🛂️proctor/🧪️tests/🌐️end-to-end/🦀️.rs",
+      "🎓️teaching/🏛️architecture/❓️quiz/README.md",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧱️stack/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/🏗️builder/🌐️vite/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/🎭️e2e/{🎚️config,🚶️learner}/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🧱️local-stack/🟦️.ts"
+    ],
+    "removed": []
+  }
+}

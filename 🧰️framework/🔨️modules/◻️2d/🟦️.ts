@@ -34,7 +34,7 @@ export type DrawingNode =
   | { readonly kind: "line"; readonly x1: number; readonly y1: number; readonly x2: number; readonly y2: number }
   | { readonly kind: "polygon"; readonly points: readonly Vec2[] }
   | { readonly kind: "path"; readonly segments: readonly PathSegment[] }
-  | { readonly kind: "text"; readonly x: number; readonly y: number; readonly content: string; readonly size: number }
+  | { readonly kind: "text"; readonly x: number; readonly y: number; readonly content: string; readonly size: number; readonly font?: string; readonly anchor?: "start" | "middle" | "end"; readonly baseline?: "alphabetic" | "middle" | "top" | "bottom" }
   | { readonly kind: "group"; readonly children: readonly string[] };
 
 export type PathSegment =
@@ -225,9 +225,9 @@ export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingS
       }
     }
     if (entry.node.kind === "text") {
-      ctx.font = `${entry.node.size}px sans-serif`;
-      ctx.textBaseline = "alphabetic";
-      ctx.textAlign = "left";
+      ctx.font = `${entry.node.size}px ${entry.node.font ?? "sans-serif"}`;
+      ctx.textBaseline = entry.node.baseline ?? "alphabetic";
+      ctx.textAlign = entry.node.anchor === "middle" ? "center" : entry.node.anchor === "end" ? "right" : "left";
       if (entry.fill) paintFill(ctx, entry.fill);
       const hasStroke = entry.stroke && Number.isFinite(entry.stroke.width) && entry.stroke.width > 0;
       if (hasStroke) paintStroke(ctx, entry.stroke!);

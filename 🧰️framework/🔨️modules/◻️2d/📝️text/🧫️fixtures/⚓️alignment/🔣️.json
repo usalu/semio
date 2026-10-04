@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "anchor": "start",
+      "baseline": "alphabetic",
+      "text": "Print & data"
+    },
+    {
+      "anchor": "middle",
+      "baseline": "middle",
+      "text": "Diagramm"
+    },
+    {
+      "anchor": "end",
+      "baseline": "top",
+      "text": "Label"
+    },
+    {
+      "anchor": "middle",
+      "baseline": "bottom",
+      "text": "Text\nZeile"
+    },
+    {
+      "anchor": "start",
+      "baseline": "alphabetic",
+      "text": "Wide iii MMM",
+      "font": "monospace"
+    },
+    {
+      "anchor": "middle",
+      "baseline": "middle",
+      "text": "Serif Schrift",
+      "font": "serif"
+    }
+  ]
+}

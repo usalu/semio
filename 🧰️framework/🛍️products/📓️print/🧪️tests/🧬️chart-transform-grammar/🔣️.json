@@ -1,0 +1,326 @@
+{
+  "rows": [
+    {
+      "id": "a",
+      "group": "one",
+      "x": 1,
+      "y": 3,
+      "value": 2,
+      "a": 2,
+      "b": 1
+    },
+    {
+      "id": "b",
+      "group": "two",
+      "x": 2,
+      "y": 2,
+      "value": 4,
+      "a": 4,
+      "b": 3
+    },
+    {
+      "id": "c",
+      "group": "one",
+      "x": 3,
+      "y": 1,
+      "value": 6,
+      "a": 6,
+      "b": 2
+    },
+    {
+      "id": "a",
+      "group": "one",
+      "x": 4,
+      "y": 5,
+      "value": 3,
+      "a": 1,
+      "b": 5
+    }
+  ],
+  "lookup": [
+    {
+      "id": "a",
+      "score": 10
+    },
+    {
+      "id": "c",
+      "score": 30
+    }
+  ],
+  "cases": [
+    {
+      "kind": "filter",
+      "options": {
+        "column": "value",
+        "operator": "gt",
+        "value": 2
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "sort",
+      "options": {
+        "column": "value",
+        "descending": true
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "group",
+      "options": {
+        "column": "group"
+      },
+      "columns": [
+        "value",
+        "group"
+      ]
+    },
+    {
+      "kind": "aggregate",
+      "options": {
+        "column": "value",
+        "groupby": "group",
+        "operation": "sum"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "rollup",
+      "options": {
+        "column": "value",
+        "groupby": "group",
+        "operation": "sum"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "summary",
+      "options": {
+        "column": "value",
+        "groupby": "group",
+        "operation": "sum"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "fold",
+      "options": {
+        "columns": [
+          "a",
+          "b"
+        ]
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "pivot",
+      "options": {
+        "index": "group",
+        "key": "id",
+        "value": "value"
+      },
+      "columns": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "kind": "join",
+      "options": {
+        "table": "lookup",
+        "left": "id",
+        "right": "id",
+        "prefix": "other-"
+      },
+      "columns": [
+        "value",
+        "other-score"
+      ]
+    },
+    {
+      "kind": "window",
+      "options": {
+        "column": "value",
+        "size": 2
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "normalize",
+      "options": {
+        "column": "value"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "cumulative",
+      "options": {
+        "column": "value"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "kind": "bin",
+      "options": {
+        "column": "value",
+        "thresholds": [
+          3,
+          5
+        ],
+        "min": 0,
+        "max": 8
+      },
+      "columns": [
+        "x0",
+        "x1",
+        "count"
+      ]
+    },
+    {
+      "kind": "stack",
+      "options": {
+        "keys": [
+          "a",
+          "b"
+        ],
+        "offset": "expand"
+      },
+      "columns": [
+        "y0",
+        "y1"
+      ]
+    },
+    {
+      "kind": "quantile",
+      "options": {
+        "column": "value"
+      },
+      "columns": [
+        "p",
+        "value"
+      ]
+    },
+    {
+      "kind": "kde",
+      "options": {
+        "column": "value",
+        "min": 0,
+        "max": 8,
+        "samples": 5,
+        "bandwidth": 1
+      },
+      "columns": [
+        "x",
+        "density"
+      ]
+    },
+    {
+      "kind": "regression",
+      "options": {
+        "x": "x",
+        "y": "y",
+        "method": "linear"
+      },
+      "columns": [
+        "x",
+        "y",
+        "slope",
+        "intercept",
+        "r2"
+      ]
+    }
+  ],
+  "extras": [
+    {
+      "id": "grouped-window",
+      "kind": "window",
+      "options": {
+        "column": "value",
+        "as": "smooth",
+        "groupby": "group",
+        "size": 2,
+        "centred": true,
+        "operation": "sum"
+      },
+      "columns": [
+        "value",
+        "smooth"
+      ]
+    },
+    {
+      "id": "grouped-normalize",
+      "kind": "normalize",
+      "options": {
+        "column": "value",
+        "as": "fraction",
+        "groupby": "group",
+        "mode": "extent"
+      },
+      "columns": [
+        "value",
+        "fraction"
+      ]
+    },
+    {
+      "id": "stable-sort",
+      "kind": "sort",
+      "options": {
+        "columns": [
+          "group",
+          "value"
+        ],
+        "order": "ascending"
+      },
+      "columns": [
+        "value"
+      ]
+    },
+    {
+      "id": "grouped-median",
+      "kind": "aggregate",
+      "options": {
+        "column": "value",
+        "as": "median",
+        "groupby": "group",
+        "operation": "median"
+      },
+      "columns": [
+        "median"
+      ]
+    },
+    {
+      "id": "kde-uniform",
+      "kind": "kde",
+      "options": {
+        "column": "value",
+        "samples": 5,
+        "min": 0,
+        "max": 8,
+        "bandwidth": 1,
+        "kernel": "uniform"
+      },
+      "columns": [
+        "density"
+      ]
+    }
+  ]
+}

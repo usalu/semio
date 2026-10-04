@@ -10,7 +10,8 @@
  * learner went through and up to the place above — and names what the quizzes are about in its middle; the address
  * names the page of the overview that shows. Learners see who else is online and where, and the cursors of the learners
  * on the same page. A site may hand in pets: small animated companions that fit the quiz on screen, as lively as the learner
- * likes. Every screen ends with the footer that says what is stored and links the site's legal pages. The look is
+ * likes. Every screen ends with the footer that says what is stored and links the site's legal pages. A run and its
+ * results come in script chunks of their own, fetched once the first screen shows, so that screen never waits for them. The look is
  * the semio card language of `🎡️play` and the `🧺️demonstrator`: the design system's navbar and window chrome from
  * `@semio-tech/ui-react/chrome`, its tokens, glass and fonts, light and dark through its surface chrome.
  *
@@ -18,8 +19,9 @@
  * @see ../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts — the design system's slim chrome
  */
 
-import { StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
+import { Component, StrictMode, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import { retryWithJitteredBackoff } from "@semio-tech/framework";
 import {
   DEFAULT_UI_DRIVER,
   Navbar,
@@ -36,16 +38,16 @@ import {
 } from "@semio-tech/ui-react/chrome";
 import { applyLocale, localized, preferredLocale, quizText, type QuizLabelKey, type QuizLocale, type QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
-import { ProctorClient, proctorTransport, type ProctorConnect, type RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
+import { ProctorClient, RETRY_TIMING, proctorTransport, type ProctorConnect, type RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
 import { Deputy, type QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
 import { QuizSession, type QuizConnection, type QuizNotice, type QuizState, type QuizStep } from "./🔨️modules/🧭️session/🟦️.ts";
-import { LanguageChoice, LanguageSwitch, PreferencesPanelCard, everyLanguage, readPreferences, textScale, withPets, writePreferences, type QuizPreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+import { LanguageChoice, LanguageSwitch, PreferencesPanelCard, effectiveIconMotion, everyLanguage, readPreferences, textScale, withPets, writePreferences, type QuizPreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 import { IntroductionScreen } from "./🔨️modules/👋️introduction/🟦️.tsx";
 import { IdentityScreen, noticeProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
 import { HomeScreen, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
 import { NavigationControls, placeName, useAddress } from "./🔨️modules/🚏️navigation/🟦️.tsx";
-import { RunScreen } from "./🔨️modules/▶️run/🟦️.tsx";
-import { ResultsScreen } from "./🔨️modules/🏁️results/🟦️.tsx";
+import type { RunScreen } from "./🔨️modules/▶️run/🟦️.tsx";
+import type { ResultsScreen } from "./🔨️modules/🏁️results/🟦️.tsx";
 import { LegalFooter, type QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
 import { BodyButton, CardIcon, ProblemNote, QuizCard, cn } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 import { PresenceOverlay, PresenceProvider, PresenceStatus, QuizPresence, presencePlace, presenceSelf, presenceView, presenceDrafts, sheetItemLabels, useDocumentVisible, usePresencePointer, type PresenceConnect } from "./🔨️modules/👥️presence/🟦️.tsx";
@@ -55,16 +57,19 @@ import "./🎨️.css";
 //#region 🔁️Reexports
 export { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export type { QuizLabelKey, QuizLocale, QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
-export { SIGNIFICANT_DIGITS, SI_PREFIXES, engineering, formatClock, formatDate, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, oneDecimal, parseQuantity, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
+export { SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatClock, formatCount, formatCountdown, formatDate, formatDuration, formatFactor, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, oneDecimal, parseQuantity, withMinusSign, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
+export type { Toward } from "./🔨️modules/📏️quantity/🟦️.ts";
 export { RADAR_LABEL_EM, RADAR_METRICS, RadarChart, estimateTextWidth, radarAngle, radarFraction, radarLayout, radarPoint, radarPolygon, textMeasure, wrapLabel } from "./🔨️modules/🕸️radar/🟦️.tsx";
 export type { RadarAxis, RadarBox, RadarFrame, RadarLabel, RadarLayout, RadarLegendEntry, RadarPoint, TextMeasure } from "./🔨️modules/🕸️radar/🟦️.tsx";
-export { browserStorageArea, isRecord, localChange, localStore, memoryStorageOrigin } from "./🔨️modules/💾️persistence/🟦️.ts";
+export { browserStorageArea, isCatalogView, isChallenge, isLearnerView, isRecord, isRunView, isTimestamp, localChange, localStore, memoryStorageOrigin } from "./🔨️modules/💾️persistence/🟦️.ts";
 export type { LocalChange, LocalCollection, LocalSlice, LocalStore, StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
 export {
+  AGREEMENT_RECHECK_MS,
   ProctorClient,
+  ProctorIncompatible,
   ProctorThrottled,
   ProctorUnavailable,
-  QUIZ_WIRE_VERSION,
+  QUIZ_KINDS,
   RETRY_AFTER_MAX_MS,
   RETRY_TIMING,
   SIGN_UP_ALLOWANCE,
@@ -72,6 +77,7 @@ export {
   commandEnvelope,
   commandTarget,
   commandVerdict,
+  disagreement,
   errorRejection,
   isNotFound,
   isThrottled,
@@ -81,44 +87,49 @@ export {
   pause,
   proctorTransport,
   queryEnvelope,
+  quizInstance,
   quizRejection,
   retryAfterMs,
   retryTransient,
   retryWait,
   signUpsSpent,
 } from "./🔨️modules/🛂️proctor/🟦️.ts";
-export type { CommandVerdict, HttpRequest, HttpResponse, HttpTransport, ProctorConnect, ProctorReachability, RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
+export type { CommandVerdict, HttpRequest, HttpResponse, HttpTransport, ProctorConnect, ProctorContract, ProctorReachability, RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
 export { Outbox, coalesce, coalescingKey, commandRun } from "./🔨️modules/📮️outbox/🟦️.ts";
 export type { OutboxActivity, OutboxEntry, OutboxOptions, OutboxStatus } from "./🔨️modules/📮️outbox/🟦️.ts";
 export { Deputy, REVISED, materialRevision } from "./🔨️modules/🫡️deputy/🟦️.ts";
 export type { HeldLearner, QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
-export { DEFAULT_BOARD, DEPUTY_PATIENCE_MS, EMPTY_TRAIL, HOME_PAGES, PROJECTION_GRACE_MS, QuizSession, TRAIL_LIMIT, boardKey, evolveQuizState, initialQuizState, lastSubmittedRunOf, mergeRunViews, openRunOf, overallLeaderboard, restoreQuizState, runAwards, sameStep, shownLeaderboard, stepAbove, stepAfter, stepBefore } from "./🔨️modules/🧭️session/🟦️.ts";
+export { DEFAULT_BOARD, DEPUTY_PATIENCE_MS, EMPTY_TRAIL, HOME_PAGES, PROJECTION_GRACE_MS, QuizSession, TRAIL_LIMIT, boardKey, evolveQuizState, initialQuizState, lastSubmittedRunOf, mergeRunViews, openChallengeOf, openRunOf, overallLeaderboard, restoreQuizState, runAwards, sameStep, shownLeaderboard, stepAbove, stepAfter, stepBefore } from "./🔨️modules/🧭️session/🟦️.ts";
 export type { BoardChoice, HeldLeaderboard, QuizClientEvent, QuizConnection, QuizLearner, QuizNotice, QuizSessionOptions, QuizSnapshot, QuizState, QuizStep, QuizTrail, RefreshOutcome, SessionFailure, SubmissionPhase } from "./🔨️modules/🧭️session/🟦️.ts";
 export { NAVIGATION_WAYS, NavigationControls, addressPage, navigationWays, placeName, stepAddress, useAddress } from "./🔨️modules/🚏️navigation/🟦️.tsx";
 export type { NavigationWay } from "./🔨️modules/🚏️navigation/🟦️.tsx";
-export { EveryLanguage, LOCALE_NAMES, LanguageChoice, LanguageSwitch, PreferencesCard, PreferencesPage, PreferencesPanel, PreferencesPanelCard, TEXT_SIZES, THEME_CHOICES, everyLanguage, readPreferences, textScale, writePreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+export { EveryLanguage, LOCALE_NAMES, LanguageChoice, LanguageSwitch, PreferencesCard, PreferencesPage, PreferencesPanel, PreferencesPanelCard, TEXT_SIZES, THEME_CHOICES, challengeOf, effectiveIconMotion, everyLanguage, readPreferences, textScale, withChallenge, withIcons, writePreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 export type { QuizPreferences, TextSize, ThemeChoice } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 export { OTHERS_CHOICE_LABELS, PET_CHOICE_LABELS, withPets } from "./🔨️modules/🎛️preferences/🟦️.tsx";
-export { PET_CHOICES, PET_HOME_SCENE, PetsSwitch, QUIZ_PETS_TEMPO, QUIZ_PET_KEEPOUTS, QUIZ_PET_SURFACES, QuizPets, QuizPetsProvider, effectivePetMode, peerGlances, petNames, petScene, petsTempo, switchedPets, usePetCast, usePetsForced, usePetsReduced } from "./🔨️modules/🐾️pets/🟦️.tsx";
-export type { PetChoice, PetLiveliness, QuizPetsSource, QuizPetsStage } from "./🔨️modules/🐾️pets/🟦️.tsx";
+export { PET_CHOICES, PetTopic, PetsPlay, PetsSwitch, QuizPets, QuizPetsProvider, effectivePetMode, petProp, switchedPets, usePetCast, usePetTopic, usePetsForced, usePetsReduced } from "./🔨️modules/🐾️pets/🟦️.tsx";
+export type { PetChoice, PetLiveliness, PetPlay, PetPlayer, QuizPetsSource, QuizPetsStage, ShownPets } from "./🔨️modules/🐾️pets/🟦️.tsx";
+export { PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PET_HOME_SCENE, PetsPlayground, QUIZ_PETS_TEMPO, QUIZ_PET_CONTROLS, QUIZ_PET_KEEPOUTS, QUIZ_PET_PROPS, QUIZ_PET_SURFACES, QuizPetLayer, peerGlances, petNames, petPlayers, petScene, petsTempo } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
+export type { PetDeed } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
-export { DROP_ZONE_CLASS, DragGrip, ICON_BUTTON_CLASS, LiveRegion, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, elementId, useAnnouncement, useFocusAfterRender } from "./🔨️modules/🧩️task/🟦️.tsx";
-export type { Announcement, TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
-export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, Mark, Missing, ProblemNote, QuizCard, Segments, textPresentation } from "./🔨️modules/🪟️chrome/🟦️.tsx";
-export type { Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
-export { ClassificationTaskView } from "./🔨️modules/🗂️classification/🟦️.tsx";
+export { DROP_ZONE_CLASS, DragGrip, GuessField, HINT_SYMBOL, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, exampleGuess, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement } from "./🔨️modules/🧩️task/🟦️.tsx";
+export type { TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
+export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, IconLabel, LiveRegion, Mark, Missing, ProblemNote, QuizCard, Records, Segments, TABLE, TASK_KIND_ICONS, TaskGlyph, textPresentation, useAnnouncement } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export type { Announcement, Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export { ClassificationTaskView, classificationHintText } from "./🔨️modules/🗂️classification/🟦️.tsx";
 export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
 export { MatchingTaskView, assignCard } from "./🔨️modules/🃏️matching/🟦️.tsx";
 export { IntroductionCard, IntroductionPage, IntroductionScreen } from "./🔨️modules/👋️introduction/🟦️.tsx";
 export { LearnerCard, LearnerPage, SwitchIdentity } from "./🔨️modules/📇️profile/🟦️.tsx";
 export { QuizCardView, QuizPage } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
+export { CHALLENGE_HINTS, CHALLENGE_LABELS, ChallengeChooser, challengeScored } from "./🔨️modules/⛰️challenge/🟦️.tsx";
 export type { Act } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
 export { IdentityScreen, failureProblem, handleFault, handleFaultMessage, learnerName, noticeProblem, thrownProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
 export type { HandleFault } from "./🔨️modules/🪪️identity/🟦️.tsx";
 export { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, homeCells, homeGridMinHeight, homeLayoutQueries, homePages, homeTrackTemplate, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
 export type { HomeLayout } from "./🔨️modules/🏠️home/🟦️.tsx";
-export { RunScreen, TASK_KIND_ICONS, TaskGlyph, TaskView } from "./🔨️modules/▶️run/🟦️.tsx";
-export { ResultsScreen, TaskResultView } from "./🔨️modules/🏁️results/🟦️.tsx";
+export { RunScreen, TaskClock, TaskView, clockStage, usePassed, useRemaining } from "./🔨️modules/▶️run/🟦️.tsx";
+export type { ClockStage } from "./🔨️modules/▶️run/🟦️.tsx";
+export { ResultsScreen, TaskResultView, deviation, tolerance } from "./🔨️modules/🏁️results/🟦️.tsx";
 export { BOARD_EXCERPT_SIZE, LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, POLL_BACKOFF_MAX_MS, RANK_ORDER, boardExcerpt, leaderboardColumns, nextSort, ownRow, pollDelay, sortLeaderboard, usePolling } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
 export type { LeaderboardColumn, LeaderboardKey, LeaderboardSort } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
 export { BadgesCard, BadgesPage, awardOf, badgesEarnedIn } from "./🔨️modules/🏅️badges/🟦️.tsx";
@@ -177,7 +188,7 @@ export type {
   RoomStatus,
   WatchedState,
 } from "./🔨️modules/👥️presence/🟦️.tsx";
-export { AnswerFigure, CROWD_DOTS, CrowdDoor, OTHERS_CHOICES, ScoreFigure, TaskFigures, answerFigure, crowdGate, crowdPlace, crowdShown, livePlace, scoreFigure } from "./🔨️modules/🗳️crowd/🟦️.tsx";
+export { AnswerFigure, CROWD_DOTS, CrowdDoor, OTHERS_CHOICES, ScoreFigure, TaskFigures, answerFigure, crowdGate, crowdPlace, crowdShown, keysHidden, livePlace, plotFold, scoreFigure } from "./🔨️modules/🗳️crowd/🟦️.tsx";
 export type { AnswerCell, AnswerColumn, AnswerFigureInput, AnswerFigureModel, AnswerRow, CrowdGate, CrowdPlace, OthersChoice, ScoreFigureModel } from "./🔨️modules/🗳️crowd/🟦️.tsx";
 export { Column, columnShare, formatShare, peakOf } from "./🔨️modules/📊️plot/🟦️.tsx";
 //#endregion 🔁️Reexports
@@ -216,13 +227,20 @@ interface ConnectionSentence {
   readonly values?: Readonly<Record<string, number>>;
 }
 
+/** 🚧️ Whether the proctor cannot take anything from this client: it does not answer, or it speaks another contract. */
+function away(connection: QuizConnection): boolean {
+  return connection.reachability === "unreachable" || connection.reachability === "incompatible";
+}
+
 /** 📶️ The state of the connection as the indicator shows it: connecting until the proctor first answers, then saved,
- * saving, a busy proctor (it answers, but asks to slow down), or answers held on the device — where a deputy decides
- * meanwhile, everything is saved there. */
+ * saving, a busy proctor (it answers, but asks to slow down), a page older than the proctor's contract (kept on the
+ * device until it is reloaded), or answers held on the device while the proctor does not answer or speaks an older or
+ * foreign contract — where a deputy decides meanwhile, everything is saved there. */
 export function connectionState(connection: QuizConnection): ConnectionSentence & { readonly tone: ConnectionTone } {
   if (!connection.online) return { key: "quiz.connection.offline", tone: "alert" };
-  if (connection.reachability === "unreachable" && connection.deputy) return connection.pending > 0 ? { key: "quiz.connection.localWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.local", tone: "alert" };
-  if (connection.reachability === "unreachable") return connection.pending > 0 ? { key: "quiz.connection.reconnectingWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.reconnecting", tone: "alert" };
+  if (connection.reachability === "incompatible" && connection.contract === "newer") return { key: "quiz.connection.outdated", tone: "alert" };
+  if (away(connection) && connection.deputy) return connection.pending > 0 ? { key: "quiz.connection.localWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.local", tone: "alert" };
+  if (away(connection)) return connection.pending > 0 ? { key: "quiz.connection.reconnectingWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.reconnecting", tone: "alert" };
   if (connection.reachability === "throttled") return { key: "quiz.connection.throttled", tone: "busy" };
   if (connection.pending > 0) return { key: "quiz.connection.saving", values: { waiting: connection.pending }, tone: "busy" };
   if (connection.reachability === "unknown") return { key: "quiz.connection.connecting", tone: "busy" };
@@ -235,11 +253,13 @@ export function connectionMessage(connection: QuizConnection, text: QuizText): {
   return { message: text(state.key, state.values), tone: state.tone };
 }
 
-/** ⏳️ What a screen whose data has not arrived yet says: connecting, unreachable (with a retry), busy (the client
- * retries by itself and offers no button to ask a busy proctor even more often), refused, or loading. */
-export function waitingMessage(connection: QuizConnection, notice: QuizNotice | undefined, text: QuizText): { readonly message: string; readonly retry: boolean } {
+/** ⏳️ What a screen whose data has not arrived yet says: connecting, unreachable (with a retry), out of date (with a
+ * reload), busy (the client retries by itself and offers no button to ask a busy proctor even more often), refused, or
+ * loading. */
+export function waitingMessage(connection: QuizConnection, notice: QuizNotice | undefined, text: QuizText): { readonly message: string; readonly retry: boolean; readonly reload?: true } {
   if (!connection.online) return { message: text("quiz.connection.offline"), retry: true };
-  if (connection.reachability === "unreachable") return { message: text("quiz.app.unreachable"), retry: true };
+  if (connection.reachability === "incompatible" && connection.contract === "newer") return { message: text("quiz.app.outdated"), retry: false, reload: true };
+  if (away(connection)) return { message: text("quiz.app.unreachable"), retry: true };
   if (connection.reachability === "throttled") return { message: text("quiz.app.busy"), retry: false };
   if (connection.reachability === "unknown") return { message: text("quiz.connection.connecting"), retry: false };
   if (notice?.kind === "refused") return { message: text("quiz.app.failed"), retry: true };
@@ -256,9 +276,40 @@ function Waiting(props: { readonly connection: QuizConnection; readonly notice: 
           {waiting.message}
         </p>
         {waiting.retry ? <BodyButton onClick={onRetry}>{text("quiz.app.retry")}</BodyButton> : null}
+        {waiting.reload ? <BodyButton onClick={reloadPage}>{text("quiz.app.reload")}</BodyButton> : null}
       </QuizCard>
     </div>
   );
+}
+
+/** 🔄️ Loads the page anew: a page older than the proctor's contract gets the current one. */
+function reloadPage(): void {
+  window.location.reload();
+}
+
+/** 🧯️ One screen that may fail to render: a screen that throws shows what happened instead — the rest of the client
+ * stays — with a way to show it again and a reload. Everything the learner did lives in the session, so nothing is lost;
+ * the next screen starts afresh. */
+export class ScreenBoundary extends Component<{ readonly text: QuizText; readonly children: ReactNode }, { readonly error: Error | undefined }> {
+  override state: { readonly error: Error | undefined } = { error: undefined };
+
+  static getDerivedStateFromError(error: unknown): { readonly error: Error } {
+    return { error: error instanceof Error ? error : new Error(String(error)) };
+  }
+
+  override render(): ReactNode {
+    const { text, children } = this.props;
+    const { error } = this.state;
+    if (error === undefined) return children;
+    return (
+      <Page>
+        <ProblemNote problem={{ message: text("quiz.app.crashed"), detail: error.message }} text={text} id="quiz-crashed">
+          <BodyButton onClick={() => this.setState({ error: undefined })}>{text("quiz.app.retry")}</BodyButton>
+          <BodyButton onClick={reloadPage}>{text("quiz.app.reload")}</BodyButton>
+        </ProblemNote>
+      </Page>
+    );
+  }
 }
 
 function stepKey(step: QuizStep): string {
@@ -283,17 +334,41 @@ export function documentTitle(state: QuizState, locale: QuizLocale | undefined):
   return site === undefined || site === screen ? screen : `${screen} · ${site}`;
 }
 
-/** 🖼️ A screen other than home: it scrolls on its own, centred at a comfortable reading width; the first visit shows
- * the preferences beside. */
-function Page(props: { readonly aside?: ReactNode; readonly children: ReactNode }): ReactElement {
+/** 🖼️ A screen other than home: it scrolls on its own, centred at a comfortable reading width — a `wide` one (a run,
+ * its results) takes the room of a large screen for its panes side by side —; the first visit shows the preferences
+ * beside. */
+function Page(props: { readonly aside?: ReactNode; readonly wide?: boolean; readonly children: ReactNode }): ReactElement {
   return (
     <div className="relative min-h-0 flex-1 overflow-auto p-double">
-      <div className={cn("quiz-page mx-auto w-full", props.aside === undefined ? "max-w-6xl" : "quiz-pair max-w-6xl")}>
+      <div className={cn("quiz-page mx-auto w-full", props.wide ? "max-w-[100rem]" : "max-w-6xl", props.aside !== undefined && "quiz-pair")}>
         {props.children}
         {props.aside}
       </div>
     </div>
   );
+}
+
+/** 💤️ The run and results screens with all that only they show — the task views, the clock, guesses, hints, the
+ * radar and the results tables —: script chunks of their own, so the first screen never waits for them. */
+interface RunScreens {
+  readonly RunScreen: typeof RunScreen;
+  readonly ResultsScreen: typeof ResultsScreen;
+}
+
+const runScreens = (): Promise<RunScreens> => Promise.all([import("./🔨️modules/▶️run/🟦️.tsx"), import("./🔨️modules/🏁️results/🟦️.tsx")]).then(([run, results]) => ({ RunScreen: run.RunScreen, ResultsScreen: results.ResultsScreen }));
+
+/** 📥️ The {@link RunScreens}, fetched as soon as the client shows its first screen and fetched again with jittered
+ * backoff while a connection shortage keeps them away; `undefined` until they are there. */
+function useRunScreens(): RunScreens | undefined {
+  const [screens, setScreens] = useState<RunScreens | undefined>(undefined);
+  const missing = screens === undefined;
+  useEffect(() => {
+    if (!missing) return;
+    const abort = new AbortController();
+    retryWithJitteredBackoff(runScreens, { ...RETRY_TIMING, signal: abort.signal }).then(setScreens, () => undefined);
+    return () => abort.abort();
+  }, [missing]);
+  return screens;
 }
 
 function Screen(props: {
@@ -307,6 +382,7 @@ function Screen(props: {
 }): ReactElement {
   const { session, state, connection, text, locale, preferences, onPreferences } = props;
   const step = state.step;
+  const screens = useRunScreens();
   const waiting = (
     <Page>
       <Waiting connection={connection} notice={state.notice} text={text} onRetry={() => session.reconnect()} />
@@ -332,19 +408,19 @@ function Screen(props: {
     case "home":
       return state.catalog === undefined ? waiting : <HomeScreen session={session} state={state} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} />;
     case "run":
-      return state.runs[step.run] === undefined ? (
+      return state.runs[step.run] === undefined || screens === undefined ? (
         waiting
       ) : (
-        <Page>
-          <RunScreen key={step.run} session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
+        <Page wide>
+          <screens.RunScreen key={step.run} session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
         </Page>
       );
     case "results":
-      return state.runs[step.run] === undefined ? (
+      return state.runs[step.run] === undefined || screens === undefined ? (
         waiting
       ) : (
-        <Page>
-          <ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
+        <Page wide>
+          <screens.ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
         </Page>
       );
   }
@@ -405,6 +481,7 @@ function Client(props: ClientProps): ReactElement {
   const [task, setTask] = useState<string | undefined>(undefined);
   const visible = useDocumentVisible();
   const pets = effectivePetMode(preferences.pets, preferences.petsChosen, usePetsReduced());
+  const icons = effectiveIconMotion(preferences.animateIcons, preferences.iconsChosen, useMediaQuery("(prefers-reduced-motion: reduce)"));
   const identified = state.introduced && state.learner !== undefined;
   const self = useMemo(() => presenceSelf(identified ? state.learner : undefined), [identified, state.learner]);
   const at = presencePlace(state.step, state, task);
@@ -450,7 +527,7 @@ function Client(props: ClientProps): ReactElement {
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={preferences.animateIcons ? "on" : "off"} data-pets={pets}>
+      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} data-pets={pets}>
         <a
           href="#quiz-main"
           className="sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
@@ -465,12 +542,19 @@ function Client(props: ClientProps): ReactElement {
           <Navbar label={text("quiz.nav.label")} items={items} showFullscreenToggle={false} />
         </header>
         <main id="quiz-main" ref={main} tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
+          {connection.contract === "newer" ? (
+            <ProblemNote problem={{ message: text("quiz.app.outdated") }} text={text} className="m-double mb-0" id="quiz-outdated">
+              <BodyButton onClick={reloadPage}>{text("quiz.app.reload")}</BodyButton>
+            </ProblemNote>
+          ) : null}
           {state.notice === undefined ? null : (
             <ProblemNote problem={noticeProblem(state.notice, text)} text={text} className="m-double mb-0">
               <BodyButton onClick={() => session.dismissNotice()}>{text("quiz.app.dismiss")}</BodyButton>
             </ProblemNote>
           )}
-          <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} />
+          <ScreenBoundary key={key} text={text}>
+            <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} />
+          </ScreenBoundary>
         </main>
         <LegalFooter legal={options.legal} locale={locale} text={text}>
           <PetsSwitch shown={preferences.pets !== "off"} label={text("quiz.preferences.petsShown")} onChange={(shown) => onPreferences(withPets(preferences, switchedPets(shown, preferences.petsLiveliness)))} />
@@ -524,7 +608,7 @@ export function QuizApp(options: QuizOptions): ReactElement {
   };
   if (locale !== undefined)
     return (
-      <QuizPetsProvider source={options.pets} choice={preferences.pets} chosen={preferences.petsChosen} state={state} locale={locale}>
+      <QuizPetsProvider source={options.pets} choice={preferences.pets} chosen={preferences.petsChosen} play={preferences.petsPlay} mischief={preferences.petsMischief} state={state} locale={locale}>
         <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} />
       </QuizPetsProvider>
     );

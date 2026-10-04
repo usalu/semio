@@ -4,7 +4,7 @@ use crate::catalog::tests::{fixture, fixture_path};
 use crate::projections::tests::{bus, play, submit};
 use crate::storage::tests::{scratch, Scratch};
 use crate::storage::{ErasedActor, Inspection};
-use quiz::Command;
+use quiz::{Challenge, Command};
 use server::contract::CommandOutcome;
 
 fn code(exit: ExitCode) -> String {
@@ -40,8 +40,8 @@ async fn played(label: &str) -> Scratch {
     for (seed, learner, identity) in [(1, ADA, Identity::Name { handle: "Ada Lovelace".into() }), (2, BOB, Identity::Anonymous), (3, &*id(0xc), Identity::Pseudonym { handle: "Cy".into() })] {
         assert!(matches!(submit(&mut bus, &Command::IdentifyLearner { id: id(seed), learner: learner.into(), identity }, 100).await, CommandOutcome::Accepted { .. }));
     }
-    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
-    play(&mut bus, &catalog, BOB, &id(11), "power", 300).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Medium, 200).await;
+    play(&mut bus, &catalog, BOB, &id(11), "power", Challenge::Medium, 300).await;
     directory
 }
 
@@ -329,7 +329,7 @@ async fn cluttered(label: &str) -> Scratch {
     for (seed, learner, identity, millis) in registrations {
         assert!(matches!(submit(&mut bus, &Command::IdentifyLearner { id: id(seed), learner, identity }, millis).await, CommandOutcome::Accepted { .. }), "registration {seed:#x}");
     }
-    crate::projections::tests::answer(&mut bus, &catalog, &id(0xe0), &id(0x12), "power", 200).await;
+    crate::projections::tests::answer(&mut bus, &catalog, &id(0xe0), &id(0x12), "power", Challenge::Medium, 200).await;
     directory
 }
 
@@ -432,7 +432,7 @@ async fn prune_removes_what_nobody_played_under_from_a_stopped_proctor_and_every
     assert!(matches!(claimed, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "a pruned handle is free again: {claimed:?}");
     let reused = submit(&mut bus, &Command::IdentifyLearner { id: id(0x21), learner: id(0xd1), identity: Identity::Anonymous }, 901).await;
     assert!(matches!(reused, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "a pruned learner id and its command id are unknown again: {reused:?}");
-    let stranger = submit(&mut bus, &Command::StartRun { id: id(0x62), learner: id(0xe0), run: id(0x63), quiz: "power".into() }, 902).await;
+    let stranger = submit(&mut bus, &Command::StartRun { id: id(0x62), learner: id(0xe0), run: id(0x63), quiz: "power".into(), challenge: Challenge::Medium, at: 902 }, 902).await;
     assert!(matches!(stranger, CommandOutcome::Rejected { .. }), "a pruned learner starts no run: {stranger:?}");
     let successor = submit(&mut bus, &Command::IdentifyLearner { id: id(0x64), learner: id(0x65), identity: Identity::Pseudonym { handle: "Spare Early".into() } }, 903).await;
     assert!(matches!(successor, CommandOutcome::Accepted { ref events, .. } if events.len() == 1), "{successor:?}");

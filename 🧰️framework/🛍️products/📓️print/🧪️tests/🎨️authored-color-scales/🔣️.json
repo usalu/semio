@@ -1,0 +1,649 @@
+{
+  "cases": [
+    {
+      "name": "linear-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "#ff0000",
+        "#0000ff"
+      ],
+      "values": [
+        0,
+        2.5,
+        5,
+        10
+      ]
+    },
+    {
+      "name": "sequential-color",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "#ff0000",
+        "#0000ff"
+      ],
+      "options": {
+        "clamp": true
+      },
+      "values": [
+        -1,
+        0,
+        2.5,
+        5,
+        10,
+        11
+      ]
+    },
+    {
+      "name": "sequential-number-reversed",
+      "kind": "sequential",
+      "domain": [
+        2,
+        8
+      ],
+      "range": [
+        10,
+        40
+      ],
+      "options": {
+        "clamp": true,
+        "reverse": true
+      },
+      "values": [
+        0,
+        2,
+        5,
+        8,
+        10
+      ]
+    },
+    {
+      "name": "diverging-color",
+      "kind": "diverging",
+      "domain": [
+        -2,
+        0,
+        2
+      ],
+      "range": [
+        "#0000ff",
+        "#ffffff",
+        "#ff0000"
+      ],
+      "options": {
+        "clamp": true
+      },
+      "values": [
+        -3,
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "diverging-descending",
+      "kind": "diverging",
+      "domain": [
+        2,
+        0,
+        -2
+      ],
+      "range": [
+        "#0000ff",
+        "#ffffff",
+        "#ff0000"
+      ],
+      "values": [
+        -2,
+        -1,
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "piecewise-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        2,
+        10
+      ],
+      "range": [
+        "#ff0000",
+        "#ffffff",
+        "#0000ff"
+      ],
+      "values": [
+        0,
+        1,
+        2,
+        6,
+        10
+      ]
+    },
+    {
+      "name": "temporal-iso",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T00:00:00Z",
+        "2025-01-03T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "values": [
+        1735689600000,
+        1735776000000,
+        1735862400000
+      ]
+    },
+    {
+      "name": "scheme-light-reversed",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [],
+      "options": {
+        "scheme": "primary",
+        "reverse": true,
+        "clamp": true
+      },
+      "appearance": "light",
+      "schemeStops": [
+        "#f7f3e3",
+        "#ff344f",
+        "#6b2c32"
+      ],
+      "values": [
+        -1,
+        0,
+        2.5,
+        5,
+        10,
+        11
+      ]
+    },
+    {
+      "name": "scheme-dark-diverging-reversed",
+      "kind": "diverging",
+      "domain": [
+        -2,
+        0,
+        2
+      ],
+      "range": [],
+      "options": {
+        "scheme": "primary",
+        "reverse": true,
+        "clamp": true
+      },
+      "appearance": "dark",
+      "schemeStops": [
+        "#001117",
+        "#ff344f",
+        "#ffa9a0"
+      ],
+      "values": [
+        -3,
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "name": "lab-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "#ff344f",
+        "#34d1bf"
+      ],
+      "options": {
+        "interpolator": "lab"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "lab-scheme",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [],
+      "options": {
+        "scheme": "primary",
+        "interpolator": "lab",
+        "clamp": true
+      },
+      "appearance": "light",
+      "schemeStops": [
+        "#f7f3e3",
+        "#ff344f",
+        "#6b2c32"
+      ],
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "hcl-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "#ff344f",
+        "#34d1bf"
+      ],
+      "options": {
+        "interpolator": "hcl"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "hcl-scheme",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [],
+      "options": {
+        "scheme": "primary",
+        "interpolator": "hcl",
+        "clamp": true
+      },
+      "appearance": "light",
+      "schemeStops": [
+        "#f7f3e3",
+        "#ff344f",
+        "#6b2c32"
+      ],
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "oklab-knots",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "#ff344f",
+        "#34d1bf",
+        "#071f12"
+      ],
+      "options": {
+        "interpolator": "oklab",
+        "clamp": true
+      },
+      "values": [
+        0,
+        5,
+        10
+      ]
+    },
+    {
+      "name": "rounded-number",
+      "kind": "sequential",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        3
+      ],
+      "options": {
+        "interpolator": "round"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "named-css-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "red",
+        "blue"
+      ],
+      "values": [
+        0,
+        2.5,
+        5,
+        10
+      ]
+    },
+    {
+      "name": "rgb-css-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "rgb(255, 0, 0)",
+        "hsl(240, 100%, 50%)"
+      ],
+      "values": [
+        0,
+        2.5,
+        5,
+        10
+      ]
+    },
+    {
+      "name": "rgb-alpha",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "rgba(255,0,0,0.4)",
+        "rgba(0,0,255,0.8)"
+      ],
+      "options": {
+        "interpolator": "rgb"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "lab-alpha",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "rgba(255,0,0,0.4)",
+        "rgba(0,0,255,0.8)"
+      ],
+      "options": {
+        "interpolator": "lab"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "hcl-alpha",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "rgba(255,0,0,0.4)",
+        "rgba(0,0,255,0.8)"
+      ],
+      "options": {
+        "interpolator": "hcl"
+      },
+      "values": [
+        0,
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "transparent-color",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        "transparent",
+        "#ff0000"
+      ],
+      "values": [
+        2.5,
+        5,
+        7.5,
+        10
+      ]
+    },
+    {
+      "name": "temporal-iso-values",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T00:00:00Z",
+        "2025-01-03T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "values": [
+        "2025-01-01T00:00:00Z",
+        "2025-01-02T00:00:00Z",
+        "2025-01-03T00:00:00Z"
+      ]
+    }
+  ],
+  "paints": [
+    "#abc",
+    "#abcd",
+    "#aabbcc",
+    "#aabbccdd",
+    " RGB(255, 0, 0) ",
+    "rgb(100%, 0%, 50%)",
+    "rgba(12,34,56,0.4)",
+    "rgba(12%,34%,56%,0.4)",
+    "hsl(-120,100%,50%)",
+    "hsla(120,25%,40%,0.4)",
+    "transparent",
+    "#zzzzzz",
+    "#12345",
+    "#1234567",
+    "rgb(1,2)",
+    "rgb(1,2,3,4,5)",
+    "hsl(240,50,50)",
+    "not-a-color"
+  ],
+  "controls": [
+    {
+      "name": "explicit-ticks",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "tickValues": [
+          0,
+          3,
+          10
+        ],
+        "tickFormat": ".1f"
+      },
+      "values": [
+        0,
+        3,
+        10
+      ]
+    },
+    {
+      "name": "tick-count",
+      "kind": "linear",
+      "domain": [
+        0,
+        10
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "ticks": 3
+      },
+      "values": [
+        0,
+        5,
+        10
+      ]
+    },
+    {
+      "name": "utc-days",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T12:00:00Z",
+        "2025-01-04T12:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "interval": "day"
+      },
+      "values": []
+    },
+    {
+      "name": "utc-months-reversed",
+      "kind": "temporal",
+      "domain": [
+        "2025-05-01T00:00:00Z",
+        "2025-01-01T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "interval": "month"
+      },
+      "values": []
+    },
+    {
+      "name": "utc-auto-years-reversed",
+      "kind": "temporal",
+      "domain": [
+        "2030-01-01T00:00:00Z",
+        "2020-01-01T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "ticks": 4
+      },
+      "values": []
+    },
+    {
+      "name": "utc-weeks",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T00:00:00Z",
+        "2025-02-01T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "interval": "week"
+      },
+      "values": []
+    },
+    {
+      "name": "utc-years",
+      "kind": "temporal",
+      "domain": [
+        "2025-01-01T00:00:00Z",
+        "2030-01-01T00:00:00Z"
+      ],
+      "range": [
+        0,
+        100
+      ],
+      "options": {
+        "interval": "year"
+      },
+      "values": []
+    }
+  ],
+  "presetPaints": [
+    "rebeccapurple",
+    "rgb(25%,50%,100%)",
+    "hsl(270,50%,50%)",
+    "#123",
+    "#123456",
+    "rgba(255,0,0,0.125)",
+    "hsla(270,50%,50%,0.375)",
+    "#1234",
+    "#12345678",
+    "transparent"
+  ]
+}

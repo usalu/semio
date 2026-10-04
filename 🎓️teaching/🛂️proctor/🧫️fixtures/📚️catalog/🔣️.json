@@ -15,8 +15,8 @@
       "id": "perfect-power",
       "emoji": "⚡",
       "label": { "en": "Power expert", "de": "Leistungsprofi" },
-      "description": { "en": "A perfect run of the power quiz.", "de": "Ein fehlerfreier Durchgang des Leistungsquiz." },
-      "rule": { "kind": "perfect-quiz", "quiz": "power" }
+      "description": { "en": "A perfect run of the power quiz, at medium or harder.", "de": "Ein fehlerfreier Durchgang des Leistungsquiz, ab mittel." },
+      "rule": { "kind": "perfect-quiz", "quiz": "power", "challenge": "medium" }
     },
     {
       "id": "sorter",

@@ -21729,6 +21729,34 @@
       }
     },
     {
+      "name": "📦️generate-font-metrics📓️print🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:generate-font-metrics",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 900.00452
+      }
+    },
+    {
+      "name": "📦️build📓️print🦀️chart-inference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:build",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 900.00455
+      }
+    },
+    {
       "name": "📦️build-viz📓️print🟦️",
       "type": "node-terminal",
       "request": "launch",
@@ -21792,6 +21820,48 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.0371
+      }
+    },
+    {
+      "name": "⚖️test📓️print🦀️chart-inference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:test",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03711
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️native-grammar",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712
+      }
+    },
+    {
+      "name": "⚖️test📓️print🖼️family-containment",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar -- --families-only",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03713
       }
     },
     {
@@ -25785,7 +25855,7 @@
         "@semio-tech/playbook-playbook",
         "@semio-tech/playbook-playbook-rs",
         "@semio-tech/print",
-        "@semio-tech/print-viz-kernel",
+        "@semio-tech/print-viz-inference",
         "@semio-tech/procedural-generation2d",
         "@semio-tech/procedural-generation2d-rs",
         "@semio-tech/procedural-generation3d",
@@ -26688,7 +26758,7 @@
         "@semio-tech/presentation",
         "@semio-tech/presentation-react",
         "@semio-tech/print",
-        "@semio-tech/print-viz-kernel",
+        "@semio-tech/print-viz-inference",
         "@semio-tech/procedural-generation2d",
         "@semio-tech/procedural-generation2d-rs",
         "@semio-tech/procedural-generation3d",
@@ -27062,7 +27132,7 @@
         "@semio-tech/presentation",
         "@semio-tech/presentation-react",
         "@semio-tech/print",
-        "@semio-tech/print-viz-kernel",
+        "@semio-tech/print-viz-inference",
         "@semio-tech/procedural-plugin",
         "@semio-tech/process-extension-concrete-rust",
         "@semio-tech/process-extension-metal-rust",
@@ -27271,7 +27341,7 @@
         "@semio-tech/presentation",
         "@semio-tech/presentation-react",
         "@semio-tech/print",
-        "@semio-tech/print-viz-kernel",
+        "@semio-tech/print-viz-inference",
         "@semio-tech/procedural-plugin",
         "@semio-tech/process-extension-concrete-rust",
         "@semio-tech/process-extension-metal-rust",
@@ -27506,7 +27576,7 @@
         "@semio-tech/presentation",
         "@semio-tech/presentation-react",
         "@semio-tech/print",
-        "@semio-tech/print-viz-kernel",
+        "@semio-tech/print-viz-inference",
         "@semio-tech/procedural-plugin",
         "@semio-tech/process-extension-concrete-rust",
         "@semio-tech/process-extension-metal-rust",

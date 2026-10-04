@@ -1,7 +1,21 @@
 {
   "version": "0.2.0",
   "configurations": [
-    {"name":"⚖️test-quick📖️pdf🌊️structural🦀️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- quick --lib lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse --no-fail-fast","cwd":"${workspaceFolder}","env":{"SEMIO_TEST_LEVEL":"quick","NX_DAEMON":"false"},"presentation":{"group":"4_gate","order":408.6904}},
+    {
+      "name": "⚖️test-quick📖️pdf🌊️structural🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- quick --lib lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse --no-fail-fast",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_LEVEL": "quick",
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.6904
+      }
+    },
     {"name":"⚖️sqlite-source🧱️🖐️5d","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/block-5d-rs:test-snapshot-sqlite-source --skip-nx-cache","cwd":"${workspaceFolder}","env":{"SEMIO_TEST_LEVEL":"quick","NX_DAEMON":"false"},"presentation":{"group":"4_gate","order":408.688}},
     {"name":"⚖️sqlite-public🧱️🖐️5d","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/block-5d-rs:verify-snapshot-sqlite-source --skip-nx-cache","cwd":"${workspaceFolder}","env":{"SEMIO_TEST_LEVEL":"quick","NX_DAEMON":"false"},"presentation":{"group":"4_gate","order":408.689}},
     {"name":"⚖️test-quick📕️xlsx🦀️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/stdio-xlsx-rs:test --skip-nx-cache -- quick --no-fail-fast","cwd":"${workspaceFolder}","env":{"SEMIO_TEST_LEVEL":"quick","NX_DAEMON":"false"},"presentation":{"group":"4_gate","order":408.6901}},
@@ -9090,6 +9104,76 @@
       "presentation": {
         "group": "9_gates",
         "order": 900.05814
+      }
+    },
+    {
+      "name": "📦️generate-font-metrics📓️print🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:generate-font-metrics",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 900.00452
+      }
+    },
+    {
+      "name": "📦️build📓️print🦀️chart-inference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:build",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 900.00455
+      }
+    },
+    {
+      "name": "⚖️test📓️print🦀️chart-inference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print-rs:test",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03711
+      }
+    },
+    {
+      "name": "⚖️test📓️print🧬️native-grammar",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03712
+      }
+    },
+    {
+      "name": "⚖️test📓️print🖼️family-containment",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/print:test-native-grammar -- --families-only",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.03713
       }
     }
   ],

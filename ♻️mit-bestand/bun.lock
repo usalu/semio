@@ -1383,8 +1383,8 @@
         "suncalc": "1.9.0",
       },
     },
-    "../🧰️framework/🛍️products/📓️print/🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/print-viz-kernel",
+    "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/print-viz-inference",
       "version": "0.1.0",
       "devDependencies": {
         "d3-array": "3.2.4",
@@ -2473,7 +2473,7 @@
 
     "@semio-tech/print": ["@semio-tech/print@workspace:../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
 
-    "@semio-tech/print-viz-kernel": ["@semio-tech/print-viz-kernel@workspace:../🧰️framework/🛍️products/📓️print/🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript"],
+    "@semio-tech/print-viz-inference": ["@semio-tech/print-viz-inference@workspace:../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript"],
 
     "@semio-tech/procedural-generation2d-rs": ["@semio-tech/procedural-generation2d-rs@workspace:../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust"],
 

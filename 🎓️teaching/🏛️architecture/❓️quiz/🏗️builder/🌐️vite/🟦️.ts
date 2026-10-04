@@ -11,6 +11,7 @@ import {
   semioHostTitleText,
   semioReferencedAssetsVitePlugin,
   semioServeCloseVitePlugin,
+  semioServeUpgradeVitePlugin,
   semioViteProductionBuild,
   type SemioHostHtmlSpec,
 } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
@@ -110,7 +111,8 @@ function quizReleaseDocumentVitePlugin(proctorOrigin: string): OwnedBuildPlugin 
  * host), seals the document with a Content-Security-Policy that admits connections to that origin alone, and writes `CNAME`
  * with the site host; assets resolve from the domain root and land in the package's `dist`. The dev
  * server bakes nothing and proxies the gateway routes to the dev proctor on `PROCTOR_PORT` (default 8791), so dev and
- * tests stay same-origin. `TEACHING_ARCHITECTURE_QUIZ_CACHE` moves Vite's dependency cache, so a throw-away dev server
+ * tests stay same-origin; a proctor that goes away while a socket is proxied never takes the dev server along, whatever
+ * the runtime. `TEACHING_ARCHITECTURE_QUIZ_CACHE` moves Vite's dependency cache, so a throw-away dev server
  * never rewrites the one a developer's own server reads, and `TEACHING_ARCHITECTURE_QUIZ_WATCH=off` stops it watching the
  * sources, so an edit never reloads the pages a test drives.
  * @see ../../🚀️deploy/🔣️.json — the site and proctor hosts
@@ -123,6 +125,7 @@ export default defineOwnedBuildConfigFactory(({ command }) => ({
   cacheDir: process.env.TEACHING_ARCHITECTURE_QUIZ_CACHE,
   plugins: [
     semioServeCloseVitePlugin(),
+    semioServeUpgradeVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, quizHostDocument),
     semioEmojiIndexHtmlVitePlugin(siteRoot),
     ...semioReferencedAssetsVitePlugin(repoRoot),

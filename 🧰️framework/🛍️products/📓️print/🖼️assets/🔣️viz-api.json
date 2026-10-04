@@ -1588,6 +1588,36 @@
       "package": "semio-viz-data",
       "commands": [
         {
+          "name": "\\SemioVizNull",
+          "kind": "command",
+          "signature": "",
+          "note": "🧬 Typed row tokens preserve null and booleans independently of authored strings."
+        },
+        {
+          "name": "\\SemioVizString",
+          "kind": "command",
+          "signature": "m",
+          "note": ""
+        },
+        {
+          "name": "\\SemioVizUndefined",
+          "kind": "command",
+          "signature": "",
+          "note": ""
+        },
+        {
+          "name": "\\SemioVizNaN",
+          "kind": "command",
+          "signature": "",
+          "note": ""
+        },
+        {
+          "name": "\\SemioVizBoolean",
+          "kind": "command",
+          "signature": "m",
+          "note": ""
+        },
+        {
           "name": "\\SemioVizTable",
           "kind": "command",
           "signature": "m m",
@@ -4632,6 +4662,12 @@
       "package": "semio-viz-scale",
       "commands": [
         {
+          "name": "\\SemioVizPaintAlpha",
+          "kind": "command",
+          "signature": "m m",
+          "note": ""
+        },
+        {
           "name": "\\SemioVizScaleSolver",
           "kind": "command",
           "signature": "O{}",
@@ -7099,7 +7135,7 @@
               "type": "int",
               "default": "24",
               "description": {
-                "en": ": raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets.",
+                "en": ": raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets. samples (int, 120): intervals per sheet.",
                 "de": ""
               }
             },
@@ -7108,7 +7144,7 @@
               "type": "int",
               "default": "24",
               "description": {
-                "en": ": raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets.",
+                "en": ": raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets. samples (int, 120): intervals per sheet.",
                 "de": ""
               }
             }
@@ -12136,8 +12172,8 @@
           "type": "string",
           "default": "",
           "description": {
-            "en": "Local solar hours in UTC to sample.",
-            "de": "Abzutastende wahre Ortsstunden in UTC."
+            "en": "UTC hours to sample on the configured calendar date.",
+            "de": "Abzutastende UTC-Stunden am eingestellten Kalendertag."
           }
         },
         {
@@ -12201,6 +12237,15 @@
           "description": {
             "en": "Frame size in millimetres.",
             "de": "Rahmengröße in Millimetern."
+          }
+        },
+        {
+          "name": "data",
+          "type": "string",
+          "default": "",
+          "description": {
+            "en": "Optional table with month, hour, azimuth and altitude columns. An empty name computes positions from date, UTC hours, latitude and longitude. Azimuth is in degrees clockwise from south; altitude is in degrees above the horizon.",
+            "de": "Optionale Tabelle mit den Spalten month, hour, azimuth und altitude. Ein leerer Name berechnet Sonnenstände aus Datum, UTC-Stunden, Breite und Länge. Der Azimut wird in Grad im Uhrzeigersinn ab Süden, die Höhe in Grad über dem Horizont angegeben."
           }
         }
       ]
@@ -21700,6 +21745,15 @@
             "en": "Quantitative column of the series.",
             "de": "Quantitative Spalte der Reihe."
           }
+        },
+        {
+          "name": "caption",
+          "type": "boolean",
+          "default": "true",
+          "description": {
+            "en": "Draw the figure facility caption; namespace presentations can suppress the delegated caption.",
+            "de": "Beschriftung der Abbildungsfunktion zeichnen; Namensraumdarstellungen können die delegierte Beschriftung ausblenden."
+          }
         }
       ]
     },
@@ -21984,6 +22038,15 @@
           "description": {
             "en": "Value-axis domain override.",
             "de": "Vorgabe des Wertebereichs der Werteachse."
+          }
+        },
+        {
+          "name": "deviation",
+          "type": "number",
+          "default": "2",
+          "description": {
+            "en": "Bollinger standard-deviation multiplier.",
+            "de": "Standardabweichungsmultiplikator der Bollinger-Bänder."
           }
         }
       ]
@@ -37319,10 +37382,10 @@
         {
           "name": "scale",
           "type": "string",
-          "default": "",
+          "default": "length",
           "description": {
-            "en": "Named scale the values pass through.",
-            "de": "Benannte Skala, durch die die Werte laufen."
+            "en": "Branch ordinate: accumulated length, tree depth, or equal leaf rank with separated cluster leaves.",
+            "de": "Astordinate: summierte Länge, Baumtiefe oder gleiche Blattebene mit getrennten Clusterblättern."
           }
         },
         {
@@ -43272,6 +43335,15 @@
           }
         },
         {
+          "name": "samples",
+          "type": "integer",
+          "default": "120",
+          "description": {
+            "en": "Uniform intervals per Riemann sheet; each sheet includes both endpoints.",
+            "de": "Gleichmäßige Intervalle je Riemannschem Blatt; jedes Blatt enthält beide Endpunkte."
+          }
+        },
+        {
           "name": "seed",
           "type": "integer",
           "default": "20260905",
@@ -46135,8 +46207,8 @@
           "type": "number",
           "default": "",
           "description": {
-            "en": "Millimetres per unit of force.",
-            "de": "Millimeter je Krafteinheit."
+            "en": "Nominal millimetres per force unit before uniform canvas fitting; physical magnitudes remain unchanged.",
+            "de": "Nominelle Millimeter je Krafteinheit vor der gleichmäßigen Einpassung; physikalische Beträge bleiben unverändert."
           }
         },
         {
@@ -46180,8 +46252,8 @@
           "type": "number",
           "default": "60",
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         {
@@ -48190,8 +48262,8 @@
           "type": "string",
           "default": "",
           "description": {
-            "en": "Output range `min,max` of the scale or sweep.",
-            "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+            "en": "Explicit energy range `min,max`. When absent, fit every authored level, sampled potential value or band edge with a 12% margin.",
+            "de": "Expliziter Energiebereich `min,max`. Ohne Angabe werden alle vorgegebenen Niveaus, abgetasteten Potentialwerte oder Bandkanten mit 12 % Rand eingepasst."
           }
         },
         {
@@ -48226,8 +48298,8 @@
           "type": "string",
           "default": "",
           "description": {
-            "en": "Arrows between level indices.",
-            "de": "Pfeile zwischen den Niveauindizes."
+            "en": "Slash-separated from/to/label records. From/to are one-based level indices; optional labels have measured spacing and leaders.",
+            "de": "Durch Schrägstriche getrennte von/nach/Beschriftung-Datensätze. Von/nach sind einsbasierte Niveauindizes; optionale Beschriftungen erhalten gemessene Abstände und Verbindungslinien."
           }
         },
         {
@@ -49552,8 +49624,8 @@
           "type": "number",
           "default": "60",
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         {
@@ -50932,8 +51004,8 @@
           "type": "number",
           "default": "60",
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         {
@@ -63832,7 +63904,7 @@
   ],
   "totals": {
     "packages": 55,
-    "commands": 162,
+    "commands": 168,
     "keys": 895,
     "families": 246
   }

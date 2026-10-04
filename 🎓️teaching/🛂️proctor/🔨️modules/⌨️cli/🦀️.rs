@@ -120,7 +120,7 @@ fn report(error: &CatalogError) {
 async fn serve(environment: &impl Fn(&str) -> Option<String>) -> Result<ExitCode, Box<dyn std::error::Error>> {
     let config = ProctorConfig::from_environment(environment)?;
     eprintln!(
-        "[INFO] proctor {} mode {}, data {}, catalog {}, cross-origin {}, trusted forwarding {}, presence tick {} ms, at most {} learners and {} submitted runs per learner, sign-ups per address {} at once and {} per hour",
+        "[INFO] proctor {} mode {}, data {}, catalog {}, cross-origin {}, trusted forwarding {}, presence tick {} ms, at most {} learners and {} started runs per learner, sign-ups per address {} at once and {} per hour",
         env!("CARGO_PKG_VERSION"),
         config.mode.label(),
         config.data.display(),

@@ -1,9 +1,10 @@
 /** 📱️ On a phone (375 × 812) home is a list — one section per page, in reading order, each as tall as the screen, its
  * card as tall as what it holds and centred — and a quiz is playable from start to results without anything spilling
- * over the edge of the screen or scrolling the screen sideways.
+ * over the edge of the screen or scrolling the screen sideways. On hard every guess field lies within the screen, is
+ * tall enough to hit and takes its guess, and the categories keep their descriptions to themselves.
  * @see ../../🎭️e2e/🎚️config/🟦️.ts — the `phone` project that holds this phone
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { QUIZZES, answerRun, boxOf, card, enter, expect, expectFeedback, goHome, percent, playQuiz, quizOf, screen, submitRun, test, unresolvedLabels, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { PAR, QUIZZES, answerRun, answerTask, boxOf, card, enter, expect, expectFeedback, goHome, handle, openTask, playQuiz, quizOf, screen, shownBest, shownTask, shownText, submitRun, taskOf, test, unresolvedLabels, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 /** ↔️ How many pixels the document is wider than the screen. */
 async function overflow(device: Device): Promise<number> {
@@ -62,5 +63,34 @@ test("home is a list on a phone and a quiz is playable", async ({ device }) => {
   await goHome(learner);
   await expect(root).toHaveAttribute("data-mode", "list");
   await card(learner.page, quiz.id).scrollIntoViewIfNeeded();
-  expect(percent(await card(learner.page, quiz.id).locator("li", { hasText: "%" }).innerText())).toBe(100);
+  expect(await shownBest(learner, quiz.id)).toEqual({ challenge: "medium", points: PAR.medium, par: PAR.medium });
+});
+
+test("a hard run on a phone: every guess field lies within the screen, is tall enough to hit and takes its guess", async ({ device }) => {
+  const learner = await device("en");
+  await enter(learner, { kind: "pseudonym", handle: handle("Phone Guesser") });
+  const quiz = quizOf("physics");
+  await playQuiz(learner, quiz.id, "hard");
+  const steps = screen(learner.page, "run").locator("nav button");
+  for (let index = 0; index < quiz.tasks.length; index++) {
+    await openTask(learner, index);
+    const fields = screen(learner.page, "task").locator("[data-quiz-item] input");
+    for (const field of await fields.all()) {
+      const box = await boxOf(field);
+      expect(box.x, "a guess field starts on the screen").toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, "a guess field ends on the screen").toBeLessThanOrEqual(375);
+      expect(box.height, "a guess field is at least 24 px tall").toBeGreaterThanOrEqual(24);
+    }
+    const task = taskOf(quiz, await shownTask(learner));
+    if (task.kind === "classification") for (const category of task.categories!) if (category.description !== undefined) expect(await shownText(learner)).not.toContain(category.description.en);
+    await answerTask(learner, quiz, "perfect");
+    await expect(steps.nth(index).locator("[data-complete]")).toBeVisible();
+    expect(await overflow(learner)).toBeLessThanOrEqual(0);
+    expect(await sideways(learner)).toBe(0);
+  }
+  await submitRun(learner);
+  expect((await expectFeedback(learner, quiz, "perfect", "hard")).points).toBe(PAR.hard);
+  expect(await overflow(learner)).toBeLessThanOrEqual(0);
+  expect(await sideways(learner)).toBe(0);
+  expect(await unresolvedLabels(learner)).toEqual([]);
 });

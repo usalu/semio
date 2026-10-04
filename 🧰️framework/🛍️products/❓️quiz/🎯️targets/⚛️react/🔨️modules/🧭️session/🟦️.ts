@@ -13,6 +13,11 @@
  * holder. The learner finds the way with the trail: back and forward along the steps that still stand, up to the place
  * above, and a new trail with every new learner.
  *
+ * A run starts at a challenge; starting a quiz at another challenge than its open run's voids that run. The device
+ * keeps the time: an opening of a task and an answer carry the instant the learner acted by the session clock
+ * ({@link QuizSession.now}), so a connection shortage never makes a timely answer late. An easy run's hints follow
+ * every answer — at once from the deputy, else with the proctor's view of the run once its answers are delivered.
+ *
  * With a {@link Deputy} the device also decides by itself. A command goes straight to the proctor unless the proctor
  * is known not to answer or something the deputy decided still waits in the outbox; then the deputy decides it, its events
  * fold into the held views at once and the command waits in the outbox for the proctor. What the deputy decided is
@@ -26,15 +31,19 @@
 
 import { latestWins } from "@semio-tech/framework";
 import {
+  acted,
+  challengeRules,
   emptyLearnerState,
   evolveLearner,
   type Answer,
   type BadgeAwardedEvent,
   type CatalogView,
+  type Challenge,
   type Command,
   type CrowdView,
   type Event,
   type HandleView,
+  type Hint,
   type Id,
   type Identity,
   type IdentityClaim,
@@ -44,6 +53,7 @@ import {
   type LearnerRegisteredEvent,
   type LearnerState,
   type LearnerView,
+  type OpenTaskCommand,
   type Rejection,
   type RunResult,
   type RunSubmittedEvent,
@@ -54,8 +64,8 @@ import {
   type SubmitRunCommand,
 } from "@semio-tech/quiz";
 import type { Deputy } from "../🫡️deputy/🟦️.ts";
-import { isRecord, type LocalChange, type LocalStore } from "../💾️persistence/🟦️.ts";
-import { Outbox, commandRun, type OutboxActivity } from "../📮️outbox/🟦️.ts";
+import { isCatalogView, isLearnerView, isRecord, isRunView, type LocalChange, type LocalStore } from "../💾️persistence/🟦️.ts";
+import { Outbox, coalescingKey, commandRun, type OutboxActivity } from "../📮️outbox/🟦️.ts";
 import {
   ProctorThrottled,
   ProctorUnavailable,
@@ -70,6 +80,7 @@ import {
   signUpsSpent,
   type CommandVerdict,
   type ProctorClient,
+  type ProctorContract,
   type ProctorReachability,
   type RetryTiming,
 } from "../🛂️proctor/🟦️.ts";
@@ -90,10 +101,10 @@ export interface QuizTrail {
   readonly forward: readonly QuizStep[];
 }
 
-/** 🧵️ The trail of a learner who has not gone anywhere yet. */
+/** 🪡️ The trail of a learner who has not gone anywhere yet. */
 export const EMPTY_TRAIL: QuizTrail = { back: [], forward: [] };
 
-/** 🧵️ How many steps a trail keeps behind the one in front; older ones are forgotten. */
+/** 📏️ How many steps a trail keeps behind the one in front; older ones are forgotten. */
 export const TRAIL_LIMIT = 50;
 
 /** 🧑‍🎓️ The learner this device acts as; the identity is known once registered here or loaded from the proctor. */
@@ -112,7 +123,7 @@ export interface BoardChoice {
   readonly quiz?: Slug;
 }
 
-/** 🗂️ The leaderboard a learner sees first: every run of every quiz. */
+/** 🌐️ The leaderboard a learner sees first: every run of every quiz. */
 export const DEFAULT_BOARD: BoardChoice = { period: "all-time" };
 
 /** 🔑️ What names one leaderboard among those the client holds: its period, then its quiz. */
@@ -128,7 +139,7 @@ export interface HeldLeaderboard {
   readonly local?: true;
 }
 
-/** 🧭️ Everything the client renders. `board` is the leaderboard the learner chose to look at (ephemeral local-only);
+/** 🖼️ Everything the client renders. `board` is the leaderboard the learner chose to look at (ephemeral local-only);
  * `leaderboards` holds, by {@link boardKey}, the last standings the proctor sent for every leaderboard looked at so far
  * and when they last changed here — so a leaderboard chosen again shows at once while it is asked for anew, and an
  * answer equal to the one held changes nothing, so polling renders nothing while the standings stand. `submissions`
@@ -167,6 +178,8 @@ export type QuizClientEvent =
   | { readonly type: "learner-loaded"; readonly view: LearnerView }
   | { readonly type: "run-loaded"; readonly view: RunView }
   | { readonly type: "answer-given"; readonly run: Id; readonly task: Slug; readonly answer: Answer }
+  | { readonly type: "task-opened"; readonly run: Id; readonly task: Slug; readonly at: number }
+  | { readonly type: "run-hinted"; readonly run: Id; readonly hints: Readonly<Record<Slug, readonly Hint[]>> }
   | { readonly type: "run-submitted"; readonly run: Id; readonly result: RunResult; readonly badges: readonly Slug[]; readonly at: number }
   | { readonly type: "run-voided"; readonly run: Id }
   | { readonly type: "board-chosen"; readonly board: BoardChoice }
@@ -183,7 +196,7 @@ export function initialQuizState(persisted: Pick<QuizState, "introduced" | "lear
   return { ...persisted, step, trail: EMPTY_TRAIL, awards: {}, board: DEFAULT_BOARD, leaderboards: {}, crowds: {}, asked: [] };
 }
 
-/** 🏆️ The leaderboard the learner looks at, as far as the proctor has answered it. */
+/** 👁️ The leaderboard the learner looks at, as far as the proctor has answered it. */
 export function shownLeaderboard(state: Pick<QuizState, "board" | "leaderboards">): HeldLeaderboard | undefined {
   return state.leaderboards[boardKey(state.board)];
 }
@@ -194,7 +207,7 @@ export function overallLeaderboard(state: Pick<QuizState, "leaderboards">): Held
   return state.leaderboards[boardKey(DEFAULT_BOARD)];
 }
 
-/** 🗂️ `board` as far as `catalog` allows it: a quiz the catalog does not list is no category to look at. */
+/** 🚧️ `board` as far as `catalog` allows it: a quiz the catalog does not list is no category to look at. */
 function allowedBoard(board: BoardChoice, catalog: CatalogView | undefined): BoardChoice {
   return board.quiz === undefined || catalog === undefined || catalog.quizzes.some((quiz) => quiz.id === board.quiz) ? board : { period: board.period };
 }
@@ -215,7 +228,7 @@ function stands(state: Pick<QuizState, "runs">, step: QuizStep): boolean {
   return status === undefined || status === (step.screen === "run" ? "open" : "submitted");
 }
 
-/** 🪧️ The state once `step` is in front: the step left stays behind when it still stands and the steps ahead are
+/** 🚶️ The state once `step` is in front: the step left stays behind when it still stands and the steps ahead are
  * forgotten — unless it shows `instead` of the one in front, which then leaves no trace. The step already in front
  * changes nothing. */
 function opened(state: QuizState, step: QuizStep, instead = false): QuizState {
@@ -225,7 +238,7 @@ function opened(state: QuizState, step: QuizStep, instead = false): QuizState {
   return { ...state, step, trail: { back, forward: [] } };
 }
 
-/** 🧵️ The state once the trail was followed `to` one side: in front is the nearest step there that still stands and is
+/** 🔙️ The state once the trail was followed `to` one side: in front is the nearest step there that still stands and is
  * not the one in front already, the step left lies on the other side, and the steps passed over are forgotten. Nothing
  * when no step of that side stands. */
 function retraced(state: QuizState, to: keyof QuizTrail): QuizState | undefined {
@@ -258,10 +271,42 @@ export function stepAbove(state: Pick<QuizState, "step" | "runs" | "catalog">): 
   return quiz !== undefined && state.catalog?.quizzes.some((candidate) => candidate.id === quiz) ? { screen: "home", page: quiz } : { screen: "home" };
 }
 
-/** 🔒️ A cached open run the learner view lists as closed (e.g. submitted on another device): closed here too; its
- * result arrives with the next run view. */
+/** ✂️ `view` without the hints of the tasks `dropped` names (every task when it names none): a hint tells about the
+ * answer it was given for and only while the run is open, never about another answer. */
+function unhinted(view: RunView, dropped: (task: Slug) => boolean = () => true): RunView {
+  if (view.hints === undefined || !Object.keys(view.hints).some(dropped)) return view;
+  const { hints, ...rest } = view;
+  const kept = Object.entries(hints).filter(([task]) => !dropped(task));
+  return kept.length === 0 ? rest : { ...rest, hints: Object.fromEntries(kept) };
+}
+
+/** 🆕️ A proctor's read `loaded` of an open run with the answers — and their hints — of the tasks `fresh` names taken
+ * from the `held` view instead: answers the read cannot hold, since the device gave them after it was asked for. */
+function keptFresh(loaded: RunView, held: RunView, fresh: (task: Slug) => boolean): RunView {
+  if (loaded.status !== "open" || held.status !== "open" || ![...Object.keys(loaded.answers), ...Object.keys(held.answers)].some(fresh)) return loaded;
+  const merged = <T>(read: Readonly<Record<Slug, T>> | undefined, local: Readonly<Record<Slug, T>> | undefined): Record<Slug, T> => ({
+    ...Object.fromEntries(Object.entries(read ?? {}).filter(([task]) => !fresh(task))),
+    ...Object.fromEntries(Object.entries(local ?? {}).filter(([task]) => fresh(task))),
+  });
+  const { hints: _, ...rest } = loaded;
+  const hints = merged(loaded.hints, held.hints);
+  return { ...rest, answers: merged(loaded.answers, held.answers), ...(Object.keys(hints).length === 0 ? {} : { hints }) };
+}
+
+/** ⌛️ Whether an answer to `task` of `view` at the instant `at` comes after the task's time is up: its clock started
+ * at its opening and allows its sheet task's seconds, as the deciders count them (`time-up`), the device deciding at
+ * its own clock (`now = at`). An unopened task is not
+ * overdue here — another device may have opened it — and the deciders judge it. */
+function overdue(view: RunView, task: Slug, at: number): boolean {
+  const opened = view.opened?.[task];
+  const seconds = view.sheet.tasks.find((candidate) => candidate.id === task)?.seconds;
+  return opened !== undefined && seconds !== undefined && acted(at, opened, at) - opened > seconds * 1000;
+}
+
+/** 🔒️ A cached open run the learner view lists as closed (e.g. submitted on another device): closed here too, without
+ * hints; its result arrives with the next run view. */
 function closedRun(view: RunView, summary: RunSummary): RunView {
-  return { ...view, status: summary.status, ...(summary.submittedAt === undefined ? {} : { submittedAt: summary.submittedAt }) };
+  return { ...unhinted(view), status: summary.status, ...(summary.submittedAt === undefined ? {} : { submittedAt: summary.submittedAt }) };
 }
 
 function withRun(state: QuizState, run: Id, change: (view: RunView) => RunView): QuizState {
@@ -319,13 +364,17 @@ export function evolveQuizState(state: QuizState, event: QuizClientEvent): QuizS
       if (state.learner?.id !== event.view.learner) return state;
       return { ...state, runs: { ...state.runs, [event.view.run]: event.view }, asked: event.view.status === "open" || state.runs[event.view.run]?.status !== "open" ? state.asked : unasked(state, event.view.run) };
     case "answer-given":
-      return withRun(state, event.run, (view) => ({ ...view, answers: { ...view.answers, [event.task]: event.answer } }));
+      return withRun(state, event.run, (view) => unhinted({ ...view, answers: { ...view.answers, [event.task]: event.answer } }, (task) => task === event.task));
+    case "task-opened":
+      return withRun(state, event.run, (view) => (view.opened !== undefined && Object.hasOwn(view.opened, event.task) ? view : { ...view, opened: { ...view.opened, [event.task]: event.at } }));
+    case "run-hinted":
+      return withRun(state, event.run, (view) => (Object.keys(event.hints).length === 0 ? unhinted(view) : { ...view, hints: event.hints }));
     case "run-submitted": {
-      const submitted = withRun(state, event.run, (view) => ({ ...view, status: "submitted", result: event.result, submittedAt: event.at }));
+      const submitted = withRun(state, event.run, (view) => ({ ...unhinted(view), status: "submitted", result: event.result, submittedAt: event.at }));
       return opened({ ...submitted, awards: { ...state.awards, [event.run]: event.badges }, asked: unasked(state, event.run) }, { screen: "results", run: event.run });
     }
     case "run-voided": {
-      const voided = { ...withRun(state, event.run, (view) => ({ ...view, status: "voided" })), asked: unasked(state, event.run) };
+      const voided = { ...withRun(state, event.run, (view) => ({ ...unhinted(view), status: "voided" })), asked: unasked(state, event.run) };
       const onRun = (state.step.screen === "run" || state.step.screen === "results") && state.step.run === event.run;
       return onRun ? opened(voided, { screen: "home" }) : voided;
     }
@@ -369,6 +418,12 @@ export function openRunOf(state: QuizState, quiz: Slug): Id | undefined {
   return listed ?? Object.values(state.runs).find((view) => view.quiz === quiz && view.status === "open" && view.learner === state.learner?.id)?.run;
 }
 
+/** 🧗️ The challenge of the open run of `quiz`, if the learner has one: from its held view, else from its listing. */
+export function openChallengeOf(state: QuizState, quiz: Slug): Challenge | undefined {
+  const open = openRunOf(state, quiz);
+  return open === undefined ? undefined : (state.runs[open]?.sheet.challenge ?? state.learnerView?.runs.find((summary) => summary.run === open)?.challenge);
+}
+
 /** 🏁️ The latest submitted run of `quiz`, from the learner view or from what this device submitted since. */
 export function lastSubmittedRunOf(state: QuizState, quiz: Slug): Id | undefined {
   const listed = state.learnerView?.runs.find((summary) => summary.quiz === quiz && summary.status === "submitted");
@@ -380,11 +435,25 @@ export function lastSubmittedRunOf(state: QuizState, quiz: Slug): Id | undefined
 }
 
 /** 🔀️ One run from this tab's copy and another tab's: a closed status (with its result) wins over an open one; while
- * both are open the answers are their union, the other tab's — written last — winning per task. */
+ * both are open the answers are their union, the other tab's — written last — winning per task, each task keeping the
+ * hints of the copy whose answer it keeps, and every task opened in either copy counts as opened at its earliest
+ * instant. */
 export function mergeRunViews(mine: RunView | undefined, theirs: RunView): RunView {
   if (mine === undefined || theirs.status !== "open") return theirs;
   if (mine.status !== "open") return mine;
-  return { ...theirs, answers: { ...mine.answers, ...theirs.answers } };
+  const { hints: _, opened: __, ...rest } = theirs;
+  const answers = { ...mine.answers, ...theirs.answers };
+  const hints = Object.keys(answers).flatMap((task) => {
+    const hinted = (Object.hasOwn(theirs.answers, task) ? theirs : mine).hints?.[task];
+    return hinted === undefined ? [] : [[task, hinted] as const];
+  });
+  const openings = [...Object.entries(mine.opened ?? {}), ...Object.entries(theirs.opened ?? {})].sort(([, left], [, right]) => right - left);
+  return {
+    ...rest,
+    answers,
+    ...(mine.opened === undefined && theirs.opened === undefined ? {} : { opened: Object.fromEntries(openings) }),
+    ...(hints.length === 0 ? {} : { hints: Object.fromEntries(hints) }),
+  };
 }
 //#endregion 🧭️State
 
@@ -395,15 +464,15 @@ function restoredLearner(value: unknown): QuizLearner | undefined {
 }
 
 function restoredCatalog(value: unknown): CatalogView | undefined {
-  return isRecord(value) && Array.isArray(value.quizzes) && Array.isArray(value.badges) ? (value as unknown as CatalogView) : undefined;
+  return isCatalogView(value) ? value : undefined;
 }
 
 function restoredLearnerView(value: unknown): LearnerView | undefined {
-  return isRecord(value) && typeof value.learner === "string" && Array.isArray(value.runs) && Array.isArray(value.badges) ? (value as unknown as LearnerView) : undefined;
+  return isLearnerView(value) ? value : undefined;
 }
 
 function restoredRun(value: unknown, run: Id): RunView | undefined {
-  return isRecord(value) && value.run === run && typeof value.learner === "string" && isRecord(value.sheet) && isRecord(value.answers) && typeof value.status === "string" ? (value as unknown as RunView) : undefined;
+  return isRunView(value, run) ? value : undefined;
 }
 
 function restoredRuns(store: LocalStore, learner: Id | undefined): Readonly<Record<Id, RunView>> {
@@ -452,13 +521,15 @@ export type RefreshOutcome = { readonly answered: true } | { readonly answered: 
 /** 📊️ The progress of a submission. */
 export type SubmissionPhase = { readonly phase: "saving"; readonly done: number; readonly total: number } | { readonly phase: "submitting" } | { readonly phase: "results" };
 
-/** 📶️ What the learner sees of the connection; with a `deputy` the device goes on deciding while the proctor is away. */
+/** 📶️ What the learner sees of the connection; with a `deputy` the device goes on deciding while the proctor is away —
+ * also while it speaks another `contract`, which is named as long as it does. */
 export interface QuizConnection {
   readonly reachability: ProctorReachability;
   readonly online: boolean;
   readonly pending: number;
   readonly activity: OutboxActivity;
   readonly deputy: boolean;
+  readonly contract?: ProctorContract;
 }
 
 /** 📸️ One consistent render input: the state and the connection. */
@@ -493,7 +564,7 @@ function decision(command: Command): boolean {
   return command.type !== "record-answer";
 }
 
-/** ⏳️ How long a view this client itself caused may still be missing from the proctor's projections. */
+/** 🕐️ How long a view this client itself caused may still be missing from the proctor's projections. */
 export const PROJECTION_GRACE_MS = 10_000;
 
 function stoppedLifetime(): AbortController {
@@ -526,11 +597,15 @@ export class QuizSession {
   private readonly deputy: Deputy | undefined;
   private readonly patienceMs: number;
   private readonly timing: RetryTiming;
-  private readonly now: () => number;
+  private readonly clock: () => number;
   private state: QuizState;
   private online = true;
   private signUpsFrom = 0;
   private readonly unconfirmed = new Set<Id>();
+  private edits = 0;
+  private readonly edited = new Map<string, number>();
+  private reads = 0;
+  private readonly adopted = new Map<Id, number>();
   private snapshot: QuizSnapshot;
   private lifetime = stoppedLifetime();
   private readonly listeners = new Set<() => void>();
@@ -542,7 +617,7 @@ export class QuizSession {
     if (catalog !== undefined) this.dispatch({ type: "catalog-loaded", catalog });
   });
 
-  /** 🧑‍🎓️ Reloads the learner view, retrying through connection shortages and projection lag; concurrent calls collapse
+  /** 🔃️ Reloads the learner view, retrying through connection shortages and projection lag; concurrent calls collapse
    * into one. A learner the proctor still does not know afterwards is forgotten on this device and asked to identify.
    * While the device is ahead of the proctor nothing is read: the proctor has not heard everything yet. */
   readonly refreshLearner = latestWins(async (): Promise<void> => {
@@ -582,7 +657,7 @@ export class QuizSession {
     this.dispatch({ type: "crowd-unasked", quiz });
   }
 
-  /** 🗂️ The learner chooses the leaderboard to look at — a period, of every quiz or of one: what is held of it shows at
+  /** 👆️ The learner chooses the leaderboard to look at — a period, of every quiz or of one: what is held of it shows at
    * once, and it is asked for again. A quiz the catalog does not list is no choice. */
   chooseBoard(board: BoardChoice): void {
     const before = this.state.board;
@@ -590,7 +665,7 @@ export class QuizSession {
     if (this.state.board !== before) void this.refreshLeaderboard();
   }
 
-  /** 🏆️ Asks for the leaderboard the learner looks at once; polling repeats it, so a failure only keeps the last known
+  /** 📈️ Asks for the leaderboard the learner looks at once; polling repeats it, so a failure only keeps the last known
    * standings and tells the poller to slow down. While the learner looks at another leaderboard than the overall one,
    * that one — which says the learner's rank on the profile — is asked for too whenever the answer says that runs were
    * submitted since it was held. When the proctor does not answer — or not within the learner's patience — a deputy
@@ -618,13 +693,20 @@ export class QuizSession {
     this.deputy = options.deputy;
     this.patienceMs = options.patienceMs ?? DEPUTY_PATIENCE_MS;
     this.timing = options.timing ?? RETRY_TIMING;
-    this.now = options.now ?? Date.now;
-    this.outbox = new Outbox({ send: (command, signal) => this.deliver(command, signal), store: options.store, timing: this.timing, now: this.now, onSettled: (command, verdict) => this.settled(command, verdict) });
+    this.clock = options.now ?? Date.now;
+    this.outbox = new Outbox({ send: (command, signal) => this.deliver(command, signal), store: options.store, timing: this.timing, now: this.clock, onSettled: (command, verdict) => this.settled(command, verdict) });
     this.state = this.restored();
+    this.rehintAll();
     this.snapshot = this.freeze();
   }
 
-  /** 📸️ The current snapshot; the same object until something changes. */
+  /** 🕰️ The session's clock in milliseconds since the Unix epoch: the instant an answer or an opening is stamped with
+   * and the one every countdown is measured against. */
+  now(): number {
+    return this.clock();
+  }
+
+  /** 🎞️ The current snapshot; the same object until something changes. */
   getSnapshot = (): QuizSnapshot => this.snapshot;
 
   /** 🔔️ Calls `listener` on every change; returns the unsubscribe function. */
@@ -693,7 +775,7 @@ export class QuizSession {
     this.dispatch({ type: "introduction-read" });
   }
 
-  /** 🪧️ Opens a screen and refreshes what it shows from the proctor; a cached run shows at once, also offline. The
+  /** 🚪️ Opens a screen and refreshes what it shows from the proctor; a cached run shows at once, also offline. The
    * step left stays on the trail behind — unless the new one shows `instead` of it, as the page the address named on
    * arrival does. */
   open(step: QuizStep, instead = false): void {
@@ -701,17 +783,17 @@ export class QuizSession {
     this.refresh(step);
   }
 
-  /** ⏪️ Goes back along the trail to the nearest step that still stands. */
+  /** ◀️ Goes back along the trail to the nearest step that still stands. */
   back(): void {
     this.retrace("back");
   }
 
-  /** ⏩️ Goes forward again along the trail to the nearest step that still stands. */
+  /** ⏭️ Goes forward again along the trail to the nearest step that still stands. */
   forward(): void {
     this.retrace("forward");
   }
 
-  /** ⏫️ Opens the place above the step in front, if there is one. */
+  /** 🔼️ Opens the place above the step in front, if there is one. */
   up(): void {
     const above = stepAbove(this.state);
     if (above !== undefined) this.open(above);
@@ -737,7 +819,7 @@ export class QuizSession {
     this.dispatch({ type: "notice-dismissed" });
   }
 
-  /** 🔁️ Forgets the learner on this device; their progress stays with the proctor. */
+  /** 🧽️ Forgets the learner on this device; their progress stays with the proctor. */
   forgetLearner(): void {
     this.dispatch({ type: "learner-forgotten" });
   }
@@ -795,11 +877,14 @@ export class QuizSession {
     return { kind: "rejected", rejection: identity.kind === "anonymous" ? "learner-exists" : "handle-claimed" };
   }
 
-  /** ▶️ Starts a run of `quiz` and opens it; an already open run of the quiz is resumed instead. */
-  async startRun(quiz: Slug, signal: AbortSignal): Promise<SessionFailure | undefined> {
+  /** 🚀️ Starts a run of `quiz` at `challenge` at the instant the learner started it by the session clock — the run's
+   * start wherever and whenever it is decided — and opens it; an already open run of the quiz at that challenge is
+   * resumed instead, and one at another challenge is voided by the start — the learner asked for that, so no notice says
+   * it. */
+  async startRun(quiz: Slug, challenge: Challenge, signal: AbortSignal): Promise<SessionFailure | undefined> {
     const learner = this.state.learner?.id;
     if (learner === undefined) return { kind: "rejected", rejection: "unknown-learner" };
-    const command: StartRunCommand = { type: "start-run", id: newId(), learner, run: newId(), quiz };
+    const command: StartRunCommand = { type: "start-run", id: newId(), learner, run: newId(), quiz, challenge, at: this.now() };
     const { verdict, by } = await this.decided(command, signal);
     if (verdict.kind === "rejected" && verdict.rejection === "run-open") {
       if (by === "proctor") this.adoptLearnerView(await this.projected((current) => this.proctor.learner(learner, current), signal));
@@ -824,13 +909,53 @@ export class QuizSession {
     return undefined;
   }
 
-  /** ✍️ Records an answer: applied locally at once, delivered through the outbox. */
+  /** ⏱️ Opens a task of a timed run: its clock starts at the instant the learner acted by the session clock. Decided
+   * like a start — by the proctor, or by the deputy while the proctor is away, but only once the run's view is held: it
+   * is loaded first when the device knows the run from its listing alone — and a task the held view already holds as
+   * opened needs no command. Once it resolves without a failure, the held view holds the opening. `already-opened` is
+   * success — the task is open elsewhere, so the run is read again when the held view lacks the opening. A revised quiz
+   * voids the run; a run that closed is read again. */
+  async openTask(run: Id, task: Slug, signal: AbortSignal): Promise<SessionFailure | undefined> {
+    const learner = this.state.learner?.id;
+    if (learner === undefined) return { kind: "rejected", rejection: "unknown-learner" };
+    if (this.state.runs[run] === undefined) await this.loadRun(run, signal);
+    const opened = this.state.runs[run]?.opened;
+    if (opened !== undefined && Object.hasOwn(opened, task)) return undefined;
+    const command: OpenTaskCommand = { type: "open-task", id: newId(), learner, run, task, at: this.now() };
+    const { verdict, by } = await this.decided(command, signal);
+    if (verdict.kind === "accepted") {
+      if (by === "deputy") return undefined;
+      const event = verdict.events.find((candidate) => candidate.type === "task-opened" && candidate.run === run && candidate.task === task);
+      if (event === undefined) await this.loadRun(run, signal);
+      else this.dispatch({ type: "task-opened", run, task, at: event.at });
+      return undefined;
+    }
+    if (verdict.kind === "rejected" && verdict.rejection === "already-opened") {
+      const held = this.state.runs[run]?.opened;
+      if (held === undefined || !Object.hasOwn(held, task)) await this.loadRun(run, signal);
+      return undefined;
+    }
+    if (verdict.kind === "rejected" && verdict.rejection === "quiz-revised") this.voided(run);
+    if (verdict.kind === "rejected" && (verdict.rejection === "run-closed" || verdict.rejection === "unknown-run")) void this.loadRun(run);
+    return failureOf(verdict);
+  }
+
+  /** ✍️ Records an answer given now by the session clock: applied locally at once, delivered through the outbox — its
+   * instant is the one the deciders judge, also once a later edit of the same task replaced it in the queue. An answer
+   * to a task whose time is up by the session clock is refused here as the deciders would refuse it: nothing changes and
+   * nothing is sent, and the learner is told. The hints of the task's former answer go at once; on a run that hints, a
+   * deputy tells those of the new answer right away, else they arrive with the proctor's view of the run once its
+   * answers are delivered. */
   answer(run: Id, task: Slug, answer: Answer): void {
     const learner = this.state.learner?.id;
     const view = this.state.runs[run];
     if (learner === undefined || view === undefined || view.status !== "open") return;
+    const at = this.now();
+    if (overdue(view, task, at)) return this.dispatch({ type: "notice-raised", notice: { kind: "rejection", rejection: "time-up" } });
     this.dispatch({ type: "answer-given", run, task, answer });
-    this.outbox.enqueue({ type: "record-answer", id: newId(), learner, run, task, answer });
+    this.edited.set(coalescingKey({ run, task }), (this.edits += 1));
+    this.outbox.enqueue({ type: "record-answer", id: newId(), learner, run, task, answer, at });
+    this.rehint(run);
   }
 
   /** 📨️ Submits a run once all its answers are delivered, reporting each phase; `signal` cancels between and during
@@ -852,7 +977,7 @@ export class QuizSession {
     if (this.state.runs[run]?.status === "voided") return { kind: "rejected", rejection: "quiz-revised" };
     onPhase({ phase: "submitting" });
     const command: SubmitRunCommand = { type: "submit-run", id: newId(), learner, run };
-    const verdict = delivered ? (await this.decided(command, signal)).verdict : this.deputise(command);
+    const verdict = delivered || !this.decidable(command) ? (await this.decided(command, signal)).verdict : this.deputise(command);
     if (verdict.kind === "refused" || (verdict.kind === "rejected" && verdict.rejection !== "run-closed")) return failureOf(verdict);
     onPhase({ phase: "results" });
     const events = verdict.kind === "accepted" ? verdict.events : [];
@@ -875,34 +1000,48 @@ export class QuizSession {
     return undefined;
   }
 
-  /** 🏃️ Loads a run view, waiting out projection lag. The proctor's view wins — including answers another device gave
-   * — except for answers still waiting in the outbox, which are newer than anything the proctor has. A run that closed
-   * meanwhile is followed: to its results when submitted, home with a notice when voided. `signal` makes it
-   * interactive, else it runs in the background. While the device is ahead of the proctor the held view is the answer. */
+  /** 📖️ Loads a run view, waiting out projection lag. The proctor's view wins — including answers another device gave
+   * — except for the answers it cannot hold yet, with their hints: those still waiting in the outbox, and those this
+   * device gave of a task that had one waiting when the read was asked for or that it answered since. A read overtaken
+   * by a later one of the same run is dropped. A run that closed meanwhile is followed: to its results when submitted,
+   * home with a notice when voided. `signal` makes it interactive, else it runs in the background. While the proctor's
+   * view of the run lacks a decision of the deputy ({@link behind}) the held view is the answer. */
   async loadRun(run: Id, signal?: AbortSignal): Promise<RunView | undefined> {
     const learner = this.state.learner?.id;
     if (learner === undefined) return undefined;
-    if (this.ahead()) return this.state.runs[run];
+    if (this.behind(run)) return this.state.runs[run];
+    const ticket = (this.reads += 1);
+    const edits = this.edits;
+    const unsettled = Object.keys(this.outbox.pendingAnswers(run));
     const read = (current: AbortSignal): Promise<RunView> => this.proctor.run(run, learner, current);
     const loaded = signal === undefined ? await this.background(read) : await this.projected(read, signal);
     if (loaded === undefined || this.state.learner?.id !== learner) return undefined;
-    if (this.ahead()) return this.state.runs[run];
+    if (this.behind(run) || (this.adopted.get(run) ?? 0) > ticket) return this.state.runs[run];
+    this.adopted.set(run, ticket);
     const cached = this.state.runs[run];
-    const view = this.withPending(loaded);
+    const fresh = (task: Slug): boolean => unsettled.includes(task) || (this.edited.get(coalescingKey({ run, task })) ?? 0) > edits;
+    const view = this.withPending(cached === undefined ? loaded : keptFresh(loaded, cached, fresh));
     this.dispatch({ type: "run-loaded", view });
+    this.rehint(run);
     this.followClosure(cached, view);
-    return view;
+    return this.state.runs[run] ?? view;
   }
 
+  /** 📝️ `view` with the answers still waiting in the outbox on top — they are newer than anything the proctor has — and
+   * without the hints of the tasks whose answer that changes. */
   private withPending(view: RunView): RunView {
-    return view.status === "open" ? { ...view, answers: { ...view.answers, ...this.outbox.pendingAnswers(view.run) } } : view;
+    if (view.status !== "open") return view;
+    const pending = this.outbox.pendingAnswers(view.run);
+    const changed = Object.keys(pending).filter((task) => JSON.stringify(view.answers[task]) !== JSON.stringify(pending[task]));
+    return changed.length === 0 ? view : unhinted({ ...view, answers: { ...view.answers, ...pending } }, (task) => changed.includes(task));
   }
 
   private overlayPending(): void {
     for (const view of Object.values(this.state.runs)) {
-      if (view.status !== "open") continue;
-      const pending = Object.entries(this.outbox.pendingAnswers(view.run));
-      if (pending.some(([task, answer]) => JSON.stringify(view.answers[task]) !== JSON.stringify(answer))) this.dispatch({ type: "run-loaded", view: this.withPending(view) }, false);
+      const overlaid = this.withPending(view);
+      if (overlaid === view) continue;
+      this.dispatch({ type: "run-loaded", view: overlaid }, false);
+      this.rehint(view.run, false);
     }
   }
 
@@ -955,7 +1094,10 @@ export class QuizSession {
     if (stored?.id === this.state.learner?.id) return;
     if (stored === undefined) return this.dispatch({ type: "learner-forgotten" }, false);
     this.dispatch({ type: "learner-identified", learner: stored.id, identity: stored.identity }, false);
-    for (const view of Object.values(restoredRuns(this.store, stored.id))) this.dispatch({ type: "run-loaded", view: this.withPending(view) }, false);
+    for (const view of Object.values(restoredRuns(this.store, stored.id))) {
+      this.dispatch({ type: "run-loaded", view: this.withPending(view) }, false);
+      this.rehint(view.run, false);
+    }
     void this.refreshLearner();
   }
 
@@ -965,12 +1107,29 @@ export class QuizSession {
     const cached = this.state.runs[run];
     const view = this.withPending(mergeRunViews(cached, stored));
     this.dispatch({ type: "run-loaded", view }, false);
+    this.rehint(run, false);
     this.followClosure(cached, view);
   }
 
   private adoptStore(): void {
     this.state = this.restored();
+    this.rehintAll();
     this.notify();
+  }
+
+  /** 💡️ Has the deputy tell the hints of `run` anew when it is an open run that hints and they differ from those held —
+   * whenever the answers held may have changed. Without a deputy, or for a run whose held sheet the material does not
+   * deal, the hints held stay as they are: whatever changed an answer already dropped the hints of its former one. */
+  private rehint(run: Id, persist = true): void {
+    const learner = this.state.learner?.id;
+    const view = this.state.runs[run];
+    if (this.deputy === undefined || learner === undefined || view?.status !== "open" || !challengeRules(view.sheet.challenge).hints) return;
+    const hints = this.deputy.hints(this.held(learner), run);
+    if (hints !== undefined && JSON.stringify(hints) !== JSON.stringify(view.hints ?? {})) this.dispatch({ type: "run-hinted", run, hints }, persist);
+  }
+
+  private rehintAll(): void {
+    for (const run of Object.keys(this.state.runs)) this.rehint(run);
   }
 
   private restored(): QuizState {
@@ -988,25 +1147,35 @@ export class QuizSession {
     if (!this.outbox.waiting((command) => decision(command) && commandRun(command) === run)) this.outbox.discard(run);
   }
 
-  /** 🏃️ Whether the device is ahead of the proctor: a decision the deputy took still waits in the outbox, so the
+  /** 🏎️ Whether the device is ahead of the proctor: a decision the deputy took still waits in the outbox, so the
    * proctor's views lack it. */
   private ahead(): boolean {
     return this.deputy !== undefined && this.outbox.waiting(decision);
   }
 
+  /** 🐢️ Whether the proctor's view of `run` lacks a decision the deputy took that still waits in the outbox: one about
+   * the run itself, a start of a run of its quiz — which may void it — or the learner's registration. Decisions about
+   * other runs leave the proctor's view of this one as it is. */
+  private behind(run: Id): boolean {
+    if (this.deputy === undefined) return false;
+    const quiz = this.state.runs[run]?.quiz ?? this.state.learnerView?.runs.find((summary) => summary.run === run)?.quiz;
+    return this.outbox.waiting((command) => decision(command) && (command.type === "identify-learner" || commandRun(command) === run || (command.type === "start-run" && (quiz === undefined || command.quiz === quiz))));
+  }
+
   /** 🛂️ Whether a command is the proctor's to decide right now: always without a deputy; with one unless the proctor
-   * is known not to answer (it did not, it asked to slow down, or the browser is offline) or the device is ahead —
+   * is known not to answer (it did not, it asked to slow down, it speaks another contract, or the browser is offline)
+   * or the device is ahead —
    * then the command would overtake what waits. A proctor nobody has heard from yet is asked. */
   private direct(): boolean {
     const reached = this.proctor.reachability();
     return this.deputy === undefined || (this.online && (reached === "reachable" || reached === "unknown") && !this.ahead());
   }
 
-  /** ⚖️ Has `command` decided. Without a deputy the proctor decides, however long a connection shortage lasts. With
+  /** 🏛️ Has `command` decided. Without a deputy the proctor decides, however long a connection shortage lasts. With
    * one the proctor is asked once while it is the proctor's to decide, and the deputy decides whenever it is not or
    * the proctor did not answer; a sent command the proctor did decide is the same command when it arrives again. */
   private async decided(command: Command, signal: AbortSignal): Promise<Decided> {
-    if (this.deputy === undefined) return { verdict: await retryTransient(() => this.proctor.command(command, signal), this.timing, signal), by: "proctor" };
+    if (this.deputy === undefined || !this.decidable(command)) return { verdict: await retryTransient(() => this.proctor.command(command, signal), this.timing, signal), by: "proctor" };
     if (this.direct()) {
       try {
         return { verdict: await this.patient((waiting) => this.proctor.command(command, waiting), signal), by: "proctor" };
@@ -1017,7 +1186,15 @@ export class QuizSession {
     return { verdict: this.deputise(command), by: "deputy" };
   }
 
-  /** ⏳️ Asks the proctor through `call` for as long as the learner's patience lasts; after that the call is given up as
+  /** 🔎️ Whether the deputy may decide `command` from what the device holds: an opening or a submission of an open run
+   * only when its run view is held — a listing alone knows neither the run's answers nor when its tasks were opened, so
+   * such a command waits for the proctor. */
+  private decidable(command: Command): boolean {
+    if (command.type !== "open-task" && command.type !== "submit-run") return true;
+    return this.state.runs[command.run] !== undefined || this.state.learnerView?.runs.find((summary) => summary.run === command.run)?.status !== "open";
+  }
+
+  /** 🧘️ Asks the proctor through `call` for as long as the learner's patience lasts; after that the call is given up as
    * a connection shortage and the proctor counts as unreachable until it answers anything again, so the next command
    * does not wait for it once more. */
   private async patient<T>(call: (signal: AbortSignal) => Promise<T>, signal: AbortSignal): Promise<T> {
@@ -1047,7 +1224,7 @@ export class QuizSession {
     return { kind: "accepted", events: taken.events };
   }
 
-  /** 🧑‍🎓️ The learner `learner` as the held views describe it; a learner this device does not act as has nothing held. */
+  /** 🗃️ The learner `learner` as the held views describe it; a learner this device does not act as has nothing held. */
   private held(learner: Id): LearnerState {
     const { learner: acting, learnerView, runs } = this.state;
     return acting?.id === learner ? this.deputy!.state({ learner, identity: acting.identity, view: learnerView, runs }) : emptyLearnerState(learner);
@@ -1079,7 +1256,7 @@ export class QuizSession {
     return this.deputy.handle(handle);
   }
 
-  /** 💾️ Waits until every answer of `run` reached the proctor, reporting the progress, and says whether they all did.
+  /** 📤️ Waits until every answer of `run` reached the proctor, reporting the progress, and says whether they all did.
    * With a deputy the wait ends as soon as the run is no longer the proctor's to decide, and at the latest when the
    * learner's patience is spent: the answers go on waiting, and the submission must wait behind them. */
   private async saved(run: Id, signal: AbortSignal, onPhase: (phase: SubmissionPhase) => void): Promise<boolean> {
@@ -1103,14 +1280,14 @@ export class QuizSession {
     }
   }
 
-  /** 🏅️ Shows the device's own standing on the leaderboard the learner looks at; a standing the proctor sent stays. */
+  /** 🥈️ Shows the device's own standing on the leaderboard the learner looks at; a standing the proctor sent stays. */
   private ownStanding(): void {
     const learner = this.state.learner?.id;
     if (this.deputy === undefined || learner === undefined || this.lifetime.signal.aborted) return;
     this.dispatch({ type: "leaderboard-loaded", leaderboard: this.deputy.leaderboard(this.held(learner), this.state.board, this.now()), at: this.now(), local: true });
   }
 
-  /** 📨️ Delivers one queued command to the proctor. A spent sign-up allowance and a full roster are waited out, never
+  /** 🚚️ Delivers one queued command to the proctor. A spent sign-up allowance and a full roster are waited out, never
    * given up on: the learner goes on playing on the device meanwhile. A registration is only delivered once the
    * proctor knows its learner ({@link enrolled}), so the commands behind it find that learner. */
   private async deliver(command: Command, signal: AbortSignal): Promise<CommandVerdict> {
@@ -1157,10 +1334,12 @@ export class QuizSession {
     if (identity.kind !== "anonymous") this.dispatch({ type: "notice-raised", notice: { kind: "recalled", handle: identity.handle } });
   }
 
-  /** 📬️ What the proctor decided about a command the deputy had decided. An accepted one needs nothing now — a run the
-   * proctor voided with it is voided here too. A run the proctor would not start never existed for it: it is voided
-   * on the device. Any other refusal is told. Once the device is no longer ahead, the proctor's views are read again:
-   * the learner, and every run the proctor heard of meanwhile. */
+  /** 📭️ What the proctor decided about a command the deputy had decided. An accepted one needs nothing now — a run the
+   * proctor voided with it is voided here too. A run the proctor would not start never existed for it, and a run whose
+   * task the proctor would not open because the quiz was revised is void for it like one whose answer met the revision:
+   * either is voided on the device. A task the proctor already holds as opened (`already-opened`) is open, as the
+   * device wants it. Any other refusal is told. Once the device is no longer ahead, the proctor's views are
+   * read again: the learner, and every run the proctor heard of meanwhile. */
   private decisionSettled(command: Exclude<Command, { readonly type: "record-answer" }>, verdict: CommandVerdict): void {
     const run = commandRun(command);
     if (run !== undefined) this.unconfirmed.add(run);
@@ -1173,27 +1352,40 @@ export class QuizSession {
           this.dispatch({ type: "run-voided", run: event.run });
         }
       }
-    } else if (command.type === "start-run") {
+    } else if (command.type === "start-run" || (command.type === "open-task" && verdict.kind === "rejected" && verdict.rejection === "quiz-revised")) {
       this.unconfirmed.delete(command.run);
       this.voided(command.run);
     } else if (verdict.kind === "refused") this.dispatch({ type: "notice-raised", notice: { kind: "refused", detail: verdict.detail } });
-    else if (command.type !== "submit-run" || verdict.rejection !== "run-closed") this.dispatch({ type: "notice-raised", notice: { kind: "rejection", rejection: verdict.rejection } });
+    else if ((command.type !== "submit-run" || verdict.rejection !== "run-closed") && (command.type !== "open-task" || verdict.rejection !== "already-opened")) this.dispatch({ type: "notice-raised", notice: { kind: "rejection", rejection: verdict.rejection } });
     if (this.ahead()) return;
     void this.refreshLearner();
     for (const confirmed of this.unconfirmed) void this.loadRun(confirmed);
     this.unconfirmed.clear();
   }
+
   private settled(command: Command, verdict: CommandVerdict): void {
     if (command.type === "record-answer") this.answerSettled(command.run, verdict);
     else this.decisionSettled(command, verdict);
   }
 
+  /** 📬️ What the proctor decided about an answer. Without a deputy, the hints of a run that hints come with the
+   * proctor's view of it: it is read again once none of its answers waits any more. An answer refused because its
+   * task's time was up or its clock never started is told, and the run is read again, so the device shows what the
+   * proctor recorded — at once, whatever the deputy decided about other runs, or, while the proctor's view of this run
+   * lacks a decision of the deputy, once that decision is delivered. */
   private answerSettled(run: Id, verdict: CommandVerdict): void {
-    if (verdict.kind === "accepted") return;
+    if (verdict.kind === "accepted") {
+      const view = this.state.runs[run];
+      if (this.deputy === undefined && view?.status === "open" && challengeRules(view.sheet.challenge).hints && this.outbox.queued(run).length === 0) void this.loadRun(run);
+      return;
+    }
     if (verdict.kind === "refused") return this.dispatch({ type: "notice-raised", notice: { kind: "refused", detail: verdict.detail } });
     if (verdict.rejection === "quiz-revised") return this.voided(run);
     if (verdict.rejection === "run-closed" || verdict.rejection === "unknown-run") return void this.loadRun(run);
     this.dispatch({ type: "notice-raised", notice: { kind: "rejection", rejection: verdict.rejection } });
+    if (verdict.rejection !== "time-up" && verdict.rejection !== "task-unopened") return;
+    if (this.behind(run)) this.unconfirmed.add(run);
+    else void this.loadRun(run);
   }
 
   private voided(run: Id): void {
@@ -1250,7 +1442,9 @@ export class QuizSession {
 
   private freeze(): QuizSnapshot {
     const status = this.outbox.status();
-    return { state: this.state, connection: { reachability: this.proctor.reachability(), online: this.online, pending: status.pending, activity: status.activity, deputy: this.deputy !== undefined } };
+    const reachability = this.proctor.reachability();
+    const contract = reachability === "incompatible" ? this.proctor.contract() : undefined;
+    return { state: this.state, connection: { reachability, online: this.online, pending: status.pending, activity: status.activity, deputy: this.deputy !== undefined, ...(contract === undefined ? {} : { contract }) } };
   }
 }
 //#endregion 🎮️Session

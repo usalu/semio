@@ -1,11 +1,11 @@
 @capability-viz-kernel-twin-parity
-@oracle-print-viz-kernel-twin
+@oracle-print-viz-inference-twin
 @comparison-viz-probe-v1
 Feature: The LaTeX viz kernel and its TypeScript twin answer the same numbers
   Every other case in this tree measures ONE implementation against a third party. This case measures
   the two implementations of the semio visualization kernel against EACH OTHER: the subject is the
   LaTeX kernel under `🖋️latex/`, probed through `semio-viz-probe.sty`, and the reference is
-  `@semio-tech/print-viz-kernel`, the TypeScript twin under `🔨️modules/📊️viz-kernel/`.
+  `@semio-tech/print-viz-inference`, the TypeScript inference under `🧬️schema/💡️inferences/`.
 
   The twin is registered as a `cross-semio-implementation` oracle, which the platform's registry
   defines as a SUPPLEMENT and explicitly not independent evidence — both implementations were written

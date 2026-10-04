@@ -21,8 +21,59 @@ pub mod animation;
 #[path = "../../🔨️modules/🏞️terrain/🦀️.rs"]
 pub mod terrain;
 
+#[path = "../../🔨️modules/🪢️swing/🦀️.rs"]
+pub mod swing;
+
+#[path = "../../🔨️modules/🧗️climbing/🦀️.rs"]
+pub mod climbing;
+
 #[path = "../../🔨️modules/🧠️behavior/🦀️.rs"]
 pub mod behavior;
+
+#[path = "../../🔨️modules/💗️feeling/🦀️.rs"]
+pub mod feeling;
+
+#[path = "../../🔨️modules/👆️gesture/🦀️.rs"]
+pub mod gesture;
+
+#[path = "../../🔨️modules/🚧️clearance/🦀️.rs"]
+pub mod clearance;
+
+#[path = "../../🔨️modules/✨️effects/🦀️.rs"]
+pub mod effects;
+
+#[path = "../../🔨️modules/🪄️mischief/🦀️.rs"]
+pub mod mischief;
+
+#[path = "../../🔨️modules/📝️draft/🦀️.rs"]
+mod draft;
+
+#[path = "../../🔨️modules/📏️spacing/🦀️.rs"]
+mod spacing;
+
+#[path = "../../🔨️modules/🗓️schedule/🦀️.rs"]
+mod schedule;
+
+#[path = "../../🔨️modules/👀️attention/🦀️.rs"]
+mod attention;
+
+#[path = "../../🔨️modules/🚶️locomotion/🦀️.rs"]
+mod locomotion;
+
+#[path = "../../🔨️modules/💞️sociability/🦀️.rs"]
+mod sociability;
+
+#[path = "../../🔨️modules/🎯️choice/🦀️.rs"]
+mod choice;
+
+#[path = "../../🔨️modules/👥️population/🦀️.rs"]
+mod population;
+
+#[path = "../../🔨️modules/🕰️clock/🦀️.rs"]
+mod clock;
+
+#[path = "../../🔨️modules/🎥️projection/🦀️.rs"]
+mod projection;
 
 #[path = "../../🔨️modules/🎪️stage/🦀️.rs"]
 pub mod stage;

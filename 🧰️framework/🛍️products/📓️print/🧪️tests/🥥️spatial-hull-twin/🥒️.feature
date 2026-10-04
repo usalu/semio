@@ -3,7 +3,7 @@
 @comparison-viz-probe-exact-v1
 Feature: The TypeScript twin of the convex hull answers as the reference implementation does
   `🥚️spatial-hull` measures the LaTeX kernel — the convex hull of semio-viz-spatial agrees with d3-delaunay. This case measures the
-  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-kernel`, on
+  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-inference`, on
   the same vectors and against the same oracle, because a kernel that exists twice is only a
   kernel if both copies answer alike.
 

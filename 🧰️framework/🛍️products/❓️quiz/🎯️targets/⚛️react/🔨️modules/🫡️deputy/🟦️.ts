@@ -7,8 +7,12 @@
  * back into views ({@link Deputy.learnerView}, {@link Deputy.runView}). What it decides is provisional: the command
  * still goes to the proctor, which decides it again with the same deciders and whose views replace the deputy's.
  * Where the views hold less than the proctor's stream does, the deputy decides with what there is: a run known only
- * from the learner view counts with its score and no task results, and a handle is free unless the device itself
- * holds it — the proctor settles both when it hears of them.
+ * from the learner view counts at its challenge with its score, its points and no task results, and a handle is free
+ * unless the device itself holds it — the proctor settles both when it hears of them. A run's challenge and the openings
+ * of its tasks come from its run view, and its held sheet must be the one the material deals at that challenge; the
+ * session never has the deputy open a task of or submit a run it knows from its listing alone. An answer is never the
+ * deputy's to decide — the session records it and the proctor decides it at delivery — so the count of recorded answers
+ * (the proctor's cap) is rebuilt only as far as the views tell it, the answers held, and decides nothing here.
  *
  * @see ../../../../🔨️modules/🧾️lifecycle/🟦️.ts — `decideLearner`, `decideHandle`, `evolveLearner`
  * @see ../../../../🔨️modules/👁️views/🟦️.ts — `learnerView`, `runView`, `leaderboard`
@@ -25,6 +29,7 @@ import {
   leaderboard,
   learnerView,
   normalizeHandle,
+  points,
   runSeed,
   runView,
   sheetOf,
@@ -34,6 +39,7 @@ import {
   type Command,
   type Decision,
   type HandleView,
+  type Hint,
   type Id,
   type Identity,
   type Leaderboard,
@@ -143,23 +149,34 @@ export class Deputy {
     return leaderboard(own === undefined ? [] : [own], this.catalog, board, now, state.learner);
   }
 
+  /** 💡️ The hints of `run` of `state` as the proctor would give them (none on a closed run or a challenge that does
+   * not hint); nothing when the material does not hold its quiz or its held sheet is not the one the material deals. */
+  hints(state: LearnerState, run: Id): Readonly<Record<Slug, readonly Hint[]>> | undefined {
+    const found = state.runs.find((candidate) => candidate.run === run);
+    if (found === undefined || found.revision === REVISED) return undefined;
+    return runView(state, run, this.quizzes)?.hints ?? {};
+  }
+
   private run(run: Id, summary: RunSummary | undefined, view: RunView | undefined): RunState {
     const known = (view ?? summary)!;
+    const challenge = view?.sheet.challenge ?? summary!.challenge;
     const status = view === undefined || (view.status === "open" && summary !== undefined) ? summary!.status : view.status;
     const seed = view?.sheet.seed ?? runSeed(run);
     const loaded = Object.hasOwn(this.quizzes, known.quiz) ? this.quizzes[known.quiz] : undefined;
-    const current = loaded !== undefined && (view === undefined || status !== "open" || alike(view.sheet, sheetOf(loaded.quiz, seed)));
-    const result = view?.result ?? (summary?.score === undefined ? undefined : { quiz: known.quiz, score: summary.score, tasks: [] });
+    const current = loaded !== undefined && (view === undefined || status !== "open" || alike(view.sheet, sheetOf(loaded.quiz, seed, challenge)));
+    const result = view?.result ?? (summary?.score === undefined ? undefined : { quiz: known.quiz, challenge, score: summary.score, points: summary.points ?? points(summary.score, challenge), tasks: [] });
     const submittedAt = view?.submittedAt ?? summary?.submittedAt;
     const answers = view?.answers ?? {};
     return {
       run,
       quiz: known.quiz,
+      challenge,
       revision: current ? loaded.revision : REVISED,
       seed,
       status,
       answers,
       recorded: Object.keys(answers).length,
+      opened: view?.opened ?? {},
       ...(result === undefined ? {} : { result }),
       startedAt: known.startedAt,
       ...(submittedAt === undefined ? {} : { submittedAt }),

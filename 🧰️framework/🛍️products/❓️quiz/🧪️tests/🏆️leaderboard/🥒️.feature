@@ -26,6 +26,16 @@ Feature: Catalogs and learner streams fold into the same read views and the same
   is built from one transcript per ranked learner, which never leaves the proctor, so a proctor keeps
   every board incrementally: only a submission, a badge or a registration changes a transcript.
 
+  Points (challenge design §3.6) replace the score × 100 of earlier: a run earns its score times the
+  par of its challenge (100, 200, 300, 400), and every result carries its challenge and its points. A
+  transcript run carries the quiz, the challenge, the score, the points and the instant. The best run of
+  a quiz is the one with the most points — a later run replaces it only with strictly more, so of equal
+  points the earliest stays —, `best` names it per quiz as its challenge, score and points (in the learner
+  view and in every row), `total` sums those points and `reachedAt` is the submission that last raised a
+  best. No board is split by challenge. The vector `points-across-challenges` climbs from easy to
+  a better hard run and keeps it against an equal later one, keeps a medium best against an expert run of
+  equal points, and ties two totals of 500 made of different challenges.
+
   The read views are this product's policy, so no third party can judge them. THE REFERENCE is `🐍️.py`
   beside this file, a second implementation written in Python from the contract, which reads every
   window off Python's `datetime` calendar — the third party the calendar arithmetic of the subjects is

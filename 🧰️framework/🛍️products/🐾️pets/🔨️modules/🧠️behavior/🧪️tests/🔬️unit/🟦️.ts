@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { ACTIVITIES, PET_MODES, TICKS_PER_SECOND, type Activity, type Actor, type Bond, type Cast, type Menagerie, type Needs, type PetMode, type Rapport, type Species, type Temperament } from "../../../../🧬️schema/🟦️.ts";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
 import { CAST_STREAM, randomPick, randomUnit, randomWords, weightedIndex } from "../../../🎲️randomness/🟦️.ts";
-import { AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS, RAPPORT_SPAN, type Situation, activityWeights, affinityOf, castOf, dwellOf, encounterOf, encounterShares, followersOf, moodOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🟦️.ts";
+import { AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS, RAPPORT_SPAN, type Situation, activityWeights, affinityOf, castOf, dwellOf, encounterOf, encounterShares, followersOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🟦️.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TOLERANCE = 1e-9;
@@ -31,14 +31,13 @@ function fixture<T>(name: string): T {
   return JSON.parse(readFileSync(resolve(HERE, "../../../../🧫️fixtures", name, "🔣️.json"), "utf8")) as T;
 }
 
-type Circumstance = { readonly id: string; readonly mode: PetMode; readonly quiet: boolean; readonly movers: number; readonly fidgeters: number; readonly roam: boolean; readonly hops: boolean; readonly crowd: number; readonly watched: boolean; readonly fidgets: boolean; readonly needs: Needs };
+type Circumstance = { readonly id: string; readonly mode: PetMode; readonly quiet: boolean; readonly movers: number; readonly fidgeters: number; readonly roam: boolean; readonly hops: boolean; readonly crowd: number; readonly watched: boolean; readonly whims: boolean; readonly fidgets: boolean; readonly needs: Needs };
 type ChoiceVectors = {
   readonly limits: readonly { readonly id: PetMode; readonly expected: unknown }[];
   readonly weights: readonly (Circumstance & { readonly expected: readonly number[] })[];
   readonly picks: readonly { readonly id: string; readonly weights: readonly number[]; readonly units: readonly number[]; readonly expected: readonly number[] }[];
   readonly decisions: readonly (Circumstance & { readonly seed: number; readonly stream: number; readonly count: number; readonly expected: { readonly activities: readonly Activity[] } })[];
   readonly dwells: readonly { readonly id: string; readonly activity: Activity; readonly mode: PetMode; readonly units: readonly number[]; readonly expected: readonly number[] }[];
-  readonly moods: readonly { readonly id: Activity; readonly expected: number }[];
   readonly encounters: readonly { readonly id: string; readonly affinity: number; readonly units: readonly number[]; readonly expected: { readonly shares: readonly number[]; readonly kinds: readonly string[] } }[];
   readonly graph: readonly { readonly id: string; readonly expected: { readonly followers: Record<string, readonly Activity[]>; readonly reachable: Record<string, readonly Activity[]>; readonly components: number } }[];
   readonly casts: readonly { readonly id: string; readonly cast: Cast; readonly capacity: number; readonly seed: number; readonly epochs: readonly number[]; readonly expected: readonly (readonly string[])[] }[];
@@ -55,7 +54,7 @@ type BondVectors = {
 const CHOICE = fixture<ChoiceVectors>("🧠️behavior-choice");
 const BONDS = fixture<BondVectors>("🤝️bond-dynamics");
 const RESTED: Needs = { energy: 0.9, sociability: 0.5, curiosity: 0.6 };
-const OPEN: Situation = { mode: "calm", quiet: false, movers: 0, fidgeters: 0, roam: true, hops: true, crowd: 0, watched: false };
+const OPEN: Situation = { mode: "calm", quiet: false, movers: 0, fidgeters: 0, roam: true, hops: true, crowd: 0, watched: false, whims: false };
 
 /** 🧸️ An actor with nothing but needs. */
 function feeling(needs: Needs): Actor {
@@ -69,7 +68,7 @@ function kind(fidgets: boolean): Species {
 
 /** ⚖️ The weights of a committed situation. */
 function weighed(vector: Circumstance): number[] {
-  return activityWeights(feeling(vector.needs), kind(vector.fidgets), { mode: vector.mode, quiet: vector.quiet, movers: vector.movers, fidgeters: vector.fidgeters, roam: vector.roam, hops: vector.hops, crowd: vector.crowd, watched: vector.watched });
+  return activityWeights(feeling(vector.needs), kind(vector.fidgets), { mode: vector.mode, quiet: vector.quiet, movers: vector.movers, fidgeters: vector.fidgeters, roam: vector.roam, hops: vector.hops, crowd: vector.crowd, watched: vector.watched, whims: vector.whims });
 }
 
 /** 🏷️ A weight by the name of its activity. */
@@ -101,7 +100,7 @@ describe("mode limits", () => {
   });
 
   it("makes calm calmer than lively in every weight", () => {
-    for (const weight of ["fidget", "walk", "hop"] as const) expect(MODE_LIMITS.calm[weight]).toBeLessThan(MODE_LIMITS.lively[weight]);
+    for (const weight of ["fidget", "walk", "hop", "whim"] as const) expect(MODE_LIMITS.calm[weight]).toBeLessThan(MODE_LIMITS.lively[weight]);
     expect(MODE_LIMITS.calm.stroll).toBeLessThanOrEqual(MODE_LIMITS.lively.stroll);
   });
 
@@ -111,11 +110,13 @@ describe("mode limits", () => {
 });
 
 describe("activityWeights", () => {
-  it("answers in ACTIVITIES order and only ever lets an idle pet choose idle, fidget, walk, hop or sleep", () => {
-    const weights = activityWeights(feeling({ energy: 0.3, sociability: 0.5, curiosity: 0.6 }), kind(true), OPEN);
+  it("answers in ACTIVITIES order and only ever lets an idle pet choose idle, fidget, walk, hop, sleep or a trick on a whim", () => {
+    const weights = activityWeights(feeling({ energy: 0.3, sociability: 0.5, curiosity: 0.6 }), kind(true), { ...OPEN, whims: true });
     expect(weights).toHaveLength(ACTIVITIES.length);
-    for (const activity of ["fall", "land", "greet", "cuddle", "squabble", "sulk"] as const) expect(weightOf(weights, activity)).toBe(0);
-    for (const activity of ["idle", "fidget", "walk", "hop", "sleep"] as const) expect(weightOf(weights, activity)).toBeGreaterThan(0);
+    const chosen: readonly Activity[] = ["idle", "fidget", "walk", "hop", "sleep", "trick"];
+    for (const activity of ACTIVITIES) if (!chosen.includes(activity)) expect(weightOf(weights, activity), activity).toBe(0);
+    for (const activity of chosen) expect(weightOf(weights, activity)).toBeGreaterThan(0);
+    expect(ACTIVITIES.slice(11)).toEqual(["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]);
   });
 
   it("is slightly active by default: a rested pet in calm most likely stays idle, then fidgets, then walks", () => {
@@ -134,12 +135,23 @@ describe("activityWeights", () => {
   });
 
   it("leaves a still pet nothing but idle", () => {
-    expect(activityWeights(feeling({ energy: 0, sociability: 1, curiosity: 1 }), kind(true), { ...OPEN, mode: "still" })).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(activityWeights(feeling({ energy: 0, sociability: 1, curiosity: 1 }), kind(true), { ...OPEN, mode: "still", whims: true })).toEqual(ACTIVITIES.map((activity) => (activity === "idle" ? 1 : 0)));
+  });
+
+  it("lets a pet perform on a whim only when a trick of its own is on offer: rarely in calm, more often in lively, by its drive", () => {
+    const whim = (mode: PetMode, energy: number, whims: boolean): number => weightOf(activityWeights(feeling({ energy, sociability: 0.5, curiosity: 0.6 }), kind(true), { ...OPEN, mode, whims }), "trick");
+    expect(whim("calm", 0.9, false)).toBe(0);
+    expect(whim("calm", 0.9, true)).toBe(MODE_LIMITS.calm.whim * (0.5 + 0.5 * 0.9));
+    expect(whim("lively", 0.9, true)).toBeGreaterThan(whim("calm", 0.9, true));
+    expect(whim("lively", 0.2, true)).toBeLessThan(whim("lively", 0.9, true));
+    expect(whim("still", 0.9, true)).toBe(0);
+    const total = activityWeights(feeling(RESTED), kind(true), { ...OPEN, whims: true }).reduce((left, right) => left + right, 0);
+    expect(whim("calm", 0.9, true) / total).toBeLessThan(0.03);
   });
 
   it("leaves a quiet pet only idle and sleep", () => {
-    const rested = activityWeights(feeling(RESTED), kind(true), { ...OPEN, quiet: true });
-    expect(rested).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const rested = activityWeights(feeling(RESTED), kind(true), { ...OPEN, quiet: true, whims: true });
+    expect(rested).toEqual(ACTIVITIES.map((activity) => (activity === "idle" ? 1 : 0)));
     const tired = activityWeights(feeling({ energy: 0.3, sociability: 0.5, curiosity: 0.6 }), kind(true), { ...OPEN, quiet: true });
     expect(weightOf(tired, "sleep")).toBeGreaterThan(0);
     expect(weightOf(tired, "sleep")).toBeCloseTo(3 * weightOf(activityWeights(feeling({ energy: 0.3, sociability: 0.5, curiosity: 0.6 }), kind(true), OPEN), "sleep"), 12);
@@ -234,7 +246,7 @@ describe("weightedIndex", () => {
   });
 });
 
-describe("dwellOf and moodOf", () => {
+describe("dwellOf", () => {
   it("keeps an idle dwell inside the range of its mode", () => {
     for (let step = 0; step < STEPS; step++) {
       const unit = step / STEPS;
@@ -270,14 +282,8 @@ describe("dwellOf and moodOf", () => {
     }
   });
 
-  it("gives every activity the mood of the design", () => {
-    expect([moodOf("cuddle"), moodOf("greet"), moodOf("idle"), moodOf("squabble"), moodOf("sulk"), moodOf("sleep")]).toEqual([1, 0.7, 0.3, -0.8, -0.6, 0.1]);
-    for (const activity of ACTIVITIES) expect(Math.abs(moodOf(activity))).toBeLessThanOrEqual(1);
-  });
-
-  it("answers the committed dwells and moods", () => {
+  it("answers the committed dwells", () => {
     for (const vector of CHOICE.dwells) expect(vector.units.map((unit) => dwellOf(vector.activity, vector.mode, unit)), vector.id).toEqual(vector.expected);
-    for (const vector of CHOICE.moods) expect(moodOf(vector.id)).toBe(vector.expected);
   });
 });
 
@@ -301,7 +307,8 @@ describe("the activity graph", () => {
 
   it("only lets a squabble end in a sulk, and flights in a landing", () => {
     expect(ACTIVITIES.filter((activity) => followersOf(activity).includes("sulk"))).toEqual(["squabble"]);
-    expect(ACTIVITIES.filter((activity) => followersOf(activity).includes("land"))).toEqual(["hop", "fall"]);
+    expect(ACTIVITIES.filter((activity) => followersOf(activity).includes("land"))).toEqual(["hop", "fall", "tumble", "glide"]);
+    expect(ACTIVITIES.filter((activity) => !followersOf(activity).includes("hang"))).toEqual(["hang"]);
     expect(followersOf("idle")).toEqual(expect.arrayContaining(["fidget", "walk", "hop", "sleep", "greet", "cuddle", "squabble", "fall"]));
   });
 

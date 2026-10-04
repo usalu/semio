@@ -4,6 +4,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{semio-viz-mark}
+\RequirePackage{semio-viz-layout}
 
 \ExplSyntaxOn
 
@@ -288,4 +289,37 @@
 \NewDocumentCommand \SemioVizShapeResult { } { \tl_use:N \g_semio_viz_shape_result_tl }
 %endregion 🔖️Results
 
+% 🥧 Authored value rows become plot-ready arcs while retaining every source column.
+\cs_new_protected:cpn {semio_viz_layout_table_pie:nnn} #1#2#3 {
+  \semio_viz_layout_table_load:nn {#1} {#3}
+  \semio_viz_layout_defaults:n {startAngle=0,endAngle=6.283185307179586,padAngle=0,innerRadius=0,outerRadius=20,cx=40,cy=20}
+  \prop_if_in:NnF \l_tmpa_prop {outerRadius}
+    {\prop_put:Nnx \l_semio_viz_layout_options_prop {outerRadius} {min(\semio_viz_layout_option:n {width},\semio_viz_layout_option:n {height})/2}}
+  \prop_if_in:NnF \l_tmpa_prop {cx} {\prop_put:Nnx \l_semio_viz_layout_options_prop {cx} {\semio_viz_layout_option:n {width}/2}}
+  \prop_if_in:NnF \l_tmpa_prop {cy} {\prop_put:Nnx \l_semio_viz_layout_options_prop {cy} {\semio_viz_layout_option:n {height}/2}}
+  \seq_clear:N \l_semio_viz_layout_points_seq
+  \seq_map_inline:Nn \l_semio_viz_layout_rows_seq {
+    \semio_viz_layout_row:n {##1}
+    \seq_put_right:Nx \l_semio_viz_layout_points_seq {\semio_viz_layout_field:n {value}}
+  }
+  \use:x {\exp_not:N \semio_viz_pie_compute:nnnnn
+    {\seq_use:Nn \l_semio_viz_layout_points_seq {,}}
+    {\semio_viz_layout_option:n {startAngle}} {\semio_viz_layout_option:n {endAngle}}
+    {\semio_viz_layout_option:n {padAngle}} {\semio_viz_layout_option:n {sort}}}
+  \seq_map_indexed_inline:Nn \l_semio_viz_layout_rows_seq {
+    \semio_viz_layout_row:n {##2}
+    \semio_viz_layout_set:nn {startAngle} {\seq_item:Nn \g_semio_viz_pie_start_seq {##1}}
+    \semio_viz_layout_set:nn {endAngle} {\seq_item:Nn \g_semio_viz_pie_end_seq {##1}}
+    \semio_viz_layout_set:nn {angle} {\seq_item:Nn \g_semio_viz_pie_start_seq {##1}}
+    \semio_viz_layout_set:nn {padAngle} {\fp_to_decimal:N \l_semio_viz_pie_pad_fp}
+    \semio_viz_layout_set:nn {innerRadius} {\fp_eval:n {\semio_viz_layout_option:n {innerRadius}}}
+    \semio_viz_layout_set:nn {outerRadius} {\fp_eval:n {\semio_viz_layout_option:n {outerRadius}}}
+    \semio_viz_layout_set:nn {radius} {\fp_eval:n {\semio_viz_layout_option:n {outerRadius}}}
+    \semio_viz_layout_set:nn {x} {\fp_eval:n {\semio_viz_layout_option:n {cx}}}
+    \semio_viz_layout_set:nn {y} {\fp_eval:n {\semio_viz_layout_option:n {cy}}}
+    \semio_viz_layout_put:
+  }
+  \semio_viz_layout_store:n {#2}
+}
+\semio_viz_layout_define:nn {pie} {\use:c {semio_viz_layout_table_pie:nnn} {#1} {#2} {#3}}
 \ExplSyntaxOff

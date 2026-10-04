@@ -7,6 +7,7 @@
 //! @see 🧬️schema/🔣️.json — the normative contract
 
 pub use crate::badges::*;
+pub use crate::challenge::*;
 pub use crate::lifecycle::*;
 pub use crate::presence::*;
 pub use crate::randomness::*;

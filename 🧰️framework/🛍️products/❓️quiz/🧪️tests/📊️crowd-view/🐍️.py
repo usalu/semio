@@ -17,9 +17,19 @@ rounded half up, place 0 when ``n < 2``. ``scores`` holds ten bins of whole perc
 — ``[0, 10)``, … ``[80, 90)``, ``[90, 100]`` — of the run scores on the view, of the task scores on a
 classification or sorting, of the dimension's scores on a matching's crowd task.
 
+One crowd serves every challenge (challenge design §3.6). The score bins take the score — the accuracy —
+of runs at any challenge. Where a sheet task hid its cards the assigned value of a matching item is a
+guess (its result says whether it ``miss``es): it counts under the nearest value among all authored
+items of the task for that dimension, the distance taken on the quantity's scale (``log10`` on a
+logarithmic one) and the smaller value of two equally near. An item the learner left unanswered on a
+timed run — a classification or matching item result without ``assigned`` — counts nowhere, and a sorting
+result without any guess where the keys were hidden is a task without an answer, standing in sheet
+order: it adds its score to the bins and nothing to the places.
+
 Counts and places are recounted with ``collections.Counter``, every mean is recomputed with
-``numpy.mean`` and every score distribution with ``numpy.histogram`` over the whole percents (edges
-0, 10, … 90, 101) before anything is projected.
+``numpy.mean``, every score distribution with ``numpy.histogram`` over the whole percents (edges
+0, 10, … 90, 101) and the authored value of every guess with ``numpy.argmin`` over ``numpy.unique`` of the
+authored values before anything is projected.
 
 @see ../../🧬️schema/🔣️.json
 @see ../../🧫️fixtures/📊️crowd-view/🔣️.json
@@ -104,6 +114,28 @@ def mean(values):
     return total / len(values)
 
 
+def scaled(value, scale):
+    """📏️ ``s(v)``: the value itself, or its decadic logarithm on a logarithmic scale."""
+    return value if scale == "linear" else math.log10(value)
+
+
+def nearest(value, task, dimension):
+    """🧲️ The authored value of a matching dimension a guess is tallied under: the nearest of all the task's items on the quantity's scale, the smaller one of two equally near."""
+    scale = dimension["quantity"]["scale"]
+    authored = sorted({item["values"][dimension["id"]] for item in task["items"]})
+    return min(authored, key=lambda candidate: abs(scaled(candidate, scale) - scaled(value, scale)))
+
+
+def tallied(entry, task, dimension):
+    """🗂️ The value a matching item result counts under: the assigned card value itself, or — where the sheet task hid the cards, so the result says whether it misses — the authored value nearest to the guess."""
+    return nearest(entry["assigned"], task, dimension) if "miss" in entry else entry["assigned"]
+
+
+def ordered(scored_task):
+    """🧍️ Whether a sorting result carries an order of the learner: always where the keys showed, and where they were hidden only when some item was guessed — a task without any answer stands in sheet order."""
+    return any("miss" not in entry or "guess" in entry for entry in scored_task["items"])
+
+
 def crowd_view(quiz, results):
     """🗳️ ``crowdView(quiz, results)``: the run scores, then every task (every dimension of a matching) with its scores and answered items."""
     runs = [result for result in results if result["quiz"] == quiz["id"]]
@@ -115,7 +147,7 @@ def crowd_view(quiz, results):
                 parts = [part for scored_task in scored for part in first(scored_task["dimensions"], dimension=dimension["id"])]
                 items = []
                 for item in task["items"]:
-                    keys = [value_key(entry["assigned"]) for part in parts for entry in first(part["items"], item=item["id"])]
+                    keys = [value_key(tallied(entry, task, dimension)) for part in parts for entry in first(part["items"], item=item["id"]) if "assigned" in entry]
                     if keys:
                         items.append({"item": item["id"], "answers": len(keys), "counts": counted(keys)})
                 tasks.append({"task": task["id"], "kind": "matching", "dimension": dimension["id"], "scores": binned(part["score"] for part in parts), "items": items})
@@ -123,11 +155,11 @@ def crowd_view(quiz, results):
         items = []
         for item in task["items"]:
             if task["kind"] == "classification":
-                keys = [entry["assigned"] for scored_task in scored for entry in first(scored_task["items"], item=item["id"])]
+                keys = [entry["assigned"] for scored_task in scored for entry in first(scored_task["items"], item=item["id"]) if "assigned" in entry]
                 if keys:
                     items.append({"item": item["id"], "answers": len(keys), "counts": counted(keys)})
             else:
-                orders = [(entry["position"], len(scored_task["items"])) for scored_task in scored for entry in first(scored_task["items"], item=item["id"])]
+                orders = [(entry["position"], len(scored_task["items"])) for scored_task in scored if ordered(scored_task) for entry in first(scored_task["items"], item=item["id"])]
                 if orders:
                     places = [0] * presented(task)
                     for position, length in orders:
@@ -163,8 +195,21 @@ def corroborate(vector, quiz, results, view):
         if crowd["kind"] == "matching":
             scored = [part for scored_task in scored for part in first(scored_task["dimensions"], dimension=crowd["dimension"])]
         histogram(vector, "%s/%s" % (crowd["task"], crowd.get("dimension", "-")), [entry["score"] for entry in scored], crowd["scores"])
+        definition = definitions[crowd["task"]]
+        if crowd["kind"] == "sorting":
+            scored = [scored_task for scored_task in scored if not all("miss" in found and "guess" not in found for found in scored_task["items"])]
+        named = {entry["item"] for entry in crowd["items"]}
+        for item in definition["items"]:
+            if item["id"] not in named and any("assigned" in found or crowd["kind"] == "sorting" for scored_task in scored for found in first(scored_task["items"], item=item["id"])):
+                raise AssertionError("%s/%s/%s: an answered item is left out" % (vector, crowd["task"], item["id"]))
         for entry in crowd["items"]:
-            answered = [(found, len(scored_task["items"])) for scored_task in scored for found in first(scored_task["items"], item=entry["item"])]
+            answered = [(found, len(scored_task["items"])) for scored_task in scored for found in first(scored_task["items"], item=entry["item"]) if crowd["kind"] == "sorting" or "assigned" in found]
+            if crowd["kind"] == "matching":
+                dimension = next(candidate for candidate in definition["dimensions"] if candidate["id"] == crowd["dimension"])
+                authored = numpy.unique(numpy.array([item["values"][crowd["dimension"]] for item in definition["items"]], dtype=float))
+                transformed = authored if dimension["quantity"]["scale"] == "linear" else numpy.log10(authored)
+                snap = lambda value: float(authored[int(numpy.argmin(numpy.abs(transformed - (value if dimension["quantity"]["scale"] == "linear" else numpy.log10(value)))))])
+                answered = [({**found, "assigned": snap(found["assigned"])} if "miss" in found else found, length) for found, length in answered]
             if crowd["kind"] == "sorting":
                 positions = [normalized(found["position"], length) for found, length in answered]
                 if abs(float(numpy.mean(positions)) - entry["meanPosition"]) > TOLERANCE:

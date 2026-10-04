@@ -1,6 +1,6 @@
 /** 📇️ The learner's own pages: switching identity asks first — an anonymous learner is told the progress cannot be
  * recovered and has to say so explicitly, a pseudonymous or named one is told how to come back —, the runs table names
- * every column with a header cell, missing values are spoken, and a badge shows whether it is earned as an icon and in
+ * every column with a header cell and each run's challenge and points, missing values are spoken, and a badge shows whether it is earned as an icon and in
  * words, never by colour or opacity alone. Names are computed by `dom-accessibility-api` (through `@testing-library`).
  *
  * @see https://www.w3.org/WAI/WCAG22/Understanding/error-prevention-legal-financial-data.html — confirm what cannot be undone
@@ -11,7 +11,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { learnerTag, type CatalogView, type Identity, type LearnerView } from "@semio-tech/quiz";
-import { BadgesCard, BadgesPage, LearnerCard, LearnerPage, QUIZ_LOCALES, quizText, type QuizSession, type QuizState } from "@semio-tech/quiz-react";
+import { BadgesCard, BadgesPage, LearnerCard, LearnerPage, QUIZ_LOCALES, formatScore, quizText, type QuizSession, type QuizState } from "@semio-tech/quiz-react";
 
 const LEARNER = "a".repeat(32);
 const text = (en: string, de: string) => ({ en, de });
@@ -32,12 +32,12 @@ function state(identity: Identity): QuizState {
     learner: LEARNER,
     identity,
     runs: [
-      { run: "1".repeat(32), quiz: "heating", status: "open", startedAt: 10 },
-      { run: "2".repeat(32), quiz: "heating", status: "submitted", score: 0.997, startedAt: 20, submittedAt: 30 },
+      { run: "1".repeat(32), quiz: "heating", challenge: "expert", status: "open", startedAt: 10 },
+      { run: "2".repeat(32), quiz: "heating", challenge: "hard", status: "submitted", score: 0.997, points: 299.1, startedAt: 20, submittedAt: 30 },
     ],
     badges: [{ badge: "heating-expert", run: "2".repeat(32), at: 30 }],
-    best: { heating: 0.997 },
-    total: 99.7,
+    best: { heating: { challenge: "hard", score: 0.997, points: 299.1 } },
+    total: 299.1,
   };
   return { step: { screen: "home" }, trail: { back: [], forward: [] }, introduced: true, learner: { id: LEARNER, identity }, catalog: CATALOG, learnerView, runs: {}, awards: {}, board: { period: "all-time" }, leaderboards: {}, crowds: {}, asked: [] };
 }
@@ -118,17 +118,34 @@ describe("📇️ the runs table", () => {
     render(<LearnerPage session={stubSession() as unknown as QuizSession} state={state(NAMED)} text={quizText("en")} locale="en" view={{ opened: true, revealed: false }} busy={false} act={act} />);
     const table = screen.getByRole("table", { name: "Your runs" });
     const head = within(table).getAllByRole("row")[0]!;
-    expect([...head.children].map((cell) => cell.tagName)).toEqual(["TH", "TH", "TH", "TH", "TH", "TH"]);
-    expect(within(head).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Quiz", "Status", "Score", "Started", "Submitted", "Actions"]);
+    expect([...head.children].map((cell) => cell.tagName)).toEqual(["TH", "TH", "TH", "TH", "TH", "TH", "TH", "TH"]);
+    expect(within(head).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Quiz", "Status", "Challenge", "Score", "Points", "Started", "Submitted", "Actions"]);
     expect(head.lastElementChild?.querySelector(".sr-only")?.textContent).toBe("Actions");
     const open = within(table).getAllByRole("row")[2]!;
     const cells = within(open).getAllByRole("cell");
     expect(cells[0]?.textContent).toBe("In progress");
-    expect([...cells[1]!.children].map((part) => [part.getAttribute("aria-hidden"), part.className, part.textContent])).toEqual([
+    expect(cells[1]?.textContent).toBe("Expert");
+    expect([...cells[2]!.children].map((part) => [part.getAttribute("aria-hidden"), part.className, part.textContent])).toEqual([
       ["true", "", "–"],
       [null, "sr-only", "No score"],
     ]);
-    expect(cells[3]?.querySelector(".sr-only")?.textContent).toBe("Not submitted");
+    expect(cells[3]?.querySelector(".sr-only")?.textContent).toBe("No points");
+    expect(cells[5]?.querySelector(".sr-only")?.textContent).toBe("Not submitted");
+    expect(within(open).getByRole("button", { name: "Resume (Expert)" })).toBeTruthy();
+  });
+
+  it("names each run's challenge and its points of the most that challenge gives, in both languages", () => {
+    for (const [locale, expected] of [
+      ["en", ["Hard", "299.1 of 300", "Points: 299.1"]],
+      ["de", ["Schwer", "299,1 von 300", "Punkte: 299,1"]],
+    ] as const) {
+      const { unmount } = render(<LearnerPage session={stubSession() as unknown as QuizSession} state={state(NAMED)} text={quizText(locale)} locale={locale} view={{ opened: true, revealed: false }} busy={false} act={act} />);
+      const submitted = within(screen.getByRole("table")).getAllByRole("row")[1]!;
+      const cells = within(submitted).getAllByRole("cell");
+      expect([cells[1]?.textContent, cells[2]?.textContent, cells[3]?.textContent]).toEqual([expected[0], formatScore(0.997, locale), expected[1]]);
+      expect(screen.getByText(expected[2])).toBeTruthy();
+      unmount();
+    }
   });
 });
 

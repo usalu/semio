@@ -9,6 +9,7 @@ import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28
 import {
   type Answer,
   type Catalog,
+  type Challenge,
   type Command,
   type Decision,
   type Event,
@@ -38,7 +39,7 @@ const VECTORS = "shared://🧾️learner-lifecycle/🔣️.json";
 
 type Step<C> = { readonly command: C; readonly now: number; readonly revisions?: Readonly<Record<string, string>> };
 type Sequence = { readonly id: string; readonly learner: string; readonly given: readonly Event[]; readonly limits?: Limits; readonly steps: readonly Step<Command>[]; readonly views?: { readonly runs: readonly string[] } };
-type Play = { readonly id: string; readonly learner: string; readonly runs: readonly { readonly run: string; readonly quiz: string; readonly flaw?: string }[] };
+type Play = { readonly id: string; readonly learner: string; readonly runs: readonly { readonly run: string; readonly quiz: string; readonly challenge: Challenge; readonly flaw?: string }[] };
 type Vectors = {
   readonly catalog: Catalog;
   readonly quizzes: readonly Quiz[];
@@ -79,25 +80,27 @@ function replay(committed: Vectors, sequence: Sequence): { decisions: Decision[]
 function perfectAnswer(task: Task, sheetTask: SheetTask): Answer {
   const presented = sheetTask.items.map((item) => item.id);
   if (task.kind === "classification") return { kind: "classification", assignments: Object.fromEntries(presented.map((id) => [id, task.items.find((item) => item.id === id)!.category])) };
-  if (task.kind === "sorting") {
+  if (task.kind === "sorting" && sheetTask.kind === "sorting") {
     const position = (id: string): number => task.items.findIndex((item) => item.id === id);
-    return { kind: "sorting", order: [...presented].sort((left, right) => task.items[position(left)]!.value - task.items[position(right)]!.value || position(left) - position(right)) };
+    const order = [...presented].sort((left, right) => task.items[position(left)]!.value - task.items[position(right)]!.value || position(left) - position(right));
+    return sheetTask.keys ? { kind: "sorting", order } : { kind: "sorting", order, guesses: Object.fromEntries(order.map((id) => [id, task.items[position(id)]!.value])) };
   }
-  if (sheetTask.kind !== "matching") throw new Error(`${task.id} is not presented as a matching task`);
+  if (task.kind !== "matching" || sheetTask.kind !== "matching") throw new Error(`${task.id} is not presented as its own kind`);
+  if (sheetTask.dimensions.some((dimension) => dimension.cards === undefined)) return { kind: "matching", guesses: Object.fromEntries(sheetTask.dimensions.map((dimension) => [dimension.id, Object.fromEntries(presented.map((id) => [id, task.items.find((item) => item.id === id)!.values[dimension.id]!]))])) };
   const assignments: Record<string, Record<string, number>> = {};
   for (const dimension of sheetTask.dimensions) {
-    const free = dimension.cards.map((_, card) => card);
+    const free = dimension.cards!.map((_, card) => card);
     assignments[dimension.id] = {};
     for (const id of presented) {
       const value = task.items.find((item) => item.id === id)!.values[dimension.id];
-      const card = free.splice(free.findIndex((candidate) => dimension.cards[candidate] === value), 1)[0]!;
+      const card = free.splice(free.findIndex((candidate) => dimension.cards![candidate] === value), 1)[0]!;
       assignments[dimension.id]![id] = card;
     }
   }
   return { kind: "matching", assignments };
 }
 
-/** 🩹️ The perfect answer with exactly one mistake: the first item in the first wrong category, the smallest and the largest item exchanged, or the cards of the first item and of the first later item of another value exchanged in the first dimension. */
+/** 🩹️ The perfect answer with exactly one mistake: the first item in the first wrong category, the smallest and the largest item exchanged with their guesses, or the cards — the guesses where the keys are hidden — of the first item and of the first later item of another value exchanged in the first dimension. */
 function flawedAnswer(task: Task, sheetTask: SheetTask): Answer {
   const answer = perfectAnswer(task, sheetTask);
   const presented = sheetTask.items.map((item) => item.id);
@@ -106,12 +109,21 @@ function flawedAnswer(task: Task, sheetTask: SheetTask): Answer {
     const correct = task.items.find((item) => item.id === first)!.category;
     return { ...answer, assignments: { ...answer.assignments, [first]: sheetTask.categories.find((category) => category.id !== correct)!.id } };
   }
-  if (answer.kind === "sorting") return { ...answer, order: [answer.order[answer.order.length - 1]!, ...answer.order.slice(1, -1), answer.order[0]!] };
+  if (answer.kind === "sorting") {
+    const smallest = answer.order[0]!;
+    const largest = answer.order[answer.order.length - 1]!;
+    const order = [largest, ...answer.order.slice(1, -1), smallest];
+    return answer.guesses ? { ...answer, order, guesses: { ...answer.guesses, [smallest]: answer.guesses[largest]!, [largest]: answer.guesses[smallest]! } } : { ...answer, order };
+  }
   if (task.kind !== "matching" || sheetTask.kind !== "matching" || answer.kind !== "matching") throw new Error(`${task.id} is not presented as its own kind`);
   const dimension = sheetTask.dimensions[0]!.id;
   const value = (id: string): number => task.items.find((item) => item.id === id)!.values[dimension]!;
   const other = presented.slice(1).find((id) => value(id) !== value(first))!;
-  const cards = answer.assignments[dimension]!;
+  if (answer.guesses) {
+    const guesses = answer.guesses[dimension]!;
+    return { ...answer, guesses: { ...answer.guesses, [dimension]: { ...guesses, [first]: guesses[other]!, [other]: guesses[first]! } } };
+  }
+  const cards = answer.assignments![dimension]!;
   return { ...answer, assignments: { ...answer.assignments, [dimension]: { ...cards, [first]: cards[other]!, [other]: cards[first]! } } };
 }
 
@@ -121,7 +133,7 @@ function siteQuizzes(repoRoot: string, path: string): { catalog: Catalog; quizze
   return { catalog, quizzes: catalog.quizzes.map((quiz) => JSON.parse(readFileSync(join(repoRoot, dirname(path), quiz), "utf8")) as Quiz) };
 }
 
-/** 🎮️ One registered learner playing the committed runs: per run its score and the badges it awards, and every badge held at the end. */
+/** 🎮️ One registered learner playing the committed runs, each at its challenge — a timed task opened before it is answered, every command at the instant it is decided: per run its score and the badges it awards, and every badge held at the end. */
 function play(catalog: Catalog, quizzes: readonly Quiz[], scenario: Play): { scores: number[]; awards: string[][]; held: string[] } {
   const context = { catalog, quizzes: Object.fromEntries(quizzes.map((quiz) => [quiz.id, { quiz, revision: "0".repeat(64) }])), limits: DEFAULT_LIMITS };
   let state = evolveLearner(emptyLearnerState(scenario.learner), { type: "learner-registered", learner: scenario.learner, identity: { kind: "anonymous" }, at: 0 });
@@ -138,10 +150,11 @@ function play(catalog: Catalog, quizzes: readonly Quiz[], scenario: Play): { sco
   scenario.runs.forEach((run, number) => {
     const quiz = quizzes.find((candidate) => candidate.id === run.quiz)!;
     const id = (): string => ((BigInt(number) << 64n) + BigInt(now + 1)).toString(16).padStart(32, "0");
-    decided({ type: "start-run", id: id(), learner: scenario.learner, run: run.run, quiz: run.quiz });
-    for (const sheetTask of sheetOf(quiz, runSeed(run.run)).tasks) {
+    decided({ type: "start-run", id: id(), learner: scenario.learner, run: run.run, quiz: run.quiz, challenge: run.challenge, at: now + 1 });
+    for (const sheetTask of sheetOf(quiz, runSeed(run.run), run.challenge).tasks) {
       const task = quiz.tasks.find((candidate) => candidate.id === sheetTask.id)!;
-      decided({ type: "record-answer", id: id(), learner: scenario.learner, run: run.run, task: sheetTask.id, answer: (sheetTask.id === run.flaw ? flawedAnswer : perfectAnswer)(task, sheetTask) });
+      if (sheetTask.seconds !== undefined) decided({ type: "open-task", id: id(), learner: scenario.learner, run: run.run, task: sheetTask.id, at: now + 1 });
+      decided({ type: "record-answer", id: id(), learner: scenario.learner, run: run.run, task: sheetTask.id, answer: (sheetTask.id === run.flaw ? flawedAnswer : perfectAnswer)(task, sheetTask), at: now + 1 });
     }
     const events = decided({ type: "submit-run", id: id(), learner: scenario.learner, run: run.run });
     scores.push(events.flatMap((event) => (event.type === "run-submitted" ? [event.result.score] : []))[0]!);

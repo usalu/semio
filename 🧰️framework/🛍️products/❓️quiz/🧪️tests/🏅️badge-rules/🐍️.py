@@ -6,7 +6,10 @@ reference the TypeScript and Rust twins are held to, and the two twins are held 
 Badges are evaluated in catalog order over every submitted result, held badges are skipped, and a
 rule awards when: some result of its quiz scored exactly 1 (``perfect-quiz``); every catalog task the
 selector matches scored exactly 1 in some result, a selector matching nothing never awarding
-(``perfect-tasks``); every catalog quiz has a submitted result (``completed-quizzes``).
+(``perfect-tasks``); every catalog quiz has a submitted result (``completed-quizzes``). A ``perfect-quiz``
+or ``perfect-tasks`` rule may name a ``challenge`` (challenge design §3.6): the least challenge that
+counts — only results played at that challenge or a more demanding one (easy < medium < hard < expert)
+are looked at, every result without it.
 
 @see ../../🧫️fixtures/🏅️badge-rules/🔣️.json
 """
@@ -21,6 +24,12 @@ from semio_repo_test import Adapter, Outcome
 
 # region 🔖️Reference
 VECTORS = "shared://🏅️badge-rules/🔣️.json"
+CHALLENGES = ["easy", "medium", "hard", "expert"]
+
+
+def counting(rule, results):
+    """🚧️ The results a rule counts: every one, or those played at a challenge at least as demanding as the rule's."""
+    return [result for result in results if "challenge" not in rule or CHALLENGES.index(result["challenge"]) >= CHALLENGES.index(rule["challenge"])]
 
 
 def perfect_task(results, quiz, task):
@@ -31,10 +40,10 @@ def perfect_task(results, quiz, task):
 def earns(rule, quizzes, results):
     """⚖️ Whether one rule holds over the learner's submitted results."""
     if rule["kind"] == "perfect-quiz":
-        return any(result["quiz"] == rule["quiz"] and result["score"] == 1 for result in results)
+        return any(result["quiz"] == rule["quiz"] and result["score"] == 1 for result in counting(rule, results))
     if rule["kind"] == "perfect-tasks":
         selected = [(quiz["id"], task["id"]) for quiz in quizzes for task in quiz["tasks"] if rule.get("taskKind", task["kind"]) == task["kind"] and rule.get("quiz", quiz["id"]) == quiz["id"]]
-        return len(selected) > 0 and all(perfect_task(results, quiz, task) for quiz, task in selected)
+        return len(selected) > 0 and all(perfect_task(counting(rule, results), quiz, task) for quiz, task in selected)
     return all(any(result["quiz"] == quiz["id"] for result in results) for quiz in quizzes)
 
 

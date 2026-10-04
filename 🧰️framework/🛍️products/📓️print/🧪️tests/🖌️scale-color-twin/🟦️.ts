@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { scaleDiverging, scaleSequential, vizInterpolateRgb } from "../../🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🟦️.ts";
+import { scaleDiverging, scaleSequential, vizInterpolateRgb } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../🎨️scale-color/🟦️.ts";
 // #endregion 🔌️Adapters
 

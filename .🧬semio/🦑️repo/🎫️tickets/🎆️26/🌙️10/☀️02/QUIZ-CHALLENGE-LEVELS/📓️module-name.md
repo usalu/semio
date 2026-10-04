@@ -1,0 +1,1 @@
+`🧰️framework/🛍️products/❓️quiz/🔨️modules/⛰️challenge` (TypeScript `🟦️.ts`, Rust `🦀️.rs`; registered as `⛰️challenge` in `members-of-modules` of the taxonomy; the schema JSON `🧬️schema/🔣️.json` has landed).

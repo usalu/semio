@@ -11,4 +11,5 @@ export default {
   species: [species],
   bonds: [],
   casts: [{ scene: "home", core: [species.id], rotation: [] }],
+  chemistry: [],
 };

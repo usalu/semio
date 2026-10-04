@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": []
+      },
+      "valid": true
+    },
+    {
+      "id": "styled",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [
+          {
+            "mark": "point",
+            "data": "t",
+            "encodings": {
+              "x": {
+                "column": "x"
+              },
+              "y": {
+                "column": "y"
+              },
+              "fill": {
+                "column": "color"
+              },
+              "opacity": {
+                "value": 0.4
+              }
+            },
+            "options": {
+              "size": 12,
+              "clip": true
+            }
+          }
+        ],
+        "tables": [
+          {
+            "name": "t",
+            "columns": [
+              "x",
+              "y",
+              "color"
+            ],
+            "rows": [
+              {
+                "x": 1,
+                "y": 2,
+                "color": "#123456"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "localized",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "de",
+        "layers": [],
+        "title": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "annotations": [
+          {
+            "kind": "label",
+            "x": 12,
+            "y": 20,
+            "text": {
+              "en": "Label",
+              "de": "Beschriftung"
+            }
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "tickValues": [
+              "a",
+              "b"
+            ],
+            "options": {
+              "domain": true
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "preset",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "presets": [
+          {
+            "kind": "circle",
+            "options": {
+              "size": 12
+            }
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "negative-width",
+      "chart": {
+        "width": -1,
+        "height": 60,
+        "language": "en",
+        "layers": []
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-mark",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [
+          {
+            "mark": "unknown"
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-channel",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [
+          {
+            "mark": "point",
+            "encodings": {
+              "unknown": {
+                "value": 2
+              }
+            }
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-transform",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [
+          {
+            "mark": "point",
+            "transform": [
+              {
+                "kind": "unknown"
+              }
+            ]
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-language",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "layers": []
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-property",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "unknown": true
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-scale-option",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              100
+            ],
+            "options": {
+              "bogus": true
+            }
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "typed-scale-clamp",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              100
+            ],
+            "options": {
+              "clamp": "yes"
+            }
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "invalid-scale-padding",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              100
+            ],
+            "options": {
+              "padding": -1
+            }
+          }
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "authored-scale-options",
+      "chart": {
+        "width": 100,
+        "height": 60,
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              0,
+              100
+            ],
+            "options": {
+              "clamp": true,
+              "interpolator": "lab",
+              "tickValues": [
+                0,
+                0.5,
+                1
+              ],
+              "tickFormat": ".1f",
+              "reverse": true
+            }
+          }
+        ]
+      },
+      "valid": true
+    }
+  ]
+}

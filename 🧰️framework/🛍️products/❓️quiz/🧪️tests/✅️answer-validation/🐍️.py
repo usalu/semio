@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""✅️ Second implementation of answer validity and completeness (design §5), in Python.
+"""✅️ Second implementation of answer validity and completeness (design §5, challenge design §3.3), in Python.
 
 Written from the design text alone. An answer is valid when its kind matches the sheet task, every
-item, category and dimension it names exists in that sheet task, every card index is in range and used
-at most once per dimension, and a sorting order is a permutation of the sheet items whose optional
-numeric ``guesses`` (item id to guess in the quantity's base unit) name sheet items only, are finite
-numbers (positive on a logarithmic quantity) and stand in non-decreasing guess order along the order,
-ties allowed and unguessed items unconstrained; partial classification and matching answers stay
-valid. Completeness is asked only of valid answers: every sheet item assigned (in every dimension,
-for matching), and a recorded sorting answer is always complete.
+item, category and dimension it names exists in that sheet task and a sorting order is a permutation of
+the sheet items. What else it may carry follows the sheet task. Where the keys show (a sorting with
+``keys``, a matching whose dimensions carry ``cards``) the answer assigns: a sorting is its order alone
+and a matching its ``assignments`` — required, as they always were —, every card index in range and used
+at most once per dimension; ``guesses`` are then invalid. Where the keys are hidden the guesses are the
+answer — optional, an answer without them is valid and incomplete —: a sorting's
+``guesses`` (item id to guess in the quantity's base unit) name sheet items only, are finite numbers
+(positive on a logarithmic quantity) and stand in non-decreasing guess order along the order, ties
+allowed and unguessed items unconstrained; a matching's ``guesses`` name sheet dimensions and items and
+are finite numbers (positive on a logarithmic quantity), and ``assignments`` are then invalid. Partial
+answers stay valid. Completeness is asked only of valid answers: every sheet item assigned or guessed
+(in every dimension, for matching); a recorded sorting order is complete where the keys show.
 
 @see ../../🧫️fixtures/✅️answer-validation/🔣️.json
 """
@@ -27,16 +32,25 @@ from semio_repo_test import Adapter, Outcome
 VECTORS = "shared://✅️answer-validation/🔣️.json"
 
 
-def guesses_fit(sheet_task, answer):
-    """🔢️ Whether the optional ``guesses`` of a sorting answer are an object of finite numbers over sheet items, in non-decreasing order along ``order``."""
-    guesses = answer.get("guesses", {})
+def keys_hidden(sheet_task):
+    """🙈️ Whether a sheet task hides its keys: a sorting without ``keys``, a matching with a dimension without ``cards``; a classification has no key to guess."""
+    if sheet_task["kind"] == "sorting":
+        return "keys" not in sheet_task
+    return sheet_task["kind"] == "matching" and any("cards" not in dimension for dimension in sheet_task["dimensions"])
+
+
+def numbers_fit(guesses, items, logarithmic):
+    """🔢️ Whether guesses are an object of finite numbers over sheet items, positive on a logarithmic quantity."""
     if not isinstance(guesses, dict):
         return False
-    items = {item["id"] for item in sheet_task["items"]}
-    logarithmic = sheet_task["quantity"]["scale"] == "logarithmic"
-    for item, guess in guesses.items():
-        if item not in items or isinstance(guess, bool) or not isinstance(guess, (int, float)) or not math.isfinite(guess) or (logarithmic and guess <= 0):
-            return False
+    return all(item in items and not isinstance(guess, bool) and isinstance(guess, (int, float)) and math.isfinite(guess) and not (logarithmic and guess <= 0) for item, guess in guesses.items())
+
+
+def guesses_fit(sheet_task, answer):
+    """🪜️ Whether the ``guesses`` of a sorting answer fit their sheet items and stand in non-decreasing order along ``order``."""
+    guesses = answer.get("guesses", {})
+    if not numbers_fit(guesses, {item["id"] for item in sheet_task["items"]}, sheet_task["quantity"]["scale"] == "logarithmic"):
+        return False
     guessed = [guesses[item] for item in answer["order"] if item in guesses]
     return all(before <= after for before, after in zip(guessed, guessed[1:]))
 
@@ -50,28 +64,41 @@ def answer_rejection(sheet_task, answer):
         categories = {category["id"] for category in sheet_task["categories"]}
         return None if all(item in items and category in categories for item, category in answer["assignments"].items()) else "answer-invalid"
     if answer["kind"] == "sorting":
-        permutation = Counter(answer["order"]) == Counter(item["id"] for item in sheet_task["items"])
-        return None if permutation and guesses_fit(sheet_task, answer) else "answer-invalid"
-    cards = {dimension["id"]: len(dimension["cards"]) for dimension in sheet_task["dimensions"]}
+        if Counter(answer["order"]) != Counter(item["id"] for item in sheet_task["items"]):
+            return "answer-invalid"
+        if not keys_hidden(sheet_task):
+            return "answer-invalid" if "guesses" in answer else None
+        return None if guesses_fit(sheet_task, answer) else "answer-invalid"
+    dimensions = {dimension["id"]: dimension for dimension in sheet_task["dimensions"]}
+    if keys_hidden(sheet_task):
+        if "assignments" in answer or not isinstance(answer.get("guesses", {}), dict):
+            return "answer-invalid"
+        for dimension, guesses in answer.get("guesses", {}).items():
+            if dimension not in dimensions or not numbers_fit(guesses, items, dimensions[dimension]["quantity"]["scale"] == "logarithmic"):
+                return "answer-invalid"
+        return None
+    if "guesses" in answer or "assignments" not in answer:
+        return "answer-invalid"
     for dimension, assignments in answer["assignments"].items():
-        if dimension not in cards:
+        if dimension not in dimensions:
             return "answer-invalid"
         indices = list(assignments.values())
-        if len(set(indices)) != len(indices) or any(item not in items for item in assignments) or any(not 0 <= index < cards[dimension] for index in indices):
+        if len(set(indices)) != len(indices) or any(item not in items for item in assignments) or any(not 0 <= index < len(dimensions[dimension]["cards"]) for index in indices):
             return "answer-invalid"
     return None
 
 
 def answer_complete(sheet_task, answer):
-    """☑️ Whether a (valid) answer, or its absence, lets the run be submitted."""
+    """☑️ Whether a (valid) answer, or its absence, lets an untimed run be submitted."""
     if answer is None:
         return False
     items = [item["id"] for item in sheet_task["items"]]
     if answer["kind"] == "classification":
         return all(item in answer["assignments"] for item in items)
     if answer["kind"] == "sorting":
-        return True
-    return all(dimension["id"] in answer["assignments"] and all(item in answer["assignments"][dimension["id"]] for item in items) for dimension in sheet_task["dimensions"])
+        return not keys_hidden(sheet_task) or all(item in answer.get("guesses", {}) for item in items)
+    chosen = answer.get("guesses" if keys_hidden(sheet_task) else "assignments", {})
+    return all(dimension["id"] in chosen and all(item in chosen[dimension["id"]] for item in items) for dimension in sheet_task["dimensions"])
 
 
 def verdict(sheet_task, answer):

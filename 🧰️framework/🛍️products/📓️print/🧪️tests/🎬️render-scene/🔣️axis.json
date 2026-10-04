@@ -1,0 +1,3881 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "axis-options-scale",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          },
+          {
+            "name": "other",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              20,
+              60
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "scale": "other"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          20,
+          70,
+          20,
+          72
+        ],
+        [
+          60,
+          70,
+          60,
+          72
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 20,
+          "y": 75,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 60,
+          "y": 75,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-options-orient",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "top"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          10,
+          10,
+          8
+        ],
+        [
+          90,
+          10,
+          90,
+          8
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 5,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 5,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "bottom",
+        "bottom"
+      ],
+      "expectedTikzAnchors": [
+        "south",
+        "south"
+      ]
+    },
+    {
+      "id": "axis-options-offset",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "offset": 3
+            },
+            "offset": 1
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          73,
+          10,
+          75
+        ],
+        [
+          90,
+          73,
+          90,
+          75
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 78,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 78,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ]
+    },
+    {
+      "id": "axis-options-title",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "title": "Native title",
+              "titleGap": 10
+            },
+            "title": {
+              "en": "Typed title",
+              "de": "Typisierter Titel"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          72
+        ],
+        [
+          90,
+          70,
+          90,
+          72
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 75,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 75,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 82,
+          "content": "Native title",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-at-bottom",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 40,
+              "offset": 3
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          43,
+          10,
+          45
+        ],
+        [
+          90,
+          43,
+          90,
+          45
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 48,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 48,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-at-left",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "left",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 40,
+              "offset": 3
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          37,
+          10,
+          35,
+          10
+        ],
+        [
+          37,
+          90,
+          35,
+          90
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 34,
+          "y": 10,
+          "content": "0",
+          "anchor": "end",
+          "rotation": 0
+        },
+        {
+          "x": 34,
+          "y": 90,
+          "content": "10",
+          "anchor": "end",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-outer-caps",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 4,
+              "domainLine": true,
+              "labels": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          74,
+          10,
+          70
+        ],
+        [
+          10,
+          70,
+          90,
+          70
+        ],
+        [
+          90,
+          70,
+          90,
+          74
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-grid-length",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "labels": false,
+              "grid": true,
+              "gridLength": 12
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          58
+        ],
+        [
+          90,
+          70,
+          90,
+          58
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-segment",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "segment",
+              "from": "10,20",
+              "to": "50,50"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          60,
+          11.2,
+          61.6
+        ],
+        [
+          30,
+          45,
+          31.2,
+          46.6
+        ],
+        [
+          50,
+          30,
+          51.2,
+          31.6
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 11.8,
+          "y": 62.4,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 31.8,
+          "y": 47.4,
+          "content": "5",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 51.8,
+          "y": 32.4,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north",
+        "north"
+      ]
+    },
+    {
+      "id": "axis-segment-grid-minor",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "segment",
+              "from": "0,0",
+              "to": "60,80",
+              "labels": false,
+              "grid": true,
+              "gridLength": 5,
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          0,
+          80,
+          -4,
+          77
+        ],
+        [
+          60,
+          0,
+          56,
+          -3
+        ],
+        [
+          30,
+          40,
+          30.8,
+          40.6
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-radial-horizontal",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "radial",
+              "center": "50,40",
+              "innerRadius": 10,
+              "outerRadius": 30,
+              "angle": 0,
+              "title": "Radius",
+              "titleAnchor": "end",
+              "titleGap": 3
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          60,
+          42
+        ],
+        [
+          70,
+          40,
+          70,
+          42
+        ],
+        [
+          80,
+          40,
+          80,
+          42
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 60,
+          "y": 43,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 70,
+          "y": 43,
+          "content": "5",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 80,
+          "y": 43,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 80,
+          "y": 45,
+          "content": "Radius",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top",
+        "top",
+        "middle"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north",
+        "north",
+        "center"
+      ]
+    },
+    {
+      "id": "axis-radial-vertical",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "radial",
+              "center": "50,40",
+              "innerRadius": 10,
+              "outerRadius": 30,
+              "angle": 90
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          50,
+          30,
+          52,
+          30
+        ],
+        [
+          50,
+          10,
+          52,
+          10
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 53,
+          "y": 30,
+          "content": "0",
+          "anchor": "start",
+          "rotation": 0
+        },
+        {
+          "x": 53,
+          "y": 10,
+          "content": "10",
+          "anchor": "start",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-angular",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          62,
+          40
+        ],
+        [
+          50,
+          30,
+          50,
+          28
+        ],
+        [
+          40,
+          40,
+          38,
+          40
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 63,
+          "y": 40,
+          "content": "0",
+          "anchor": "start",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 27,
+          "content": "5",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 37,
+          "y": 40,
+          "content": "10",
+          "anchor": "end",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "middle",
+        "bottom",
+        "middle"
+      ],
+      "expectedTikzAnchors": [
+        "west",
+        "south",
+        "east"
+      ]
+    },
+    {
+      "id": "axis-angular-minor",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10,
+              "labels": false,
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          57.071067811865476,
+          32.928932188134524,
+          57.77817459305202,
+          32.22182540694798
+        ],
+        [
+          42.928932188134524,
+          32.928932188134524,
+          42.22182540694798,
+          32.22182540694798
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-angular-domain",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": true,
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10,
+              "startAngle": 0,
+              "endAngle": 12,
+              "labels": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          59.99657324975557,
+          39.73823051692127
+        ],
+        [
+          59.99657324975557,
+          39.73823051692127,
+          59.986295347545735,
+          39.47664043757056
+        ],
+        [
+          59.986295347545735,
+          39.47664043757056,
+          59.96917333733128,
+          39.215409042721554
+        ],
+        [
+          59.96917333733128,
+          39.215409042721554,
+          59.94521895368273,
+          38.954715367323466
+        ],
+        [
+          59.94521895368273,
+          38.954715367323466,
+          59.9144486137381,
+          38.694738077799485
+        ],
+        [
+          59.9144486137381,
+          38.694738077799485,
+          59.876883405951375,
+          38.43565534959769
+        ],
+        [
+          59.876883405951375,
+          38.43565534959769,
+          59.83254907563955,
+          38.177644745078524
+        ],
+        [
+          59.83254907563955,
+          38.177644745078524,
+          59.78147600733806,
+          37.920883091822404
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-broken-domain",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              100
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              2,
+              5,
+              8,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": true,
+              "broken": "2,8",
+              "breakGap": 2,
+              "labels": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          0,
+          70,
+          42,
+          70
+        ],
+        [
+          18.6,
+          68.3,
+          20.2,
+          70.5
+        ],
+        [
+          19.8,
+          69.5,
+          21.4,
+          71.7
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-broken-gap-marks",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              100
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": true,
+              "broken": "2,8",
+              "breakGap": 4,
+              "breakMarks": 1,
+              "labels": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          0,
+          70,
+          44,
+          70
+        ],
+        [
+          19.2,
+          68.9,
+          20.8,
+          71.1
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-broken-hidden-marks",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              100
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 0,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": true,
+              "broken": "2,8",
+              "breakMarks": 0,
+              "labels": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          0,
+          70,
+          42,
+          70
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-native-style",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "style": "line width=0.6mm,semio audit style",
+              "labelSize": 11,
+              "title": "Styled",
+              "titleSize": 14,
+              "titleGap": 10
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          72
+        ],
+        [
+          90,
+          70,
+          90,
+          72
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 75,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 75,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 82,
+          "content": "Styled",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedStyle": "line width=0.6mm,semio audit style",
+      "expectedSizes": [
+        11,
+        11,
+        14
+      ],
+      "expectedTikzExcludes": [
+        "text opacity=1"
+      ]
+    },
+    {
+      "id": "axis-native-defaults",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          71.4
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ],
+        [
+          10,
+          71.4,
+          10,
+          70
+        ],
+        [
+          10,
+          70,
+          90,
+          70
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 72.2,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 72.2,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 76.4,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        6.6,
+        6.6,
+        7.2
+      ]
+    },
+    {
+      "id": "axis-native-left-defaults",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              20,
+              60
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "left",
+            "tickValues": [
+              0,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          20,
+          8.6,
+          20
+        ],
+        [
+          10,
+          60,
+          8.6,
+          60
+        ],
+        [
+          8.6,
+          20,
+          10,
+          20
+        ],
+        [
+          10,
+          20,
+          10,
+          60
+        ],
+        [
+          10,
+          60,
+          8.6,
+          60
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 7.8,
+          "y": 20,
+          "content": "0",
+          "anchor": "end",
+          "rotation": 0
+        },
+        {
+          "x": 7.8,
+          "y": 60,
+          "content": "10",
+          "anchor": "end",
+          "rotation": 0
+        },
+        {
+          "x": 3.6,
+          "y": 40,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        6.6,
+        6.6,
+        7.2
+      ]
+    },
+    {
+      "id": "axis-angular-title-start",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "options": {
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10,
+              "startAngle": 0,
+              "endAngle": 180,
+              "tickSize": 2,
+              "titleGap": 5,
+              "titleAnchor": "start",
+              "labels": false,
+              "domainLine": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          62,
+          40
+        ],
+        [
+          50,
+          30,
+          50,
+          28
+        ],
+        [
+          40,
+          40,
+          38,
+          40
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 67,
+          "y": 40,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        7.2
+      ],
+      "expectedFonts": [
+        "Share Tech Mono"
+      ],
+      "expectedTikzFonts": [
+        "SemioMono"
+      ]
+    },
+    {
+      "id": "axis-angular-title-middle",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "options": {
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10,
+              "startAngle": 0,
+              "endAngle": 180,
+              "tickSize": 2,
+              "titleGap": 5,
+              "titleAnchor": "middle",
+              "labels": false,
+              "domainLine": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          62,
+          40
+        ],
+        [
+          50,
+          30,
+          50,
+          28
+        ],
+        [
+          40,
+          40,
+          38,
+          40
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 50,
+          "y": 23,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        7.2
+      ],
+      "expectedFonts": [
+        "Share Tech Mono"
+      ],
+      "expectedTikzFonts": [
+        "SemioMono"
+      ]
+    },
+    {
+      "id": "axis-angular-title-end",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "options": {
+              "orient": "angular",
+              "center": "50,40",
+              "outerRadius": 10,
+              "startAngle": 0,
+              "endAngle": 180,
+              "tickSize": 2,
+              "titleGap": 5,
+              "titleAnchor": "end",
+              "labels": false,
+              "domainLine": false
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          60,
+          40,
+          62,
+          40
+        ],
+        [
+          50,
+          30,
+          50,
+          28
+        ],
+        [
+          40,
+          40,
+          38,
+          40
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 33,
+          "y": 40,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        7.2
+      ],
+      "expectedFonts": [
+        "Share Tech Mono"
+      ],
+      "expectedTikzFonts": [
+        "SemioMono"
+      ]
+    },
+    {
+      "id": "axis-empty-title",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "title": "",
+              "titleGap": 10
+            },
+            "title": {
+              "en": "Typed title",
+              "de": "Typisierter Titel"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          72
+        ],
+        [
+          90,
+          70,
+          90,
+          72
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 75,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 75,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ]
+    },
+    {
+      "id": "axis-explicit-alignment-baseline",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 3,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "top",
+              "labelAlign": "start"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          10,
+          10,
+          8
+        ],
+        [
+          90,
+          10,
+          90,
+          8
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 5,
+          "content": "0",
+          "anchor": "start",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 5,
+          "content": "10",
+          "anchor": "start",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "middle",
+        "middle"
+      ],
+      "expectedTikzAnchors": [
+        "west",
+        "west"
+      ]
+    },
+    {
+      "id": "axis-native-default-scale",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          71.4
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ],
+        [
+          10,
+          71.4,
+          10,
+          70
+        ],
+        [
+          10,
+          70,
+          90,
+          70
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 72.2,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 72.2,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 76.4,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        6.6,
+        6.6,
+        7.2
+      ]
+    },
+    {
+      "id": "axis-native-default-orient",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 20,
+                "y": 0
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "data": "data",
+            "encodings": {
+              "x": {
+                "column": "x"
+              },
+              "y": {
+                "column": "y",
+                "scale": "y"
+              }
+            }
+          }
+        ],
+        "scales": [
+          {
+            "name": "y",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "tickValues": [
+              0,
+              10
+            ],
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "scale": "y"
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          71.4
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ],
+        [
+          10,
+          71.4,
+          10,
+          70
+        ],
+        [
+          10,
+          70,
+          90,
+          70
+        ],
+        [
+          90,
+          70,
+          90,
+          71.4
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 72.2,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 72.2,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 76.4,
+          "content": "Axis",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedSizes": [
+        6.6,
+        6.6,
+        7.2
+      ]
+    },
+    {
+      "id": "axis-native-boolean-literals",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "minor": "true",
+              "minorTicks": 2,
+              "labels": "false",
+              "domainLine": "false",
+              "grid": "true",
+              "gridLength": 3,
+              "tickSize": 0
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          10,
+          67
+        ],
+        [
+          90,
+          70,
+          90,
+          67
+        ],
+        [
+          50,
+          70,
+          50,
+          70.7
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-native-domain-literal",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "labels": "false",
+              "domain": "false",
+              "domainLine": "true",
+              "tickSize": 0,
+              "tickSizeOuter": 0
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          70,
+          90,
+          70
+        ]
+      ],
+      "expectedTexts": []
+    },
+    {
+      "id": "axis-native-at-bottom",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ]
+    },
+    {
+      "id": "axis-native-at-top",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 60,
+              "offset": 4,
+              "orient": "top"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          16,
+          10,
+          14
+        ],
+        [
+          90,
+          16,
+          90,
+          14
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 13,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 13,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "bottom",
+        "bottom"
+      ],
+      "expectedTikzAnchors": [
+        "south",
+        "south"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ]
+    },
+    {
+      "id": "axis-native-polar-default",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "left": 8,
+          "right": 2,
+          "top": 2,
+          "bottom": 8
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              0,
+              180
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              5,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "orient": "angular",
+              "center": "50,40"
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          82,
+          40,
+          84,
+          40
+        ],
+        [
+          50,
+          8,
+          50,
+          6
+        ],
+        [
+          18,
+          40,
+          16,
+          40
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 85,
+          "y": 40,
+          "content": "0",
+          "anchor": "start",
+          "rotation": 0
+        },
+        {
+          "x": 50,
+          "y": 5,
+          "content": "5",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 15,
+          "y": 40,
+          "content": "10",
+          "anchor": "end",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "middle",
+        "bottom",
+        "middle"
+      ],
+      "expectedTikzAnchors": [
+        "west",
+        "south",
+        "east"
+      ]
+    },
+    {
+      "id": "axis-native-rotation-positive",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "labelRotation": 30
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": -30
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": -30
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ]
+    },
+    {
+      "id": "axis-native-rotation-negative",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "labelRotation": -30
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 30
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 30
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ]
+    },
+    {
+      "id": "axis-native-rotation-alias",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "labelRotate": 45
+            }
+          }
+        ]
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": -45
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": -45
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ]
+    },
+    {
+      "id": "axis-native-theme-light",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1,
+              "grid": true,
+              "gridLength": 53
+            }
+          }
+        ],
+        "theme": {
+          "appearance": "light"
+        }
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          10
+        ],
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          10
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ],
+        [
+          50,
+          63,
+          50,
+          64
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ],
+      "expectedStrokes": [
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.45
+        ],
+        [
+          "#001117",
+          0.2635948526359485,
+          1
+        ],
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.45
+        ],
+        [
+          "#001117",
+          0.2635948526359485,
+          1
+        ],
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.6
+        ]
+      ],
+      "expectedTextFills": [
+        "#001117",
+        "#001117"
+      ]
+    },
+    {
+      "id": "axis-native-theme-dark",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1,
+              "grid": true,
+              "gridLength": 53
+            }
+          }
+        ],
+        "theme": {
+          "appearance": "dark"
+        }
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          10
+        ],
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          10
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ],
+        [
+          50,
+          63,
+          50,
+          64
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ],
+      "expectedStrokes": [
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.45
+        ],
+        [
+          "#f7f3e3",
+          0.2635948526359485,
+          1
+        ],
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.45
+        ],
+        [
+          "#f7f3e3",
+          0.2635948526359485,
+          1
+        ],
+        [
+          "#7b827d",
+          0.2635948526359485,
+          0.6
+        ]
+      ],
+      "expectedTextFills": [
+        "#f7f3e3",
+        "#f7f3e3"
+      ]
+    },
+    {
+      "id": "axis-native-stroke-overrides",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1,
+              "grid": true,
+              "stroke": "#123456",
+              "strokeWidth": 0.7,
+              "gridStroke": "#abcdef",
+              "gridLength": 53
+            }
+          }
+        ],
+        "theme": {
+          "appearance": "dark"
+        }
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          10
+        ],
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          10
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ],
+        [
+          50,
+          63,
+          50,
+          64
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ],
+      "expectedStrokes": [
+        [
+          "#abcdef",
+          0.7,
+          0.45
+        ],
+        [
+          "#123456",
+          0.7,
+          1
+        ],
+        [
+          "#abcdef",
+          0.7,
+          0.45
+        ],
+        [
+          "#123456",
+          0.7,
+          1
+        ],
+        [
+          "#123456",
+          0.7,
+          0.6
+        ]
+      ],
+      "expectedTextFills": [
+        "#f7f3e3",
+        "#f7f3e3"
+      ]
+    },
+    {
+      "id": "axis-native-grid-stroke-fallback",
+      "oracle": "axis-controls",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "tables": [],
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "tickSize": 2,
+              "tickPadding": 1,
+              "tickSizeOuter": 0,
+              "domainLine": false,
+              "at": 20,
+              "offset": 3,
+              "orient": "bottom",
+              "minor": true,
+              "minorTicks": 2,
+              "minorSize": 1,
+              "grid": true,
+              "stroke": "#123456",
+              "strokeWidth": 0.7,
+              "gridLength": 53
+            }
+          }
+        ],
+        "theme": {
+          "appearance": "dark"
+        }
+      },
+      "expectedLines": [
+        [
+          10,
+          63,
+          10,
+          10
+        ],
+        [
+          10,
+          63,
+          10,
+          65
+        ],
+        [
+          90,
+          63,
+          90,
+          10
+        ],
+        [
+          90,
+          63,
+          90,
+          65
+        ],
+        [
+          50,
+          63,
+          50,
+          64
+        ]
+      ],
+      "expectedTexts": [
+        {
+          "x": 10,
+          "y": 66,
+          "content": "0",
+          "anchor": "middle",
+          "rotation": 0
+        },
+        {
+          "x": 90,
+          "y": 66,
+          "content": "10",
+          "anchor": "middle",
+          "rotation": 0
+        }
+      ],
+      "expectedBaselines": [
+        "top",
+        "top"
+      ],
+      "expectedTikzAnchors": [
+        "north",
+        "north"
+      ],
+      "expectedFonts": [
+        "Anta",
+        "Anta"
+      ],
+      "expectedTikzFonts": [
+        "SemioSans",
+        "SemioSans"
+      ],
+      "expectedStrokes": [
+        [
+          "#123456",
+          0.7,
+          0.45
+        ],
+        [
+          "#123456",
+          0.7,
+          1
+        ],
+        [
+          "#123456",
+          0.7,
+          0.45
+        ],
+        [
+          "#123456",
+          0.7,
+          1
+        ],
+        [
+          "#123456",
+          0.7,
+          0.6
+        ]
+      ],
+      "expectedTextFills": [
+        "#f7f3e3",
+        "#f7f3e3"
+      ]
+    }
+  ]
+}

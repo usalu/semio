@@ -263,6 +263,7 @@
   \tl_set:Nx \l_semio_viz_scn_options_tl
     {
       \exp_not:n {#2}
+      \str_if_eq:nnT {#1}{figure} { ,caption=false }
       \tl_if_empty:NF \l_semio_viz_scn_extra_tl
         { \tl_if_empty:nF {#2} { , } \exp_not:V \l_semio_viz_scn_extra_tl }
     }
@@ -425,6 +426,10 @@
 \tl_new:N \l_semio_viz_scf_cell_tl
 \tl_new:N \l_semio_viz_scf_pick_tl
 \tl_new:N \l_semio_viz_scf_level_tl
+\bool_new:N \l_semio_viz_scf_caption_bool
+\fp_new:N \l_semio_viz_scf_legend_width_fp
+\fp_new:N \l_semio_viz_scf_legend_text_fp
+\fp_new:N \l_semio_viz_scf_legend_x_fp
 
 \keys_define:nn { semio / viz / family / figure } {
   variant .tl_set:N = \l_semio_viz_scf_variant_tl,
@@ -432,6 +437,7 @@
   x .tl_set:N = \l_semio_viz_scf_x_tl,
   y .tl_set:N = \l_semio_viz_scf_y_tl,
   category .tl_set:N = \l_semio_viz_scf_category_tl,
+  caption .bool_set:N = \l_semio_viz_scf_caption_bool,
   label .tl_set:N = \l_semio_viz_scf_label_tl,
   cut .fp_set:N = \l_semio_viz_scf_cut_fp,
   panels .int_set:N = \l_semio_viz_scf_panels_int,
@@ -444,6 +450,7 @@
 % 🧹 Restores every figure key to its documented default before a kind reads its options.
 \cs_new_protected:Npn \semio_viz_scf_keys_reset: {
   \tl_set:Nn \l_semio_viz_scf_variant_tl { themes }
+  \bool_set_true:N \l_semio_viz_scf_caption_bool
   \tl_set:Nn \l_semio_viz_scf_data_tl { demo }
   \tl_set:Nn \l_semio_viz_scf_x_tl { cat }
   \tl_set:Nn \l_semio_viz_scf_y_tl { val }
@@ -912,6 +919,15 @@
       { labels } { \semio_viz_scf_labels: }
       { legends }
         {
+          \semio_viz_sc_category_scale:NNn \l_semio_viz_scf_data_tl \l_semio_viz_scf_category_tl {showcase-figure-fill}
+          \semio_viz_legend_keys_reset:
+          \fp_zero:N \l_semio_viz_scf_legend_width_fp
+          \seq_map_inline:Nn \l_semio_viz_sc_categories_seq {
+            \semio_viz_legend_text_width:nN {##1} \l_semio_viz_scf_legend_text_fp
+            \fp_set:Nn \l_semio_viz_scf_legend_width_fp { max(\l_semio_viz_scf_legend_width_fp,\l_semio_viz_scf_legend_text_fp) }
+          }
+          \fp_add:Nn \l_semio_viz_scf_legend_width_fp { \l_semio_viz_legend_swatch_fp + \l_semio_viz_legend_label_gap_fp }
+          \fp_set:Nn \l_semio_viz_scf_legend_x_fp { \l_semio_viz_width_fp - 2 - \l_semio_viz_scf_legend_width_fp }
           \use:x
             {
               \exp_not:N \SemioVizPlot
@@ -919,17 +935,21 @@
                   data = \exp_not:V \l_semio_viz_scf_data_tl , mark = point ,
                   x = \exp_not:V \l_semio_viz_scf_x_tl ,
                   y = \exp_not:V \l_semio_viz_scf_y_tl ,
-                  fill = \exp_not:V \l_semio_viz_scf_category_tl ,
-                  guide = { legend }
+                  fill = { column = \exp_not:V \l_semio_viz_scf_category_tl , scale = showcase-figure-fill } ,
+                  x1 = \fp_eval:n { \l_semio_viz_scf_legend_x_fp - \l_semio_viz_scf_gap_fp } ,
+                  y1 = \fp_eval:n { \l_semio_viz_sc_yb_fp - 6 }
                 ]
             }
+          \use:x { \exp_not:N \SemioVizLegend[scale=showcase-figure-fill,at={\fp_to_decimal:N\l_semio_viz_scf_legend_x_fp,\fp_eval:n{\l_semio_viz_height_fp-2}}] }
         }
       { responsive-sizing } { \semio_viz_scf_responsive: }
     }
     { \semio_viz_scf_themes: }
+  \bool_if:NT \l_semio_viz_scf_caption_bool {
   \semio_viz_sc_caption:nn
     { Figure~facility~\l_semio_viz_scf_variant_tl }
     { Abbildungsinfrastruktur~\l_semio_viz_scf_variant_tl }
+  }
 }
 
 % 🖼️ §78: figure infrastructure, shown as the contrast between one series without it and with it.
@@ -976,6 +996,9 @@
 \tl_new:N \l_semio_viz_scg_pick_tl
 \tl_new:N \l_semio_viz_scg_cell_tl
 \tl_new:N \l_semio_viz_scg_points_tl
+\seq_new:N \l_semio_viz_sc_categories_seq
+\tl_new:N \l_semio_viz_sc_domain_tl
+\tl_new:N \l_semio_viz_sc_colors_tl
 
 \keys_define:nn { semio / viz / family / grammar } {
   variant .tl_set:N = \l_semio_viz_scg_variant_tl,
@@ -1038,6 +1061,21 @@
 % 🧾 Cell (row #1, column #2) of the bound table.
 \cs_new_protected:Npn \semio_viz_scg_cell:nN #1#2 {
   \semio_viz_table_cell:VnVN \l_semio_viz_scg_data_tl {#1} #2 \l_semio_viz_scg_cell_tl
+}
+
+% \u{1f39b}\uFE0F Maps the bound category column explicitly onto the active theme palette.
+\cs_new_protected:Npn \semio_viz_sc_category_scale:NNn #1#2#3 {
+  \semio_viz_plot_levels:VVN #1#2 \l_semio_viz_sc_categories_seq
+  \tl_clear:N \l_semio_viz_sc_domain_tl
+  \tl_clear:N \l_semio_viz_sc_colors_tl
+  \seq_map_indexed_inline:Nn \l_semio_viz_sc_categories_seq {
+    \tl_put_right:Nn \l_semio_viz_sc_domain_tl { {##2}, }
+    \tl_put_right:Nx \l_semio_viz_sc_colors_tl { \semio_viz_theme_color:n {##1-1}, }
+  }
+  \use:x {
+    \exp_not:N \SemioVizScale {#3} { ordinal }
+      { \exp_not:V \l_semio_viz_sc_domain_tl } { \exp_not:V \l_semio_viz_sc_colors_tl }
+  }
 }
 
 % 📇 The grammar's data stage: the bound table drawn as the record grid it actually is.
@@ -1504,12 +1542,13 @@
       { data } { \semio_viz_scg_tabular: }
       { encoding }
         {
+          \semio_viz_sc_category_scale:NNn \l_semio_viz_scg_data_tl \l_semio_viz_scg_category_tl {showcase-grammar-fill}
           \semio_viz_scg_plot:n
             {
               mark = point , x = \exp_not:V \l_semio_viz_scg_x_tl ,
               y = \exp_not:V \l_semio_viz_scg_y_tl ,
               size = \exp_not:V \l_semio_viz_scg_y_two_tl ,
-              fill = \exp_not:V \l_semio_viz_scg_category_tl
+              fill = { column = \exp_not:V \l_semio_viz_scg_category_tl , scale = showcase-grammar-fill }
             }
         }
       { functional } { \semio_viz_scg_functional: }
@@ -1517,7 +1556,7 @@
         {
           \semio_viz_scg_plot:n
             {
-              mark = square , x = \exp_not:V \l_semio_viz_scg_x_tl ,
+              mark = point , symbol = square , x = \exp_not:V \l_semio_viz_scg_x_tl ,
               y = \exp_not:V \l_semio_viz_scg_y_two_tl , guide = { grid }
             }
         }
@@ -3242,7 +3281,7 @@
       \tl_set:Nn \l_semio_viz_scl_source_tl { showcase-signed }
     }
   \use:x {
-    \exp_not:N \semio_viz_layout_run:nnnn { stack }
+    \exp_not:N \semio_viz_layout_structure:nnnn { stack }
       { \exp_not:V \l_semio_viz_scl_source_tl } { showcase-stack }
       {
         stack = \l_semio_viz_scl_x_tl : \l_semio_viz_scl_series_tl : \l_semio_viz_scl_value_tl ,
@@ -3293,7 +3332,7 @@
 % 📊 Runs the bin layout and paints one rectangle per bin, standing on the frame's baseline.
 \cs_new_protected:Npn \semio_viz_scl_bin: {
   \use:x {
-    \exp_not:N \semio_viz_layout_run:nnnn { bin }
+    \exp_not:N \semio_viz_layout_structure:nnnn { bin }
       { \exp_not:V \l_semio_viz_scl_data_tl } { showcase-bin }
       {
         bin = \l_semio_viz_scl_bincol_tl ,

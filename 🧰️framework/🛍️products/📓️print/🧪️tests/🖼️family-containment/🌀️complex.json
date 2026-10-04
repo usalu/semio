@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "id": "riemann-stock", "kind": "riemann-surface-visualization", "options": "", "width": 60, "height": 40, "domain": [-1.5, 1.5], "range": [-1.5, 1.5], "sheets": 3, "samples": 120 },
+    { "id": "riemann-custom", "kind": "riemann-surface-visualization", "options": "width=70,height=32,domain={-1,2},range={-2,2},sheets=2,samples=8", "width": 70, "height": 32, "domain": [-1, 2], "range": [-2, 2], "sheets": 2, "samples": 8 }
+  ],
+  "tolerance": 0.0001
+}

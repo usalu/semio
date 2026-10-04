@@ -24,7 +24,8 @@
     { "id": "tail", "parent": "body", "x": -19, "y": -8 },
     { "id": "intake", "parent": "body", "x": -15, "y": -14 },
     { "id": "outlet", "parent": "body", "x": 5, "y": -25 },
-    { "id": "fan", "parent": "body", "x": 0, "y": -11.5 }
+    { "id": "fan", "parent": "body", "x": 0, "y": -11.5 },
+    { "id": "frost", "parent": "body", "x": 0, "y": 0 }
   ],
   "parts": [
     { "id": "intake", "bone": "intake", "shape": { "kind": "path", "d": "M 0 -3 q 2.5 -2 5 0 q 2.5 2 5 0 M 0 3 q 2.5 -2 5 0 q 2.5 2 5 0" }, "fill": "none", "stroke": "accent", "strokeWidth": 1.75 },
@@ -35,6 +36,7 @@
     { "id": "leg-front-near", "bone": "leg-front-near", "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 0, "y2": 7.5 }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
     { "id": "tail", "bone": "tail", "shape": { "kind": "path", "d": "M 2 0 L 0 0 q -4.5 0 -4.5 -5" }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
     { "id": "tail-pipe", "bone": "tail", "shape": { "kind": "path", "d": "M 0 0 q -4.5 0 -4.5 -5" }, "fill": "none", "stroke": "detail", "strokeWidth": 1 },
+    { "id": "frost", "bone": "frost", "shape": { "kind": "path", "d": "M -12 -34.5 Q -9 -38.5 -6 -35.5 Q -3 -39 0 -35.5 Q 3 -39 6 -35.5 Q 9 -38.5 12 -34.5 L 12 -30 L -12 -30 Z" }, "fill": "paper", "stroke": "ink", "strokeWidth": 1.25 },
     { "id": "body", "bone": "body", "shape": { "kind": "rect", "x": -19, "y": -38, "width": 38, "height": 38, "radius": 7 }, "fill": "body", "stroke": "ink" },
     { "id": "louvres", "bone": "body", "shape": { "kind": "path", "d": "M -16 -15.5 L -13 -15.5 M -16 -11.5 L -13 -11.5 M -16 -7.5 L -13 -7.5 M 13 -15.5 L 16 -15.5 M 13 -11.5 L 16 -11.5 M 13 -7.5 L 16 -7.5" }, "fill": "none", "stroke": "ink", "strokeWidth": 1.25 },
     { "id": "well", "bone": "body", "shape": { "kind": "ellipse", "cx": 0, "cy": -11.5, "rx": 9.5, "ry": 9.5 }, "fill": "accent", "stroke": "ink" },
@@ -211,6 +213,251 @@
         { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 45 }, { "at": 0.5, "value": 20 }, { "at": 1, "value": 45 }] },
         { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -360 }] }
       ]
+    },
+    {
+      "id": "hush",
+      "seconds": 4,
+      "loop": true,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -360 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 0.97 }, { "at": 1, "value": 0.97 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 0.8 }, { "at": 1, "value": 0.8 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": -45, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -38, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -45 }] }
+      ]
+    },
+    {
+      "id": "reverse",
+      "seconds": 4,
+      "loop": true,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -720 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 14, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 20, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 14 }] }
+      ]
+    },
+    {
+      "id": "thaw",
+      "seconds": 2.4,
+      "loop": true,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -360 }] },
+        { "bone": "frost", "channel": "y", "keys": [{ "at": 0, "value": -4.5, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -3.6, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -4.5 }] },
+        { "bone": "body", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.6, "value": 0 }, { "at": 0.64, "value": 0.35 }, { "at": 0.68, "value": -0.35 }, { "at": 0.72, "value": 0.35 }, { "at": 0.76, "value": -0.35 }, { "at": 0.8, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": -10 }, { "at": 1, "value": -10 }] }
+      ]
+    },
+    {
+      "id": "three-for-one",
+      "seconds": 2.8,
+      "loop": false,
+      "tracks": [
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.05, "value": 32 }, { "at": 0.09, "value": -12 }, { "at": 0.14, "value": 20 }, { "at": 0.2, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "intake", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.02, "value": 0.02 }, { "at": 0.1, "value": 0.02 }, { "at": 0.2, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "intake", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.02, "value": 0.02 }, { "at": 0.1, "value": 0.02 }, { "at": 0.2, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "intake", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.1, "value": -15 }, { "at": 0.2, "value": -15, "ease": [0.5, 0, 0.8, 0.6] }, { "at": 0.46, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.28, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 1.06, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.9, "value": 0.99 }, { "at": 1, "value": 1 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.28, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 1.035, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.9, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.2, "value": -3 }, { "at": 0.5, "value": -3, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.6, "value": 3 }, { "at": 0.9, "value": 3, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.88, "value": 1920 }, { "at": 1, "value": 1920 }] },
+        { "bone": "outlet", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.5, "value": 0, "ease": [0.2, 0.6, 0.4, 1] }, { "at": 0.6, "value": 13 }, { "at": 0.88, "value": 14 }, { "at": 0.92, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "outlet", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.6, "value": 0 }, { "at": 0.66, "value": -1.6 }, { "at": 0.72, "value": 0 }, { "at": 0.78, "value": -1.6 }, { "at": 0.84, "value": 0 }, { "at": 0.88, "value": -1.6 }, { "at": 0.92, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "outlet", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 0.8 }, { "at": 0.6, "value": 1.1 }, { "at": 0.88, "value": 1.2 }, { "at": 0.9, "value": 0.05 }, { "at": 0.92, "value": 0.05 }, { "at": 0.97, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.5, "value": 1 }, { "at": 0.6, "value": 1.1 }, { "at": 0.88, "value": 1.1 }, { "at": 0.9, "value": 0.05 }, { "at": 0.92, "value": 0.05 }, { "at": 0.97, "value": 1 }, { "at": 1, "value": 1 }] }
+      ]
+    },
+    {
+      "id": "reverse-cycle",
+      "seconds": 1.8,
+      "loop": false,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.2, 0.6, 0.4, 1] }, { "at": 0.3, "value": -40 }, { "at": 0.42, "value": -60, "ease": [0.5, 0, 0.5, 1] }, { "at": 1, "value": -960 }] },
+        { "bone": "body", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.28, "value": 0 }, { "at": 0.31, "value": 0.7 }, { "at": 0.34, "value": -0.7 }, { "at": 0.37, "value": 0.6 }, { "at": 0.4, "value": -0.5 }, { "at": 0.43, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.3, "value": 1 }, { "at": 0.36, "value": 0.96 }, { "at": 0.46, "value": 1.03 }, { "at": 0.6, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "intake", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.45, "value": 0, "ease": [0.2, 0.6, 0.4, 1] }, { "at": 0.75, "value": -14 }, { "at": 0.9, "value": -15 }, { "at": 0.94, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "intake", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.45, "value": 1 }, { "at": 0.75, "value": 1.15 }, { "at": 0.9, "value": 1.15 }, { "at": 0.92, "value": 0.05 }, { "at": 0.94, "value": 0.05 }, { "at": 0.98, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "intake", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.9, "value": 1 }, { "at": 0.92, "value": 0.05 }, { "at": 0.94, "value": 0.05 }, { "at": 0.98, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.43, "value": 1 }, { "at": 0.45, "value": 0.02 }, { "at": 0.5, "value": 0.02 }, { "at": 0.58, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.43, "value": 1 }, { "at": 0.45, "value": 0.02 }, { "at": 0.5, "value": 0.02 }, { "at": 0.58, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "x", "keys": [{ "at": 0, "value": 0 }, { "at": 0.45, "value": 0 }, { "at": 0.5, "value": 13 }, { "at": 0.58, "value": 13, "ease": [0.5, 0, 0.8, 0.6] }, { "at": 0.9, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 20 }, { "at": 0.45, "value": -15, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.7, "value": 10, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0 }] }
+      ]
+    },
+    {
+      "id": "whisper",
+      "seconds": 2.4,
+      "loop": false,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": -7.6 }, { "at": 0.5, "value": -30.4 }, { "at": 0.75, "value": -68.4 }, { "at": 0.8875, "value": -95.8 }, { "at": 1, "value": -120 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0.97 }, { "at": 1, "value": 0.97 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0.8 }, { "at": 1, "value": 0.8 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": -2.5, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.8, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.6, "value": -40 }, { "at": 1, "value": -40 }] }
+      ]
+    },
+    {
+      "id": "flow-temperature",
+      "seconds": 2.6,
+      "loop": false,
+      "tracks": [
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.15, "value": 5 }, { "at": 0.82, "value": 5, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.15, "value": 1.035 }, { "at": 0.82, "value": 1.035, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "x", "keys": [{ "at": 0, "value": 0, "ease": [0.2, 0.6, 0.4, 1] }, { "at": 0.15, "value": 14 }, { "at": 0.88, "value": 14 }, { "at": 0.94, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "outlet", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.15, "value": 1.4 }, { "at": 0.85, "value": 1.4 }, { "at": 0.88, "value": 0.05 }, { "at": 0.94, "value": 0.05 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.85, "value": 1 }, { "at": 0.88, "value": 0.05 }, { "at": 0.94, "value": 0.05 }, { "at": 1, "value": 1 }] },
+        { "bone": "outlet", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.2, "value": 0 }, { "at": 0.3, "value": -1 }, { "at": 0.4, "value": 0 }, { "at": 0.5, "value": -1 }, { "at": 0.6, "value": 0 }, { "at": 0.7, "value": -1 }, { "at": 0.8, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.1, "value": 25 }, { "at": 0.2, "value": -10 }, { "at": 0.3, "value": 25 }, { "at": 0.4, "value": -10 }, { "at": 0.5, "value": 25 }, { "at": 0.6, "value": -10 }, { "at": 0.7, "value": 25 }, { "at": 0.8, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 960 }, { "at": 1, "value": 960 }] }
+      ]
+    },
+    {
+      "id": "defrost-shake",
+      "seconds": 2.4,
+      "loop": false,
+      "tracks": [
+        { "bone": "frost", "channel": "y", "keys": [{ "at": 0, "value": 0, "ease": [0.2, 0.6, 0.4, 1] }, { "at": 0.05, "value": -4.5 }, { "at": 1, "value": -4.5 }] },
+        { "bone": "frost", "channel": "scaleX", "keys": [{ "at": 0, "value": 1 }, { "at": 0.1, "value": 1 }, { "at": 0.5, "value": 0.85 }, { "at": 1, "value": 0.85 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": 0 }, { "at": 0.1, "value": 6 }, { "at": 0.14, "value": -6 }, { "at": 0.18, "value": 6 }, { "at": 0.22, "value": -6 }, { "at": 0.26, "value": 6 }, { "at": 0.3, "value": -6 }, { "at": 0.34, "value": 6 }, { "at": 0.38, "value": -6 }, { "at": 0.42, "value": 6 }, { "at": 0.46, "value": -6 }, { "at": 0.5, "value": 4 }, { "at": 0.54, "value": -3 }, { "at": 0.58, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": 0 }, { "at": 0.1, "value": -25 }, { "at": 0.14, "value": 25 }, { "at": 0.18, "value": -25 }, { "at": 0.22, "value": 25 }, { "at": 0.26, "value": -25 }, { "at": 0.3, "value": 25 }, { "at": 0.34, "value": -25 }, { "at": 0.38, "value": 25 }, { "at": 0.42, "value": -25 }, { "at": 0.46, "value": 25 }, { "at": 0.5, "value": -15 }, { "at": 0.54, "value": 10 }, { "at": 0.58, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.9, "value": -960 }, { "at": 1, "value": -960 }] },
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": 12 }, { "at": 0.54, "value": 12 }, { "at": 0.62, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": 12 }, { "at": 0.54, "value": 12 }, { "at": 0.62, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": -12 }, { "at": 0.54, "value": -12 }, { "at": 0.62, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.06, "value": -12 }, { "at": 0.54, "value": -12 }, { "at": 0.62, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1 }, { "at": 0.05, "value": 1.03 }, { "at": 0.58, "value": 1 }, { "at": 1, "value": 1 }] }
+      ]
+    },
+    {
+      "id": "compressor-purr",
+      "seconds": 1.2,
+      "loop": true,
+      "tracks": [
+        { "bone": "body", "channel": "x", "keys": [{ "at": 0, "value": 0.4 }, { "at": 0.0625, "value": -0.4 }, { "at": 0.125, "value": 0.4 }, { "at": 0.1875, "value": -0.4 }, { "at": 0.25, "value": 0.4 }, { "at": 0.3125, "value": -0.4 }, { "at": 0.375, "value": 0.4 }, { "at": 0.4375, "value": -0.4 }, { "at": 0.5, "value": 0.4 }, { "at": 0.5625, "value": -0.4 }, { "at": 0.625, "value": 0.4 }, { "at": 0.6875, "value": -0.4 }, { "at": 0.75, "value": 0.4 }, { "at": 0.8125, "value": -0.4 }, { "at": 0.875, "value": 0.4 }, { "at": 0.9375, "value": -0.4 }, { "at": 1, "value": 0.4 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": 360 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": -8, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 8, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -8 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 1.015, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 1 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 4, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 2 }] }
+      ]
+    },
+    {
+      "id": "fan-brake",
+      "seconds": 0.6,
+      "loop": true,
+      "tracks": [
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -720 }] },
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": -30 }, { "at": 1, "value": -30 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": -30 }, { "at": 1, "value": -30 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": 30 }, { "at": 1, "value": 30 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": 30 }, { "at": 1, "value": 30 }] },
+        { "bone": "leg-back-near", "channel": "y", "keys": [{ "at": 0, "value": -1.5 }, { "at": 1, "value": -1.5 }] },
+        { "bone": "leg-back-far", "channel": "y", "keys": [{ "at": 0, "value": -1.5 }, { "at": 1, "value": -1.5 }] },
+        { "bone": "leg-front-near", "channel": "y", "keys": [{ "at": 0, "value": -1.5 }, { "at": 1, "value": -1.5 }] },
+        { "bone": "leg-front-far", "channel": "y", "keys": [{ "at": 0, "value": -1.5 }, { "at": 1, "value": -1.5 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": -35, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -25, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -35 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": -2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 2, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -2 }] }
+      ]
+    },
+    {
+      "id": "dangle-outlet",
+      "seconds": 1,
+      "loop": true,
+      "tracks": [
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 25 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 25 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -20 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": 25, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -20 }] },
+        { "bone": "leg-back-near", "channel": "y", "keys": [{ "at": 0, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "leg-back-far", "channel": "y", "keys": [{ "at": 0, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "leg-front-near", "channel": "y", "keys": [{ "at": 0, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "leg-front-far", "channel": "y", "keys": [{ "at": 0, "value": 1 }, { "at": 1, "value": 1 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -20, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 20 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1.02 }, { "at": 1, "value": 1.02 }] },
+        { "bone": "body", "channel": "scaleX", "keys": [{ "at": 0, "value": 0.99 }, { "at": 1, "value": 0.99 }] }
+      ]
+    },
+    {
+      "id": "toss",
+      "seconds": 0.5,
+      "loop": true,
+      "tracks": [
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 45 }, { "at": 0.5, "value": 10 }, { "at": 1, "value": 45 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": 10 }, { "at": 0.5, "value": 45 }, { "at": 1, "value": 10 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": -45 }, { "at": 0.5, "value": -10 }, { "at": 1, "value": -45 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": -10 }, { "at": 0.5, "value": -45 }, { "at": 1, "value": -10 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": -360 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 40 }, { "at": 0.5, "value": -30 }, { "at": 1, "value": 40 }] },
+        { "bone": "body", "channel": "scaleX", "keys": [{ "at": 0, "value": 1.03 }, { "at": 0.5, "value": 0.97 }, { "at": 1, "value": 1.03 }] },
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 0.97 }, { "at": 0.5, "value": 1.03 }, { "at": 1, "value": 0.97 }] }
+      ]
+    },
+    {
+      "id": "push-blow",
+      "seconds": 1.6,
+      "loop": true,
+      "tracks": [
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 6, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 9 }, { "at": 0.8, "value": 6 }, { "at": 1, "value": 6 }] },
+        { "bone": "body", "channel": "x", "keys": [{ "at": 0, "value": 0.5, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 1.3 }, { "at": 0.36, "value": 0.9 }, { "at": 0.42, "value": 1.3 }, { "at": 0.48, "value": 0.9 }, { "at": 0.54, "value": 1.2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.8, "value": 0.5 }, { "at": 1, "value": 0.5 }] },
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 22 }, { "at": 1, "value": 22 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": 22 }, { "at": 1, "value": 22 }] },
+        { "bone": "leg-back-near", "channel": "y", "keys": [{ "at": 0, "value": 0.55 }, { "at": 1, "value": 0.55 }] },
+        { "bone": "leg-back-far", "channel": "y", "keys": [{ "at": 0, "value": 0.55 }, { "at": 1, "value": 0.55 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": -6 }, { "at": 1, "value": -6 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": -6 }, { "at": 1, "value": -6 }] },
+        { "bone": "outlet", "channel": "x", "keys": [{ "at": 0, "value": 12, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 14 }, { "at": 0.8, "value": 12 }, { "at": 1, "value": 12 }] },
+        { "bone": "outlet", "channel": "scaleX", "keys": [{ "at": 0, "value": 1.1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 1.4 }, { "at": 0.55, "value": 1.3, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.8, "value": 1.1 }, { "at": 1, "value": 1.1 }] },
+        { "bone": "outlet", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.3, "value": -1 }, { "at": 0.6, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 1, "value": 720 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 20, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": 35 }, { "at": 0.8, "value": 20 }, { "at": 1, "value": 20 }] }
+      ]
+    },
+    {
+      "id": "woozy",
+      "seconds": 1.2,
+      "loop": true,
+      "tracks": [
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": -6, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 6, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -6 }] },
+        { "bone": "body", "channel": "x", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": 1.5, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.75, "value": -1.5, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -110, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 8, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -8, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 8 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": 8, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -8, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 8 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": -6, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 6, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -6 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": -6, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 6, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -6 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": -30, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": -12, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": -30 }] }
+      ]
+    },
+    {
+      "id": "shrug",
+      "seconds": 1.4,
+      "loop": false,
+      "tracks": [
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -6 }, { "at": 0.6, "value": -5, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -1.5 }, { "at": 0.6, "value": -1.2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -30 }, { "at": 0.6, "value": -26, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "fan", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.3, "value": -40 }, { "at": 0.6, "value": -40, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -38 }, { "at": 0.6, "value": -34, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-near", "channel": "y", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -2.5 }, { "at": 0.6, "value": -2.2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.25, "value": 10 }, { "at": 0.6, "value": 10, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.85, "value": 0 }, { "at": 1, "value": 0 }] }
+      ]
+    },
+    {
+      "id": "scurry",
+      "seconds": 0.4,
+      "loop": true,
+      "tracks": [
+        { "bone": "leg-back-near", "channel": "rotation", "keys": [{ "at": 0, "value": -24 }, { "at": 0.5, "value": 24 }, { "at": 1, "value": -24 }] },
+        { "bone": "leg-back-near", "channel": "x", "keys": [{ "at": 0, "value": 2 }, { "at": 0.5, "value": -2 }, { "at": 1, "value": 2 }] },
+        { "bone": "leg-back-near", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.5, "value": 0 }, { "at": 0.75, "value": -1.8 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-far", "channel": "rotation", "keys": [{ "at": 0, "value": -24 }, { "at": 0.5, "value": 24 }, { "at": 1, "value": -24 }] },
+        { "bone": "leg-front-far", "channel": "x", "keys": [{ "at": 0, "value": 2 }, { "at": 0.5, "value": -2 }, { "at": 1, "value": 2 }] },
+        { "bone": "leg-front-far", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.5, "value": 0 }, { "at": 0.75, "value": -1.8 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-back-far", "channel": "rotation", "keys": [{ "at": 0, "value": 24 }, { "at": 0.5, "value": -24 }, { "at": 1, "value": 24 }] },
+        { "bone": "leg-back-far", "channel": "x", "keys": [{ "at": 0, "value": -2 }, { "at": 0.5, "value": 2 }, { "at": 1, "value": -2 }] },
+        { "bone": "leg-back-far", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": -1.8 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "leg-front-near", "channel": "rotation", "keys": [{ "at": 0, "value": 24 }, { "at": 0.5, "value": -24 }, { "at": 1, "value": 24 }] },
+        { "bone": "leg-front-near", "channel": "x", "keys": [{ "at": 0, "value": -2 }, { "at": 0.5, "value": 2 }, { "at": 1, "value": -2 }] },
+        { "bone": "leg-front-near", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": -1.8 }, { "at": 0.5, "value": 0 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": -1 }, { "at": 0.5, "value": 0 }, { "at": 0.75, "value": -1 }, { "at": 1, "value": 0 }] },
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 2, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 5, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 2 }] },
+        { "bone": "tail", "channel": "rotation", "keys": [{ "at": 0, "value": 18 }, { "at": 0.5, "value": 30 }, { "at": 1, "value": 18 }] }
+      ]
     }
   ],
   "repertoire": {
@@ -224,8 +471,45 @@
     "greet": ["nod"],
     "cuddle": ["purr"],
     "squabble": ["bluster"],
-    "sulk": ["standby"]
+    "sulk": ["standby"],
+    "hang": ["dangle-outlet"],
+    "tumble": ["toss"],
+    "glide": ["fan-brake"],
+    "purr": ["compressor-purr"],
+    "dizzy": ["woozy"],
+    "shrug": ["shrug"],
+    "scoot": ["scurry"],
+    "push": ["push-blow"]
   },
   "locomotion": { "gait": "walk", "speed": 34 },
-  "temperament": { "energy": 0.55, "sociability": 0.3, "curiosity": 0.45 }
+  "temperament": { "energy": 0.55, "sociability": 0.3, "curiosity": 0.45 },
+  "states": [
+    { "id": "heating", "name": { "en": "Heating", "de": "Heizen" } },
+    { "id": "standby", "name": { "en": "Standby", "de": "Bereitschaft" }, "tint": { "body": "#4a7f78", "accent": "#5c9c96", "detail": "#c46a1a" }, "clip": "hush", "lasts": 60, "then": "heating" },
+    { "id": "cooling", "name": { "en": "Cooling", "de": "Kühlen" }, "tint": { "body": "#2a8fb5", "accent": "#7ee6f5", "detail": "#4bc8e8" }, "clip": "reverse", "emitter": "cool-streak", "lasts": 40, "then": "heating" },
+    { "id": "defrost", "name": { "en": "Defrosting", "de": "Abtauen" }, "tint": { "body": "#4f9692", "accent": "#9fd8d4", "detail": "#fa9500" }, "clip": "thaw", "emitter": "steam-puff", "lasts": 8, "then": "heating" }
+  ],
+  "tricks": [
+    { "id": "three-for-one", "name": { "en": "Three for one", "de": "Eins zu drei" }, "clip": "three-for-one", "cues": ["click"], "emitter": "warm-streak", "to": "heating", "mood": "proud" },
+    { "id": "reverse-cycle", "name": { "en": "Reverse the cycle", "de": "Kreislauf umkehren" }, "clip": "reverse-cycle", "cues": ["click"], "emitter": "cool-streak", "from": ["heating", "standby", "defrost"], "to": "cooling", "mood": "proud" },
+    { "id": "ramp-up", "name": { "en": "Ramp up", "de": "Hochmodulieren" }, "clip": "rev", "cues": ["circle"], "emitter": "warm-streak", "from": ["standby", "heating"], "mood": "proud" },
+    { "id": "whisper", "name": { "en": "Whisper mode", "de": "Flüstermodus" }, "clip": "whisper", "cues": ["countercircle"], "emitter": "hush-ring", "from": ["standby", "heating"], "mood": "content" },
+    { "id": "flow-temperature", "name": { "en": "Flow temperature", "de": "Vorlauftemperatur" }, "clip": "flow-temperature", "cues": ["show"], "emitter": "flow-dots", "from": ["heating"], "mood": "proud" },
+    { "id": "defrost-shake", "name": { "en": "Shake off the frost", "de": "Frost abschütteln" }, "clip": "defrost-shake", "cues": ["whim", "shake"], "emitter": "ice-chips", "from": ["heating", "standby"], "to": "defrost", "mood": "proud" }
+  ],
+  "purr": { "clip": "compressor-purr", "emitter": "purr-ring" },
+  "emitters": [
+    { "id": "warm-streak", "bone": "body", "x": 21, "y": -25, "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 7, "y2": 0 }, "fill": "none", "stroke": "detail", "strokeWidth": 1.75, "motion": "drift", "count": 3, "life": 0.9, "speed": 26, "spread": 0.2 },
+    { "id": "cool-streak", "bone": "body", "x": 21, "y": -25, "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 6, "y2": 0 }, "fill": "none", "stroke": "accent", "strokeWidth": 1.5, "motion": "drift", "count": 2, "life": 1, "speed": 20, "spread": 0.15 },
+    { "id": "steam-puff", "bone": "body", "x": 0, "y": -42, "shape": { "kind": "path", "d": "M -2 1.6 Q -3.5 1.4 -3.1 -0.2 Q -3.2 -1.9 -1.4 -1.7 Q -0.6 -3.1 0.9 -2.4 Q 2.6 -2.8 2.8 -1 Q 3.9 -0.4 3.2 0.9 Q 2.6 1.8 1.4 1.6 Z" }, "fill": "paper", "stroke": "ink", "strokeWidth": 1, "motion": "rise", "count": 3, "life": 1.2, "speed": 14, "spread": 0.4 },
+    { "id": "hush-ring", "bone": "body", "x": 0, "y": -42, "shape": { "kind": "ellipse", "cx": 0, "cy": 0, "rx": 4, "ry": 4 }, "fill": "none", "stroke": "ink", "strokeWidth": 0.75, "motion": "rise", "count": 2, "life": 1, "speed": 8, "spread": 0.3 },
+    { "id": "flow-dots", "bone": "body", "x": 21, "y": -25, "shape": { "kind": "ellipse", "cx": 0, "cy": 0, "rx": 1.4, "ry": 1.4 }, "fill": "detail", "stroke": "ink", "strokeWidth": 0.6, "motion": "drift", "count": 6, "life": 1, "speed": 32, "spread": 0.04 },
+    { "id": "ice-chips", "bone": "body", "x": 0, "y": -41, "shape": { "kind": "rect", "x": -1.5, "y": -1, "width": 3, "height": 2 }, "fill": "paper", "stroke": "ink", "strokeWidth": 0.75, "motion": "burst", "count": 6, "life": 0.6, "speed": 90, "spread": 0.7 },
+    { "id": "purr-ring", "bone": "body", "x": 6, "y": -40, "shape": { "kind": "ellipse", "cx": 0, "cy": 0, "rx": 3.5, "ry": 3.5 }, "fill": "none", "stroke": "detail", "strokeWidth": 1.25, "motion": "rise", "count": 2, "life": 1.2, "speed": 10, "spread": 0.2 }
+  ],
+  "gear": ["parachute"],
+  "grip": 43.5,
+  "reach": 9,
+  "canopy": { "kind": "path", "d": "M -30 0 Q -28 -21 0 -23 Q 28 -21 30 0 Q 20 -5 10 0 Q 0 -5 -10 0 Q -20 -5 -30 0 Z M -24 -9 Q 0 -18 24 -9 M -15 -16 Q 0 -21.5 15 -16" },
+  "mood": "content"
 }

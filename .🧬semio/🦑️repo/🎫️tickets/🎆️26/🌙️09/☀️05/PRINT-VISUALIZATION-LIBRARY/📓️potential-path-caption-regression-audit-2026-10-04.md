@@ -1,0 +1,18 @@
+# Potential Curve And Caption PDF Regression Audit
+
+## Current Pre-Regression Read
+
+Current physics neutral fixture has potential-stock with all five authored n=1…n=5 captions and potential-custom with A/B/C. Both light and dark run through the same registered family helper. Stock gallery viz30 calls potential-energy-diagram without overrides, inside an80×40 frame. The neutral stock test disables axes/grid and uses60×40, so it reproduces family defaults but is not the full authored gallery frame/chrome.
+
+Current PDF.js checks caption presence and pairwise caption-rectangle separation, then mathematical glyph presence. It does not consume operator-list paths or test potential strokes against caption rectangles. Therefore existing geometry bounds,32 D3 physical references, and caption-vs-caption assertions cannot detect the observed stock page4 potential curve crossing n=4. This is a concrete missing regression dimension, not evidence that physical values changed.
+
+The D3 branch independently samples121 potential positions from authored coefficient/intercept/domain and derives complete energy window (or honors explicit range), comparing raw native window reports. Its reference is separate from measured bounds/text. A forthcoming actual-PDF path/caption test must retain that separation: compare actual stroke geometry to actual caption rectangles for all five stock labels in both themes, independently of those numerical assertions. No production/test edit or test run was performed by this audit. New regression details and terminal evidence remain pending owner publication.
+## Potential RED Candidate Read Review
+
+Candidate now adds potential-only phase to the existing registered helper and retains both-theme loop. Actual PDF.js operator-list save/restore/transform matrix composition decodes one121-point polyline per potential case and transforms it into page coordinates. Every121 local point is compared to an independently calculated D3 potential ordinate: authored coefficient/intercept/domain, complete authored energy extent and canvas height. Abscissa uses observed first/last path positions, so this is explicitly a viewport-relative shape oracle rather than an independent absolute horizontal-placement oracle. Existing raw D3 window/projection checks remain separate.
+
+The actual curve page segments are intersected against expanded actual PDF text rectangles with neutral0.4mm gap. Both stock five n=1…n=5 and authored three A/B/C captions are enumerated; expected total8 checks/theme. Existing missing-label assertions remain. The segment interval assumes increasing page x, valid for the current two positive-width unrotated potential probes. It is not presented as a rotated general geometry kernel. These tests use PDF.js/D3 as existing test-only imports and introduce no production dependency.
+
+Current candidate retains the earlier neutral60×40 stock viewport without axis/grid chrome while actual gallery frame is80×40. Both have family-default physical height40; final actual stock page4 review is still needed for authored publication evidence. No immediate blocker found within these two current probes. Registered RED66264 is compiling unchanged245c16ff; terminal/provenance and actual8 checks/theme remain pending. The review does not claim RED or GREEN runtime results.
+
+Units clarified: PDF local/page coordinates and caption transforms are PDF points; physical canvas mm converts by72/25.4. Per-point independent projection tolerance is0.1pt; neutral caption gap0.4mm converts to approximately1.134pt. Candidate keeps existing physical-report tolerance1e-4 and measured canvas tolerance0.25mm separate.

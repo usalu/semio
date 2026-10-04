@@ -28,6 +28,15 @@ pub const CAST_STREAM: u32 = 0xffff_fffe;
 
 /// 🔁️ The stream of a render target's rotation clock (`[seed, ROTATION_STREAM, epoch]`): how long an epoch of the cast lasts.
 pub const ROTATION_STREAM: u32 = 0xffff_fffd;
+
+/// ⚗️ The stream of the chemistry between species (`[seed, CHEMISTRY_STREAM, beat]`, `beat` = the tick of a chemistry beat ÷ its length): the chances of the reactions that are due on that beat, one word each in trial order. Its own stream, so no other draw of the stage moves with it.
+pub const CHEMISTRY_STREAM: u32 = 0xffff_fffc;
+
+/// 🧗️ The stream of the gear (`[seed, GEAR_STREAM, stream, counter]`, `stream` the actor's and `counter` the draw of the decision it belongs to): whether a pet that could hop goes by its gear instead, where it sets out for, where on a wall it rests and whether its grappling hook is aimed past the edge. Its own stream, so no draw of a pet without a way to go by its gear moves with it.
+pub const GEAR_STREAM: u32 = 0xffff_fffb;
+
+/// 🪄️ The stream of mischief with the page (`[seed, MISCHIEF_STREAM, tick, purpose]`, `purpose` 0 when the stage picks a pet and a marked element to play with at `tick` and draws how far the pet shoves it, 1 when the learner takes the element back at `tick` and the pet is thrown off): the only randomness of the pick, which knows nothing but the topic of the element. Its own stream, so no other draw of the stage moves with it.
+pub const MISCHIEF_STREAM: u32 = 0xffff_fffa;
 //#endregion 🔖️Constants
 
 //#region 🔖️Words

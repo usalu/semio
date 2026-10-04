@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use quiz::serde_json::{self, Map, Value};
-    use quiz::{sheet_of, Quiz};
+    use quiz::{sheet_of, Challenge, Quiz};
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use std::collections::BTreeMap;
 
@@ -29,7 +29,7 @@ mod subject {
         for vector in vectors["sheets"].as_array().ok_or("the vectors carry no sheets")? {
             let quiz = quizzes.get(vector["quiz"].as_str().unwrap_or_default()).ok_or_else(|| format!("unknown quiz in {vector}"))?;
             let seed = vector["seed"].as_u64().and_then(|seed| u32::try_from(seed).ok()).ok_or_else(|| format!("no u32 seed in {vector}"))?;
-            projection.insert(vector["id"].as_str().unwrap_or_default().to_string(), serde_json::to_value(sheet_of(quiz, seed)).map_err(|error| error.to_string())?);
+            projection.insert(vector["id"].as_str().unwrap_or_default().to_string(), serde_json::to_value(sheet_of(quiz, seed, decode!(vector["challenge"], Challenge)?)).map_err(|error| error.to_string())?);
         }
         Ok(Outcome::projection(parse_json(&Value::Object(projection).to_string())?))
     }

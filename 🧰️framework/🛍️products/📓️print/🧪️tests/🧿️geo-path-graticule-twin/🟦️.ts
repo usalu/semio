@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { vizGeoPath, vizGeoProjection, type VizGeoGeometry, type VizProjectionKind } from "../../🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🟦️.ts";
+import { vizGeoPath, vizGeoProjection, type VizGeoGeometry, type VizProjectionKind } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../🗺️geo-path-graticule/🟦️.ts";
 // #endregion 🔌️Adapters
 

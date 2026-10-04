@@ -11,7 +11,7 @@ import Ajv2020 from "ajv/dist/2020";
 import MarkdownIt from "markdown-it";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { loadVizCatalog, loadVizSchema, marksItselfGenerated, registeredVizFamilies, vizCoverageReport, vizGeneratedFiles, vizImplementedFamilyKeys } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { loadVizCatalog, loadVizSchema, marksItselfGenerated, registeredVizFamilies, vizCoverageReport, vizGeneratedFiles, vizImplementedFamilyKeys, vizApiReferenceFindings } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import type { LocalizedText } from "../../🧬️schema/🟦️.ts";
 import { vizOptionList } from "../../🧬️schema/🟦️.ts";
 
@@ -250,9 +250,7 @@ function generatedFindings(): string[] {
 
 /** 🔍️ The API reference out of step with the LaTeX sources it is derived from. */
 function apiReferenceFindings(): string[] {
-  const file = vizGeneratedFiles().find((entry) => entry.path === VIZ_API_ARTIFACT);
-  if (file === undefined) return [`missing ${VIZ_API_ARTIFACT}`];
-  return generatedFinding(file);
+  return [...vizApiReferenceFindings()];
 }
 
 export default defineTestAdapter({

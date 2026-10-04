@@ -2,6 +2,7 @@
 \ProvidesPackage{semio-viz-flow-sankey}[2026/09/05 v0.3.0 semio viz namespace flow-sankey families]
 
 \RequirePackage{expl3}
+\RequirePackage{graphicx}
 \RequirePackage{xparse}
 \RequirePackage{semio-viz-network-graph}
 \RequirePackage{semio-viz-flow}
@@ -96,30 +97,122 @@
     {
       \fp_eval:n { round( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } , 4 ) } ,
       \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) } ,
-      \fp_eval:n { round( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
-        - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } , 4 ) } ,
-      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
-        - \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) }
+      \fp_eval:n { round( ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } )
+        - ( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } ) , 4 ) } ,
+      \fp_eval:n { round( ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } )
+        - ( \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } ) , 4 ) }
     }
-  \bool_if:NT \l_semio_viz_net_labels_bool {
-    \seq_if_empty:cTF { l_semio_viz_network_slink_ \int_eval:n { \l_semio_viz_snk_i_tl } _seq }
-      {
-        \node [ anchor=east , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0pt ]
-          at ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } - 0.9 } ,
-               \fp_to_decimal:n { ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
-                 + \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } ) / 2 } )
-          { \l_semio_viz_snk_id_tl } ;
-      }
-      {
-        \node [ anchor=west , font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , inner~sep=0pt ]
-          at ( \fp_to_decimal:n { \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } + 0.9 } ,
-               \fp_to_decimal:n { ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl }
-                 + \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } ) / 2 } )
-          { \l_semio_viz_snk_id_tl } ;
-      }
-  }
+
 }
 
+\seq_new:N \l_semio_viz_snk_caption_rows_seq
+\prop_new:N \l_semio_viz_snk_caption_counts_prop
+\prop_new:N \l_semio_viz_snk_caption_positions_prop
+\tl_new:N \l_semio_viz_snk_caption_column_tl
+\tl_new:N \l_semio_viz_snk_caption_previous_tl
+\fp_new:N \l_semio_viz_snk_caption_gap_fp
+\fp_new:N \l_semio_viz_snk_caption_y_fp
+\fp_new:N \l_semio_viz_snk_caption_previous_fp
+\fp_new:N \l_semio_viz_snk_caption_neighbor_fp
+\fp_new:N \l_semio_viz_snk_caption_width_fp
+\fp_new:N \l_semio_viz_snk_caption_scale_fp
+\box_new:N \l_semio_viz_snk_caption_box
+% 🔠 Orders captions by column and vertical stratum.
+\cs_new_protected:Npn \semio_viz_snk_caption_sort:nn #1#2 {
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{x0}\l_tmpa_tl
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#2}{x0}\l_tmpb_tl
+  \fp_compare:nNnT {\l_tmpa_tl} = {\l_tmpb_tl} {
+    \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{y0}\l_tmpa_tl
+    \semio_viz_table_cell:nnnN {semio-net-flow}{#2}{y0}\l_tmpb_tl
+  }
+  \fp_compare:nNnTF {\l_tmpa_tl} > {\l_tmpb_tl} {\sort_return_swapped:}{\sort_return_same:}
+}
+% 🔠 Reads the available spacing and mapped centre of a stratum.
+\cs_new_protected:Npn \semio_viz_snk_caption_read:n #1 {
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{x0}\l_semio_viz_snk_caption_column_tl
+  \prop_get:NVN \l_semio_viz_snk_caption_counts_prop \l_semio_viz_snk_caption_column_tl \l_tmpa_tl
+  \fp_set:Nn \l_semio_viz_snk_caption_gap_fp {min(2.8,(\l_semio_viz_net_yhi_fp-\l_semio_viz_net_ylo_fp)/\l_tmpa_tl)}
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{y0}\l_semio_viz_snk_y_tl
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{y1}\l_semio_viz_snk_yb_tl
+  \fp_set:Nn \l_semio_viz_snk_caption_y_fp {(\semio_viz_snk_y:n{\l_semio_viz_snk_y_tl}+\semio_viz_snk_y:n{\l_semio_viz_snk_yb_tl})/2}
+}
+% 🔠 Spreads crowded captions within their column and retains each stratum through a leader.
+\cs_new_protected:Npn \semio_viz_snk_captions: {
+  \seq_clear:N \l_semio_viz_snk_caption_rows_seq
+  \prop_clear:N \l_semio_viz_snk_caption_counts_prop
+  \prop_clear:N \l_semio_viz_snk_caption_positions_prop
+  \int_step_inline:nn {\l_semio_viz_snk_rows_int} {
+    \semio_viz_table_cell:nnnN {semio-net-flow}{##1}{kind}\l_semio_viz_snk_kind_tl
+    \str_if_eq:VnT \l_semio_viz_snk_kind_tl {node} {
+      \seq_put_right:Nn \l_semio_viz_snk_caption_rows_seq {##1}
+      \semio_viz_table_cell:nnnN {semio-net-flow}{##1}{x0}\l_semio_viz_snk_caption_column_tl
+      \prop_get:NVNTF \l_semio_viz_snk_caption_counts_prop \l_semio_viz_snk_caption_column_tl \l_tmpa_tl
+        {\prop_put:NVx \l_semio_viz_snk_caption_counts_prop \l_semio_viz_snk_caption_column_tl {\int_eval:n{\l_tmpa_tl+1}}}
+        {\prop_put:NVn \l_semio_viz_snk_caption_counts_prop \l_semio_viz_snk_caption_column_tl {1}}
+    }
+  }
+  \seq_sort:Nn \l_semio_viz_snk_caption_rows_seq {\semio_viz_snk_caption_sort:nn{##1}{##2}}
+  \tl_clear:N \l_semio_viz_snk_caption_previous_tl
+  \seq_map_inline:Nn \l_semio_viz_snk_caption_rows_seq {
+    \semio_viz_snk_caption_read:n {##1}
+    \tl_if_eq:NNF \l_semio_viz_snk_caption_column_tl \l_semio_viz_snk_caption_previous_tl {
+      \fp_set:Nn \l_semio_viz_snk_caption_previous_fp {\l_semio_viz_net_yhi_fp+\l_semio_viz_snk_caption_gap_fp/2}
+      \tl_set_eq:NN \l_semio_viz_snk_caption_previous_tl \l_semio_viz_snk_caption_column_tl
+    }
+    \fp_set:Nn \l_semio_viz_snk_caption_y_fp {min(\l_semio_viz_snk_caption_y_fp,\l_semio_viz_snk_caption_previous_fp-\l_semio_viz_snk_caption_gap_fp)}
+    \prop_put:Nnx \l_semio_viz_snk_caption_positions_prop {##1}{\fp_to_decimal:N\l_semio_viz_snk_caption_y_fp}
+    \fp_set_eq:NN \l_semio_viz_snk_caption_previous_fp \l_semio_viz_snk_caption_y_fp
+  }
+  \seq_reverse:N \l_semio_viz_snk_caption_rows_seq
+  \tl_clear:N \l_semio_viz_snk_caption_previous_tl
+  \seq_map_inline:Nn \l_semio_viz_snk_caption_rows_seq {
+    \semio_viz_snk_caption_read:n {##1}
+    \tl_if_eq:NNF \l_semio_viz_snk_caption_column_tl \l_semio_viz_snk_caption_previous_tl {
+      \fp_set:Nn \l_semio_viz_snk_caption_previous_fp {\l_semio_viz_net_ylo_fp-\l_semio_viz_snk_caption_gap_fp/2}
+      \tl_set_eq:NN \l_semio_viz_snk_caption_previous_tl \l_semio_viz_snk_caption_column_tl
+    }
+    \prop_get:NnN \l_semio_viz_snk_caption_positions_prop {##1}\l_tmpa_tl
+    \fp_set:Nn \l_semio_viz_snk_caption_previous_fp {max(\l_tmpa_tl,\l_semio_viz_snk_caption_previous_fp+\l_semio_viz_snk_caption_gap_fp)}
+    \prop_put:Nnx \l_semio_viz_snk_caption_positions_prop {##1}{\fp_to_decimal:N\l_semio_viz_snk_caption_previous_fp}
+  }
+  \seq_map_inline:Nn \l_semio_viz_snk_caption_rows_seq {\semio_viz_snk_caption_draw:n{##1}}
+}
+% 🔠 Fits caption glyphs to the reserved gutter and measured vertical clearance.
+\cs_new_protected:Npn \semio_viz_snk_caption_draw:n #1 {
+  \semio_viz_snk_caption_read:n {#1}
+  \prop_get:NnN \l_semio_viz_snk_caption_positions_prop {#1}\l_tmpa_tl
+  \fp_set:Nn \l_semio_viz_snk_caption_previous_fp {\l_tmpa_tl}
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{i}\l_semio_viz_snk_i_tl
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{x0}\l_semio_viz_snk_x_tl
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{x1}\l_semio_viz_snk_xb_tl
+  \semio_viz_table_cell:nnnN {semio-net-flow}{#1}{id}\l_semio_viz_snk_id_tl
+  \hbox_set:Nn \l_semio_viz_snk_caption_box {\pgfinterruptpicture\c_semio_viz_theme_font_label_tl\l_semio_viz_snk_id_tl\endpgfinterruptpicture}
+
+  \seq_if_empty:cTF {l_semio_viz_network_slink_\int_eval:n{\l_semio_viz_snk_i_tl}_seq} {
+    \fp_set:Nn \l_tmpa_fp {\semio_viz_snk_x:n{\l_semio_viz_snk_x_tl}}
+    \tl_set:Nn \l_tmpa_tl {east}
+    \fp_set:Nn \l_tmpb_fp {\l_tmpa_fp-.9}
+  } {
+    \fp_set:Nn \l_tmpa_fp {\semio_viz_snk_x:n{\l_semio_viz_snk_xb_tl}}
+    \tl_set:Nn \l_tmpa_tl {west}
+    \fp_set:Nn \l_tmpb_fp {\l_tmpa_fp+.9}
+  }
+  \fp_set:Nn \l_semio_viz_snk_caption_width_fp {max(.1,\l_semio_viz_snk_label_w_fp-1.3)}
+  \seq_map_inline:Nn \l_semio_viz_snk_caption_rows_seq {
+    \str_if_eq:VnTF \l_tmpa_tl {west} {
+      \semio_viz_table_cell:nnnN {semio-net-flow}{##1}{x0}\l_tmpb_tl
+      \fp_set:Nn \l_semio_viz_snk_caption_neighbor_fp {(\semio_viz_snk_x:n{\l_tmpb_tl})-\l_tmpa_fp}
+    } {
+      \semio_viz_table_cell:nnnN {semio-net-flow}{##1}{x1}\l_tmpb_tl
+      \fp_set:Nn \l_semio_viz_snk_caption_neighbor_fp {\l_tmpa_fp-(\semio_viz_snk_x:n{\l_tmpb_tl})}
+    }
+    \fp_compare:nNnT {\l_semio_viz_snk_caption_neighbor_fp} > {0} {\fp_set:Nn \l_semio_viz_snk_caption_width_fp {min(\l_semio_viz_snk_caption_width_fp,max(.1,(\l_semio_viz_snk_caption_neighbor_fp-2.8)/2))}}
+  }
+  \fp_set:Nn \l_semio_viz_snk_caption_scale_fp {min(1,\l_semio_viz_snk_caption_width_fp/max(.01,\dim_to_fp:n{\box_wd:N\l_semio_viz_snk_caption_box}/\dim_to_fp:n{1mm}),max(.1,\l_semio_viz_snk_caption_gap_fp-.6)/max(.01,\dim_to_fp:n{\box_ht:N\l_semio_viz_snk_caption_box+\box_dp:N\l_semio_viz_snk_caption_box}/\dim_to_fp:n{1mm}))}
+  \draw[semio-chrome-foreground,line~width=.15mm] (\fp_to_decimal:N\l_tmpa_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_y_fp) -- (\fp_to_decimal:N\l_tmpb_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_previous_fp);
+  \node[anchor=\l_tmpa_tl,text=semio-chrome-foreground,fill=semio-chrome-base,inner~sep=.2mm] at (\fp_to_decimal:N\l_tmpb_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_previous_fp) {\scalebox{\fp_to_decimal:N\l_semio_viz_snk_caption_scale_fp}{\box_use:N\l_semio_viz_snk_caption_box}};
+  \semio_viz_probe_geometry:nx {flow-label}{#1,\fp_to_decimal:N\l_tmpb_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_previous_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_y_fp,\fp_to_decimal:N\l_semio_viz_snk_caption_scale_fp}
+}
 % 💧 One link ribbon: two cubic curves with horizontal control points, exactly d3's sankeyLinkHorizontal.
 \cs_new_protected:Npn \semio_viz_snk_link_draw:n #1 {
   \semio_viz_table_cell:nnnN { semio-net-flow } {#1} { i } \l_semio_viz_snk_i_tl
@@ -165,7 +258,7 @@
   \semio_viz_probe_geometry:nx { flow-link }
     {
       \l_semio_viz_snk_i_tl , \l_semio_viz_snk_j_tl ,
-      \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } , 4 ) } ,
+      \fp_eval:n { round( ( \semio_viz_snk_y:n { \l_semio_viz_snk_y_tl } ) , 4 ) } ,
       \fp_eval:n { round( \semio_viz_snk_y:n { \l_semio_viz_snk_yb_tl } , 4 ) } ,
       \fp_eval:n { round( \l_semio_viz_snk_w_tl * \l_semio_viz_snk_k_fp , 4 ) }
     }
@@ -173,16 +266,16 @@
 % 〰️ First Bézier control abscissa of a link ribbon: `curvature` of the way to the target column.
 \cs_new:Npn \semio_viz_snk_cx:
   {
-    \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl }
-    + \l_semio_viz_snk_curv_fp * ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
-      - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } )
+    ( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } )
+    + \l_semio_viz_snk_curv_fp * ( ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } )
+      - ( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } ) )
   }
 % 〰️ Second Bézier control abscissa of a link ribbon, the mirror of the first at the target end.
 \cs_new:Npn \semio_viz_snk_dx:
   {
-    \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
-    - \l_semio_viz_snk_curv_fp * ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl }
-      - \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } )
+    ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } )
+    - \l_semio_viz_snk_curv_fp * ( ( \semio_viz_snk_x:n { \l_semio_viz_snk_xb_tl } )
+      - ( \semio_viz_snk_x:n { \l_semio_viz_snk_x_tl } ) )
   }
 
 % 💧 Layout space is the unit-height extent the kernel was given; these map it into the drawing rectangle.
@@ -212,6 +305,7 @@
   \semio_viz_table_nrows:nN { semio-net-flow } \l_semio_viz_snk_rows_int
   \int_step_inline:nn { \l_semio_viz_snk_rows_int } { \semio_viz_snk_row:nn { link } {##1} }
   \int_step_inline:nn { \l_semio_viz_snk_rows_int } { \semio_viz_snk_row:nn { node } {##1} }
+  \bool_if:NT \l_semio_viz_net_labels_bool {\semio_viz_snk_captions:}
 }
 % 💧 Draws the layout row #2 when it is of kind #1, so one pass over the output draws one layer.
 \cs_new_protected:Npn \semio_viz_snk_row:nn #1#2 {
@@ -254,7 +348,7 @@
           / \l_semio_viz_snk_k_fp
         }
     }
-  \semio_viz_layout_run:nVnV {#2} \l_semio_viz_net_data_tl { semio-net-flow } \l_semio_viz_net_layopts_tl
+  \semio_viz_layout_structure:nVnV {#2} \l_semio_viz_net_data_tl { semio-net-flow } \l_semio_viz_net_layopts_tl
   \semio_viz_net_groups_build:
   \semio_viz_snk_draw:
 }

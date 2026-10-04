@@ -4,7 +4,7 @@
 @comparison-viz-probe-v1
 Feature: The TypeScript twin's links bump the way d3 draws them
   `shape-links-ribbons` measures the LaTeX kernel. This case measures the second subject of the same
-  specification, the TypeScript twin `@semio-tech/print-viz-kernel`, on the same vectors and against
+  specification, the TypeScript twin `@semio-tech/print-viz-inference`, on the same vectors and against
   the same oracle, because a kernel that exists twice is only a kernel if both copies answer alike.
 
   The platform gives a case one adapter per language and one subject per scenario, so the twin cannot

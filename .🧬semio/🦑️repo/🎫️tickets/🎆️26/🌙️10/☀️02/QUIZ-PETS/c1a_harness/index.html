@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pet hand harness (work package C1a)</title>
+    <style>
+      :root {
+        --foreground: #001117;
+        --ground: #f7f3e3;
+        --panel: #ffffff;
+        --line: #c9c8bd;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: var(--ground);
+        color: var(--foreground);
+        font: 15px/1.4 system-ui, sans-serif;
+        overflow: hidden;
+      }
+      header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      main {
+        position: relative;
+        height: calc(100% - 80px);
+      }
+      .card {
+        position: absolute;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .card p {
+        margin: 0 0 10px;
+      }
+      .card-a {
+        left: 60px;
+        top: 230px;
+        width: 360px;
+        height: 200px;
+      }
+      .card-b {
+        left: 500px;
+        top: 200px;
+        width: 340px;
+        height: 220px;
+      }
+      .card-c {
+        left: 900px;
+        top: 260px;
+        width: 320px;
+        height: 180px;
+      }
+      .words {
+        position: absolute;
+        left: 60px;
+        top: 470px;
+        width: 760px;
+        margin: 0;
+      }
+      .covered {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 60px;
+        height: 30px;
+      }
+      footer {
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+        padding: 6px 16px;
+        border-top: 1px solid var(--line);
+      }
+      button {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

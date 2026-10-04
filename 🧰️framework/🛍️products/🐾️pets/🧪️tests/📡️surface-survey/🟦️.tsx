@@ -13,7 +13,7 @@ import { getRoles } from "@testing-library/react";
 import { roles } from "aria-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { StageEvent } from "@semio-tech/pets";
-import { FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_SURFACES, SURFACE_WIDTH, SURVEY_ATTRIBUTES, stageBox, surfaceId, survey, watchPointer, watchSurvey, type SurveyHost } from "@semio-tech/pets-react";
+import { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_PRESS_CONTROLS, PET_PROPS, PET_SURFACES, SURFACE_WIDTH, SURVEY_ATTRIBUTES, fixtureId, stageBox, surfaceId, survey, wallId, watchPointer, watchSurvey, type SurveyHost } from "@semio-tech/pets-react";
 import vectors from "../../🧫️fixtures/📡️surface-survey/🔣️.json";
 
 interface Box {
@@ -37,7 +37,8 @@ interface Scene {
   readonly viewport: { readonly width: number; readonly height: number };
   readonly frame?: Box;
   readonly focus?: string;
-  readonly options?: { readonly surfaces?: string; readonly keepoutsBesidesDefaults?: string };
+  readonly pointer?: { readonly x: number; readonly y: number };
+  readonly options?: { readonly surfaces?: string; readonly keepoutsBesidesDefaults?: string; readonly walls?: string; readonly props?: string };
   readonly nodes: readonly SceneNode[];
   readonly expected: {
     readonly kind: string;
@@ -45,6 +46,8 @@ interface Scene {
     readonly height: number;
     readonly surfaces: readonly { readonly element: string; readonly x0: number; readonly x1: number; readonly y: number }[];
     readonly keepouts: readonly { readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
+    readonly walls: readonly { readonly element: string; readonly side: 1 | -1; readonly x: number; readonly y0: number; readonly y1: number }[];
+    readonly fixtures?: readonly { readonly element: string; readonly key: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
   };
 }
 
@@ -135,8 +138,10 @@ afterEach(() => {
 describe("📡️ surface survey", () => {
   it("ships vectors for every rule of the survey", () => {
     expect(scenes.length).toBeGreaterThanOrEqual(10);
-    expect(vectors.margins).toEqual({ surfaceWidth: SURFACE_WIDTH, keepout: KEEPOUT_MARGIN, focus: FOCUS_MARGIN });
+    expect(vectors.margins).toEqual({ surfaceWidth: SURFACE_WIDTH, keepout: KEEPOUT_MARGIN, focus: FOCUS_MARGIN, fixtureElements: FIXTURE_ELEMENTS });
     expect(PET_SURFACES).toBe("[data-pet-surface]");
+    expect(PET_PROPS).toBe("[data-pet-prop]");
+    expect(scenes.filter((scene) => (scene.expected.fixtures ?? []).length > 0).length).toBeGreaterThanOrEqual(3);
   });
 
   for (const scene of scenes) {
@@ -154,11 +159,16 @@ describe("📡️ surface survey", () => {
       const surveyed = survey(document, {
         ...(scene.options?.surfaces === undefined ? {} : { surfaces: scene.options.surfaces }),
         ...(scene.options?.keepoutsBesidesDefaults === undefined ? {} : { keepouts: `${PET_KEEPOUTS}, ${scene.options.keepoutsBesidesDefaults}` }),
+        ...(scene.options?.walls === undefined ? {} : { walls: scene.options.walls }),
+        ...(scene.options?.props === undefined ? {} : { props: scene.options.props }),
+        ...(scene.pointer === undefined ? {} : { pointer: scene.pointer }),
         frame,
       });
       expect(surveyed).toEqual({
         ...scene.expected,
+        fixtures: (scene.expected.fixtures ?? []).map(({ element, ...fixture }) => ({ id: fixtureId(built.get(element)!), ...fixture })),
         surfaces: scene.expected.surfaces.map(({ element, ...edge }) => ({ id: element === "floor" ? FLOOR : surfaceId(built.get(element)!), ...edge })),
+        walls: scene.expected.walls.map(({ element, side, ...wall }) => ({ id: wallId(built.get(element)!, side), surface: surfaceId(built.get(element)!), side, ...wall })),
       });
       expect(document.body.outerHTML).toBe(before);
     });
@@ -210,10 +220,14 @@ describe("📡️ surface survey", () => {
     const after = place(document.createElement("p"), { left: 400, top: 500, width: 200, height: 40 });
     root.append(inside, words, folded, after);
     const floor = { id: FLOOR, x0: 0, x1: 1000, y: 700 };
-    expect(survey(root)).toEqual({ kind: "surveyed", width: 1000, height: 700, surfaces: [floor], keepouts: [] });
-    expect(survey(document)).toEqual({ kind: "surveyed", width: 1000, height: 700, surfaces: [floor], keepouts: [] });
+    expect(survey(root)).toEqual({ kind: "surveyed", width: 1000, height: 700, surfaces: [floor], keepouts: [], walls: [], fixtures: [] });
+    expect(survey(document)).toEqual({ kind: "surveyed", width: 1000, height: 700, surfaces: [floor], keepouts: [], walls: [], fixtures: [] });
     backstage.removeAttribute("inert");
-    const shown = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(inside), x0: 100, x1: 300, y: 300 }, floor], keepouts: [{ x: 396, y: 296, width: 208, height: 48 }, { x: 396, y: 496, width: 208, height: 48 }, { x: 96, y: 300, width: 208, height: 100 }] };
+    const walls = [
+      { id: wallId(inside, -1), surface: surfaceId(inside), side: -1, x: 100, y0: 300, y1: 400 },
+      { id: wallId(inside, 1), surface: surfaceId(inside), side: 1, x: 300, y0: 300, y1: 400 },
+    ];
+    const shown = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(inside), x0: 100, x1: 300, y: 300 }, floor], keepouts: [{ x: 396, y: 296, width: 208, height: 48 }, { x: 396, y: 496, width: 208, height: 48 }, { x: 96, y: 300, width: 208, height: 100 }], walls, fixtures: [] };
     expect(survey(root)).toEqual(shown);
     expect(survey(document)).toEqual(shown);
     folded.remove();
@@ -431,11 +445,7 @@ describe("📡️ surface survey", () => {
     root.close();
 
     const events: StageEvent[] = [];
-    const pets = [{ left: 90, top: 40, right: 130, bottom: 100 }];
-    const stop = watchPointer(window, (event) => events.push(event), {
-      origin: () => ({ x: 10, y: 20 }),
-      hit: (x, y) => pets.some((pet) => x >= pet.left && x <= pet.right && y >= pet.top && y <= pet.bottom),
-    });
+    const stop = watchPointer(window, (event) => events.push(event), { origin: () => ({ x: 10, y: 20 }) });
     const plain = document.createElement("div");
     const button = document.createElement("button");
     const inner = document.createElement("span");
@@ -448,23 +458,50 @@ describe("📡️ surface survey", () => {
     };
 
     send(plain, pointer("pointermove", { clientX: 310, clientY: 220 }));
-    expect(events).toEqual([{ kind: "pointed", x: 300, y: 200 }]);
+    send(inner, pointer("pointermove", { clientX: 320, clientY: 230 }));
+    expect(events).toEqual([
+      { kind: "pointed", x: 300, y: 200, over: "free" },
+      { kind: "pointed", x: 310, y: 210, over: "control" },
+    ]);
     events.length = 0;
 
     send(plain, pointer("pointerdown", { clientX: 120, clientY: 90, button: 0 }));
-    expect(events).toEqual([{ kind: "pointed", x: 110, y: 70 }, { kind: "poked", x: 110, y: 70 }]);
+    send(plain, pointer("pointermove", { clientX: 130, clientY: 95, buttons: 1 }));
+    send(plain, pointer("pointerup", { clientX: 130, clientY: 95, button: 0 }));
+    send(plain, pointer("pointermove", { clientX: 131, clientY: 95 }));
+    expect(events, "a press the pets did not take keeps the pointer busy until it ends").toEqual([
+      { kind: "pointed", x: 110, y: 70, over: "free" },
+      { kind: "pointed", x: 120, y: 75, over: "control" },
+      { kind: "pointed", x: 121, y: 75, over: "free" },
+    ]);
     events.length = 0;
 
     send(inner, pointer("pointerdown", { clientX: 120, clientY: 90, button: 0 }));
+    send(inner, pointer("pointerup", { clientX: 120, clientY: 90, button: 0 }));
     send(plain, pointer("pointerdown", { clientX: 120, clientY: 90, button: 2 }));
+    send(plain, pointer("pointermove", { clientX: 120, clientY: 90, buttons: 2 }));
     send(plain, pointer("pointerdown", { clientX: 120, clientY: 90, button: 0, isPrimary: false }));
+    send(plain, pointer("pointermove", { clientX: 120, clientY: 90, buttons: 1, isPrimary: false }));
     send(plain, pointer("pointerdown", { clientX: 500, clientY: 90, button: 0 }));
+    send(plain, pointer("pointermove", { clientX: 500, clientY: 91 }));
     expect(events).toEqual([
-      { kind: "pointed", x: 110, y: 70 },
-      { kind: "pointed", x: 110, y: 70 },
-      { kind: "pointed", x: 110, y: 70 },
-      { kind: "pointed", x: 490, y: 70 },
+      { kind: "pointed", x: 110, y: 70, over: "control" },
+      { kind: "pointed", x: 110, y: 70, over: "free" },
+      { kind: "pointed", x: 110, y: 70, over: "free" },
+      { kind: "pointed", x: 110, y: 70, over: "free" },
+      { kind: "pointed", x: 110, y: 70, over: "free" },
+      { kind: "pointed", x: 490, y: 70, over: "free" },
+      { kind: "pointed", x: 490, y: 71, over: "free" },
     ]);
+    events.length = 0;
+
+    const label = document.createElement("label");
+    const grip = document.createElement("span");
+    grip.setAttribute("data-grip", "");
+    document.body.append(label, grip);
+    send(label, pointer("pointermove", { clientX: 20, clientY: 30 }));
+    send(grip, pointer("pointermove", { clientX: 20, clientY: 30 }));
+    expect(events.map((event) => (event.kind === "pointed" ? event.over : event.kind)), "a label hands its press on to its control").toEqual(["control", "free"]);
     events.length = 0;
 
     send(plain, pointer("pointerleave", {}));
@@ -483,7 +520,7 @@ describe("📡️ surface survey", () => {
     send(plain, pointer("pointerup", { clientX: 120, clientY: 90, button: 0, pointerType: "touch" }));
     send(plain, pointer("pointerdown", { clientX: 500, clientY: 90, button: 0, pointerType: "touch" }));
     send(plain, pointer("pointercancel", { pointerType: "touch" }));
-    expect(events).toEqual([{ kind: "pointed", x: 110, y: 70 }, { kind: "poked", x: 110, y: 70 }, { kind: "unpointed" }, { kind: "pointed", x: 490, y: 70 }, { kind: "unpointed" }]);
+    expect(events).toEqual([{ kind: "pointed", x: 110, y: 70, over: "free" }, { kind: "unpointed" }, { kind: "pointed", x: 490, y: 70, over: "free" }, { kind: "unpointed" }]);
     events.length = 0;
 
     for (const event of sent) expect(event.defaultPrevented, event.type).toBe(false);
@@ -495,11 +532,104 @@ describe("📡️ surface survey", () => {
     expect(events).toEqual([]);
   });
 
-  it("pokes nothing and measures from the viewport's corner when the layer tells it nothing", () => {
+  it("measures from the viewport's corner when the layer tells it nothing", () => {
     const events: StageEvent[] = [];
     const stop = watchPointer(window, (event) => events.push(event));
     document.body.dispatchEvent(pointer("pointerdown", { clientX: 5, clientY: 6, button: 0 }));
-    expect(events).toEqual([{ kind: "pointed", x: 5, y: 6 }]);
+    expect(events).toEqual([{ kind: "pointed", x: 5, y: 6, over: "free" }]);
     stop();
+  });
+
+  it("asks the host which elements are controls at every event", () => {
+    expect(PET_PRESS_CONTROLS).toBe(`${PET_CONTROLS}, label`);
+    const events: StageEvent[] = [];
+    let controls = `${PET_PRESS_CONTROLS}, [data-grip]`;
+    const stop = watchPointer(window, (event) => events.push(event), { controls: () => controls });
+    const grip = document.createElement("span");
+    grip.setAttribute("data-grip", "");
+    const button = document.createElement("button");
+    document.body.append(grip, button);
+    grip.dispatchEvent(pointer("pointermove", { clientX: 5, clientY: 6 }));
+    controls = "[data-grip]";
+    button.dispatchEvent(pointer("pointermove", { clientX: 5, clientY: 6 }));
+    grip.dispatchEvent(pointer("pointermove", { clientX: 5, clientY: 6 }));
+    expect(events.map((event) => (event.kind === "pointed" ? event.over : event.kind))).toEqual(["control", "free", "control"]);
+    stop();
+  });
+
+  it("names the sides of a surface as walls of their own, once and for good, and leaves the sides of other elements to the host", () => {
+    viewport(1000, 700);
+    const card = place(document.createElement("article"), { left: 100, top: 300, width: 200, height: 100 });
+    card.setAttribute("data-pet-surface", "");
+    const rail = place(document.createElement("aside"), { left: 600, top: 100, width: 50, height: 400 });
+    rail.setAttribute("data-rail", "");
+    document.body.append(card, rail);
+    const walls = survey(document).walls;
+    expect(walls).toEqual([
+      { id: wallId(card, -1), surface: surfaceId(card), side: -1, x: 100, y0: 300, y1: 400 },
+      { id: wallId(card, 1), surface: surfaceId(card), side: 1, x: 300, y0: 300, y1: 400 },
+    ]);
+    expect(new Set([...walls.map((wall) => wall.id), surfaceId(card), surfaceId(rail)]).size).toBe(4);
+    expect(wallId(card, -1)).toBe(wallId(card, -1));
+    place(card, { left: 140, top: 320, width: 200, height: 100 });
+    expect(survey(document, { walls: "[data-rail]" }).walls.map((wall) => [wall.id, wall.x])).toEqual([
+      [wallId(card, -1), 140],
+      [wallId(card, 1), 340],
+      [wallId(rail, -1), 600],
+      [wallId(rail, 1), 650],
+    ]);
+    expect(survey(document, { walls: "[data-rail]" }).surfaces.map((surface) => surface.id)).toEqual([surfaceId(card), FLOOR]);
+  });
+
+  it("names every fixture once and for good, never sees one inside the stage's own element and reads nothing but its key", () => {
+    viewport(1000, 700);
+    const row = place(document.createElement("li"), { left: 100, top: 300, width: 400, height: 30 });
+    row.setAttribute("data-pet-prop", "heating/u-values");
+    row.setAttribute("data-correct", "true");
+    row.setAttribute("data-value", "0.24");
+    const layer = place(document.createElement("div"), { left: 0, top: 0, width: 1000, height: 700 });
+    const inside = place(document.createElement("div"), { left: 600, top: 300, width: 200, height: 30 });
+    inside.setAttribute("data-pet-prop", "heating");
+    layer.append(inside);
+    document.body.append(row, layer);
+    const fixture = { id: fixtureId(row), key: "heating/u-values", x: 100, y: 300, width: 400, height: 30 };
+    expect(survey(document, { frame: layer }).fixtures).toEqual([fixture]);
+    expect(survey(document).fixtures.map((each) => each.id)).toEqual([fixtureId(row), fixtureId(inside)]);
+    place(row, { left: 120, top: 340, width: 400, height: 30 });
+    expect(survey(document, { frame: layer, pointer: null }).fixtures).toEqual([{ ...fixture, x: 120, y: 340 }]);
+    expect(survey(document, { frame: layer, pointer: { x: 520, y: 370 } }).fixtures).toEqual([]);
+    expect(survey(document, { frame: layer, props: "[data-other]" }).fixtures).toEqual([]);
+    expect(fixtureId(row)).not.toBe(surfaceId(row));
+    const reads = vi.spyOn(Element.prototype, "getAttribute");
+    const dataset = vi.spyOn(HTMLElement.prototype, "dataset", "get");
+    survey(document, { frame: layer });
+    expect(reads.mock.calls.map(([name]) => name)).toContain("data-pet-prop");
+    expect(reads.mock.calls.map(([name]) => name).filter((name) => name === "data-correct" || name === "data-value")).toEqual([]);
+    expect(dataset).not.toHaveBeenCalled();
+  });
+
+  it("never looks into the stage's own element, and asks every element it walks once whether it is anything at all", () => {
+    viewport(1000, 700);
+    const outside = card({ left: 100, top: 300, width: 200, height: 100 });
+    const plain = place(document.createElement("div"), { left: 600, top: 100, width: 100, height: 100 });
+    const layer = place(document.createElement("div"), { left: 0, top: 0, width: 1000, height: 700 });
+    const drawn = place(document.createElement("article"), { left: 500, top: 300, width: 200, height: 100 });
+    drawn.setAttribute("data-pet-surface", "");
+    drawn.append(place(document.createElement("p"), { left: 510, top: 310, width: 100, height: 20 }), place(document.createElement("button"), { left: 510, top: 340, width: 100, height: 20 }));
+    layer.append(drawn);
+    document.body.append(plain, layer);
+    const page = { kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: surfaceId(outside), x0: 100, x1: 300, y: 300 }, { id: FLOOR, x0: 0, x1: 1000, y: 700 }], keepouts: [{ x: 96, y: 300, width: 208, height: 100 }], walls: [{ id: wallId(outside, -1), surface: surfaceId(outside), side: -1, x: 100, y0: 300, y1: 400 }, { id: wallId(outside, 1), surface: surfaceId(outside), side: 1, x: 300, y0: 300, y1: 400 }], fixtures: [] };
+    expect(survey(document, { frame: layer, walls: "article" })).toEqual(page);
+    expect(survey(document).surfaces.map((surface) => surface.id)).toEqual([surfaceId(outside), surfaceId(drawn), FLOOR]);
+    const backstage = document.createElement("section");
+    backstage.setAttribute("inert", "");
+    document.body.append(backstage);
+    const asked = vi.spyOn(Element.prototype, "matches");
+    expect(survey(document, { frame: layer, walls: "article" })).toEqual(page);
+    const askedOf = (element: Element): number => asked.mock.contexts.filter((context) => context === element).length;
+    expect([layer, drawn, ...drawn.children].map(askedOf)).toEqual([0, 0, 0, 0]);
+    expect(askedOf(plain)).toBe(1);
+    expect(askedOf(outside)).toBeGreaterThan(1);
+    expect(survey(layer, { frame: layer })).toEqual({ kind: "surveyed", width: 1000, height: 700, surfaces: [{ id: FLOOR, x0: 0, x1: 1000, y: 700 }], keepouts: [], walls: [], fixtures: [] });
   });
 });

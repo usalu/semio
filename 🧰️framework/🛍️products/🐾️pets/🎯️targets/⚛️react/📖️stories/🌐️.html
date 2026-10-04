@@ -9,8 +9,9 @@
     <div id="root"></div>
     <script type="module">
       import { origin, source } from "pets-stories:menagerie";
+      import { director } from "pets-stories:director";
       import { mountStories } from "./🟦️.tsx";
-      mountStories(document.getElementById("root"), source, origin);
+      mountStories(document.getElementById("root"), source, origin, director);
     </script>
   </body>
 </html>

@@ -12,7 +12,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
           "runtime": "bun --version"
@@ -40,7 +40,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
           "runtime": "bun --version"
@@ -62,7 +62,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
           "runtime": "bun --version"
@@ -288,7 +288,7 @@
           "runtime": "node -p \"process.platform.concat(process.arch)\""
         },
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
         {
           "runtime": "bun --version"
@@ -317,6 +317,28 @@
         "command": "bun ./📜️script.ts test viz fixtures",
         "forwardAllArgs": true
       }
+    },
+    "test-native-grammar": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test native-grammar",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ]
+    },
+    "generate-font-metrics": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
+      },
+      "cache": false
     }
   },
   "metadata": {

@@ -9,6 +9,8 @@
  * @see https://html.spec.whatwg.org/multipage/webstorage.html#the-storage-event
  */
 
+import { CHALLENGES, type CatalogView, type Challenge, type Id, type LearnerView, type RunView } from "@semio-tech/quiz";
+
 //#region 🗄️Area
 /** 🗄️ An origin-wide string key/value area every tab shares, with key enumeration and notification of the changes
  * other tabs make — the owned seam over `localStorage` and its `storage` event. `watch` reports the changed key, or
@@ -184,4 +186,35 @@ export function localStore(area: StorageArea, tenant: string): LocalStore {
 export function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+/** 🧗️ Whether a stored `value` is one of the {@link CHALLENGES}. */
+export function isChallenge(value: unknown): value is Challenge {
+  return (CHALLENGES as readonly unknown[]).includes(value);
+}
 //#endregion 💾️Store
+
+//#region 🧾️Shapes
+/** 📚️ Whether `value` — stored, or read from the proctor — has the shape of a catalog view this client renders. */
+export function isCatalogView(value: unknown): value is CatalogView {
+  return isRecord(value) && typeof value.id === "string" && Array.isArray(value.quizzes) && Array.isArray(value.badges);
+}
+
+function isBest(value: unknown): boolean {
+  return isRecord(value) && isChallenge(value.challenge) && typeof value.score === "number" && typeof value.points === "number";
+}
+
+/** 🧑‍🎓️ Whether `value` has the shape of a learner view of this contract: every run listed with its challenge and every
+ * best run with its challenge, score and points. */
+export function isLearnerView(value: unknown): value is LearnerView {
+  if (!isRecord(value) || typeof value.learner !== "string" || !Array.isArray(value.runs) || !Array.isArray(value.badges) || !isRecord(value.best)) return false;
+  return value.runs.every((summary) => isRecord(summary) && typeof summary.run === "string" && isChallenge(summary.challenge)) && Object.values(value.best).every(isBest);
+}
+
+/** 🏃️ Whether `value` has the shape of a run view of this contract — of `run` when it names one: a sheet at one of the
+ * challenges with its tasks, the answers and a status. */
+export function isRunView(value: unknown, run?: Id): value is RunView {
+  return isRecord(value) && typeof value.run === "string" && (run === undefined || value.run === run) && typeof value.learner === "string" && isRecord(value.sheet) && isChallenge(value.sheet.challenge) && Array.isArray(value.sheet.tasks) && isRecord(value.answers) && typeof value.status === "string";
+}
+
+export { isTimestamp } from "@semio-tech/quiz";
+//#endregion 🧾️Shapes

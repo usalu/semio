@@ -45,5 +45,31 @@
         }
       }
     }
+  },
+  "$defs": {
+    "DrawingTextPlacement": {
+      "type": "object",
+      "properties": {
+        "anchor": {
+          "enum": [
+            "start",
+            "middle",
+            "end"
+          ]
+        },
+        "baseline": {
+          "enum": [
+            "alphabetic",
+            "middle",
+            "top",
+            "bottom"
+          ]
+        },
+        "font": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
   }
 }

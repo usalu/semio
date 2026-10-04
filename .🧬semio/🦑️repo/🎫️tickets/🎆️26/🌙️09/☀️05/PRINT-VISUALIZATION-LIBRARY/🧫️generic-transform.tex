@@ -1,0 +1,319 @@
+%region 🔖️CanonicalTransformGrammar
+\tl_new:N \l_semio_viz_trg_kind_tl
+\tl_new:N \l_semio_viz_trg_column_tl
+\clist_new:N \l_semio_viz_trg_columns_clist
+\clist_new:N \l_semio_viz_trg_groupby_clist
+\clist_new:N \l_semio_viz_trg_keys_clist
+\tl_new:N \l_semio_viz_trg_as_tl
+\tl_new:N \l_semio_viz_trg_operation_tl
+\tl_new:N \l_semio_viz_trg_operator_tl
+\tl_new:N \l_semio_viz_trg_index_tl
+\tl_new:N \l_semio_viz_trg_key_tl
+\tl_new:N \l_semio_viz_trg_value_tl
+\tl_new:N \l_semio_viz_trg_table_tl
+\tl_new:N \l_semio_viz_trg_left_tl
+\tl_new:N \l_semio_viz_trg_right_tl
+\tl_new:N \l_semio_viz_trg_prefix_tl
+\tl_new:N \l_semio_viz_trg_mode_tl
+\tl_new:N \l_semio_viz_trg_min_tl
+\tl_new:N \l_semio_viz_trg_max_tl
+\tl_new:N \l_semio_viz_trg_x_tl
+\tl_new:N \l_semio_viz_trg_y_tl
+\tl_new:N \l_semio_viz_trg_method_tl
+\int_new:N \l_semio_viz_trg_size_int
+\bool_new:N \l_semio_viz_trg_centred_bool
+\bool_new:N \l_semio_viz_trg_keep_bool
+\prop_new:N \l_semio_viz_trg_groups_prop
+\prop_new:N \l_semio_viz_trg_override_prop
+\prop_new:N \l_semio_viz_trg_result_prop
+\seq_new:N \l_semio_viz_trg_groups_seq
+\seq_new:N \l_semio_viz_trg_source_rows_seq
+\clist_new:N \l_semio_viz_trg_source_cols_clist
+\clist_new:N \l_semio_viz_trg_bucket_clist
+\tl_new:N \l_semio_viz_trg_bucket_tl
+\tl_new:N \l_semio_viz_trg_group_tl
+\tl_new:N \l_semio_viz_trg_row_tl
+\tl_new:N \l_semio_viz_trg_cell_tl
+\tl_new:N \l_semio_viz_trg_a_tl
+\tl_new:N \l_semio_viz_trg_b_tl
+\tl_new:N \l_semio_viz_trg_out_tl
+\fp_new:N \l_semio_viz_trg_delta_fp
+\int_new:N \l_semio_viz_trg_row_int
+\int_new:N \l_semio_viz_trg_group_int
+\int_new:N \l_semio_viz_trg_lo_int
+\int_new:N \l_semio_viz_trg_hi_int
+\cs_generate_variant:Nn \prop_put:Nnn {NVx,NVn,Nnx,NVf}
+\cs_generate_variant:Nn \prop_get:NnN {NVN}
+\cs_generate_variant:Nn \semio_viz_tr_aggregate:nN {VN}
+\keys_define:nn {semio/viz/transform} {
+  kind .tl_set:N=\l_semio_viz_trg_kind_tl,
+  column .tl_set:N=\l_semio_viz_trg_column_tl,
+  columns .clist_set:N=\l_semio_viz_trg_columns_clist,
+  as .tl_set:N=\l_semio_viz_trg_as_tl,
+  groupby .clist_set:N=\l_semio_viz_trg_groupby_clist,
+  operation .tl_set:N=\l_semio_viz_trg_operation_tl,
+  operator .tl_set:N=\l_semio_viz_trg_operator_tl,
+  index .tl_set:N=\l_semio_viz_trg_index_tl,
+  key .tl_set:N=\l_semio_viz_trg_key_tl,
+  value .tl_set:N=\l_semio_viz_trg_value_tl,
+  table .tl_set:N=\l_semio_viz_trg_table_tl,
+  left .tl_set:N=\l_semio_viz_trg_left_tl,
+  right .tl_set:N=\l_semio_viz_trg_right_tl,
+  prefix .tl_set:N=\l_semio_viz_trg_prefix_tl,
+  size .int_set:N=\l_semio_viz_trg_size_int,
+  centred .bool_set:N=\l_semio_viz_trg_centred_bool,
+  mode .tl_set:N=\l_semio_viz_trg_mode_tl,
+  keys .clist_set:N=\l_semio_viz_trg_keys_clist,
+  min .tl_set:N=\l_semio_viz_trg_min_tl,
+  max .tl_set:N=\l_semio_viz_trg_max_tl,
+  x .tl_set:N=\l_semio_viz_trg_x_tl,
+  y .tl_set:N=\l_semio_viz_trg_y_tl,
+  method .tl_set:N=\l_semio_viz_trg_method_tl
+}
+% 🧼 Resets the schema transform keys independently of the catalogue shorthand keys.
+\cs_new_protected:Npn \semio_viz_trg_reset: {
+  \tl_clear:N \l_semio_viz_trg_kind_tl
+  \tl_set:Nn \l_semio_viz_trg_column_tl {value}
+  \clist_clear:N \l_semio_viz_trg_columns_clist
+  \clist_clear:N \l_semio_viz_trg_groupby_clist
+  \clist_clear:N \l_semio_viz_trg_keys_clist
+  \tl_clear:N \l_semio_viz_trg_as_tl
+  \tl_clear:N \l_semio_viz_trg_operation_tl
+  \tl_set:Nn \l_semio_viz_trg_operator_tl {eq}
+  \tl_set:Nn \l_semio_viz_trg_index_tl {id}
+  \tl_set:Nn \l_semio_viz_trg_key_tl {key}
+  \tl_set:Nn \l_semio_viz_trg_value_tl {value}
+  \tl_clear:N \l_semio_viz_trg_table_tl
+  \tl_set:Nn \l_semio_viz_trg_left_tl {id}
+  \tl_set:Nn \l_semio_viz_trg_right_tl {id}
+  \tl_clear:N \l_semio_viz_trg_prefix_tl
+  \tl_set:Nn \l_semio_viz_trg_mode_tl {sum}
+  \tl_clear:N \l_semio_viz_trg_min_tl \tl_clear:N \l_semio_viz_trg_max_tl
+  \tl_set:Nn \l_semio_viz_trg_x_tl {x} \tl_set:Nn \l_semio_viz_trg_y_tl {y}
+  \tl_set:Nn \l_semio_viz_trg_method_tl {linear}
+  \int_set:Nn \l_semio_viz_trg_size_int {3}
+  \bool_set_false:N \l_semio_viz_trg_centred_bool
+}
+% 🛡️ Requires a working-table column instead of accepting an absent cell.
+\cs_new_protected:Npn \semio_viz_trg_require:n #1 {
+  \semio_viz_tr_colindex:nN {#1}\l_semio_viz_tr_col_int
+  \int_compare:nNnT \l_semio_viz_tr_col_int = {0}{\msg_error:nnn{semio-viz}{unknown-column}{#1}}
+}
+\cs_generate_variant:Nn \semio_viz_trg_require:n {V}
+% 🧺 Groups original row indices by all requested key columns in first appearance order.
+\cs_new_protected:Npn \semio_viz_trg_groups: {
+  \prop_clear:N \l_semio_viz_trg_groups_prop \seq_clear:N \l_semio_viz_trg_groups_seq
+  \clist_map_inline:Nn \l_semio_viz_trg_groupby_clist {\semio_viz_trg_require:n{##1}}
+  \int_step_inline:nn {\seq_count:N\l_semio_viz_tr_rows_seq} {
+    \tl_set:Nx \l_semio_viz_trg_row_tl {\seq_item:Nn\l_semio_viz_tr_rows_seq{##1}}
+    \tl_clear:N \l_semio_viz_trg_group_tl
+    \clist_map_inline:Nn \l_semio_viz_trg_groupby_clist {\semio_viz_tr_get:VnN\l_semio_viz_trg_row_tl{####1}\l_semio_viz_trg_cell_tl \tl_put_right:Nx\l_semio_viz_trg_group_tl{{\exp_not:V\l_semio_viz_trg_cell_tl}}}
+    \prop_get:NVNTF \l_semio_viz_trg_groups_prop \l_semio_viz_trg_group_tl \l_semio_viz_trg_bucket_tl {\tl_put_right:Nn\l_semio_viz_trg_bucket_tl{,##1}} {\seq_put_right:NV\l_semio_viz_trg_groups_seq\l_semio_viz_trg_group_tl \tl_set:Nn\l_semio_viz_trg_bucket_tl{##1}}
+    \prop_put:NVV \l_semio_viz_trg_groups_prop \l_semio_viz_trg_group_tl \l_semio_viz_trg_bucket_tl
+  }
+}
+% 📤 Emits a source row through the output columns, replacing only explicit override cells.
+\cs_new_protected:Npn \semio_viz_trg_put: {
+  \seq_clear:N \l_semio_viz_tr_build_seq
+  \clist_map_inline:Nn \l_semio_viz_tr_out_cols_clist {
+    \prop_get:NnNTF\l_semio_viz_trg_override_prop{##1}\l_semio_viz_trg_cell_tl {} {\semio_viz_tr_get:VnN\l_semio_viz_trg_row_tl{##1}\l_semio_viz_trg_cell_tl}
+    \seq_put_right:NV\l_semio_viz_tr_build_seq\l_semio_viz_trg_cell_tl
+  }
+  \semio_viz_tr_put:N\l_semio_viz_tr_build_seq
+}
+% 🎯 Sets an output cell and adds its column once when absent.
+\cs_new_protected:Npn \semio_viz_trg_set:nn #1#2 {
+  \clist_if_in:NnF\l_semio_viz_tr_out_cols_clist{#1}{\clist_put_right:Nn\l_semio_viz_tr_out_cols_clist{#1}}
+  \prop_put:Nnn\l_semio_viz_trg_override_prop{#1}{#2}
+}
+\cs_generate_variant:Nn \semio_viz_trg_set:nn {Vn,VV,Vx,nV,nx}
+% ⚖️ Compares numeric cells numerically and categorical cells lexically.
+\cs_new_protected:Npn \semio_viz_trg_compare:NN #1#2 {
+  \fp_zero:N\l_semio_viz_trg_delta_fp
+  \str_if_eq:VVF #1#2 {
+    \regex_match:nVTF{\A[-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?\Z}#1 {
+      \regex_match:nVTF{\A[-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?\Z}#2 {\fp_set:Nn\l_semio_viz_trg_delta_fp{#1<#2?-1:1}} {\fp_set:Nn\l_semio_viz_trg_delta_fp{\str_compare_p:eNe{#1}<{#2}? -1:1}}
+    } {\fp_set:Nn\l_semio_viz_trg_delta_fp{\str_compare_p:eNe{#1}<{#2}? -1:1}}
+  }
+}
+% 🧮 Collects values for a bucket of original row indices.
+\cs_new_protected:Npn \semio_viz_trg_values: {
+  \seq_clear:N\l_semio_viz_tr_values_seq
+  \clist_map_inline:Nn\l_semio_viz_trg_bucket_clist{\tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{##1}}\semio_viz_tr_get:VVN\l_semio_viz_trg_row_tl\l_semio_viz_trg_column_tl\l_semio_viz_trg_cell_tl\seq_put_right:NV\l_semio_viz_tr_values_seq\l_semio_viz_trg_cell_tl}
+}
+% 🔢 Extends the owned aggregation primitives with sample variance and deviation.
+\cs_new_protected:Npn \semio_viz_trg_aggregate: {
+  \str_case:VnF\l_semio_viz_trg_operation_tl {
+    {variance}{\semio_viz_tr_stat_variance:NN\l_semio_viz_tr_values_seq\l_semio_viz_tr_value_fp}
+    {deviation}{\semio_viz_tr_stat_deviation:NN\l_semio_viz_tr_values_seq\l_semio_viz_tr_value_fp}
+  }{\semio_viz_tr_aggregate:VN\l_semio_viz_trg_operation_tl\l_semio_viz_tr_value_fp}
+}
+% 📏 Applies optional authored bounds after an observed numeric extent is known.
+\cs_new_protected:Npn \semio_viz_trg_domain: {
+  \tl_if_empty:NF\l_semio_viz_trg_min_tl{\fp_set:Nn\l_semio_viz_tr_xlo_fp{\l_semio_viz_trg_min_tl}}
+  \tl_if_empty:NF\l_semio_viz_trg_max_tl{\fp_set:Nn\l_semio_viz_tr_xhi_fp{\l_semio_viz_trg_max_tl}}
+}
+% 🔍 Applies structured predicates without evaluating user expressions.
+\cs_new_protected:Npn \semio_viz_trg_filter: {
+  \semio_viz_trg_require:V\l_semio_viz_trg_column_tl
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn\l_semio_viz_tr_rows_seq {
+    \semio_viz_tr_get:nVN{##1}\l_semio_viz_trg_column_tl\l_semio_viz_trg_a_tl
+    \tl_set_eq:NN\l_semio_viz_trg_b_tl\l_semio_viz_trg_value_tl
+    \semio_viz_trg_compare:NN\l_semio_viz_trg_a_tl\l_semio_viz_trg_b_tl
+    \bool_set_false:N\l_semio_viz_trg_keep_bool
+    \str_case:VnF\l_semio_viz_trg_operator_tl {
+      {eq}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp=0}}}
+      {ne}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp!=0}}}
+      {lt}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp<0}}}
+      {lte}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp<=0}}}
+      {gt}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp>0}}}
+      {gte}{\bool_set:Nn\l_semio_viz_trg_keep_bool{\fp_compare_p:n{\l_semio_viz_trg_delta_fp>=0}}}
+      {valid}{\tl_if_empty:NF\l_semio_viz_trg_a_tl{\bool_set_true:N\l_semio_viz_trg_keep_bool}}
+      {in}{\clist_set:NV\l_semio_viz_trg_bucket_clist\l_semio_viz_trg_value_tl\clist_if_in:NVTF\l_semio_viz_trg_bucket_clist\l_semio_viz_trg_a_tl{\bool_set_true:N\l_semio_viz_trg_keep_bool}{}}
+    }{\msg_error:nnn{semio-viz}{unknown-transform-option}{operator}}
+    \bool_if:NT\l_semio_viz_trg_keep_bool{\seq_put_right:Nn\l_semio_viz_tr_out_rows_seq{##1}}
+  }
+  \seq_set_eq:NN\l_semio_viz_tr_rows_seq\l_semio_viz_tr_out_rows_seq
+}
+% 🔃 Stable multi-column ordering shares the numeric and categorical comparison contract.
+\cs_new_protected:Npn \semio_viz_trg_sort: {
+  \clist_if_empty:NT\l_semio_viz_trg_columns_clist{\clist_put_right:NV\l_semio_viz_trg_columns_clist\l_semio_viz_trg_column_tl}
+  \clist_map_inline:Nn\l_semio_viz_trg_columns_clist{\semio_viz_trg_require:n{##1}}
+  \str_if_eq:VnT\l_semio_viz_tr_order_tl{descending}{\bool_set_true:N\l_semio_viz_tr_descending_bool}
+  \seq_sort:Nn\l_semio_viz_tr_rows_seq {
+    \fp_zero:N\l_semio_viz_trg_delta_fp
+    \clist_map_inline:Nn\l_semio_viz_trg_columns_clist {
+      \fp_compare:nNnT\l_semio_viz_trg_delta_fp={0}{\semio_viz_tr_get:nnN{##1}{####1}\l_semio_viz_trg_a_tl\semio_viz_tr_get:nnN{##2}{####1}\l_semio_viz_trg_b_tl\semio_viz_trg_compare:NN\l_semio_viz_trg_a_tl\l_semio_viz_trg_b_tl}
+    }
+    \bool_if:NT\l_semio_viz_tr_descending_bool{\fp_set:Nn\l_semio_viz_trg_delta_fp{-\l_semio_viz_trg_delta_fp}}
+    \fp_compare:nNnTF\l_semio_viz_trg_delta_fp>{0}{\sort_return_swapped:}{\sort_return_same:}
+  }
+}
+% 🧺 Emits grouped rows or grouped summaries with all grouping columns retained.
+\cs_new_protected:Npn \semio_viz_trg_group: {
+  \str_if_eq:VnT\l_semio_viz_trg_kind_tl{group}{\clist_set_eq:NN\l_semio_viz_trg_groupby_clist\l_semio_viz_trg_columns_clist\clist_if_empty:NT\l_semio_viz_trg_groupby_clist{\clist_put_right:NV\l_semio_viz_trg_groupby_clist\l_semio_viz_trg_column_tl}}
+  \semio_viz_trg_groups:
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \str_if_eq:VnTF\l_semio_viz_trg_kind_tl{group}{\clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist\tl_if_empty:NT\l_semio_viz_trg_as_tl{\tl_set:Nn\l_semio_viz_trg_as_tl{group}}}{\clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_trg_groupby_clist\tl_if_empty:NT\l_semio_viz_trg_as_tl{\tl_set_eq:NN\l_semio_viz_trg_as_tl\l_semio_viz_trg_column_tl}}
+  \int_zero:N\l_semio_viz_trg_group_int
+  \seq_map_inline:Nn\l_semio_viz_trg_groups_seq {
+    \prop_get:NnN\l_semio_viz_trg_groups_prop{##1}\l_semio_viz_trg_bucket_tl \clist_set:NV\l_semio_viz_trg_bucket_clist\l_semio_viz_trg_bucket_tl
+    \str_if_eq:VnTF\l_semio_viz_trg_kind_tl{group}{
+      \clist_map_inline:Nn\l_semio_viz_trg_bucket_clist{\tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{####1}}\prop_clear:N\l_semio_viz_trg_override_prop\semio_viz_trg_set:Vx\l_semio_viz_trg_as_tl{\int_use:N\l_semio_viz_trg_group_int}\semio_viz_trg_put:}
+    }{\semio_viz_trg_values:\semio_viz_trg_aggregate:\tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{\clist_item:Nn\l_semio_viz_trg_bucket_clist{1}}}\prop_clear:N\l_semio_viz_trg_override_prop\semio_viz_trg_set:Vx\l_semio_viz_trg_as_tl{\fp_to_decimal:N\l_semio_viz_tr_value_fp}\semio_viz_trg_put:}
+    \int_incr:N\l_semio_viz_trg_group_int
+  }
+  \semio_viz_tr_commit:
+}
+% 🔽 Folds wide columns while preserving every non-folded cell.
+\cs_new_protected:Npn \semio_viz_trg_fold: {
+  \clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist
+  \clist_map_inline:Nn\l_semio_viz_trg_columns_clist{\semio_viz_trg_require:n{##1}\clist_remove_all:Nn\l_semio_viz_tr_out_cols_clist{##1}}
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn\l_semio_viz_tr_rows_seq{\tl_set:Nn\l_semio_viz_trg_row_tl{##1}\clist_map_inline:Nn\l_semio_viz_trg_columns_clist{\semio_viz_tr_get:VnN\l_semio_viz_trg_row_tl{####1}\l_semio_viz_trg_a_tl\prop_clear:N\l_semio_viz_trg_override_prop\semio_viz_trg_set:Vn\l_semio_viz_trg_key_tl{####1}\semio_viz_trg_set:VV\l_semio_viz_trg_value_tl\l_semio_viz_trg_a_tl\semio_viz_trg_put:}}
+  \semio_viz_tr_commit:
+}
+% 🔄 Pivots by aggregation so duplicate keys contribute rather than disappear.
+\cs_new_protected:Npn \semio_viz_trg_pivot: {
+  \semio_viz_tr_distinct:VN\l_semio_viz_trg_index_tl\l_semio_viz_tr_groups_seq
+  \semio_viz_tr_distinct:VN\l_semio_viz_trg_key_tl\l_semio_viz_tr_keys_seq
+  \clist_set:Nx\l_semio_viz_tr_out_cols_clist{\l_semio_viz_trg_index_tl,\seq_use:Nn\l_semio_viz_tr_keys_seq{,}}
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn\l_semio_viz_tr_groups_seq{
+    \tl_set:Nn\l_semio_viz_trg_group_tl{##1}\seq_clear:N\l_semio_viz_tr_build_seq\seq_put_right:Nn\l_semio_viz_tr_build_seq{##1}
+    \seq_map_inline:Nn\l_semio_viz_tr_keys_seq{
+      \seq_clear:N\l_semio_viz_tr_values_seq
+      \seq_map_inline:Nn\l_semio_viz_tr_rows_seq{\semio_viz_tr_get:nVN{########1}\l_semio_viz_trg_index_tl\l_semio_viz_trg_a_tl\str_if_eq:VVT\l_semio_viz_trg_a_tl\l_semio_viz_trg_group_tl{\semio_viz_tr_get:nVN{########1}\l_semio_viz_trg_key_tl\l_semio_viz_trg_a_tl\str_if_eq:VnT\l_semio_viz_trg_a_tl{####1}{\semio_viz_tr_get:nVN{########1}\l_semio_viz_trg_value_tl\l_semio_viz_trg_a_tl\seq_put_right:NV\l_semio_viz_tr_values_seq\l_semio_viz_trg_a_tl}}}
+      \semio_viz_trg_aggregate:\seq_put_right:Nx\l_semio_viz_tr_build_seq{\fp_to_decimal:N\l_semio_viz_tr_value_fp}
+    }\semio_viz_tr_put:N\l_semio_viz_tr_build_seq
+  }\semio_viz_tr_commit:
+}
+% 🔗 Joins equal keys, omitting the right key and applying explicit right-column prefixes.
+\cs_new_protected:Npn \semio_viz_trg_join: {
+  \exp_args:NV\semio_viz_table_require:n\l_semio_viz_trg_table_tl
+  \clist_set_eq:Nc\l_semio_viz_tr_other_cols_clist{g_semio_viz_table_\l_semio_viz_tab_tl _cols_clist}\seq_set_eq:Nc\l_semio_viz_tr_other_rows_seq{g_semio_viz_table_\l_semio_viz_tab_tl _rows_seq}
+  \clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist\clist_set_eq:NN\l_semio_viz_tr_keep_cols_clist\l_semio_viz_tr_cols_clist\seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \clist_map_inline:Nn\l_semio_viz_tr_other_cols_clist{\str_if_eq:VnF\l_semio_viz_trg_right_tl{##1}{\tl_set:Nx\l_semio_viz_trg_out_tl{\l_semio_viz_trg_prefix_tl##1}\clist_if_in:NVF\l_semio_viz_tr_out_cols_clist\l_semio_viz_trg_out_tl{\clist_put_right:NV\l_semio_viz_tr_out_cols_clist\l_semio_viz_trg_out_tl}}}
+  \seq_map_inline:Nn\l_semio_viz_tr_rows_seq{
+    \tl_set:Nn\l_semio_viz_trg_row_tl{##1}\semio_viz_tr_get:nVN{##1}\l_semio_viz_trg_left_tl\l_semio_viz_trg_a_tl
+    \seq_map_inline:Nn\l_semio_viz_tr_other_rows_seq{
+      \clist_set_eq:NN\l_semio_viz_tr_cols_clist\l_semio_viz_tr_other_cols_clist\semio_viz_tr_get:nVN{####1}\l_semio_viz_trg_right_tl\l_semio_viz_trg_b_tl
+      \str_if_eq:VVT\l_semio_viz_trg_a_tl\l_semio_viz_trg_b_tl{\prop_clear:N\l_semio_viz_trg_override_prop\clist_map_inline:Nn\l_semio_viz_tr_other_cols_clist{\str_if_eq:VnF\l_semio_viz_trg_right_tl{########1}{\semio_viz_tr_get:nnN{####1}{########1}\l_semio_viz_trg_cell_tl\tl_set:Nx\l_semio_viz_trg_out_tl{\l_semio_viz_trg_prefix_tl########1}\prop_put:NVV\l_semio_viz_trg_override_prop\l_semio_viz_trg_out_tl\l_semio_viz_trg_cell_tl}}\clist_set_eq:NN\l_semio_viz_tr_cols_clist\l_semio_viz_tr_keep_cols_clist\semio_viz_trg_put:}
+      \clist_set_eq:NN\l_semio_viz_tr_cols_clist\l_semio_viz_tr_keep_cols_clist
+    }
+  }\semio_viz_tr_commit:
+}
+\seq_new:N\l_semio_viz_trg_source_values_seq
+% 🪟 Computes grouped windows and normalization while preserving original row order.
+\cs_new_protected:Npn \semio_viz_trg_window: {
+  \semio_viz_trg_require:V\l_semio_viz_trg_column_tl\semio_viz_trg_groups:\prop_clear:N\l_semio_viz_trg_result_prop
+  \tl_if_empty:NT\l_semio_viz_trg_as_tl{\tl_set_eq:NN\l_semio_viz_trg_as_tl\l_semio_viz_trg_column_tl}
+  \seq_map_inline:Nn\l_semio_viz_trg_groups_seq{
+    \prop_get:NnN\l_semio_viz_trg_groups_prop{##1}\l_semio_viz_trg_bucket_tl\clist_set:NV\l_semio_viz_trg_bucket_clist\l_semio_viz_trg_bucket_tl\semio_viz_trg_values:\seq_set_eq:NN\l_semio_viz_trg_source_values_seq\l_semio_viz_tr_values_seq
+    \semio_viz_tr_sum:N\l_semio_viz_tr_total_fp\semio_viz_tr_stat_min:NN\l_semio_viz_tr_values_seq\l_semio_viz_tr_xlo_fp\semio_viz_tr_stat_max:NN\l_semio_viz_tr_values_seq\l_semio_viz_tr_xhi_fp
+    \fp_zero:N\l_semio_viz_tr_pos_fp
+    \int_step_inline:nn{\clist_count:N\l_semio_viz_trg_bucket_clist}{
+      \str_case:Vn\l_semio_viz_trg_kind_tl{
+        {cumulative}{\fp_add:Nn\l_semio_viz_tr_pos_fp{\seq_item:Nn\l_semio_viz_trg_source_values_seq{####1}}\fp_set_eq:NN\l_semio_viz_tr_value_fp\l_semio_viz_tr_pos_fp}
+        {normalize}{\str_if_eq:VnTF\l_semio_viz_trg_mode_tl{extent}{\fp_set:Nn\l_semio_viz_tr_value_fp{\l_semio_viz_tr_xhi_fp=\l_semio_viz_tr_xlo_fp?0:(\seq_item:Nn\l_semio_viz_trg_source_values_seq{####1}-\l_semio_viz_tr_xlo_fp)/(\l_semio_viz_tr_xhi_fp-\l_semio_viz_tr_xlo_fp)}}{\fp_set:Nn\l_semio_viz_tr_value_fp{\l_semio_viz_tr_total_fp=0?0:\seq_item:Nn\l_semio_viz_trg_source_values_seq{####1}/\l_semio_viz_tr_total_fp}}}
+        {window}{\int_set:Nn\l_semio_viz_trg_lo_int{\int_max:nn{1}{####1-\l_semio_viz_trg_size_int+1+\bool_if:NTF\l_semio_viz_trg_centred_bool{\int_div_truncate:nn{\l_semio_viz_trg_size_int}{2}}{0}}}\int_set:Nn\l_semio_viz_trg_hi_int{\int_min:nn{\seq_count:N\l_semio_viz_trg_source_values_seq}{####1+\bool_if:NTF\l_semio_viz_trg_centred_bool{\int_div_truncate:nn{\l_semio_viz_trg_size_int}{2}}{0}}}\seq_clear:N\l_semio_viz_tr_values_seq\int_step_inline:nnn{\l_semio_viz_trg_lo_int}{\l_semio_viz_trg_hi_int}{\seq_put_right:Nx\l_semio_viz_tr_values_seq{\seq_item:Nn\l_semio_viz_trg_source_values_seq{########1}}}\semio_viz_trg_aggregate:}
+      }
+      \tl_set:Nx\l_semio_viz_trg_out_tl{\clist_item:Nn\l_semio_viz_trg_bucket_clist{####1}}\prop_put:NVx\l_semio_viz_trg_result_prop\l_semio_viz_trg_out_tl{\fp_to_decimal:N\l_semio_viz_tr_value_fp}
+    }
+  }
+  \clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist\seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn{\seq_count:N\l_semio_viz_tr_rows_seq}{\tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{##1}}\prop_clear:N\l_semio_viz_trg_override_prop\prop_get:NnN\l_semio_viz_trg_result_prop{##1}\l_semio_viz_trg_out_tl\semio_viz_trg_set:VV\l_semio_viz_trg_as_tl\l_semio_viz_trg_out_tl\semio_viz_trg_put:}\semio_viz_tr_commit:
+}
+% 🥞 Converts wide authored stack keys through the owned offset engine and retains source cells.
+\cs_new_protected:Npn \semio_viz_trg_stack: {
+  \seq_set_eq:NN\l_semio_viz_trg_source_rows_seq\l_semio_viz_tr_rows_seq\clist_set_eq:NN\l_semio_viz_trg_source_cols_clist\l_semio_viz_tr_cols_clist
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn{\seq_count:N\l_semio_viz_tr_rows_seq}{\tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{##1}}\clist_map_inline:Nn\l_semio_viz_trg_keys_clist{\semio_viz_trg_require:n{####1}\semio_viz_tr_get:VnN\l_semio_viz_trg_row_tl{####1}\l_semio_viz_trg_cell_tl\seq_put_right:Nx\l_semio_viz_tr_out_rows_seq{{##1},{####1},{\exp_not:V\l_semio_viz_trg_cell_tl}}}}
+  \seq_set_eq:NN\l_semio_viz_tr_rows_seq\l_semio_viz_tr_out_rows_seq\clist_set:Nn\l_semio_viz_tr_cols_clist{row,key,value}\semio_viz_tr_stack:nnn{row}{key}{value}
+  \seq_set_eq:NN\l_semio_viz_tr_rows_seq\l_semio_viz_trg_source_rows_seq\clist_set_eq:NN\l_semio_viz_tr_cols_clist\l_semio_viz_trg_source_cols_clist\clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist\seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \int_step_inline:nn{\clist_count:N\l_semio_viz_trg_keys_clist}{
+    \tl_set:Nx\l_semio_viz_trg_key_tl{\clist_item:Nn\l_semio_viz_trg_keys_clist{##1}}
+    \int_zero:N\l_semio_viz_trg_group_int\int_step_inline:nn{\seq_count:N\l_semio_viz_tr_order_seq}{\int_compare:nNnT{\seq_item:Nn\l_semio_viz_tr_order_seq{####1}}={##1}{\int_set:Nn\l_semio_viz_trg_group_int{####1}}}
+    \int_step_inline:nn{\seq_count:N\l_semio_viz_tr_rows_seq}{
+      \tl_set:Nx\l_semio_viz_trg_row_tl{\seq_item:Nn\l_semio_viz_tr_rows_seq{####1}}\prop_clear:N\l_semio_viz_trg_override_prop
+      \semio_viz_trg_set:nV{key}\l_semio_viz_trg_key_tl\semio_viz_trg_set:nx{index}{\int_eval:n{\l_semio_viz_trg_group_int-1}}
+      \semio_viz_trg_set:nx{y0}{\semio_viz_tr_y:nnn{0}{\l_semio_viz_trg_group_int}{####1}}\semio_viz_trg_set:nx{y2}{\semio_viz_tr_y:nnn{0}{\l_semio_viz_trg_group_int}{####1}}
+      \semio_viz_trg_set:nx{y1}{\semio_viz_tr_y:nnn{1}{\l_semio_viz_trg_group_int}{####1}}\semio_viz_trg_set:nx{y}{\semio_viz_tr_y:nnn{1}{\l_semio_viz_trg_group_int}{####1}}
+      \semio_viz_tr_get:VVN\l_semio_viz_trg_row_tl\l_semio_viz_trg_key_tl\l_semio_viz_trg_cell_tl\semio_viz_trg_set:nV{value}\l_semio_viz_trg_cell_tl\semio_viz_trg_put:
+    }
+  }\semio_viz_tr_commit:
+}
+% 📉 Fits and predicts all original x positions with the owned regression primitives.
+\cs_new_protected:Npn \semio_viz_trg_regression: {
+  \semio_viz_tr_column_values:VN\l_semio_viz_trg_x_tl\l_semio_viz_tr_xv_seq\semio_viz_tr_column_values:VN\l_semio_viz_trg_y_tl\l_semio_viz_tr_yv_seq\int_set:Nn\l_semio_viz_tr_n_int{\seq_count:N\l_semio_viz_tr_xv_seq}
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \str_case:VnF\l_semio_viz_trg_method_tl{{linear}{\semio_viz_tr_ols:nn{X}{Y}}{log}{\semio_viz_tr_ols:nn{L}{Y}}{exp}{\semio_viz_tr_ols:nn{X}{M}}{pow}{\semio_viz_tr_ols:nn{L}{M}}{poly}{\regex_match:nVTF{\A[0-9]+\Z}\l_semio_viz_tr_order_tl{\int_set:Nn\l_semio_viz_tr_degree_int{\l_semio_viz_tr_order_tl}}{}\semio_viz_tr_regression_poly:}}{\msg_error:nnn{semio-viz}{unknown-regression}{\l_semio_viz_trg_method_tl}}
+  \seq_clear:N\l_semio_viz_tr_out_rows_seq\clist_set:Nn\l_semio_viz_tr_out_cols_clist{x,y,slope,intercept,r2}
+  \int_step_inline:nn{\l_semio_viz_tr_n_int}{
+    \fp_set:Nn\l_semio_viz_tr_pos_fp{\seq_item:Nn\l_semio_viz_tr_xv_seq{##1}}
+    \str_case:VnF\l_semio_viz_trg_method_tl{{poly}{\fp_zero:N\l_semio_viz_tr_value_fp\int_step_inline:nn{\l_semio_viz_tr_m_int}{\fp_add:Nn\l_semio_viz_tr_value_fp{\fp_use:c{\semio_viz_tr_matrix:nn{####1}{\l_semio_viz_tr_m_int+1}}*\l_semio_viz_tr_pos_fp^(####1-1)}}}{log}{\fp_set:Nn\l_semio_viz_tr_value_fp{\l_semio_viz_tr_intercept_fp+\l_semio_viz_tr_slope_fp*ln(\l_semio_viz_tr_pos_fp)}}{pow}{\fp_set:Nn\l_semio_viz_tr_value_fp{exp(\l_semio_viz_tr_intercept_fp+\l_semio_viz_tr_slope_fp*ln(\l_semio_viz_tr_pos_fp))}}{exp}{\fp_set:Nn\l_semio_viz_tr_value_fp{exp(\l_semio_viz_tr_intercept_fp+\l_semio_viz_tr_slope_fp*\l_semio_viz_tr_pos_fp)}}}{\fp_set:Nn\l_semio_viz_tr_value_fp{\l_semio_viz_tr_intercept_fp+\l_semio_viz_tr_slope_fp*\l_semio_viz_tr_pos_fp}}
+    \seq_put_right:Nx\l_semio_viz_tr_out_rows_seq{{\fp_to_decimal:N\l_semio_viz_tr_pos_fp},{\fp_to_decimal:N\l_semio_viz_tr_value_fp},{\fp_to_decimal:N\l_semio_viz_tr_slope_fp},{\fp_to_decimal:N\l_semio_viz_tr_intercept_fp},{1}}
+  }\semio_viz_tr_commit:
+}
+\cs_generate_variant:Nn \semio_viz_tr_column_values:nN {VN}
+% 🚚 Dispatches the schema kind through the working-table inference engine.
+\cs_new_protected:Npn \semio_viz_trg_dispatch: {
+  \tl_if_empty:NT\l_semio_viz_trg_operation_tl{\str_if_eq:VnTF\l_semio_viz_trg_kind_tl{window}{\tl_set:Nn\l_semio_viz_trg_operation_tl{mean}}{\tl_set:Nn\l_semio_viz_trg_operation_tl{sum}}}
+  \str_case:VnF\l_semio_viz_trg_kind_tl{
+    {filter}{\semio_viz_trg_filter:}{sort}{\semio_viz_trg_sort:}{group}{\semio_viz_trg_group:}{aggregate}{\semio_viz_trg_group:}{rollup}{\semio_viz_trg_group:}{summary}{\semio_viz_trg_group:}
+    {fold}{\semio_viz_trg_fold:}{pivot}{\semio_viz_trg_pivot:}{join}{\semio_viz_trg_join:}
+    {window}{\semio_viz_trg_window:}{normalize}{\semio_viz_trg_window:}{cumulative}{\semio_viz_trg_window:}
+    {bin}{\tl_replace_all:Nnn\l_semio_viz_tr_thresholds_tl{,}{;}\semio_viz_tr_bin:V\l_semio_viz_trg_column_tl\semio_viz_trg_aliases:n{bin}}
+    {stack}{\semio_viz_trg_stack:}{quantile}{\semio_viz_tr_quantile:V\l_semio_viz_trg_column_tl}
+    {kde}{\semio_viz_tr_kde:V\l_semio_viz_trg_column_tl\semio_viz_trg_aliases:n{kde}}{regression}{\semio_viz_trg_regression:}
+  }{\msg_error:nnn{semio-viz}{unknown-transform-kind}{\l_semio_viz_trg_kind_tl}}
+}
+% 📐 Provides conventional geometry aliases for inferred histogram and density tables.
+\cs_new_protected:Npn \semio_viz_trg_aliases:n #1 {
+  \clist_set_eq:NN\l_semio_viz_tr_out_cols_clist\l_semio_viz_tr_cols_clist\seq_clear:N\l_semio_viz_tr_out_rows_seq
+  \seq_map_inline:Nn\l_semio_viz_tr_rows_seq{\tl_set:Nn\l_semio_viz_trg_row_tl{##1}\prop_clear:N\l_semio_viz_trg_override_prop\str_if_eq:nnTF{#1}{bin}{\semio_viz_tr_get:nnN{##1}{x0}\l_semio_viz_trg_cell_tl\semio_viz_trg_set:nV{x}\l_semio_viz_trg_cell_tl\semio_viz_tr_get:nnN{##1}{x1}\l_semio_viz_trg_cell_tl\semio_viz_trg_set:nV{x2}\l_semio_viz_trg_cell_tl\semio_viz_tr_get:nnN{##1}{count}\l_semio_viz_trg_cell_tl}{\semio_viz_tr_get:nnN{##1}{density}\l_semio_viz_trg_cell_tl}\semio_viz_trg_set:nV{y}\l_semio_viz_trg_cell_tl\semio_viz_trg_put:}\semio_viz_tr_commit:
+}
+\msg_new:nnn{semio-viz}{unknown-transform-kind}{Unknown~transform~kind~'#1'.}
+\msg_new:nnn{semio-viz}{unknown-transform-option}{Unknown~structured~transform~option~'#1'.}
+%endregion 🔖️CanonicalTransformGrammar

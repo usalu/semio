@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/📐️trigonometry/🟦️.ts
  */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { clamp, cosTurns, lerp, sinTurns, smoothstep } from "../../🔨️modules/📐️trigonometry/🟦️.ts";
+import { atanTurns, clamp, cosTurns, fastNegExp, lerp, sinTurns, smoothstep } from "../../🔨️modules/📐️trigonometry/🟦️.ts";
 
 const VECTORS = "shared://📐️turn-trigonometry/🔣️.json";
 
@@ -14,6 +14,9 @@ type Vectors = {
   readonly clamps: readonly { readonly id: string; readonly value: number; readonly low: number; readonly high: number }[];
   readonly lerps: readonly { readonly id: string; readonly from: number; readonly to: number; readonly amount: number }[];
   readonly smoothsteps: readonly { readonly id: string; readonly amount: number }[];
+  readonly arctangents: readonly { readonly id: string; readonly y: number; readonly x: number }[];
+  readonly arctangentGrids: readonly { readonly id: string; readonly span: number; readonly step: number }[];
+  readonly decays: readonly { readonly id: string; readonly x: number }[];
 };
 
 /** 🧫️ The committed vectors. */
@@ -40,6 +43,13 @@ function sweep(denominator: number, first: number, last: number): { sines: numbe
   return { sines, cosines };
 }
 
+/** 🕸️ The directions of every point `(column × step, row × step)` of a square lattice, row by row from `−span` to `span`. */
+function lattice(span: number, step: number): number[] {
+  const turns: number[] = [];
+  for (let row = -span; row <= span; row++) for (let column = -span; column <= span; column++) turns.push(atanTurns(row * step, column * step));
+  return turns;
+}
+
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
@@ -49,5 +59,8 @@ export default defineTestAdapter({
     clamps: { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).clamps.map((vector) => [vector.id, clamp(vector.value, vector.low, vector.high)])) }) },
     lerps: { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).lerps.map((vector) => [vector.id, lerp(vector.from, vector.to, vector.amount)])) }) },
     smoothsteps: { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).smoothsteps.map((vector) => [vector.id, smoothstep(vector.amount)])) }) },
+    arctangents: { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).arctangents.map((vector) => [vector.id, { turns: atanTurns(vector.y, vector.x), bits: bits(atanTurns(vector.y, vector.x)) }])) }) },
+    "arctangent-grids": { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).arctangentGrids.map((vector) => [vector.id, lattice(vector.span, vector.step)])) }) },
+    decays: { subject: (ctx) => ({ projection: Object.fromEntries(vectors(ctx).decays.map((vector) => [vector.id, { value: fastNegExp(vector.x), bits: bits(fastNegExp(vector.x)) }])) }) },
   },
 });

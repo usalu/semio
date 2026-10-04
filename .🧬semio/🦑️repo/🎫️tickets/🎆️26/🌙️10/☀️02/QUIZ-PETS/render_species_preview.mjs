@@ -1,15 +1,63 @@
-/** 🖼️ Ticket tool: renders species documents to a PNG contact sheet (rest pose plus every clip at four phases, on the light and the dark theme) so rigs can be judged by eye.
+/** 🖼️ Ticket tool: renders species documents to PNG contact sheets so rigs, clips, states, tricks and gear can be judged by eye, on the light and the dark theme.
  *
- * Usage (from the repository root):
- *   node ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/render_species_preview.mjs" --out <file.png> [--scale 3] [--clips idle,walk] <species.json>...
+ * ## Usage (from the repository root)
  *
- * The drawing rules mirror 📓️design.md §6.2; this tool uses the platform's Math and is not part of the product.
+ *   node ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/render_species_preview.mjs" --out <file.png> [options] <species.json>...
+ *
+ * | Option | Meaning |
+ * |---|---|
+ * | `--out <file.png>` | where the sheet goes (default `species-preview.png`); the page itself is written beside it as `.html` with its script `.js` |
+ * | `--scale <n>` | screen pixels per pet pixel (default 3; 1 shows the pets as large as on a page) |
+ * | `--states` | every state: the rest pose under its tint, and its overlay clip at phase 0.25 with the particles of its emitter |
+ * | `--tricks` | every trick's clip at four phases with a sample of its emitter's particles (in the tint of the state it starts from), then the purr |
+ * | `--gear` | the clips of the new activities with what they are played with: `hang` and `tumble` tilted about the grip and the middle, `glide` under the open parachute (the species' own canopy or the plain one, also opening and overshooting), `aim` with the gun, `reel` on a rope, `climb` and `slide` at a wall (and on a standing ladder for a species that owns one), `mantle` over a corner, `carry` with a ladder (lying and raised), `push` against a block, `dizzy`, `shrug`, `scoot` |
+ * | `--clips a,b` | only these clips at four phases (`--clips all`: every clip); as in the first round |
+ * | `--themes light,dark` | the grounds to draw on (default both; the plain clips are drawn on the first only) |
+ * | `--pages <px>` | the most a PNG is tall, in page pixels (default 1600, so a picture can be looked at without shrinking): a taller sheet is cut between rows into `<file>-1.png`, `<file>-2.png`, …; 0 never cuts |
+ * | `--width <px>` | the width of the page (default 1500) |
+ *
+ * Without `--states`, `--tricks`, `--gear` and `--clips` a sheet holds everything; with any of them only what is named.
+ * The rest row (rest, looks, blink, facing left; both themes) heads every species, with a line that says what the
+ * document holds and whether the product's validation accepts it.
+ *
+ * Examples:
+ *
+ *   node "<this file>" --out "<ticket>/🗑️generated/h1/sunny.png" "🎓️teaching/🏛️architecture/🐾️pets/☀️sunny/🔣️.json"
+ *   node "<this file>" --out sheet.png --gear --scale 2 "🎓️teaching/🏛️architecture/🐾️pets/🏠️housy/🔣️.json" "🎓️teaching/🏛️architecture/🐾️pets/🌡️thermy/🔣️.json"
+ *   node "<this file>" --out sheet.png --states --tricks "🎓️teaching/🏛️architecture/🐾️pets/☁️cloudy/🔣️.json"
+ *   node "<this file>" --out sheet.png --clips hang,tumble --scale 4 "<ticket>/reference-species.json"
+ *
+ * ## What is drawn, and by what
+ *
+ * The sheet is drawn by the product itself: this script bundles `render_species_preview.entry.ts` with `bun build` and
+ * loads it into a page next to the product's stylesheet. The core samples the clips (`sampleClip`), solves the rigs
+ * (`solveRig`) and moves the particles (`particlesOf` of `🔨️modules/✨️effects`); the React target depicts the pets
+ * (`depict`, `paint`), their gear (`equip`, `paintTools`, `paintLadders`), their particles (`paintEffects`) and their
+ * tints (`tintPalette`). So what a sheet shows is what the layer will show. A clip is shown alone on the rest pose
+ * (the stage runs the idle loop underneath).
+ *
+ * A species document of the first round still renders: what it lacks is filled in for the sheet (no states, tricks,
+ * emitters or gear, a grip at nine tenths of its height); its header then counts the fields validation misses.
+ *
+ * Notes for artists:
+ * - `grip` is the height of the scruff above the feet in pixels: the red dot of the `hang` cells, where the parachute
+ *   and the rope of `reel` take hold. Whole-drawing tilt turns the pet about it.
+ * - `canopy` is drawn in the accent with an ink outline, around the point that floats 0.7 heights above the grip: put
+ *   the middle of its rim at (0, 0) and the canopy above it (negative y). The four cords run to the rim: the leftmost
+ *   and the rightmost point of the shape and two points between them. Without `canopy` the plain striped dome is used
+ *   (1.5 widths wide, 0.45 heights high).
+ * - Particles of an emitter are shown at a moment that suits its motion: a burst along its life over the four phases,
+ *   a ring one lap on, a stream (fall, rise, drift) once it is full.
+ * - The gun sits at 0.42 widths ahead and half the height up; a carried ladder is held 0.45 heights up, behind the pet.
  */
+import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, "../../../../../../..");
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
   const index = args.indexOf(`--${name}`);
@@ -17,158 +65,84 @@ const option = (name, fallback) => {
   const [, value] = args.splice(index, 2);
   return value;
 };
+const flag = (name) => {
+  const index = args.indexOf(`--${name}`);
+  if (index < 0) return false;
+  args.splice(index, 1);
+  return true;
+};
 const out = resolve(option("out", "species-preview.png"));
 const scale = Number(option("scale", "3"));
 const only = option("clips", "");
+const themes = option("themes", "light,dark").split(",");
+const pages = Number(option("pages", "1600"));
+const width = Number(option("width", "1500"));
+const chosen = ["states", "tricks", "gear"].filter((section) => flag(section));
+if (only !== "") chosen.unshift("clips");
+const sections = ["rest", ...(chosen.length === 0 ? ["clips", "states", "tricks", "gear"] : chosen)];
 const files = args;
 if (files.length === 0) throw new Error("no species files given");
 
-const THEMES = [
-  { name: "light", base: "#f7f3e3", panel: "#c9c8bd", ink: "#001117", paper: "#f7f3e3" },
-  { name: "dark", base: "#001117", panel: "#1d2b2f", ink: "#f7f3e3", paper: "#f7f3e3" },
-];
-const PHASES = [0, 0.25, 0.5, 0.75];
+const species = files.map((file) => {
+  const document = JSON.parse(readFileSync(file, "utf8"));
+  return { ...document, states: document.states ?? [], tricks: document.tricks ?? [], emitters: document.emitters ?? [], gear: document.gear ?? [], grip: document.grip ?? Math.round(document.size.height * 0.9), repertoire: document.repertoire ?? {} };
+});
 
-const bezier = (x1, y1, x2, y2, t) => {
-  let low = 0;
-  let high = 1;
-  for (let step = 0; step < 40; step++) {
-    const middle = (low + high) / 2;
-    const x = 3 * (1 - middle) * (1 - middle) * middle * x1 + 3 * (1 - middle) * middle * middle * x2 + middle * middle * middle;
-    if (x < t) low = middle;
-    else high = middle;
-  }
-  const s = (low + high) / 2;
-  return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s;
-};
-
-const sampleTrack = (track, phase) => {
-  const keys = track.keys;
-  if (phase <= keys[0].at) return keys[0].value;
-  for (let index = 0; index + 1 < keys.length; index++) {
-    const from = keys[index];
-    const to = keys[index + 1];
-    if (phase <= to.at) {
-      const local = (phase - from.at) / (to.at - from.at);
-      const eased = from.ease ? bezier(...from.ease, local) : local;
-      return from.value + (to.value - from.value) * eased;
-    }
-  }
-  return keys[keys.length - 1].value;
-};
-
-const poseOf = (species, clip, phase) => {
-  const pose = new Map(species.bones.map((bone) => [bone.id, { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 }]));
-  if (clip) for (const track of clip.tracks) pose.get(track.bone)[track.channel] = sampleTrack(track, phase);
-  return pose;
-};
-
-const compose = (p, l) => [p[0] * l[0] + p[2] * l[1], p[1] * l[0] + p[3] * l[1], p[0] * l[2] + p[2] * l[3], p[1] * l[2] + p[3] * l[3], p[0] * l[4] + p[2] * l[5] + p[4], p[1] * l[4] + p[3] * l[5] + p[5]];
-
-const solve = (species, pose) => {
-  const world = new Map();
-  for (const bone of species.bones) {
-    const delta = pose.get(bone.id);
-    const angle = (((bone.rotation ?? 0) + delta.rotation) * Math.PI) / 180;
-    const sin = Math.sin(angle);
-    const cos = Math.cos(angle);
-    const local = [cos * delta.scaleX, sin * delta.scaleX, -sin * delta.scaleY, cos * delta.scaleY, bone.x + delta.x, bone.y + delta.y];
-    world.set(bone.id, bone.parent === undefined ? local : compose(world.get(bone.parent), local));
-  }
-  return world;
-};
-
-const matrix = (m) => `matrix(${m.map((value) => +value.toFixed(4)).join(" ")})`;
-const escape = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-
-const shapeMarkup = (shape, attributes) => {
-  if (shape.kind === "path") return `<path d="${escape(shape.d)}" ${attributes}/>`;
-  if (shape.kind === "ellipse") return `<ellipse cx="${shape.cx}" cy="${shape.cy}" rx="${shape.rx}" ry="${shape.ry}" ${attributes}/>`;
-  if (shape.kind === "rect") return `<rect x="${shape.x}" y="${shape.y}" width="${shape.width}" height="${shape.height}" rx="${shape.radius ?? 0}" ${attributes}/>`;
-  return `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" ${attributes}/>`;
-};
-
-const faceMarkup = (species, world, colour, look) => {
-  const face = species.face;
-  let markup = "";
-  for (const eye of face.eyes) {
-    const reach = Math.max(0, eye.radius - eye.pupil - 0.25);
-    markup += `<g transform="${matrix(world.get(eye.bone))}"><g transform="translate(${eye.x} ${eye.y}) scale(1 ${1 - 0.9 * look.lid})">`;
-    markup += `<circle r="${eye.radius}" fill="${colour("paper")}" stroke="${colour("ink")}" stroke-width="1.5"/>`;
-    markup += `<circle cx="${look.x * reach}" cy="${look.y * reach}" r="${eye.pupil}" fill="#001117"/></g></g>`;
-  }
-  if (face.mouth) {
-    const mouth = face.mouth;
-    markup += `<g transform="${matrix(world.get(mouth.bone))}"><path d="M ${mouth.x - mouth.width / 2} ${mouth.y} Q ${mouth.x} ${mouth.y + mouth.width * 0.5 * look.mood} ${mouth.x + mouth.width / 2} ${mouth.y}" fill="none" stroke="${colour("ink")}" stroke-width="1.5" stroke-linecap="round"/></g>`;
-  }
-  return markup;
-};
-
-const speciesMarkup = (species, theme, clip, phase, look) => {
-  const colour = (paint) => (paint === "none" ? "none" : paint === "ink" ? theme.ink : paint === "paper" ? theme.paper : species.palette[paint]);
-  const world = solve(species, poseOf(species, clip, phase));
-  let markup = "";
-  let faced = false;
-  const face = () => {
-    if (!faced) markup += faceMarkup(species, world, colour, look);
-    faced = true;
-  };
-  for (const part of species.parts) {
-    const attributes = `fill="${colour(part.fill)}" stroke="${colour(part.stroke)}" stroke-width="${part.stroke === "none" ? 0 : (part.strokeWidth ?? 2)}" stroke-linejoin="round" stroke-linecap="round"`;
-    markup += `<g transform="${matrix(world.get(part.bone))}">${shapeMarkup(part.shape, attributes)}</g>`;
-    if (species.face.above === part.id) face();
-  }
-  if (species.face.above === undefined) face();
-  face();
-  return markup;
-};
-
-const cellMarkup = (species, theme, clip, phase, label, look) => {
-  const margin = 14;
-  const hover = species.locomotion.hover ?? 0;
-  const width = species.size.width + margin * 2;
-  const height = species.size.height + hover + margin * 2 + 12;
-  const ground = species.size.height + hover + margin;
-  return `<figure style="margin:0;background:${theme.base};color:${theme.ink}"><svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">
-<rect x="0" y="${ground}" width="${width}" height="${height - ground}" fill="${theme.panel}"/>
-<rect x="${margin}" y="${ground - hover - species.size.height}" width="${species.size.width}" height="${species.size.height}" fill="none" stroke="${theme.ink}" stroke-opacity="0.18" stroke-dasharray="2 2" stroke-width="0.5"/>
-<g transform="translate(${width / 2} ${ground - hover})">${speciesMarkup(species, theme, clip, phase, look)}</g>
-<text x="2" y="${height - 3}" font-size="5" font-family="monospace" fill="${theme.ink}">${escape(label)}</text></svg></figure>`;
-};
-
-let body = "";
-for (const file of files) {
-  const species = JSON.parse(readFileSync(file, "utf8"));
-  const wanted = only ? only.split(",") : species.clips.map((clip) => clip.id);
-  body += `<h2>${escape(species.id)} · ${escape(species.name?.en ?? "")} · ${escape(species.name?.de ?? "")} · ${species.size.width}×${species.size.height} · ${escape(species.locomotion.gait)}</h2>`;
-  for (const theme of THEMES) {
-    body += `<div class="row">`;
-    body += cellMarkup(species, theme, undefined, 0, `rest (${theme.name})`, { x: 0, y: 0, lid: 0, mood: 0.4 });
-    body += cellMarkup(species, theme, undefined, 0, "look left, sad", { x: -1, y: 0.2, lid: 0, mood: -0.8 });
-    body += cellMarkup(species, theme, undefined, 0, "look right, happy", { x: 1, y: -0.2, lid: 0, mood: 1 });
-    body += cellMarkup(species, theme, undefined, 0, "blink", { x: 0, y: 0, lid: 1, mood: 0.4 });
-    body += `<span style="display:inline-block;transform:scaleX(-1)">${cellMarkup(species, theme, undefined, 0, "", { x: 0.6, y: 0, lid: 0, mood: 0.4 })}</span>`;
-    body += `</div>`;
-    if (theme.name !== "light") continue;
-    for (const clip of species.clips) {
-      if (!wanted.includes(clip.id)) continue;
-      body += `<div class="row">`;
-      for (const phase of PHASES) body += cellMarkup(species, theme, clip, phase, `${clip.id} @${phase} (${clip.seconds}s${clip.loop ? ", loop" : ""})`, { x: 0, y: 0, lid: 0, mood: 0.4 });
-      body += `</div>`;
-    }
-  }
-}
-
-const html = `<!doctype html><meta charset="utf-8"><style>body{margin:8px;background:#888;font:12px monospace}h2{margin:10px 0 4px;color:#fff;font-size:13px}.row{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}</style>${body}`;
 mkdirSync(dirname(out), { recursive: true });
-const page = out.replace(/\.png$/i, ".html");
-writeFileSync(page, html);
+const stem = out.replace(/\.png$/i, "");
+const quoted = (text) => `"${text}"`;
+const built = spawnSync(["bun", "build", quoted(join(here, "render_species_preview.entry.ts")), "--outfile", quoted(`${stem}.js`), "--target", "browser"].join(" "), { cwd: root, encoding: "utf8", shell: true });
+if (built.status !== 0) throw new Error(`bun build failed:\n${built.stdout}\n${built.stderr}`);
+const css = readFileSync(join(root, "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css"), "utf8");
+const preview = { species, scale, sections, clips: only === "" || only === "all" ? null : only.split(","), themes };
+
+const html = `<!doctype html><meta charset="utf-8"><style>${css}</style><style>
+body{margin:8px;background:#888;font:12px monospace}
+h2{margin:10px 0 4px;color:#fff;font-size:13px}
+h3{margin:10px 0 3px;color:#fff;font-size:12px}
+h4{margin:5px 0 2px;color:#fff;font-size:11px;font-weight:normal}
+.row{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;align-items:flex-end}
+.row.light{--ground:#f7f3e3;--panel:#c9c8bd;--foreground:#001117}
+.row.dark{--ground:#001117;--panel:#1d2b2f;--foreground:#f7f3e3}
+.cell{position:relative;margin:0;overflow:hidden;background:var(--ground);color:var(--foreground)}
+.decor{position:absolute;left:0;top:0}
+.decor .panel{fill:var(--panel)}
+.decor .box{fill:none;stroke:var(--foreground);stroke-opacity:.18;stroke-dasharray:2 2;stroke-width:.5}
+.decor .wall{fill:none;stroke:var(--foreground);stroke-opacity:.6;stroke-width:1.5}
+.decor .block{fill:var(--panel);stroke:var(--foreground);stroke-width:1.5}
+figcaption{position:absolute;left:${2 * scale}px;right:${scale}px;bottom:${scale}px;font:${Math.max(8, 4.4 * scale)}px/1.15 monospace;max-height:${13 * scale}px;overflow:hidden}
+i{position:absolute;width:${Math.max(4, 1.6 * scale)}px;height:${Math.max(4, 1.6 * scale)}px;margin:${-Math.max(2, 0.8 * scale)}px;border-radius:50%;background:#ff344f}
+</style><body><script>const PREVIEW=${JSON.stringify(preview).replace(/</g, "\\u003c")};</script><script src="./${stem.split(/[\\/]/).pop()}.js"></script>`;
+writeFileSync(`${stem}.html`, html);
+
 const browser = await chromium.launch();
 try {
-  const tab = await browser.newPage({ viewport: { width: 1500, height: 900 } });
-  await tab.goto(pathToFileURL(page).href);
-  await tab.screenshot({ path: out, fullPage: true });
+  const tab = await browser.newPage({ viewport: { width, height: 900 } });
+  const faults = [];
+  tab.on("pageerror", (error) => faults.push(String(error)));
+  tab.on("console", (message) => {
+    if (message.type() === "error") faults.push(message.text());
+  });
+  await tab.goto(pathToFileURL(`${stem}.html`).href);
+  await tab.waitForSelector("body[data-ready]", { timeout: 20000 }).catch(() => faults.push("the sheet never became ready"));
+  if (faults.length > 0) throw new Error(faults.join("\n"));
+  const layout = await tab.evaluate(() => ({ height: document.documentElement.scrollHeight, width: document.documentElement.scrollWidth, breaks: [...document.querySelectorAll("h2, h3, .band")].map((block) => Math.floor(block.getBoundingClientRect().top + window.scrollY) - 2) }));
+  if (pages <= 0 || layout.height <= pages) {
+    await tab.screenshot({ path: out, fullPage: true });
+    console.log(`wrote ${out}`);
+  } else {
+    const cuts = [0];
+    for (const [index, top] of layout.breaks.entries()) {
+      const next = layout.breaks[index + 1] ?? layout.height;
+      if (next - cuts[cuts.length - 1] > pages && top > cuts[cuts.length - 1]) cuts.push(top);
+    }
+    cuts.push(layout.height);
+    for (let part = 0; part + 1 < cuts.length; part++) {
+      const file = `${stem}-${part + 1}.png`;
+      await tab.screenshot({ path: file, fullPage: true, clip: { x: 0, y: cuts[part], width: layout.width, height: cuts[part + 1] - cuts[part] } });
+      console.log(`wrote ${file}`);
+    }
+  }
 } finally {
   await browser.close();
 }
-console.log(`wrote ${out}`);

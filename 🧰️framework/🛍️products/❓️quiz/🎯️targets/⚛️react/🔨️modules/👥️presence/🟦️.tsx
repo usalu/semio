@@ -83,6 +83,7 @@ export function rejoinDelay(flaps: number, timing: RetryTiming, random: number):
 /** 🔌️ What a presence room needs of a WebSocket; the browser's `WebSocket` is one. */
 export interface PresenceSocket {
   readonly readyState: number;
+  onopen: ((event: Event) => void) | null;
   onmessage: ((event: MessageEvent) => void) | null;
   onclose: ((event: CloseEvent) => void) | null;
   onerror: ((event: Event) => void) | null;
@@ -96,7 +97,16 @@ export type PresenceConnect = (url: string, protocol: string) => PresenceSocket;
 /** 🌐️ The browser's WebSocket. */
 export const browserPresenceConnect: PresenceConnect = (url, protocol) => new WebSocket(url, protocol);
 
+const CONNECTING = 0;
 const OPEN = 1;
+
+/** 👋️ Closes a socket that is left: at once when it is open, else as soon as it opens — a socket closed while it still
+ * connects is reported by the browser as a failed connection, though nothing failed. */
+function leave(socket: PresenceSocket | undefined): void {
+  if (socket === undefined) return;
+  if (socket.readyState === CONNECTING) socket.onopen = () => socket.close(1000, "left");
+  else socket.close(1000, "left");
+}
 
 /** 🚦️ Where a room is: joining, joined, waiting to join again after a loss, or left. */
 export type RoomStatus = "connecting" | "open" | "waiting" | "stopped";
@@ -190,7 +200,7 @@ export class PresenceRoom<S, W = never> {
     this.lifetime = undefined;
     clearTimeout(this.flushTimer);
     this.flushTimer = undefined;
-    this.detach()?.close(1000, "left");
+    leave(this.detach());
     this.members = new Map();
     this.watchedMembers = new Map();
     this.self = undefined;
@@ -240,6 +250,7 @@ export class PresenceRoom<S, W = never> {
       const socket = this.options.connect(this.options.url, PRESENCE_PROTOCOL);
       let end: () => void = () => undefined;
       const ended = new Promise<void>((done) => (end = done));
+      signal.addEventListener("abort", () => (reject(signal.reason), end()), { once: true });
       this.socket = socket;
       socket.onmessage = (event) => {
         if (this.receive(socket, event.data) === "welcome") resolve({ ended });
@@ -328,6 +339,7 @@ export class PresenceRoom<S, W = never> {
     clearTimeout(this.flushTimer);
     this.flushTimer = undefined;
     if (socket !== undefined) {
+      socket.onopen = null;
       socket.onmessage = null;
       socket.onclose = null;
       socket.onerror = null;

@@ -16,8 +16,37 @@ Feature: Registrations, runs, answers and submissions decide the same events and
   followed by one `badge-awarded` per newly earned badge. Every decision first holds the command to its id
   and slug shapes (`id-invalid`) and to its own learner (`unknown-learner`), and to the caps of `Limits`:
   a registration beyond the cap of learners is `roster-full` (`registrationRejection`), a start after the
-  cap of submitted runs — per quiz or in total — `runs-exhausted`, an answer after the cap of recorded
-  answers of a run `answers-exhausted`.
+  cap of started runs — open, submitted or voided alike, per quiz or in total, so switching the challenge
+  back and forth stops — `runs-exhausted`, an answer after the cap of recorded answers of a run
+  `answers-exhausted`.
+
+  A run is played at one challenge (challenge design §3.5), named by `start-run` and fixed by
+  `run-started`, which starts the run at the instant the `start-run` carries — a run started offline and
+  delivered late keeps the device's start, so a task opened on the device gains no time after the sync.
+  Every claimed instant is first lowered to five minutes (`CLOCK_LEAD`) past the decider's clock: an honest
+  device four minutes ahead decides alike on the device and at the proctor, at once or late, while a start
+  or an opening dated an hour ahead is lowered and buys no time. An
+  instant beyond 2^53 − 1 is `id-invalid`. An open run of the quiz at the current revision blocks a start at its own challenge
+  (`run-open`) and is voided by a start at another one — after the caps, which refuse first. The run's
+  sheet, its answer rules and its scoring follow the challenge; a result carries its challenge and its
+  points (score × par). On a timed run (expert) a task is opened first: `open-task` (checked like
+  `record-answer` for its ids and slug) decides `task-opened` at the instant the learner acted, raised to
+  the run's start, is refused for a task already opened (`already-opened`), on an untimed run
+  (`run-untimed`), a closed run, a revised quiz or an unknown task. An answer carries the instant the
+  learner acted: on a timed run it is refused for a task not opened (`task-unopened`) and after the
+  task's seconds (`time-up` — the instant raised to the opening, minus the opening, above
+  `seconds × 1000`; exactly at the limit is in time, 1 ms past it is not, for every kind of task); on an
+  untimed run the instant is raised to the run's start; `answer-recorded` keeps the raised instant. Apart
+  from the lead the decider's clock never enters these instants: a device clock running less than five minutes
+  ahead of the decider's or any amount behind it, an answer delivered at once or long after, all get the
+  same verdict. A timed run is submitted with tasks unanswered or partly answered, what is missing
+  scoring as a miss; an untimed run stays `run-incomplete` until every task is complete. The learner view
+  names each run's challenge and, once submitted, its points; `best` is per quiz the submitted run with
+  the most points (a later run replaces it only with strictly more) as its challenge, score and points,
+  and `total` sums those points. A run view shows the sheet at the run's challenge, `opened` on a timed
+  run, and on an open easy run the hints of every task that has any (challenge design §8: compare, profile,
+  group and category questions about the learner's own answer, as the challenge-rules case states them). The badges `hard-cooling` and
+  `expert-sorter` ask for a least challenge.
 
   THE REFERENCE is `🐍️.py` beside this file: a second implementation of §3–§8 written in Python from
   the design text alone (the handle policy over `unicodedata`, sheet over numpy's MT19937, answer rules,
@@ -33,8 +62,14 @@ Feature: Registrations, runs, answers and submissions decide the same events and
   (`🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` and the quizzes it lists): a learner who answers every
   sheet task of every quiz perfectly — whatever items the run draws — earns every badge of the catalog,
   "Heating Expert", "Numerical Brain" and "Pattern Seer" among them, and a learner who makes exactly one
-  mistake in one task earns every badge but those that depend on that task. Every implementation builds
-  the answers from the quiz definitions and its own sheets.
+  mistake in one task earns every badge but those that depend on that task. Every play names the
+  challenge of its runs — perfect tours at medium, hard, expert and easy, flawed ones taking turns at
+  medium, hard and expert —, a tour below a badge's least challenge earns every badge but that one, and a
+  timed task is opened before it is answered, every command carrying the instant it is decided at. Every
+  implementation builds the answers from the quiz definitions and its own sheets: perfect answers guess
+  the true values where the keys are hidden, a flawed sorting exchanges the smallest and the largest item
+  with their guesses, a flawed matching exchanges the cards — or the guesses — of two items of different
+  value in the first dimension.
 
   Command idempotency by command id is a property of the proctor's framework deciders, not of these
   pure functions, so every committed command id is distinct.

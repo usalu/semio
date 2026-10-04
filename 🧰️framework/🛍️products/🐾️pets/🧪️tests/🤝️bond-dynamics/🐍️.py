@@ -23,15 +23,16 @@ from semio_repo_test import Adapter, Outcome
 
 # region 🔖️Reference
 VECTORS = "shared://🤝️bond-dynamics/🔣️.json"
-ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"]
+EPISODES = ["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]
+ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"] + EPISODES
 AFFINITY_FLOOR = -0.6
 RAPPORT_SPAN = 0.5
-RAPPORT_STEPS = [0, 0, 0, 0, 0, 0, 0, 0.05, 0.1, -0.15, 0.1]
+RAPPORT_STEPS = [0, 0, 0, 0, 0, 0, 0, 0.05, 0.1, -0.15, 0.1] + [0] * len(EPISODES)
 RAPPORT_FADE_STEP = 0.1
 RAPPORT_FADE_TICKS = 38400
-ENERGY_RATES = [-0.001, -0.01, -0.012, -0.02, 0, 0, 0.02, -0.006, -0.004, -0.012, -0.001]
-SOCIABILITY_RATES = [0.002, 0.002, 0.002, 0.002, 0, 0.002, 0.002, -0.12, -0.12, -0.12, -0.02]
-CURIOSITY_RATES = [0.01, -0.08, -0.06, -0.1, 0, 0.01, 0.01, 0, 0, 0, 0.01]
+ENERGY_RATES = [-0.001, -0.01, -0.012, -0.02, 0, 0, 0.02, -0.006, -0.004, -0.012, -0.001] + [0, 0, 0, -0.004, -0.012, -0.016, -0.016, -0.002, -0.014, -0.01, 0.004, -0.002, -0.001, -0.012, -0.014]
+SOCIABILITY_RATES = [0.002, 0.002, 0.002, 0.002, 0, 0.002, 0.002, -0.12, -0.12, -0.12, -0.02] + [0, 0, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, -0.06, 0.002, 0.002, 0.002, 0.002]
+CURIOSITY_RATES = [0.01, -0.08, -0.06, -0.1, 0, 0.01, 0.01, 0, 0, 0, 0.01] + [0, 0, -0.04, -0.06, -0.08, -0.08, -0.08, -0.04, -0.06, -0.08, 0.01, 0, 0.01, -0.02, -0.1]
 
 
 def joined(pair, a, b):

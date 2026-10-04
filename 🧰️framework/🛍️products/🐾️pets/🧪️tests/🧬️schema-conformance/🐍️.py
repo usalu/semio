@@ -8,9 +8,11 @@ the design (§3), which the schema either cannot see at all — then they must c
 their vector names.
 
 The rules beyond the schema (unique ids, resolved references, bone order, key order, loop seams, gait clips,
-hover, bonds, casts) have no schema keyword and no library: ``findings`` below restates them from the design
-text for documents whose structure is sound. That second implementation is a supplement that holds both cores
-to one reading of the rules; the third-party evidence of this case is the schema verdict.
+hover, bonds, casts, and of the second round: states, tricks, purrs, emitters, the clips a gear and every species
+owe, a floater's gear, grip and reach inside the size box, and the chemistry between species) have no schema
+keyword and no library: ``findings`` below restates them from the design text for documents whose structure is
+sound. That second implementation is a supplement that holds both cores to one reading of the rules; the
+third-party evidence of this case is the schema verdict.
 
 @see https://python-jsonschema.readthedocs.io/en/stable/validate/
 @see ../../🧬️schema/🔣️.json
@@ -97,9 +99,12 @@ def resolve(vectors, vector):
 # region 🔖️Rules
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 COLOR = re.compile(r"#[0-9a-f]{6}")
-ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"]
+ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk", "hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]
 LANGUAGES = ["en", "de"]
 POSITIVE = {"ellipse": ["rx", "ry"], "rect": ["width", "height"]}
+GEAR_ACTIVITIES = {"climb": ["climb", "mantle", "slide"], "ladder": ["carry", "climb"], "grapple": ["aim", "reel"], "parachute": ["glide"]}
+GROUND_GEARS = ["climb", "ladder", "grapple"]
+OWED_ACTIVITIES = ["hang", "tumble", "purr", "dizzy", "shrug", "push"]
 
 
 def slug(value, path, out):
@@ -136,15 +141,31 @@ def text(value, path, out):
             out.append((at(path, language), "length-invalid"))
 
 
-def unique(ids, path, out, key=None):
-    """👯️ ``duplicate-id`` at every entry that repeats an earlier one."""
+def unique(ids, path, out, key=None, code="duplicate-id"):
+    """👯️ ``code`` (``duplicate-id`` unless told otherwise) at every entry that repeats an earlier one."""
     seen = set()
     for index, value in enumerate(ids):
         if value is None:
             continue
         if value in seen:
-            out.append((at(path, index) if key is None else at(at(path, index), key), "duplicate-id"))
+            out.append((at(path, index) if key is None else at(at(path, index), key), code))
         seen.add(value)
+
+
+def between(json_object, key, path, out, low, high):
+    """🎚️ A number in ``[low, high]`` when the object carries it; ``out-of-range`` otherwise."""
+    if key in json_object and (json_object[key] < low or json_object[key] > high):
+        out.append((at(path, key), "out-of-range"))
+
+
+def shape(value, path, out):
+    """🔷️ The geometry of a part, an emitter or a canopy: a path that is not empty, positive extents, a corner radius of zero or more."""
+    if value["kind"] == "path" and len(value["d"]) < 1:
+        out.append((at(path, "d"), "length-invalid"))
+    for key in POSITIVE.get(value["kind"], []):
+        positive(value, key, path, out)
+    if value["kind"] == "rect":
+        positive(value, "radius", path, out, or_zero=True)
 
 
 def bones(entries, path, out):
@@ -175,13 +196,7 @@ def parts(entries, path, out, bone_ids):
     for index, part in enumerate(entries):
         here = at(path, index)
         reference(part["bone"], at(here, "bone"), out, bone_ids)
-        shape = part["shape"]
-        if shape["kind"] == "path" and len(shape["d"]) < 1:
-            out.append((at(at(here, "shape"), "d"), "length-invalid"))
-        for key in POSITIVE.get(shape["kind"], []):
-            positive(shape, key, at(here, "shape"), out)
-        if shape["kind"] == "rect":
-            positive(shape, "radius", at(here, "shape"), out, or_zero=True)
+        shape(part["shape"], at(here, "shape"), out)
         positive(part, "strokeWidth", here, out)
         ids.append(slug(part["id"], at(here, "id"), out))
     unique(ids, path, out, "id")
@@ -246,8 +261,71 @@ def clips(entries, path, out, bone_ids):
     return {value for value in ids if value is not None}
 
 
+def emitters(entries, path, out, bone_ids):
+    """✨️ Every emitter on a bone of the rig, with 1…32 particles, a positive life, a speed of zero or more and a spread in [0, 1]; hands the emitter ids on."""
+    ids = []
+    for index, emitter in enumerate(entries):
+        here = at(path, index)
+        reference(emitter["bone"], at(here, "bone"), out, bone_ids)
+        shape(emitter["shape"], at(here, "shape"), out)
+        positive(emitter, "strokeWidth", here, out)
+        between(emitter, "count", here, out, 1, 32)
+        positive(emitter, "life", here, out)
+        positive(emitter, "speed", here, out, or_zero=True)
+        between(emitter, "spread", here, out, 0, 1)
+        ids.append(slug(emitter["id"], at(here, "id"), out))
+    unique(ids, path, out, "id")
+    return {value for value in ids if value is not None}
+
+
+def states(entries, path, out, clip_ids, emitter_ids):
+    """🔦️ At least one state; tints in lowercase colours, the overlay clip and the emitter of the species, and a state that lasts names the state it gives way to; hands the state ids on."""
+    ids = []
+    for index, state in enumerate(entries):
+        here = at(path, index)
+        text(state["name"], at(here, "name"), out)
+        for name, color in state.get("tint", {}).items():
+            if not COLOR.fullmatch(color):
+                out.append((at(at(here, "tint"), name), "out-of-range"))
+        if "clip" in state:
+            reference(state["clip"], at(here, "clip"), out, clip_ids)
+        if "emitter" in state:
+            reference(state["emitter"], at(here, "emitter"), out, emitter_ids)
+        positive(state, "lasts", here, out)
+        if "lasts" in state and "then" not in state:
+            out.append((at(here, "then"), "lasts-then"))
+        ids.append(slug(state["id"], at(here, "id"), out))
+    if len(entries) < 1:
+        out.append((path, "items-too-few"))
+    unique(ids, path, out, "id")
+    known = {value for value in ids if value is not None}
+    for index, state in enumerate(entries):
+        if "then" in state:
+            reference(state["then"], at(at(path, index), "then"), out, known)
+    return known
+
+
+def tricks(entries, path, out, clip_ids, emitter_ids, state_ids):
+    """🪄️ Every trick with a clip of the species, distinct cues, an optional emitter and states of the species; hands the trick ids on."""
+    ids = []
+    for index, trick in enumerate(entries):
+        here = at(path, index)
+        text(trick["name"], at(here, "name"), out)
+        reference(trick["clip"], at(here, "clip"), out, clip_ids)
+        unique(trick["cues"], at(here, "cues"), out, code="duplicate-entry")
+        if "emitter" in trick:
+            reference(trick["emitter"], at(here, "emitter"), out, emitter_ids)
+        if "from" in trick:
+            unique([reference(state, at(at(here, "from"), number), out, state_ids) for number, state in enumerate(trick["from"])], at(here, "from"), out, code="duplicate-entry")
+        if "to" in trick:
+            reference(trick["to"], at(here, "to"), out, state_ids)
+        ids.append(slug(trick["id"], at(here, "id"), out))
+    unique(ids, path, out, "id")
+    return {value for value in ids if value is not None}
+
+
 def species(value, path, out):
-    """🐾️ One species; hands its id on when that is a slug."""
+    """🐾️ One species; hands its id, its state ids and its trick ids on when the id is a slug."""
     text(value["name"], at(path, "name"), out)
     text(value["thing"], at(path, "thing"), out)
     for index, ground in enumerate(value["grounds"]):
@@ -281,7 +359,29 @@ def species(value, path, out):
     for trait in ["energy", "sociability", "curiosity"]:
         if value["temperament"][trait] < 0 or value["temperament"][trait] > 1:
             out.append((at(at(path, "temperament"), trait), "out-of-range"))
-    return slug(value["id"], at(path, "id"), out)
+    for activity in OWED_ACTIVITIES:
+        if activity not in played:
+            out.append((at(at(path, "repertoire"), activity), "missing-activity-clip"))
+    emitter_ids = emitters(value["emitters"], at(path, "emitters"), out, bone_ids)
+    state_ids = states(value["states"], at(path, "states"), out, clip_ids, emitter_ids)
+    trick_ids = tricks(value["tricks"], at(path, "tricks"), out, clip_ids, emitter_ids, state_ids)
+    reference(value["purr"]["clip"], at(at(path, "purr"), "clip"), out, clip_ids)
+    if "emitter" in value["purr"]:
+        reference(value["purr"]["emitter"], at(at(path, "purr"), "emitter"), out, emitter_ids)
+    unique(value["gear"], at(path, "gear"), out, code="duplicate-entry")
+    for index, gear in enumerate(value["gear"]):
+        if locomotion["gait"] == "float" and gear in GROUND_GEARS:
+            out.append((at(at(path, "gear"), index), "floater-gear"))
+        if any(activity not in played for activity in GEAR_ACTIVITIES[gear]):
+            out.append((at(at(path, "gear"), index), "missing-gear-clip"))
+    if positive(value, "grip", path, out) is not None and 0 < value["size"]["height"] < value["grip"]:
+        out.append((at(path, "grip"), "out-of-range"))
+    if positive(value, "reach", path, out, or_zero=True) is not None and 0 < value["size"]["width"] < value["reach"]:
+        out.append((at(path, "reach"), "out-of-range"))
+    if "canopy" in value:
+        shape(value["canopy"], at(path, "canopy"), out)
+    identifier = slug(value["id"], at(path, "id"), out)
+    return None if identifier is None else {"id": identifier, "states": state_ids, "tricks": trick_ids}
 
 
 def bonds(entries, path, out, known):
@@ -323,6 +423,57 @@ def casts(entries, path, out, known):
         seen.add(scene)
 
 
+def trait(value, path, out, kinds, anyone):
+    """🕵️ One side of a reaction: a species of the menagerie when it names one, a state and a trick of that species (of some species of the menagerie when it names none) and a positive time held; hands on the species it names when the menagerie knows it, ``anyone`` when it names none."""
+    if "species" in value:
+        named = reference(value["species"], at(path, "species"), out, None if kinds is None else set(kinds))
+        kind = None if named is None or kinds is None else kinds.get(named)
+    else:
+        kind = anyone
+    if "state" in value:
+        reference(value["state"], at(path, "state"), out, None if kind is None else kind["states"])
+    if "trick" in value:
+        reference(value["trick"], at(path, "trick"), out, None if kind is None else kind["tricks"])
+    positive(value, "held", path, out)
+    return kind
+
+
+def chemistry(entries, path, out, kinds):
+    """⚗️ Unique reaction ids, sides that resolve (a side that names no species stands for anyone), a third side ``unless`` like them, affinity bounds in [−1, 1] with the low one first, positive distances and periods, a chance in [0, 1] and at least one effect whose state and trick belong to the species of its side."""
+    ids = []
+    anyone = None if kinds is None else {"id": "", "states": {state for kind in kinds.values() for state in kind["states"]}, "tricks": {trick for kind in kinds.values() for trick in kind["tricks"]}}
+    for index, reaction in enumerate(entries):
+        here = at(path, index)
+        sides = {party: trait(reaction[party], at(here, party), out, kinds, anyone) for party in ["when", "near"]}
+        if "unless" in reaction:
+            trait(reaction["unless"], at(here, "unless"), out, kinds, anyone)
+        if "affinity" in reaction:
+            ends = reaction["affinity"]
+            for number, end in enumerate(ends):
+                if end < -1 or end > 1:
+                    out.append((at(at(here, "affinity"), number), "out-of-range"))
+            if len(ends) != 2:
+                out.append((at(here, "affinity"), "length-invalid"))
+            elif ends[0] > ends[1]:
+                out.append((at(here, "affinity"), "out-of-range"))
+        positive(reaction, "within", here, out)
+        positive(reaction, "every", here, out)
+        between(reaction, "chance", here, out, 0, 1)
+        for number, effect in enumerate(reaction["then"]):
+            there = at(at(here, "then"), number)
+            kind = sides[effect["on"]]
+            if "state" in effect:
+                reference(effect["state"], at(there, "state"), out, None if kind is None else kind["states"])
+            if "trick" in effect:
+                reference(effect["trick"], at(there, "trick"), out, None if kind is None else kind["tricks"])
+            between(effect, "amount", there, out, 0, 1)
+            between(effect, "rapport", there, out, -1, 1)
+        if len(reaction["then"]) < 1:
+            out.append((at(here, "then"), "items-too-few"))
+        ids.append(slug(reaction["id"], at(here, "id"), out))
+    unique(ids, path, out, "id")
+
+
 def findings(definition, document):
     """🩺️ The rule findings of a structurally sound document, as ``{path, code}`` sorted by path, then code, in code point order."""
     out = []
@@ -332,10 +483,15 @@ def findings(definition, document):
         slug(document["id"], "/id", out)
         text(document["title"], "/title", out)
         known = None
+        kinds = None
         if definition == "Menagerie":
-            ids = [species(member, at("/species", index), out) for index, member in enumerate(document["species"])]
-            unique(ids, "/species", out, "id")
-            known = {value for value in ids if value is not None}
+            found = [species(member, at("/species", index), out) for index, member in enumerate(document["species"])]
+            unique([None if kind is None else kind["id"] for kind in found], "/species", out, "id")
+            kinds = {}
+            for kind in found:
+                if kind is not None:
+                    kinds.setdefault(kind["id"], kind)
+            known = set(kinds)
         else:
             paths = []
             for index, path in enumerate(document["species"]):
@@ -345,6 +501,7 @@ def findings(definition, document):
             unique(paths, "/species", out)
         bonds(document["bonds"], "/bonds", out, known)
         casts(document["casts"], "/casts", out, known)
+        chemistry(document["chemistry"], "/chemistry", out, kinds)
     return [{"path": path, "code": code} for path, code in sorted(set(out))]
 
 

@@ -14,7 +14,8 @@
  * below, the design system's own breakpoints — measured in the learner's text size, so larger text gets the layout of
  * the narrower viewport it leaves, and a viewport too short for every card to fit its cell (three rows of cells on a
  * desktop, five on a tablet) gets the list as well. Should a card still be taller than its cell, it scrolls inside the
- * cell and never lies over the card below. Pages are pure views over session state: showing, revealing or keeping one
+ * cell and never lies over the card below. In the list every card is as wide as the screen leaves it, up to a width
+ * that reads (`.quiz-home-entry`). Pages are pure views over session state: showing, revealing or keeping one
  * live never runs a command.
  *
  * @see ../../🎨️.css — `.quiz-home-grid`
@@ -31,7 +32,7 @@ import { failureProblem, learnerName, thrownProblem } from "../🪪️identity/�
 import { LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, usePolling } from "../🏆️leaderboard/🟦️.tsx";
 import { BadgesCard, BadgesPage } from "../🏅️badges/🟦️.tsx";
 import { IntroductionCard, IntroductionPage } from "../👋️introduction/🟦️.tsx";
-import { PreferencesCard, PreferencesPage, textScale, type QuizPreferences } from "../🎛️preferences/🟦️.tsx";
+import { PreferencesCard, PreferencesPage, challengeOf, textScale, withChallenge, type QuizPreferences } from "../🎛️preferences/🟦️.tsx";
 import { LearnerCard, LearnerPage } from "../📇️profile/🟦️.tsx";
 import { QuizCardView, QuizPage, type Act } from "../📖️quiz-page/🟦️.tsx";
 import { BodyButton, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
@@ -181,7 +182,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
     render: (pane) => {
       const view = { opened: pane.opened, revealed: pane.revealed };
       const quiz = catalog.quizzes.find((candidate) => candidate.id === page);
-      if (quiz !== undefined) return <QuizPage {...common} quiz={quiz} busy={busy} act={act} view={view} others={preferences.others} />;
+      if (quiz !== undefined) return <QuizPage {...common} quiz={quiz} busy={busy} act={act} view={view} others={preferences.others} challenge={challengeOf(preferences, quiz.id)} onChallenge={(challenge) => onPreferences(withChallenge(preferences, quiz.id, challenge))} />;
       switch (page) {
         case HOME_PAGES.learner:
           return <LearnerPage {...common} busy={busy} act={act} view={view} />;
@@ -207,13 +208,13 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
         {body}
       </div>
     ) : (
-      body
+      <div className="quiz-home-entry">{body}</div>
     );
   };
   const cardOf = (pane: LayeredPane, card: LayeredCardState): ReactNode => {
     const shown = { revealed: card.revealed, onOpen: card.open };
     const quiz = catalog.quizzes.find((candidate) => candidate.id === pane.id);
-    if (quiz !== undefined) return <QuizCardView {...common} {...shown} quiz={quiz} busy={busy} act={act} />;
+    if (quiz !== undefined) return <QuizCardView {...common} {...shown} quiz={quiz} busy={busy} act={act} challenge={challengeOf(preferences, quiz.id)} />;
     switch (pane.id) {
       case HOME_PAGES.learner:
         return <LearnerCard {...common} {...shown} />;

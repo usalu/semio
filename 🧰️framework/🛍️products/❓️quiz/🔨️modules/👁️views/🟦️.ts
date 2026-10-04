@@ -1,6 +1,8 @@
-/** 👁️ The read side: the solution-free catalog, a learner's runs and bests, one run with its sheet, the leaderboard, and the crowd of a quiz.
+/** 👁️ The read side: the solution-free catalog, a learner's runs and bests, one run with its sheet, hints and opened tasks, the leaderboard, and the crowd of a quiz.
  *
- * Id-keyed maps are emitted with their keys in code point order, like the Rust twin's `BTreeMap`s.
+ * Id-keyed maps are emitted with their keys in code point order, like the Rust twin's `BTreeMap`s. A best is the
+ * submitted run of a quiz with the most points whatever its challenge, and totals sum those points; the crowd mixes
+ * every challenge and tallies a guessed value under the nearest authored one.
  *
  * @see ../../README.md — the views and the leaderboard ordering
  * @see ./🦀️.rs — the Rust twin
@@ -8,13 +10,17 @@
 import {
   CROWD_SCORE_BINS,
   LEADERBOARD_TOP,
+  type Answer,
+  type Best,
   type Catalog,
   type CatalogView,
+  type Challenge,
   type CrowdCount,
   type CrowdItem,
   type CrowdScores,
   type CrowdTask,
   type CrowdView,
+  type Hint,
   type Id,
   type Identity,
   type Leaderboard,
@@ -22,16 +28,21 @@ import {
   type LeaderboardRow,
   type LeaderboardWindow,
   type LearnerView,
+  type MatchingTask,
   type Quiz,
   type RunResult,
   type RunView,
+  type Scale,
   type Score,
+  type Sheet,
   type Slug,
   type Task,
   type TaskResult,
   type Timestamp,
 } from "../../🧬️schema/🟦️.ts";
+import { challengeRules, hintsOf } from "../⛰️challenge/🟦️.ts";
 import { fnv1a32 } from "../🎲️randomness/🟦️.ts";
+import { scaled } from "../📏️scoring/🟦️.ts";
 import { iconOf, sheetOf } from "../🃏️sheet/🟦️.ts";
 import type { LearnerState, LoadedQuiz, RunState } from "../🧾️lifecycle/🟦️.ts";
 import { compareCodePoints } from "../✅️validation/🟦️.ts";
@@ -52,8 +63,8 @@ export function catalogView(catalog: Catalog, quizzes: readonly Quiz[]): Catalog
   };
 }
 
-/** 📨️ One submitted run as a standing counts it: its quiz, its score and when it was submitted. */
-export type TranscriptRun = { readonly quiz: Slug; readonly score: Score; readonly at: Timestamp };
+/** 📨️ One submitted run as a standing counts it: its quiz, its challenge, its score, the points it earned and when it was submitted. */
+export type TranscriptRun = { readonly quiz: Slug; readonly challenge: Challenge; readonly score: Score; readonly points: number; readonly at: Timestamp };
 
 /** 🎗️ One badge as a standing counts it: the quiz of the run that earned it and when. */
 export type TranscriptBadge = { readonly badge: Slug; readonly quiz: Slug; readonly at: Timestamp };
@@ -66,48 +77,75 @@ function submittedRuns(state: LearnerState): TranscriptRun[] {
   return state.runs
     .filter((run): run is RunState & { readonly result: NonNullable<RunState["result"]>; readonly submittedAt: number } => run.status === "submitted" && run.result !== undefined && run.submittedAt !== undefined)
     .sort((left, right) => left.submittedAt - right.submittedAt)
-    .map((run) => ({ quiz: run.quiz, score: run.result.score, at: run.submittedAt }));
+    .map((run) => ({ quiz: run.quiz, challenge: run.result.challenge, score: run.result.score, points: run.result.points, at: run.submittedAt }));
 }
 
-/** 🥇️ The best score per quiz id over `runs` in submission order and when the last best was raised. */
-function bests(runs: readonly TranscriptRun[]): { readonly best: Record<string, Score>; readonly reachedAt: number | undefined } {
-  const best: Record<string, Score> = {};
+/** 🥇️ The best run per quiz id over `runs` in submission order — the one with the most points, a later run replacing it only with strictly more — and when the last best was raised. */
+function bests(runs: readonly TranscriptRun[]): { readonly best: Record<string, Best>; readonly reachedAt: number | undefined } {
+  const best: Record<string, Best> = {};
   let reachedAt: number | undefined;
   for (const run of runs) {
-    if (Object.hasOwn(best, run.quiz) && best[run.quiz]! >= run.score) continue;
-    best[run.quiz] = run.score;
+    if (Object.hasOwn(best, run.quiz) && best[run.quiz]!.points >= run.points) continue;
+    best[run.quiz] = { challenge: run.challenge, score: run.score, points: run.points };
     reachedAt = run.at;
   }
   return { best: sortedRecord(best), reachedAt };
 }
 
-/** ➕️ The sum of the best scores over the catalog quizzes in catalog order, in points (score × 100). */
-function total(best: Readonly<Record<string, Score>>, catalog: CatalogView): number {
-  return catalog.quizzes.reduce((sum, quiz) => (Object.hasOwn(best, quiz.id) ? sum + best[quiz.id]! * 100 : sum), 0);
+/** ➕️ The sum of the points of the best runs over the catalog quizzes in catalog order. */
+function total(best: Readonly<Record<string, Best>>, catalog: CatalogView): number {
+  return catalog.quizzes.reduce((sum, quiz) => (Object.hasOwn(best, quiz.id) ? sum + best[quiz.id]!.points : sum), 0);
 }
 
-/** 👤️ A registered learner's runs (newest first), badges, bests and total; `undefined` before registration. */
+/** 👤️ A registered learner's runs (newest first, each with its challenge and, once submitted, its score and points), badges, bests and total; `undefined` before registration. */
 export function learnerView(state: LearnerState, catalog: CatalogView): LearnerView | undefined {
   if (!state.identity) return undefined;
   const { best } = bests(submittedRuns(state));
-  const runs = [...state.runs].reverse().map((run) => ({ run: run.run, quiz: run.quiz, status: run.status, ...(run.result ? { score: run.result.score } : {}), startedAt: run.startedAt, ...(run.submittedAt !== undefined ? { submittedAt: run.submittedAt } : {}) }));
+  const runs = [...state.runs].reverse().map((run) => ({
+    run: run.run,
+    quiz: run.quiz,
+    challenge: run.challenge,
+    status: run.status,
+    startedAt: run.startedAt,
+    ...(run.result ? { score: run.result.score, points: run.result.points } : {}),
+    ...(run.submittedAt !== undefined ? { submittedAt: run.submittedAt } : {}),
+  }));
   return { learner: state.learner, identity: state.identity, runs, badges: state.badges, best, total: total(best, catalog) };
 }
 
-/** 🏃️ One run with the sheet rebuilt from its seed and the loaded quiz; `undefined` when the run or its quiz is unknown. */
+/** 💡️ The hints of a run per task id, only for tasks that have any: what each recorded answer earns from `hintsOf`, tasks in code point order. */
+function runHints(quiz: Quiz, sheet: Sheet, answers: Readonly<Record<string, Answer>>): Record<string, Hint[]> {
+  return sortedRecord(
+    Object.fromEntries(
+      sheet.tasks.flatMap((sheetTask) => {
+        const task = quiz.tasks.find((candidate) => candidate.id === sheetTask.id);
+        const hints = task && Object.hasOwn(answers, sheetTask.id) ? hintsOf(task, sheetTask, answers[sheetTask.id]) : [];
+        return hints.length > 0 ? [[sheetTask.id, hints] as const] : [];
+      }),
+    ),
+  );
+}
+
+/** 🏃️ One run with the sheet rebuilt from its seed and challenge and the loaded quiz; on a timed run when each opened task was opened, and while the run is open at a challenge that hints the hints of its answers, when there are any; `undefined` when the run or its quiz is unknown. */
 export function runView(state: LearnerState, run: string, quizzes: Readonly<Record<string, LoadedQuiz>>): RunView | undefined {
   const found = state.runs.find((candidate) => candidate.run === run);
   if (!found || !Object.hasOwn(quizzes, found.quiz)) return undefined;
+  const quiz = quizzes[found.quiz]!.quiz;
+  const rules = challengeRules(found.challenge);
+  const sheet = sheetOf(quiz, found.seed, found.challenge);
+  const hints = found.status === "open" && rules.hints ? runHints(quiz, sheet, found.answers) : {};
   return {
     run: found.run,
     learner: state.learner,
     quiz: found.quiz,
     status: found.status,
-    sheet: sheetOf(quizzes[found.quiz]!.quiz, found.seed),
+    sheet,
     answers: sortedRecord(found.answers),
     ...(found.result ? { result: found.result } : {}),
     startedAt: found.startedAt,
     ...(found.submittedAt !== undefined ? { submittedAt: found.submittedAt } : {}),
+    ...(rules.timed ? { opened: sortedRecord(found.opened) } : {}),
+    ...(Object.keys(hints).length > 0 ? { hints } : {}),
   };
 }
 
@@ -116,7 +154,7 @@ export function learnerTag(learner: string): string {
   return fnv1a32(learner).toString(16).padStart(8, "0");
 }
 
-/** 📜️ The transcript of a registered learner with a submitted run, `undefined` otherwise; it changes only when the learner submits a run, earns a badge or registers. A badge whose run is unknown is left out. */
+/** 📃️ The transcript of a registered learner with a submitted run, `undefined` otherwise; it changes only when the learner submits a run, earns a badge or registers. A badge whose run is unknown is left out. */
 export function transcript(state: LearnerState): Transcript | undefined {
   const runs = submittedRuns(state);
   if (!state.identity || runs.length === 0) return undefined;
@@ -164,7 +202,7 @@ export function periodWindow(period: LeaderboardPeriod, at: Timestamp): Leaderbo
 /** 🔭️ Which runs a leaderboard counts: those submitted inside `window` (every run without one), of `quiz` only when it names one. */
 export type BoardScope = { readonly window?: LeaderboardWindow; readonly quiz?: Slug };
 
-/** 🔭️ The scope of the leaderboard of `period` — of `quiz` only when it names one — at the instant `at`. */
+/** 🎯️ The scope of the leaderboard of `period` — of `quiz` only when it names one — at the instant `at`. */
 export function boardScope(period: LeaderboardPeriod, quiz: Slug | undefined, at: Timestamp): BoardScope {
   const window = periodWindow(period, at);
   return { ...(window ? { window } : {}), ...(quiz === undefined ? {} : { quiz }) };
@@ -253,7 +291,26 @@ export function placeBin(position: number, length: number, places: number): numb
   return length < 2 || places < 1 ? 0 : Math.min(places - 1, Math.floor((2 * position * (places - 1) + (length - 1)) / (2 * (length - 1))));
 }
 
-/** 👪️ What the learners answered and scored in the submitted results of one quiz: the run scores per score bin; per task the scores of the results that count for it (per dimension the dimension's scores for a matching), classification counts per assigned category, sorting mean normalized position (position / (len − 1), 0 for a single item) summed in result order beside the count per presented place ({@link placeBin}), matching counts per assigned value key per dimension, counts keys ascending by code point; tasks, dimensions and items in definition order, unanswered items left out, results of other quizzes ignored. */
+/** 📌️ The value among `values` nearest to a guess on `scale`, the smaller of two equally near; `undefined` among none — the rule a guess is tallied by in the crowd, for anyone who marks where it counts. */
+export function nearestOf(values: Iterable<number>, scale: Scale, guess: number): number | undefined {
+  const position = scaled(guess, scale);
+  let nearest: number | undefined;
+  let gap = Infinity;
+  for (const value of values) {
+    const distance = Math.abs(scaled(value, scale) - position);
+    if (nearest !== undefined && !(distance < gap || (distance === gap && value < nearest))) continue;
+    nearest = value;
+    gap = distance;
+  }
+  return nearest;
+}
+
+/** 🧭️ The authored value of `dimension` nearest to a guess on the dimension's scale ({@link nearestOf}); `undefined` when no item of the task carries one. */
+export function nearestValue(task: MatchingTask, dimension: Slug, scale: Scale, guess: number): number | undefined {
+  return nearestOf(task.items.flatMap((item) => (Object.hasOwn(item.values, dimension) ? [item.values[dimension]!] : [])), scale, guess);
+}
+
+/** 👪️ What the learners answered and scored in the submitted results of one quiz, every challenge mixed: the run scores per score bin; per task the scores of the results that count for it (per dimension the dimension's scores for a matching), classification counts per assigned category, sorting mean normalized position (position / (len − 1), 0 for a single item) summed in result order beside the count per presented place ({@link placeBin}), matching counts per assigned value key per dimension — a guess (an item result that carries `miss`) under the authored value nearest to it ({@link nearestValue}) — counts keys ascending by code point; tasks, dimensions and items in definition order, unanswered items left out, results of other quizzes ignored. An item left unanswered counts nowhere, and a sorting nobody guessed in (every item a miss without a guess: no answer, or none that says anything) adds its score only. */
 export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView {
   const runs = results.filter((result) => result.quiz === quiz.id);
   const tasks = quiz.tasks.flatMap((task): CrowdTask[] => {
@@ -268,9 +325,10 @@ export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView 
       }
       case "sorting": {
         const answered = answeredTasks(runs, task.id, "sorting");
+        const ordered = answered.filter((result) => !result.items.every((item) => item.miss === true && item.guess === undefined));
         const count = presented(task);
         const items = task.items.flatMap((item): CrowdItem[] => {
-          const orders = answered.flatMap((result) => {
+          const orders = ordered.flatMap((result) => {
             const found = result.items.find((candidate) => candidate.item === item.id);
             return found === undefined ? [] : [{ position: found.position, length: result.items.length }];
           });
@@ -288,7 +346,9 @@ export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView 
           const items = task.items.flatMap((item): CrowdItem[] => {
             const assigned = results.flatMap((result) => {
               const found = result.items.find((candidate) => candidate.item === item.id);
-              return found === undefined ? [] : [valueKey(found.assigned)];
+              if (found?.assigned === undefined) return [];
+              const value = found.miss === undefined ? found.assigned : nearestValue(task, dimension.id, dimension.quantity.scale, found.assigned);
+              return value === undefined ? [] : [valueKey(value)];
             });
             return assigned.length === 0 ? [] : [{ item: item.id, answers: assigned.length, counts: counted(assigned) }];
           });

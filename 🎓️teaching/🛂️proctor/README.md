@@ -87,7 +87,7 @@ The proctor is configured by environment variables only:
 | `PROCTOR_LIMIT_SOCKETS` | WebSockets open in total | `8192` | `8192` |
 | `PROCTOR_LIMIT_IN_FLIGHT` | Requests served at once in total | `2048` | `2048` |
 | `PROCTOR_MAX_LEARNERS` | Registrations in total: anonymous learners plus claimed handles | `100000` | `100000` |
-| `PROCTOR_MAX_RUNS` | Submitted runs one learner may have over all quizzes | `1000` | `1000` |
+| `PROCTOR_MAX_RUNS` | Runs one learner may start over all quizzes (open, submitted or voided) | `1000` | `1000` |
 
 Every `PROCTOR_LIMIT_*` whose range the table does not name, and both `PROCTOR_MAX_*`, is a whole number from 1 to
 1000000; a value outside its range stops the boot and names the variable.
@@ -130,10 +130,14 @@ once: one that claims a second handle holds both, and keeps the identity it regi
 | Cap | Default | Refusal | Set by |
 |---|---|---|---|
 | Registrations: anonymous learners plus claimed handles | 100000 | `roster-full` | `PROCTOR_MAX_LEARNERS` |
-| Submitted runs of one learner over all quizzes | 1000 | `runs-exhausted` | `PROCTOR_MAX_RUNS` |
-| Submitted runs of one learner in one quiz | 200 | `runs-exhausted` | fixed |
-| Open runs of one learner in one quiz | 1 | `run-open` (a run left open on an earlier revision of the quiz is voided instead) | fixed |
+| Runs one learner started over all quizzes (open, submitted or voided) | 1000 | `runs-exhausted` | `PROCTOR_MAX_RUNS` |
+| Runs one learner started in one quiz (open, submitted or voided), so switching the challenge back and forth stops | 200 | `runs-exhausted` | fixed |
+| Open runs of one learner in one quiz | 1 | `run-open` at the open run's challenge (the client resumes it); a run left open at another challenge or on an earlier revision of the quiz is voided instead | fixed |
 | Answers recorded in one run (every change of an answer counts) | 2000 | `answers-exhausted` | fixed |
+| Openings of one task of an expert run | 1 | `already-opened` | fixed |
+
+A receipt is stored for every accepted command and for no refusal, and no command is accepted without an event: a
+repeated `open-task` is refused, so the receipts grow only with the facts the caps above bound.
 
 A real class is far below every one of them (300 learners playing every quiz dozens of times). The registration cap is
 held against a count the projector keeps, so it is a quota, not a ledger: a burst may pass it by the registrations
@@ -174,7 +178,7 @@ must never be throttled, and **one script must not be able to take the proctor d
 | Sockets per address | 2048 | 900 (three per learner in a run) | `429` |
 | Sockets in total | 8192 | — | `503` |
 | Requests in flight in total | 2048 | a few dozen: a request is in flight for milliseconds, and its body is taken before it counts | `503` |
-| Request body | 16384 bytes, delivered within 10 s | the largest real command is 2952 bytes (an answer naming every item of the largest task) | `413`; `408` when it does not arrive |
+| Request body | 16384 bytes, delivered within 10 s | the largest real command is 4186 bytes (an answer guessing every item of the largest task, each guess the longest number JSON writes, `-1.2345678901234567e-300`; measured 2026-10-03), more than three times below, the headroom the end-to-end test holds every catalog it plays to | `413`; `408` when it does not arrive |
 | Presence message (client to proctor) | 4096 bytes | a state is at most 2048 bytes | the socket closes |
 | Presence frame (proctor to one socket) | 4096 bytes per tick; per watch interval over everything watched | 20 cursors per tick; a room that changes more is sent over the next ticks, every changed learner once before any twice | the rest waits for the next frame |
 | Presence in total | 16 MiB per second | 11 MiB per second while 300 learners move their pointers | every socket waits longer for its next frame |
@@ -239,7 +243,9 @@ must never be throttled, and **one script must not be able to take the proctor d
   or occupy them.
 
 The gate `bun nx run @teaching/proctor:capacity` holds the release build to this, under its default cap of learners:
-300 simulated learners from one address play two quizzes each at five times the pace of a real lecture, alone and then
+300 simulated learners from one address play two quizzes each, spread evenly over the four challenges (an easy run read
+again after every answer for its hints, guesses on hard and expert, every expert task opened before its answers and
+answered only while its clock runs), at five times the pace of a real lecture, alone and then
 beside an abusive script from another address (it tries to fill the roster — registrations, anonymous and under
 handles, as fast as it can post them — while the hall signs up, floods malformed commands, queries and sockets on
 connections it keeps open, and sends oversized bodies and frames). It fails unless the hall saw no error and no
@@ -266,14 +272,17 @@ of 100000 registrations (1.8 %), of which `prune` would remove exactly the scrip
 a third of a core alone and two fifths to two thirds of a core beside the script, and at most 109 MiB. Joining a presence room (until the
 `welcome`) took 1 ms alone (p50; p99 9 to 13 ms) and 2 ms (p99 19 to 35 ms) while the script pushed two thousand
 sockets into the hall's own roster room; what gives under such a flood is the rest of presence — the hall was sent
-59 to 61 % of the presence bytes it was sent alone, its even split of the total.
+59 to 61 % of the presence bytes it was sent alone, its even split of the total. These figures, and the needs of a
+class in the table of the edge limits, were measured while the hall played medium runs only. The gate now plays all
+four challenges — an expert run adds one `open-task` per task and an easy run one read of the run per answer — and
+has not yet been run on that mix, so every figure above is to be re-measured by its next run on a quiet machine.
 
 ## Run
 
 | Command | What it does |
 |---|---|
 | `bun nx run @teaching/proctor:dev` | Serves `🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` on `127.0.0.1:8791` over the git-ignored `.🧬semio/🎓️teaching/proctor-dev/`. The dev site (Vite, port 6061) proxies `/instance`, `/commands`, `/queries`, `/actors` and `/scopes` to it, so in development the client stays same-origin. `PROCTOR_*` variables set by the launcher win. |
-| `bun nx run @teaching/architecture-quiz:dev` | The proctor and the site together in one terminal (launch row `🛠️dev🎓️teaching🏛️architecture❓️quiz`): it reuses a proctor that already answers on `PROCTOR_PORT`, else launches one exactly as `@teaching/proctor:dev` does, waits for `GET /instance`, then starts the site. One Ctrl+C stops both. See the site's README. |
+| `bun nx run @teaching/architecture-quiz:dev` | The proctor and the site together in one terminal (launch row `🛠️dev🎓️teaching🏛️architecture❓️quiz`): it reuses a proctor that already answers on `PROCTOR_PORT` (saying so when it serves another quiz contract), else launches one exactly as `@teaching/proctor:dev` does, waits for `GET /instance`, then starts the site; the proctor it launched is built and launched anew when its sources or catalog change and launched again when it ends by itself. One Ctrl+C stops both. See the site's README. |
 | `bun nx run @teaching/proctor:check [-- <catalog>]` | `proctor check <catalog>`: validates a catalog and every quiz it lists, and prints each quiz's revision. It exits non-zero and lists `[ERROR] <json-pointer> <code> (<quiz file>)` for every issue. |
 | `bun nx run @teaching/proctor:rebuild` | `proctor rebuild`: drops every read model of the dev data directory and refolds the whole event log, with progress. |
 | `bun nx run @teaching/proctor:health` | `proctor health` against the dev proctor (launch row `🩺️health🎓️teaching🛂️proctor`): exits 0 exactly when it serves. |
@@ -309,7 +318,8 @@ At boot, the proctor:
    revision. The fingerprint changes whenever a quiz file changes; the revision whenever the proctor starts keeping a
    read model differently (revision 2 added the crowd, revision 3 the handles, the standings and the registration
    count, revision 4 keeps a transcript per ranked learner instead of its standing, for the leaderboards of a period
-   and of one quiz, revision 5 the score and place distributions of the crowd).
+   and of one quiz, revision 5 the score and place distributions of the crowd, revision 6 the challenges: points and
+   bests by points in the learner views and transcripts, opened tasks and hints in the run views, guesses in the crowd).
 4. Relays any missing enrollment.
 5. Catches the projections up with progress.
 6. Listens.
@@ -339,7 +349,11 @@ Clients use the framework server contract (`@semio-tech/framework-server`), and 
 root:
 
 - `POST /commands` takes a `CommandEnvelope`:
-  - Its `kind` is `quiz.<type>` and its `version` is `1`.
+  - Its `kind` is `quiz.<type>` and its `version` is the wire version of the quiz contract (`WIRE_VERSION`,
+    `$defs/WireVersion` of the quiz schema; 4 since the hint verdicts and short labels). An envelope of any other version is
+    `envelope-mismatch: …` (a query of another version is `400`). `GET /instance` declares every command and query kind
+    at that version; the quiz client sends nothing to a proctor that does not declare its own (it keeps everything on
+    the device instead), so a proctor and a site of different contracts never take each other's commands or views.
   - `commandId` and `idempotencyKey` both equal the quiz command's `id`.
   - `tenant` and `scope` are the catalog id.
   - `target` is `{kind:"quiz-learner",id:<learner>}` for every command — except an `identify-learner` under a
@@ -348,8 +362,30 @@ root:
     `handleActorId(normalizeHandle(handle).key)` from the quiz core). A target of any other shape is `id-invalid`; a
     well-formed target that is not the command's own is `envelope-mismatch: …`.
   - `payload` holds the UTF-8 bytes of the quiz `Command` JSON.
+- The commands a learner sends:
+
+  | Kind | Payload beyond `id`, `learner` | Offline | What it decides |
+  |---|---|---|---|
+  | `quiz.identify-learner` | `identity` | authority required | a registration, anonymous or under a handle |
+  | `quiz.start-run` | `run`, `quiz`, `challenge` (`easy`, `medium`, `hard` or `expert`), `at` | authority required | `run-started` with the challenge at the `at` the device claims; an open run of the quiz at another challenge is voided first (`run-voided`, at the proctor's clock), one at the same challenge answers `run-open` |
+  | `quiz.open-task` | `run`, `task`, `at` | optimistic | starts the clock of a task of an expert run: `task-opened`, once per task (a repeat is refused with `already-opened`, so it stores no receipt) |
+  | `quiz.record-answer` | `run`, `task`, `answer`, `at` | optimistic | `answer-recorded`; on an expert run only within the task's `seconds` from its opening |
+  | `quiz.submit-run` | `run` | authority required | `run-submitted` with the result, its challenge and its points (`score × par`: 100, 200, 300, 400), then the badges; an expert run is submitted with whatever was answered |
+
+  `at` is the instant the learner acted by the device's clock. The proctor first lowers every `at` to five minutes
+  (`CLOCK_LEAD`, 300 000 ms) past its own clock: a device whose clock runs less than five minutes ahead is never
+  lowered, while a start or an opening dated an hour ahead is and buys no time. A run starts at its `at`, so a run
+  started offline keeps the device's start however late it arrives. The proctor raises the `at` of an opening or an
+  answer to its floor — the run's start for an opening and an untimed answer, the task's opening for a timed
+  answer — and applies the limit to those instants; apart from the lead its own clock never enters a time verdict,
+  so an answer made in time and delivered after a connection shortage still counts. A `challenge` that is none of the four, or an `at` that is no
+  integer from 0 to 2^64 − 1, is `command-malformed: …`; an `at` from 2^53 up to 2^64 − 1 (beyond the largest integer
+  every client reads exactly) is `id-invalid`.
 - A quiz rejection comes back as `{"status":"rejected","reason":{"kind":"invalid","detail":"<rejection>"}}`. Besides
-  the lifecycle's own (`unknown-learner`, `run-open`, `answer-invalid`, …) these are `id-invalid`, `handle-invalid`,
+  the lifecycle's own (`unknown-learner`, `run-open`, `answer-invalid`, …, and for the clock of an expert run
+  `run-untimed` — an `open-task` on a run without a clock —, `task-unopened` — an answer to a task that was not
+  opened —, `time-up` — an answer made after the task's `seconds` — and `already-opened` — an `open-task` for a task
+  opened before) these are `id-invalid`, `handle-invalid`,
   `handle-claimed`, `learner-exists`, `roster-full`, `runs-exhausted` and `answers-exhausted`
   (see [Identity](#identity-handles-ids-and-caps)).
 - Accepted events carry `kind: "quiz.<type>"` and the quiz `Event` JSON as their payload.
@@ -368,8 +404,9 @@ root:
   or of one: exactly `{"period":…,"quiz":…,"window":{"from":…,"until":…},"rows":[…],"learners":n,"submissions":m,
   "own":{…}}` — `quiz` only when the query named one, `window` for every period but `all-time`. A board counts the runs
   submitted inside its window — the day, the ISO week (from Monday) or the month that contains the proctor's clock, in
-  UTC — and of its quiz; its rows are made of those runs only (their best scores, the badges they earned, their count
-  and the last of them). It answers the top 100 rows, the number of ranked learners, the number of runs submitted in
+  UTC — and of its quiz; its rows are made of those runs only (per quiz the best run — the one with the most points,
+  whatever its challenge — as `{"challenge","score","points"}`, the `total` of those points, the badges they earned,
+  their count and the last of them). It answers the top 100 rows, the number of ranked learners, the number of runs submitted in
   the whole catalog (whatever the board: it grows with every submission, which is how a client knows when to ask for the
   crowds again) and — when the query names a learner with a run in scope — that learner's own row with its true rank,
   wherever it stands. The caller is named in the query because the proctor resolves no principal. A row never carries a
@@ -391,9 +428,21 @@ root:
   `places`, how often the learners put it at each place a sheet of the task presents. It exists for every quiz of the
   catalog, with `runs: 0`, ten zeros in every `scores` and no items before the first submission. The proctor keeps it
   incrementally, folding each `run-submitted` result into a stored per-quiz tally — score bins per quiz, task and
-  dimension, and per sorting item the count per order length and position, so nothing in the tally depends on the
-  quiz definition and the view bins the positions against the places the current definition presents — and it equals
-  the quiz core's `crowd_view` over every submitted result byte for byte.
+  dimension, and per sorting item the count per order length and position, so the view bins the positions against the
+  places the current definition presents — and it equals the quiz core's `crowd_view` over every submitted result byte
+  for byte. Runs of every challenge are mixed: the score bins count accuracy, a guessed matching value counts under the
+  authored value nearest to it (the one thing a tally takes from the definition; a changed catalog refolds it), an
+  item left unanswered on an expert run counts nowhere, and a sorting nobody guessed in adds its score only.
+- `quiz.run` answers the run with its sheet at the run's challenge: `easy` and `medium` sheets show the keys (a
+  sorting's ascending `keys`, a matching's `cards`, category descriptions and axis numbers), `hard` and `expert`
+  sheets carry no keys (no sorting `keys`, no `cards`, no descriptions, no axis numbers; profiles are shares of the
+  axis range), and every task of an `expert` sheet carries its `seconds`. An expert run view also
+  holds `opened` (task → instant), and an open `easy` run view holds `hints` for the answers that earned any (task →
+  questions, at most one per far-off item and three per task, those most wrong: `compare` a key against another
+  item's, preferring a familiar one, with its `verdict` `under`, `over` or `reversed`; `profile` — beside an item
+  rightly placed on the other side where there is one —, `group` or `category` for a misplaced classification item;
+  each questions a relation the answer claims and never states the truth). Sheet items, axes and quantities carry their
+  `short` labels for the hints to name; whether an item is `familiar` never leaves the proctor.
 - `GET /actors/<catalog>/quiz-learner/<learner>/events[?since=n]` (and `/events/ws`) replays one learner's event
   stream. The handle streams are readable by nobody (`403`); who holds a handle is answered by `quiz.handle` only.
 - Any other path answers the gateway's JSON `404`; a known route with another method answers `405` with its `Allow`.
@@ -455,9 +504,11 @@ What is admitted:
 - **States** must be the room's type and pass the quiz core's rules (`presence_problem`, `cursor_problem`,
   `thinking_problem`), and they may name only what the catalog renders: a place names a quiz of this catalog and a task
   of that quiz; a drag names an item of the room's quiz; a draft names tasks of the quiz with answers of their kind,
-  their items, categories and dimensions, and for matching only values a card of that dimension shows. The refusal
-  reason is the issue code and its JSON pointer (`tag-invalid /tag`, `quiz-unknown /place/quiz`,
-  `id-unknown /drag/item`, `kind-mismatch /answers/<task>`, `value-unknown /answers/<task>/values/<dimension>/<item>`),
+  their items, categories and dimensions, and only numbers an answer can carry: a matching value is a card value or,
+  where the keys are hidden, the number guessed, and a sorting guess names an item of its task; on a logarithmic scale
+  either is positive. The refusal reason is the issue code and its JSON pointer (`tag-invalid /tag`,
+  `quiz-unknown /place/quiz`, `id-unknown /drag/item`, `kind-mismatch /answers/<task>`,
+  `value-invalid /answers/<task>/values/<dimension>/<item>` or `/answers/<task>/guesses/<item>`),
   `state-invalid` for a state of the wrong shape, `state-too-large`, or `frame-invalid` for anything but a `state` or
   `watch` frame.
 
@@ -473,9 +524,11 @@ refuses a file of another format. Events, receipts and outbox deliveries are app
 same file and can always be rebuilt (`proctor rebuild`, with the serving proctor stopped: the directory belongs to one
 serving process).
 
-The format is `semio.teaching.proctor.sqlite` **v2**: one stream per handle instead of a roster stream, and no
-`learner-recalled` event. A v1 file — any development database written before the handle actors — is refused at open
-(`… holds format semio.teaching.proctor.sqlite v1; this proctor reads … v2`). There is no migration, because nothing
+The format is `semio.teaching.proctor.sqlite` **v3**: one stream per handle (since v2, which replaced the roster
+stream and the `learner-recalled` event), every `run-started` with its `challenge`, `task-opened` facts, every
+`answer-recorded` stamped with the instant the learner acted, and every result with its `challenge` and `points`. A file
+of an earlier format — any development database written before the challenges — is refused at open
+(`… holds format semio.teaching.proctor.sqlite v2; this proctor reads … v3`). There is no migration, because nothing
 was in production: delete the directory and start again. In development nobody has to: `@teaching/proctor:dev` (and
 the `dev` of a site that launches it) looks at the format row before it builds, moves the launcher's own disposable
 `.🧬semio/🎓️teaching/proctor-dev/` aside to `.🧬semio/🎓️teaching/proctor-dev.v<format>-<time>/`, starts with empty data and
@@ -645,7 +698,7 @@ dry run: nothing was changed
 | `🔨️modules/🧩️instance` | The `ServerInstance`, module, policy templates, the request gate (transport trust, CORS, preflight max-age), the wiring of the framework's throttle, route groups and command admission, presence wiring, the single-flight consistency middleware, and serving |
 | `🔨️modules/⌨️cli` | `serve`, `check`, `rebuild` and the operator verbs `health`, `backup`, `restore`, `erase`, `prune` |
 | `🏗️bootstrap` | Process entry (`🦀️.rs`) and the dev launcher that runs a private copy of the built binary (`🟦️.ts`) |
-| `🧫️fixtures` | A two-quiz catalog the tests play |
+| `🧫️fixtures` | A two-quiz catalog the tests play (the heating systems carry a category without a profile for the hints without one; a familiar kettle and a few short labels for the hints to prefer and name) |
 | `🧪️tests/🔬️conformance` | The framework storage laws, run against these stores |
-| `🧪️tests/🌐️end-to-end` | The whole API over HTTP, including a restart, handles claimed and recalled, the leaderboard's shape, the cross-origin API behind the gate, presence, watching and thinking with real WebSocket clients, the crowd after submissions, the operator verbs run as the built binary (health, backup while serving, a proctor booted on the restored copy, an erasure and the freed handle, a pruning that leaves everybody who played), and the edge: idempotency keys, id admission, body limit, throttling per address, the sign-up allowance, route set and socket limits |
+| `🧪️tests/🌐️end-to-end` | The whole API over HTTP, including a restart, handles claimed and recalled, a run at every challenge (keys and hints on easy — far-off sorting keys and matching cards compared with another item by factor or difference, `under`, `over` or `reversed`, the familiar kettle preferred, three hints at most per task, short labels on the sheet and familiarity kept back, misplaced classification items asked about a profile axis beside an item rightly placed above or below, a pairing together or apart, or a category without a profile, none once the run is submitted or voided —, keys on medium, guesses and their misses in the result on hard, the clock on expert for every kind of task with `open-task`, `task-unopened`, `time-up` at explicit instants, `already-opened` without a further receipt and a partial submission, malformed and unsafe instants and malformed openings refused at admission, a voided run when the challenge changes and switching back and forth until `runs-exhausted`, points and bests on the learner view and the board), the leaderboard's shape, the cross-origin API behind the gate, presence, watching and thinking with real WebSocket clients, the crowd after submissions, the operator verbs run as the built binary (health, backup while serving, a proctor booted on the restored copy, an erasure and the freed handle, a pruning that leaves everybody who played), and the edge: idempotency keys, id admission, body limit, throttling per address, the sign-up allowance, route set and socket limits |
 | `🧪️tests/🏋️capacity` | The capacity gate: a lecture hall of 300 from one address against the release binary under its default cap, alone and beside an abusive script that also tries to fill the roster |

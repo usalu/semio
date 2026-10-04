@@ -580,6 +580,35 @@
       }
     },
     {
+      "name": "architektur-und-technologie-quizze-steady",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@teaching/architecture-quiz:dev"
+      ],
+      "port": 6061,
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791",
+        "TEACHING_ARCHITECTURE_QUIZ_WATCH": "off"
+      }
+    },
+    {
+      "name": "architektur-und-technologie-quizze-beside",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📜️script.ts",
+        "dev"
+      ],
+      "port": 6063,
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6063",
+        "PROCTOR_PORT": "8793",
+        "PROCTOR_DATA": ".🧬semio/🎓️teaching/proctor-beside"
+      }
+    },
+    {
       "name": "framework-snapshot-sqlite",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite"]

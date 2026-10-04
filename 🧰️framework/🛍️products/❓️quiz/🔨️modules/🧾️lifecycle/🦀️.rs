@@ -1,18 +1,30 @@
-//! 🧾️ The learner lifecycle as pure `decide`/`evolve` pairs (design §8), shared by both cores; the
-//! proctor wraps them in framework deciders. One handle actor per handle key registers a pseudonym or
-//! name exactly once; one learner actor per learner owns its registration (directly when anonymous),
-//! runs, answers, submissions and badges. `at` is always the decision time.
+//! 🧾️ The learner lifecycle as pure `decide`/`evolve` pairs, shared by both cores; the proctor wraps
+//! them in framework deciders. One handle actor per handle key registers a pseudonym or name exactly
+//! once; one learner actor per learner owns its registration (directly when anonymous), runs, opened
+//! tasks, answers, submissions and badges.
+//!
+//! A run is started at a challenge that stays fixed for it; starting the quiz at another challenge
+//! voids its open run. The device keeps the time: `start-run`, `open-task` and `record-answer` carry
+//! the instant the learner acted. A decision lowers every claim to [`CLOCK_LEAD`](crate::challenge::CLOCK_LEAD) past the decision
+//! time and raises it to its floor ([`acted`]: 0 for the start, the run's start for an opening and
+//! an untimed answer, the task's opening for a timed answer) before it applies the limit of a timed
+//! task to those instants alone. A device decides at its own clock, so its claims never meet the
+//! lead: the deputy on the device and the proctor at delivery decide alike whatever the delay, as
+//! long as the device's clock runs less than the lead ahead of the proctor's; a claim dated further
+//! ahead buys no time. Every other `at` is the decision time.
 //!
 //! Every decision first holds the command to its id and slug shapes (`id-invalid`), so no malformed id
 //! reaches an event, and to the caps of [`Limits`], so no stream grows without bound. A claimed handle
 //! is recalled by a read, never by a command: recalling writes nothing.
 //!
 //! @see ../../🧬️schema/🔣️.json — `Command`, `Event`, `Rejection`, `Limits`
+//! @see ../⛰️challenge/🦀️.rs — the rules of a challenge and the instant a learner acted
 //! @see ../🧾️lifecycle/🟦️.ts — the TypeScript twin
 
 use crate::badges::earned_badges;
+use crate::challenge::{acted, challenge_rules};
 use crate::randomness::run_seed;
-use crate::schema::{Answer, BadgeAward, Catalog, Command, Event, Id, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
+use crate::schema::{Answer, BadgeAward, Catalog, Challenge, Command, Event, Id, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
 use crate::scoring::score_run;
 use crate::sheet::sheet_of;
 use crate::validation::{answer_complete, answer_rejection, command_rejection, normalize_handle};
@@ -78,18 +90,21 @@ pub fn evolve_handle(state: &mut HandleState, event: &Event) {
     }
 }
 
-/// 🏃️ One run of a learner as the learner actor remembers it; `recorded` counts every answer
-/// recorded, also the replaced ones.
+/// 🏃️ One run of a learner as the learner actor remembers it: its challenge, `recorded` counting every
+/// answer recorded, also the replaced ones, and `opened` holding when each opened task of a timed run
+/// was opened (empty on an untimed run).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunState {
     pub run: Id,
     pub quiz: Slug,
+    pub challenge: Challenge,
     pub revision: String,
     pub seed: u32,
     pub status: RunStatus,
     pub answers: BTreeMap<Slug, Answer>,
     pub recorded: u64,
+    pub opened: BTreeMap<Slug, Timestamp>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<RunResult>,
     pub started_at: Timestamp,
@@ -142,10 +157,14 @@ pub struct LearnerContext<'a> {
     pub limits: &'a Limits,
 }
 
-/// 🧑‍⚖️ Decide a command of this learner (design §8): the registration of an anonymous learner,
-/// `start-run`, `record-answer` or `submit-run`. A command of malformed ids is `id-invalid`, a command
+/// 🧑‍⚖️ Decide a command of this learner: the registration of an anonymous learner, `start-run`,
+/// `open-task`, `record-answer` or `submit-run`. A command of malformed ids is `id-invalid`, a command
 /// of another learner `unknown-learner`. Starting a run under an id the learner already used is
-/// refused with `run-open` or `run-closed`. Events are addressed to `state.learner`.
+/// refused with `run-open` or `run-closed`; starting a quiz whose open run has the same challenge with
+/// `run-open`, while another challenge voids that run; a start beyond the caps of runs started (open,
+/// submitted or voided) with `runs-exhausted`. Opening a task twice is `already-opened`. A timed
+/// run takes an answer only for an opened task (`task-unopened`) within its seconds (`time-up`) and is
+/// submitted whatever is answered. Events are addressed to `state.learner`.
 pub fn decide_learner(state: &LearnerState, command: &Command, context: &LearnerContext<'_>) -> Decision {
     if let Some(malformed) = command_rejection(command) {
         return Decision::Rejection(malformed);
@@ -155,8 +174,9 @@ pub fn decide_learner(state: &LearnerState, command: &Command, context: &Learner
     }
     let outcome = match command {
         Command::IdentifyLearner { identity, .. } => register(state, identity, context),
-        Command::StartRun { run, quiz, .. } => start_run(state, run, quiz, context),
-        Command::RecordAnswer { run, task, answer, .. } => record_answer(state, run, task, answer, context),
+        Command::StartRun { run, quiz, challenge, at, .. } => start_run(state, run, quiz, *challenge, *at, context),
+        Command::OpenTask { run, task, at, .. } => open_task(state, run, task, *at, context),
+        Command::RecordAnswer { run, task, answer, at, .. } => record_answer(state, run, task, answer, *at, context),
         Command::SubmitRun { run, .. } => submit_run(state, run, context),
     };
     outcome.map_or_else(Decision::Rejection, Decision::Events)
@@ -172,7 +192,7 @@ fn register(state: &LearnerState, identity: &Identity, context: &LearnerContext<
     Ok(vec![Event::LearnerRegistered { learner: state.learner.clone(), identity: Identity::Anonymous, at: context.now }])
 }
 
-fn start_run(state: &LearnerState, run: &Id, quiz: &Slug, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
+fn start_run(state: &LearnerState, run: &Id, quiz: &Slug, challenge: Challenge, at: Timestamp, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
     if state.identity.is_none() {
         return Err(Rejection::UnknownLearner);
     }
@@ -181,14 +201,13 @@ fn start_run(state: &LearnerState, run: &Id, quiz: &Slug, context: &LearnerConte
         return Err(if existing.status == RunStatus::Open { Rejection::RunOpen } else { Rejection::RunClosed });
     }
     let open = state.runs.iter().find(|candidate| candidate.quiz == *quiz && candidate.status == RunStatus::Open);
-    if open.is_some_and(|open| open.revision == current.revision) {
+    if open.is_some_and(|open| open.revision == current.revision && open.challenge == challenge) {
         return Err(Rejection::RunOpen);
     }
-    let submitted = || state.runs.iter().filter(|candidate| candidate.status == RunStatus::Submitted);
-    if submitted().count() as u64 >= context.limits.runs || submitted().filter(|candidate| candidate.quiz == *quiz).count() as u64 >= context.limits.runs_per_quiz {
+    if state.runs.len() as u64 >= context.limits.runs || state.runs.iter().filter(|candidate| candidate.quiz == *quiz).count() as u64 >= context.limits.runs_per_quiz {
         return Err(Rejection::RunsExhausted);
     }
-    let started = Event::RunStarted { learner: state.learner.clone(), run: run.clone(), quiz: quiz.clone(), revision: current.revision.clone(), seed: run_seed(run), at: context.now };
+    let started = Event::RunStarted { learner: state.learner.clone(), run: run.clone(), quiz: quiz.clone(), challenge, revision: current.revision.clone(), seed: run_seed(run), at: acted(at, 0, context.now) };
     Ok(match open {
         Some(open) => vec![Event::RunVoided { learner: state.learner.clone(), run: open.run.clone(), at: context.now }, started],
         None => vec![started],
@@ -208,18 +227,38 @@ fn current_quiz<'a>(found: &RunState, context: &LearnerContext<'a>) -> Option<&'
     context.quizzes.get(&found.quiz).filter(|current| current.revision == found.revision).map(|current| &current.quiz)
 }
 
-fn record_answer(state: &LearnerState, run: &Id, task: &Slug, answer: &Answer, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
+fn open_task(state: &LearnerState, run: &Id, task: &Slug, at: Timestamp, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
+    let found = open_run(state, run)?;
+    let quiz = current_quiz(found, context).ok_or(Rejection::QuizRevised)?;
+    if !challenge_rules(found.challenge).timed {
+        return Err(Rejection::RunUntimed);
+    }
+    if !sheet_of(quiz, found.seed, found.challenge).tasks.iter().any(|candidate| candidate.id() == task) {
+        return Err(Rejection::UnknownTask);
+    }
+    if found.opened.contains_key(task) {
+        return Err(Rejection::AlreadyOpened);
+    }
+    Ok(vec![Event::TaskOpened { learner: state.learner.clone(), run: run.clone(), task: task.clone(), at: acted(at, found.started_at, context.now) }])
+}
+
+fn record_answer(state: &LearnerState, run: &Id, task: &Slug, answer: &Answer, at: Timestamp, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
     let found = open_run(state, run)?;
     let quiz = current_quiz(found, context).ok_or(Rejection::QuizRevised)?;
     if found.recorded >= context.limits.answers_per_run {
         return Err(Rejection::AnswersExhausted);
     }
-    let sheet = sheet_of(quiz, found.seed);
+    let sheet = sheet_of(quiz, found.seed, found.challenge);
     let sheet_task = sheet.tasks.iter().find(|candidate| candidate.id() == task).ok_or(Rejection::UnknownTask)?;
+    let opened = if challenge_rules(found.challenge).timed { *found.opened.get(task).ok_or(Rejection::TaskUnopened)? } else { found.started_at };
+    let at = acted(at, opened, context.now);
+    if sheet_task.seconds().is_some_and(|seconds| at.saturating_sub(opened) > seconds.saturating_mul(1000)) {
+        return Err(Rejection::TimeUp);
+    }
     if let Some(rejection) = answer_rejection(sheet_task, answer) {
         return Err(rejection);
     }
-    Ok(vec![Event::AnswerRecorded { learner: state.learner.clone(), run: run.clone(), task: task.clone(), answer: answer.clone(), at: context.now }])
+    Ok(vec![Event::AnswerRecorded { learner: state.learner.clone(), run: run.clone(), task: task.clone(), answer: answer.clone(), at }])
 }
 
 fn submit_run(state: &LearnerState, run: &Id, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
@@ -228,8 +267,8 @@ fn submit_run(state: &LearnerState, run: &Id, context: &LearnerContext<'_>) -> R
     let Some(quiz) = current_quiz(found, context) else {
         return Ok(vec![Event::RunVoided { learner: learner.clone(), run: run.clone(), at: context.now }]);
     };
-    let sheet = sheet_of(quiz, found.seed);
-    if !sheet.tasks.iter().all(|task| answer_complete(task, found.answers.get(task.id()))) {
+    let sheet = sheet_of(quiz, found.seed, found.challenge);
+    if !challenge_rules(found.challenge).timed && !sheet.tasks.iter().all(|task| answer_complete(task, found.answers.get(task.id()))) {
         return Err(Rejection::RunIncomplete);
     }
     let result = score_run(quiz, &sheet, &found.answers).ok_or(Rejection::RunIncomplete)?;
@@ -249,10 +288,17 @@ pub fn evolve_learner(state: &mut LearnerState, event: &Event) {
     }
     match event {
         Event::LearnerRegistered { identity, .. } => state.identity = Some(identity.clone()),
-        Event::RunStarted { run, quiz, revision, seed, at, .. } => state.runs.push(RunState { run: run.clone(), quiz: quiz.clone(), revision: revision.clone(), seed: *seed, status: RunStatus::Open, answers: BTreeMap::new(), recorded: 0, result: None, started_at: *at, submitted_at: None }),
+        Event::RunStarted { run, quiz, challenge, revision, seed, at, .. } => {
+            state.runs.push(RunState { run: run.clone(), quiz: quiz.clone(), challenge: *challenge, revision: revision.clone(), seed: *seed, status: RunStatus::Open, answers: BTreeMap::new(), recorded: 0, opened: BTreeMap::new(), result: None, started_at: *at, submitted_at: None });
+        }
         Event::RunVoided { run, .. } => {
             if let Some(found) = state.run_mut(run) {
                 found.status = RunStatus::Voided;
+            }
+        }
+        Event::TaskOpened { run, task, at, .. } => {
+            if let Some(found) = state.run_mut(run) {
+                found.opened.insert(task.clone(), *at);
             }
         }
         Event::AnswerRecorded { run, task, answer, .. } => {

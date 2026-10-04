@@ -654,10 +654,11 @@
 
 %region 🔖️Keys-arch-sunpath
 % 🗝️ `arch-sunpath` computes solar altitude and azimuth and plots the day arc or the shadow fan.
+%   data      tl   optional month/hour/azimuth/altitude table; empty solves the supplied date and site
 %   latitude  fp   degrees north, negative south (default 52.37)
 %   longitude fp   degrees east, negative west (default 9.73)
 %   date      tl   ISO calendar day `YYYY-MM-DD` of the arc (default 2026-06-21)
-%   hours     clist local solar hours in UTC to sample (default 4,6,8,10,12,14,16,18,20)
+%   hours     clist UTC hours to sample (default 4,6,8,10,12,14,16,18,20)
 %   mode      choice stereographic|shadow  polar sun chart or a shadow fan (default stereographic)
 %   pole      fp    millimetre radius of the horizon circle, 0 fits the frame (default 0)
 %   object    fp    metres of object height used by mode=shadow (default 3)
@@ -674,11 +675,15 @@
 \fp_new:N \l_semio_viz_ar_object_fp
 \tl_new:N \l_semio_viz_ar_date_tl
 \tl_new:N \l_semio_viz_ar_mode_tl
+\tl_new:N \l_semio_viz_ar_sundata_tl
+\tl_new:N \l_semio_viz_ar_sunmonth_tl
+\int_new:N \l_semio_viz_ar_sunpoints_int
 \clist_new:N \l_semio_viz_ar_hours_clist
 
 % 🗝️ The option surface of `arch-sunpath`: the site coordinates, the day and the hours to sample,
 % the chart mode, the horizon radius and the object height.
 \keys_define:nn { semio / viz / family / arch-sunpath } {
+  data      .tl_set:N = \l_semio_viz_ar_sundata_tl,
   latitude  .fp_set:N = \l_semio_viz_ar_lat_fp,
   longitude .fp_set:N = \l_semio_viz_ar_lon_fp,
   date      .tl_set:N = \l_semio_viz_ar_date_tl,
@@ -739,6 +744,7 @@
 \cs_new_protected:Npn \semio_viz_ar_sunpath:n #1 {
   \semio_viz_frame_require:n { arch-sunpath }
   \semio_viz_dg_reset:
+  \tl_clear:N \l_semio_viz_ar_sundata_tl
   \fp_set:Nn \l_semio_viz_ar_lat_fp { 52.37 }
   \fp_set:Nn \l_semio_viz_ar_lon_fp { 9.73 }
   \tl_set:Nn \l_semio_viz_ar_date_tl { 2026-06-21 }
@@ -749,7 +755,9 @@
   \keys_set:nn { semio / viz / family / arch-sunpath } {#1}
   \fp_compare:nT { \l_semio_viz_ar_pole_fp <= 0 }
     { \fp_set:Nn \l_semio_viz_ar_pole_fp { min( \l_semio_viz_dg_w_fp , \l_semio_viz_dg_h_fp ) / 2 - 3 } }
-  \exp_args:NV \semio_viz_ar_sunpath_date:n \l_semio_viz_ar_date_tl
+  \tl_if_empty:NTF \l_semio_viz_ar_sundata_tl
+    { \exp_args:NV \semio_viz_ar_sunpath_date:n \l_semio_viz_ar_date_tl }
+    { \semio_viz_ar_sunpath_draw: }
 }
 
 % 📆 Delimits the ISO date so the parser below can see its hyphens.
@@ -770,10 +778,39 @@
     ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } )
     circle [ radius=\fp_eval:n { \l_semio_viz_ar_pole_fp } ] ;
   \tl_clear:N \l_semio_viz_ar_path_tl
-  \clist_map_inline:Nn \l_semio_viz_ar_hours_clist { \semio_viz_ar_sunpath_hour:n {##1} }
+  \tl_clear:N \l_semio_viz_ar_sunmonth_tl
+  \int_zero:N \l_semio_viz_ar_sunpoints_int
+  \tl_if_empty:NTF \l_semio_viz_ar_sundata_tl
+    { \clist_map_inline:Nn \l_semio_viz_ar_hours_clist { \semio_viz_ar_sunpath_hour:n {##1} } }
+    { \exp_args:NV \semio_viz_ar_sunpath_table:n \l_semio_viz_ar_sundata_tl }
+  \semio_viz_ar_sunpath_flush:
+}
+
+% 📑 Reads authored solar positions and separates consecutive month arcs.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_table:n #1 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_ar_n_int
+  \int_step_inline:nn { \l_semio_viz_ar_n_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} { month } \l_semio_viz_dg_cell_tl
+    \tl_if_eq:NNF \l_semio_viz_ar_sunmonth_tl \l_semio_viz_dg_cell_tl
+      { \semio_viz_ar_sunpath_flush: }
+    \tl_set_eq:NN \l_semio_viz_ar_sunmonth_tl \l_semio_viz_dg_cell_tl
+    \semio_viz_table_cell:nnnN {#1} {##1} { hour } \l_semio_viz_dg_cell_tl
+    \semio_viz_table_cell:nnnN {#1} {##1} { azimuth } \l_semio_viz_dg_cell_tl
+    \fp_set:Nn \l_semio_viz_ar_azi_fp { \l_semio_viz_dg_cell_tl }
+    \semio_viz_table_cell:nnnN {#1} {##1} { altitude } \l_semio_viz_dg_cell_tl
+    \fp_set:Nn \l_semio_viz_ar_alt_fp { \l_semio_viz_dg_cell_tl }
+    \semio_viz_ar_sunpath_position:
+  }
+}
+
+% 🌅 Emits the current daylight arc before a month change, horizon crossing or final sample.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_flush: {
   \tl_if_empty:NF \l_semio_viz_ar_path_tl {
     \draw [ semio-warning , line~width=\semio@stroke@default ] \l_semio_viz_ar_path_tl ;
+    \semio_viz_probe_geometry:nx { diagram-sun-arc } { \int_use:N \l_semio_viz_ar_sunpoints_int }
   }
+  \tl_clear:N \l_semio_viz_ar_path_tl
+  \int_zero:N \l_semio_viz_ar_sunpoints_int
 }
 
 % 🕐 One sampled hour: solves the sun position and, while it is above the horizon, either casts the
@@ -782,22 +819,35 @@
   \semio_viz_ar_days:nnnn
     { \l_semio_viz_dg_ta_tl } { \l_semio_viz_dg_tb_tl } { \l_semio_viz_dg_cell_tl } {#1}
   \semio_viz_ar_sun:
+  \semio_viz_ar_sunpath_position:
+}
+
+% 📍 Projects one supplied or computed sun position and casts shadows opposite the solar bearing.
+\cs_new_protected:Npn \semio_viz_ar_sunpath_position: {
   \semio_viz_probe_geometry:nx { diagram-sun }
     { \semio_viz_format_mm:n { \l_semio_viz_ar_alt_fp } , \semio_viz_format_mm:n { \l_semio_viz_ar_azi_fp } }
-  \fp_compare:nT { \l_semio_viz_ar_alt_fp > 0 } {
+  \fp_compare:nTF { \l_semio_viz_ar_alt_fp > 0 } {
     \str_if_eq:VnTF \l_semio_viz_ar_mode_tl { shadow }
       {
         \fp_set:Nn \l_semio_viz_ar_u_fp
           { min( \l_semio_viz_ar_object_fp / tand( max( \l_semio_viz_ar_alt_fp , 1 ) ) , \l_semio_viz_ar_pole_fp ) }
         \draw [ semio-chrome-border-emphasized , line~width=\semio@stroke@hairline ]
           ( \fp_eval:n { \l_semio_viz_dg_x_fp } , \fp_eval:n { \l_semio_viz_dg_y_fp } ) --
-          ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
-            \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } ) ;
+          ( \fp_eval:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
+            \fp_eval:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } ) ;
+        \semio_viz_probe_geometry:nx { diagram-sun-point }
+          { \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp + \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
+            \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp + \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } }
       }
       {
         \fp_set:Nn \l_semio_viz_ar_u_fp
-          { \l_semio_viz_ar_pole_fp * ( 90 - \l_semio_viz_ar_alt_fp ) / 90 }
+          { \l_semio_viz_ar_pole_fp * tand( ( 90 - \l_semio_viz_ar_alt_fp ) / 2 ) }
+        \int_incr:N \l_semio_viz_ar_sunpoints_int
         \fp_set:Nn \l_semio_viz_ar_v_fp { \l_semio_viz_ar_azi_fp + 180 }
+        \fill [ semio-warning ]
+          ( \fp_eval:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
+            \fp_eval:n { \l_semio_viz_dg_y_fp - \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } )
+          circle [ radius=0.35 ] ;
         \tl_if_empty:NTF \l_semio_viz_ar_path_tl
           {
             \tl_set:Nx \l_semio_viz_ar_path_tl
@@ -814,7 +864,13 @@
               }
           }
       }
+    \str_if_eq:VnF \l_semio_viz_ar_mode_tl { shadow } {
+      \semio_viz_probe_geometry:nx { diagram-sun-point }
+        { \semio_viz_format_mm:n { \l_semio_viz_dg_x_fp - \l_semio_viz_ar_u_fp * sind( \l_semio_viz_ar_azi_fp ) } ,
+          \semio_viz_format_mm:n { \l_semio_viz_dg_y_fp - \l_semio_viz_ar_u_fp * cosd( \l_semio_viz_ar_azi_fp ) } }
+    }
   }
+  { \semio_viz_ar_sunpath_flush: }
 }
 % ☀️ Publishes the solar chart family under the name `arch-sunpath`.
 \SemioVizFamily { arch-sunpath } { \semio_viz_ar_sunpath:n {#1} }
@@ -925,6 +981,21 @@
 %region 🔖️DemoData
 % 🧪 Architecture fixtures every family in this package defaults to.
 \cs_new_protected:Npn \semio_viz_ar_demo: {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-sunpath } {
+    \group_begin:
+    \semio_viz_table_new:nn { demo-arch-sunpath } { month, hour, azimuth, altitude }
+    \fp_set:Nn \l_semio_viz_ar_lat_fp { 52.37 }
+    \fp_set:Nn \l_semio_viz_ar_lon_fp { 9.73 }
+    \clist_map_inline:nn { 3, 6, 12 } {
+      \clist_map_inline:nn { 4, 6, 8, 10, 12, 14, 16, 18, 20 } {
+        \semio_viz_ar_days:nnnn { 2026 } {##1} { 21 } {####1}
+        \semio_viz_ar_sun:
+        \semio_viz_table_row:nx { demo-arch-sunpath }
+          { ##1, ####1, \fp_use:N \l_semio_viz_ar_azi_fp, \fp_use:N \l_semio_viz_ar_alt_fp }
+      }
+    }
+    \group_end:
+  }
   \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-arch-layer } {
     \semio_viz_table_new:nn { demo-arch-layer } { id, label, tier, tone }
     \semio_viz_table_row:nn { demo-arch-layer } { web, {Web app}, Presentation, 1 }

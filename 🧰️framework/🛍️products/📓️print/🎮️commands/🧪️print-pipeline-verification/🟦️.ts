@@ -1,6 +1,7 @@
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { TEST_LEVELS } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
 
+import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/📜️script.ts";
 import { BundleScript } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🔬️probes/🟦️.ts";
@@ -26,12 +27,14 @@ export class PrintPipelineVerificationCommand extends BundleScript {
       const mode = segments[1] ?? "coverage";
       if (!["quick", "coverage", "full"].includes(mode)) throw new Error(`unknown viz test mode: ${mode}`);
       await verifyPrintPipelineQuick();
+      await verifyVizChartInferences(["quick"]);
       verifyVisualizationCoverage();
       if (mode === "full") await verifyPrintVisualizationBuild();
       return;
     }
     const { level } = resolveTestLevel(segments);
     await verifyPrintPipelineQuick();
+    await verifyVizChartInferences([level === "exhaustive" ? "exhaustive" : level === "long" ? "long" : "quick"]);
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong();
   }
 }

@@ -1736,8 +1736,8 @@
         "hours": {
           "type": "string",
           "description": {
-            "en": "Local solar hours in UTC to sample.",
-            "de": "Abzutastende wahre Ortsstunden in UTC."
+            "en": "UTC hours to sample on the configured calendar date.",
+            "de": "Abzutastende UTC-Stunden am eingestellten Kalendertag."
           }
         },
         "latitude": {
@@ -1792,6 +1792,14 @@
           "description": {
             "en": "Frame size in millimetres.",
             "de": "Rahmengröße in Millimetern."
+          }
+        },
+        "data": {
+          "type": "string",
+          "default": "",
+          "description": {
+            "en": "Optional table with month, hour, azimuth and altitude columns. An empty name computes positions from date, UTC hours, latitude and longitude. Azimuth is in degrees clockwise from south; altitude is in degrees above the horizon.",
+            "de": "Optionale Tabelle mit den Spalten month, hour, azimuth und altitude. Ein leerer Name berechnet Sonnenstände aus Datum, UTC-Stunden, Breite und Länge. Der Azimut wird in Grad im Uhrzeigersinn ab Süden, die Höhe in Grad über dem Horizont angegeben."
           }
         }
       }
@@ -9813,6 +9821,14 @@
             "en": "Quantitative column of the series.",
             "de": "Quantitative Spalte der Reihe."
           }
+        },
+        "caption": {
+          "type": "boolean",
+          "default": true,
+          "description": {
+            "en": "Draw the figure facility caption; namespace presentations can suppress the delegated caption.",
+            "de": "Beschriftung der Abbildungsfunktion zeichnen; Namensraumdarstellungen können die delegierte Beschriftung ausblenden."
+          }
         }
       }
     },
@@ -10013,7 +10029,8 @@
           "description": {
             "en": "Window of the moving average and the bands.",
             "de": "Fenster des gleitenden Mittels und der Bänder."
-          }
+          },
+          "minimum": 1
         },
         "x": {
           "type": "string",
@@ -10053,6 +10070,15 @@
           "description": {
             "en": "Value-axis domain override.",
             "de": "Vorgabe des Wertebereichs der Werteachse."
+          }
+        },
+        "deviation": {
+          "type": "number",
+          "minimum": 0,
+          "default": 2,
+          "description": {
+            "en": "Bollinger standard-deviation multiplier.",
+            "de": "Standardabweichungsmultiplikator der Bollinger-Bänder."
           }
         }
       }
@@ -22969,9 +22995,11 @@
         },
         "scale": {
           "type": "string",
+          "enum": ["length", "depth", "equal"],
+          "default": "length",
           "description": {
-            "en": "Named scale the values pass through.",
-            "de": "Benannte Skala, durch die die Werte laufen."
+            "en": "Branch ordinate: accumulated length, tree depth, or equal leaf rank with separated cluster leaves.",
+            "de": "Astordinate: summierte Länge, Baumtiefe oder gleiche Blattebene mit getrennten Clusterblättern."
           }
         },
         "separationDepth": {
@@ -27915,6 +27943,15 @@
             "de": "Gitter der impliziten Kurve."
           }
         },
+        "samples": {
+          "type": "integer",
+          "default": 120,
+          "minimum": 1,
+          "description": {
+            "en": "Uniform intervals per Riemann sheet; each sheet includes both endpoints.",
+            "de": "Gleichmäßige Intervalle je Riemannschem Blatt; jedes Blatt enthält beide Endpunkte."
+          }
+        },
         "seed": {
           "type": "integer",
           "default": 20260905,
@@ -30243,8 +30280,8 @@
         "scale": {
           "type": "number",
           "description": {
-            "en": "Millimetres per unit of force.",
-            "de": "Millimeter je Krafteinheit."
+            "en": "Nominal millimetres per force unit before uniform canvas fitting; physical magnitudes remain unchanged.",
+            "de": "Nominelle Millimeter je Krafteinheit vor der gleichmäßigen Einpassung; physikalische Beträge bleiben unverändert."
           }
         },
         "seed": {
@@ -30281,8 +30318,8 @@
           "type": "number",
           "default": 60,
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         "xlabel": {
@@ -31911,8 +31948,8 @@
         "range": {
           "type": "string",
           "description": {
-            "en": "Output range `min,max` of the scale or sweep.",
-            "de": "Ausgabebereich `min,max` der Skala bzw. des Durchlaufs."
+            "en": "Explicit energy range `min,max`. When absent, fit every authored level, sampled potential value or band edge with a 12% margin.",
+            "de": "Expliziter Energiebereich `min,max`. Ohne Angabe werden alle vorgegebenen Niveaus, abgetasteten Potentialwerte oder Bandkanten mit 12 % Rand eingepasst."
           }
         },
         "seed": {
@@ -31941,8 +31978,8 @@
         "transitions": {
           "type": "string",
           "description": {
-            "en": "Arrows between level indices.",
-            "de": "Pfeile zwischen den Niveauindizes."
+            "en": "Slash-separated from/to/label records. From/to are one-based level indices; optional labels have measured spacing and leaders.",
+            "de": "Durch Schrägstriche getrennte von/nach/Beschriftung-Datensätze. Von/nach sind einsbasierte Niveauindizes; optionale Beschriftungen erhalten gemessene Abstände und Verbindungslinien."
           }
         },
         "variant": {
@@ -33024,8 +33061,8 @@
           "type": "number",
           "default": 60,
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         "xlabel": {
@@ -34148,8 +34185,8 @@
           "type": "number",
           "default": 60,
           "description": {
-            "en": "Canvas width in millimetres.",
-            "de": "Zeichenflächenbreite in Millimetern."
+            "en": "Canvas width in millimetres. Physical coordinates are uniformly fitted after reserving measured caption space.",
+            "de": "Zeichenflächenbreite in Millimetern. Physikalische Koordinaten werden nach Reservierung des gemessenen Beschriftungsraums gleichmäßig eingepasst."
           }
         },
         "xlabel": {
@@ -44951,8 +44988,8 @@
         "altitude"
       ],
       "description": {
-        "en": "Sun positions over a day and a year, as azimuth and altitude per month and hour.",
-        "de": "Sonnenstände über Tag und Jahr, als Azimut und Höhe je Monat und Stunde."
+        "en": "Sun positions by month and UTC hour. Azimuth is in degrees clockwise from south; altitude is in degrees above the horizon.",
+        "de": "Sonnenstände je Monat und UTC-Stunde. Azimut in Grad im Uhrzeigersinn ab Süden, Höhe in Grad über dem Horizont."
       }
     },
     {
@@ -47648,6 +47685,876 @@
         }
       },
       "additionalProperties": false
+    },
+    "ChartLocalizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "en",
+        "de"
+      ]
+    },
+    "ChartTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "name",
+        "columns",
+        "rows"
+      ]
+    },
+    "ChartEncoding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ]
+        }
+      }
+    },
+    "ChartScale": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "log",
+            "pow",
+            "sqrt",
+            "symlog",
+            "identity",
+            "ordinal",
+            "band",
+            "point",
+            "quantile",
+            "quantize",
+            "threshold",
+            "sequential",
+            "diverging",
+            "temporal"
+          ]
+        },
+        "domain": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "range": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "options": {
+          "$ref": "#/$defs/ChartScaleOptions"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "linear",
+                    "log",
+                    "pow",
+                    "sqrt",
+                    "symlog",
+                    "identity",
+                    "ordinal",
+                    "quantile",
+                    "quantize",
+                    "threshold",
+                    "sequential",
+                    "diverging",
+                    "temporal"
+                  ]
+                }
+              }
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "band",
+                    "point"
+                  ]
+                },
+                "options": {
+                  "properties": {
+                    "unknown": false
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "required": [
+        "name",
+        "kind",
+        "domain",
+        "range"
+      ]
+    },
+    "ChartTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "filter",
+            "sort",
+            "group",
+            "aggregate",
+            "rollup",
+            "summary",
+            "fold",
+            "pivot",
+            "join",
+            "window",
+            "normalize",
+            "cumulative",
+            "bin",
+            "stack",
+            "quantile",
+            "kde",
+            "regression"
+          ]
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "ChartLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mark": {
+          "type": "string",
+          "enum": [
+            "bar",
+            "rect",
+            "heatmap",
+            "point",
+            "circle",
+            "symbol",
+            "line",
+            "area",
+            "band",
+            "trail",
+            "arc",
+            "pie",
+            "text",
+            "rule",
+            "link",
+            "path",
+            "polygon",
+            "ribbon"
+          ]
+        },
+        "data": {
+          "type": "string"
+        },
+        "transform": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartTransform"
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": [
+                "stack",
+                "bin",
+                "hexbin",
+                "beeswarm",
+                "jitter",
+                "pie",
+                "arc",
+                "chord",
+                "sankey",
+                "alluvial",
+                "treemap",
+                "partition",
+                "pack",
+                "force",
+                "tree",
+                "cluster",
+                "dag",
+                "bundling",
+                "voronoi",
+                "delaunay",
+                "hull",
+                "contour",
+                "density",
+                "projection"
+              ]
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            }
+          },
+          "required": [
+            "algorithm"
+          ]
+        },
+        "encodings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "y": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "x2": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "y2": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "angle": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "endAngle": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "radius": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "innerRadius": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "size": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "shape": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "fill": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "stroke": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "strokeWidth": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "opacity": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "text": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "dash": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "width": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "order": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "detail": {
+              "$ref": "#/$defs/ChartEncoding"
+            },
+            "rotation": {
+              "$ref": "#/$defs/ChartEncoding"
+            }
+          }
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "required": [
+        "mark"
+      ]
+    },
+    "ChartGuide": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "axis",
+            "legend",
+            "grid"
+          ]
+        },
+        "scale": {
+          "type": "string",
+          "default": "x"
+        },
+        "orient": {
+          "type": "string",
+          "enum": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/ChartLocalizedText"
+        },
+        "ticks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tickValues": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "tickFormat": {
+          "type": "string"
+        },
+        "tickSize": {
+          "type": "number",
+          "default": 1.4
+        },
+        "minor": {
+          "type": "boolean"
+        },
+        "grid": {
+          "type": "boolean"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "description": "Native guide controls. Authored at, from, to and center coordinates use a Cartesian origin at the bottom left; polar angles run counterclockwise from the positive horizontal axis. Inference projects them into the drawing scene.",
+          "x-semio-description": {
+            "en": "Native guide controls. Authored at, from, to and center coordinates use a Cartesian origin at the bottom left; polar angles run counterclockwise from the positive horizontal axis. Inference projects them into the drawing scene.",
+            "de": "Native Führungseinstellungen. Angegebene Koordinaten at, from, to und center verwenden einen kartesischen Ursprung unten links; Polarwinkel laufen gegen den Uhrzeigersinn ab der positiven Horizontalen. Die Inferenz projiziert sie in die Zeichenszene."
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "x-semio-guide-defaults": {
+        "axis": {
+          "tickSize": 1.4,
+          "tickSizeOuter": 1.4,
+          "tickPadding": 0.8,
+          "titleGap": 5,
+          "labelSize": 6.6,
+          "titleSize": 7.2,
+          "scale": "x",
+          "orient": "bottom",
+          "labelFont": "SemioSans",
+          "titleFont": "SemioMono",
+          "strokeRole": "hairline",
+          "strokeColorRole": "border-emphasized",
+          "minorStrokeColorRole": "border-normal",
+          "gridStrokeColorRole": "border-normal",
+          "textColorRole": "foreground",
+          "minorOpacity": 0.6,
+          "gridOpacity": 0.45
+        },
+        "legend": {
+          "scale": "x",
+          "kind": "swatch",
+          "orient": "vertical",
+          "columns": 1,
+          "ticks": 5,
+          "hatchLines": 3,
+          "itemGap": 1.2,
+          "swatchSize": 2.6,
+          "labelGap": 1.2,
+          "length": 24,
+          "symbol": "circle",
+          "sizeMode": "area",
+          "offset": 0,
+          "inset": 2,
+          "labelSize": 6.6,
+          "titleSize": 7.2,
+          "labelFont": "SemioSans",
+          "titleFont": "SemioMono",
+          "strokeRole": "default",
+          "outlineStrokeRole": "hairline",
+          "textColorRole": "foreground"
+        }
+      },
+      "x-semio-guide-units": {
+        "geometry": "millimetre",
+        "typography": "tex-point",
+        "rotation": "degree",
+        "nativeCoordinates": "cartesian-y-up",
+        "nativeAngle": "counterclockwise-from-positive-x",
+        "nativeLabelRotation": "counterclockwise"
+      },
+      "x-semio-guide-geometry": {
+        "defaultPolarRadius": {
+          "en": "Half the shorter canvas dimension, reduced by the largest authored frame inset, with a minimum of one millimetre.",
+          "de": "Die Hälfte der kürzeren Leinwandseite, vermindert um den größten angegebenen Rahmeneinzug, mindestens ein Millimeter."
+        }
+      }
+    },
+    "ChartAnnotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "text",
+            "label",
+            "line",
+            "rule",
+            "rect",
+            "circle",
+            "point"
+          ]
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "x2": {
+          "type": "number"
+        },
+        "y2": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "text": {
+          "$ref": "#/$defs/ChartLocalizedText"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "x",
+        "y"
+      ]
+    },
+    "ChartSpecification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "margin": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "top": {
+              "type": "number"
+            },
+            "right": {
+              "type": "number"
+            },
+            "bottom": {
+              "type": "number"
+            },
+            "left": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ]
+        },
+        "theme": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "appearance": {
+              "type": "string",
+              "enum": [
+                "light",
+                "dark"
+              ]
+            },
+            "palette": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "de"
+          ]
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartTable"
+          }
+        },
+        "scales": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartScale"
+          }
+        },
+        "coordinate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "cartesian",
+                "polar",
+                "ternary",
+                "barycentric",
+                "parallel",
+                "logpolar",
+                "geographic"
+              ]
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean"
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartLayer"
+          }
+        },
+        "guides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartGuide"
+          }
+        },
+        "title": {
+          "$ref": "#/$defs/ChartLocalizedText"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartAnnotation"
+          }
+        },
+        "presets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChartPreset"
+          }
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "language",
+        "layers"
+      ]
+    },
+    "ChartPreset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "data": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      }
+    },
+    "ChartScaleOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nice": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "clamp": {
+          "type": "boolean"
+        },
+        "padding": {
+          "type": "number",
+          "minimum": 0
+        },
+        "paddingInner": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "paddingOuter": {
+          "type": "number",
+          "minimum": 0
+        },
+        "align": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "round": {
+          "type": "boolean"
+        },
+        "base": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "not": {
+            "const": 1
+          }
+        },
+        "exponent": {
+          "type": "number"
+        },
+        "constant": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ticks": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tickValues": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "string"
+            ]
+          }
+        },
+        "tickFormat": {
+          "type": "string"
+        },
+        "interpolator": {
+          "type": "string",
+          "enum": [
+            "number",
+            "round",
+            "rgb",
+            "lab",
+            "hcl",
+            "oklab"
+          ]
+        },
+        "scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reverse": {
+          "type": "boolean"
+        },
+        "interval": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "day",
+            "week",
+            "month",
+            "year"
+          ]
+        },
+        "unknown": {
+          "type": [
+            "number",
+            "string",
+            "boolean",
+            "null"
+          ]
+        }
+      }
     }
   }
 }

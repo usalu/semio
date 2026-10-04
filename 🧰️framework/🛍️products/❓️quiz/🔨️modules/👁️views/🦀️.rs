@@ -1,10 +1,13 @@
 //! 👁️ The read models a proctor answers (`CatalogView`, `LearnerView`, `RunView`, `Leaderboard`,
 //! `CrowdView`), derived from the catalog, the learner states and the submitted results.
 //!
-//! Best scores are the maximum submitted score per quiz id; totals sum `best × 100` over the catalog
-//! quizzes in catalog order; `reachedAt` is the submission time of the last submission (in
-//! submission-time order, ties in start order) that set or raised a best score; `lastActivity` is the
-//! latest submission time.
+//! A best is the submitted run of a quiz with the most points whatever its challenge (a later run
+//! replaces it only with strictly more); totals sum the points of the bests over the catalog quizzes
+//! in catalog order; `reachedAt` is the submission time of the last submission (in submission-time
+//! order, ties in start order) that set or raised a best; `lastActivity` is the latest submission
+//! time. A run view carries the sheet at the run's challenge, on a timed run when each opened task was
+//! opened, and while the run is open at a challenge that hints the hints of its answers. The crowd
+//! mixes every challenge and tallies a guessed value under the nearest authored one.
 //!
 //! A leaderboard has a scope ([`BoardScope`]): the window of its period around an instant
 //! ([`period_window`]: the day, the ISO week or the month in UTC, none for all-time) and, when it
@@ -14,15 +17,18 @@
 //! a badge or a registration changes a transcript.
 //!
 //! @see ../../🧬️schema/🔣️.json — the view contracts
+//! @see ../⛰️challenge/🦀️.rs — the rules of a challenge and the hints
 //! @see ../👁️views/🟦️.ts — the TypeScript twin
 //! @see <https://howardhinnant.github.io/date_algorithms.html#civil_from_days> — the calendar arithmetic
 
+use crate::challenge::{challenge_rules, hints_of};
 use crate::lifecycle::{LearnerState, LoadedQuiz};
 use crate::randomness::fnv1a32;
 use crate::schema::{
-    Catalog, CatalogBadgeView, CatalogQuizView, CatalogTaskView, CatalogView, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, DimensionResult, Id, Identity, Leaderboard, LeaderboardPeriod, LeaderboardRow, LeaderboardWindow, LearnerView, Quiz, RunResult, RunStatus, RunSummary, RunView, Score, Slug, Task, TaskKind, TaskResult, Timestamp,
-    CROWD_SCORE_BINS, LEADERBOARD_TOP,
+    Answer, Best, Catalog, CatalogBadgeView, CatalogQuizView, CatalogTaskView, CatalogView, Challenge, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, Dimension, DimensionResult, Hint, Id, Identity, Leaderboard, LeaderboardPeriod, LeaderboardRow, LeaderboardWindow, LearnerView, MatchingItemResult,
+    MatchingTask, Quiz, RunResult, RunStatus, RunSummary, RunView, Scale, Score, Sheet, Slug, SortingItemResult, Task, TaskKind, TaskResult, Timestamp, CROWD_SCORE_BINS, LEADERBOARD_TOP,
 };
+use crate::scoring::scaled;
 use crate::sheet::sheet_of;
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
@@ -44,35 +50,61 @@ pub fn catalog_view(catalog: &Catalog, quizzes: &[Quiz]) -> CatalogView {
     }
 }
 
-/// 🧑‍🏫️ A registered learner's runs (newest first), badges, best scores and total; `None` before
-/// registration.
+/// 🧑‍🏫️ A registered learner's runs (newest first, each with its challenge and, once submitted, its
+/// score and points), badges, bests and total; `None` before registration.
 pub fn learner_view(state: &LearnerState, catalog: &CatalogView) -> Option<LearnerView> {
     let (best, _) = bests(&submissions(state));
     Some(LearnerView {
         learner: state.learner.clone(),
         identity: state.identity.clone()?,
-        runs: state.runs.iter().rev().map(|run| RunSummary { run: run.run.clone(), quiz: run.quiz.clone(), status: run.status, score: run.result.as_ref().map(|result| result.score), started_at: run.started_at, submitted_at: run.submitted_at }).collect(),
+        runs: state
+            .runs
+            .iter()
+            .rev()
+            .map(|run| RunSummary { run: run.run.clone(), quiz: run.quiz.clone(), challenge: run.challenge, status: run.status, started_at: run.started_at, score: run.result.as_ref().map(|result| result.score), points: run.result.as_ref().map(|result| result.points), submitted_at: run.submitted_at })
+            .collect(),
         badges: state.badges.clone(),
         total: total(&best, catalog),
         best,
     })
 }
 
-/// 🔬️ One run with its sheet (recomputed from the current quiz and the run seed), answers and result;
-/// `None` when the run or its quiz is unknown.
+/// 🔦️ The hints of a run per task id, only for tasks that have any: what each recorded answer earns
+/// from [`hints_of`].
+fn run_hints(quiz: &Quiz, sheet: &Sheet, answers: &BTreeMap<Slug, Answer>) -> BTreeMap<Slug, Vec<Hint>> {
+    sheet
+        .tasks
+        .iter()
+        .filter_map(|sheet_task| {
+            let task = quiz.tasks.iter().find(|candidate| candidate.id() == sheet_task.id())?;
+            let hints = hints_of(task, sheet_task, Some(answers.get(sheet_task.id())?));
+            (!hints.is_empty()).then(|| (sheet_task.id().clone(), hints))
+        })
+        .collect()
+}
+
+/// 🔬️ One run with its sheet (recomputed from the current quiz, the run seed and the run's
+/// challenge), answers and result; on a timed run when each opened task was opened, and while the run
+/// is open at a challenge that hints the hints of its answers, when there are any; `None` when the run
+/// or its quiz is unknown.
 pub fn run_view(state: &LearnerState, run: &str, quizzes: &BTreeMap<Slug, LoadedQuiz>) -> Option<RunView> {
     let found = state.run(run)?;
     let current = quizzes.get(&found.quiz)?;
+    let rules = challenge_rules(found.challenge);
+    let sheet = sheet_of(&current.quiz, found.seed, found.challenge);
+    let hints = if found.status == RunStatus::Open && rules.hints { run_hints(&current.quiz, &sheet, &found.answers) } else { BTreeMap::new() };
     Some(RunView {
         run: found.run.clone(),
         learner: state.learner.clone(),
         quiz: found.quiz.clone(),
         status: found.status,
-        sheet: sheet_of(&current.quiz, found.seed),
+        sheet,
         answers: found.answers.clone(),
         result: found.result.clone(),
         started_at: found.started_at,
         submitted_at: found.submitted_at,
+        opened: rules.timed.then(|| found.opened.clone()),
+        hints: (!hints.is_empty()).then_some(hints),
     })
 }
 
@@ -82,12 +114,15 @@ pub fn learner_tag(learner: &str) -> String {
     format!("{:08x}", fnv1a32(learner))
 }
 
-/// 📨️ One submitted run as a standing counts it: its quiz, its score and when it was submitted.
+/// 📨️ One submitted run as a standing counts it: its quiz, its challenge, its score, the points it
+/// earned and when it was submitted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TranscriptRun {
     pub quiz: Slug,
+    pub challenge: Challenge,
     pub score: Score,
+    pub points: f64,
     pub at: Timestamp,
 }
 
@@ -202,7 +237,7 @@ pub struct Standing {
     pub identity: Identity,
     pub total: f64,
     pub reached_at: Timestamp,
-    pub best: BTreeMap<Slug, Score>,
+    pub best: BTreeMap<Slug, Best>,
     pub badges: Vec<Slug>,
     pub runs: usize,
     pub last_activity: Timestamp,
@@ -293,15 +328,53 @@ pub fn place_bin(position: usize, length: usize, places: usize) -> usize {
     (position.saturating_mul(2 * (places - 1)).saturating_add(length - 1) / (2 * (length - 1))).min(places - 1)
 }
 
-/// 👪️ What the learners answered and scored in the submitted runs of `quiz` (results of other quizzes are
-/// ignored): the run scores per score bin ([`score_bin`]), then every task in definition order, matching once per
-/// dimension in definition order; per task the scores of the results that count for it — the task score, for a
-/// matching the dimension's score — and the items in definition order that at least one result answered.
-/// Classification counts the assigned category ids, matching the assigned values as [`json_number_text`]s, both
-/// in ascending key order (code point order, so `"120"` precedes `"50"`); sorting gives the mean over the
-/// results, in result order, of the normalized position `position / (n − 1)` in the learner's order of `n` items
-/// (`0` when `n < 2`) beside the count per place a sheet presents ([`place_bin`] over [`presented`] places). A
-/// task result counts only when its kind matches the quiz task.
+/// 📌️ The value among `values` nearest to `guess` on `scale`, the smaller of two equally near; `None`
+/// among none — the rule a guess is tallied by in the crowd, for anyone who marks where it counts.
+pub fn nearest_of(values: impl IntoIterator<Item = f64>, scale: Scale, guess: f64) -> Option<f64> {
+    let position = scaled(scale, guess);
+    let mut nearest: Option<(f64, f64)> = None;
+    for value in values {
+        let distance = (scaled(scale, value) - position).abs();
+        if nearest.is_none_or(|(held, gap)| distance < gap || (distance == gap && value < held)) {
+            nearest = Some((value, distance));
+        }
+    }
+    nearest.map(|(value, _)| value)
+}
+
+/// 🧲️ The authored value of `dimension` nearest to `guess` on `scale` ([`nearest_of`]); `None` when no
+/// item of the task carries one.
+pub fn nearest_value(task: &MatchingTask, dimension: &str, scale: Scale, guess: f64) -> Option<f64> {
+    nearest_of(task.items.iter().filter_map(|item| item.values.get(dimension).copied()), scale, guess)
+}
+
+/// 🗳️ The value a matched item counts under in the crowd of `dimension`: the assigned card value, for
+/// a guess (an item result that carries `miss`) the authored value nearest to it ([`nearest_value`]);
+/// `None` for an item the learner left unanswered, which counts nowhere.
+pub fn crowd_value(task: &MatchingTask, dimension: &Dimension, result: &MatchingItemResult) -> Option<f64> {
+    let assigned = result.assigned?;
+    match result.miss {
+        None => Some(assigned),
+        Some(_) => nearest_value(task, &dimension.id, dimension.quantity.scale, assigned),
+    }
+}
+
+/// 🧾️ Whether a sorting result places its items in the crowd: not when nobody guessed in it — every
+/// item a miss without a guess (no answer, or none that says anything) — which adds its score only.
+pub fn crowd_orders(items: &[SortingItemResult]) -> bool {
+    !items.iter().all(|item| item.miss == Some(true) && item.guess.is_none())
+}
+
+/// 👪️ What the learners answered and scored in the submitted runs of `quiz`, every challenge mixed (results of
+/// other quizzes are ignored): the run scores per score bin ([`score_bin`]), then every task in definition order,
+/// matching once per dimension in definition order; per task the scores of the results that count for it — the
+/// task score, for a matching the dimension's score — and the items in definition order that at least one result
+/// answered. Classification counts the assigned category ids, matching the values the items count under
+/// ([`crowd_value`]) as [`json_number_text`]s, both in ascending key order (code point order, so `"120"`
+/// precedes `"50"`); sorting gives the mean over the results that place their items ([`crowd_orders`]), in
+/// result order, of the normalized position `position / (n − 1)` in the learner's order of `n` items (`0` when
+/// `n < 2`) beside the count per place a sheet presents ([`place_bin`] over [`presented`] places). A task result
+/// counts only when its kind matches the quiz task; an item left unanswered counts nowhere.
 pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView {
     let results: Vec<&RunResult> = results.iter().map(Borrow::borrow).filter(|result| result.quiz == quiz.id).collect();
     let scored = |task: &Task| -> Vec<&TaskResult> { results.iter().filter_map(|result| result.tasks.iter().find(|scored| scored.task() == task.id() && kind_of(scored) == task.kind())).collect() };
@@ -312,7 +385,7 @@ pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView
         match task {
             Task::Classification(definition) => {
                 let items = definition.items.iter().filter_map(|item| counted(&item.id, scored.iter().filter_map(|scored| match scored {
-                    TaskResult::Classification { items, .. } => items.iter().find(|result| result.item == item.id).map(|result| result.assigned.clone()),
+                    TaskResult::Classification { items, .. } => items.iter().find(|result| result.item == item.id).and_then(|result| result.assigned.clone()),
                     _ => None,
                 })));
                 tasks.push(CrowdTask { task: definition.id.clone(), kind: TaskKind::Classification, dimension: None, scores, items: items.collect() });
@@ -323,7 +396,7 @@ pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView
                     let orders: Vec<(usize, usize)> = scored
                         .iter()
                         .filter_map(|scored| match scored {
-                            TaskResult::Sorting { items, .. } => items.iter().find(|result| result.item == item.id).map(|result| (result.position, items.len())),
+                            TaskResult::Sorting { items, .. } if crowd_orders(items) => items.iter().find(|result| result.item == item.id).map(|result| (result.position, items.len())),
                             _ => None,
                         })
                         .collect();
@@ -347,7 +420,7 @@ pub fn crowd_view<R: Borrow<RunResult>>(quiz: &Quiz, results: &[R]) -> CrowdView
                             _ => None,
                         })
                         .collect();
-                    let items = definition.items.iter().filter_map(|item| counted(&item.id, answered.iter().filter_map(|answered| answered.items.iter().find(|result| result.item == item.id).map(|result| json_number_text(result.assigned)))));
+                    let items = definition.items.iter().filter_map(|item| counted(&item.id, answered.iter().filter_map(|answered| answered.items.iter().find(|result| result.item == item.id).and_then(|result| crowd_value(definition, dimension, result)).map(json_number_text))));
                     tasks.push(CrowdTask { task: definition.id.clone(), kind: TaskKind::Matching, dimension: Some(dimension.id.clone()), scores: binned(answered.iter().map(|answered| answered.score)), items: items.collect() });
                 }
             }
@@ -401,26 +474,35 @@ fn counted(item: &str, keys: impl Iterator<Item = String>) -> Option<CrowdItem> 
 
 /// 📬️ The submitted runs of a learner in submission order (`submittedAt`, ties in start order).
 fn submissions(state: &LearnerState) -> Vec<TranscriptRun> {
-    let mut runs: Vec<TranscriptRun> = state.runs.iter().filter(|run| run.status == RunStatus::Submitted).filter_map(|run| Some(TranscriptRun { quiz: run.quiz.clone(), score: run.result.as_ref()?.score, at: run.submitted_at? })).collect();
+    let mut runs: Vec<TranscriptRun> = state
+        .runs
+        .iter()
+        .filter(|run| run.status == RunStatus::Submitted)
+        .filter_map(|run| {
+            let result = run.result.as_ref()?;
+            Some(TranscriptRun { quiz: run.quiz.clone(), challenge: result.challenge, score: result.score, points: result.points, at: run.submitted_at? })
+        })
+        .collect();
     runs.sort_by_key(|run| run.at);
     runs
 }
 
-/// 🥇️ The best score per quiz id over `runs` in submission order and when the last best was raised.
-fn bests<R: Borrow<TranscriptRun>>(runs: &[R]) -> (BTreeMap<Slug, Score>, Option<Timestamp>) {
-    let mut best: BTreeMap<Slug, Score> = BTreeMap::new();
+/// 🥇️ The best run per quiz id over `runs` in submission order — the one with the most points, a later
+/// run replacing it only with strictly more — and when the last best was raised.
+fn bests<R: Borrow<TranscriptRun>>(runs: &[R]) -> (BTreeMap<Slug, Best>, Option<Timestamp>) {
+    let mut best: BTreeMap<Slug, Best> = BTreeMap::new();
     let mut reached_at = None;
     for run in runs.iter().map(Borrow::borrow) {
-        if best.get(&run.quiz).is_none_or(|&previous| run.score > previous) {
-            best.insert(run.quiz.clone(), run.score);
+        if best.get(&run.quiz).is_none_or(|previous| run.points > previous.points) {
+            best.insert(run.quiz.clone(), Best { challenge: run.challenge, score: run.score, points: run.points });
             reached_at = Some(run.at);
         }
     }
     (best, reached_at)
 }
 
-fn total(best: &BTreeMap<Slug, Score>, catalog: &CatalogView) -> f64 {
-    catalog.quizzes.iter().filter_map(|quiz| best.get(&quiz.id)).fold(0.0, |sum, score| sum + score * 100.0)
+fn total(best: &BTreeMap<Slug, Best>, catalog: &CatalogView) -> f64 {
+    catalog.quizzes.iter().filter_map(|quiz| best.get(&quiz.id)).fold(0.0, |sum, best| sum + best.points)
 }
 
 #[cfg(test)]

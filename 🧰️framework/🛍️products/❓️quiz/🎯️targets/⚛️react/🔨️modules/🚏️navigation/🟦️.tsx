@@ -13,19 +13,20 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type ReactElement } from "react";
 import { Icon, cn, overviewCardChipClass, type IconName } from "@semio-tech/ui-react/chrome";
 import { localized, type QuizLabelKey, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
+import { CHALLENGE_LABELS } from "../⛰️challenge/🟦️.tsx";
 import { homePages, pageLabel } from "../🏠️home/🟦️.tsx";
 import { stepAbove, stepAfter, stepBefore, type QuizSession, type QuizState, type QuizStep } from "../🧭️session/🟦️.ts";
 
 //#region 🏷️Places
-/** 🏷️ What the place a step shows is called: the overview, one of its pages, a run by its quiz, results by theirs;
- * nothing for a step that is no place, an unknown page and a run whose view has not arrived. */
+/** 🏷️ What the place a step shows is called: the overview, one of its pages, a run by its quiz and its challenge,
+ * results by their quiz; nothing for a step that is no place, an unknown page and a run whose view has not arrived. */
 export function placeName(step: QuizStep, state: Pick<QuizState, "catalog" | "learner" | "runs">, locale: QuizLocale, text: QuizText): string | undefined {
   if (step.screen === "home") return step.page === undefined ? text("quiz.nav.home") : pageLabel(step.page, state, locale, text);
   if (step.screen !== "run" && step.screen !== "results") return undefined;
   const view = state.runs[step.run];
   if (view === undefined) return undefined;
   const quiz = localized(view.sheet.title, locale);
-  return step.screen === "run" ? quiz : text("quiz.results.title", { quiz });
+  return step.screen === "run" ? text("quiz.nav.run", { quiz, challenge: text(CHALLENGE_LABELS[view.sheet.challenge]) }) : text("quiz.results.title", { quiz });
 }
 //#endregion 🏷️Places
 

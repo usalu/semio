@@ -4,5 +4,43 @@
     "support.js": "export const ready = true;\n",
     "nested/worker.js": "postMessage('ready');\n"
   },
-  "cancelReason": "cancelled publication"
+  "cancelReason": "cancelled publication",
+  "cancellation": {
+    "point": "identical-eof",
+    "outcome": "rejected",
+    "unchanged": true
+  },
+  "replacement": {
+    "files": {
+      "support.js": "export const ready = false;\n",
+      "nested/worker.js": "postMessage('updated');\n"
+    },
+    "transient": {
+      "code": "EPERM",
+      "failures": 2,
+      "outcome": "published"
+    },
+    "permanent": {
+      "code": "EIO",
+      "outcome": "rejected",
+      "unchanged": true
+    },
+    "cancellation": {
+      "code": "EBUSY",
+      "outcome": "rejected",
+      "unchanged": true
+    },
+    "persistent": {
+      "code": "EPERM",
+      "timeoutMs": 5000,
+      "outcome": "rejected",
+      "unchanged": true
+    },
+    "initial": {
+      "absentBefore": true,
+      "code": "EPERM",
+      "failures": 2,
+      "outcome": "published"
+    }
+  }
 }

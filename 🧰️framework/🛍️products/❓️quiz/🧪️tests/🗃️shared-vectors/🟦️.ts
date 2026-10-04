@@ -124,11 +124,11 @@ describe("🎲️seeded-randomness", () => {
 });
 
 describe("🃏️sheet-assembly", () => {
-  const fixture = vectors<{ quizzes: Quiz[]; sheets: { id: string; quiz: string; seed: number; sheet: Sheet }[] }>("🃏️sheet-assembly");
+  const fixture = vectors<{ quizzes: Quiz[]; sheets: { id: string; quiz: string; seed: number; challenge: Sheet["challenge"]; sheet: Sheet }[] }>("🃏️sheet-assembly");
 
   it("assembles every committed sheet", () => {
     expect(fixture.sheets.length).toBeGreaterThan(0);
-    for (const vector of fixture.sheets) expect(sheetOf(fixture.quizzes.find((quiz) => quiz.id === vector.quiz)!, vector.seed), vector.id).toEqual(vector.sheet);
+    for (const vector of fixture.sheets) expect(sheetOf(fixture.quizzes.find((quiz) => quiz.id === vector.quiz)!, vector.seed, vector.challenge), vector.id).toEqual(vector.sheet);
   });
 
   it("finds no issue in the committed quizzes", () => {

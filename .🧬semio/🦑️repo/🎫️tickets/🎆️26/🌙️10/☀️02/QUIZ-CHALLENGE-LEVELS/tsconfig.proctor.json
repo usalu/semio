@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": ["../../../../../../../🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🟦️.ts", "../../../../../../../🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts"],
+  "exclude": ["**/node_modules/**"]
+}

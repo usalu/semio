@@ -20,21 +20,30 @@ Feature: The stage folds the same events into the same frames
   concentration, a still stage, a change of scene with a rotating cast, pokes and glances, a narrow stage, a floor
   that shrinks to a strip beside a task and widens again (whoever does not fit waits off stage), a card with a
   title tab on a floor with a footer line (pets step between the two levels), a pointer that rests on one
-  place after another (whoever stands there turns see-through), a pointer that crosses behind the pets, comes to
+  place after another (whoever stands there stays whole and perks up; only a pet in the air, on a wall, a ladder or
+  a rope in front of what the page keeps free turns see-through), a pointer that crosses behind the pets, comes to
   rest beside them and jitters from side to side (they turn round to it, lean after it, greet it, and never flip
   back and forth; a time of concentration leaves them be), and a company that gathers on the only edge there is
-  and finds new ground with the next survey (it spreads out at once, but not in a time of concentration).
+  and finds new ground with the next survey (it spreads out at once, but not in a time of concentration), and
+  mischief on a page of a quiz whose task rows are marked for the pets (a ground of a blob covers a row's key): a
+  learner who stays still while a blob climbs down beside the row of its topic, pushes the row's copy out of its stack
+  and lets it slide home; a learner who takes the row back, so the blob is thrown off, glides down under its
+  parachute and is sheepish; and a change of scene while the copy is out.
   A script is replayed tick by tick — the events of a tick are folded, then the tick passes — and every frame is
   digested: FNV-1a (32 bit) over the IEEE-754 bit patterns of every number of the frame (tick, rate, wake, and per
-  actor its species index, feet, facing, the index of its activity, opacity, every bone matrix, every eye and its
-  mood), running on from frame to frame. The committed trace of a script holds that digest at a checkpoint every ten seconds, with the
+  actor its species index, where its rig is placed, facing, the index of its activity, opacity, every bone matrix,
+  every eye, its spirits, the indices of its footing, state and mood, the intensity, tilt and pivot, every tool and
+  its body; then every standing ladder, every particle, every lifted copy, every puff of dust and the index of the pet
+  held), running on from frame to frame; a checkpoint also records how many particles, ladders, lifted copies and
+  puffs its frame shows and who is held. The committed trace of a script holds that digest at a checkpoint every ten seconds, with the
   actors on stage, so a difference is found within ten seconds of where it began.
 
   The subjects are `@semio-tech/pets` (`openStage`, `advance`, `frameOf`) and the `pets` crate (`open_stage`,
   `advance`, `frame_of`); they hold themselves to the committed trace and the harness holds them to each other. The
   Python file of this case simulates nothing: it checks on the committed trace what can be checked without the
-  stage (actors stand on surveyed surfaces, outside keep-outs and not in each other, within the mode's number of
-  movers, one pair at most).
+  stage (actors stand on surveyed surfaces and outside keep-outs, the recorded bodies of no two actors overlap, within
+  the mode's number of movers, one pair at most, at most 160 particles and one lifted copy, nothing of the kind on a
+  still stage, and only a pet in the learner's hand held).
 
   The vectors shared://🎪️stage-trace/🔣️.json are generated, never hand-edited, from the repository root:
   `.venv/Scripts/python.exe .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/generate_behavior_vectors.py`
@@ -55,7 +64,7 @@ Feature: The stage folds the same events into the same frames
   Scenario: Every tick of every script keeps the laws of the stage
     Given the committed vectors shared://🎪️stage-trace/🔣️.json
     When the laws are checked after every tick of every script
-    Then grounded actors stand on perches, outside every keep-out and never in each other, no more actors walk or hop than the mode allows, at most one pair has partners, activities follow the activity graph and every frame is well-formed
+    Then actors on a perch stand on it outside every keep-out, the bodies of no two actors overlap wherever they are, no more actors walk or hop than the mode allows, at most one pair has partners, activities follow the activity graph and every frame is well-formed
 
   @id-determinism
   @level-quick

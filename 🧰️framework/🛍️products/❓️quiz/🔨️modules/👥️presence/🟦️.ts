@@ -121,14 +121,15 @@ export function thinkingProblem(state: unknown): ValidationIssue | undefined {
   return thinkingIssues(state)[0];
 }
 
-/** 🔁️ The publisher's own answer as a draft peers can read, or `undefined` when it does not fit the sheet task: classification and sorting unchanged, matching card indices replaced by the card values (non-finite card values left out). */
+/** 🔁️ The publisher's own answer as a draft peers can read, or `undefined` when it does not fit the sheet task: classification and sorting unchanged, matching card indices replaced by the card values (non-finite card values left out), matching guesses carried as the values they are. */
 export function thinkingAnswer(sheetTask: SheetTask, answer: Answer): ThinkingAnswer | undefined {
   if (answerRejection(sheetTask, answer) !== undefined) return undefined;
   if (answer.kind !== "matching") return answer;
   if (sheetTask.kind !== "matching") return undefined;
+  if (answer.assignments === undefined) return { kind: "matching", values: answer.guesses ?? {} };
   const values = Object.fromEntries(
     Object.entries(answer.assignments).map(([dimension, cards]) => {
-      const deck = sheetTask.dimensions.find((candidate) => candidate.id === dimension)!.cards;
+      const deck = sheetTask.dimensions.find((candidate) => candidate.id === dimension)?.cards ?? [];
       return [dimension, Object.fromEntries(Object.entries(cards).flatMap(([item, card]) => (Number.isFinite(deck[card]) ? [[item, deck[card]!]] : [])))];
     }),
   );

@@ -1,6 +1,6 @@
 @capability-viz-plot-grammar
 @oracle-d3-scale
-@oracle-print-viz-kernel-twin
+@oracle-print-viz-inference-twin
 @comparison-viz-probe-v1
 Feature: The plot grammar binds every encoding channel and puts a row where the scales say
   `\SemioVizPlot` is the one call taxonomy §79 promises: a data table, a mark, a coordinate system

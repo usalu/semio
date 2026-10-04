@@ -20,16 +20,24 @@ function zoneElement(zone: string | undefined, root: ParentNode): HTMLElement | 
   return [...root.querySelectorAll<HTMLElement>("[data-quiz-drop]")].find((element) => element.dataset.quizDrop === zone);
 }
 
-/** 👻️ An inert copy of `source` that looks like it: cloning a node does not carry over what a select currently shows,
- * so every select of the copy is given the value of the one it copies.
- * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element — no cloning steps */
+/** 👻️ An inert copy of `source` that looks like it, in an empty copy of the list it lies in: the list is the room its
+ * rows lay themselves out for (a container query), so the copy keeps the layout of its source — one line or two —
+ * wherever it is carried. Cloning a node does not carry over what a select currently shows, so every select of the
+ * copy is given the value of the one it copies.
+ * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element — no cloning steps
+ * @see ../../🎨️.css — `.quiz-rows` */
 function ghostOf(source: HTMLElement): HTMLElement {
-  const ghost = source.cloneNode(true) as HTMLElement;
+  const copy = source.cloneNode(true) as HTMLElement;
   const shown = source.querySelectorAll("select");
-  ghost.querySelectorAll("select").forEach((select, index) => (select.value = shown[index]!.value));
+  copy.querySelectorAll("select").forEach((select, index) => (select.value = shown[index]!.value));
+  copy.style.width = `${source.getBoundingClientRect().width}px`;
+  const room = source.parentElement;
+  const ghost = room === null ? document.createElement("div") : (room.cloneNode(false) as HTMLElement);
+  for (const own of ["id", "tabindex", "aria-label", "aria-labelledby"]) ghost.removeAttribute(own);
   ghost.classList.add("quiz-drag-ghost");
   ghost.setAttribute("aria-hidden", "true");
-  ghost.style.width = `${source.getBoundingClientRect().width}px`;
+  if (room !== null) ghost.style.width = `${room.getBoundingClientRect().width}px`;
+  ghost.append(copy);
   return ghost;
 }
 

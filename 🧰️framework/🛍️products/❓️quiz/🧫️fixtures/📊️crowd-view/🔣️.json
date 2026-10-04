@@ -36,6 +36,10 @@
                 "en": "Seasonal efficiency",
                 "de": "Jahresnutzungsgrad"
               },
+              "short": {
+                "en": "efficiency",
+                "de": "Nutzungsgrad"
+              },
               "unit": "%",
               "min": 0,
               "max": 400
@@ -120,6 +124,10 @@
                 "en": "Direct electric heating",
                 "de": "Elektrodirektheizung"
               },
+              "short": {
+                "en": "Direct electric",
+                "de": "Direktstrom"
+              },
               "description": {
                 "en": "Resistance heaters without storage or pump.",
                 "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -132,6 +140,10 @@
               "label": {
                 "en": "Borehole with brine circuit",
                 "de": "Erdsonde mit Solekreislauf"
+              },
+              "short": {
+                "en": "Borehole",
+                "de": "Erdsonde"
               },
               "category": "heat-pump",
               "explanation": {
@@ -204,7 +216,8 @@
             },
             "unit": "W",
             "scale": "logarithmic",
-            "prefixed": true
+            "prefixed": true,
+            "additive": true
           },
           "items": [
             {
@@ -273,6 +286,10 @@
                 "en": "Nuclear power plant",
                 "de": "Kernkraftwerk"
               },
+              "short": {
+                "en": "Nuclear plant",
+                "de": "AKW"
+              },
               "value": 1600000000,
               "explanation": {
                 "en": "About 1.6 GW of electric power.",
@@ -304,7 +321,8 @@
             },
             "unit": "°C",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           },
           "items": [
             {
@@ -321,7 +339,8 @@
                 "en": "Living room",
                 "de": "Wohnzimmer"
               },
-              "value": 21
+              "value": 21,
+              "familiar": true
             },
             {
               "id": "bathroom",
@@ -352,9 +371,14 @@
                   "en": "Energy density",
                   "de": "Energiedichte"
                 },
+                "short": {
+                  "en": "density",
+                  "de": "Dichte"
+                },
                 "unit": "MJ/kg",
                 "scale": "logarithmic",
-                "prefixed": false
+                "prefixed": false,
+                "additive": false
               }
             },
             {
@@ -366,7 +390,8 @@
                 },
                 "unit": "kg/kWh",
                 "scale": "linear",
-                "prefixed": false
+                "prefixed": false,
+                "additive": false
               }
             }
           ],
@@ -488,7 +513,8 @@
             },
             "unit": "W/m²",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           },
           "items": [
             {
@@ -585,6 +611,267 @@
           "draw": 3
         }
       ]
+    },
+    {
+      "schema": "semio.quiz/v1",
+      "id": "icon-demo",
+      "emoji": "🖼️",
+      "title": {
+        "en": "Icon demo",
+        "de": "Symbolbeispiel"
+      },
+      "description": {
+        "en": "Every task, item, category and dimension carries an icon.",
+        "de": "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."
+      },
+      "tasks": [
+        {
+          "kind": "classification",
+          "id": "sources",
+          "title": {
+            "en": "Sources",
+            "de": "Quellen"
+          },
+          "prompt": {
+            "en": "Assign every source.",
+            "de": "Ordne jede Quelle zu."
+          },
+          "icon": {
+            "emoji": "⚡",
+            "motion": "pulse"
+          },
+          "categories": [
+            {
+              "id": "renewable",
+              "label": {
+                "en": "Renewable",
+                "de": "Erneuerbar"
+              },
+              "icon": {
+                "emoji": "♻️",
+                "motion": "spin"
+              }
+            },
+            {
+              "id": "fossil",
+              "label": {
+                "en": "Fossil",
+                "de": "Fossil"
+              },
+              "icon": {
+                "emoji": "🛢️",
+                "motion": "sway"
+              }
+            }
+          ],
+          "items": [
+            {
+              "id": "sunlight",
+              "label": {
+                "en": "Sunlight",
+                "de": "Sonnenlicht"
+              },
+              "icon": {
+                "emoji": "☀️",
+                "motion": "spin"
+              },
+              "category": "renewable"
+            },
+            {
+              "id": "wind",
+              "label": {
+                "en": "Wind",
+                "de": "Wind"
+              },
+              "icon": {
+                "emoji": "🌬️",
+                "motion": "sway"
+              },
+              "category": "renewable"
+            },
+            {
+              "id": "coal",
+              "label": {
+                "en": "Coal",
+                "de": "Kohle"
+              },
+              "icon": {
+                "emoji": "🪨",
+                "motion": "bounce"
+              },
+              "category": "fossil"
+            },
+            {
+              "id": "gas",
+              "label": {
+                "en": "Natural gas",
+                "de": "Erdgas"
+              },
+              "icon": {
+                "emoji": "🔥",
+                "motion": "float"
+              },
+              "category": "fossil"
+            }
+          ],
+          "draw": 3
+        },
+        {
+          "kind": "sorting",
+          "id": "masses",
+          "title": {
+            "en": "Masses",
+            "de": "Massen"
+          },
+          "prompt": {
+            "en": "Smallest first.",
+            "de": "Das Kleinste zuerst."
+          },
+          "icon": {
+            "emoji": "⚖️",
+            "motion": "sway"
+          },
+          "quantity": {
+            "label": {
+              "en": "Mass",
+              "de": "Masse"
+            },
+            "unit": "kg",
+            "scale": "logarithmic",
+            "prefixed": true,
+            "additive": true
+          },
+          "items": [
+            {
+              "id": "feather",
+              "label": {
+                "en": "Feather",
+                "de": "Feder"
+              },
+              "icon": {
+                "emoji": "🪶",
+                "motion": "float"
+              },
+              "value": 0.001
+            },
+            {
+              "id": "brick",
+              "label": {
+                "en": "Brick",
+                "de": "Backstein"
+              },
+              "icon": {
+                "emoji": "🧱",
+                "motion": "flip"
+              },
+              "value": 2.5
+            },
+            {
+              "id": "car",
+              "label": {
+                "en": "Car",
+                "de": "Auto"
+              },
+              "icon": {
+                "emoji": "🚗",
+                "motion": "bounce"
+              },
+              "value": 1500
+            }
+          ]
+        },
+        {
+          "kind": "matching",
+          "id": "appliances",
+          "title": {
+            "en": "Appliances",
+            "de": "Geräte"
+          },
+          "prompt": {
+            "en": "Match every appliance.",
+            "de": "Ordne jedem Gerät zu."
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "bounce"
+          },
+          "dimensions": [
+            {
+              "id": "power",
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "linear",
+                "prefixed": true,
+                "additive": true
+              },
+              "icon": {
+                "emoji": "⚡",
+                "motion": "pulse"
+              }
+            },
+            {
+              "id": "lifespan",
+              "quantity": {
+                "label": {
+                  "en": "Lifespan",
+                  "de": "Lebensdauer"
+                },
+                "unit": "a",
+                "scale": "linear",
+                "prefixed": false,
+                "additive": false
+              }
+            }
+          ],
+          "items": [
+            {
+              "id": "toaster",
+              "label": {
+                "en": "Toaster",
+                "de": "Toaster"
+              },
+              "icon": {
+                "emoji": "🍞",
+                "motion": "bounce"
+              },
+              "values": {
+                "power": 800,
+                "lifespan": 8
+              }
+            },
+            {
+              "id": "kettle",
+              "label": {
+                "en": "Kettle",
+                "de": "Wasserkocher"
+              },
+              "values": {
+                "power": 2200,
+                "lifespan": 5
+              }
+            },
+            {
+              "id": "oven",
+              "label": {
+                "en": "Oven",
+                "de": "Backofen"
+              },
+              "icon": {
+                "emoji": "♨️",
+                "motion": "pulse"
+              },
+              "values": {
+                "power": 3000,
+                "lifespan": 15
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "vectors": [
@@ -594,7 +881,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -798,7 +1087,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.23485524130413243,
+          "points": 46.971048260826485,
           "tasks": [
             {
               "kind": "classification",
@@ -994,7 +1285,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "classification",
@@ -1680,7 +1973,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.23485524130413243,
+          "points": 46.971048260826485,
           "tasks": [
             {
               "kind": "classification",
@@ -2250,7 +2545,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -2454,7 +2751,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -2945,7 +3244,9 @@
       "results": [
         {
           "quiz": "cooling-basics",
+          "challenge": "easy",
           "score": 1,
+          "points": 100,
           "tasks": [
             {
               "kind": "sorting",
@@ -2977,7 +3278,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -3157,7 +3460,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0,
+          "points": 0,
           "tasks": [
             {
               "kind": "classification",
@@ -3207,7 +3512,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.0949,
+          "points": 18.98,
           "tasks": [
             {
               "kind": "classification",
@@ -3268,7 +3575,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.095,
+          "points": 19.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3329,7 +3638,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.1,
+          "points": 20.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3390,7 +3701,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3440,7 +3753,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.8949,
+          "points": 178.98000000000002,
           "tasks": [
             {
               "kind": "classification",
@@ -3501,7 +3816,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.895,
+          "points": 179.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3562,7 +3879,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.9,
+          "points": 180.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3623,7 +3942,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.995,
+          "points": 199.0,
           "tasks": [
             {
               "kind": "classification",
@@ -3673,7 +3994,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1,
+          "points": 200,
           "tasks": [
             {
               "kind": "classification",
@@ -3892,7 +4215,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.0,
+          "points": 0.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -3961,7 +4286,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.7401090040277409,
+          "points": 148.0218008055482,
           "tasks": [
             {
               "kind": "sorting",
@@ -4030,7 +4357,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.46490421798977655,
+          "points": 92.98084359795531,
           "tasks": [
             {
               "kind": "sorting",
@@ -4093,7 +4422,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.4108211734130328,
+          "points": 82.16423468260656,
           "tasks": [
             {
               "kind": "sorting",
@@ -4146,7 +4477,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.12284895299602705,
+          "points": 24.56979059920541,
           "tasks": [
             {
               "kind": "sorting",
@@ -4193,7 +4526,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.386793650365057,
+          "points": 77.3587300730114,
           "tasks": [
             {
               "kind": "sorting",
@@ -4224,7 +4559,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.0,
+          "points": 0.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -4257,7 +4594,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1,
+          "points": 200,
           "tasks": [
             {
               "kind": "sorting",
@@ -4276,7 +4615,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.0,
+          "points": 0.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -4301,7 +4642,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.2272727272727273,
+          "points": 45.45454545454546,
           "tasks": [
             {
               "kind": "sorting",
@@ -4579,7 +4922,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100,
           "tasks": [
             {
               "kind": "classification",
@@ -4726,7 +5071,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.23485524130413243,
+          "points": 46.971048260826485,
           "tasks": [
             {
               "kind": "classification",
@@ -5286,6 +5633,4009 @@
                   {
                     "key": "0.027",
                     "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "every-challenge",
+      "quiz": "energy-basics",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "easy",
+          "score": 1.0,
+          "points": 100.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0,
+                      "correct": 0
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 3
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "medium",
+          "score": 0.4191608903456996,
+          "points": 83.83217806913991,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.6766435613827985,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.5312706618602472,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 50,
+                      "correct": 18
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 18,
+                      "correct": 50
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.8220164609053497,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.2,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.027,
+                      "correct": 0.2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 0,
+                  "rank": 5
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 1,
+                  "rank": 4
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 3
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 3,
+                  "rank": 2
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 4,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 5,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "hard",
+          "score": 1.0,
+          "points": 300.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0.34,
+                      "correct": 0.34,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0,
+                      "correct": 0,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 9,
+                  "miss": false
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 3000000,
+                  "miss": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 0.32304851212289765,
+          "points": 129.21940484915905,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.2921940484915905,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "district-heating",
+                  "correct": "heat-pump",
+                  "credit": 0.27124515668392657
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "wood-pellets",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "gas-boiler",
+                  "correct": "district-heating",
+                  "credit": 0.5623996484812476
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "heat-pump",
+                  "correct": "wood-pellets",
+                  "credit": 0.3560802806088518
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "district-heating",
+                  "correct": "heat-pump",
+                  "credit": 0.27124515668392657,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 9,
+                  "miss": false
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 18,
+                  "miss": true
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 23.5,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 50,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 120,
+                      "correct": 15,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 15,
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 18,
+                      "correct": 50,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 0,
+                      "correct": 0.34,
+                      "miss": true
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.2,
+                      "correct": 0.027,
+                      "miss": true
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.34,
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.027,
+                      "correct": 0.2,
+                      "miss": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "hard",
+          "score": 0.056651169203051785,
+          "points": 16.995350760915535,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.22660467681220714,
+              "items": [
+                {
+                  "item": "pellet-stove",
+                  "assigned": "heat-pump",
+                  "correct": "wood-pellets",
+                  "credit": 0.3560802806088518
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "wood-pellets",
+                  "correct": "gas-boiler",
+                  "credit": 0.23445279008433084
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "district-heating",
+                  "correct": "heat-pump",
+                  "credit": 0.27124515668392657,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "district-heating",
+                  "correct": "heat-pump",
+                  "credit": 0.27124515668392657
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "gas-boiler",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 50,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 15,
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 18,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 120,
+                      "correct": 15,
+                      "miss": true
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.2,
+                      "correct": 0.027,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.27,
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0,
+                      "correct": 0.27,
+                      "miss": true,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.027,
+                      "correct": 0.2,
+                      "miss": true
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 5,
+                  "guess": 60,
+                  "miss": true,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 4,
+                  "guess": 2200,
+                  "miss": true
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 2,
+                  "rank": 3,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 2,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 4,
+                  "rank": 1,
+                  "guess": 3000000,
+                  "miss": true
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 0,
+                  "guess": 1600000000,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 18,
+                  "miss": true
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 23.5,
+                  "miss": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "energy-basics",
+        "runs": 5,
+        "scores": [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "tasks": [
+          {
+            "task": "heating-systems",
+            "kind": "classification",
+            "scores": [
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "ground-source",
+                "answers": 5,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 2
+                  },
+                  {
+                    "key": "heat-pump",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "air-source",
+                "answers": 5,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 2
+                  },
+                  {
+                    "key": "heat-pump",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "condensing-gas",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "gas-boiler",
+                    "count": 3
+                  },
+                  {
+                    "key": "wood-pellets",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "lake-water-network",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 3
+                  },
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "pellet-stove",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "heat-pump",
+                    "count": 2
+                  },
+                  {
+                    "key": "wood-pellets",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "night-storage-heater",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "electric-resistance",
+                    "count": 2
+                  },
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  },
+                  {
+                    "key": "wood-pellets",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "power-ratings",
+            "kind": "sorting",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "led-bulb",
+                "answers": 4,
+                "meanPosition": 0.25,
+                "places": [
+                  3,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "tea-light",
+                "answers": 2,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "laptop",
+                "answers": 5,
+                "meanPosition": 0.4800000000000001,
+                "places": [
+                  0,
+                  2,
+                  1,
+                  1,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 3,
+                "meanPosition": 0.5333333333333333,
+                "places": [
+                  0,
+                  0,
+                  2,
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "hair-dryer",
+                "answers": 4,
+                "meanPosition": 0.55,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  3,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "wallbox",
+                "answers": 4,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  1,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "wind-turbine",
+                "answers": 5,
+                "meanPosition": 0.56,
+                "places": [
+                  1,
+                  1,
+                  0,
+                  0,
+                  2,
+                  1
+                ]
+              },
+              {
+                "item": "nuclear-plant",
+                "answers": 3,
+                "meanPosition": 0.6666666666666666,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "task": "room-temperatures",
+            "kind": "sorting",
+            "scores": [
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "bedroom",
+                "answers": 5,
+                "meanPosition": 0.6,
+                "places": [
+                  2,
+                  0,
+                  3
+                ]
+              },
+              {
+                "item": "living-room",
+                "answers": 5,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  5,
+                  0
+                ]
+              },
+              {
+                "item": "bathroom",
+                "answers": 5,
+                "meanPosition": 0.4,
+                "places": [
+                  3,
+                  0,
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "energy-density",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "120",
+                    "count": 2
+                  },
+                  {
+                    "key": "15",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "18",
+                    "count": 3
+                  },
+                  {
+                    "key": "50",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "heating-oil",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "42.6",
+                    "count": 4
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "42.6",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "29",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "wood-pellets",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "50",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 5,
+                "counts": [
+                  {
+                    "key": "120",
+                    "count": 2
+                  },
+                  {
+                    "key": "15",
+                    "count": 3
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "co2-factor",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              2
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "0",
+                    "count": 2
+                  },
+                  {
+                    "key": "0.27",
+                    "count": 1
+                  },
+                  {
+                    "key": "0.34",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "0.027",
+                    "count": 3
+                  },
+                  {
+                    "key": "0.2",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "heating-oil",
+                "answers": 4,
+                "counts": [
+                  {
+                    "key": "0",
+                    "count": 1
+                  },
+                  {
+                    "key": "0.27",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "0.27",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "0",
+                    "count": 1
+                  },
+                  {
+                    "key": "0.34",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "wood-pellets",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "0.2",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 5,
+                "counts": [
+                  {
+                    "key": "0.027",
+                    "count": 5
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "guessed-values",
+      "quiz": "icon-demo",
+      "results": [
+        {
+          "quiz": "icon-demo",
+          "challenge": "hard",
+          "score": 0.8333333333333334,
+          "points": 250.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "wind",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                },
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.5,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "kettle",
+                      "assigned": 2600.5,
+                      "correct": 2200,
+                      "miss": false
+                    },
+                    {
+                      "item": "toaster",
+                      "assigned": 1500,
+                      "correct": 800,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 3000,
+                      "correct": 3000,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "kettle",
+                      "assigned": 10,
+                      "correct": 5,
+                      "miss": false
+                    },
+                    {
+                      "item": "toaster",
+                      "assigned": 6.5,
+                      "correct": 8,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 100,
+                      "correct": 15,
+                      "miss": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 0.001,
+                  "miss": false
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2.5,
+                  "miss": false
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1500,
+                  "miss": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "icon-demo",
+          "challenge": "hard",
+          "score": 0.8863636363636364,
+          "points": 265.9090909090909,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "sunlight",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                },
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 0.001,
+                  "miss": false
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2.5,
+                  "miss": false
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1500,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.6590909090909092,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 0.31818181818181823,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 800,
+                      "correct": 800,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 1000000.0,
+                      "correct": 3000,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 1500,
+                      "correct": 2200,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 8,
+                      "correct": 8,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 6.5,
+                      "correct": 5,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "icon-demo",
+          "challenge": "expert",
+          "score": 0.6666666666666666,
+          "points": 266.66666666666663,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "wind",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 2200,
+                      "correct": 800,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "correct": 3000,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 2200,
+                      "miss": true
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "correct": 8,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 0.5,
+                      "correct": 15,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 5,
+                      "miss": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 0.001,
+                  "miss": false
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2.5,
+                  "miss": false
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1500,
+                  "miss": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "icon-demo",
+        "runs": 3,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          2,
+          0
+        ],
+        "tasks": [
+          {
+            "task": "sources",
+            "kind": "classification",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "sunlight",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "renewable",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "wind",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "renewable",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "fossil",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "gas",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "fossil",
+                    "count": 3
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "masses",
+            "kind": "sorting",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "feather",
+                "answers": 3,
+                "meanPosition": 0.0,
+                "places": [
+                  3,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "brick",
+                "answers": 3,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  3,
+                  0
+                ]
+              },
+              {
+                "item": "car",
+                "answers": 3,
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            ]
+          },
+          {
+            "task": "appliances",
+            "kind": "matching",
+            "dimension": "power",
+            "scores": [
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "items": [
+              {
+                "item": "toaster",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "2200",
+                    "count": 1
+                  },
+                  {
+                    "key": "800",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "3000",
+                    "count": 1
+                  },
+                  {
+                    "key": "800",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "oven",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "3000",
+                    "count": 2
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "appliances",
+            "kind": "matching",
+            "dimension": "lifespan",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "items": [
+              {
+                "item": "toaster",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "5",
+                    "count": 1
+                  },
+                  {
+                    "key": "8",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "5",
+                    "count": 1
+                  },
+                  {
+                    "key": "8",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "oven",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "15",
+                    "count": 2
+                  },
+                  {
+                    "key": "5",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "guessed-densities",
+      "quiz": "energy-basics",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "hard",
+          "score": 1.0,
+          "points": 300.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 9,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 23.2,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0,
+                      "correct": 0,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 0.9409425757373233,
+          "points": 376.37703029492934,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 9,
+                  "miss": false
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 3000000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.7637703029492933,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.5275406058985865,
+                  "items": [
+                    {
+                      "item": "firewood",
+                      "assigned": 35,
+                      "correct": 15,
+                      "miss": true
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 18,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0.34,
+                      "correct": 0.34,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "medium",
+          "score": 0.29514626910122305,
+          "points": 59.02925382024461,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.18058507640489216,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "electric-resistance",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "wood-pellets",
+                  "correct": "district-heating",
+                  "credit": 0.66847259194013
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "electric-resistance",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "district-heating",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "gas-boiler",
+                  "correct": "wood-pellets",
+                  "credit": 0.23445279008433084
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 18,
+                      "correct": 18
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0.34,
+                      "correct": 0.34
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.027,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 0,
+                  "rank": 5
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 1,
+                  "rank": 4
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 3
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 3,
+                  "rank": 2
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 4,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 5,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "energy-basics",
+        "runs": 3,
+        "scores": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        "tasks": [
+          {
+            "task": "heating-systems",
+            "kind": "classification",
+            "scores": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "ground-source",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "electric-resistance",
+                    "count": 1
+                  },
+                  {
+                    "key": "heat-pump",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "air-source",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "electric-resistance",
+                    "count": 1
+                  },
+                  {
+                    "key": "heat-pump",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "condensing-gas",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "lake-water-network",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 2
+                  },
+                  {
+                    "key": "wood-pellets",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "pellet-stove",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  },
+                  {
+                    "key": "wood-pellets",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "night-storage-heater",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 1
+                  },
+                  {
+                    "key": "electric-resistance",
+                    "count": 2
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "power-ratings",
+            "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "led-bulb",
+                "answers": 3,
+                "meanPosition": 0.3333333333333333,
+                "places": [
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "tea-light",
+                "answers": 2,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "laptop",
+                "answers": 1,
+                "meanPosition": 0.6,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "meanPosition": 0.30000000000000004,
+                "places": [
+                  0,
+                  1,
+                  1,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "hair-dryer",
+                "answers": 3,
+                "meanPosition": 0.4666666666666666,
+                "places": [
+                  0,
+                  0,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "wallbox",
+                "answers": 3,
+                "meanPosition": 0.5333333333333333,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "wind-turbine",
+                "answers": 3,
+                "meanPosition": 0.6,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "item": "nuclear-plant",
+                "answers": 1,
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            ]
+          },
+          {
+            "task": "room-temperatures",
+            "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "bedroom",
+                "answers": 3,
+                "meanPosition": 0.3333333333333333,
+                "places": [
+                  2,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "living-room",
+                "answers": 3,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  3,
+                  0
+                ]
+              },
+              {
+                "item": "bathroom",
+                "answers": 3,
+                "meanPosition": 0.6666666666666666,
+                "places": [
+                  1,
+                  0,
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "120",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "50",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "heating-oil",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "42.6",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "42.6",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "29",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "wood-pellets",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "18",
+                    "count": 2
+                  },
+                  {
+                    "key": "29",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "15",
+                    "count": 2
+                  },
+                  {
+                    "key": "29",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "0.2",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "heating-oil",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "0.27",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0.27",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "0.34",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "wood-pellets",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "0.027",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "0.027",
+                    "count": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "unanswered-on-the-clock",
+      "quiz": "icon-demo",
+      "results": [
+        {
+          "quiz": "icon-demo",
+          "challenge": "expert",
+          "score": 0.6666666666666666,
+          "points": 266.66666666666663,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "sunlight",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                },
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 0,
+                  "rank": 1,
+                  "miss": true
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 1,
+                  "rank": 2,
+                  "miss": true
+                },
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 2,
+                  "rank": 0,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 800,
+                      "correct": 800,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 3000,
+                      "correct": 3000,
+                      "miss": false
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 2200,
+                      "correct": 2200,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 8,
+                      "correct": 8,
+                      "miss": false
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 5,
+                      "correct": 5,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "icon-demo",
+          "challenge": "expert",
+          "score": 0.3333333333333333,
+          "points": 133.33333333333331,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "sunlight",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 0.001,
+                  "miss": true
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 2.5,
+                  "miss": false
+                },
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 1500,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "correct": 800,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 2200,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "correct": 3000,
+                      "miss": true
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "correct": 8,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 5,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "correct": 15,
+                      "miss": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "icon-demo",
+          "challenge": "expert",
+          "score": 0.0,
+          "points": 0.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "wind",
+                  "assigned": "fossil",
+                  "correct": "renewable",
+                  "credit": 0
+                },
+                {
+                  "item": "sunlight",
+                  "correct": "renewable",
+                  "credit": 0
+                },
+                {
+                  "item": "gas",
+                  "correct": "fossil",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "correct": 800,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 2950,
+                      "correct": 3000,
+                      "miss": false
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 2200,
+                      "miss": true
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "correct": 8,
+                      "miss": true
+                    },
+                    {
+                      "item": "oven",
+                      "correct": 15,
+                      "miss": true
+                    },
+                    {
+                      "item": "kettle",
+                      "correct": 5,
+                      "miss": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 0.001,
+                  "miss": false
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1,
+                  "miss": true
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 2,
+                  "rank": 2,
+                  "miss": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "icon-demo",
+          "challenge": "medium",
+          "score": 1.0,
+          "points": 200.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "sources",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "coal",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "gas",
+                  "assigned": "fossil",
+                  "correct": "fossil",
+                  "credit": 1
+                },
+                {
+                  "item": "wind",
+                  "assigned": "renewable",
+                  "correct": "renewable",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "masses",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "feather",
+                  "value": 0.001,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "brick",
+                  "value": 2.5,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "car",
+                  "value": 1500,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "appliances",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "power",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 800,
+                      "correct": 800
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 3000,
+                      "correct": 3000
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 2200,
+                      "correct": 2200
+                    }
+                  ]
+                },
+                {
+                  "dimension": "lifespan",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "toaster",
+                      "assigned": 8,
+                      "correct": 8
+                    },
+                    {
+                      "item": "oven",
+                      "assigned": 15,
+                      "correct": 15
+                    },
+                    {
+                      "item": "kettle",
+                      "assigned": 5,
+                      "correct": 5
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "icon-demo",
+        "runs": 4,
+        "scores": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1
+        ],
+        "tasks": [
+          {
+            "task": "sources",
+            "kind": "classification",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              3
+            ],
+            "items": [
+              {
+                "item": "sunlight",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "renewable",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "wind",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "fossil",
+                    "count": 1
+                  },
+                  {
+                    "key": "renewable",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "fossil",
+                    "count": 3
+                  }
+                ]
+              },
+              {
+                "item": "gas",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "fossil",
+                    "count": 3
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "masses",
+            "kind": "sorting",
+            "scores": [
+              3,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "items": [
+              {
+                "item": "feather",
+                "answers": 3,
+                "meanPosition": 0.3333333333333333,
+                "places": [
+                  2,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "brick",
+                "answers": 3,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  3,
+                  0
+                ]
+              },
+              {
+                "item": "car",
+                "answers": 3,
+                "meanPosition": 0.6666666666666666,
+                "places": [
+                  1,
+                  0,
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "task": "appliances",
+            "kind": "matching",
+            "dimension": "power",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "toaster",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "800",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "2200",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "oven",
+                "answers": 3,
+                "counts": [
+                  {
+                    "key": "3000",
+                    "count": 3
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "appliances",
+            "kind": "matching",
+            "dimension": "lifespan",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
+            "items": [
+              {
+                "item": "toaster",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "8",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "5",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "oven",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "15",
+                    "count": 2
                   }
                 ]
               }

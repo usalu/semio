@@ -3,7 +3,7 @@
 @comparison-viz-probe-v1
 Feature: The TypeScript twin draws every d3 symbol type from its own area, not from a radius
   `shape-symbols` measures the LaTeX kernel. This case measures the second subject of the same
-  specification, the TypeScript twin `@semio-tech/print-viz-kernel`, on the same vectors and against
+  specification, the TypeScript twin `@semio-tech/print-viz-inference`, on the same vectors and against
   the same oracle, because a kernel that exists twice is only a kernel if both copies answer alike.
 
   The platform gives a case one adapter per language and one subject per scenario, so the twin cannot

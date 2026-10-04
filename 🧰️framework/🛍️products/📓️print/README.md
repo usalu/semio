@@ -8,7 +8,7 @@ driven from the repository's design tokens and both built through `📜️script
 | Path | What lives there |
 |---|---|
 | `🖋️latex/` | The LaTeX packages. `semio.cls` plus `semio-core`, `semio-window`, `semio-table`, `semio-fonts`, `semio-tokens`, `semio-phd` (the dissertation apparatus), and the visualization bundle `semio-viz` with its kernel and namespace packages. |
-| `🧬️schema/` | `🔣️.json` — the JSON Schema of a catalogue entry, the family option vocabularies (`x-semio-family-options`), the demo tables and the probe protocol — and `🟦️.ts`, its typed twin. |
+| `🧬️schema/` | `🔣️.json` — the JSON Schema of an authored chart and catalogue entry, the family option vocabularies (`x-semio-family-options`), the demo tables and the probe protocol — and `🟦️.ts`, its typed twin. Chart snapshots, semantic diffs and mutation decisions live in `📸️snapshot/`, `🔀️diff/`, and `🧬️mutations/`; all visualization derivations live in `💡️inferences/`. |
 | `🖼️assets/` | `📊️viz-taxonomy.md` (the human taxonomy, the single source of the sections and leaves), `🔣️viz-catalog.json` (the handcrafted chart-kind catalogue), fonts and demo images. |
 | `🧾️template/` | Documents. `📋️report`, `📃️paper`, `🎓️phd`, `📰️flyer`, `🏗️zukunftbau`; `📊️viz-gallery/` is generated, one document per taxonomy section; `📊️viz-api/🔓️viz-api.tex` is the hand-written API reference. |
 | `🔨️modules/` | TypeScript modules: catalogue loading and generation, the probe harness, font provisioning, tectonic compilation. |
@@ -99,3 +99,9 @@ in both themes and both languages).
 The probe protocol lives in `🖋️latex/semio-viz-probe.sty` and its TypeScript side in
 `🔨️modules/🧪️viz-probe/🟦️.ts`. The full contract, including the mandatory `\SemioVizProbePage`, is
 in the reference document's chapter on extending the library.
+
+## Authored Chart Inference
+
+`@semio-tech/print-viz-inference` exposes chart snapshots, semantic customization mutations, reversible diffs and total read-side inference. Every chart selects `language: "en"` or `"de"` explicitly. A mutation validates authored values before producing a diff; applying and replaying those diffs recreates the chart. Await `inferVizChart(snapshot, { signal, onProgress })` to derive a plan, a 2D scene and TikZ from the same resolved primitives. The owned worker keeps validation, layout and rendering off the caller's event loop; cancellation terminates it and removes its listeners. Progress starts at zero, increases monotonically, and reaches its total for a completed result. Catalogue presets use the existing LaTeX family inference and can compose with numerical layers. Invalid input and cancellation return diagnostics without partial results.
+
+The native `semio-framework-print` artifact registers executable mutation and inference services in the OS registry. Its TikZ inference delegates numerical grammar operations to the existing LaTeX implementation. `test quick` also executes the schema, replay, D3 arithmetic and rendering checks; the native package has its own registered Nx test command.

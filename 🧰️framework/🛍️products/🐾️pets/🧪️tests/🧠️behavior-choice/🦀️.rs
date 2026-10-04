@@ -13,7 +13,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use pets::serde_json::{self, json, Map, Value};
-    use pets::{activity_weights, cast_of, dwell_of, encounter_of, encounter_shares, followers_of, mood_of, random_pick, weighted_index, Activity, Actor, Cast, PetMode, Situation, Species, ACTIVITIES, MODE_LIMITS};
+    use pets::{activity_weights, at_rest, cast_of, dwell_of, encounter_of, encounter_shares, followers_of, no_hover, random_pick, weighted_index, Activity, Actor, Cast, Facing, Footing, Gaze, Mood, Needs, PetMode, Situation, Species, ACTIVITIES, COLD, MODE_LIMITS};
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
     const VECTORS: &str = "shared://🧠️behavior-choice/🔣️.json";
@@ -61,11 +61,49 @@ mod subject {
 
     /// ⚖️ The weights of a committed situation: an actor with the committed needs and a species with or without a fidget.
     fn weighed(vector: &Value) -> Result<[f64; ACTIVITIES.len()], String> {
-        let actor: Actor = serde_json::from_value(json!({ "species": "blob", "perch": null, "x": 0, "y": 0, "vx": 0, "vy": 0, "facing": 1, "faced": 0, "activity": "idle", "since": 0, "until": 0, "goal": 0, "partner": null, "clip": null, "gaze": { "x": 0, "y": 0, "vx": 0, "vy": 0 }, "blink": 0, "mood": 0, "needs": vector["needs"], "opacity": 1, "leaving": false, "draws": 0 })).map_err(|error| format!("actor: {error}"))?;
+        let needs: Needs = serde_json::from_value(vector["needs"].clone()).map_err(|error| format!("needs: {error}"))?;
+        let actor = Actor {
+            species: "blob".to_string(),
+            perch: None,
+            host: None,
+            pitch: None,
+            grip: 384.0,
+            footing: Footing::Perch,
+            x: 0.0,
+            y: 0.0,
+            vx: 0.0,
+            vy: 0.0,
+            tilt: 0.0,
+            facing: Facing::Right,
+            faced: 0,
+            activity: Activity::Idle,
+            since: 0,
+            until: 0,
+            goal: 0.0,
+            partner: None,
+            clip: None,
+            gaze: Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 },
+            blink: 0,
+            needs,
+            opacity: 1.0,
+            leaving: false,
+            draws: 0,
+            feeling: at_rest(Mood::Content, 0),
+            state: "resting".to_string(),
+            state_since: 0,
+            former: "resting".to_string(),
+            trick: None,
+            warmth: COLD,
+            hover: no_hover(0),
+            hang: None,
+            chute: None,
+            rope: None,
+            emitters: Vec::new(),
+        };
         let repertoire = if vector["fidgets"] == true { json!({ "fidget": ["fidget"] }) } else { json!({}) };
-        let species: Species = serde_json::from_value(json!({ "id": "blob", "name": { "en": "Blob", "de": "Klecks" }, "thing": { "en": "blob", "de": "Klecks" }, "grounds": [], "size": { "width": 40, "height": 40 }, "palette": { "body": "#000000", "accent": "#000000", "detail": "#000000" }, "bones": [], "parts": [], "face": { "eyes": [] }, "clips": [], "repertoire": repertoire, "locomotion": { "gait": "walk", "speed": 40 }, "temperament": { "energy": 0.5, "sociability": 0.5, "curiosity": 0.5 } })).map_err(|error| format!("species: {error}"))?;
+        let species: Species = serde_json::from_value(json!({ "id": "blob", "name": { "en": "Blob", "de": "Klecks" }, "thing": { "en": "blob", "de": "Klecks" }, "grounds": [], "size": { "width": 40, "height": 40 }, "palette": { "body": "#000000", "accent": "#000000", "detail": "#000000" }, "bones": [], "parts": [], "face": { "eyes": [] }, "clips": [], "repertoire": repertoire, "locomotion": { "gait": "walk", "speed": 40 }, "temperament": { "energy": 0.5, "sociability": 0.5, "curiosity": 0.5 }, "states": [{ "id": "resting", "name": { "en": "Resting", "de": "In Ruhe" } }], "tricks": [], "purr": { "clip": "fidget" }, "emitters": [], "gear": [], "grip": 36, "reach": 10, "mood": "content" })).map_err(|error| format!("species: {error}"))?;
         let situation: Situation = serde_json::from_value(
-            json!({ "mode": vector["mode"], "quiet": vector["quiet"], "movers": vector["movers"], "fidgeters": vector["fidgeters"], "roam": vector["roam"], "hops": vector["hops"], "crowd": vector["crowd"], "watched": vector["watched"] }),
+            json!({ "mode": vector["mode"], "quiet": vector["quiet"], "movers": vector["movers"], "fidgeters": vector["fidgeters"], "roam": vector["roam"], "hops": vector["hops"], "crowd": vector["crowd"], "watched": vector["watched"], "whims": vector["whims"] }),
         )
         .map_err(|error| format!("situation: {error}"))?;
         Ok(activity_weights(&actor, &species, situation))
@@ -107,7 +145,7 @@ mod subject {
         keyed(&group(ctx, "limits")?, |vector| Ok(json!(MODE_LIMITS[mode(vector, "id")?])))
     }
 
-    /// 🧭️ The eleven weights of every committed situation.
+    /// 🧭️ The twenty-six weights of every committed situation.
     pub fn weights(ctx: &Context<'_>) -> Result<Outcome, String> {
         keyed(&group(ctx, "weights")?, |vector| Ok(json!(weighed(vector)?)))
     }
@@ -137,11 +175,6 @@ mod subject {
             let (activity, mode) = (activity(vector, "activity")?, mode(vector, "mode")?);
             Ok(json!(numbers(vector, "units")?.into_iter().map(|unit| dwell_of(activity, mode, unit)).collect::<Vec<_>>()))
         })
-    }
-
-    /// 🙂️ The mood of every activity.
-    pub fn moods(ctx: &Context<'_>) -> Result<Outcome, String> {
-        keyed(&group(ctx, "moods")?, |vector| Ok(json!(mood_of(activity(vector, "id")?))))
     }
 
     /// 🥧️ The shares of an encounter at every committed affinity and the kind every committed unit picks.
@@ -179,7 +212,6 @@ pub fn adapter() -> Adapter {
         .subject("picks", subject::picks)
         .subject("decisions", subject::decisions)
         .subject("dwells", subject::dwells)
-        .subject("moods", subject::moods)
         .subject("encounters", subject::encounters)
         .subject("reachability", subject::reachability)
         .subject("casts", subject::casts);

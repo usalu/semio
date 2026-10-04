@@ -8,7 +8,7 @@
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🚏️navigation/🟦️.tsx — the ways and the address
  * @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx — the layered overview */
-import { CATALOG, QUIZZES, boxOf, card, enter, expect, handle, pane, playQuiz, primary, screen, test, way, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { CATALOG, CHALLENGE_NAMES, QUIZZES, boxOf, card, enter, expect, handle, pane, playQuiz, primary, screen, test, way, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 const [first, second, third, fourth] = QUIZZES.map((quiz) => quiz.id);
 const PAGES = ["learner", first!, "intro", second!, "board", third!, "badges", fourth!, "prefs"];
@@ -254,5 +254,5 @@ test("the navbar leads the way: the overview, back and forward along the trail, 
   await way(page, "overview").click();
   await expect(screen(page, "run")).toHaveCount(0);
   await expect(page.locator("[data-layered-pane][data-opened]")).toHaveCount(0);
-  await expect(way(page, "back")).toHaveAccessibleName(`Back: ${QUIZZES[1]!.title.en}`);
+  await expect(way(page, "back")).toHaveAccessibleName(`Back: ${QUIZZES[1]!.title.en} (${CHALLENGE_NAMES.medium.en})`);
 });

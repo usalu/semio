@@ -162,11 +162,11 @@ fn a_pick_is_the_one_weighted_index_of_the_product_at_the_unit_of_the_key() {
 #[test]
 fn a_word_becomes_a_unit_by_one_exact_division_and_three_streams_are_reserved_at_the_top() {
     assert_eq!([unit_of(0), unit_of(2_147_483_648), unit_of(u32::MAX)], [0.0, 0.5, 1.0 - 1.0 / 4_294_967_296.0]);
-    assert_eq!([STAGE_STREAM, CAST_STREAM, ROTATION_STREAM], [0xffff_ffff, 0xffff_fffe, 0xffff_fffd]);
-    let mut words: Vec<u32> = [STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, 0, 1, 2].iter().map(|&stream| random_words(&[SEED, stream, 0], 1)[0]).collect();
+    assert_eq!([STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, CHEMISTRY_STREAM, GEAR_STREAM, MISCHIEF_STREAM], [0xffff_ffff, 0xffff_fffe, 0xffff_fffd, 0xffff_fffc, 0xffff_fffb, 0xffff_fffa]);
+    let mut words: Vec<u32> = [STAGE_STREAM, CAST_STREAM, ROTATION_STREAM, CHEMISTRY_STREAM, GEAR_STREAM, MISCHIEF_STREAM, 0, 1, 2].iter().map(|&stream| random_words(&[SEED, stream, 0], 1)[0]).collect();
     words.sort_unstable();
     words.dedup();
-    assert_eq!(words.len(), 6);
+    assert_eq!(words.len(), 9);
 }
 
 #[test]

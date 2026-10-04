@@ -1,0 +1,10 @@
+{"cases":[
+{"name":"linear-explicit-ticks","kind":"linear","domain":[0.1,0.9],"range":[0,10],"options":{"tickValues":[0.2,0.8],"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"linear-authored-count","kind":"linear","domain":[0.1,0.9],"range":[0,10],"options":{"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"pow-explicit-ticks","kind":"pow","domain":[0.1,0.9],"range":[0,10],"options":{"tickValues":[0.2,0.8],"ticks":2,"tickFormat":".2f","unknown":-5,"exponent":2},"count":2},
+{"name":"sqrt-authored-count","kind":"sqrt","domain":[0.1,0.9],"range":[0,10],"options":{"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"symlog-explicit-ticks","kind":"symlog","domain":[0.1,0.9],"range":[0,10],"options":{"tickValues":[0.2,0.8],"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"log-explicit-ticks","kind":"log","domain":[0.1,0.9],"range":[0,10],"options":{"tickValues":[0.2,0.8],"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"identity-authored-count","kind":"identity","domain":[0.1,0.9],"range":[0.1,0.9],"options":{"ticks":2,"tickFormat":".2f","unknown":-5},"count":2},
+{"name":"color-explicit-ticks","kind":"linear","domain":[0.1,0.9],"range":["red","blue"],"options":{"tickValues":[0.2,0.8],"ticks":2,"tickFormat":".2f","unknown":"hotpink","reverse":true},"count":2}
+]}

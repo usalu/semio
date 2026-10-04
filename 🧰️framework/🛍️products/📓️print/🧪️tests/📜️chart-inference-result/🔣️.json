@@ -1,0 +1,7990 @@
+{
+  "base": {
+    "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+    "diagnostics": [],
+    "complete": true,
+    "plan": {
+      "width": 80,
+      "height": 40,
+      "frame": {
+        "x0": 0,
+        "y0": 0,
+        "x1": 80,
+        "y1": 40
+      },
+      "theme": {
+        "name": "semio",
+        "appearance": "light",
+        "palette": {
+          "appearance": "light",
+          "categorical": [
+            "#123456"
+          ],
+          "schemes": {}
+        },
+        "strokes": {
+          "normal": 0.2
+        },
+        "fonts": {
+          "body": [
+            "Inter"
+          ]
+        },
+        "typography": {
+          "textSmPx": 10
+        },
+        "chrome": {
+          "border-normal": "#7b827d",
+          "border-emphasized": "#001117",
+          "foreground": "#001117"
+        }
+      },
+      "items": [
+        {
+          "kind": "rect",
+          "x": 1,
+          "y": 2,
+          "width": 3,
+          "height": 4,
+          "fill": "#123456"
+        }
+      ]
+    },
+    "scene": {
+      "width": 80,
+      "height": 40,
+      "nodes": [
+        {
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "node": {
+            "kind": "rect",
+            "x": 1,
+            "y": 2,
+            "width": 3,
+            "height": 4
+          },
+          "fill": {
+            "kind": "solid",
+            "color": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "valid-plan-and-scene",
+      "expected": true
+    },
+    {
+      "name": "unknown-plan-kind",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "kind"
+      ],
+      "value": "unknown",
+      "expected": false
+    },
+    {
+      "name": "missing-rectangle-width",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "width"
+      ],
+      "remove": true,
+      "expected": false
+    },
+    {
+      "name": "malformed-path-command",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "path",
+        "commands": [
+          {
+            "op": "nope",
+            "args": []
+          }
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "wrong-path-arity",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "path",
+        "commands": [
+          {
+            "op": "moveTo",
+            "args": [
+              1
+            ]
+          }
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "unknown-frame-key",
+      "path": [
+        "plan",
+        "frame",
+        "extra"
+      ],
+      "value": 1,
+      "expected": false
+    },
+    {
+      "name": "malformed-palette",
+      "path": [
+        "plan",
+        "theme",
+        "palette",
+        "categorical"
+      ],
+      "value": [
+        1
+      ],
+      "expected": false
+    },
+    {
+      "name": "malformed-font-stack",
+      "path": [
+        "plan",
+        "theme",
+        "fonts",
+        "body"
+      ],
+      "value": [
+        1
+      ],
+      "expected": false
+    },
+    {
+      "name": "unknown-scene-kind",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "node",
+        "kind"
+      ],
+      "value": "unknown",
+      "expected": false
+    },
+    {
+      "name": "short-transform",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "transform"
+      ],
+      "value": [
+        1,
+        0
+      ],
+      "expected": false
+    },
+    {
+      "name": "short-rgba",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "fill",
+        "color"
+      ],
+      "value": [
+        0,
+        0,
+        0
+      ],
+      "expected": false
+    },
+    {
+      "name": "unknown-paint",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "fill",
+        "kind"
+      ],
+      "value": "unknown",
+      "expected": false
+    },
+    {
+      "name": "bad-path-segment",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "node"
+      ],
+      "value": {
+        "kind": "path",
+        "segments": [
+          {
+            "kind": "quad",
+            "to": [
+              1,
+              2
+            ]
+          }
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "extra-root-field",
+      "path": [
+        "extra"
+      ],
+      "value": true,
+      "expected": false
+    },
+    {
+      "name": "empty-complete-tikz",
+      "path": [
+        "tikz"
+      ],
+      "value": "",
+      "expected": false
+    },
+    {
+      "name": "failed-partial-publication",
+      "path": [
+        "complete"
+      ],
+      "value": false,
+      "expected": false
+    },
+    {
+      "name": "bad-diagnostic",
+      "path": [
+        "diagnostics"
+      ],
+      "value": [
+        {
+          "code": 1,
+          "path": "chart",
+          "message": "invalid"
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "valid-diagnostic-failure",
+      "result": {
+        "tikz": "",
+        "diagnostics": [
+          {
+            "code": "print.chart.schema",
+            "path": "chart",
+            "message": "invalid"
+          }
+        ],
+        "complete": false
+      },
+      "expected": true
+    },
+    {
+      "name": "unexplained-failure",
+      "result": {
+        "tikz": "",
+        "diagnostics": [],
+        "complete": false
+      },
+      "expected": false
+    },
+    {
+      "name": "all-valid-render-and-scene-variants",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "end",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "rx": 3,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": true
+    },
+    {
+      "name": "missing-ellipse-radius",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "end",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "invalid-gradient-color",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "end",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "rx": 3,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "invalid-stroke-cap",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "end",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "rx": 3,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "invalid",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "invalid-text-anchor",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "invalid",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "rx": 3,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": false
+    },
+    {
+      "name": "native-tikz-style-on-every-plan-item",
+      "result": {
+        "tikz": "\\begin{tikzpicture}\\end{tikzpicture}",
+        "diagnostics": [],
+        "complete": true,
+        "plan": {
+          "width": 80,
+          "height": 40,
+          "frame": {
+            "x0": 0,
+            "y0": 0,
+            "x1": 80,
+            "y1": 40
+          },
+          "theme": {
+            "name": "semio",
+            "appearance": "light",
+            "palette": {
+              "appearance": "light",
+              "categorical": [
+                "#123456"
+              ],
+              "schemes": {}
+            },
+            "strokes": {
+              "normal": 0.2
+            },
+            "fonts": {
+              "body": [
+                "Inter"
+              ]
+            },
+            "typography": {
+              "textSmPx": 10
+            },
+            "chrome": {
+              "border-normal": "#7b827d",
+              "border-emphasized": "#001117",
+              "foreground": "#001117"
+            }
+          },
+          "items": [
+            {
+              "kind": "rect",
+              "x": 1,
+              "y": 2,
+              "width": 3,
+              "height": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            },
+            {
+              "kind": "circle",
+              "cx": 1,
+              "cy": 2,
+              "r": 3,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            },
+            {
+              "kind": "line",
+              "x1": 1,
+              "y1": 2,
+              "x2": 3,
+              "y2": 4,
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            },
+            {
+              "kind": "polygon",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            },
+            {
+              "kind": "path",
+              "commands": [
+                {
+                  "op": "moveTo",
+                  "args": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "op": "lineTo",
+                  "args": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "op": "quadraticCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "op": "bezierCurveTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "op": "arc",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    0,
+                    3.14,
+                    0
+                  ]
+                },
+                {
+                  "op": "arcTo",
+                  "args": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ]
+                },
+                {
+                  "op": "rect",
+                  "args": [
+                    0,
+                    0,
+                    2,
+                    3
+                  ]
+                },
+                {
+                  "op": "closePath",
+                  "args": []
+                }
+              ],
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            },
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "content": "a\nb",
+              "size": 12,
+              "anchor": "end",
+              "fill": "#123456",
+              "stroke": "#654321",
+              "strokeWidth": 0.2,
+              "opacity": 0.5,
+              "dash": [
+                1,
+                2
+              ],
+              "rotation": 20,
+              "clip": {
+                "x0": 0,
+                "y0": 0,
+                "x1": 80,
+                "y1": 40
+              },
+              "cap": "round",
+              "join": "bevel",
+              "tikzStyle": "draw=blue,line width=.7pt"
+            }
+          ]
+        },
+        "scene": {
+          "width": 80,
+          "height": 40,
+          "nodes": [
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "rect",
+                "x": 1,
+                "y": 2,
+                "width": 3,
+                "height": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "ellipse",
+                "cx": 1,
+                "cy": 2,
+                "rx": 3,
+                "ry": 4
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "circle",
+                "cx": 1,
+                "cy": 2,
+                "r": 3
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "line",
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "polygon",
+                "points": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "path",
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      1,
+                      1
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      1,
+                      2
+                    ],
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      1,
+                      2
+                    ],
+                    "ctrl2": [
+                      3,
+                      4
+                    ],
+                    "to": [
+                      5,
+                      6
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 2,
+                    "ry": 3,
+                    "rotation": 10,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              "fill": {
+                "kind": "radialGradient",
+                "cx": 1,
+                "cy": 2,
+                "r": 3,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "text",
+                "x": 1,
+                "y": 2,
+                "content": "a\nb",
+                "size": 4,
+                "anchor": "end",
+                "baseline": "bottom"
+              },
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "transform": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "node": {
+                "kind": "group",
+                "children": [
+                  "a",
+                  "b"
+                ]
+              },
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 1,
+                "y2": 1,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      0.5
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  0.2,
+                  0.3,
+                  0.4,
+                  0.5
+                ],
+                "width": 0.2,
+                "cap": "square",
+                "join": "round",
+                "dash": [
+                  1,
+                  2
+                ]
+              },
+              "opacity": 0.5,
+              "clip": [
+                {
+                  "kind": "move",
+                  "to": [
+                    0,
+                    0
+                  ]
+                },
+                {
+                  "kind": "line",
+                  "to": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "kind": "quad",
+                  "ctrl": [
+                    1,
+                    2
+                  ],
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "cubic",
+                  "ctrl1": [
+                    1,
+                    2
+                  ],
+                  "ctrl2": [
+                    3,
+                    4
+                  ],
+                  "to": [
+                    5,
+                    6
+                  ]
+                },
+                {
+                  "kind": "arc",
+                  "rx": 2,
+                  "ry": 3,
+                  "rotation": 10,
+                  "largeArc": false,
+                  "sweep": true,
+                  "to": [
+                    3,
+                    4
+                  ]
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": true
+    },
+    {
+      "name": "native-tikz-style-text",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "tikzStyle"
+      ],
+      "value": "rounded corners=2pt",
+      "expected": true
+    },
+    {
+      "name": "invalid-native-tikz-style-number",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "tikzStyle"
+      ],
+      "value": 2,
+      "expected": false
+    },
+    {
+      "name": "invalid-native-tikz-style-object",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "tikzStyle"
+      ],
+      "value": {
+        "draw": "blue"
+      },
+      "expected": false
+    },
+    {
+      "name": "native-tikz-style-not-a-scene-property",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "tikzStyle"
+      ],
+      "value": "draw=blue",
+      "expected": false
+    },
+    {
+      "name": "valid-print-text-baseline-alphabetic",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "axis",
+        "size": 6.6,
+        "anchor": "middle",
+        "baseline": "alphabetic"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-print-text-baseline-middle",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "axis",
+        "size": 6.6,
+        "anchor": "middle",
+        "baseline": "middle"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-print-text-baseline-top",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "axis",
+        "size": 6.6,
+        "anchor": "middle",
+        "baseline": "top"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-print-text-baseline-bottom",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "axis",
+        "size": 6.6,
+        "anchor": "middle",
+        "baseline": "bottom"
+      },
+      "expected": true
+    },
+    {
+      "name": "invalid-print-text-baseline",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "axis",
+        "size": 6.6,
+        "baseline": "ideographic"
+      },
+      "expected": false
+    },
+    {
+      "name": "print-baseline-not-a-rectangle-property",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "baseline"
+      ],
+      "value": "middle",
+      "expected": false
+    },
+    {
+      "name": "valid-print-font-Anta",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 6.6,
+        "anchor": "middle",
+        "font": "Anta"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-print-font-Noto Emoji",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 6.6,
+        "anchor": "middle",
+        "font": "Noto Emoji"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-print-font-Print Custom Font",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 6.6,
+        "anchor": "middle",
+        "font": "Print Custom Font"
+      },
+      "expected": true
+    },
+    {
+      "name": "valid-scene-owned-font",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "node"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 2.32,
+        "anchor": "middle",
+        "font": "Share Tech Mono"
+      },
+      "expected": true
+    },
+    {
+      "name": "invalid-print-font-\"\"",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 6.6,
+        "anchor": "middle",
+        "font": ""
+      },
+      "expected": false
+    },
+    {
+      "name": "invalid-print-font-5",
+      "path": [
+        "plan",
+        "items",
+        "0"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 6.6,
+        "anchor": "middle",
+        "font": 5
+      },
+      "expected": false
+    },
+    {
+      "name": "print-font-not-a-rectangle-property",
+      "path": [
+        "plan",
+        "items",
+        "0",
+        "font"
+      ],
+      "value": "Anta",
+      "expected": false
+    },
+    {
+      "name": "invalid-empty-scene-font",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "node"
+      ],
+      "value": {
+        "kind": "text",
+        "x": 1,
+        "y": 2,
+        "content": "Font",
+        "size": 2.32,
+        "anchor": "middle",
+        "font": ""
+      },
+      "expected": false
+    },
+    {
+      "name": "scene-font-not-a-rectangle-property",
+      "path": [
+        "scene",
+        "nodes",
+        "0",
+        "node",
+        "font"
+      ],
+      "value": "Anta",
+      "expected": false
+    },
+    {
+      "name": "valid-chrome-native-colors",
+      "path": [
+        "plan",
+        "theme",
+        "chrome",
+        "foreground"
+      ],
+      "value": "#f7f3e3",
+      "expected": true
+    },
+    {
+      "name": "numeric-chrome-color",
+      "path": [
+        "plan",
+        "theme",
+        "chrome",
+        "foreground"
+      ],
+      "value": 12,
+      "expected": false
+    },
+    {
+      "name": "empty-chrome-color",
+      "path": [
+        "plan",
+        "theme",
+        "chrome",
+        "foreground"
+      ],
+      "value": "",
+      "expected": false
+    },
+    {
+      "name": "missing-chrome",
+      "path": [
+        "plan",
+        "theme",
+        "chrome"
+      ],
+      "remove": true,
+      "expected": false
+    },
+    {
+      "name": "missing-emphasized-chrome-role",
+      "path": [
+        "plan",
+        "theme",
+        "chrome",
+        "border-emphasized"
+      ],
+      "remove": true,
+      "expected": false
+    }
+  ],
+  "fontPoints": [
+    8,
+    12,
+    72.27
+  ]
+}

@@ -19,7 +19,8 @@
         },
         "unit": "W",
         "scale": "logarithmic",
-        "prefixed": true
+        "prefixed": true,
+        "additive": true
       },
       "items": [
         {
@@ -88,6 +89,10 @@
             "en": "Nuclear power plant",
             "de": "Kernkraftwerk"
           },
+          "short": {
+            "en": "Nuclear plant",
+            "de": "AKW"
+          },
           "value": 1600000000,
           "explanation": {
             "en": "About 1.6 GW of electric power.",
@@ -119,7 +124,8 @@
         },
         "unit": "°C",
         "scale": "linear",
-        "prefixed": false
+        "prefixed": false,
+        "additive": false
       },
       "items": [
         {
@@ -136,7 +142,8 @@
             "en": "Living room",
             "de": "Wohnzimmer"
           },
-          "value": 21
+          "value": 21,
+          "familiar": true
         },
         {
           "id": "bathroom",
@@ -166,7 +173,8 @@
         },
         "unit": "W",
         "scale": "linear",
-        "prefixed": true
+        "prefixed": true,
+        "additive": true
       },
       "items": [
         {
@@ -213,7 +221,8 @@
         },
         "unit": "m",
         "scale": "linear",
-        "prefixed": false
+        "prefixed": false,
+        "additive": false
       },
       "items": [
         {
@@ -281,6 +290,46 @@
           "value": 24
         }
       ]
+    },
+    {
+      "kind": "sorting",
+      "id": "identical-masses",
+      "title": {
+        "en": "Identical masses",
+        "de": "Gleiche Massen"
+      },
+      "prompt": {
+        "en": "Smallest first.",
+        "de": "Das Kleinste zuerst."
+      },
+      "quantity": {
+        "label": {
+          "en": "Mass",
+          "de": "Masse"
+        },
+        "unit": "kg",
+        "scale": "logarithmic",
+        "prefixed": true,
+        "additive": true
+      },
+      "items": [
+        {
+          "id": "brick-a",
+          "label": {
+            "en": "Brick A",
+            "de": "Backstein A"
+          },
+          "value": 2.5
+        },
+        {
+          "id": "brick-b",
+          "label": {
+            "en": "Brick B",
+            "de": "Backstein B"
+          },
+          "value": 2.5
+        }
+      ]
     }
   ],
   "vectors": [
@@ -305,14 +354,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -436,14 +498,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -567,14 +642,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -698,14 +786,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -829,14 +930,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -960,14 +1074,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -1091,14 +1218,27 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          2200,
+          2200,
+          11000,
+          1600000000
+        ],
         "items": [
           {
             "id": "nuclear-plant",
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           },
           {
@@ -1222,8 +1362,19 @@
           },
           "unit": "W",
           "scale": "logarithmic",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          9,
+          40,
+          60,
+          2200,
+          2200,
+          11000,
+          3000000,
+          1600000000
+        ],
         "items": [
           {
             "id": "led-bulb",
@@ -1279,6 +1430,10 @@
             "label": {
               "en": "Nuclear power plant",
               "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
             }
           }
         ]
@@ -1381,8 +1536,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -1462,8 +1623,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -1543,8 +1710,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -1624,8 +1797,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -1705,8 +1884,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -1786,8 +1971,14 @@
           },
           "unit": "W",
           "scale": "linear",
-          "prefixed": true
+          "prefixed": true,
+          "additive": true
         },
+        "keys": [
+          150,
+          150,
+          150
+        ],
         "items": [
           {
             "id": "fridge-b",
@@ -1869,8 +2060,19 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21,
+          24
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2020,8 +2222,19 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21,
+          24
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2171,8 +2384,13 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2238,8 +2456,13 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2305,8 +2528,13 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2372,8 +2600,14 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2453,8 +2687,14 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2534,8 +2774,14 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2615,8 +2861,16 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2724,8 +2978,16 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2833,8 +3095,16 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -2942,8 +3212,19 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21,
+          24
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -3093,8 +3374,19 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21,
+          24
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -3244,8 +3536,19 @@
           },
           "unit": "m",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          3,
+          6,
+          9,
+          12,
+          15,
+          18,
+          21,
+          24
+        ],
         "items": [
           {
             "id": "floor-1",
@@ -3375,6 +3678,3562 @@
       }
     }
   ],
+  "guessed": [
+    {
+      "id": "log-exact",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-rough-in-reach",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 5,
+          "tea-light": 100,
+          "kettle": 1000,
+          "hair-dryer": 1500,
+          "wallbox": 20000,
+          "nuclear-plant": 1000000000.0
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 5,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 100,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 1500,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 20000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1000000000.0,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-counted-one-to-six",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 1,
+          "tea-light": 2,
+          "kettle": 3,
+          "hair-dryer": 4,
+          "wallbox": 5,
+          "nuclear-plant": 6
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.18335150475117323,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 1,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 2,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 3,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 4,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 5,
+            "miss": true
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 6,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-every-guess-misses",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 1e-09,
+          "tea-light": 2e-09,
+          "kettle": 3.0000000000000004e-09,
+          "hair-dryer": 4e-09,
+          "wallbox": 5e-09,
+          "nuclear-plant": 6.000000000000001e-09
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 1e-09,
+            "miss": true
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 2e-09,
+            "miss": true,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 3.0000000000000004e-09,
+            "miss": true
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 4e-09,
+            "miss": true
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 5e-09,
+            "miss": true
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 6.000000000000001e-09,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-largest-misses",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 100000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.32592502017534164,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 100000,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-smallest-misses-high",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "led-bulb",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9000000,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.654887630472041,
+        "items": [
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 0,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 1,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 2,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 3,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 4,
+            "rank": 0,
+            "guess": 9000000,
+            "miss": true
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-neighbours-exchanged-in-reach",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "wallbox",
+          "hair-dryer",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 12000,
+          "wallbox": 3000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.9856082431060547,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 3,
+            "rank": 4,
+            "guess": 3000,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 4,
+            "rank": 3,
+            "guess": 12000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-equal-guesses-in-true-order",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 1000,
+          "kettle": 1000,
+          "hair-dryer": 1000,
+          "wallbox": 1000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 1000,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-equal-guesses-against-true-order",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "wallbox",
+          "kettle",
+          "hair-dryer",
+          "tea-light",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 1000,
+          "kettle": 1000,
+          "hair-dryer": 1000,
+          "wallbox": 1000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.8493227911271809,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 1,
+            "rank": 4,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 1000,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 4,
+            "rank": 1,
+            "guess": 1000,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-thousandfold-of-the-largest-in-reach",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000000.0
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000000.0,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-thousandfold-of-the-largest-one-double-beyond-within-the-slack",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000000.0002
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000000.0002,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-thousandfold-of-the-largest-beyond-the-slack",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000003200
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.32592502017534164,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000003200,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-typed-thousandth-of-the-smallest-within",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 0.009,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 0.009,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "log-typed-ten-thousandth-of-the-smallest-misses",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 0.0009,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.654887630472041,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 0.0009,
+            "miss": true
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "linear-exact",
+      "task": "room-temperatures",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 18,
+          "living-room": 21,
+          "bathroom": 23.5
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "room-temperatures",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "bedroom",
+            "value": 18,
+            "position": 0,
+            "rank": 0,
+            "guess": 18,
+            "miss": false
+          },
+          {
+            "item": "living-room",
+            "value": 21,
+            "position": 1,
+            "rank": 1,
+            "guess": 21,
+            "miss": false
+          },
+          {
+            "item": "bathroom",
+            "value": 23.5,
+            "position": 2,
+            "rank": 2,
+            "guess": 23.5,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "linear-at-the-reach",
+      "task": "room-temperatures",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 20.75,
+          "living-room": 21,
+          "bathroom": 26.25
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "room-temperatures",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "bedroom",
+            "value": 18,
+            "position": 0,
+            "rank": 0,
+            "guess": 20.75,
+            "miss": false
+          },
+          {
+            "item": "living-room",
+            "value": 21,
+            "position": 1,
+            "rank": 1,
+            "guess": 21,
+            "miss": false
+          },
+          {
+            "item": "bathroom",
+            "value": 23.5,
+            "position": 2,
+            "rank": 2,
+            "guess": 26.25,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "linear-just-beyond-the-reach",
+      "task": "room-temperatures",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 15.2,
+          "living-room": 21,
+          "bathroom": 26.25
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "room-temperatures",
+        "score": 0.2272727272727273,
+        "items": [
+          {
+            "item": "bedroom",
+            "value": 18,
+            "position": 0,
+            "rank": 0,
+            "guess": 15.2,
+            "miss": true
+          },
+          {
+            "item": "living-room",
+            "value": 21,
+            "position": 1,
+            "rank": 1,
+            "guess": 21,
+            "miss": false
+          },
+          {
+            "item": "bathroom",
+            "value": 23.5,
+            "position": 2,
+            "rank": 2,
+            "guess": 26.25,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "linear-middle-misses",
+      "task": "room-temperatures",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "bathroom",
+          "living-room"
+        ],
+        "guesses": {
+          "bedroom": 18,
+          "bathroom": 23.5,
+          "living-room": 30
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "room-temperatures",
+        "score": 0.5,
+        "items": [
+          {
+            "item": "bedroom",
+            "value": 18,
+            "position": 0,
+            "rank": 0,
+            "guess": 18,
+            "miss": false
+          },
+          {
+            "item": "bathroom",
+            "value": 23.5,
+            "position": 1,
+            "rank": 2,
+            "guess": 23.5,
+            "miss": false
+          },
+          {
+            "item": "living-room",
+            "value": 21,
+            "position": 2,
+            "rank": 1,
+            "guess": 30,
+            "miss": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-linear-any-guess",
+      "task": "identical-loads",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "identical-loads",
+        "title": {
+          "en": "Identical loads",
+          "de": "Gleiche Lasten"
+        },
+        "prompt": {
+          "en": "Smallest first.",
+          "de": "Das Kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "linear",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "fridge-b",
+            "label": {
+              "en": "Fridge B",
+              "de": "Kühlschrank B"
+            }
+          },
+          {
+            "id": "fridge-c",
+            "label": {
+              "en": "Fridge C",
+              "de": "Kühlschrank C"
+            }
+          },
+          {
+            "id": "fridge-a",
+            "label": {
+              "en": "Fridge A",
+              "de": "Kühlschrank A"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "fridge-a",
+          "fridge-c",
+          "fridge-b"
+        ],
+        "guesses": {
+          "fridge-a": 0.001,
+          "fridge-c": 150,
+          "fridge-b": 1000000000000.0
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "identical-loads",
+        "score": 1,
+        "items": [
+          {
+            "item": "fridge-a",
+            "value": 150,
+            "position": 0,
+            "rank": 0,
+            "guess": 0.001,
+            "miss": false
+          },
+          {
+            "item": "fridge-c",
+            "value": 150,
+            "position": 1,
+            "rank": 2,
+            "guess": 150,
+            "miss": false
+          },
+          {
+            "item": "fridge-b",
+            "value": 150,
+            "position": 2,
+            "rank": 1,
+            "guess": 1000000000000.0,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-log-in-reach",
+      "task": "identical-masses",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "identical-masses",
+        "title": {
+          "en": "Identical masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Smallest first.",
+          "de": "Das Kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Mass",
+            "de": "Masse"
+          },
+          "unit": "kg",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "brick-b",
+            "label": {
+              "en": "Brick B",
+              "de": "Backstein B"
+            }
+          },
+          {
+            "id": "brick-a",
+            "label": {
+              "en": "Brick A",
+              "de": "Backstein A"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "brick-a",
+          "brick-b"
+        ],
+        "guesses": {
+          "brick-a": 0.01,
+          "brick-b": 2000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "identical-masses",
+        "score": 1,
+        "items": [
+          {
+            "item": "brick-a",
+            "value": 2.5,
+            "position": 0,
+            "rank": 0,
+            "guess": 0.01,
+            "miss": false
+          },
+          {
+            "item": "brick-b",
+            "value": 2.5,
+            "position": 1,
+            "rank": 1,
+            "guess": 2000,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-log-miss",
+      "task": "identical-masses",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "identical-masses",
+        "title": {
+          "en": "Identical masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Smallest first.",
+          "de": "Das Kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Mass",
+            "de": "Masse"
+          },
+          "unit": "kg",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "brick-b",
+            "label": {
+              "en": "Brick B",
+              "de": "Backstein B"
+            }
+          },
+          {
+            "id": "brick-a",
+            "label": {
+              "en": "Brick A",
+              "de": "Backstein A"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "brick-a",
+          "brick-b"
+        ],
+        "guesses": {
+          "brick-a": 2.5,
+          "brick-b": 5000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "identical-masses",
+        "score": 0,
+        "items": [
+          {
+            "item": "brick-a",
+            "value": 2.5,
+            "position": 0,
+            "rank": 0,
+            "guess": 2.5,
+            "miss": false
+          },
+          {
+            "item": "brick-b",
+            "value": 2.5,
+            "position": 1,
+            "rank": 1,
+            "guess": 5000,
+            "miss": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-exact",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ],
+        "seconds": 102
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "tea-light": 40,
+          "kettle": 2200,
+          "hair-dryer": 2200,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 1.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "guess": 40,
+            "miss": false,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "guess": 2200,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-partly-guessed",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ],
+        "seconds": 102
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "kettle",
+          "led-bulb",
+          "wallbox",
+          "hair-dryer",
+          "tea-light",
+          "nuclear-plant"
+        ],
+        "guesses": {
+          "led-bulb": 9,
+          "wallbox": 11000,
+          "nuclear-plant": 1600000000
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.33972911645087245,
+        "items": [
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 0,
+            "rank": 2,
+            "miss": true
+          },
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 1,
+            "rank": 0,
+            "guess": 9,
+            "miss": false
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 2,
+            "rank": 4,
+            "guess": 11000,
+            "miss": false
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "miss": true
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 4,
+            "rank": 1,
+            "miss": true,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "guess": 1600000000,
+            "miss": false,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-order-without-guesses",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ],
+        "seconds": 102
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led-bulb",
+          "tea-light",
+          "kettle",
+          "hair-dryer",
+          "wallbox",
+          "nuclear-plant"
+        ]
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 0,
+            "rank": 0,
+            "miss": true
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 1,
+            "rank": 1,
+            "miss": true,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "miss": true
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "miss": true
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "miss": true
+          },
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 5,
+            "rank": 5,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-unanswered",
+      "task": "power-ratings",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "power-ratings",
+        "title": {
+          "en": "Power ratings",
+          "de": "Leistungen"
+        },
+        "prompt": {
+          "en": "Order by rated power, smallest first.",
+          "de": "Ordne nach Nennleistung, die kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "logarithmic",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "nuclear-plant",
+            "label": {
+              "en": "Nuclear power plant",
+              "de": "Kernkraftwerk"
+            },
+            "short": {
+              "en": "Nuclear plant",
+              "de": "AKW"
+            }
+          },
+          {
+            "id": "led-bulb",
+            "label": {
+              "en": "LED bulb",
+              "de": "LED-Lampe"
+            }
+          },
+          {
+            "id": "kettle",
+            "label": {
+              "en": "Kettle",
+              "de": "Wasserkocher"
+            }
+          },
+          {
+            "id": "hair-dryer",
+            "label": {
+              "en": "Hair dryer",
+              "de": "Haartrockner"
+            }
+          },
+          {
+            "id": "wallbox",
+            "label": {
+              "en": "Wallbox",
+              "de": "Wallbox"
+            }
+          },
+          {
+            "id": "tea-light",
+            "label": {
+              "en": "Tea light",
+              "de": "Teelicht"
+            }
+          }
+        ],
+        "seconds": 102
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "power-ratings",
+        "score": 0.0,
+        "items": [
+          {
+            "item": "nuclear-plant",
+            "value": 1600000000,
+            "position": 0,
+            "rank": 5,
+            "miss": true,
+            "explanation": {
+              "en": "About 1.6 GW of electric power.",
+              "de": "Etwa 1,6 GW elektrische Leistung."
+            }
+          },
+          {
+            "item": "led-bulb",
+            "value": 9,
+            "position": 1,
+            "rank": 0,
+            "miss": true
+          },
+          {
+            "item": "kettle",
+            "value": 2200,
+            "position": 2,
+            "rank": 2,
+            "miss": true
+          },
+          {
+            "item": "hair-dryer",
+            "value": 2200,
+            "position": 3,
+            "rank": 3,
+            "miss": true
+          },
+          {
+            "item": "wallbox",
+            "value": 11000,
+            "position": 4,
+            "rank": 4,
+            "miss": true
+          },
+          {
+            "item": "tea-light",
+            "value": 40,
+            "position": 5,
+            "rank": 1,
+            "miss": true,
+            "explanation": {
+              "en": "A tea light releases about 40 W of heat.",
+              "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-zero-weight-one-unguessed",
+      "task": "identical-loads",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "identical-loads",
+        "title": {
+          "en": "Identical loads",
+          "de": "Gleiche Lasten"
+        },
+        "prompt": {
+          "en": "Smallest first.",
+          "de": "Das Kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "linear",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "fridge-b",
+            "label": {
+              "en": "Fridge B",
+              "de": "Kühlschrank B"
+            }
+          },
+          {
+            "id": "fridge-c",
+            "label": {
+              "en": "Fridge C",
+              "de": "Kühlschrank C"
+            }
+          },
+          {
+            "id": "fridge-a",
+            "label": {
+              "en": "Fridge A",
+              "de": "Kühlschrank A"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "fridge-b",
+          "fridge-c",
+          "fridge-a"
+        ],
+        "guesses": {
+          "fridge-b": 150,
+          "fridge-a": 150
+        }
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "identical-loads",
+        "score": 0,
+        "items": [
+          {
+            "item": "fridge-b",
+            "value": 150,
+            "position": 0,
+            "rank": 1,
+            "guess": 150,
+            "miss": false
+          },
+          {
+            "item": "fridge-c",
+            "value": 150,
+            "position": 1,
+            "rank": 2,
+            "miss": true
+          },
+          {
+            "item": "fridge-a",
+            "value": 150,
+            "position": 2,
+            "rank": 0,
+            "guess": 150,
+            "miss": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-zero-weight-unanswered",
+      "task": "identical-loads",
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "identical-loads",
+        "title": {
+          "en": "Identical loads",
+          "de": "Gleiche Lasten"
+        },
+        "prompt": {
+          "en": "Smallest first.",
+          "de": "Das Kleinste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Power",
+            "de": "Leistung"
+          },
+          "unit": "W",
+          "scale": "linear",
+          "prefixed": true,
+          "additive": true
+        },
+        "items": [
+          {
+            "id": "fridge-b",
+            "label": {
+              "en": "Fridge B",
+              "de": "Kühlschrank B"
+            }
+          },
+          {
+            "id": "fridge-c",
+            "label": {
+              "en": "Fridge C",
+              "de": "Kühlschrank C"
+            }
+          },
+          {
+            "id": "fridge-a",
+            "label": {
+              "en": "Fridge A",
+              "de": "Kühlschrank A"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "expected": {
+        "kind": "sorting",
+        "task": "identical-loads",
+        "score": 0,
+        "items": [
+          {
+            "item": "fridge-b",
+            "value": 150,
+            "position": 0,
+            "rank": 1,
+            "miss": true
+          },
+          {
+            "item": "fridge-c",
+            "value": 150,
+            "position": 1,
+            "rank": 2,
+            "miss": true
+          },
+          {
+            "item": "fridge-a",
+            "value": 150,
+            "position": 2,
+            "rank": 0,
+            "miss": true
+          }
+        ]
+      }
+    }
+  ],
   "degraded": [
     {
       "id": "missing-item",
@@ -3400,7 +7259,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3417,7 +7277,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3447,8 +7308,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -3506,7 +7373,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3523,7 +7391,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3553,8 +7422,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -3613,7 +7488,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3630,7 +7506,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3660,8 +7537,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -3720,7 +7603,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3737,7 +7621,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3767,8 +7652,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -3825,7 +7716,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3842,7 +7734,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3872,8 +7765,14 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
         "items": [
           {
             "id": "bathroom",
@@ -3932,7 +7831,8 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
         "items": [
           {
@@ -3949,7 +7849,8 @@
               "en": "Living room",
               "de": "Wohnzimmer"
             },
-            "value": 21
+            "value": 21,
+            "familiar": true
           },
           {
             "id": "bathroom",
@@ -3979,8 +7880,10 @@
           },
           "unit": "°C",
           "scale": "linear",
-          "prefixed": false
+          "prefixed": false,
+          "additive": false
         },
+        "keys": [],
         "items": []
       },
       "answer": {
@@ -3993,6 +7896,795 @@
         "score": 1,
         "items": []
       }
+    },
+    {
+      "id": "guesses-where-the-keys-show",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "keys": [
+          18,
+          21,
+          23.5
+        ],
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 18,
+          "living-room": 21,
+          "bathroom": 23.5
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-partly-guessed-untimed",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 18,
+          "bathroom": 23.5
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-order-without-guesses-untimed",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-unanswered-untimed",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-guesses-against-the-order",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 23,
+          "living-room": 21,
+          "bathroom": 18
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-guesses-against-the-order",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room",
+          "bathroom"
+        ],
+        "guesses": {
+          "bedroom": 23,
+          "bathroom": 18
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-missing-item",
+      "task": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            },
+            "value": 18
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            },
+            "value": 21,
+            "familiar": true
+          },
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            },
+            "value": 23.5
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "sorting",
+        "id": "room-temperatures",
+        "title": {
+          "en": "Room temperatures",
+          "de": "Raumtemperaturen"
+        },
+        "prompt": {
+          "en": "Order by recommended temperature, lowest first.",
+          "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "quantity": {
+          "label": {
+            "en": "Temperature",
+            "de": "Temperatur"
+          },
+          "unit": "°C",
+          "scale": "linear",
+          "prefixed": false,
+          "additive": false
+        },
+        "items": [
+          {
+            "id": "bathroom",
+            "label": {
+              "en": "Bathroom",
+              "de": "Badezimmer"
+            }
+          },
+          {
+            "id": "bedroom",
+            "label": {
+              "en": "Bedroom",
+              "de": "Schlafzimmer"
+            }
+          },
+          {
+            "id": "living-room",
+            "label": {
+              "en": "Living room",
+              "de": "Wohnzimmer"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "bedroom",
+          "living-room"
+        ],
+        "guesses": {
+          "bedroom": 18
+        }
+      },
+      "expected": null
     }
   ]
 }

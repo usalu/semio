@@ -1,0 +1,43 @@
+{
+  "title": "Quiz Challenge Levels",
+  "emoji": "🎚️",
+  "status": "closed",
+  "reopened": "2026-10-04: easy hints must be specific comparisons between items, never generic (design §8); closed again 2026-10-04 after three hint rounds and two hint audits.",
+  "description": "Introduce four challenge levels for quizzes (easy, medium, hard, expert) that change how every kind of question behaves (visible keys and magnitude hints, hidden keys, timed questions) and that reward harder levels with more points, across schema, both cores, the reference, the proctor, the React client and the teaching site.",
+  "goal": "🎯runningframework🎯runningproducts",
+  "client": "claude-code",
+  "llm": "opus-5-5",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (CONNECTION_CLOSED) on 2026-10-02 and 2026-10-03. Closed manually on 2026-10-03.",
+  "summary": "Every quiz runs at a challenge chosen per run on the quiz page (remembered per quiz): easy shows the keys (sorting as an ascending value ladder, matching cards, classification descriptions and axis numbers) and hints when an assigned key misses its value by more than the reach (×1000, or the square root of the presented max/min ratio where less); medium shows the keys without hints; hard hides them (typed guesses for sorting and matching, shape-only spider diagrams) and scores a missing or out-of-reach guess as losing every pair it is in; expert is hard with a clock per task (open-task, device-kept time bounded by floors and a five-minute lead cap, time-up, partial submission). Points = score × 100/200/300/400; the best run per quiz by points counts; perfection badges need medium. Contract, TypeScript and Rust cores, Python reference with numpy oracles and 129/129 parity, proctor (format 3, projector 6, open-task, float_roundtrip), React client (chooser, per-challenge views, hints, clock, results with points and tolerance, lazy run chunks, EN/DE) and the teaching site (catalog, badges, e2e driver and 12-test challenge spec) moved together; six audits and their fixes are in the ticket. Final tree: quiz TS 415, Rust 180, parity 129/129, React 831, proctor 90+15+21, site 228, e2e 54/56 per topology (two layered-home tests of the adaptive-layout session red). Capacity gate and deploy-check not run. Reopened 2026-10-04: easy hints are now specific questions about a relation the learner's own answer claims between two items (CompareHint under/over/reversed with additive 'zusammen nur … ergeben' and 'in puncto <quantity>' wording, profile hints relative to a correctly placed item, group/category hints for plain classification), references chosen as the most contradicted anchor (unused first, familiar, most absurd claim), at most 3 per task, authored short labels and familiar items, Quantity.additive, number words and mantissa × 10ⁿ, wire version 4. Final tree: quiz TS 450, React 920, parity 138/138 (coordinator rerun), Rust 191, proctor 90+15+21, e2e rehearsal desktop 30/30.",
+  "files": {
+    "created": [
+      "🧰️framework/🛍️products/❓️quiz/🔨️modules/⛰️challenge/🟦️.ts",
+      "🧰️framework/🛍️products/❓️quiz/🔨️modules/⛰️challenge/🦀️.rs",
+      "🧰️framework/🛍️products/❓️quiz/🔨️modules/⛰️challenge/🧪️tests/🔬️unit/🦀️.rs",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/⛰️challenge-rules/{🥒️.feature,🐍️.py,🟦️.ts,🦀️.rs}",
+      "🧰️framework/🛍️products/❓️quiz/🧫️fixtures/⛰️challenge-rules/🔣️.json",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🧗️challenge-ladder/🟦️.ts",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🪜️challenge-views/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/⛰️challenge/🟦️.tsx",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/⛰️challenge-levels/🟦️.ts"
+    ],
+    "updated": [
+      "🧰️framework/🛍️products/❓️quiz/README.md",
+      "🧰️framework/🛍️products/❓️quiz/🧬️schema/{🔣️.json,🟦️.ts,🦀️.rs}",
+      "🧰️framework/🛍️products/❓️quiz/🔨️modules/{🃏️sheet,✅️validation,📏️scoring,🧾️lifecycle,👁️views,🏅️badges,👥️presence}/*",
+      "🧰️framework/🛍️products/❓️quiz/📦️packages/{🟦️typescript,🦀️rust}/*",
+      "🧰️framework/🛍️products/❓️quiz/🔮️oracles/🔣️.json",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/* (13 language-agnostic cases, core and React suites)",
+      "🧰️framework/🛍️products/❓️quiz/🧫️fixtures/* (12 regenerated fixtures, contrast-states, crowd-client, quantity-formatting, adaptive-layout)",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/{🟦️.tsx,🎨️.css,🧪️tests/🎚️config/🟦️.ts,📦️packages/🟦️typescript/tsconfig.json}",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/{🧭️session,📮️outbox,🫡️deputy,💾️persistence,🛂️proctor,🎛️preferences,📖️quiz-page,🏠️home,📇️profile,🏆️leaderboard,🏅️badges,🗳️crowd,🚏️navigation,🪟️chrome,▶️run,🧩️task,↕️sorting,🃏️matching,🗂️classification,🕸️radar,🏁️results,📏️quantity,🌐️i18n}/*",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🔣️taxonomy.json,🔣️schema-catalog.json,📓️schema-catalog.md}",
+      "🎓️teaching/🛂️proctor/** (Cargo.toml, modules, unit/conformance/end-to-end tests, 🏗️bootstrap/🟦️.ts, capacity script, README)",
+      "🎓️teaching/🏛️architecture/❓️quiz/{🔣️.json,README.md,🚀️deploy/🟦️.ts,🎭️e2e/🚶️learner/🟦️.ts,🧪️tests/*}",
+      ".claude/launch.json",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/generate_quiz_vectors.py"
+    ],
+    "removed": []
+  }
+}

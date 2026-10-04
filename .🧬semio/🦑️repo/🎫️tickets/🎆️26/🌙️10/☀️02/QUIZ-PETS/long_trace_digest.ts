@@ -1,7 +1,7 @@
 /** 🧪️ Ticket tool of work package M, the TypeScript half of the long-run proof that the Rust twin of the pets stage yields the same bits: it composes scripted sessions, plays them through `@semio-tech/pets` and records two digests per simulated second.
  *
  * A session is 20 minutes (76 800 ticks) on one menagerie with one seed: a survey and a summons at tick 0, then every
- * 2 to 20 seconds something happens — the pointer wanders in bursts or leaves, someone is poked (aimed at an actor
+ * 2 to 20 seconds something happens — the pointer wanders in bursts or leaves, someone is clicked — a press and its release — (aimed at an actor
  * that is on stage right now), glance points come and go, the terrain scrolls, loses a card, gains a shelf, is
  * measured again unchanged or is laid out anew at another size, the company changes, the mode is tuned (every session visits all
  * three modes and returns to its own) and a time of concentration begins or ends. The events are drawn from a small
@@ -28,7 +28,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { ACTIVITIES, PET_MODES, TICKS_PER_SECOND, type Frame, type Menagerie, type PetMode, type Point, type Rect, type Slug, type Stage, type StageEvent, type Surface } from "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts";
+import { ACTIVITIES, MOODS, PET_MODES, TICKS_PER_SECOND, type Frame, type Menagerie, type PetMode, type Point, type Rect, type Slug, type Stage, type StageEvent, type Surface } from "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts";
 import { castOf } from "../../../../../../../🧰️framework/🛍️products/🐾️pets/🔨️modules/🧠️behavior/🟦️.ts";
 import { advance, frameOf, openStage } from "../../../../../../../🧰️framework/🛍️products/🐾️pets/🔨️modules/🎪️stage/🟦️.ts";
 
@@ -67,7 +67,7 @@ function foldFrame(hash: number, menagerie: Menagerie, frame: Frame): number {
     folded = fold(fold(fold(fold(fold(folded, actor.x), actor.y), actor.facing), ACTIVITIES.indexOf(actor.activity)), actor.opacity);
     for (const number of actor.bones) folded = fold(folded, number);
     for (const eye of actor.eyes) folded = fold(fold(fold(folded, eye.x), eye.y), eye.lid);
-    folded = fold(folded, actor.mood);
+    folded = fold(folded, actor.spirits);
   }
   return folded;
 }
@@ -87,7 +87,7 @@ function foldStage(menagerie: Menagerie, stage: Stage): number {
     const species = menagerie.species[kind(actor.species)];
     numbers.push(kind(actor.species), actor.perch === null ? -1 : surface(actor.perch), actor.x, actor.y, actor.vx, actor.vy, actor.facing, actor.faced, ACTIVITIES.indexOf(actor.activity), actor.since, actor.until, actor.goal);
     numbers.push(actor.partner === null ? -1 : kind(actor.partner), actor.clip === null || species === undefined ? -1 : species.clips.findIndex((clip) => clip.id === actor.clip));
-    numbers.push(actor.gaze.x, actor.gaze.y, actor.gaze.vx, actor.gaze.vy, actor.blink, actor.mood, actor.needs.energy, actor.needs.sociability, actor.needs.curiosity, actor.opacity, actor.leaving ? 1 : 0, actor.draws);
+    numbers.push(actor.gaze.x, actor.gaze.y, actor.gaze.vx, actor.gaze.vy, actor.blink, MOODS.indexOf(actor.feeling.mood), actor.feeling.intensity, actor.feeling.since, actor.needs.energy, actor.needs.sociability, actor.needs.curiosity, actor.opacity, actor.leaving ? 1 : 0, actor.draws);
   }
   numbers.push(stage.rapports.length);
   for (const rapport of stage.rapports) numbers.push(kind(rapport.between[0]), kind(rapport.between[1]), rapport.drift);
@@ -129,7 +129,7 @@ function layout(unit: () => number): Terrain {
 
 /** 📡️ The survey event of a terrain. */
 function surveyed(terrain: Terrain): StageEvent {
-  return { kind: "surveyed", width: terrain.width, height: terrain.height, surfaces: terrain.surfaces, keepouts: terrain.keepouts };
+  return { kind: "surveyed", width: terrain.width, height: terrain.height, surfaces: terrain.surfaces, keepouts: terrain.keepouts, walls: [], fixtures: [] };
 }
 
 /** 📍️ A point on stage: near an actor that is there right now three times out of four, anywhere otherwise. */
@@ -192,14 +192,14 @@ function play(id: string, name: string, menagerie: Menagerie, seed: number, mode
         let at = tick;
         for (let move = 0; move < moves; move++) {
           const point = spot(unit, stage, menagerie, terrain, 4);
-          if (move === 0) events.push({ kind: "pointed", x: point.x, y: point.y });
-          else schedule(at, { kind: "pointed", x: point.x, y: point.y });
+          if (move === 0) events.push({ kind: "pointed", x: point.x, y: point.y, over: "free" });
+          else schedule(at, { kind: "pointed", x: point.x, y: point.y, over: "free" });
           at += 2 + Math.floor(unit() * 30);
         }
         if (unit() < 0.3) schedule(at, { kind: "unpointed" });
       } else if (choice < 0.45) {
         const point = spot(unit, stage, menagerie, terrain, 1);
-        events.push({ kind: "poked", x: point.x, y: point.y });
+        events.push({ kind: "pressed", x: point.x, y: point.y, pointer: "mouse" }, { kind: "released", x: point.x, y: point.y });
       } else if (choice < 0.55) {
         const points: Point[] = [];
         for (let glance = Math.floor(unit() * 4); glance > 0; glance--) points.push(spot(unit, stage, menagerie, terrain, 6));
@@ -248,8 +248,10 @@ function play(id: string, name: string, menagerie: Menagerie, seed: number, mode
 /** 🎪️ The menageries the sessions play on: the trace troupe and the architecture menagerie. */
 async function menageries(): Promise<Record<string, Menagerie>> {
   const troupe = (JSON.parse(readFileSync(join(ROOT, TROUPE), "utf8")) as { menagerie: Menagerie }).menagerie;
-  const module = (await import(pathToFileURL(join(ROOT, ARCHITECTURE)).href)) as { default: Menagerie };
-  return { troupe, architecture: module.default };
+  const module = (await import(pathToFileURL(join(ROOT, ARCHITECTURE)).href)) as { default?: Menagerie; ARCHITECTURE_MENAGERIE?: Menagerie };
+  const architecture = module.ARCHITECTURE_MENAGERIE ?? module.default;
+  if (architecture === undefined) throw new Error(`${ARCHITECTURE} exports no menagerie`);
+  return { troupe, architecture };
 }
 
 /** 🔍️ The first place two JSON values differ, numbers compared as the same double; `undefined` when they are the same. */

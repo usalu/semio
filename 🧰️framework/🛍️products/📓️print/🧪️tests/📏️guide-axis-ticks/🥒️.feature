@@ -77,3 +77,14 @@ Feature: An axis puts its ticks where d3-axis would
     # An English label such as `0.0` reaches the harness as a JSON number, because the probe
     # protocol classifies a bare decimal as numeric; a German label such as `0,0` reaches it as a
     # string. The adapter mirrors that on the oracle side rather than weakening the comparison.
+
+  @id-custom-controls
+  @level-quick
+  @mode-differential
+  Scenario: Explicit guide controls survive native drawing and localized formatting
+    Given the committed probe document shared://📏️guide-axis-ticks/custom-controls.tex
+      | domain | range | ticks  | locale | specifier | timestamp     | timeSpecifier      |
+      | 0,10   | 8,78  | 0,5,10 | de     | .1f       | 1735732800000 | %Y-%m-%d %H:%M     |
+    Then its native top ticks match d3-scale and its decimal label matches d3-format
+    And its color, symbol and dash legends compile with their explicit controls
+    And its temporal label and authored color ramp match d3-time-format and d3-scale

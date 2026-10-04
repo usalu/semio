@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "text-alphabetic-start",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "start",
+        "baseline": "alphabetic"
+      },
+      "expectedAnchor": "base west"
+    },
+    {
+      "id": "text-alphabetic-middle",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "middle",
+        "baseline": "alphabetic"
+      },
+      "expectedAnchor": "base"
+    },
+    {
+      "id": "text-alphabetic-end",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "end",
+        "baseline": "alphabetic"
+      },
+      "expectedAnchor": "base east"
+    },
+    {
+      "id": "text-middle-start",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "start",
+        "baseline": "middle"
+      },
+      "expectedAnchor": "west"
+    },
+    {
+      "id": "text-middle-middle",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "middle",
+        "baseline": "middle"
+      },
+      "expectedAnchor": "center"
+    },
+    {
+      "id": "text-middle-end",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "end",
+        "baseline": "middle"
+      },
+      "expectedAnchor": "east"
+    },
+    {
+      "id": "text-top-start",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "start",
+        "baseline": "top"
+      },
+      "expectedAnchor": "north west"
+    },
+    {
+      "id": "text-top-middle",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "middle",
+        "baseline": "top"
+      },
+      "expectedAnchor": "north"
+    },
+    {
+      "id": "text-top-end",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "end",
+        "baseline": "top"
+      },
+      "expectedAnchor": "north east"
+    },
+    {
+      "id": "text-bottom-start",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "start",
+        "baseline": "bottom"
+      },
+      "expectedAnchor": "south west"
+    },
+    {
+      "id": "text-bottom-middle",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "middle",
+        "baseline": "bottom"
+      },
+      "expectedAnchor": "south"
+    },
+    {
+      "id": "text-bottom-end",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "end",
+        "baseline": "bottom"
+      },
+      "expectedAnchor": "south east"
+    },
+    {
+      "id": "text-default-baseline",
+      "item": {
+        "kind": "text",
+        "x": 5,
+        "y": 6,
+        "size": 7,
+        "content": "Anchor",
+        "anchor": "middle"
+      },
+      "expectedBaseline": "middle",
+      "expectedAnchor": "center"
+    }
+  ]
+}

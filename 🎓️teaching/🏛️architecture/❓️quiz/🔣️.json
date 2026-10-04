@@ -11,20 +11,24 @@
         "de": "Diese Quizze trainieren dein Gefühl für die Zahlen hinter energieeffizienter Architektur: Leistung und Energie, U-Werte, Heiz- und Kühllasten, Luftwechselraten und Energiebedarfe. Jedes Quiz besteht aus wenigen Aufgaben, in denen du klassifizierst, sortierst oder zuordnest."
       },
       {
-        "en": "Every run picks and shuffles the items afresh, so no two runs look the same. A run only counts as a whole: answer every task, then submit. Your answers are saved as you go, and you may repeat a quiz as often as you like; your best run counts.",
-        "de": "Jeder Durchgang wählt die Elemente neu aus und mischt sie, daher gleicht kein Durchgang dem anderen. Ein Durchgang zählt nur als Ganzes: Beantworte alle Aufgaben und gib dann ab. Deine Antworten werden laufend gespeichert, und du kannst jedes Quiz beliebig oft wiederholen; dein bester Durchgang zählt."
+        "en": "Every run picks and shuffles the items afresh, so no two runs look the same. Answer the tasks, then submit; on expert you may submit before every task is answered. Your answers are saved as you go, and you may repeat a quiz as often as you like; your run with the most points counts.",
+        "de": "Jeder Durchgang wählt die Elemente neu aus und mischt sie, daher gleicht kein Durchgang dem anderen. Beantworte die Aufgaben und gib dann ab; auf Experte darfst du abgeben, bevor alle beantwortet sind. Deine Antworten werden laufend gespeichert, und du kannst jedes Quiz beliebig oft wiederholen; dein Durchgang mit den meisten Punkten zählt."
       },
       {
-        "en": "Every task earns between 0 and 100%, and partially correct answers earn partial points. In sorting and matching tasks, every pair in the wrong order costs more the further apart the true values are, measured on a logarithmic scale where the values span orders of magnitude: swapping two neighbours costs little, mistaking a tea light for a power plant costs a lot. In classifications with spider diagrams, a similar profile still earns partial credit.",
-        "de": "Jede Aufgabe bringt zwischen 0 und 100 %, und teilweise richtige Antworten bringen Teilpunkte. Beim Sortieren und Zuordnen kostet jedes falsch geordnete Paar umso mehr, je weiter die wahren Werte auseinanderliegen, gemessen auf einer logarithmischen Skala, wenn die Werte mehrere Größenordnungen umfassen: Zwei Nachbarn zu vertauschen kostet wenig, ein Teelicht mit einem Kraftwerk zu verwechseln kostet viel. Bei Klassifizierungen mit Netzdiagrammen bringt ein ähnliches Profil noch Teilpunkte."
+        "en": "Before each run you choose one of four challenges. Easy shows the keys – the values to sort by, the cards to match, the descriptions of the categories and the numbers of the diagrams – and, while you play, asks about a value you placed far off, by more than a factor of 1000 or, where the values of a task span fewer than six orders of magnitude, by more than half as many orders of magnitude as they span (on a linear scale: by more than half their range): it questions what your answer claims between that item and another one, such as whether it really takes 1,000 tea lights to add up to one kettle; in a classification it asks whether a misplaced item really fits where you put it. Medium shows the keys without hints. Hard hides them: you type your estimate of every value to sort or match, classify without descriptions and read the diagrams by their shape alone; an estimate that far off counts as a mistake. Expert is hard against the clock: every task runs for a limited time once you start it, you may submit before every task is answered, and what is unanswered counts as a mistake. A run earns its score times 100 points on easy, 200 on medium, 300 on hard and 400 on expert; for every quiz, your run with the most points counts.",
+        "de": "Vor jedem Durchgang wählst du eine von vier Herausforderungen. Leicht zeigt die Schlüssel – die Werte zum Sortieren, die Karten zum Zuordnen, die Beschreibungen der Kategorien und die Zahlen der Diagramme – und fragt schon beim Spielen nach, wenn ein Wert, den du gesetzt hast, weit danebenliegt: um mehr als den Faktor 1000 oder, wo die Werte einer Aufgabe weniger als sechs Größenordnungen umfassen, um mehr als halb so viele Größenordnungen, wie sie umfassen (auf einer linearen Skala: um mehr als ihre halbe Spannweite). Sie hinterfragt, was deine Antwort über dieses Element und ein anderes behauptet, etwa ob es wirklich 1.000 Teelichter braucht, um einen Wasserkocher zu ergeben; bei einer Klassifizierung fragt sie, ob ein falsch eingeordnetes Element wirklich dorthin passt. Mittel zeigt die Schlüssel ohne Hinweise. Schwer verbirgt sie: Du tippst deine Schätzung jedes Werts ein, den du sortierst oder zuordnest, klassifizierst ohne Beschreibungen und liest die Diagramme allein an ihrer Form; eine Schätzung, die so weit danebenliegt, zählt als Fehler. Experte ist Schwer gegen die Uhr: Jede Aufgabe läuft ab ihrem Start eine begrenzte Zeit, du darfst abgeben, bevor alle Aufgaben beantwortet sind, und was unbeantwortet bleibt, zählt als Fehler. Ein Durchgang bringt seine Wertung mal 100 Punkte auf Leicht, 200 auf Mittel, 300 auf Schwer und 400 auf Experte; je Quiz zählt dein Durchgang mit den meisten Punkten."
+      },
+      {
+        "en": "Every task earns between 0 and 100%, and partially correct answers earn partial points. In sorting and matching tasks, every pair in the wrong order costs more the further apart the true values are, measured on a logarithmic scale where the values span orders of magnitude: swapping two neighbours costs little, mistaking a tea light for a power plant costs a lot. Where you estimate the values, an estimate that is far off costs every pair it belongs to. In classifications with spider diagrams, a similar profile still earns partial credit.",
+        "de": "Jede Aufgabe bringt zwischen 0 und 100 %, und teilweise richtige Antworten bringen Teilpunkte. Beim Sortieren und Zuordnen kostet jedes falsch geordnete Paar umso mehr, je weiter die wahren Werte auseinanderliegen, gemessen auf einer logarithmischen Skala, wenn die Werte mehrere Größenordnungen umfassen: Zwei Nachbarn zu vertauschen kostet wenig, ein Teelicht mit einem Kraftwerk zu verwechseln kostet viel. Wo du die Werte schätzt, kostet eine Schätzung, die weit danebenliegt, jedes Paar, zu dem sie gehört. Bei Klassifizierungen mit Netzdiagrammen bringt ein ähnliches Profil noch Teilpunkte."
       },
       {
         "en": "You decide how you appear: anonymously, under a pseudonym or with your name. A pseudonym or name is public – on the leaderboard and to the others who are online. There are no passwords: whoever enters the same pseudonym or name continues as that learner, so pick a pseudonym others will not guess if you want your results to stay yours. Anonymous progress stays in the browser you played in and is lost when you switch identity or clear its data.",
         "de": "Du entscheidest, wie du erscheinst: anonym, unter einem Pseudonym oder mit deinem Namen. Ein Pseudonym oder Name ist öffentlich – in der Rangliste und für die anderen, die online sind. Es gibt keine Passwörter: Wer dasselbe Pseudonym oder denselben Namen eingibt, macht als diese Person weiter. Wähle also ein Pseudonym, das andere nicht erraten, wenn deine Ergebnisse deine bleiben sollen. Anonymer Fortschritt bleibt in dem Browser, in dem du gespielt hast, und geht verloren, wenn du die Identität wechselst oder seine Daten löschst."
       },
       {
-        "en": "Flawless runs earn badges: for a perfect quiz and for sorting or classifying without a single mistake; one more badge is for submitting a run of every quiz. The leaderboard ranks everyone by the sum of their best quiz scores. It is all for fun: once you have submitted a quiz you see how everyone answered and scored – earlier only if you ask for it – and while you play the others can see what you answer.",
-        "de": "Fehlerfreie Durchgänge bringen Abzeichen: für ein perfektes Quiz und für Sortieren oder Klassifizieren ganz ohne Fehler; ein weiteres Abzeichen gibt es dafür, von jedem Quiz einen Durchgang abgegeben zu haben. Die Rangliste ordnet alle nach der Summe ihrer besten Quiz-Wertungen. Das Ganze ist zum Spaß da: Sobald du ein Quiz abgegeben hast, siehst du, wie alle geantwortet und abgeschnitten haben – vorher nur, wenn du es wünschst –, und während du spielst, können die anderen sehen, was du antwortest."
+        "en": "Flawless runs on medium or harder earn badges: for a perfect quiz and for sorting or classifying without a single mistake; one more badge is for submitting a run of every quiz. The leaderboard ranks everyone by the sum of the points of their best run of every quiz. It is all for fun: once you have submitted a quiz you see how everyone answered and scored – earlier only if you ask for it – and while you play the others can see what you answer.",
+        "de": "Fehlerfreie Durchgänge auf Mittel oder schwerer bringen Abzeichen: für ein perfektes Quiz und für Sortieren oder Klassifizieren ganz ohne Fehler; ein weiteres Abzeichen gibt es dafür, von jedem Quiz einen Durchgang abgegeben zu haben. Die Rangliste ordnet alle nach der Summe der Punkte ihres besten Durchgangs jedes Quiz. Das Ganze ist zum Spaß da: Sobald du ein Quiz abgegeben hast, siehst du, wie alle geantwortet und abgeschnitten haben – vorher nur, wenn du es wünschst –, und während du spielst, können die anderen sehen, was du antwortest."
       }
     ]
   },
@@ -39,43 +43,43 @@
       "id": "physics-expert",
       "emoji": "🧲",
       "label": { "en": "Physics Expert", "de": "Physik-Profi" },
-      "description": { "en": "Scored 100% in a run of the Physical Understanding quiz.", "de": "100 % in einem Durchgang des Quiz „Physikalisches Verständnis“." },
-      "rule": { "kind": "perfect-quiz", "quiz": "physics" }
+      "description": { "en": "Scored 100% in a run of the Physical Understanding quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Physikalisches Verständnis“ auf Mittel oder schwerer." },
+      "rule": { "kind": "perfect-quiz", "quiz": "physics", "challenge": "medium" }
     },
     {
       "id": "heating-expert",
       "emoji": "🔥",
       "label": { "en": "Heating Expert", "de": "Heiz-Profi" },
-      "description": { "en": "Scored 100% in a run of the Heating quiz.", "de": "100 % in einem Durchgang des Quiz „Heizen“." },
-      "rule": { "kind": "perfect-quiz", "quiz": "heating" }
+      "description": { "en": "Scored 100% in a run of the Heating quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Heizen“ auf Mittel oder schwerer." },
+      "rule": { "kind": "perfect-quiz", "quiz": "heating", "challenge": "medium" }
     },
     {
       "id": "cooling-expert",
       "emoji": "❄️",
       "label": { "en": "Cooling Expert", "de": "Kühl-Profi" },
-      "description": { "en": "Scored 100% in a run of the Cooling quiz.", "de": "100 % in einem Durchgang des Quiz „Kühlen“." },
-      "rule": { "kind": "perfect-quiz", "quiz": "cooling" }
+      "description": { "en": "Scored 100% in a run of the Cooling quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Kühlen“ auf Mittel oder schwerer." },
+      "rule": { "kind": "perfect-quiz", "quiz": "cooling", "challenge": "medium" }
     },
     {
       "id": "demand-expert",
       "emoji": "📊",
       "label": { "en": "Energy Demand Expert", "de": "Energiebedarfs-Profi" },
-      "description": { "en": "Scored 100% in a run of the Energy Demand quiz.", "de": "100 % in einem Durchgang des Quiz „Energiebedarf“." },
-      "rule": { "kind": "perfect-quiz", "quiz": "demand" }
+      "description": { "en": "Scored 100% in a run of the Energy Demand quiz on medium or harder.", "de": "100 % in einem Durchgang des Quiz „Energiebedarf“ auf Mittel oder schwerer." },
+      "rule": { "kind": "perfect-quiz", "quiz": "demand", "challenge": "medium" }
     },
     {
       "id": "numerical-brain",
       "emoji": "🧮",
       "label": { "en": "Numerical Brain", "de": "Zahlenhirn" },
-      "description": { "en": "Sorted every sorting task of the catalog without a single mistake.", "de": "Jede Sortieraufgabe des Katalogs ganz ohne Fehler sortiert." },
-      "rule": { "kind": "perfect-tasks", "taskKind": "sorting" }
+      "description": { "en": "Sorted every sorting task of the catalog without a single mistake on medium or harder.", "de": "Jede Sortieraufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler sortiert." },
+      "rule": { "kind": "perfect-tasks", "taskKind": "sorting", "challenge": "medium" }
     },
     {
       "id": "pattern-seer",
       "emoji": "🔍",
       "label": { "en": "Pattern Seer", "de": "Musterblick" },
-      "description": { "en": "Solved every classification task of the catalog without a single mistake.", "de": "Jede Klassifizierungsaufgabe des Katalogs ganz ohne Fehler gelöst." },
-      "rule": { "kind": "perfect-tasks", "taskKind": "classification" }
+      "description": { "en": "Solved every classification task of the catalog without a single mistake on medium or harder.", "de": "Jede Klassifizierungsaufgabe des Katalogs auf Mittel oder schwerer ganz ohne Fehler gelöst." },
+      "rule": { "kind": "perfect-tasks", "taskKind": "classification", "challenge": "medium" }
     },
     {
       "id": "completionist",

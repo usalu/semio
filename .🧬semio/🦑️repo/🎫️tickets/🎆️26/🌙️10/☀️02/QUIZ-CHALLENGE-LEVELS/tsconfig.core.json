@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "types": ["bun"],
+    "paths": {
+      "@semio-tech/quiz": ["../../../../../../../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/🟦️.ts"]
+    }
+  },
+  "include": [
+    "../../../../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/❓️quiz/🔨️modules/**/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/❓️quiz/🧪️tests/*/🟦️.ts"
+  ],
+  "exclude": ["**/node_modules/**"]
+}

@@ -3,31 +3,37 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/📏️scoring/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type Answer, type SheetTask, type Task, scoreTask } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🕸️profile-similarity/🔣️.json";
 
-type Degraded = { readonly id: string; readonly task: Task; readonly sheetTask: SheetTask; readonly answer: Answer };
-type Vectors = { readonly tasks: readonly Task[]; readonly vectors: readonly { readonly id: string; readonly task: string; readonly sheetTask: SheetTask; readonly answer: Answer }[] };
+type Vector = { readonly id: string; readonly task: string; readonly sheetTask: SheetTask; readonly answer?: Answer };
+type Degraded = { readonly id: string; readonly task: Task; readonly sheetTask: SheetTask; readonly answer?: Answer };
+type Vectors = { readonly tasks: readonly Task[]; readonly vectors: readonly Vector[]; readonly timed: readonly Vector[]; readonly degraded: readonly Degraded[] };
 
-/** 🗃️ Every committed answer credited against its task and sheet task. */
-function credits(ctx: AdapterContext): Record<string, unknown> {
-  const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+/** 🧫️ The committed vectors. */
+function vectors(ctx: AdapterContext): Vectors {
+  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+}
+
+/** 🗃️ Every committed answer of one vector group — or its absence on a timed sheet task — credited against its task and sheet task. */
+function credited(ctx: AdapterContext, group: "vectors" | "timed"): Record<string, unknown> {
+  const committed = vectors(ctx);
   const tasks = new Map(committed.tasks.map((task) => [task.id, task]));
-  return Object.fromEntries(committed.vectors.map((vector) => [vector.id, scoreTask(tasks.get(vector.task)!, vector.sheetTask, vector.answer)]));
+  return Object.fromEntries(committed[group].map((vector) => [vector.id, scoreTask(tasks.get(vector.task)!, vector.sheetTask, vector.answer) ?? null]));
 }
 
 /** 🩹️ Every committed input that bypasses validation, scored — `null` where the core scores none. */
 function degraded(ctx: AdapterContext): Record<string, unknown> {
-  const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as { readonly degraded: readonly Degraded[] };
-  return Object.fromEntries(committed.degraded.map((vector) => [vector.id, scoreTask(vector.task, vector.sheetTask, vector.answer) ?? null]));
+  return Object.fromEntries(vectors(ctx).degraded.map((vector) => [vector.id, scoreTask(vector.task, vector.sheetTask, vector.answer) ?? null]));
 }
 
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
-    credits: { subject: (ctx) => ({ projection: credits(ctx) }) },
+    credits: { subject: (ctx) => ({ projection: credited(ctx, "vectors") }) },
+    timed: { subject: (ctx) => ({ projection: credited(ctx, "timed") }) },
     degraded: { subject: (ctx) => ({ projection: degraded(ctx) }) },
   },
 });

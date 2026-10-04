@@ -7,8 +7,8 @@ unit of a keyed draw taken from ``numpy.random.SeedSequence(key).generate_state(
 which is a directed graph; ``scipy.sparse.csgraph`` decides what is reachable from where and that the graph is one
 strongly connected component, so no activity is a dead end. The rotation of a cast is ``numpy.roll``.
 
-The tables the stage is tuned with (the limits of the modes, the weights, the dwells, the moods, the shares of an
-encounter, the graph) are restated here from the design text with numpy arithmetic — a second reading that holds the
+The tables the stage is tuned with (the limits of the modes, the weights, the dwells, the shares of an encounter,
+the graph) are restated here from the design text with numpy arithmetic — a second reading that holds the
 two cores to one set of numbers; the third-party evidence is the choice, the reachability and the keyed draw.
 
 @see https://numpy.org/doc/stable/reference/generated/numpy.searchsorted.html
@@ -30,28 +30,41 @@ from semio_repo_test import Adapter, Outcome
 
 # region 🔖️Reference
 VECTORS = "shared://🧠️behavior-choice/🔣️.json"
-ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"]
+EPISODES = ["hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]
+ACTIVITIES = ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"] + EPISODES
 ENCOUNTERS = ["greet", "cuddle", "squabble"]
 LIMITS = {
-    "still": {"movers": 0, "fidgeters": 0, "idleLow": 0, "idleHigh": 0, "fidget": 0, "walk": 0, "hop": 0, "sleep": 0, "stroll": 0, "encounterGap": 0, "encounterRate": 0},
-    "calm": {"movers": 1, "fidgeters": 1, "idleLow": 384, "idleHigh": 1280, "fidget": 0.4, "walk": 0.2, "hop": 0.12, "sleep": 6, "stroll": 4, "encounterGap": 5760, "encounterRate": 0.04},
-    "lively": {"movers": 2, "fidgeters": 2, "idleLow": 192, "idleHigh": 640, "fidget": 1, "walk": 0.6, "hop": 0.3, "sleep": 3, "stroll": 6, "encounterGap": 1920, "encounterRate": 0.12},
+    "still": {"movers": 0, "fidgeters": 0, "idleLow": 0, "idleHigh": 0, "fidget": 0, "walk": 0, "hop": 0, "sleep": 0, "whim": 0, "stroll": 0, "encounterGap": 0, "encounterRate": 0},
+    "calm": {"movers": 1, "fidgeters": 1, "idleLow": 384, "idleHigh": 1280, "fidget": 0.4, "walk": 0.2, "hop": 0.12, "sleep": 6, "whim": 0.04, "stroll": 4, "encounterGap": 5760, "encounterRate": 0.04},
+    "lively": {"movers": 2, "fidgeters": 2, "idleLow": 192, "idleHigh": 640, "fidget": 1, "walk": 0.6, "hop": 0.3, "sleep": 3, "whim": 0.25, "stroll": 6, "encounterGap": 1920, "encounterRate": 0.12},
 }
-DWELL_LOW = [0, 96, 1920, 96, 640, 19, 1280, 128, 128, 128, 192]
-DWELL_HIGH = [0, 96, 1920, 96, 640, 19, 3840, 320, 320, 320, 384]
-MOODS = [0.3, 0.5, 0.4, 0.5, -0.2, 0.2, 0.1, 0.7, 1, -0.8, -0.6]
+DWELL_LOW = [0, 96, 1920, 96, 640, 19, 1280, 128, 128, 128, 192] + [1920, 640, 1280, 32, 640, 1920, 32, 640, 1920, 128, 192, 96, 64, 320, 320]
+DWELL_HIGH = [0, 96, 1920, 96, 640, 19, 3840, 320, 320, 320, 384] + [1920, 640, 1280, 64, 640, 1920, 32, 640, 1920, 128, 384, 160, 96, 320, 640]
 FOLLOWERS = {
-    "idle": ["idle", "fidget", "walk", "hop", "fall", "sleep", "greet", "cuddle", "squabble"],
-    "fidget": ["idle", "walk", "fall", "greet"],
-    "walk": ["idle", "fall", "greet", "cuddle", "squabble"],
-    "hop": ["idle", "fall", "land"],
-    "fall": ["idle", "land"],
-    "land": ["idle", "walk", "fall", "greet"],
-    "sleep": ["idle", "walk", "fall", "greet"],
-    "greet": ["idle", "walk", "fall"],
-    "cuddle": ["idle", "walk", "fall"],
-    "squabble": ["idle", "walk", "fall", "sulk"],
-    "sulk": ["idle", "walk", "fall", "greet"],
+    "idle": ["idle", "fidget", "walk", "hop", "fall", "sleep", "greet", "cuddle", "squabble"] + EPISODES,
+    "fidget": ["idle", "walk", "fall", "greet", "hang", "trick", "purr", "shrug", "scoot"],
+    "walk": ["idle", "fall", "greet", "cuddle", "squabble", "hang", "aim", "climb", "trick", "purr", "shrug", "scoot"],
+    "hop": ["idle", "fall", "land", "hang", "glide", "slide"],
+    "fall": ["idle", "land", "hang", "glide", "slide"],
+    "land": ["idle", "walk", "fall", "greet", "hang", "trick", "purr", "dizzy", "shrug", "scoot"],
+    "sleep": ["idle", "walk", "fall", "greet", "hang", "trick", "purr", "shrug", "scoot"],
+    "greet": ["idle", "walk", "fall", "hang", "trick", "purr", "shrug", "scoot"],
+    "cuddle": ["idle", "walk", "fall", "hang", "purr", "scoot"],
+    "squabble": ["idle", "walk", "fall", "sulk", "hang", "scoot"],
+    "sulk": ["idle", "walk", "fall", "greet", "hang", "trick", "purr", "shrug", "scoot"],
+    **{episode: ["idle", "hang"] for episode in EPISODES},
+    "aim": ["idle", "fall", "hang", "reel", "shrug", "scoot"],
+    "reel": ["idle", "fall", "hang", "mantle"],
+    "climb": ["idle", "fall", "hang", "mantle", "slide", "push"],
+    "mantle": ["idle", "fall", "hang"],
+    "carry": ["idle", "fall", "hang", "climb", "scoot"],
+    **{answer: ["idle", "walk", "fall", "greet", "hang", "trick", "purr", "shrug", "scoot"] for answer in ["trick", "purr", "shrug"]},
+    "hang": ["idle", "tumble", "glide"],
+    "tumble": ["idle", "land", "hang", "glide", "slide"],
+    "glide": ["idle", "land", "hang", "slide"],
+    "slide": ["idle", "fall", "hang"],
+    **{grounded: ["idle", "fall", "hang", "scoot"] for grounded in ["dizzy", "scoot"]},
+    "push": ["idle", "walk", "fall", "hang", "tumble", "climb", "mantle", "slide", "scoot"],
 }
 CAST_STREAM = 0xFFFFFFFE
 QUIET_DROWSE = 3
@@ -89,7 +102,8 @@ def weights(vector):
     walk = limits["walk"] * drive * urge if awake and free and vector["roam"] else 0.0
     hop = limits["hop"] * energy * urge * (1 + vector["crowd"]) if awake and free and vector["hops"] else 0.0
     sleep = 0.0 if vector["watched"] else limits["sleep"] * tired * tired * (QUIET_DROWSE if vector["quiet"] else 1)
-    return [float(value) for value in [1, fidget, walk, hop, 0, 0, sleep, 0, 0, 0, 0]]
+    trick = limits["whim"] * drive if awake and vector["whims"] else 0.0
+    return [float(value) for value in [1, fidget, walk, hop, 0, 0, sleep, 0, 0, 0, 0] + [trick if episode == "trick" else 0 for episode in EPISODES]]
 
 
 def dwell(activity, mode, mark):
@@ -222,12 +236,6 @@ def dwells(ctx):
     return agree("dwells", {vector["id"]: [dwell(vector["activity"], vector["mode"], mark) for mark in vector["units"]] for vector in vectors}, vectors)
 
 
-def moods(ctx):
-    """🙂️ ``moodOf(activity)`` for every activity."""
-    vectors = committed(ctx)["moods"]
-    return agree("moods", {vector["id"]: MOODS[ACTIVITIES.index(vector["id"])] for vector in vectors}, vectors)
-
-
 def encounters(ctx):
     """🎭️ ``encounterShares(affinity)`` and ``encounterOf(affinity, unit)`` for every committed unit."""
     vectors = committed(ctx)["encounters"]
@@ -263,7 +271,6 @@ def adapter():
         .oracle("picks", picks)
         .oracle("decisions", decisions)
         .oracle("dwells", dwells)
-        .oracle("moods", moods)
         .oracle("encounters", encounters)
         .oracle("reachability", reachability)
         .oracle("casts", casts)

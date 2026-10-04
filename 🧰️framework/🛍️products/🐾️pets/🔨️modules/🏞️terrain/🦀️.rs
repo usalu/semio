@@ -18,10 +18,17 @@
 //! never found while the actor rises, because perches are one-way platforms. [`hop_landing`] runs exactly this loop
 //! ahead of time.
 //!
-//! @see ../../🧬️schema/🦀️.rs — `Point`, `Rect`, `Surface`, `Perch`, `Ticks`, `TICKS_PER_SECOND`
+//! Walls are the perches turned by a quarter: [`walls_of`] cuts the free stretches (pitches) out of the surveyed
+//! side edges, by the keep-outs in the band on the air side of each wall. The survey grows the box of every surface
+//! sideways and the box of every control by a few pixels, so the first [`WALL_LIP`] pixels beside a wall belong to
+//! the wall itself and block nothing. [`segment_hits`] and [`segment_clear`] are the line of sight of ropes and
+//! ladders: Liang–Barsky clipping of a segment against a box, in which only the inside of a box is in the way.
+//!
+//! @see ../../🧬️schema/🦀️.rs — `Point`, `Rect`, `Surface`, `Perch`, `Wall`, `Facing`, `Ticks`, `TICKS_PER_SECOND`
 //! @see ../🏞️terrain/🟦️.ts — the TypeScript twin
+//! @see <https://doi.org/10.1145/357332.357333> — Liang and Barsky, "A New Concept and Method for Line Clipping" (1984)
 
-use crate::schema::{Perch, Point, Rect, Surface, Ticks, TICKS_PER_SECOND};
+use crate::schema::{Facing, Perch, Point, Rect, Surface, Ticks, Wall, TICKS_PER_SECOND};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -45,6 +52,9 @@ pub const HOP_DISTANCE: f64 = 160.0;
 
 /// ⏳️ The longest hop in ticks (0.75 s).
 pub const HOP_TICKS: Ticks = 48;
+
+/// 🧱️ How many pixels beside a wall belong to the wall itself: the survey grows the box of every surface sideways by 4 px (5 px on a phone, where the stage is drawn at 0.8) and the box of a control that lies flush inside it by as much, and neither may block the wall; the 8 px around a focused control still do.
+pub const WALL_LIP: f64 = 6.0;
 
 const RATE: f64 = TICKS_PER_SECOND as f64;
 //#endregion 🔖️Constants
@@ -76,6 +86,9 @@ pub struct Flight {
     pub vx: f64,
     pub vy: f64,
 }
+
+/// 🧗️ A stretch of a wall that is free to climb: the schema's `Pitch` (the stage keeps the pitches of its survey), answered here by [`walls_of`].
+pub use crate::schema::Pitch;
 
 type Stretch = (f64, f64);
 //#endregion 🔖️Types
@@ -176,6 +189,111 @@ pub fn nearest_perch(perches: &[Perch], x: f64, y: f64) -> Option<&Perch> {
     nearest
 }
 //#endregion 🔖️Perches
+
+//#region 🔖️Walls
+/// 🚧️ Whether `keepout` reaches into the band `[low, high)` beside a wall; a box without area blocks nothing.
+fn flanks(keepout: &Rect, low: f64, high: f64) -> bool {
+    keepout.height > 0.0 && larger(low, keepout.x) < smaller(high, keepout.x + keepout.width)
+}
+
+/// 🗻️ The free stretches of every wall whose band lies inside `[0, width]`: its extent clipped to `[0, height]`, minus the y-extent of every keep-out that reaches into the band on its air side, from `WALL_LIP` to `clearance` pixels away from it (keep-outs in list order), keeping stretches at least `minimum` long; in wall order, then descending the wall.
+pub fn walls_of(walls: &[Wall], keepouts: &[Rect], width: f64, height: f64, clearance: f64, minimum: f64) -> Vec<Pitch> {
+    let mut pitches = Vec::new();
+    for wall in walls {
+        let left = wall.side == Facing::Left;
+        let low = if left { wall.x - clearance } else { wall.x + WALL_LIP };
+        let high = if left { wall.x - WALL_LIP } else { wall.x + clearance };
+        let outside = if left { low < 0.0 || wall.x > width } else { wall.x < 0.0 || high > width };
+        if outside {
+            continue;
+        }
+        let top = larger(wall.y0, 0.0);
+        let bottom = smaller(wall.y1, height);
+        if bottom <= top {
+            continue;
+        }
+        let mut stretches = vec![(top, bottom)];
+        for keepout in keepouts {
+            if flanks(keepout, low, high) {
+                stretches = cut(&stretches, keepout.y, keepout.y + keepout.height);
+            }
+        }
+        for (y0, y1) in stretches {
+            if y1 - y0 >= minimum {
+                pitches.push(Pitch { wall: wall.id.clone(), surface: wall.surface.clone(), side: wall.side, x: wall.x, y0, y1 });
+            }
+        }
+    }
+    pitches
+}
+
+/// 📌️ The first pitch of `wall` that carries the height `y`, both ends included; `None` ≙ TypeScript `null`.
+pub fn wall_at<'a>(pitches: &'a [Pitch], wall: &str, y: f64) -> Option<&'a Pitch> {
+    pitches.iter().find(|pitch| pitch.wall == wall && pitch.y0 <= y && y <= pitch.y1)
+}
+
+/// 🧭️ The pitch whose nearest point is closest to `(x, y)` by squared distance, the first one among equals; `None` without pitches. Asked with the end of a perch it answers the wall that rises or drops beside it.
+pub fn nearest_wall(pitches: &[Pitch], x: f64, y: f64) -> Option<&Pitch> {
+    let mut nearest = None;
+    let mut least = f64::INFINITY;
+    for pitch in pitches {
+        let dx = pitch.x - x;
+        let dy = larger(larger(pitch.y0 - y, 0.0), y - pitch.y1);
+        let distance = dx * dx + dy * dy;
+        if distance < least {
+            nearest = Some(pitch);
+            least = distance;
+        }
+    }
+    nearest
+}
+//#endregion 🔖️Walls
+
+//#region 🔖️Sight
+/// 🪡️ Whether the segment from `from` to `to` passes through the inside of `rect` grown by `margin` on every side (Liang–Barsky): per axis the segment is inside between two parameters, and it hits when those spans share more than a point within `[0, 1]`. Touching an edge or grazing a corner is no hit, a box without area is never hit, and a segment of no length hits the box its point lies inside.
+pub fn segment_hits(from: Point, to: Point, rect: &Rect, margin: f64) -> bool {
+    let left = rect.x - margin;
+    let right = rect.x + rect.width + margin;
+    let top = rect.y - margin;
+    let bottom = rect.y + rect.height + margin;
+    let solid = rect.width > 0.0 && rect.height > 0.0 && left < right && top < bottom;
+    if !solid {
+        return false;
+    }
+    let dx = to.x - from.x;
+    let dy = to.y - from.y;
+    let mut enter = 0.0;
+    let mut leave = 1.0;
+    if dx == 0.0 {
+        let between = left < from.x && from.x < right;
+        if !between {
+            return false;
+        }
+    } else {
+        let near = (left - from.x) / dx;
+        let far = (right - from.x) / dx;
+        enter = larger(enter, smaller(near, far));
+        leave = smaller(leave, larger(near, far));
+    }
+    if dy == 0.0 {
+        let between = top < from.y && from.y < bottom;
+        if !between {
+            return false;
+        }
+    } else {
+        let near = (top - from.y) / dy;
+        let far = (bottom - from.y) / dy;
+        enter = larger(enter, smaller(near, far));
+        leave = smaller(leave, larger(near, far));
+    }
+    enter < leave
+}
+
+/// 🔭️ Whether the segment from `from` to `to` hits none of `rects`, each grown by `margin`: a clear line of sight.
+pub fn segment_clear(from: Point, to: Point, rects: &[Rect], margin: f64) -> bool {
+    rects.iter().all(|rect| !segment_hits(from, to, rect, margin))
+}
+//#endregion 🔖️Sight
 
 //#region 🔖️Walking
 /// 👣️ The next x one tick later on the way to `goal` at `speed` pixels per second: a step of `max(speed, 0) ÷ 64`, or the goal itself when it is no farther than that.

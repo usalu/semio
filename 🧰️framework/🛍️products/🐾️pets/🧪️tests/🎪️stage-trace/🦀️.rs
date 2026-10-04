@@ -3,7 +3,7 @@
 //! The digest is FNV-1a (32 bit) over the IEEE-754 bit patterns (little-endian doubles) of every number of every
 //! frame, in this order: tick, rate, wake (−1 for none), the number of actors, then per actor in frame order the
 //! index of its species in the menagerie, x, y, facing, the index of its activity in `ACTIVITIES`, opacity, every
-//! bone number, per eye x, y and lid, and mood. It runs on from frame to frame, so a checkpoint vouches for every
+//! bone number, per eye x, y and lid, and spirits. It runs on from frame to frame, so a checkpoint vouches for every
 //! frame before it. The TypeScript twin recorded the committed digests: agreeing with them at every checkpoint is
 //! agreeing with it bit for bit.
 //!
@@ -95,7 +95,7 @@ mod subject {
             folded = [actor.x, actor.y, actor.facing.sign(), ACTIVITIES.iter().position(|activity| *activity == actor.activity).map_or(-1.0, |index| index as f64), actor.opacity].into_iter().fold(folded, fold);
             folded = actor.bones.iter().copied().fold(folded, fold);
             folded = actor.eyes.iter().flat_map(|eye| [eye.x, eye.y, eye.lid]).fold(folded, fold);
-            folded = fold(folded, actor.mood);
+            folded = fold(folded, actor.spirits);
         }
         folded
     }

@@ -1,10 +1,13 @@
-/** 🫥️ The pet layer is decoration and behaves like it: one static, hidden element that no assistive technology, no
- * keyboard and no pointer ever meets (judged by `@testing-library`'s accessibility tree and the role model of
- * `aria-query`), in which the cast of a scene appears on the top edges of the page's surfaces, keeps living outside
- * React, stands still when told to, runs nothing while the document is hidden or forced colours are active, and
- * leaves no listener, observer, frame, timer or element behind when it goes. Nothing is ever written to the console.
+/** 🫥️ The pet layer is decoration and behaves like it: one static, hidden element that no assistive technology and no
+ * keyboard ever meets (judged by `@testing-library`'s accessibility tree and the role model of `aria-query`) and that
+ * a fine pointer never hits — a press reaches the pets only through the hand's listeners on the window, never a
+ * press on a control —, in which the cast of a scene appears on the top edges of the page's surfaces, keeps living
+ * outside React, stands still when told to, runs nothing while the document is hidden or forced colours are active,
+ * and leaves no listener, observer, frame, timer or element behind when it goes. Nothing is ever written to the
+ * console. What the hand hands the stage is held in `🤏️pet-handling`.
  *
  * @see ../../🎯️targets/⚛️react/🔨️modules/🫧️layer/🟦️.tsx
+ * @see ../🤏️pet-handling/🟦️.tsx
  * @see ../../🎯️targets/⚛️react/🎨️.css
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html
  */
@@ -60,9 +63,17 @@ function specimen(id: string, body: string): Species {
       clip("doze", 4, true, [track("body", "scaleY", [1, 0.96, 1])]),
       clip("land", 0.3, false, [track("body", "scaleY", [1, 0.85, 1])]),
     ],
-    repertoire: { idle: ["idle"], walk: ["walk"], fidget: ["wiggle"], greet: ["wiggle"], cuddle: ["wiggle"], squabble: ["wiggle"], sulk: ["idle"], sleep: ["doze"], land: ["land"] },
+    repertoire: { idle: ["idle"], walk: ["walk"], fidget: ["wiggle"], greet: ["wiggle"], cuddle: ["wiggle"], squabble: ["wiggle"], sulk: ["idle"], sleep: ["doze"], land: ["land"], hang: ["idle"], tumble: ["land"], purr: ["doze"], dizzy: ["wiggle"], shrug: ["wiggle"], push: ["walk"] },
     locomotion: { gait: "walk", speed: 40 },
     temperament: { energy: 0.6, sociability: 0.6, curiosity: 0.6 },
+    states: [{ id: "resting", name: { en: "Resting", de: "In Ruhe" } }],
+    tricks: [],
+    purr: { clip: "doze" },
+    emitters: [],
+    gear: [],
+    grip: 40,
+    reach: 10,
+    mood: "content",
   };
 }
 
@@ -77,6 +88,7 @@ const MENAGERIE: Menagerie = {
     { scene: "garden", core: ["dora"], rotation: [] },
     { scene: "parade", core: ["alba"], rotation: ["bruno", "carla", "dora"] },
   ],
+  chemistry: [],
 };
 
 const HOMELESS: Menagerie = { ...MENAGERIE, id: "homeless", casts: [{ scene: "garden", core: ["dora"], rotation: [] }] };
@@ -299,7 +311,7 @@ describe("🫥️ decorative layer", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("never takes pointer events: the stylesheet says so for the layer and everything in it", () => {
+  it("takes no pointer events where the pointer is fine: the stylesheet says so for the layer and everything in it, and only a touch pad would take them", () => {
     page();
     const sheet = document.createElement("style");
     sheet.textContent = css;
@@ -314,7 +326,9 @@ describe("🫥️ decorative layer", () => {
     for (const node of layer.querySelectorAll("*")) expect(getComputedStyle(node).pointerEvents, node.nodeName).toBe("none");
     expect(css).toMatch(/@media \(forced-colors: active\) \{\s*\.pet-layer \{\s*display: none;/);
     expect(css).toMatch(/@media print \{\s*\.pet-layer \{\s*display: none;/);
-    expect(css).not.toMatch(/pointer-events:\s*(?!none)\S/);
+    expect(layer.querySelector(".pet-pad, .pet-pads")).toBeNull();
+    const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^}]*)\}/g)];
+    expect(rules.filter(([, , body]) => /pointer-events:\s*(?!none)\S/.test(body!)).map(([, selector]) => selector!.trim())).toEqual([".pet-pad"]);
     expect(css).not.toContain("animation-name:");
   });
 
@@ -411,7 +425,7 @@ describe("🫥️ decorative layer", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("lets a pet of a still stage turn see-through at once while the pointer rests on it, in one frame each way and without a timer", () => {
+  it("keeps a pet of a still stage whole while the pointer rests on it, and wakes nothing for the pointer: no frame, no write, no timer", () => {
     page();
     const frames = vi.spyOn(window, "requestAnimationFrame");
     const timers = vi.spyOn(window, "setTimeout");
@@ -422,25 +436,16 @@ describe("🫥️ decorative layer", () => {
     const before = standing(layer);
     const writes = vi.spyOn(Element.prototype, "setAttribute");
     window.dispatchEvent(pointer("pointermove", before[0]!.x, before[0]!.y - 10));
-    expect(frames).toHaveBeenCalledTimes(2);
-    vi.advanceTimersByTime(100);
-    expect(standing(layer)).toEqual(before.map((pet, index) => (index === 0 ? { ...pet, opacity: 0.35 } : pet)));
-    window.dispatchEvent(pointer("pointerdown", before[0]!.x, before[0]!.y - 10));
     vi.advanceTimersByTime(60_000);
-    expect(standing(layer)[0]!.opacity).toBe(0.35);
-    window.dispatchEvent(pointer("pointermove", before[0]!.x + 200, before[0]!.y - 200));
-    vi.advanceTimersByTime(100);
+    expect(standing(layer)).toEqual(before);
     expect(layer.innerHTML).toBe(painted);
-    const settled = frames.mock.calls.length;
-    window.dispatchEvent(pointer("pointermove", before[0]!.x + 210, before[0]!.y - 200));
-    vi.advanceTimersByTime(60_000);
-    expect(frames).toHaveBeenCalledTimes(settled);
+    expect(frames).toHaveBeenCalledTimes(1);
     expect(writes).not.toHaveBeenCalled();
     expect(timers).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("lets a pet of a living stage turn see-through while the pointer rests on it, eased, and whole again afterwards", () => {
+  it("keeps a pet of a living stage whole while the pointer rests on it: a pet on its perch is never see-through", () => {
     page();
     const { container } = render(<PetLayer menagerie={MENAGERIE} scene="home" mode="calm" seed={7} />);
     vi.advanceTimersByTime(1000);
@@ -448,13 +453,10 @@ describe("🫥️ decorative layer", () => {
     const [first] = standing(layer);
     expect(first!.opacity).toBe(1);
     window.dispatchEvent(pointer("pointermove", first!.x, first!.y - 20));
-    vi.advanceTimersByTime(100);
-    const easing = standing(layer).find((pet) => pet.species === first!.species)!.opacity;
-    expect(easing).toBeLessThan(1);
-    expect(easing).toBeGreaterThan(0.35);
-    vi.advanceTimersByTime(600);
-    expect(standing(layer).find((pet) => pet.species === first!.species)!.opacity).toBe(0.35);
-    expect(standing(layer).filter((pet) => pet.species !== first!.species).map((pet) => pet.opacity)).toEqual([1, 1]);
+    for (let wait = 0; wait < 7; wait++) {
+      vi.advanceTimersByTime(100);
+      expect(standing(layer).map((pet) => pet.opacity)).toEqual([1, 1, 1]);
+    }
     document.documentElement.dispatchEvent(pointer("pointerleave", 0, 0));
     vi.advanceTimersByTime(600);
     expect(standing(layer).map((pet) => pet.opacity)).toEqual([1, 1, 1]);
@@ -503,20 +505,20 @@ describe("🫥️ decorative layer", () => {
     document.documentElement.dispatchEvent(pointer("pointerleave", 0, 0));
     vi.advanceTimersByTime(1000);
     expect(looks(layer).every((look) => Math.abs(look) < 0.7)).toBe(true);
-    const smiles = (): number[] => [...layer.querySelectorAll("svg.pet")].map((pet) => Number(/Q \S+ (\S+) /.exec(pet.querySelector("path.pet-fill-none")!.getAttribute("d")!)![1]));
-    const calm = smiles();
     const [first] = standing(layer);
     const button = document.querySelector("button")!;
+    const heard = vi.fn();
+    document.addEventListener("pointerdown", heard);
     const missed = pointer("pointerdown", first!.x, first!.y - 10);
     button.dispatchEvent(missed);
+    window.dispatchEvent(pointer("pointerup", first!.x, first!.y - 10));
+    const press = pointer("pointerdown", first!.x, first!.y - 10);
+    document.body.dispatchEvent(press);
+    window.dispatchEvent(pointer("pointerup", first!.x, first!.y - 10));
     vi.advanceTimersByTime(300);
-    expect(smiles()).toEqual(calm);
-    const poke = pointer("pointerdown", first!.x, first!.y - 10);
-    document.body.dispatchEvent(poke);
-    vi.advanceTimersByTime(300);
-    expect(smiles()[0]).toBeGreaterThan(calm[0]!);
-    expect(smiles().slice(1)).toEqual(calm.slice(1));
-    expect(missed.defaultPrevented).toBe(false);
+    document.removeEventListener("pointerdown", heard);
+    expect([missed.defaultPrevented, press.defaultPrevented], "a control under a pet keeps its press; a press on the pet is the pets'").toEqual([false, true]);
+    expect(heard.mock.calls.map(([seen]) => seen)).toEqual([missed]);
     const seen = new Set<string>();
     for (let second = 0; second < 30; second++) {
       vi.advanceTimersByTime(1000);
@@ -525,7 +527,7 @@ describe("🫥️ decorative layer", () => {
     expect(seen.size).toBeGreaterThan(10);
     expect(standing(layer)).toHaveLength(3);
     expect(vi.getTimerCount()).toBe(1);
-    expect([event.defaultPrevented, poke.defaultPrevented]).toEqual([false, false]);
+    expect(event.defaultPrevented).toBe(false);
     expect(renders).toBe(1);
   });
 
@@ -782,9 +784,10 @@ describe("🫥️ decorative layer", () => {
     vi.advanceTimersByTime(5000);
     const layer = layerOf(container);
     expect(layer.childElementCount).toBe(3);
+    const hand = ["blur", "click", "contextmenu", "dragstart", "input", "keydown", "lostpointercapture", "pointercancel", "pointerdown", "pointermove", "pointerup", "selectstart", "wheel"];
     expect(listening.map((open) => open())).toEqual([
-      ["pagehide", "pageshow", "pointercancel", "pointerdown", "pointermove", "pointerup", "resize"],
-      ["focusin", "focusout", "scroll", "transitionend", "visibilitychange"],
+      ["pagehide", "pageshow", "pointercancel", "pointerdown", "pointermove", "pointerup", "resize", ...hand].sort(),
+      ["focusin", "focusout", "scroll", "scroll", "transitionend", "visibilitychange"],
       ["pointerleave"],
     ]);
     expect(live).toEqual({ resize: 1, mutation: 1 });
@@ -826,7 +829,7 @@ describe("🫥️ decorative layer", () => {
     const layer = layerOf(container);
     expect(standing(layer).map((pet) => pet.species).sort()).toEqual(["alba", "bruno", "carla"]);
     expect(layer.childElementCount).toBe(3);
-    expect(listening.map((open) => open().length)).toEqual([7, 5, 1]);
+    expect(listening.map((open) => open().length)).toEqual([20, 6, 1]);
     expect(live).toEqual({ resize: 1, mutation: 1 });
     expect(vi.getTimerCount()).toBe(1);
     rerender(

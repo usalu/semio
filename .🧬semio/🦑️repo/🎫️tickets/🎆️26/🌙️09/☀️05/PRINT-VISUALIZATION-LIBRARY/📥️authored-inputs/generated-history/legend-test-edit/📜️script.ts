@@ -1,0 +1,16 @@
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
+import {join} from 'node:path';
+const product=join(process.cwd(),'🧰️framework/🛍️products/📓️print'),ticket=process.env.SEMIO_TICKET_DIR!;
+const write=(path:string,text:string)=>{const temporary=join(ticket,'🗑️generated/legend-test.tmp');writeFileSync(temporary,text);renameSync(temporary,path);};
+const testPath=join(product,'🧪️tests/🎬️render-scene/🧭️legend/🟦️.ts');
+let text=readFileSync(testPath,'utf8');
+text=text.replace('export function legendSpecifications():{id:string;spec:VizChartSpecification}[]{return fixture.cases.map(entry=>({id:entry.id,spec:','type LegendVector={id:string;scale:string;options:Record<string,unknown>;positions?:number[][];tickValues?:unknown[];title?:{en:string;de:string}};\nconst cases=fixture.cases as readonly LegendVector[];\nexport function legendSpecifications():{id:string;spec:VizChartSpecification}[]{return cases.map(entry=>{const {id,positions,...guide}=entry;return {id,spec:');
+text=text.replace('guides:[{kind:"legend",...entry}]} as unknown as VizChartSpecification}));}','guides:[{kind:"legend",...guide}]} as unknown as VizChartSpecification};});}').replace('return fixture.cases.map((entry,index)','return cases.map((entry,index)');
+text=text.replace(',fmt=o.format===undefined?String:String(format(String(o.format)))','');
+text=text.replace('const content=label(value),col=horizontal?','const content=label(value),col=entry.positions?.[index]?.[0]??(horizontal?').replace('*(length/columns),row=y!-sw-(horizontal?0:Math.floor(index/columns)*(sw+gap));','*(length/columns)),row=entry.positions?.[index]?.[1]??(y!-sw-(horizontal?0:Math.floor(index/columns)*(sw+gap)));');
+write(testPath,text);
+const probesPath=join(product,'🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts');
+text=readFileSync(probesPath,'utf8');
+text='import { legendSceneChecks } from "../../../../../🧪️tests/🎬️render-scene/🧭️legend/🟦️.ts";\nimport { printFontMetricsChecks } from "../../../../../🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🟦️.ts";\n'+text;
+text=text.replace('...renderChecks(), ...(await renderGrammarChecks()),','...renderChecks(), ...(await renderGrammarChecks()), ...legendSceneChecks(), ...printFontMetricsChecks().map(check=>({module:"fonts",...check})),');
+write(probesPath,text);

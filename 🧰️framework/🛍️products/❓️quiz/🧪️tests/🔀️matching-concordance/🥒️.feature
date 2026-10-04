@@ -23,6 +23,27 @@ Feature: A matching answer scores its weighted concordance per dimension
   one-dimensional appliance task with two equal cards: perfect, equal cards exchanged, reversed card
   indices, a neighbour swap, the extreme swap, a learner-made tie, and an underrated item.
 
+  Where the sheet task hides its cards (challenge design §3.4: no `cards` on its dimensions) the answer
+  is the learner's `guesses` per dimension and item, and `a_i` is the guess. An item misses when it has no
+  guess or its guess lies farther from its true value than the reach of the presented true values of the
+  dimension — on a logarithmic scale the factor `min(1000, sqrt(hi / lo))`, met when the larger of guess
+  and value over the smaller exceeds it widened by `1e-9` of itself; on a linear scale the distance
+  `(hi − lo) / 2`, widened alike —; a
+  pair costs its whole weight when either of its items misses, else as before; a dimension without weight
+  scores 0 with a miss and 1 without. Every item result carries `miss`, and `assigned` is the guess, absent
+  where the learner guessed none. A sheet task that carries `seconds` is timed: its answer may leave items
+  out or be absent, and an item left out misses even where the cards show (its result then has no
+  `assigned` and no `miss`). The `guessed` group covers exact and rough guesses, an item missing in both
+  dimensions, equal guesses for different values, exchanged neighbours within the reach, guesses that all
+  miss, a negative guess on a linear scale, guesses at the reach and just beyond it, an exact ×1000 and
+  ÷1000 where the values do not spread, one double beyond it (within the slack) and clearly beyond it, a
+  dimension without
+  weight (in reach and missing), and timed answers: exact, partly guessed, without guesses, absent, with an
+  unguessed item of equal value, and with cards one item unassigned or no answer. numpy recomputes the
+  reach (`ptp`, `sqrt`, `minimum`), every miss and the score over the pair matrix before it is projected, and
+  guesses without a miss must score what cards of the same values score — the reading scipy's Kendall τ
+  judges.
+
   Design §13 (revisions after audit) adds how both cores degrade on inputs that bypass validation: an
   answer that §5 holds invalid or incomplete, or a sheet task the task cannot resolve, scores none (and a
   submission would be refused `run-incomplete`), an empty mean is 0, and — for classification — a profile
@@ -43,10 +64,19 @@ Feature: A matching answer scores its weighted concordance per dimension
     Then every implementation projects the same task score, dimension scores and item results per vector within 1e-12
     And exchanging equal cards keeps a perfect answer at exactly 1
 
+  @id-guessed
+  @level-fundamental
+  @mode-differential
+  Scenario: Guesses where the cards are hidden, and items left out on a timed sheet task, score the committed task result
+    Given the committed guessed vectors of shared://🔀️matching-concordance/🔣️.json
+    When every guessed or incomplete answer, or its absence on a timed sheet task, is scored against its task and sheet task
+    Then every implementation projects the same task score, dimension scores, guesses and misses per vector within 1e-12
+    And guesses at the true values or within the reach in the true order score exactly 1, and an absent answer exactly 0
+
   @id-degraded
   @level-fundamental
   @mode-error
   Scenario: Inputs that bypass validation degrade identically — scored or none, never a throw or NaN
     Given the committed degraded vectors of shared://🔀️matching-concordance/🔣️.json
     When every degraded vector is scored against its own task and sheet task
-    Then every implementation projects the same result, or none for a card out of range or reused, a dimension left incomplete, missing or unknown, or a wrong kind, and exactly 0 for a task without dimensions
+    Then every implementation projects the same result, or none for a card out of range or reused, a dimension left incomplete, missing or unknown, a wrong kind, guesses where the cards show or assignments where they are hidden, a guess of an unknown item or of zero on a logarithmic scale, and an untimed answer that leaves an item unguessed or is absent, and exactly 0 for a task without dimensions

@@ -52,6 +52,8 @@ export default defineConfig({
       "../../../../🧪️tests/🔏️privacy-notice/🟦️.tsx",
       "../../../../🧪️tests/🐾️pet-companions/🟦️.tsx",
       "../../../../🧪️tests/🚏️navigation/🟦️.tsx",
+      "../../../../🧪️tests/📐️adaptive-layout/🟦️.tsx",
+      "../../../../🧪️tests/🪜️challenge-views/🟦️.tsx",
     ],
     coverage: { include: ["../../🟦️.tsx", "../../🔨️modules/**/🟦️.ts", "../../🔨️modules/**/🟦️.tsx"] },
     passWithNoTests: false,

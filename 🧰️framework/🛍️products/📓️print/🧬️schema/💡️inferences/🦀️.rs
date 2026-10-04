@@ -1,0 +1,318 @@
+//! 💡️ Native chart inference compiles authored values into the existing LaTeX grammar.
+use crate::ChartSnapshot;
+use protocol::{DslValue, FromValue, ToValue, Inference, InferenceSpec, InferenceFieldSpec};
+#[path="🎨theme/🦀️.rs"]
+pub mod paint;
+
+pub fn validate_chart(snapshot: &ChartSnapshot) -> Result<(), String> {
+    static VALIDATOR: std::sync::OnceLock<Result<semio_framework_schema_validator::OwnedJsonSchemaValidator, String>> = std::sync::OnceLock::new();
+    let validator = VALIDATOR.get_or_init(|| semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../📸️snapshot/🔣️.json"), &[include_str!("../🔣️.json")]).map_err(|error| error.to_string()));
+    validator.as_ref().map_err(Clone::clone)?.validate_json(&pack::json::to_json_string(snapshot)).map(|_| ()).map_err(|error| error.to_string())
+}
+
+pub fn catalog() -> Result<&'static DslValue, String> {
+    static CATALOG: std::sync::OnceLock<Result<DslValue, String>> = std::sync::OnceLock::new();
+    CATALOG.get_or_init(|| pack::json::from_json_str(include_str!("../../🖼️assets/🔣️viz-catalog.json")).map_err(|error| error.to_string())).as_ref().map_err(Clone::clone)
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+pub struct ChartDiagnostic { pub code:String,pub path:String,pub message:String }
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+pub struct ChartInference {
+    pub tikz: String,
+    pub diagnostics: Vec<ChartDiagnostic>,
+    pub complete: bool,
+}
+impl Default for ChartInference { fn default()->Self{Self::infer(&ChartSnapshot::default())} }
+
+impl Inference<ChartSnapshot> for ChartInference {
+    fn infer(snapshot: &ChartSnapshot) -> Self {
+        match infer_chart_controlled(snapshot, &mut |_| Ok(())) {
+            Ok(tikz) => Self { tikz, diagnostics: Vec::new(),complete:true },
+            Err(message) => Self { tikz: String::new(), diagnostics: vec![ChartDiagnostic{code:"print.chart.inference".into(),path:"chart".into(),message}],complete:false },
+        }
+    }
+}
+
+impl InferenceSpec<ChartSnapshot> for ChartInference {
+    fn inference_schema_id() -> &'static str { "framework.print.chart.inference" }
+    fn schema_version() -> u32 { 1 }
+    fn fields() -> &'static [InferenceFieldSpec] { &[InferenceFieldSpec { id: "framework.print.chart.inference.tikz", reads: &["chart"] }, InferenceFieldSpec { id: "framework.print.chart.inference.diagnostics", reads: &["chart"] }] }
+}
+
+fn token(value: &str) -> Result<String, String> {
+    if value.is_empty() || !value.chars().all(|character| character.is_ascii_alphanumeric() || ['-', '_', '.', ':', '/'].contains(&character)) {
+        return Err(format!("invalid grammar identifier {value:?}"));
+    }
+    Ok(value.into())
+}
+
+fn text(value: &str) -> String {
+    value.chars().map(|character| match character {
+        '\\' => "\\textbackslash{}".into(), '{' => "\\{".into(), '}' => "\\}".into(), '%' => "\\%".into(), '#' => "\\#".into(), '$' => "\\$".into(), '&' => "\\&".into(), '_' => "\\_".into(), '^' => "\\textasciicircum{}".into(), '~' => "\\textasciitilde{}".into(), character => character.to_string(),
+    }).collect()
+}
+
+fn scalar(value: &DslValue) -> Result<String, String> {
+    match value {
+        DslValue::String(value) => Ok(text(value)),
+        DslValue::Number(number) if number.as_f64().is_finite() => Ok(number.as_f64().to_string()),
+        DslValue::Bool(value) => Ok(value.to_string()),
+        DslValue::Null => Ok(String::new()),
+        DslValue::Array(items) => items.iter().map(scalar).collect::<Result<Vec<_>, _>>().map(|items| items.join(",")),
+        _ => Err("grammar options must contain finite scalar values or scalar lists".into()),
+    }
+}
+
+fn row_scalar(value:&DslValue)->Result<String,String>{
+    match value{
+        DslValue::Null=>Ok("\\SemioVizNull{}".into()),
+        DslValue::String(value)=>Ok(format!("\\SemioVizString{{{}}}",text(value))),
+        DslValue::Bool(value)=>Ok(format!("\\SemioVizBoolean{{{value}}}")),
+        _=>scalar(value),
+    }
+}
+fn row_cell(value:Option<&DslValue>)->Result<String,String>{
+    value.map(row_scalar).unwrap_or_else(||Ok("\\SemioVizUndefined{}".into()))
+}
+fn paint_scalar(value:&DslValue)->Result<String,String>{
+    match value{
+        DslValue::String(value)=>paint::parse(value).map(|paint|paint.name()),
+        DslValue::Array(values)=>values.iter().map(paint_scalar).collect::<Result<Vec<_>,_>>().map(|values|values.join(",")),
+        _=>scalar(value),
+    }
+}
+
+fn paint_key(key:&str)->bool{["fill","stroke","color","colors","palette","background","foreground"].contains(&key)||key.ends_with("Color")}
+
+fn unique_name(preferred:String,names:&mut std::collections::BTreeSet<String>)->String{
+    let mut value=preferred.clone();let mut suffix=0;
+    while names.contains(&value){suffix+=1;value=format!("{preferred}-{suffix}");}
+    names.insert(value.clone());value
+}
+
+fn colors(chart:&DslValue)->String{
+    let mut values=std::collections::BTreeMap::new();
+    let mut stack=vec![chart];
+    while let Some(value)=stack.pop(){match value{
+        DslValue::String(value)=>{if let Ok(paint)=paint::parse(value){values.insert(paint.name(),paint);}},
+        DslValue::Array(items)=>stack.extend(items),
+        DslValue::Object(items)=>stack.extend(items.iter().map(|(_,value)|value)),
+        _=>{}
+    }}
+    values.values().map(paint::Paint::declaration).collect()
+}
+
+fn annotation_options(value:Option<&DslValue>,label:bool)->Result<String,String>{
+    let Some(value)=value else{return Ok(String::new());};
+    let mut entries=value.as_object().ok_or_else(||"annotation options must be an object".to_string())?.iter().collect::<Vec<_>>();
+    entries.sort_by(|(a,_),(b,_)|a.cmp(b));
+    let opacity=value.get("opacity").and_then(DslValue::as_f64).unwrap_or(1.0);
+    let alpha=|key|->Result<f64,String>{value.get(key).and_then(DslValue::as_str).map(paint::parse).transpose().map(|paint|paint.map_or(1.0,|paint|paint.alpha)*opacity)};
+    let fill_alpha=alpha("fill")?;let stroke_alpha=alpha("stroke")?;
+    let mut result=entries.into_iter().filter(|(key,_)|key.as_str()!="opacity").map(|(key,value)|{
+        let value=if paint_key(key){paint_scalar(value)?}else{scalar(value)?};
+        Ok(match key.as_str(){
+            "fill"=>format!("{}={{{value}}}",if label{"text"}else{"fill"}),
+            "stroke"=>format!("draw={{{value}}}"),
+            "strokeWidth"=>format!("line width={value}mm"),
+            "rotation"=>format!("rotate={value}"),
+            "cap"=>format!("line cap={value}"),
+            "join"=>format!("line join={value}"),
+            "size"|"fontSize"=>format!("font={{\\fontsize{{{value}}}{{{value}}}\\selectfont}}"),
+            "anchor"=>format!("anchor={}",match value.as_str(){"start"=>"west","middle"=>"center","end"=>"east",_=>value.as_str()}),
+            "dash"=>format!("dash pattern={}",value.split(|character:char|character==','||character.is_whitespace()).filter(|length|!length.is_empty()).enumerate().map(|(index,length)|format!("{} {length}mm",if index%2==0{"on"}else{"off"})).collect::<Vec<_>>().join(" ")),
+            _=>format!("{}={{{value}}}",token(key)?)
+        })
+    }).collect::<Result<Vec<_>,String>>()?;
+    result.push(format!("fill opacity={fill_alpha},draw opacity={stroke_alpha},text opacity={fill_alpha}"));
+    Ok(result.join(","))
+}
+
+fn options(value: Option<&DslValue>, paint_unknown:bool) -> Result<String, String> {
+    let Some(value) = value else { return Ok(String::new()); };
+    let entries = value.as_object().ok_or_else(|| "grammar options must be an object".to_string())?;
+    let mut entries = entries.iter().collect::<Vec<_>>();
+    entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+    entries.into_iter().map(|(key, value)| Ok(format!("{}={{{}}}", token(key)?, if key=="unknown"&&(!paint_unknown||matches!(value,DslValue::Null|DslValue::Bool(_))){row_scalar(value)?}else if paint_key(key)||(paint_unknown&&key=="unknown"){paint_scalar(value)?}else{scalar(value)?}))).collect::<Result<Vec<_>, String>>().map(|entries| entries.join(","))
+}
+
+fn name(value: &DslValue, key: &str) -> Result<String, String> {
+    token(value.get(key).and_then(DslValue::as_str).ok_or_else(|| format!("missing {key}"))?)
+}
+
+fn list<'a>(value: &'a DslValue, key: &str) -> Result<&'a [DslValue], String> {
+    match value.get(key) {
+        None => Ok(&[]),
+        Some(value) => value.as_array().ok_or_else(|| format!("{key} must be an array")),
+    }
+}
+
+/// ⏱️ Each table row, scale, transform, layer and guide has an explicit cancellable checkpoint.
+pub fn infer_chart_controlled(snapshot: &ChartSnapshot, checkpoint: &mut dyn FnMut(u64) -> Result<(), String>) -> Result<String, String> {
+    checkpoint(0)?;
+    validate_chart(snapshot)?;
+    let chart = &snapshot.chart;
+    let language = name(chart, "language")?;
+    if !["en", "de"].contains(&language.as_str()) { return Err("chart language must be explicitly en or de".into()); }
+    let dimension = |key| chart.get(key).and_then(DslValue::as_f64).filter(|value| value.is_finite() && *value > 0.0).ok_or_else(|| format!("{key} must be positive and finite"));
+    let width = dimension("width")?;
+    let height = dimension("height")?;
+    if let Some(margin)=chart.get("margin"){
+        let side=|key|margin.get(key).and_then(DslValue::as_f64).unwrap_or(0.0);
+        if side("left")+side("right")>width||side("top")+side("bottom")>height{return Err("chart margins exceed dimensions".into());}
+    }
+    let mut work = 0;
+    checkpoint(work)?;
+    let title = chart.get("title").and_then(|title| title.get(&language)).and_then(DslValue::as_str).unwrap_or("");
+    let mut output = format!("\\begingroup\n\\ExplSyntaxOn\\tl_set:Nn\\l_semio_language_tl{{{language}}}\\ExplSyntaxOff\n\\begin{{VizFigure}}[width={width},height={height},title={{{}}}]\n", text(title));
+    output.push_str(&colors(chart));
+    if let Some(theme) = chart.get("theme") {
+        let theme_name = theme.get("name").and_then(DslValue::as_str).unwrap_or("default");
+        let theme_name = if theme_name == "semio" { "default" } else { theme_name };
+        let appearance = theme.get("appearance").and_then(DslValue::as_str).unwrap_or("light");
+        output.push_str(&format!("\\SemioVizTheme{{{}}}[appearance={appearance}]\n", token(theme_name)?));
+        if let Some(palette) = theme.get("palette").and_then(DslValue::as_array) {
+            let palette = palette.iter().map(paint_scalar).collect::<Result<Vec<_>, _>>()?;
+            output.push_str(&format!("\\SemioVizThemeSet[colors={{{}}}]\n", palette.join(",")));
+        }
+    }
+    let mut tables = std::collections::BTreeSet::new();
+    for table in list(chart, "tables")? {
+        let table_name = name(table, "name")?;
+        if !tables.insert(table_name.clone()) { return Err(format!("duplicate table {table_name}")); }
+        let columns = list(table, "columns")?.iter().map(|column| token(column.as_str().ok_or_else(|| "column must be a string".to_string())?)).collect::<Result<Vec<_>, _>>()?;
+        output.push_str(&format!("\\SemioVizTable{{{table_name}}}{{{}}}\n", columns.join(",")));
+        for row in list(table, "rows")? {
+            let values = columns.iter().map(|column| row_cell(row.get(column)).map(|value| format!("{{{value}}}"))).collect::<Result<Vec<_>, _>>()?;
+            output.push_str(&format!("\\SemioVizRow{{{table_name}}}{{{}}}\n", values.join(",")));
+            work += 1; checkpoint(work)?;
+        }
+    }
+    let mut scales = std::collections::BTreeSet::new();
+    let paint_scales=list(chart,"layers")?.iter().flat_map(|layer|["fill","stroke"].into_iter().filter_map(move|channel|layer.get("encodings").and_then(|encodings|encodings.get(channel)).and_then(|encoding|encoding.get("scale")).and_then(DslValue::as_str))).collect::<std::collections::BTreeSet<_>>();
+    for scale in list(chart, "scales")? {
+        let scale_name = name(scale, "name")?;
+        if !scales.insert(scale_name.clone()) { return Err(format!("duplicate scale {scale_name}")); }
+        let range=scale.get("range").ok_or_else(||"missing scale range".to_string())?;
+        output.push_str(&format!("\\SemioVizScale{{{scale_name}}}{{{}}}{{{}}}{{{}}}[{}]\n", name(scale, "kind")?, if ["ordinal","band","point"].contains(&name(scale,"kind")?.as_str()){list(scale,"domain")?.iter().map(row_scalar).collect::<Result<Vec<_>,_>>()?.join(",")}else{scalar(scale.get("domain").ok_or_else(|| "missing scale domain".to_string())?)?}, if paint_scales.contains(scale_name.as_str()){paint_scalar(range)?}else{scalar(range)?}, options(scale.get("options"),paint_scales.contains(scale_name.as_str()))?));
+        work += 1; checkpoint(work)?;
+    }
+    if let Some(coordinate) = chart.get("coordinate") {
+        output.push_str(&format!("\\SemioVizCoordinate{{{}}}[{}]\n", name(coordinate, "kind")?, options(coordinate.get("options"),false)?));
+    }
+    for preset in list(chart, "presets")? {
+        let kind = name(preset, "kind")?;
+        let entry = list(catalog()?, "kinds")?.iter().find(|entry| entry.get("slug").and_then(DslValue::as_str) == Some(&kind)).ok_or_else(|| format!("unknown catalogue kind {kind}"))?;
+        let mut settings = options(preset.get("options"),false)?;
+        if let Some(data)=preset.get("data").and_then(DslValue::as_str){
+            if data!="demo"&&entry.get("data").and_then(DslValue::as_str)!=Some(data)&&!tables.contains(data){return Err(format!("unknown preset table {data}"));}
+            if !settings.is_empty(){settings.push(',');}settings.push_str(&format!("data={}",token(data)?));
+        }
+        output.push_str(&format!("\\SemioVizChart{{{kind}}}[{settings}]\n"));
+        work += 1; checkpoint(work)?;
+    }
+    let mut table_names=tables.clone();
+    for (index, layer) in list(chart, "layers")?.iter().enumerate() {
+        let data = match layer.get("data") { Some(value) => token(value.as_str().ok_or_else(|| "layer data must be a table name".to_string())?)?, None => list(chart,"tables")?.first().map(|table| name(table,"name")).transpose()?.ok_or_else(|| "layer needs a declared table".to_string())? };
+        if !tables.contains(&data) { return Err(format!("unknown table {data}")); }
+        let prepared = unique_name(format!("semio-print-layer-{index}"),&mut table_names);
+        let table = list(chart,"tables")?.iter().find(|table| table.get("name").and_then(DslValue::as_str) == Some(&data)).ok_or_else(|| format!("missing table {data}"))?;
+        let mut columns = list(table,"columns")?.iter().map(|column| token(column.as_str().ok_or_else(|| "column must be a string".to_string())?)).collect::<Result<Vec<_>, _>>()?;
+        let mut constants = layer.get("encodings").and_then(DslValue::as_object).unwrap_or(&[]).iter().filter_map(|(channel, encoding)| encoding.get("value").map(|value| (channel, value))).collect::<Vec<_>>();
+        constants.sort_by(|(a,_),(b,_)|a.cmp(b));
+        let mut paints=layer.get("encodings").and_then(DslValue::as_object).unwrap_or(&[]).iter().filter_map(|(channel,encoding)|(["fill","stroke"].contains(&channel.as_str())&&encoding.get("scale").is_none()).then(||encoding.get("column").and_then(DslValue::as_str).map(|column|(channel,column))).flatten()).collect::<Vec<_>>();
+        paints.sort_by(|(a,_),(b,_)|a.cmp(b));
+        let mut column_names=columns.iter().cloned().collect::<std::collections::BTreeSet<_>>();
+        let constant_names=constants.iter().map(|(channel,_)|((*channel).clone(),unique_name(format!("semio-constant-{channel}"),&mut column_names))).collect::<std::collections::BTreeMap<_,_>>();
+        let paint_names=paints.iter().map(|(channel,_)|((*channel).clone(),unique_name(format!("semio-paint-{channel}"),&mut column_names))).collect::<std::collections::BTreeMap<_,_>>();
+        columns.extend(constant_names.values().cloned());
+        columns.extend(paint_names.values().cloned());
+        output.push_str(&format!("\\SemioVizTable{{{prepared}}}{{{}}}\n", columns.join(",")));
+        for row in list(table,"rows")? {
+            let values = columns.iter().map(|column|{
+                let constant=constants.iter().find(|(channel,_)|constant_names.get(*channel)==Some(column));
+                let paint=paints.iter().find(|(channel,_)|paint_names.get(*channel)==Some(column));
+                let value=constant.map(|(_,value)|*value).or_else(||paint.and_then(|(_,column)|row.get(column))).or_else(||row.get(column));
+                if paint.is_some()||constant.is_some_and(|(channel,_)|["fill","stroke"].contains(&channel.as_str())){value.map(paint_scalar).unwrap_or_else(||Ok("none".into()))}else{row_cell(value)}.map(|value|format!("{{{value}}}"))
+            }).collect::<Result<Vec<_>,_>>()?;
+            output.push_str(&format!("\\SemioVizRow{{{prepared}}}{{{}}}\n",values.join(",")));
+            work += 1; checkpoint(work)?;
+        }
+        for transform in list(layer, "transform")? {
+            let settings = options(transform.get("options"),false)?;
+            let kind = name(transform, "kind")?;
+            output.push_str(&format!("\\SemioVizTransform{{{prepared}}}{{{prepared}}}[kind={kind}{}{settings}]\n",if settings.is_empty(){""}else{","}));
+            work += 1; checkpoint(work)?;
+        }
+        if let Some(layout) = layer.get("layout") {
+            let side=|key,fallback|chart.get("margin").and_then(|margin|margin.get(key)).and_then(DslValue::as_f64).unwrap_or(fallback);
+            let settings=options(layout.get("options"),false)?;
+            output.push_str(&format!("\\SemioVizLayout{{{}}}{{{prepared}}}{{{prepared}}}[width={},height={}{}{}]\n",name(layout,"algorithm")?,width-side("left",16.0)-side("right",8.0),height-side("top",8.0)-side("bottom",14.0),if settings.is_empty(){""}else{","},settings));
+        }
+        let mark = name(layer, "mark")?;
+        let mut bindings = vec![format!("data={prepared}"), format!("mark={mark}"),format!("colorIndex={index}")];
+        if let Some(encodings) = layer.get("encodings").and_then(DslValue::as_object) {
+            let mut encodings=encodings.iter().collect::<Vec<_>>();encodings.sort_by(|(a,_),(b,_)|a.cmp(b));
+            for (channel, encoding) in encodings {
+                let channel = token(channel)?;
+                let column = if encoding.get("value").is_some() { constant_names.get(&channel).cloned().ok_or_else(||"constant channel was not prepared".to_string())? } else if ["fill","stroke"].contains(&channel.as_str())&&encoding.get("scale").is_none(){paint_names.get(&channel).cloned().ok_or_else(||"paint channel was not prepared".to_string())?}else{ name(encoding, "column")? };
+                let mut binding = format!("column={column}");
+                if let Some(scale) = encoding.get("scale") {
+                    let scale = token(scale.as_str().ok_or_else(|| "encoding scale must be a string".to_string())?)?;
+                    if !scales.contains(&scale) { return Err(format!("unknown scale {scale}")); }
+                    binding.push_str(&format!(",scale={scale}"));
+                }
+                bindings.push(format!("{channel}={{{binding}}}"));
+            }
+        }
+        let settings = options(layer.get("options"),false)?;
+        if !settings.is_empty() { bindings.push(settings); }
+        if let Some(layout)=layer.get("layout"){
+            bindings.push("layoutCoordinates=true".into());
+            if layout.get("algorithm").and_then(DslValue::as_str)==Some("hexbin")&&layer.get("encodings").and_then(|encodings|encodings.get("shape")).is_none()&&layer.get("options").and_then(|options|options.get("shape")).is_none(){bindings.push("shape=hexagon".into());}
+        }
+        if let Some(coordinate) = chart.get("coordinate") {
+            bindings.push(format!("coordinate={}", name(coordinate,"kind")?));
+            let settings = options(coordinate.get("options"),false)?;
+            if !settings.is_empty() { bindings.push(format!("coordinateOptions={{{settings}}}")); }
+        }
+        let side=|key,fallback|chart.get("margin").and_then(|margin|margin.get(key)).and_then(DslValue::as_f64).unwrap_or(fallback);
+        bindings.extend([format!("x0={}",side("left",16.0)),format!("y0={}",side("top",8.0)),format!("x1={}",width-side("right",8.0)),format!("y1={}",height-side("bottom",14.0))]);
+        output.push_str(&format!("\\SemioVizPlot[{}]\n", bindings.join(",")));
+        work += 1; checkpoint(work)?;
+    }
+    for guide in list(chart, "guides")? {
+        let kind = name(guide, "kind")?;
+        let mut settings = Vec::new();
+        let mut fields=guide.as_object().ok_or_else(|| "guide must be an object".to_string())?.iter().collect::<Vec<_>>();fields.sort_by(|(a,_),(b,_)|a.cmp(b));
+        for (key, value) in fields {
+            if key == "kind" || key == "options" { continue; }
+            let value = if key == "title" { value.get(&language).ok_or_else(|| "guide title missing selected language".to_string())? } else { value };
+            settings.push(format!("{}={{{}}}", token(key)?, scalar(value)?));
+        }
+        if kind == "grid" { settings.extend(["grid=true".into(),"domainLine=false".into(),"labels=false".into(),"tickSize=0".into()]); }
+        let additional = options(guide.get("options"),false)?;
+        if !additional.is_empty() { settings.push(additional); }
+        let command = if kind == "legend" { "SemioVizLegend" } else if ["axis", "grid"].contains(&kind.as_str()) { "SemioVizAxis" } else { return Err(format!("unknown guide {kind}")); };
+        output.push_str(&format!("\\{command}[{}]\n", settings.join(",")));
+        work += 1; checkpoint(work)?;
+    }
+    for annotation in list(chart,"annotations")? {
+        let kind = name(annotation,"kind")?;
+        let x = scalar(annotation.get("x").ok_or_else(||"annotation x is absent".to_string())?)?;
+        let y = scalar(annotation.get("y").ok_or_else(||"annotation y is absent".to_string())?)?;
+        let settings = annotation_options(annotation.get("options"),["text","label"].contains(&kind.as_str()))?;
+        let number = |key, fallback| annotation.get(key).and_then(DslValue::as_f64).unwrap_or(fallback);
+        match kind.as_str() {
+            "text"|"label" => { let content=annotation.get("text").and_then(|value|value.get(&language)).and_then(DslValue::as_str).unwrap_or(""); output.push_str(&format!("\\node[{settings}] at ({x},{y}) {{{}}};\n",text(content))); },
+            "line"|"rule" => output.push_str(&format!("\\draw[{settings}] ({x},{y})--({},{});\n",number("x2",width),number("y2",number("y",0.0)))),
+            "rect" => output.push_str(&format!("\\path[{settings}] ({x},{y}) rectangle ({},{});\n",number("x2",number("x",0.0)+number("width",0.0)),number("y2",number("y",0.0)+number("height",0.0)))),
+            "circle"|"point" => output.push_str(&format!("\\path[{settings}] ({x},{y}) circle ({});\n",number("radius",1.0))),
+            _ => return Err(format!("unknown annotation {kind}")),
+        }
+        work += 1; checkpoint(work)?;
+    }
+    output.push_str("\\end{VizFigure}\n\\endgroup\n");
+    Ok(output)
+}

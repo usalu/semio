@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { pathRound } from "d3-path";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { vizCurve, vizLine, type VizCurveFactory, type VizCurveKind } from "../../🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🟦️.ts";
+import { vizCurve, vizLine, type VizCurveFactory, type VizCurveKind } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../➰️shape-curves/🟦️.ts";
 // #endregion 🔌️Adapters
 

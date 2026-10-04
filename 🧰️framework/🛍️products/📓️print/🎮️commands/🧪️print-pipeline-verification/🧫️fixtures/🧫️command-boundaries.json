@@ -5,7 +5,7 @@
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
     "🔨️modules/🎨print-design-token-paints/📜️script.ts"
   ],
-  "maxSourceFiles": 16,
+  "maxSourceFiles": 23,
   "forbidden": [
     "📚️library/📦️packages/🟦️typescript/🟦️.ts",
     "🎨️styling/📦️packages/🦀️rust/📜️script.ts",

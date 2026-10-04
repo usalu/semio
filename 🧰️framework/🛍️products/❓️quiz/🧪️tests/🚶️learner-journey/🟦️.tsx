@@ -1,16 +1,29 @@
 /** 🚶️ The whole learner journey against a proctor double speaking the framework wire (design §9a) and deciding with
  * the core's own pure deciders: introduction → identity → home → run (keyboard answers, a short outage) → submit →
- * results → leaderboard, then a reload that resumes locally in the chosen language.
+ * results → leaderboard, then a reload that resumes locally in the chosen language — and the session on every
+ * challenge: the sheet of each, switching voids the open run, the clock of an expert run on the session clock (openings,
+ * time up, a submission with tasks unanswered, openings decided on the device and delivered before their answers), the
+ * hints of an easy run with and without a deputy, points by challenge, and stored runs and learner views restored only
+ * in the shape of the challenges — and that what the device shows of a run stays true to its answers: hints never
+ * outlive the answer they were given for (a change, a waiting answer, a stale or overtaken read, a closed run), another
+ * tab's copy merges its openings and hints, a refused answer is read again whatever waits for other runs, a revised quiz
+ * voids a run whose opening the deputy decided, and an answer is judged at the instant of its own last edit — and a
+ * proctor that cannot take what the device sends: one of an older or newer contract (asked nothing but its contract,
+ * also when it replaces the proctor in the middle of a run), a network's sign-in page in its place and views outside
+ * the contract are waited out without a loss or a word, and a screen that fails shows what happened in its place.
  */
 
-import { StrictMode } from "react";
+import { StrictMode, type ReactElement } from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, encodeQueryResult, type CommandEnvelope, type CommandOutcome, type EventRecord, type HttpRequest, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import {
+  CHALLENGES,
   DEFAULT_LIMITS,
+  WIRE_VERSION,
   catalogView,
+  challengeRules,
   crowdView,
   decideHandle,
   decideLearner,
@@ -19,6 +32,7 @@ import {
   evolveHandle,
   evolveLearner,
   handleActorId,
+  hintsOf,
   leaderboard,
   learnerTag,
   learnerView,
@@ -27,34 +41,51 @@ import {
   transcript,
   type Answer,
   type Catalog,
+  type CatalogView,
+  type Challenge,
   type Command,
   type Event,
   type HandleState,
+  type Hint,
   type LearnerState,
   type LoadedQuiz,
   type Query,
   type Quiz,
   type RecordAnswerCommand,
+  type RunView,
   type SheetTask,
 } from "@semio-tech/quiz";
 import {
+  AGREEMENT_RECHECK_MS,
   DEFAULT_BOARD,
   Deputy,
   ProctorClient,
   ProctorUnavailable,
+  QUIZ_LOCALES,
   QuizApp,
   QuizSession,
+  ScreenBoundary,
   commandTarget,
+  connectionMessage,
+  evolveQuizState,
   formatQuantity,
+  initialQuizState,
+  isChallenge,
+  keysHidden,
   lastSubmittedRunOf,
   learnerName,
   localStore,
   memoryStorageOrigin,
+  mergeRunViews,
   newId,
+  openChallengeOf,
   openRunOf,
   overallLeaderboard,
+  quizInstance,
   quizText,
+  restoreQuizState,
   shownLeaderboard,
+  waitingMessage,
   type PresenceConnect,
   type PresenceSocket,
   type QuizMaterial,
@@ -95,7 +126,7 @@ const QUIZ: Quiz = {
       id: "masses",
       title: text("Masses", "Massen"),
       prompt: text("Sort by mass.", "Nach Masse sortieren."),
-      quantity: { label: text("Mass", "Masse"), unit: "g", scale: "logarithmic", prefixed: true },
+      quantity: { label: text("Mass", "Masse"), unit: "g", scale: "logarithmic", prefixed: true, additive: true },
       items: [
         { id: "mouse", label: text("Mouse", "Maus"), value: 20 },
         { id: "cat", label: text("Cat", "Katze"), value: 4000 },
@@ -107,7 +138,7 @@ const QUIZ: Quiz = {
       id: "lamps",
       title: text("Lamps", "Lampen"),
       prompt: text("Match each lamp its power.", "Ordnen Sie jeder Lampe ihre Leistung zu."),
-      dimensions: [{ id: "power", quantity: { label: text("Power", "Leistung"), unit: "W", scale: "logarithmic", prefixed: true } }],
+      dimensions: [{ id: "power", quantity: { label: text("Power", "Leistung"), unit: "W", scale: "logarithmic", prefixed: true, additive: true } }],
       items: [
         { id: "led", label: text("LED bulb", "LED-Lampe"), values: { power: 8 } },
         { id: "halogen", label: text("Halogen spot", "Halogenstrahler"), values: { power: 50 } },
@@ -143,13 +174,23 @@ const PROJECTION_LAG = 2;
 /** 🛂️ The proctor double: the core's deciders behind the framework wire — one handle state per handle key, one learner
  * state per learner, a registration under a handle relayed to its learner at once — idempotent by command id, with
  * views that appear only after a short projection lag and a recall that is the `handle` read. While it is `away` no
- * request reaches it at all. */
+ * request reaches it at all. It serves the household catalog unless it is given other material, and a quiz it
+ * {@link FakeProctor.revise}s is one its runs were not started against. It speaks the wire version `contract` (this
+ * client's unless a test replaces it): it declares it at `GET /instance` and refuses an envelope of another version
+ * as the proctor does, while it is `unreadable` every answer is a page that is no JSON, and `mangle` changes the views
+ * it answers. It notes every request it gets (`requests`) and how often it was asked for its contract (`instances`). */
 class FakeProctor {
   readonly envelopes: CommandEnvelope[] = [];
-  readonly quizzes: Readonly<Record<string, LoadedQuiz>> = { household: { quiz: QUIZ, revision: "0".repeat(64) } };
-  readonly view = catalogView(CATALOG, [QUIZ]);
+  readonly requests: string[] = [];
+  mangle: ((view: unknown, query: Query) => unknown) | undefined;
+  readonly catalog: Catalog;
+  readonly quizzes: Record<string, LoadedQuiz>;
+  readonly view: CatalogView;
   outage = false;
   away = false;
+  contract: number = WIRE_VERSION;
+  unreadable = false;
+  instances = 0;
   lagged = 0;
   runQueries = 0;
   submissions = 0;
@@ -160,8 +201,19 @@ class FakeProctor {
   private readonly learners = new Map<string, LearnerState>();
   private readonly outcomes = new Map<string, CommandOutcome>();
   private seq = 0;
-  private now = 1_760_000_000_000;
+  now = 1_760_000_000_000;
   private readonly queries: Query[] = [];
+
+  constructor(material: QuizMaterial = { catalog: CATALOG, quizzes: [QUIZ] }) {
+    this.catalog = material.catalog;
+    this.quizzes = Object.fromEntries(material.quizzes.map((quiz) => [quiz.id, { quiz, revision: "0".repeat(64) }]));
+    this.view = catalogView(material.catalog, material.quizzes);
+  }
+
+  /** ✏️ From now on `quiz` stands at another revision, so its runs started before are stale. */
+  revise(quiz: string): void {
+    this.quizzes[quiz] = { quiz: this.quizzes[quiz]!.quiz, revision: "1".repeat(64) };
+  }
 
   /** 🔍️ Every query of one type the proctor was asked so far, in order. */
   asked<T extends Query["type"]>(type: T): Extract<Query, { type: T }>[] {
@@ -179,7 +231,7 @@ class FakeProctor {
     const decision =
       command.type === "identify-learner" && key !== undefined
         ? decideHandle(this.handles.get(key) ?? emptyHandleState(key), command, this.now)
-        : decideLearner(this.learners.get(command.learner) ?? emptyLearnerState(command.learner), command, { now: this.now, catalog: CATALOG, quizzes: this.quizzes, limits: DEFAULT_LIMITS });
+        : decideLearner(this.learners.get(command.learner) ?? emptyLearnerState(command.learner), command, { now: this.now, catalog: this.catalog, quizzes: this.quizzes, limits: DEFAULT_LIMITS });
     const receipt = { commandId: envelope.commandId, actor: envelope.target, revision: this.seq, acceptedAt: envelope.clientHlc };
     const outcome: CommandOutcome =
       "rejection" in decision
@@ -218,7 +270,7 @@ class FakeProctor {
     return {
       commandId: command.id,
       kind: `quiz.${command.type}`,
-      version: 1,
+      version: this.contract,
       target: commandTarget(command, CATALOG.id),
       scope: CATALOG.id,
       principal: { kind: "anonymous" },
@@ -248,9 +300,19 @@ class FakeProctor {
 
   private async handle(request: HttpRequest): Promise<HttpResponse> {
     if (this.away) throw new ProctorUnavailable("the proctor is away");
+    this.requests.push(`${request.method} ${request.path}`);
+    if (this.unreadable) return { status: 200, text: async () => "<!doctype html><title>Sign in</title>", bytes: async () => encoder.encode("<!doctype html>") };
+    if (request.method === "GET" && request.path === "/instance") {
+      this.instances += 1;
+      return reply(200, quizInstance(this.contract));
+    }
     const body = JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown;
     if (request.method === "POST" && request.path === "/commands") {
       const envelope = decodeCommandEnvelope(body);
+      if (envelope.version !== this.contract) {
+        const receipt = { commandId: envelope.commandId, actor: envelope.target, revision: this.seq, acceptedAt: envelope.clientHlc };
+        return reply(200, encodeCommandOutcome({ status: "rejected", receipt, reason: { kind: "invalid", detail: `envelope-mismatch: version ${envelope.version} is not ${this.contract}` }, notices: [] }));
+      }
       this.envelopes.push(envelope);
       if (this.outage && envelope.kind === "quiz.record-answer") return reply(503, { kind: "actorUnavailable", message: "outage" });
       const outcome = this.decide(envelope);
@@ -262,13 +324,14 @@ class FakeProctor {
     }
     if (request.method === "POST" && request.path === "/queries") {
       const envelope = decodeQueryEnvelope(body);
+      if (envelope.version !== this.contract) return reply(400, { kind: "badRequest", message: `${envelope.kind} speaks version ${this.contract}, not ${envelope.version}` });
       const query = JSON.parse(decoder.decode(envelope.arguments)) as Query;
       this.queries.push(query);
       if (query.type === "run") this.runQueries += 1;
       if (query.type === "handle" && normalizeHandle(query.handle) === undefined) return reply(400, { kind: "invalid", message: "handle-invalid: the handle is outside the policy" });
       const value = this.answer(query);
       if (value === undefined) return reply(404, { kind: "notFound", message: envelope.kind });
-      return reply(200, encodeQueryResult({ kind: "snapshot", value: encoder.encode(JSON.stringify(value)), frontier: null }));
+      return reply(200, encodeQueryResult({ kind: "snapshot", value: encoder.encode(JSON.stringify(this.mangle?.(value, query) ?? value)), frontier: null }));
     }
     return reply(404, { kind: "notFound", message: request.path });
   }
@@ -309,10 +372,12 @@ class FakeProctor {
         return holder === undefined || identity === undefined ? { display: handle.display } : { display: handle.display, holder: { learner: holder, identity } };
       }
       case "crowd":
-        return crowdView(
-          QUIZ,
-          [...this.learners.values()].flatMap((state) => state.runs.flatMap((run) => (run.result === undefined ? [] : [run.result]))),
-        );
+        return Object.hasOwn(this.quizzes, query.quiz)
+          ? crowdView(
+              this.quizzes[query.quiz]!.quiz,
+              [...this.learners.values()].flatMap((state) => state.runs.flatMap((run) => (run.result === undefined ? [] : [run.result]))),
+            )
+          : undefined;
     }
   }
 }
@@ -330,9 +395,9 @@ function sloppyAnswer(task: SheetTask): Answer {
 
 function seedAnonymousRival(proctor: FakeProctor, learner = "c".repeat(32), run = "d".repeat(32)): string {
   proctor.seed({ type: "identify-learner", id: newId(), learner, identity: { kind: "anonymous" } });
-  proctor.seed({ type: "start-run", id: newId(), learner, run, quiz: QUIZ.id });
+  proctor.seed({ type: "start-run", id: newId(), learner, run, quiz: QUIZ.id, challenge: "medium", at: proctor.now });
   const sheet = runView(proctor.runOf(run)!, run, proctor.quizzes)!.sheet;
-  for (const task of sheet.tasks) proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: sloppyAnswer(task) });
+  for (const task of sheet.tasks) proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: sloppyAnswer(task), at: proctor.now });
   const submitted = proctor.seed({ type: "submit-run", id: newId(), learner, run });
   expect(submitted.some((event) => event.type === "run-submitted")).toBe(true);
   return learner;
@@ -341,7 +406,7 @@ function seedAnonymousRival(proctor: FakeProctor, learner = "c".repeat(32), run 
 const TIMING = { minMs: 1, maxMs: 4 };
 
 /** 🔇️ Presence sockets that never open: the journey is about the proctor's commands and queries. */
-const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
+const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onopen: null, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
 
 function navbar(): HTMLElement {
   return screen.getByRole("navigation", { name: /^(?:Main navigation|Hauptnavigation)$/u });
@@ -367,7 +432,7 @@ async function answerCurrentTask(user: ReturnType<typeof userEvent.setup>): Prom
     const order = (): string[] =>
       within(screen.getByRole("list", { name: "Order by Mass" }))
         .getAllByRole("listitem")
-        .map((item) => item.textContent?.replace(/[⠿↑↓\d]/gu, "") ?? "");
+        .map((item) => item.querySelector(".quiz-sort-label")?.textContent ?? "");
     for (const [position, label] of target.entries()) {
       while (order().indexOf(label) > position) {
         screen.getByRole("button", { name: `Move ${label} up` }).focus();
@@ -427,9 +492,10 @@ describe("🚶️ learner journey", () => {
     expect(within(quizCard).getByText("Not attempted yet")).toBeTruthy();
     expect(within(screen.getByRole("region", { name: "Badges" })).getByText("0 of 2 badges earned")).toBeTruthy();
 
-    await user.click(within(quizCard).getByRole("button", { name: "Start quiz" }));
+    await user.click(within(quizCard).getByRole("button", { name: "Start (Medium)" }));
     await screen.findByRole("heading", { level: 1, name: "Household physics" });
     await waitFor(() => expect(proctor.lagged).toBe(2 * PROJECTION_LAG));
+    expect(JSON.parse(decoder.decode(proctor.envelopes.find((envelope) => envelope.kind === "quiz.start-run")!.payload))).toMatchObject({ quiz: QUIZ.id, challenge: "medium" });
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("0 of 3 tasks complete")).toBeTruthy();
     const submit = screen.getByRole("button", { name: "Submit quiz" });
@@ -568,8 +634,8 @@ describe("🚶️ learner journey", () => {
     await screen.findByRole("region", { name: "Ada Lovelace" });
     expect(screen.getByRole("heading", { level: 1, name: "Quizzes" })).toBeTruthy();
     const card = screen.getByRole("region", { name: "Household physics" });
-    await within(card).findByText("Best score: 100%");
-    expect(within(card).getByRole("button", { name: "Start again" })).toBeTruthy();
+    await within(card).findByText("Best: 200 of 200 (Medium)");
+    expect(within(card).getByRole("button", { name: "Again (Medium)" })).toBeTruthy();
     expect(within(card).getByText(/^Earned here: /u).textContent).toContain("All done");
     expect(within(screen.getByRole("region", { name: "Badges" })).getByText("2 of 2 badges earned")).toBeTruthy();
   });
@@ -650,7 +716,7 @@ function sessionOn(proctor: FakeProctor, area: StorageArea): QuizSession {
 async function startedRun(session: QuizSession, handle = `Tab ${newId().slice(0, 6)}`): Promise<{ readonly run: string; readonly tasks: readonly SheetTask[] }> {
   const signal = new AbortController().signal;
   expect(await session.identify({ kind: "pseudonym", handle }, signal)).toBeUndefined();
-  expect(await session.startRun(QUIZ.id, signal)).toBeUndefined();
+  expect(await session.startRun(QUIZ.id, "medium", signal)).toBeUndefined();
   const { step, runs } = session.getSnapshot().state;
   if (step.screen !== "run") throw new Error("the run did not open");
   return { run: step.run, tasks: runs[step.run]?.sheet.tasks ?? [] };
@@ -725,7 +791,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     const task = classification(tasks);
     session.answer(run, task.id, everyItemTo(task, 0));
     await session.outbox.settled(run);
-    proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: everyItemTo(task, 1) });
+    proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: everyItemTo(task, 1), at: proctor.now });
     await session.loadRun(run);
     expect(session.getSnapshot().state.runs[run]?.answers[task.id]).toEqual(everyItemTo(task, 1));
     proctor.outage = true;
@@ -743,7 +809,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     const learner = session.getSnapshot().state.learner!.id;
     const task = classification(tasks);
     session.open({ screen: "home" });
-    proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: everyItemTo(task, 1) });
+    proctor.seed({ type: "record-answer", id: newId(), learner, run, task: task.id, answer: everyItemTo(task, 1), at: proctor.now });
     const queried = proctor.runQueries;
     session.open({ screen: "run", run });
     expect(session.getSnapshot().state.step).toEqual({ screen: "run", run });
@@ -846,7 +912,7 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     reloaded.stop();
     const cached = localStore(deviceA.tab(), CATALOG.id);
     cached.put("runs", run, { ...(cached.record("runs", run) as object), status: "open" });
-    const stale: RecordAnswerCommand = { type: "record-answer", id: newId(), learner, run, task: tasks[1]!.id, answer: sloppyAnswer(tasks[1]!) };
+    const stale: RecordAnswerCommand = { type: "record-answer", id: newId(), learner, run, task: tasks[1]!.id, answer: sloppyAnswer(tasks[1]!), at: 1 };
     cached.put("outbox", stale.id, { command: stale, queuedAt: 1 });
     const painted = new QuizSession({ proctor: new ProctorClient(() => proctor.transport, CATALOG.id), store: cached, timing: TIMING });
     expect(painted.getSnapshot().state.runs[run]?.status).toBe("submitted");
@@ -857,9 +923,9 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     proctor.outage = false;
     render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={deviceA.tab()} languages={["en"]} timing={TIMING} />);
     const card = await screen.findByRole("region", { name: "Household physics" });
-    expect(within(card).queryByRole("button", { name: "Resume quiz" })).toBeNull();
+    expect(within(card).queryByRole("button", { name: /^Resume/u })).toBeNull();
     expect(within(card).queryByText("In progress")).toBeNull();
-    expect(within(card).getByRole("button", { name: "Start again" })).toBeTruthy();
+    expect(within(card).getByRole("button", { name: "Again (Medium)" })).toBeTruthy();
     expect(within(card).getByRole("button", { name: "View last result" })).toBeTruthy();
   });
 
@@ -881,6 +947,7 @@ describe("👥️ presence through the whole app", () => {
       const record = { url, sent: [] as unknown[], closed: false, socket: undefined as unknown as PresenceSocket };
       const socket: PresenceSocket = {
         readyState: 1,
+        onopen: null,
         onmessage: null,
         onclose: null,
         onerror: null,
@@ -983,7 +1050,7 @@ describe("👥️ presence through the whole app", () => {
     await deliver(again, { type: "welcome", session: "r-me-2", colour: 0, roster: [{ session: "r-mira", colour: 4, surface: "home", state: { cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, tag: learnerTag(mira) } }] });
     expect(document.querySelector("[data-presence-layer]")).toBeNull();
 
-    await user.click(within(screen.getByRole("region", { name: "Household physics" })).getByRole("button", { name: "Start quiz" }));
+    await user.click(within(screen.getByRole("region", { name: "Household physics" })).getByRole("button", { name: "Start (Medium)" }));
     await screen.findByRole("heading", { level: 1, name: "Household physics" });
     await waitFor(() => expect(again.closed).toBe(true));
     const room = open(`${CATALOG.id}/quiz/${QUIZ.id}`);
@@ -1036,7 +1103,7 @@ function perfectAnswer(task: SheetTask): Answer {
     return { kind: "sorting", order: task.items.map((item) => item.id).sort((left, right) => value(left) - value(right)) };
   }
   if (task.kind === "matching" && source?.kind === "matching") {
-    const card = (dimension: (typeof task.dimensions)[number], id: string): number => dimension.cards.indexOf(source.items.find((known) => known.id === id)!.values[dimension.id]!);
+    const card = (dimension: (typeof task.dimensions)[number], id: string): number => dimension.cards!.indexOf(source.items.find((known) => known.id === id)!.values[dimension.id]!);
     return { kind: "matching", assignments: Object.fromEntries(task.dimensions.map((dimension) => [dimension.id, Object.fromEntries(task.items.map((item) => [item.id, card(dimension, item.id)]))])) };
   }
   throw new Error(`the household quiz has no ${task.kind} task ${task.id}`);
@@ -1044,7 +1111,7 @@ function perfectAnswer(task: SheetTask): Answer {
 
 /** ▶️ Starts a run of the household quiz in `session` and answers every task perfectly. */
 async function playedRun(session: QuizSession): Promise<string> {
-  expect(await session.startRun(QUIZ.id, new AbortController().signal)).toBeUndefined();
+  expect(await session.startRun(QUIZ.id, "medium", new AbortController().signal)).toBeUndefined();
   const { step, runs } = session.getSnapshot().state;
   if (step.screen !== "run") throw new Error("the run did not open");
   for (const task of runs[step.run]!.sheet.tasks) session.answer(step.run, task.id, perfectAnswer(task));
@@ -1076,7 +1143,7 @@ describe("🫡️ the deputy while the proctor is away", () => {
     const played = session.getSnapshot().state;
     expect(played.step).toEqual({ screen: "results", run });
     expect(played.runs[run]).toMatchObject({ learner: learner.id, status: "submitted", result: { quiz: QUIZ.id, score: 1 } });
-    expect(played.learnerView).toMatchObject({ total: 100, best: { household: 1 }, runs: [{ run, status: "submitted", score: 1 }] });
+    expect(played.learnerView).toMatchObject({ total: 200, best: { household: { challenge: "medium", score: 1, points: 200 } }, runs: [{ run, challenge: "medium", status: "submitted", score: 1, points: 200 }] });
     expect(played.learnerView?.badges.map((award) => award.badge)).toEqual(["all-done", "flawless"]);
     expect(played.awards[run]).toEqual(["all-done", "flawless"]);
     expect(played.notice).toBeUndefined();
@@ -1085,8 +1152,8 @@ describe("🫡️ the deputy while the proctor is away", () => {
     await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "unreachable", deputy: true, pending: 6 }));
 
     await session.refreshLeaderboard();
-    expect(shownLeaderboard(session.getSnapshot().state)).toMatchObject({ local: true, board: { learners: 1, rows: [{ rank: 1, tag: learnerTag(learner.id), total: 100, badges: ["all-done", "flawless"] }] } });
-    expect(await session.startRun(QUIZ.id, signal)).toBeUndefined();
+    expect(shownLeaderboard(session.getSnapshot().state)).toMatchObject({ local: true, board: { learners: 1, rows: [{ rank: 1, tag: learnerTag(learner.id), total: 200, badges: ["all-done", "flawless"] }] } });
+    expect(await session.startRun(QUIZ.id, "medium", signal)).toBeUndefined();
     const again = session.getSnapshot().state.step;
     expect(again.screen === "run" && again.run !== run).toBe(true);
     session.stop();
@@ -1179,8 +1246,8 @@ describe("🫡️ the deputy while the proctor is away", () => {
     const holder = "e".repeat(32);
     const earlier = "f".repeat(32);
     proctor.seed({ type: "identify-learner", id: newId(), learner: holder, identity: { kind: "pseudonym", handle: "Grace Hopper" } });
-    proctor.seed({ type: "start-run", id: newId(), learner: holder, run: earlier, quiz: QUIZ.id });
-    for (const task of runView(proctor.runOf(earlier)!, earlier, proctor.quizzes)!.sheet.tasks) proctor.seed({ type: "record-answer", id: newId(), learner: holder, run: earlier, task: task.id, answer: sloppyAnswer(task) });
+    proctor.seed({ type: "start-run", id: newId(), learner: holder, run: earlier, quiz: QUIZ.id, challenge: "medium", at: proctor.now });
+    for (const task of runView(proctor.runOf(earlier)!, earlier, proctor.quizzes)!.sheet.tasks) proctor.seed({ type: "record-answer", id: newId(), learner: holder, run: earlier, task: task.id, answer: sloppyAnswer(task), at: proctor.now });
     proctor.seed({ type: "submit-run", id: newId(), learner: holder, run: earlier });
     proctor.away = true;
     const area = memoryStorageOrigin().tab();
@@ -1217,7 +1284,7 @@ describe("🫡️ the deputy while the proctor is away", () => {
     await waitFor(() => expect(session.getSnapshot().state.learnerView?.learner).toBe(learner));
     proctor.away = true;
     const elsewhere = "9".repeat(32);
-    proctor.seed({ type: "start-run", id: newId(), learner, run: elsewhere, quiz: QUIZ.id });
+    proctor.seed({ type: "start-run", id: newId(), learner, run: elsewhere, quiz: QUIZ.id, challenge: "medium", at: proctor.now });
     const run = await playedRun(session);
     expect(session.outbox.queued(run).map((command) => command.type)).toEqual(WHOLE_RUN.slice(0, 4));
     proctor.away = false;
@@ -1270,12 +1337,802 @@ describe("🫡️ the deputy while the proctor is away", () => {
     const quizCard = await screen.findByRole("region", { name: "Haushaltsphysik" });
     await screen.findByText("Quiz-Server nicht erreichbar – auf diesem Gerät gespeichert, noch zu senden: 1");
     await waitFor(() => expect(document.querySelector("[data-board-local]")?.textContent).toBe("Nur dieses Gerät – die anderen erscheinen, sobald der Quiz-Server antwortet"));
-    await user.click(within(quizCard).getByRole("button", { name: "Quiz starten" }));
+    await user.click(within(quizCard).getByRole("button", { name: "Starten (Mittel)" }));
     await screen.findByRole("heading", { level: 1, name: "Haushaltsphysik" });
     expect(screen.queryByRole("alert")).toBeNull();
     proctor.away = false;
     await screen.findByText("Alle Antworten gespeichert", {}, { timeout: 10_000 });
     expect(proctor.envelopes.map((envelope) => envelope.kind)).toEqual(["quiz.identify-learner", "quiz.start-run"]);
     await waitFor(() => expect(document.querySelector("[data-board-local]")).toBeNull());
+  });
+});
+
+/** 🧩️ A started session with a deputy whose proctor client keeps time by `clock`, so a test decides when a proctor of
+ * another contract is asked again; without `deputy` the proctor decides everything. */
+function agreeingOn(proctor: FakeProctor, area: StorageArea, clock: { now: number }, deputy = true): QuizSession {
+  const client = new ProctorClient(() => proctor.transport, CATALOG.id, () => clock.now);
+  const session = new QuizSession({ proctor: client, store: localStore(area, CATALOG.id), ...(deputy ? { deputy: new Deputy(MATERIAL) } : {}), timing: TIMING });
+  session.start();
+  return session;
+}
+
+describe("🧩️ a proctor of another contract", () => {
+  it("never sends a command or a query to a proctor of an older contract: the device decides, keeps everything and delivers it once the proctor agrees", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.contract = WIRE_VERSION - 1;
+    const clock = { now: 1_760_000_000_000 };
+    const signal = new AbortController().signal;
+    const session = agreeingOn(proctor, memoryStorageOrigin().tab(), clock);
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "incompatible", contract: "older", deputy: true }));
+    expect(connectionMessage(session.getSnapshot().connection, quizText("en"))).toEqual({ message: "Quiz server not reachable – everything is saved on this device", tone: "alert" });
+    session.readIntroduction();
+    expect(await session.identify({ kind: "pseudonym", handle: "Ada Lovelace" }, signal)).toBeUndefined();
+    const run = await playedRun(session);
+    expect(await session.submit(run, signal, () => undefined)).toBeUndefined();
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["identify-learner", ...WHOLE_RUN]);
+    await session.refreshLeaderboard();
+    expect(shownLeaderboard(session.getSnapshot().state)?.local).toBe(true);
+    expect(proctor.requests.every((request) => request === "GET /instance")).toBe(true);
+    expect(proctor.instances).toBe(1);
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+
+    proctor.contract = WIRE_VERSION;
+    clock.now += AGREEMENT_RECHECK_MS;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    expect(proctor.runOf(run)?.runs[0]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(proctor.runOf(run)?.identity).toEqual({ kind: "pseudonym", handle: "Ada Lovelace" });
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "reachable", pending: 0 }));
+    expect(session.getSnapshot().connection.contract).toBeUndefined();
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("takes a proctor replaced by one of an older contract in the middle of a run for one that is away: nothing it refuses is lost or told", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const clock = { now: 1_760_000_000_000 };
+    const session = agreeingOn(proctor, memoryStorageOrigin().tab(), clock);
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    const { run, tasks } = await startedRun(session);
+    session.answer(run, tasks[0]!.id, perfectAnswer(tasks[0]!));
+    await session.outbox.settled(run);
+    proctor.contract = WIRE_VERSION - 1;
+    for (const task of tasks.slice(1)) session.answer(run, task.id, perfectAnswer(task));
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "incompatible", contract: "older" }));
+    expect(await session.submit(run, new AbortController().signal, () => undefined)).toBeUndefined();
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["record-answer", "record-answer", "submit-run"]);
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    expect(proctor.runOf(run)?.runs[0]?.status).toBe("open");
+
+    proctor.contract = WIRE_VERSION;
+    clock.now += AGREEMENT_RECHECK_MS;
+    session.reconnect();
+    await waitFor(() => expect(proctor.runOf(run)?.runs[0]).toMatchObject({ status: "submitted", result: { score: 1 } }), { timeout: 10_000 });
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]));
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]?.submittedAt).toBe(proctor.runOf(run)?.runs[0]?.submittedAt));
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("waits with every answer for a proctor of a newer contract without a deputy, and says that the page is out of date", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const clock = { now: 1_760_000_000_000 };
+    const session = agreeingOn(proctor, memoryStorageOrigin().tab(), clock, false);
+    const { run, tasks } = await startedRun(session);
+    proctor.contract = WIRE_VERSION + 1;
+    for (const task of tasks) session.answer(run, task.id, perfectAnswer(task));
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "incompatible", contract: "newer", deputy: false, pending: tasks.length }));
+    for (const locale of QUIZ_LOCALES) expect(connectionMessage(session.getSnapshot().connection, quizText(locale)).message).toBe(quizText(locale)("quiz.connection.outdated"));
+    expect(waitingMessage(session.getSnapshot().connection, undefined, quizText("de"))).toEqual({ message: "Diese Seite ist älter als der Quiz-Server – lade sie neu, dann geht alles, was auf diesem Gerät liegt, an den Server.", retry: false, reload: true });
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    expect(proctor.answersOf(run)).toEqual({});
+    proctor.contract = WIRE_VERSION;
+    clock.now += AGREEMENT_RECHECK_MS;
+    session.reconnect();
+    await waitFor(() => expect(Object.keys(proctor.answersOf(run))).toHaveLength(tasks.length), { timeout: 10_000 });
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "reachable", pending: 0 }));
+    session.stop();
+  });
+
+  it("reads an answer that is no JSON — a network's sign-in page — as a shortage: it waits, tells nothing and loses nothing", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const clock = { now: 1_760_000_000_000 };
+    const session = agreeingOn(proctor, memoryStorageOrigin().tab(), clock, false);
+    const { run, tasks } = await startedRun(session);
+    proctor.unreadable = true;
+    session.answer(run, tasks[0]!.id, perfectAnswer(tasks[0]!));
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "unreachable", pending: 1 }));
+    expect(session.getSnapshot().connection.contract).toBeUndefined();
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    proctor.unreadable = false;
+    session.reconnect();
+    await waitFor(() => expect(proctor.answersOf(run)[tasks[0]!.id]).toEqual(perfectAnswer(tasks[0]!)), { timeout: 10_000 });
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "reachable", pending: 0 }));
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("never adopts a view that is not of the contract — a sheet without its challenge — and shows the one it holds until a readable one arrives", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const clock = { now: 1_760_000_000_000 };
+    const session = agreeingOn(proctor, memoryStorageOrigin().tab(), clock, false);
+    const { run } = await startedRun(session);
+    const held = session.getSnapshot().state.runs[run]!;
+    const asked = proctor.instances;
+    proctor.mangle = (view, query) => (query.type === "run" ? { ...(view as RunView), sheet: { ...(view as RunView).sheet, challenge: undefined } } : view);
+    const loading = session.loadRun(run);
+    await waitFor(() => expect(proctor.asked("run").length).toBeGreaterThan(2));
+    expect(proctor.instances).toBeGreaterThan(asked);
+    expect(session.getSnapshot().state.runs[run]).toBe(held);
+    expect(() => keysHidden(session.getSnapshot().state.runs[run]!)).not.toThrow();
+    proctor.mangle = undefined;
+    expect((await loading)?.sheet.challenge).toBe("medium");
+    expect(session.getSnapshot().connection.reachability).toBe("reachable");
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("shows a page older than the proctor as out of date with a reload, and the device goes on deciding", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.contract = WIRE_VERSION + 1;
+    const user = userEvent.setup();
+    render(app(proctor, memoryStorageOrigin().tab(), MATERIAL));
+    await screen.findByRole("heading", { level: 1, name: "Willkommen im Testkatalog" });
+    const outdated = await screen.findByRole("alert");
+    expect(outdated.textContent).toContain("Diese Seite ist älter als der Quiz-Server");
+    expect(within(outdated).getByRole("button", { name: "Seite neu laden" })).toBeTruthy();
+    expect(screen.getAllByText("Seite veraltet – alles bleibt auf diesem Gerät, bis du sie neu lädst").length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
+    await screen.findByRole("heading", { level: 1, name: "Wie möchtest du erscheinen?" });
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
+    const quizCard = await screen.findByRole("region", { name: "Haushaltsphysik" });
+    await user.click(within(quizCard).getByRole("button", { name: "Starten (Mittel)" }));
+    await screen.findByRole("heading", { level: 1, name: "Haushaltsphysik" });
+    expect(proctor.envelopes).toEqual([]);
+    expect(proctor.requests.every((request) => request === "GET /instance")).toBe(true);
+  });
+});
+
+describe("🧯️ a screen that fails", () => {
+  it("shows what happened in place of the screen, keeps everything else and shows the screen again on request", async () => {
+    let failing = true;
+    function Fragile(): ReactElement {
+      if (failing) throw new Error("the sheet has no challenge");
+      return <h1>Run</h1>;
+    }
+    const user = userEvent.setup();
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      render(
+        <ScreenBoundary text={quizText("en")}>
+          <Fragile />
+        </ScreenBoundary>,
+      );
+      const alert = await screen.findByRole("alert");
+      expect(alert.textContent).toContain("Something went wrong while showing this screen. Everything you did is kept.");
+      expect(within(alert).getByText("the sheet has no challenge")).toBeTruthy();
+      expect(within(alert).getByRole("button", { name: "Reload page" })).toBeTruthy();
+      failing = false;
+      await user.click(within(alert).getByRole("button", { name: "Try again now" }));
+      expect(await screen.findByRole("heading", { level: 1, name: "Run" })).toBeTruthy();
+      expect(screen.queryByRole("alert")).toBeNull();
+    } finally {
+      quiet.mockRestore();
+    }
+  });
+});
+
+/** 🕰️ A started session whose clock is the proctor double's own, so the instants it stamps and the proctor's agree. */
+function clockedOn(proctor: FakeProctor, area: StorageArea, material?: QuizMaterial): QuizSession {
+  const session = new QuizSession({ proctor: new ProctorClient(() => proctor.transport, CATALOG.id), store: localStore(area, CATALOG.id), ...(material === undefined ? {} : { deputy: new Deputy(material) }), timing: TIMING, now: () => proctor.now });
+  session.start();
+  return session;
+}
+
+/** 🎯️ The answer that scores `task` 1 where the sheet hides the keys: every true value guessed exactly. */
+function guessedAnswer(task: SheetTask): Answer {
+  const source = QUIZ.tasks.find((candidate) => candidate.id === task.id);
+  if (task.kind === "sorting" && source?.kind === "sorting") {
+    const value = (id: string): number => source.items.find((known) => known.id === id)!.value;
+    return { kind: "sorting", order: task.items.map((item) => item.id).sort((left, right) => value(left) - value(right)), guesses: Object.fromEntries(task.items.map((item) => [item.id, value(item.id)])) };
+  }
+  if (task.kind === "matching" && source?.kind === "matching")
+    return { kind: "matching", guesses: Object.fromEntries(task.dimensions.map((dimension) => [dimension.id, Object.fromEntries(task.items.map((item) => [item.id, source.items.find((known) => known.id === item.id)!.values[dimension.id]!]))])) };
+  return perfectAnswer(task);
+}
+
+/** 🪨️ A valid but poor answer where the sheet hides the keys: the sloppy one, with every matching value guessed as 1. */
+function roughAnswer(task: SheetTask): Answer {
+  return task.kind === "matching" ? { kind: "matching", guesses: Object.fromEntries(task.dimensions.map((dimension) => [dimension.id, Object.fromEntries(task.items.map((item) => [item.id, 1]))])) } : sloppyAnswer(task);
+}
+
+/** 🙃️ A sorting of the household quiz in the reverse of the true order: on a ladder its outer keys miss by decades. */
+function reversedSorting(task: SheetTask): Answer {
+  const source = QUIZ.tasks.find((candidate) => candidate.id === task.id);
+  if (task.kind !== "sorting" || source?.kind !== "sorting") throw new Error("not the sorting");
+  const value = (id: string): number => source.items.find((known) => known.id === id)!.value;
+  return { kind: "sorting", order: task.items.map((item) => item.id).sort((left, right) => value(right) - value(left)) };
+}
+
+function taskOf(session: QuizSession, run: string, kind: SheetTask["kind"]): SheetTask {
+  return session.getSnapshot().state.runs[run]!.sheet.tasks.find((task) => task.kind === kind)!;
+}
+
+describe("⛰️ the challenges through the session", () => {
+  it("starts a run at every challenge with the sheet of that challenge, and a start at the same challenge resumes it", { timeout: 30_000 }, async () => {
+    for (const challenge of CHALLENGES) {
+      const proctor = new FakeProctor();
+      const session = sessionOn(proctor, memoryStorageOrigin().tab());
+      const signal = new AbortController().signal;
+      expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+      expect(await session.startRun(QUIZ.id, challenge, signal)).toBeUndefined();
+      const { step, runs } = session.getSnapshot().state;
+      if (step.screen !== "run") throw new Error("the run did not open");
+      const view = runs[step.run]!;
+      const rules = challengeRules(challenge);
+      expect(view.sheet.challenge).toBe(challenge);
+      expect(JSON.parse(decoder.decode(proctor.envelopes.find((envelope) => envelope.kind === "quiz.start-run")!.payload))).toMatchObject({ run: step.run, quiz: QUIZ.id, challenge });
+      const sorting = taskOf(session, step.run, "sorting");
+      const matching = taskOf(session, step.run, "matching");
+      expect(sorting.kind === "sorting" && sorting.keys !== undefined, challenge).toBe(rules.keys);
+      expect(matching.kind === "matching" && matching.dimensions.every((dimension) => dimension.cards !== undefined), challenge).toBe(rules.keys);
+      expect(view.sheet.tasks.every((task) => (task.seconds !== undefined) === rules.timed), challenge).toBe(true);
+      expect(view.opened, challenge).toEqual(rules.timed ? {} : undefined);
+      expect(keysHidden(view), challenge).toBe(!rules.keys);
+      expect(await session.startRun(QUIZ.id, challenge, signal)).toBeUndefined();
+      expect(session.getSnapshot().state.step).toEqual({ screen: "run", run: step.run });
+      expect(proctor.runOf(step.run)?.runs.map((run) => run.run)).toEqual([step.run]);
+      session.stop();
+    }
+  });
+
+  it("voids the open run when the learner starts the quiz at another challenge, without a notice, and drops what it queued", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = sessionOn(proctor, memoryStorageOrigin().tab());
+    const { run, tasks } = await startedRun(session);
+    proctor.outage = true;
+    session.answer(run, tasks[0]!.id, sloppyAnswer(tasks[0]!));
+    expect(session.outbox.queued(run)).toHaveLength(1);
+    expect(openChallengeOf(session.getSnapshot().state, QUIZ.id)).toBe("medium");
+    expect(await session.startRun(QUIZ.id, "hard", new AbortController().signal)).toBeUndefined();
+    const { step, runs, notice } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the new run did not open");
+    expect(step.run).not.toBe(run);
+    expect(runs[run]?.status).toBe("voided");
+    expect(runs[step.run]?.sheet.challenge).toBe("hard");
+    expect(notice).toBeUndefined();
+    expect(session.outbox.queued(run)).toEqual([]);
+    expect(openRunOf(session.getSnapshot().state, QUIZ.id)).toBe(step.run);
+    expect(openChallengeOf(session.getSnapshot().state, QUIZ.id)).toBe("hard");
+    expect(proctor.runOf(run)?.runs.map((candidate) => [candidate.run, candidate.challenge, candidate.status])).toEqual([
+      [run, "medium", "voided"],
+      [step.run, "hard", "open"],
+    ]);
+    proctor.outage = false;
+    await waitFor(() => expect(session.getSnapshot().state.learnerView?.runs.map((summary) => [summary.challenge, summary.status])).toEqual([
+      ["hard", "open"],
+      ["medium", "voided"],
+    ]));
+    session.stop();
+  });
+
+  it("keeps the clock of an expert run by the session clock: opens a task once, takes its answers in time up to the deadline, refuses one after it on the device without sending it and submits with tasks unanswered", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = clockedOn(proctor, memoryStorageOrigin().tab());
+    const signal = new AbortController().signal;
+    expect(session.now()).toBe(proctor.now);
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const view = () => session.getSnapshot().state.runs[run]!;
+    const [first, second] = view().sheet.tasks;
+    expect(view().opened).toEqual({});
+
+    session.answer(run, first!.id, guessedAnswer(first!));
+    await session.outbox.settled(run);
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "rejection", rejection: "task-unopened" });
+    await waitFor(() => expect(view().answers[first!.id]).toBeUndefined());
+    session.dismissNotice();
+
+    const before = proctor.now;
+    expect(await session.openTask(run, first!.id, signal)).toBeUndefined();
+    const opening = proctor.envelopes.filter((envelope) => envelope.kind === "quiz.open-task");
+    expect(opening.map((envelope) => JSON.parse(decoder.decode(envelope.payload)))).toEqual([{ type: "open-task", id: opening[0]!.commandId, learner: session.getSnapshot().state.learner!.id, run, task: first!.id, at: before }]);
+    expect(view().opened).toEqual({ [first!.id]: before });
+    expect(proctor.runOf(run)?.runs[0]?.opened).toEqual({ [first!.id]: before });
+    expect(await session.openTask(run, first!.id, signal)).toBeUndefined();
+    expect(proctor.envelopes.filter((envelope) => envelope.kind === "quiz.open-task")).toHaveLength(1);
+
+    const answeredAt = proctor.now;
+    session.answer(run, first!.id, guessedAnswer(first!));
+    await session.outbox.settled(run);
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    expect(proctor.answersOf(run)[first!.id]).toEqual(guessedAnswer(first!));
+    expect(JSON.parse(decoder.decode(proctor.envelopes.filter((envelope) => envelope.kind === "quiz.record-answer").at(-1)!.payload))).toMatchObject({ task: first!.id, at: answeredAt });
+
+    expect(await session.openTask(run, second!.id, signal)).toBeUndefined();
+    const deadline = view().opened![second!.id]! + second!.seconds! * 1000;
+    proctor.now = deadline;
+    const lastInTime = guessedAnswer(second!);
+    session.answer(run, second!.id, lastInTime);
+    expect(view().answers[second!.id]).toEqual(lastInTime);
+    await session.outbox.settled(run);
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    expect(session.now()).toBeGreaterThan(deadline);
+    const sent = proctor.envelopes.length;
+    session.answer(run, second!.id, roughAnswer(second!));
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "rejection", rejection: "time-up" });
+    expect(view().answers[second!.id]).toEqual(lastInTime);
+    expect(session.outbox.queued(run)).toEqual([]);
+    expect(proctor.envelopes).toHaveLength(sent);
+    expect(proctor.answersOf(run)[second!.id]).toEqual(lastInTime);
+    session.dismissNotice();
+
+    expect(await session.submit(run, signal, () => undefined)).toBeUndefined();
+    const result = view().result!;
+    expect(result.challenge).toBe("expert");
+    expect(result.tasks.map((task) => task.score)).toEqual(view().sheet.tasks.map((task) => (task.id === first!.id || task.id === second!.id ? 1 : 0)));
+    expect(result.score).toBeCloseTo(2 / view().sheet.tasks.length, 12);
+    expect(result.points).toBeCloseTo(result.score * 400, 9);
+    await waitFor(() => expect(session.getSnapshot().state.learnerView?.best[QUIZ.id]).toEqual({ challenge: "expert", score: result.score, points: result.points }));
+    session.stop();
+  });
+
+  it("opens the tasks of an expert run on the device while the proctor is away and delivers each opening before the answers of its task", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = clockedOn(proctor, memoryStorageOrigin().tab(), MATERIAL);
+    const signal = new AbortController().signal;
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const [first, second] = session.getSnapshot().state.runs[run]!.sheet.tasks;
+    proctor.away = true;
+    const firstAt = proctor.now;
+    expect(await session.openTask(run, first!.id, signal)).toBeUndefined();
+    expect(session.getSnapshot().state.runs[run]?.opened).toEqual({ [first!.id]: firstAt });
+    session.answer(run, first!.id, guessedAnswer(first!));
+    proctor.now += 5_000;
+    const secondAt = proctor.now;
+    expect(await session.openTask(run, second!.id, signal)).toBeUndefined();
+    session.answer(run, second!.id, roughAnswer(second!));
+    session.answer(run, first!.id, roughAnswer(first!));
+    expect(session.getSnapshot().state.runs[run]?.opened).toEqual({ [first!.id]: firstAt, [second!.id]: secondAt });
+    expect(session.outbox.queued(run).map((command) => (command.type === "open-task" || command.type === "record-answer" ? `${command.type} ${command.task}` : command.type))).toEqual([
+      `open-task ${first!.id}`,
+      `open-task ${second!.id}`,
+      `record-answer ${second!.id}`,
+      `record-answer ${first!.id}`,
+    ]);
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    const delivered = proctor.envelopes.filter((envelope) => envelope.kind === "quiz.open-task" || envelope.kind === "quiz.record-answer").map((envelope) => JSON.parse(decoder.decode(envelope.payload)) as Command);
+    expect(delivered.map((command) => (command.type === "open-task" || command.type === "record-answer" ? `${command.type} ${command.task}` : command.type))).toEqual([`open-task ${first!.id}`, `open-task ${second!.id}`, `record-answer ${second!.id}`, `record-answer ${first!.id}`]);
+    expect(proctor.runOf(run)?.runs[0]?.opened).toEqual({ [first!.id]: firstAt, [second!.id]: secondAt });
+    expect(proctor.answersOf(run)).toEqual({ [first!.id]: roughAnswer(first!), [second!.id]: roughAnswer(second!) });
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("never lets the deputy open a task or submit a run it knows from its listing alone: it loads the run from the proctor first", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const handle = `Clock ${newId().slice(0, 6)}`;
+    const first = clockedOn(proctor, memoryStorageOrigin().tab(), MATERIAL);
+    const signal = new AbortController().signal;
+    await waitFor(() => expect(first.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await first.identify({ kind: "pseudonym", handle }, signal)).toBeUndefined();
+    expect(await first.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = first.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const [task] = first.getSnapshot().state.runs[run]!.sheet.tasks;
+    expect(await first.openTask(run, task!.id, signal)).toBeUndefined();
+    const opened = first.getSnapshot().state.runs[run]!.opened;
+    first.stop();
+
+    const other = clockedOn(proctor, memoryStorageOrigin().tab(), MATERIAL);
+    await waitFor(() => expect(other.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await other.identify({ kind: "pseudonym", handle }, signal)).toBeUndefined();
+    await waitFor(() => expect(other.getSnapshot().state.learnerView?.runs.map((summary) => [summary.run, summary.challenge, summary.status])).toEqual([[run, "expert", "open"]]));
+    expect(other.getSnapshot().state.runs[run]).toBeUndefined();
+    proctor.away = true;
+    for (const attempt of [(cancel: AbortSignal) => other.openTask(run, task!.id, cancel), (cancel: AbortSignal) => other.submit(run, cancel, () => undefined)]) {
+      const controller = new AbortController();
+      const waiting = attempt(controller.signal);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      controller.abort(new Error("the learner gave up waiting"));
+      await expect(waiting).rejects.toThrow("the learner gave up waiting");
+      expect(other.outbox.queued()).toEqual([]);
+      expect(other.getSnapshot().state.runs[run]?.status ?? "open").toBe("open");
+    }
+    proctor.away = false;
+    expect(await other.openTask(run, task!.id, signal)).toBeUndefined();
+    expect(other.getSnapshot().state.runs[run]?.opened).toEqual(opened);
+    expect(proctor.envelopes.filter((envelope) => envelope.kind === "quiz.open-task")).toHaveLength(1);
+    other.stop();
+  });
+
+  it("tells the hints of an easy run after an answer once the proctor's view of it arrives, and none on medium", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = sessionOn(proctor, memoryStorageOrigin().tab());
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "easy", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const sorting = taskOf(session, run, "sorting");
+    const source = QUIZ.tasks.find((task) => task.id === sorting.id)!;
+    const reversed = reversedSorting(sorting);
+    const expected = hintsOf(source, sorting, reversed);
+    expect(expected.map((hint) => hint.kind)).toEqual(["compare", "compare"]);
+    expect(session.getSnapshot().state.runs[run]?.hints).toBeUndefined();
+    session.answer(run, sorting.id, reversed);
+    expect(session.getSnapshot().state.runs[run]?.hints).toBeUndefined();
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]?.hints).toEqual({ [sorting.id]: expected }));
+    session.answer(run, sorting.id, perfectAnswer(sorting));
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]?.hints).toBeUndefined());
+
+    expect(await session.startRun(QUIZ.id, "medium", signal)).toBeUndefined();
+    const medium = session.getSnapshot().state.step;
+    if (medium.screen !== "run") throw new Error("the run did not open");
+    const queried = proctor.runQueries;
+    session.answer(medium.run, taskOf(session, medium.run, "sorting").id, reversedSorting(taskOf(session, medium.run, "sorting")));
+    await session.outbox.settled(medium.run);
+    expect(proctor.runQueries).toBe(queried);
+    expect(session.getSnapshot().state.runs[medium.run]?.hints).toBeUndefined();
+    session.stop();
+  });
+
+  it("tells the hints of an easy run at once from the deputy, also while the proctor is away", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.away = true;
+    const session = clockedOn(proctor, memoryStorageOrigin().tab(), MATERIAL);
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "easy", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const sorting = taskOf(session, step.run, "sorting");
+    const reversed = reversedSorting(sorting);
+    session.answer(step.run, sorting.id, reversed);
+    expect(session.getSnapshot().state.runs[step.run]?.hints).toEqual({ [sorting.id]: hintsOf(QUIZ.tasks.find((task) => task.id === sorting.id)!, sorting, reversed) });
+    const classifying = taskOf(session, step.run, "classification");
+    if (classifying.kind !== "classification") throw new Error("not the classification");
+    session.answer(step.run, classifying.id, everyItemTo(classifying, 0));
+    const doubted = hintsOf(QUIZ.tasks.find((task) => task.id === classifying.id)!, classifying, everyItemTo(classifying, 0));
+    expect(doubted.length).toBeGreaterThan(0);
+    expect(session.getSnapshot().state.runs[step.run]?.hints?.[classifying.id]).toEqual(doubted);
+    session.answer(step.run, sorting.id, perfectAnswer(sorting));
+    expect(Object.keys(session.getSnapshot().state.runs[step.run]?.hints ?? {})).toEqual([classifying.id]);
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    await waitFor(() => expect(session.getSnapshot().state.runs[step.run]?.hints).toEqual({ [classifying.id]: doubted }));
+    session.stop();
+  });
+
+  it("scores a hard run's guesses at its par and keeps the best run by points across challenges", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = sessionOn(proctor, memoryStorageOrigin().tab());
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    const played = async (challenge: Challenge, answer: (task: SheetTask) => Answer): Promise<string> => {
+      expect(await session.startRun(QUIZ.id, challenge, signal)).toBeUndefined();
+      const { step, runs } = session.getSnapshot().state;
+      if (step.screen !== "run") throw new Error("the run did not open");
+      for (const task of runs[step.run]!.sheet.tasks) session.answer(step.run, task.id, answer(task));
+      expect(await session.submit(step.run, signal, () => undefined)).toBeUndefined();
+      return step.run;
+    };
+    const hard = await played("hard", guessedAnswer);
+    expect(session.getSnapshot().state.runs[hard]?.result).toMatchObject({ challenge: "hard", score: 1, points: 300 });
+    const easy = await played("easy", perfectAnswer);
+    expect(session.getSnapshot().state.runs[easy]?.result).toMatchObject({ challenge: "easy", score: 1, points: 100 });
+    await waitFor(() => expect(session.getSnapshot().state.learnerView).toMatchObject({ best: { [QUIZ.id]: { challenge: "hard", score: 1, points: 300 } }, total: 300 }));
+    expect(session.getSnapshot().state.learnerView?.runs.map((summary) => [summary.challenge, summary.points])).toEqual([
+      ["easy", 100],
+      ["hard", 300],
+    ]);
+    session.stop();
+  });
+
+  it("restores a stored run only with the challenge of its sheet", () => {
+    const area = memoryStorageOrigin().tab();
+    const store = localStore(area, CATALOG.id);
+    const learner = "a".repeat(32);
+    store.write("introduced", true);
+    store.write("learner", { id: learner, identity: { kind: "anonymous" } });
+    const sheet = { quiz: QUIZ.id, seed: 1, challenge: "hard", title: QUIZ.title, description: QUIZ.description, tasks: [] };
+    const view = { run: "b".repeat(32), learner, quiz: QUIZ.id, status: "open", sheet, answers: {}, startedAt: 1 };
+    store.put("runs", view.run, view);
+    const { challenge: _, ...unchallenged } = sheet;
+    store.put("runs", "c".repeat(32), { ...view, run: "c".repeat(32), sheet: unchallenged });
+    store.put("runs", "d".repeat(32), { ...view, run: "d".repeat(32), sheet: { ...sheet, challenge: "lenient" } });
+    expect(Object.keys(restoreQuizState(store).runs)).toEqual([view.run]);
+    expect(isChallenge("expert")).toBe(true);
+    expect([undefined, "Expert", "level", 3].some(isChallenge)).toBe(false);
+  });
+
+  it("restores a stored learner view only in the shape of the challenges: every run with its challenge, every best with the challenge, score and points of its run", () => {
+    const store = localStore(memoryStorageOrigin().tab(), CATALOG.id);
+    const learner = "a".repeat(32);
+    store.write("introduced", true);
+    store.write("learner", { id: learner, identity: { kind: "anonymous" } });
+    const summary = { run: "b".repeat(32), quiz: QUIZ.id, challenge: "hard", status: "submitted", startedAt: 1, score: 0.9, points: 270, submittedAt: 2 };
+    const current = { learner, identity: { kind: "anonymous" }, runs: [summary], badges: [], best: { [QUIZ.id]: { challenge: "hard", score: 0.9, points: 270 } }, total: 270 };
+    store.write("learner-view", current);
+    expect(restoreQuizState(store).learnerView).toEqual(current);
+    const { challenge: _, ...unchallenged } = summary;
+    const { best: __, ...bestless } = current;
+    for (const old of [{ ...current, best: { [QUIZ.id]: 0.9 } }, { ...current, runs: [unchallenged] }, { ...current, best: { [QUIZ.id]: { score: 0.9, points: 270 } } }, { ...current, best: { [QUIZ.id]: { challenge: "hard", score: 0.9 } } }, bestless]) {
+      store.write("learner-view", old);
+      expect(restoreQuizState(store).learnerView, JSON.stringify(old)).toBeUndefined();
+    }
+  });
+});
+
+/** ✋️ A transport to `proctor` that, while `hold.on`, keeps the answer to every read of a run back until its release in
+ * `held` is called — the releases in the order the reads were asked. */
+function heldTransport(proctor: FakeProctor): { readonly transport: HttpTransport; readonly hold: { on: boolean }; readonly held: (() => void)[] } {
+  const hold = { on: false };
+  const held: (() => void)[] = [];
+  const transport: HttpTransport = {
+    send: async (request) => {
+      if (request.path !== "/queries") return proctor.transport.send(request);
+      const body = JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown;
+      const read = request.path === "/queries" && (JSON.parse(decoder.decode(decodeQueryEnvelope(body).arguments)) as Query).type === "run";
+      const kept = hold.on && read;
+      const response = await proctor.transport.send(request);
+      if (kept) await new Promise<void>((release) => held.push(release));
+      return response;
+    },
+  };
+  return { transport, hold, held };
+}
+
+/** 🍳️ A second quiz beside the household one, so that two runs of different quizzes can be open at once. */
+const KITCHEN: Quiz = { ...QUIZ, id: "kitchen", emoji: "🍳", title: text("Kitchen physics", "Küchenphysik") };
+
+/** 🗄️ The household catalog with the kitchen quiz beside it. */
+const TWO_QUIZZES: QuizMaterial = { catalog: { ...CATALOG, quizzes: ["household.json", "kitchen.json"] }, quizzes: [QUIZ, KITCHEN] };
+
+/** 🧷️ The run view of an open timed run of the household quiz with `answers` and `extra` members, for the pure folds. */
+function heldRun(answers: RunView["answers"], extra: Partial<RunView> = {}): RunView {
+  return { run: "b".repeat(32), learner: "a".repeat(32), quiz: QUIZ.id, status: "open", sheet: { quiz: QUIZ.id, seed: 1, challenge: "expert", title: QUIZ.title, description: QUIZ.description, tasks: [] }, answers, startedAt: 1, ...extra };
+}
+
+describe("🧷️ what the device shows of a run stays true to its answers", () => {
+  it("drops the hints of a task the moment its answer changes and shows those of the new answer only once the proctor's view of it arrives (no deputy)", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = sessionOn(proctor, memoryStorageOrigin().tab());
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "easy", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const view = (): RunView => session.getSnapshot().state.runs[run]!;
+    const sorting = taskOf(session, run, "sorting");
+    const classifying = classification(view().sheet.tasks);
+    const misplaced = { [classifying.id]: hintsOf(QUIZ.tasks.find((task) => task.id === classifying.id)!, classifying, everyItemTo(classifying, 0)) };
+    expect(misplaced[classifying.id]!.length).toBeGreaterThan(0);
+    session.answer(run, sorting.id, reversedSorting(sorting));
+    session.answer(run, classifying.id, everyItemTo(classifying, 0));
+    await waitFor(() => expect(view().hints).toEqual({ ...misplaced, [sorting.id]: hintsOf(QUIZ.tasks.find((task) => task.id === sorting.id)!, sorting, reversedSorting(sorting)) }));
+    proctor.outage = true;
+    session.answer(run, sorting.id, perfectAnswer(sorting));
+    expect(view().hints).toEqual(misplaced);
+    await session.loadRun(run);
+    expect(view().answers[sorting.id]).toEqual(perfectAnswer(sorting));
+    expect(view().hints).toEqual(misplaced);
+    proctor.outage = false;
+    session.outbox.wake();
+    await waitFor(() => expect(proctor.answersOf(run)[sorting.id]).toEqual(perfectAnswer(sorting)));
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]));
+    expect(view().hints).toEqual(misplaced);
+    session.stop();
+  });
+
+  it("has the deputy tell the hints of the answers shown, also when a read of the run comes back while a newer answer waits", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "easy", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const view = (): RunView => session.getSnapshot().state.runs[run]!;
+    const sorting = taskOf(session, run, "sorting");
+    const classifying = classification(view().sheet.tasks);
+    const misplaced = { [classifying.id]: hintsOf(QUIZ.tasks.find((task) => task.id === classifying.id)!, classifying, everyItemTo(classifying, 0)) };
+    expect(misplaced[classifying.id]!.length).toBeGreaterThan(0);
+    session.answer(run, sorting.id, reversedSorting(sorting));
+    session.answer(run, classifying.id, everyItemTo(classifying, 0));
+    await session.outbox.settled(run);
+    expect(view().hints).toEqual({ ...misplaced, [sorting.id]: hintsOf(QUIZ.tasks.find((task) => task.id === sorting.id)!, sorting, reversedSorting(sorting)) });
+    proctor.outage = true;
+    session.answer(run, sorting.id, perfectAnswer(sorting));
+    expect(view().hints).toEqual(misplaced);
+    const queried = proctor.runQueries;
+    await session.loadRun(run);
+    expect(proctor.runQueries).toBeGreaterThan(queried);
+    expect(proctor.answersOf(run)[sorting.id]).toEqual(reversedSorting(sorting));
+    expect(view().answers[sorting.id]).toEqual(perfectAnswer(sorting));
+    expect(view().hints).toEqual(misplaced);
+    proctor.outage = false;
+    session.stop();
+  });
+
+  it("never lets a read of the run asked for before a newer answer bring back the older answer or its hints, and drops a read that a later one overtook", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const { transport, hold, held } = heldTransport(proctor);
+    const session = new QuizSession({ proctor: new ProctorClient(() => transport, CATALOG.id), store: localStore(memoryStorageOrigin().tab(), CATALOG.id), timing: TIMING });
+    session.start();
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "easy", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const view = (): RunView => session.getSnapshot().state.runs[run]!;
+    const sorting = taskOf(session, run, "sorting");
+    session.answer(run, sorting.id, reversedSorting(sorting));
+    await waitFor(() => expect(Object.keys(view().hints ?? {})).toEqual([sorting.id]));
+    hold.on = true;
+    const stale = session.loadRun(run);
+    await waitFor(() => expect(held).toHaveLength(1));
+    session.answer(run, sorting.id, perfectAnswer(sorting));
+    await session.outbox.settled(run);
+    await waitFor(() => expect(held).toHaveLength(2));
+    held[0]!();
+    await stale;
+    expect(view().answers[sorting.id]).toEqual(perfectAnswer(sorting));
+    expect(view().hints).toBeUndefined();
+    held[1]!();
+    const classifying = classification(view().sheet.tasks);
+    const older = session.loadRun(run);
+    await waitFor(() => expect(held).toHaveLength(3));
+    proctor.seed({ type: "record-answer", id: newId(), learner: session.getSnapshot().state.learner!.id, run, task: classifying.id, answer: everyItemTo(classifying, 1), at: proctor.now });
+    const newer = session.loadRun(run);
+    await waitFor(() => expect(held).toHaveLength(4));
+    held[3]!();
+    await newer;
+    expect(view().answers[classifying.id]).toEqual(everyItemTo(classifying, 1));
+    const doubted = { [classifying.id]: hintsOf(QUIZ.tasks.find((task) => task.id === classifying.id)!, classifying, everyItemTo(classifying, 1)) };
+    expect(doubted[classifying.id]!.length).toBeGreaterThan(0);
+    expect(view().hints).toEqual(doubted);
+    held[2]!();
+    await older;
+    expect(view().answers).toEqual({ [sorting.id]: perfectAnswer(sorting), [classifying.id]: everyItemTo(classifying, 1) });
+    expect(view().hints).toEqual(doubted);
+    hold.on = false;
+    session.stop();
+  });
+
+  it("merges another tab's copy of an open run: the union of the answers, each task with the hints of the copy whose answer it keeps, every opening at its earliest instant", () => {
+    const order = (...items: string[]): Answer => ({ kind: "sorting", order: items });
+    const doubt = (item: string, other: string): Hint => ({ kind: "compare", item, other, factor: 2, verdict: "under" });
+    const mine = heldRun({ a: order("x", "y"), b: order("y", "x") }, { opened: { a: 5, c: 9 }, hints: { a: [doubt("x", "y")], b: [doubt("y", "x")] } });
+    const theirs = heldRun({ a: order("y", "x") }, { opened: { b: 7, c: 3 }, hints: { a: [doubt("y", "x")] } });
+    expect(mergeRunViews(mine, theirs)).toEqual({ ...theirs, answers: { a: order("y", "x"), b: order("y", "x") }, opened: { a: 5, b: 7, c: 3 }, hints: { a: [doubt("y", "x")], b: [doubt("y", "x")] } });
+    expect(mergeRunViews(heldRun({ a: order("x") }), heldRun({}))).toStrictEqual(heldRun({ a: order("x") }));
+    const submitted = { ...theirs, status: "submitted" as const };
+    expect(mergeRunViews(mine, submitted)).toBe(submitted);
+    const voided = { ...mine, status: "voided" as const };
+    expect(mergeRunViews(voided, theirs)).toBe(voided);
+  });
+
+  it("keeps no hints on a run once it is submitted, voided or closed by its listing — the openings of a timed run stay, as in the proctor's view — and drops only those of a task whose answer changes", () => {
+    const learner = "a".repeat(32);
+    const order = (...items: string[]): Answer => ({ kind: "sorting", order: items });
+    const view = heldRun({ a: order("x", "y"), b: order("y", "x") }, { opened: { a: 2, b: 3 }, hints: { a: [{ kind: "group", item: "x", other: "y", together: true }], b: [{ kind: "category", item: "y", category: "c" }] } });
+    const held = { ...initialQuizState({ introduced: true, learner: { id: learner }, runs: { [view.run]: view } }), step: { screen: "run", run: view.run } as const };
+    const result = { quiz: QUIZ.id, challenge: "expert" as const, score: 1, points: 400, tasks: [] };
+    const listed = { learner, identity: { kind: "anonymous" as const }, runs: [{ run: view.run, quiz: QUIZ.id, challenge: "expert" as const, status: "submitted" as const, startedAt: 1, score: 1, points: 400, submittedAt: 4 }], badges: [], best: {}, total: 0 };
+    for (const event of [{ type: "run-submitted", run: view.run, result, badges: [], at: 4 }, { type: "run-voided", run: view.run }, { type: "learner-loaded", view: listed }] as const) {
+      const closed = evolveQuizState(held, event).runs[view.run]!;
+      expect(closed.status, event.type).not.toBe("open");
+      expect(Object.hasOwn(closed, "hints"), event.type).toBe(false);
+      expect(closed.opened, event.type).toEqual({ a: 2, b: 3 });
+    }
+    expect(evolveQuizState(held, { type: "answer-given", run: view.run, task: "a", answer: order("y", "x") }).runs[view.run]!.hints).toEqual({ b: [{ kind: "category", item: "y", category: "c" }] });
+    const once = evolveQuizState(held, { type: "answer-given", run: view.run, task: "a", answer: order("y", "x") });
+    expect(Object.hasOwn(evolveQuizState(once, { type: "answer-given", run: view.run, task: "b", answer: order("x", "y") }).runs[view.run]!, "hints")).toBe(false);
+  });
+
+  it("reads a run again at once after the proctor refused one of its answers, while the deputy's start of a run of another quiz still waits", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor(TWO_QUIZZES);
+    const session = clockedOn(proctor, memoryStorageOrigin().tab(), TWO_QUIZZES);
+    const signal = new AbortController().signal;
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const [first] = session.getSnapshot().state.runs[run]!.sheet.tasks;
+    proctor.outage = true;
+    session.answer(run, first!.id, guessedAnswer(first!));
+    expect(session.getSnapshot().state.runs[run]!.answers[first!.id]).toEqual(guessedAnswer(first!));
+    proctor.away = true;
+    expect(await session.startRun(KITCHEN.id, "medium", signal)).toBeUndefined();
+    const other = session.getSnapshot().state.step;
+    if (other.screen !== "run" || other.run === run) throw new Error("the kitchen run did not open");
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["record-answer", "start-run"]);
+    proctor.outage = false;
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "rejection", rejection: "task-unopened" });
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]!.answers[first!.id]).toBeUndefined(), { timeout: 10_000 });
+    expect(proctor.runOf(run)?.runs.map((candidate) => [candidate.quiz, candidate.status])).toEqual([
+      [QUIZ.id, "open"],
+      [KITCHEN.id, "open"],
+    ]);
+    session.stop();
+  });
+
+  it("voids a run on the device when the proctor refuses an opening the deputy decided because the quiz was revised meanwhile", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = clockedOn(proctor, memoryStorageOrigin().tab(), MATERIAL);
+    const signal = new AbortController().signal;
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const [first] = session.getSnapshot().state.runs[run]!.sheet.tasks;
+    proctor.away = true;
+    expect(await session.openTask(run, first!.id, signal)).toBeUndefined();
+    expect(session.outbox.queued(run).map((command) => command.type)).toEqual(["open-task"]);
+    proctor.revise(QUIZ.id);
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]?.status).toBe("voided"), { timeout: 10_000 });
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "voided" });
+    expect(session.outbox.queued()).toEqual([]);
+    expect(session.getSnapshot().state.step).toEqual({ screen: "home" });
+    await waitFor(() => expect(session.getSnapshot().state.learnerView?.runs.map((summary) => summary.run)).toEqual([run]));
+    expect(openRunOf(session.getSnapshot().state, QUIZ.id)).toBeUndefined();
+    session.stop();
+  });
+
+  it("delivers an answer replaced while it waited with the instant of its own last edit, which is what the deciders judge", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = clockedOn(proctor, memoryStorageOrigin().tab());
+    const signal = new AbortController().signal;
+    expect(await session.identify({ kind: "anonymous" }, signal)).toBeUndefined();
+    expect(await session.startRun(QUIZ.id, "expert", signal)).toBeUndefined();
+    const { step } = session.getSnapshot().state;
+    if (step.screen !== "run") throw new Error("the run did not open");
+    const run = step.run;
+    const [first] = session.getSnapshot().state.runs[run]!.sheet.tasks;
+    expect(await session.openTask(run, first!.id, signal)).toBeUndefined();
+    proctor.away = true;
+    session.answer(run, first!.id, roughAnswer(first!));
+    await waitFor(() => expect(session.getSnapshot().connection.activity).toBe("retrying"));
+    proctor.now += 2_000;
+    const lastAt = proctor.now;
+    session.answer(run, first!.id, guessedAnswer(first!));
+    expect(session.outbox.queued(run)).toEqual([expect.objectContaining({ type: "record-answer", task: first!.id, answer: guessedAnswer(first!), at: lastAt })]);
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    const delivered = proctor.envelopes.filter((envelope) => envelope.kind === "quiz.record-answer").map((envelope) => JSON.parse(decoder.decode(envelope.payload)) as RecordAnswerCommand);
+    expect(delivered.map((command) => [command.answer, command.at])).toEqual([[guessedAnswer(first!), lastAt]]);
+    expect(proctor.answersOf(run)[first!.id]).toEqual(guessedAnswer(first!));
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
   });
 });

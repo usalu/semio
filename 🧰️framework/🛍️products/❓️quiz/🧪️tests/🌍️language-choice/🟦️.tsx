@@ -13,7 +13,7 @@ import i18next from "i18next";
 import { afterEach, describe, expect, it } from "vitest";
 import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import type { CatalogView, Query } from "@semio-tech/quiz";
-import { QUIZ_LOCALES, QuizApp, documentTitle, initialQuizState, localStore, memoryStorageOrigin, mountQuiz, preferredLocale, readPreferences, type PresenceConnect, type QuizState, type StorageArea } from "@semio-tech/quiz-react";
+import { QUIZ_LOCALES, QuizApp, documentTitle, initialQuizState, localStore, memoryStorageOrigin, mountQuiz, preferredLocale, quizInstance, readPreferences, type PresenceConnect, type QuizState, type StorageArea } from "@semio-tech/quiz-react";
 import choice from "../../🧫️fixtures/🌍️language-choice/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
@@ -36,7 +36,7 @@ const CATALOG: CatalogView = {
   badges: [],
 };
 const TIMING = { minMs: 1, maxMs: 4 };
-const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
+const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onopen: null, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -50,6 +50,7 @@ function catalogProctor(held?: Promise<void>): HttpTransport {
   return {
     send: async (request) => {
       await held;
+      if (request.method === "GET" && request.path === "/instance") return reply(200, quizInstance());
       const body = JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown;
       if (request.path !== "/queries") return reply(404, { kind: "notFound", message: request.path });
       const query = JSON.parse(decoder.decode(decodeQueryEnvelope(body).arguments)) as Query;

@@ -8,9 +8,11 @@
  *
  * **The hall.** `learners` simulated learners (300 by default) arrive from ONE address (the `X-Forwarded-For` the
  * terminating proxy would write): each enrols, joins the roster room and the home room (watching every page, quiz and
- * thinking room at 4 Hz), polls the leaderboard, then plays two quizzes — start a run, read its sheet, join the quiz
- * and thinking rooms, revise every task's answer a few times with cursor moves and drafts in between, submit, read the
- * result, the crowd and the leaderboard. Think times are real ones divided by `compression` (5 by default), so the
+ * thinking room at 4 Hz), polls the leaderboard, then plays two quizzes at two of the four challenges, the hall
+ * spread evenly over all four — start a run, read its sheet, join the quiz and thinking rooms, revise every task's
+ * answer a few times with cursor moves and drafts in between (cards on easy and medium, guesses on hard and expert; on
+ * expert each task is opened first and answered only while its clock runs, on easy the run is read again after every
+ * answer for its hints), submit, read the result, the crowd and the leaderboard. Think times are real ones divided by `compression` (5 by default), so the
  * hall asks for `compression` times the requests per second a real lecture does. Once per phase every socket of every
  * learner drops and reconnects within two seconds (the Wi-Fi drop). A request that gets no answer is sent again, and a
  * socket join that gets none is made again, after the quiz client's own backoff, and the wait counts as its latency.
@@ -46,7 +48,7 @@ import { connect, createServer, type Socket } from "node:net";
 import { availableParallelism, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
-import { DEFAULT_LIMITS, learnerTag, rosterScope, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts";
+import { CHALLENGES, DEFAULT_LIMITS, challengeRules, learnerTag, rosterScope, thinkingAnswer, thinkingScope, type Answer, type Command, type IdentityClaim, type PresenceState, type RunView, type SheetTask, type ThinkingAnswer } from "../../../../🧰️framework/🛍️products/❓️quiz/🟦️.ts";
 import { ProctorClient, ProctorUnavailable, RETRY_TIMING, commandEnvelope, newId, retryTransient, type CommandVerdict } from "../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🛂️proctor/🟦️.ts";
 import { PRESENCE_PROTOCOL, encodeCommandEnvelope, presenceSocketUrl, type HttpRequest, type HttpResponse, type HttpTransport } from "../../../../🧰️framework/🛍️products/🖥️server/🟦️.ts";
 import { PROCTOR_DEV_CATALOG, buildProctor, launchProctor, type ProctorProcess } from "../../🏗️bootstrap/🟦️.ts";
@@ -133,6 +135,9 @@ export const GENERATOR_STALL_MS = 1_000;
 const REAL = { arrival: 60_000, home: 15_000, revise: [4_000, 12_000] as const, read: 5_000, poll: 10_000, storm: 2_000 };
 /** 🖱️ How often a learner who moves the pointer shares it, and how much of the time one does. */
 const CURSOR = { intervalMs: 100, share: 0.3 };
+/** ⏲️ How long before the clock of an expert task runs out a learner stops answering it: the learner acts on the
+ * device's clock, so a margin keeps the last answer inside the time however late it is delivered. */
+const CLOCK_MARGIN_MS = 1_000;
 /** 👀️ The interval a home page watches the other rooms at. */
 const WATCH_INTERVAL_MS = 250;
 /** 🐌️ How often a thread of the load generator probes its own lateness. */
@@ -358,22 +363,29 @@ function shuffled<T>(items: readonly T[]): T[] {
   return order;
 }
 
-/** ✍️ A valid answer to one presented task and the draft a learner shares of it. */
-function answerOf(task: SheetTask): { readonly answer: Answer; readonly draft: ThinkingAnswer } {
+/** 🎲️ A number a learner types where the keys are hidden: three digits somewhere between a tenth and a million,
+ * positive on either scale. */
+const guessed = (): number => Number((10 ** between(-1, 6)).toPrecision(3));
+
+/** ✍️ A valid answer to one presented task — the keys assigned where the sheet shows them, a guess per item (and
+ * dimension) where it hides them, the guessed items standing in the order of their guesses — and the draft a learner
+ * shares of it. */
+function answerOf(task: SheetTask): { readonly answer: Answer; readonly draft: ThinkingAnswer | undefined } {
   const items = task.items.map((item) => item.id);
+  const drafted = (answer: Answer) => ({ answer, draft: thinkingAnswer(task, answer) });
+  if (task.kind === "classification") return drafted({ kind: "classification", assignments: Object.fromEntries(items.map((item) => [item, task.categories[Math.floor(Math.random() * task.categories.length)].id])) });
   if (task.kind === "sorting") {
-    const answer = { kind: "sorting", order: shuffled(items) } as const;
-    return { answer, draft: answer };
+    if (task.keys !== undefined) return drafted({ kind: "sorting", order: shuffled(items) });
+    const guesses = Object.fromEntries(items.map((item) => [item, guessed()]));
+    return drafted({ kind: "sorting", order: [...items].sort((left, right) => guesses[left] - guesses[right]), guesses });
   }
-  if (task.kind === "classification") {
-    const answer = { kind: "classification", assignments: Object.fromEntries(items.map((item) => [item, task.categories[Math.floor(Math.random() * task.categories.length)].id])) } as const;
-    return { answer, draft: answer };
-  }
-  const cards = task.dimensions.map((dimension) => ({ dimension, order: shuffled(dimension.cards.map((_, card) => card)) }));
-  return {
-    answer: { kind: "matching", assignments: Object.fromEntries(cards.map(({ dimension, order }) => [dimension.id, Object.fromEntries(items.map((item, index) => [item, order[index]]))])) },
-    draft: { kind: "matching", values: Object.fromEntries(cards.map(({ dimension, order }) => [dimension.id, Object.fromEntries(items.map((item, index) => [item, dimension.cards[order[index]]]))])) },
-  };
+  const shown = task.dimensions.flatMap((dimension) => (dimension.cards === undefined ? [] : [[dimension.id, shuffled(dimension.cards.map((_, card) => card))] as const]));
+  const hidden = task.dimensions.filter((dimension) => dimension.cards === undefined);
+  return drafted({
+    kind: "matching",
+    ...(shown.length === 0 ? {} : { assignments: Object.fromEntries(shown.map(([dimension, order]) => [dimension, Object.fromEntries(items.map((item, index) => [item, order[index]]))])) }),
+    ...(hidden.length === 0 ? {} : { guesses: Object.fromEntries(hidden.map((dimension) => [dimension.id, Object.fromEntries(items.map((item) => [item, guessed()]))])) }),
+  });
 }
 
 /** 🧑‍🎓️ One learner's lecture: enrol, look around, play `plays` quizzes, leave. */
@@ -448,10 +460,12 @@ async function attend(hall: Hall, index: number, plays: number): Promise<void> {
     }
   })();
 
-  for (const quiz of [hall.quizzes[0], ...shuffled(hall.quizzes.slice(1))].slice(0, plays)) {
+  const quizzes = [hall.quizzes[0], ...shuffled(hall.quizzes.slice(1))].slice(0, plays);
+  for (const [played, quiz] of quizzes.entries()) {
     await dwell(REAL.home * hall.scale * between(0.5, 1.5), page, `card:${quiz}`);
     const run = newId();
-    if (!(await command({ type: "start-run", id: newId(), learner, run, quiz }))) break;
+    const challenge = CHALLENGES[(index + played) % CHALLENGES.length];
+    if (!(await command({ type: "start-run", id: newId(), learner, run, quiz, challenge, at: Date.now() }))) break;
     const view: RunView | undefined = await timed("query run", () => client.run(run, learner));
     if (view === undefined) break;
     leave(page);
@@ -461,12 +475,16 @@ async function attend(hall: Hall, index: number, plays: number): Promise<void> {
     const drafts: Record<string, ThinkingAnswer> = {};
     for (const task of view.sheet.tasks) {
       roster.share(here({ screen: "run", quiz, task: task.id }));
+      const opened = Date.now();
+      if (task.seconds !== undefined && !(await command({ type: "open-task", id: newId(), learner, run, task: task.id, at: opened }))) continue;
+      const deadline = task.seconds === undefined ? Number.POSITIVE_INFINITY : opened + task.seconds * 1000 - CLOCK_MARGIN_MS;
       for (let revision = 0, revisions = 2 + Math.floor(Math.random() * 3); revision < revisions; revision += 1) {
         await dwell(between(REAL.revise[0], REAL.revise[1]) * hall.scale, page, `task:${task.id}`);
+        if (Date.now() > deadline) break;
         const { answer, draft } = answerOf(task);
-        drafts[task.id] = draft;
+        if (draft !== undefined) drafts[task.id] = draft;
         thinking.share({ tag, answers: { ...drafts } });
-        await command({ type: "record-answer", id: newId(), learner, run, task: task.id, answer });
+        if ((await command({ type: "record-answer", id: newId(), learner, run, task: task.id, answer, at: Date.now() })) && challengeRules(challenge).hints) await timed("query run", () => client.run(run, learner));
       }
     }
     await command({ type: "submit-run", id: newId(), learner, run });
@@ -675,7 +693,7 @@ async function script(orders: ScriptOrders, stopped: () => boolean): Promise<Scr
   const malformed = async (): Promise<void> => {
     const posting = wire();
     while (!stopped()) {
-      const sent = JSON.parse(envelope({ type: "start-run", id: newId(), learner: newId(), run: newId(), quiz: orders.quiz })) as { target: { id: string } };
+      const sent = JSON.parse(envelope({ type: "start-run", id: newId(), learner: newId(), run: newId(), quiz: orders.quiz, challenge: "medium", at: Date.now() })) as { target: { id: string } };
       sent.target.id = `no-such-learner-${Math.random()}`;
       tally(report.malformed, await posting.post("/commands", JSON.stringify(sent)));
     }

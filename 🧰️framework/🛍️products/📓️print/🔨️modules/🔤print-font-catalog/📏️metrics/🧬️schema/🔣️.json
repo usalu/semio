@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/print/font-metrics.schema.json",
+  "title":"Print Font Metrics",
+  "type":"object","additionalProperties":false,
+  "required":["family","sha256","unitsPerEm","characters","advances","classes","substitutions","positioning"],
+  "properties":{
+    "family":{"const":"Anta"},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"unitsPerEm":{"type":"integer","minimum":1},
+    "characters":{"type":"object","additionalProperties":{"type":"integer","minimum":0}},
+    "advances":{"type":"array","items":{"type":"integer","minimum":0}},"classes":{"type":"array","items":{"type":"integer","minimum":0}},
+    "substitutions":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["kind","ignoreMarks","rules"],"properties":{"kind":{"enum":["multiple","ligature"]},"ignoreMarks":{"type":"boolean"},"rules":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["input","output"],"properties":{"input":{"type":"array","minItems":1,"items":{"type":"integer","minimum":0}},"output":{"type":"array","minItems":1,"items":{"type":"integer","minimum":0}}}}}}}},
+    "positioning":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["ignoreMarks","tables"],"properties":{"ignoreMarks":{"type":"boolean"},"tables":{"type":"array","items":{"oneOf":[
+      {"type":"object","additionalProperties":false,"required":["coverage","pairs"],"properties":{"coverage":{"$ref":"#/$defs/glyphs"},"pairs":{"type":"array","items":{"type":"array","minItems":3,"maxItems":3,"prefixItems":[{"type":"integer","minimum":0},{"type":"integer","minimum":0},{"type":"integer"}]}}}},
+      {"type":"object","additionalProperties":false,"required":["coverage","firstClasses","secondClasses","adjustments"],"properties":{"coverage":{"$ref":"#/$defs/glyphs"},"firstClasses":{"$ref":"#/$defs/glyphs"},"secondClasses":{"$ref":"#/$defs/glyphs"},"adjustments":{"type":"array","items":{"type":"array","items":{"type":"integer"}}}}}
+    ]}}}}}
+  },
+  "$defs":{"glyphs":{"type":"array","items":{"type":"integer","minimum":0}}}
+}

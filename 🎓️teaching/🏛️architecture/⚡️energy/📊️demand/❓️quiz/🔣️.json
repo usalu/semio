@@ -29,6 +29,7 @@
         {
           "id": "cooling",
           "label": { "en": "Cooling demand to keep 26\u00a0°C", "de": "Kühlbedarf für 26\u00a0°C" },
+          "short": { "en": "Cooling demand", "de": "Kühlbedarf" },
           "unit": "kWh/(m²·a)",
           "min": 0,
           "max": 10
@@ -36,6 +37,7 @@
         {
           "id": "ventilation",
           "label": { "en": "Ventilation heat loss (air leakage plus ventilation after heat recovery)", "de": "Lüftungswärmeverlust (Undichtheit plus Lüftung nach Wärmerückgewinnung)" },
+          "short": { "en": "Ventilation heat loss", "de": "Lüftungswärmeverlust" },
           "unit": "kWh/(m²·a)",
           "min": 0,
           "max": 70
@@ -43,6 +45,7 @@
         {
           "id": "costs",
           "label": { "en": "Net energy costs for heating, hot water and auxiliary energy (after PV credit)", "de": "Netto-Energiekosten für Heizung, Warmwasser und Hilfsenergie (nach PV-Gutschrift)" },
+          "short": { "en": "Net energy costs", "de": "Netto-Energiekosten" },
           "unit": "€/(m²·a)",
           "min": -5,
           "max": 55
@@ -52,31 +55,37 @@
         {
           "id": "profile-a",
           "label": { "en": "Profile A", "de": "Profil A" },
+          "icon": { "emoji": "🔺", "motion": "pulse" },
           "profile": { "heating": 26, "cooling": 4, "ventilation": 9, "costs": 4.2 }
         },
         {
           "id": "profile-b",
           "label": { "en": "Profile B", "de": "Profil B" },
+          "icon": { "emoji": "⬛", "motion": "sway" },
           "profile": { "heating": 303, "cooling": 8, "ventilation": 61, "costs": 50 }
         },
         {
           "id": "profile-c",
           "label": { "en": "Profile C", "de": "Profil C" },
+          "icon": { "emoji": "⚫", "motion": "bounce" },
           "profile": { "heating": 20, "cooling": 7, "ventilation": 8, "costs": -2 }
         },
         {
           "id": "profile-d",
           "label": { "en": "Profile D", "de": "Profil D" },
+          "icon": { "emoji": "🔷", "motion": "float" },
           "profile": { "heating": 135, "cooling": 6, "ventilation": 43, "costs": 23 }
         },
         {
           "id": "profile-e",
           "label": { "en": "Profile E", "de": "Profil E" },
+          "icon": { "emoji": "⭐", "motion": "spin" },
           "profile": { "heating": 15, "cooling": 2, "ventilation": 6.5, "costs": 3.7 }
         },
         {
           "id": "profile-f",
           "label": { "en": "Profile F", "de": "Profil F" },
+          "icon": { "emoji": "🔻", "motion": "flip" },
           "profile": { "heating": 55, "cooling": 5, "ventilation": 32, "costs": 10 }
         }
       ],
@@ -84,6 +93,8 @@
         {
           "id": "unrenovated-old-building",
           "label": { "en": "Unrenovated old building (1960s single-family house)", "de": "Unsanierter Altbau (Einfamilienhaus der 1960er-Jahre)" },
+          "short": { "en": "Unrenovated old building", "de": "Unsanierter Altbau" },
+          "icon": { "emoji": "🏚️", "motion": "sway" },
           "category": "profile-b",
           "explanation": {
             "en": "Profile B: about 300\u00a0kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50\u00a0≈\u00a08\u00a01/h) losing about 60\u00a0kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50\u00a0€/(m²·a) for gas at 12\u00a0ct/kWh.",
@@ -93,6 +104,8 @@
         {
           "id": "wschvo-1995",
           "label": { "en": "House to the Thermal Insulation Ordinance 1995 (WSchVO 1995)", "de": "Haus nach Wärmeschutzverordnung 1995 (WSchVO 1995)" },
+          "short": { "en": "House to WSchVO 1995", "de": "Haus nach WSchVO 1995" },
+          "icon": { "emoji": "📜", "motion": "sway" },
           "category": "profile-d",
           "explanation": {
             "en": "Profile D: about 135\u00a0kWh/(m²·a) heating (IWU type EFH_I), n50\u00a0≈\u00a04\u00a01/h with about 43\u00a0kWh/(m²·a) ventilation loss, and about 23\u00a0€/(m²·a) with a low-temperature gas boiler.",
@@ -102,6 +115,7 @@
         {
           "id": "enev-2014",
           "label": { "en": "New build to EnEV 2014", "de": "Neubau nach EnEV 2014" },
+          "icon": { "emoji": "🏠", "motion": "pulse" },
           "category": "profile-f",
           "explanation": {
             "en": "Profile F: about 55\u00a0kWh/(m²·a) heating (slightly above today's minimum envelope, which the Energy Saving Ordinance (EnEV) 2016 tightened by about 20%), airtight to n50\u00a0≈\u00a01.5\u00a01/h but ventilated by windows or exhaust fans without heat recovery (about 32\u00a0kWh/(m²·a)), and about 10\u00a0€/(m²·a) with a gas condensing boiler.",
@@ -111,6 +125,7 @@
         {
           "id": "kfw-40",
           "label": { "en": "KfW Efficiency House 40", "de": "KfW-Effizienzhaus 40" },
+          "icon": { "emoji": "🏡", "motion": "float" },
           "category": "profile-a",
           "explanation": {
             "en": "Profile A, a funding standard of KfW (German state development bank): about 26\u00a0kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9\u00a0kWh/(m²·a), and a heat pump brings the costs down to about 4\u00a0€/(m²·a).",
@@ -120,6 +135,7 @@
         {
           "id": "passive-house",
           "label": { "en": "Passive house", "de": "Passivhaus" },
+          "icon": { "emoji": "🌱", "motion": "sway" },
           "category": "profile-e",
           "explanation": {
             "en": "Profile E: at most 15\u00a0kWh/(m²·a) heating and n50\u00a0≤\u00a00.6\u00a01/h with at least 75% heat recovery (Passive House Institute), about 6.5\u00a0kWh/(m²·a) ventilation loss, the lowest cooling demand thanks to planned shading, and about 4\u00a0€/(m²·a) with a compact heat pump.",
@@ -129,6 +145,7 @@
         {
           "id": "plus-energy-house",
           "label": { "en": "Plus-energy house", "de": "Plusenergiehaus" },
+          "icon": { "emoji": "➕", "motion": "pulse" },
           "category": "profile-c",
           "explanation": {
             "en": "Profile C: a passive-house-like envelope with heat pump and a large PV roof that exports more electricity than the building buys, so the net costs are negative (about −2\u00a0€/(m²·a) at 30\u00a0ct purchase and 8\u00a0ct feed-in); larger glazing raises the cooling demand.",
@@ -149,13 +166,16 @@
       "dimensions": [
         {
           "id": "final-energy",
-          "quantity": { "label": { "en": "Final energy demand", "de": "Endenergiebedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false }
+          "icon": { "emoji": "🧾", "motion": "sway" },
+          "quantity": { "label": { "en": "Final energy demand", "de": "Endenergiebedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false, "additive": false }
         }
       ],
       "items": [
         {
           "id": "kfw-40-heat-pump",
           "label": { "en": "KfW Efficiency House 40 with heat pump and heat-recovery ventilation", "de": "KfW-Effizienzhaus 40 mit Wärmepumpe und Wärmerückgewinnungslüftung" },
+          "short": { "en": "KfW 40 house with heat pump", "de": "KfW-40-Haus mit Wärmepumpe" },
+          "icon": { "emoji": "🏡", "motion": "float" },
           "values": { "final-energy": 14 },
           "explanation": {
             "en": "About 14\u00a0kWh/(m²·a): (26 heating + 12.5 hot water)\u00a0÷\u00a0seasonal performance factor 3.5 + 3 for fans and pumps; the heat pump takes more than two thirds of the heat from the environment.",
@@ -165,6 +185,8 @@
         {
           "id": "deep-retrofit-heat-pump",
           "label": { "en": "1960s single-family house, deeply retrofitted with passive-house components and a heat pump", "de": "Einfamilienhaus der 1960er-Jahre, tiefgreifend mit Passivhaus-Komponenten und Wärmepumpe saniert" },
+          "short": { "en": "Deep-retrofitted house with heat pump", "de": "Tief sanierter Altbau mit Wärmepumpe" },
+          "icon": { "emoji": "🛠️", "motion": "sway" },
           "values": { "final-energy": 23 },
           "explanation": {
             "en": "About 23\u00a0kWh/(m²·a): the heating demand falls from 303 to 54\u00a0kWh/(m²·a) (IWU package 2, type EFH_E); (54 + 12.5)\u00a0÷\u00a0seasonal performance factor 3.3 + 3.",
@@ -174,6 +196,8 @@
         {
           "id": "passive-house-direct-electric",
           "label": { "en": "Passive house with direct-electric heating and hot water", "de": "Passivhaus mit Direktstromheizung und elektrischer Warmwasserbereitung" },
+          "short": { "en": "Passive house with electric heating", "de": "Passivhaus mit Direktstromheizung" },
+          "icon": { "emoji": "🌱", "motion": "sway" },
           "values": { "final-energy": 30 },
           "explanation": {
             "en": "About 30\u00a0kWh/(m²·a): 15 heating + 12.5 hot water + 3 ventilation, all bought as electricity one to one, which is acceptable only because the demand is so small.",
@@ -183,6 +207,8 @@
         {
           "id": "kfw-55-gas-solar",
           "label": { "en": "KfW Efficiency House 55 with gas condensing boiler and solar hot water", "de": "KfW-Effizienzhaus 55 mit Gas-Brennwertkessel und Solarthermie" },
+          "short": { "en": "KfW 55 house with gas and solar", "de": "KfW-55-Haus mit Gas und Solarthermie" },
+          "icon": { "emoji": "🌤️", "motion": "float" },
           "values": { "final-energy": 48 },
           "explanation": {
             "en": "About 48\u00a0kWh/(m²·a): 35 heating\u00a0÷\u00a00.9 + the 40% of the 12.5 hot water not covered by the collectors\u00a0÷\u00a00.8 + 3 auxiliary energy.",
@@ -192,6 +218,8 @@
         {
           "id": "enev-2014-gas",
           "label": { "en": "New house to EnEV 2014 with gas condensing boiler", "de": "Neubau nach EnEV 2014 mit Gas-Brennwertkessel" },
+          "short": { "en": "EnEV 2014 house with condensing boiler", "de": "EnEV-2014-Neubau mit Gas-Brennwertkessel" },
+          "icon": { "emoji": "🏠", "motion": "pulse" },
           "values": { "final-energy": 80 },
           "explanation": {
             "en": "About 80\u00a0kWh/(m²·a): 55 heating\u00a0÷\u00a00.9 + 12.5 hot water (the standard value of DIN V 4108-6)\u00a0÷\u00a00.8 + 3 auxiliary energy.",
@@ -201,6 +229,8 @@
         {
           "id": "old-house-heat-pump",
           "label": { "en": "Unrenovated 1960s single-family house with an air-source heat pump", "de": "Unsaniertes Einfamilienhaus der 1960er-Jahre mit Luft-Wärmepumpe" },
+          "short": { "en": "Unrenovated house with heat pump", "de": "Unsanierter Altbau mit Wärmepumpe" },
+          "icon": { "emoji": "🌀", "motion": "spin" },
           "values": { "final-energy": 122 },
           "explanation": {
             "en": "About 122\u00a0kWh/(m²·a): (303 + 12.5)\u00a0÷\u00a0seasonal performance factor 2.7 + 5; even without insulation, a heat pump cuts the purchased energy to less than a third (field tests in existing buildings measured about 3, Fraunhofer ISE).",
@@ -210,6 +240,8 @@
         {
           "id": "wschvo-1995-gas",
           "label": { "en": "Single-family house to WSchVO 1995 with low-temperature gas boiler", "de": "Einfamilienhaus nach WSchVO 1995 mit Niedertemperatur-Gaskessel" },
+          "short": { "en": "WSchVO 1995 house with gas boiler", "de": "WSchVO-1995-Haus mit Gaskessel" },
+          "icon": { "emoji": "📜", "motion": "sway" },
           "values": { "final-energy": 182 },
           "explanation": {
             "en": "About 182\u00a0kWh/(m²·a): 135 heating (IWU type EFH_I)\u00a0÷\u00a00.85 + 12.5 hot water\u00a0÷\u00a00.65 + 4 auxiliary energy.",
@@ -219,7 +251,10 @@
         {
           "id": "gruenderzeit-gas",
           "label": { "en": "Unrenovated Gründerzeit apartment building with gas central heating", "de": "Unsaniertes Gründerzeit-Mehrfamilienhaus mit Gas-Zentralheizung" },
+          "short": { "en": "Gründerzeit building with gas heating", "de": "Gründerzeitbau mit Gas-Zentralheizung" },
+          "icon": { "emoji": "🏛️", "motion": "pulse" },
           "values": { "final-energy": 274 },
+          "familiar": true,
           "explanation": {
             "en": "About 274\u00a0kWh/(m²·a): 197 heating (IWU type MFH_B)\u00a0÷\u00a00.8 + 12.5 hot water\u00a0÷\u00a00.5 (storage and circulation losses) + 3 auxiliary energy.",
             "de": "Rund 274\u00a0kWh/(m²·a): 197 Heizwärme (IWU-Typ MFH_B)\u00a0÷\u00a00,8 + 12,5 Warmwasser\u00a0÷\u00a00,5 (Speicher- und Zirkulationsverluste) + 3 Hilfsenergie."
@@ -228,7 +263,10 @@
         {
           "id": "old-house-gas",
           "label": { "en": "Unrenovated 1960s single-family house with old gas boiler", "de": "Unsaniertes Einfamilienhaus der 1960er-Jahre mit altem Gaskessel" },
+          "short": { "en": "Unrenovated house with old gas boiler", "de": "Unsanierter Altbau mit altem Gaskessel" },
+          "icon": { "emoji": "🏚️", "motion": "sway" },
           "values": { "final-energy": 409 },
+          "familiar": true,
           "explanation": {
             "en": "About 409\u00a0kWh/(m²·a): 303 heating (IWU type EFH_E)\u00a0÷\u00a00.8 + 12.5 hot water\u00a0÷\u00a00.5 + 5 auxiliary energy, far beyond the 250\u00a0kWh/(m²·a) that marks efficiency class H in the energy certificate (German Buildings Energy Act, GEG, Annex 10).",
             "de": "Rund 409\u00a0kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E)\u00a0÷\u00a00,8 + 12,5 Warmwasser\u00a0÷\u00a00,5 + 5 Hilfsenergie, weit jenseits der 250\u00a0kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GEG Anlage 10)."

@@ -887,6 +887,56 @@ export function semioServeCloseVitePlugin() {
 }
 //#endregion 🔖️ServeClose
 
+//#region 🔖️ServeUpgrade
+/** @emoji 🧦️ The part of the socket of an HTTP upgrade that ending it softly needs. */
+export type ServeUpgradeSocket = {
+  destroySoon?: () => void;
+  readonly writable: boolean;
+  readonly writableFinished: boolean;
+  end(): unknown;
+  destroy(): unknown;
+  once(event: "finish", listener: () => void): unknown;
+};
+
+/** @emoji 🧦️ The part of a dev serve's HTTP server that sees every upgrade first. */
+export type ServeUpgradeHttpServer = {
+  prependListener(event: "upgrade", listener: (request: unknown, socket: ServeUpgradeSocket) => void): unknown;
+};
+
+/** @emoji 🔎️ Whether a serve's HTTP server lets a listener see an upgrade before every other one. */
+export function isServeUpgradeHttpServer(value: object | null): value is ServeUpgradeHttpServer {
+  return value !== null && typeof (value as Partial<ServeUpgradeHttpServer>).prependListener === "function";
+}
+
+/** @emoji 🕊️ Ends `socket` once what was written to it is flushed, as Node's `Socket#destroySoon` does: end it while it is
+ * writable, then destroy it at once when it is finished, else as soon as it finishes.
+ * @see https://github.com/nodejs/node/blob/main/lib/net.js — `Socket.prototype.destroySoon` */
+export function destroySoon(socket: ServeUpgradeSocket): void {
+  if (socket.writable) socket.end();
+  if (socket.writableFinished) socket.destroy();
+  else socket.once("finish", () => socket.destroy());
+}
+
+/** @emoji 🧦️ Lets every socket an upgrade arrives on be ended softly under every runtime. The dev server's proxy of a
+ * WebSocket route ends the browser's socket with `destroySoon` once its upstream answers without upgrading or ends — a
+ * backend that restarts or goes away does exactly that — and Bun 1.3's `node:http` hands upgrades a socket without
+ * `destroySoon`: the `TypeError` killed the whole dev server whenever its backend went away while a socket was proxied.
+ * The listener runs before the proxy's and gives such a socket {@link destroySoon}. */
+export function semioServeUpgradeVitePlugin() {
+  return {
+    name: "semio-serve-upgrade",
+    apply: "serve" as const,
+    configureServer(server: { readonly httpServer: object | null }) {
+      const httpServer = server.httpServer;
+      if (!isServeUpgradeHttpServer(httpServer)) return;
+      httpServer.prependListener("upgrade", (_request, socket) => {
+        if (typeof socket.destroySoon !== "function") socket.destroySoon = () => destroySoon(socket);
+      });
+    },
+  };
+}
+//#endregion 🔖️ServeUpgrade
+
 /** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
 export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
 
@@ -1457,7 +1507,7 @@ const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules"
  * it several times over. The workspace set cannot change under a running dev server — its vite config is
  * evaluated once at boot — so one walk per process is the whole truth. The declared `workspaces` array in
  * the root `package.json` is NOT a substitute: it is missing `@semio-tech/framework-graph-layout-run-rs`,
- * `@semio-tech/framework-tool-run-rs` and `@semio-tech/print-viz-kernel`, which must stay out of
+ * `@semio-tech/framework-tool-run-rs` and `@semio-tech/print-viz-inference`, which must stay out of
  * `optimizeDeps`. */
 const workspacePackagesByRoot = new Map<string, string[]>();
 

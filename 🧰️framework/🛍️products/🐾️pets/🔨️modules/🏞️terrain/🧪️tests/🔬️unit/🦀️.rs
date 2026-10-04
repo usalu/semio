@@ -1,8 +1,9 @@
-//! 🏞️ Unit tests of the terrain: perches, strides, falls, landings and hops in the cases of the TypeScript suite, the extremes of JavaScript, and the committed vectors of the terrain-walking and hop-ballistics cases.
+//! 🏞️ Unit tests of the terrain: perches, pitches, strides, falls, landings, hops and lines of sight in the cases of the TypeScript suite, the extremes of JavaScript, the separating axes and a sampled segment, and the committed vectors of the terrain-walking, hop-ballistics and wall-climbing cases.
 //!
 //! @see ../../🦀️.rs — the implementation under test
 //! @see ../../../../🧫️fixtures/🏞️terrain-walking/🔣️.json
 //! @see ../../../../🧫️fixtures/🦘️hop-ballistics/🔣️.json
+//! @see ../../../../🧫️fixtures/🧗️wall-climbing/🔣️.json — pitches, stretches, nearests and sights
 
 use super::*;
 use crate::schema::tests::{entries, fixture, number, typed};
@@ -27,8 +28,35 @@ fn point(x: f64, y: f64) -> Point {
     Point { x, y }
 }
 
-fn index_of(perches: &[Perch], found: Option<&Perch>) -> Option<usize> {
-    found.map(|found| perches.iter().position(|candidate| std::ptr::eq(candidate, found)).unwrap_or_else(|| panic!("{found:?} is not an element of the list")))
+fn index_of<T: std::fmt::Debug>(list: &[T], found: Option<&T>) -> Option<usize> {
+    found.map(|found| list.iter().position(|candidate| std::ptr::eq(candidate, found)).unwrap_or_else(|| panic!("{found:?} is not an element of the list")))
+}
+
+fn wall(id: &str, surface: &str, side: Facing, x: f64, y0: f64, y1: f64) -> Wall {
+    Wall { id: id.to_string(), surface: surface.to_string(), side, x, y0, y1 }
+}
+
+fn pitch(id: &str, surface: &str, side: Facing, x: f64, y0: f64, y1: f64) -> Pitch {
+    Pitch { wall: id.to_string(), surface: surface.to_string(), side, x, y0, y1 }
+}
+
+fn crossed(from: Point, to: Point, rect: &Rect, margin: f64) -> bool {
+    let (left, right, top, bottom) = (rect.x - margin, rect.x + rect.width + margin, rect.y - margin, rect.y + rect.height + margin);
+    let solid = rect.width > 0.0 && rect.height > 0.0 && left < right && top < bottom;
+    let overlapping = from.x.min(to.x) < right && from.x.max(to.x) > left && from.y.min(to.y) < bottom && from.y.max(to.y) > top;
+    if !solid || !overlapping {
+        return false;
+    }
+    let sides = [(left, top), (right, top), (right, bottom), (left, bottom)].map(|(x, y)| (to.x - from.x) * (y - from.y) - (to.y - from.y) * (x - from.x));
+    (from.x == to.x && from.y == to.y) || (sides.iter().any(|&side| side < 0.0) && sides.iter().any(|&side| side > 0.0))
+}
+
+fn threaded(from: Point, to: Point, rect: &Rect, margin: f64, count: u32) -> bool {
+    (0..=count).any(|index| {
+        let x = from.x + ((to.x - from.x) * f64::from(index)) / f64::from(count);
+        let y = from.y + ((to.y - from.y) * f64::from(index)) / f64::from(count);
+        rect.width > 0.0 && rect.height > 0.0 && x - (rect.x - margin) > 1e-6 && rect.x + rect.width + margin - x > 1e-6 && y - (rect.y - margin) > 1e-6 && rect.y + rect.height + margin - y > 1e-6
+    })
 }
 
 fn group<'a>(vectors: &'a Value, name: &str) -> &'a [Value] {
@@ -464,6 +492,244 @@ fn hop_landing_ends_on_whatever_is_crossed_first_on_the_way_down_and_passes_a_pe
     assert_eq!(ended(&[launch.clone(), perch("roof", 0.0, 300.0, 290.0), perch("higher", 150.0, 300.0, 240.0)], from, point(180.0, 240.0)), Some("higher"));
     assert_eq!(ended(&[launch], from, point(180.0, 300.0)), None);
     assert_eq!(ended(&[], from, from), None);
+}
+
+#[test]
+fn walls_keep_free_walls_whole_in_wall_order_on_either_side() {
+    let walls = [wall("b-right", "b", Facing::Right, 500.0, 200.0, 400.0), wall("a-left", "a", Facing::Left, 100.0, 120.0, 300.0), wall("a-right", "a", Facing::Right, 220.0, 120.0, 300.0)];
+    assert_eq!(walls_of(&walls, &[], 640.0, 480.0, 48.0, 72.0), [pitch("b-right", "b", Facing::Right, 500.0, 200.0, 400.0), pitch("a-left", "a", Facing::Left, 100.0, 120.0, 300.0), pitch("a-right", "a", Facing::Right, 220.0, 120.0, 300.0)]);
+}
+
+#[test]
+fn walls_drop_a_wall_whose_band_leaves_the_viewport_and_clip_the_others_to_its_height() {
+    let walls = [
+        wall("near-left", "a", Facing::Left, 47.5, 100.0, 300.0),
+        wall("on-left", "a", Facing::Left, 48.0, 100.0, 300.0),
+        wall("near-right", "b", Facing::Right, 592.5, 100.0, 300.0),
+        wall("on-right", "b", Facing::Right, 592.0, 100.0, 300.0),
+        wall("beyond", "c", Facing::Left, 640.5, 100.0, 300.0),
+        wall("edge", "c", Facing::Left, 640.0, 100.0, 300.0),
+        wall("before", "d", Facing::Right, -0.5, 100.0, 300.0),
+        wall("origin", "d", Facing::Right, 0.0, 100.0, 300.0),
+        wall("tall", "e", Facing::Left, 300.0, -80.0, 560.0),
+        wall("above", "f", Facing::Right, 300.0, -200.0, 0.0),
+        wall("below", "f", Facing::Right, 300.0, 480.0, 600.0),
+    ];
+    let expected = [
+        pitch("on-left", "a", Facing::Left, 48.0, 100.0, 300.0),
+        pitch("on-right", "b", Facing::Right, 592.0, 100.0, 300.0),
+        pitch("edge", "c", Facing::Left, 640.0, 100.0, 300.0),
+        pitch("origin", "d", Facing::Right, 0.0, 100.0, 300.0),
+        pitch("tall", "e", Facing::Left, 300.0, 0.0, 480.0),
+    ];
+    assert_eq!(walls_of(&walls, &[], 640.0, 480.0, 48.0, 72.0), expected);
+}
+
+#[test]
+fn walls_lose_a_keep_out_only_when_it_reaches_into_the_band_from_the_lip_to_the_clearance_on_the_air_side() {
+    let left = [wall("left", "card", Facing::Left, 300.0, 100.0, 400.0)];
+    let right = [wall("right", "card", Facing::Right, 300.0, 100.0, 400.0)];
+    let cut = vec![100.0, 200.0, 250.0, 400.0];
+    let whole = vec![100.0, 400.0];
+    let found = |walls: &[Wall], blocker: Rect, clearance: f64| -> Vec<f64> { walls_of(walls, &[blocker], 640.0, 480.0, clearance, 0.0).iter().flat_map(|free| [free.y0, free.y1]).collect() };
+    assert_eq!(WALL_LIP, 6.0);
+    assert_eq!(found(&left, keepout(260.0, 200.0, 20.0, 50.0), 48.0), cut);
+    assert_eq!(found(&left, keepout(296.0, 100.0, 208.0, 300.0), 48.0), whole);
+    assert_eq!(found(&left, keepout(294.0, 200.0, 100.0, 50.0), 48.0), whole);
+    assert_eq!(found(&left, keepout(293.5, 200.0, 100.0, 50.0), 48.0), cut);
+    assert_eq!(found(&left, keepout(200.0, 200.0, 52.0, 50.0), 48.0), whole);
+    assert_eq!(found(&left, keepout(200.0, 200.0, 52.5, 50.0), 48.0), cut);
+    assert_eq!(found(&left, keepout(310.0, 200.0, 30.0, 50.0), 48.0), whole);
+    assert_eq!(found(&left, keepout(260.0, 200.0, 20.0, 50.0), 6.0), whole);
+    assert_eq!(found(&left, keepout(260.0, 200.0, 20.0, 50.0), 0.0), whole);
+    assert_eq!(found(&right, keepout(320.0, 200.0, 20.0, 50.0), 48.0), cut);
+    assert_eq!(found(&right, keepout(96.0, 100.0, 208.0, 300.0), 48.0), whole);
+    assert_eq!(found(&right, keepout(200.0, 200.0, 106.0, 50.0), 48.0), whole);
+    assert_eq!(found(&right, keepout(200.0, 200.0, 106.5, 50.0), 48.0), cut);
+    assert_eq!(found(&right, keepout(348.0, 200.0, 40.0, 50.0), 48.0), whole);
+    assert_eq!(found(&right, keepout(347.5, 200.0, 40.0, 50.0), 48.0), cut);
+    assert_eq!(found(&right, keepout(260.0, 200.0, 20.0, 50.0), 48.0), whole);
+}
+
+#[test]
+fn walls_lose_nothing_to_keep_outs_that_only_touch_an_end_or_have_no_area() {
+    let left = [wall("left", "card", Facing::Left, 300.0, 100.0, 400.0)];
+    let whole = [pitch("left", "card", Facing::Left, 300.0, 100.0, 400.0)];
+    assert_eq!(walls_of(&left, &[keepout(260.0, 50.0, 20.0, 50.0), keepout(260.0, 400.0, 20.0, 50.0)], 640.0, 480.0, 48.0, 0.0), whole);
+    assert_eq!(walls_of(&left, &[keepout(260.0, 200.0, 0.0, 50.0), keepout(260.0, 200.0, 20.0, 0.0), keepout(280.0, 200.0, -20.0, 50.0), keepout(260.0, 250.0, 20.0, -50.0)], 640.0, 480.0, 48.0, 0.0), whole);
+    assert_eq!(walls_of(&left, &[keepout(260.0, 50.0, 20.0, 50.5), keepout(260.0, 399.5, 20.0, 50.0)], 640.0, 480.0, 48.0, 0.0), [pitch("left", "card", Facing::Left, 300.0, 100.5, 399.5)]);
+}
+
+#[test]
+fn walls_merge_nested_overlapping_and_abutting_keep_outs_in_any_order() {
+    let tall = [wall("left", "card", Facing::Left, 300.0, 0.0, 600.0)];
+    let keepouts = [keepout(260.0, 100.0, 30.0, 200.0), keepout(270.0, 150.0, 10.0, 50.0), keepout(250.0, 250.0, 60.0, 100.0), keepout(290.0, 350.0, 5.0, 50.0), keepout(280.0, 500.0, 40.0, 40.0)];
+    let expected = [pitch("left", "card", Facing::Left, 300.0, 0.0, 100.0), pitch("left", "card", Facing::Left, 300.0, 400.0, 500.0), pitch("left", "card", Facing::Left, 300.0, 540.0, 600.0)];
+    assert_eq!(walls_of(&tall, &keepouts, 640.0, 640.0, 48.0, 0.0), expected);
+    let mut reversed = keepouts;
+    reversed.reverse();
+    assert_eq!(walls_of(&tall, &reversed, 640.0, 640.0, 48.0, 0.0), expected);
+    assert_eq!(walls_of(&tall, &[keepouts[2], keepouts[4], keepouts[0], keepouts[3], keepouts[1]], 640.0, 640.0, 48.0, 0.0), expected);
+}
+
+#[test]
+fn walls_keep_stretches_of_exactly_the_minimum_drop_shorter_ones_and_never_have_zero_length() {
+    let short = [wall("left", "card", Facing::Left, 300.0, 0.0, 300.0)];
+    let keepouts = [keepout(260.0, 72.0, 10.0, 28.0), keepout(260.0, 171.5, 10.0, 28.5), keepout(260.0, 200.0, 10.0, 100.0)];
+    assert_eq!(walls_of(&short, &keepouts, 640.0, 480.0, 48.0, 72.0), [pitch("left", "card", Facing::Left, 300.0, 0.0, 72.0)]);
+    assert_eq!(walls_of(&short, &keepouts, 640.0, 480.0, 48.0, 71.5), [pitch("left", "card", Facing::Left, 300.0, 0.0, 72.0), pitch("left", "card", Facing::Left, 300.0, 100.0, 171.5)]);
+    assert!(walls_of(&short, &[keepout(260.0, 0.0, 10.0, 150.0), keepout(260.0, 150.0, 10.0, 150.0)], 640.0, 480.0, 48.0, 0.0).is_empty());
+    let degenerate = [wall("point", "card", Facing::Left, 300.0, 200.0, 200.0), wall("backwards", "card", Facing::Right, 300.0, 300.0, 200.0), wall("floor", "card", Facing::Right, 300.0, 480.0, 480.0)];
+    assert!(walls_of(&degenerate, &[], 640.0, 480.0, 48.0, 0.0).is_empty());
+    assert_eq!(walls_of(&short, &[], 640.0, 480.0, 48.0, 300.0), [pitch("left", "card", Facing::Left, 300.0, 0.0, 300.0)]);
+    assert!(walls_of(&short, &[], 640.0, 480.0, 48.0, 300.5).is_empty());
+}
+
+#[test]
+fn wall_at_finds_the_pitch_of_a_wall_that_carries_y_ends_included_the_first_where_two_touch_and_none_elsewhere() {
+    let pitches =
+        [pitch("left", "card", Facing::Left, 300.0, 100.0, 200.0), pitch("left", "card", Facing::Left, 300.0, 200.0, 280.0), pitch("right", "card", Facing::Right, 500.0, 100.0, 400.0), pitch("left", "card", Facing::Left, 300.0, 340.5, 400.0)];
+    let at = |wall: &str, y: f64| index_of(&pitches, wall_at(&pitches, wall, y));
+    assert_eq!([at("left", 100.0), at("left", 200.0), at("left", 200.5), at("left", 400.0), at("right", 300.0)], [Some(0), Some(0), Some(1), Some(3), Some(2)]);
+    assert_eq!([at("left", 300.0), at("left", 99.5), at("left", 400.5), at("none", 150.0)], [None; 4]);
+    assert_eq!(wall_at(&[], "left", 150.0), None);
+}
+
+#[test]
+fn nearest_wall_measures_to_the_nearest_point_of_each_pitch_prefers_the_first_among_equals_and_answers_the_wall_beside_a_perch() {
+    let pitches = [pitch("a", "a", Facing::Left, 100.0, 200.0, 300.0), pitch("b", "b", Facing::Right, 300.0, 120.0, 200.0), pitch("c", "c", Facing::Left, 500.0, 0.0, 480.0), pitch("d", "d", Facing::Right, 300.0, 280.0, 400.0)];
+    let near = |x: f64, y: f64| index_of(&pitches, nearest_wall(&pitches, x, y));
+    assert_eq!([near(110.0, 250.0), near(100.0, 150.0), near(290.0, 130.0), near(420.0, 300.0), near(301.0, 250.0), near(-400.0, -400.0)], [Some(0), Some(0), Some(1), Some(2), Some(3), Some(0)]);
+    assert_eq!([near(300.0, 240.0), near(200.0, 200.0)], [Some(1), Some(0)]);
+    let swapped = [pitches[3].clone(), pitches[1].clone()];
+    assert_eq!(index_of(&swapped, nearest_wall(&swapped, 300.0, 240.0)), Some(0));
+    assert_eq!(nearest_wall(&[], 10.0, 10.0), None);
+    let shelf = perch("shelf", 104.0, 296.0, 320.0);
+    assert_eq!([near(shelf.x1, shelf.y), near(shelf.x0, shelf.y)], [Some(3), Some(0)]);
+}
+
+#[test]
+fn segment_hits_a_box_it_passes_through_ends_in_begins_in_or_lies_in_and_misses_one_beside_short_or_beyond() {
+    let card = keepout(100.0, 100.0, 100.0, 50.0);
+    let hit = |x0: f64, y0: f64, x1: f64, y1: f64| segment_hits(point(x0, y0), point(x1, y1), &card, 0.0);
+    for (x0, y0, x1, y1) in [(50.0, 125.0, 250.0, 125.0), (50.0, 50.0, 250.0, 200.0), (50.0, 125.0, 150.0, 125.0), (150.0, 125.0, 150.0, 300.0), (120.0, 110.0, 180.0, 140.0), (150.0, 50.0, 150.0, 200.0)] {
+        assert!(hit(x0, y0, x1, y1), "({x0}, {y0}) → ({x1}, {y1})");
+    }
+    for (x0, y0, x1, y1) in [(50.0, 50.0, 250.0, 60.0), (50.0, 125.0, 99.0, 125.0), (201.0, 125.0, 300.0, 125.0), (50.0, 300.0, 99.5, 125.0), (0.0, 149.0, 99.0, 0.0)] {
+        assert!(!hit(x0, y0, x1, y1), "({x0}, {y0}) → ({x1}, {y1})");
+    }
+}
+
+#[test]
+fn segment_touching_an_edge_or_grazing_a_corner_is_no_hit_a_hair_inside_is_and_a_point_hits_only_inside() {
+    let card = keepout(100.0, 100.0, 100.0, 50.0);
+    let hit = |x0: f64, y0: f64, x1: f64, y1: f64| segment_hits(point(x0, y0), point(x1, y1), &card, 0.0);
+    for (x0, y0, x1, y1) in [
+        (50.0, 100.0, 250.0, 100.0),
+        (100.0, 50.0, 100.0, 200.0),
+        (200.0, 50.0, 200.0, 200.0),
+        (50.0, 150.0, 250.0, 150.0),
+        (50.0, 125.0, 100.0, 125.0),
+        (200.0, 125.0, 260.0, 125.0),
+        (50.0, 150.0, 150.0, 50.0),
+        (150.0, 50.0, 250.0, 150.0),
+        (50.0, 100.0, 150.0, 200.0),
+        (150.0, 200.0, 250.0, 100.0),
+    ] {
+        assert!(!hit(x0, y0, x1, y1), "({x0}, {y0}) → ({x1}, {y1})");
+    }
+    for (x0, y0, x1, y1) in [(50.0, 100.5, 250.0, 100.5), (50.0, 150.5, 150.5, 50.0), (50.0, 125.0, 100.5, 125.0)] {
+        assert!(hit(x0, y0, x1, y1), "({x0}, {y0}) → ({x1}, {y1})");
+    }
+    assert!(hit(150.0, 125.0, 150.0, 125.0));
+    assert!(!hit(100.0, 125.0, 100.0, 125.0) && !hit(200.0, 150.0, 200.0, 150.0) && !hit(50.0, 50.0, 50.0, 50.0));
+}
+
+#[test]
+fn segment_grows_the_box_by_the_margin_shrinks_it_by_a_negative_one_and_never_hits_a_box_without_area() {
+    let card = keepout(100.0, 100.0, 100.0, 50.0);
+    let hit = |x0: f64, y0: f64, x1: f64, y1: f64, margin: f64| segment_hits(point(x0, y0), point(x1, y1), &card, margin);
+    assert!(!hit(50.0, 98.0, 250.0, 98.0, 0.0) && !hit(50.0, 98.0, 250.0, 98.0, 2.0) && hit(50.0, 98.0, 250.0, 98.0, 2.5));
+    assert!(!hit(97.0, 0.0, 97.0, 300.0, 3.0) && hit(97.0, 0.0, 97.0, 300.0, 3.5));
+    assert!(hit(50.0, 125.0, 250.0, 125.0, -24.0) && !hit(50.0, 125.0, 250.0, 125.0, -25.0) && !hit(50.0, 125.0, 250.0, 125.0, -40.0));
+    for flat in [keepout(100.0, 100.0, 0.0, 50.0), keepout(100.0, 100.0, 100.0, 0.0), keepout(100.0, 100.0, -20.0, 50.0), keepout(100.0, 100.0, 100.0, -5.0)] {
+        assert!(!segment_hits(point(50.0, 100.0), point(250.0, 150.0), &flat, 10.0), "{flat:?}");
+    }
+}
+
+#[test]
+fn segment_does_not_depend_on_its_direction_and_agrees_with_the_separating_axes_and_with_a_sampled_segment() {
+    let mut next = stream(31);
+    let (mut hits, mut misses) = (0, 0);
+    let sights = 400;
+    for sight in 0..sights {
+        let from = point(next(1200) / 4.0 - 20.0, next(1200) / 4.0 - 20.0);
+        let to = if next(12) == 0.0 {
+            point(from.x, next(1200) / 4.0 - 20.0)
+        } else if next(11) == 0.0 {
+            point(next(1200) / 4.0 - 20.0, from.y)
+        } else {
+            point(next(1200) / 4.0 - 20.0, next(1200) / 4.0 - 20.0)
+        };
+        let (x, y) = (next(800) / 4.0, next(800) / 4.0);
+        let width = if next(9) == 0.0 { 0.0 } else { next(480) / 4.0 };
+        let height = if next(9) == 0.0 { 0.0 } else { next(480) / 4.0 };
+        let rect = keepout(x, y, width, height);
+        let margin = [0.0, 0.0, 2.0, 6.0, -3.0][next(5) as usize];
+        let found = segment_hits(from, to, &rect, margin);
+        assert_eq!(found, crossed(from, to, &rect, margin), "sight {sight}");
+        assert_eq!(segment_hits(to, from, &rect, margin), found, "sight {sight} backwards");
+        if threaded(from, to, &rect, margin, 512) {
+            assert!(found, "sight {sight} sampled");
+        }
+        if found {
+            hits += 1;
+        } else {
+            misses += 1;
+        }
+    }
+    assert!(hits > sights / 8 && misses > sights / 8, "{hits} hits, {misses} misses");
+}
+
+#[test]
+fn segment_clear_is_clear_when_no_box_is_hit_blocked_by_any_one_and_grows_every_box_by_the_margin() {
+    let boxes = [keepout(100.0, 100.0, 100.0, 50.0), keepout(300.0, 40.0, 40.0, 200.0), keepout(260.0, 300.0, 0.0, 80.0)];
+    assert!(segment_clear(point(0.0, 20.0), point(400.0, 20.0), &boxes, 0.0) && segment_clear(point(0.0, 20.0), point(400.0, 20.0), &[], 0.0));
+    assert!(!segment_clear(point(0.0, 125.0), point(250.0, 125.0), &boxes, 0.0) && !segment_clear(point(250.0, 125.0), point(400.0, 125.0), &boxes, 0.0));
+    assert!(segment_clear(point(250.0, 340.0), point(270.0, 340.0), &boxes, 0.0) && segment_clear(point(210.0, 0.0), point(290.0, 400.0), &boxes, 0.0));
+    assert!(segment_clear(point(250.0, 0.0), point(250.0, 400.0), &boxes, 0.0) && segment_clear(point(250.0, 0.0), point(250.0, 400.0), &boxes, 50.0));
+    assert!(!segment_clear(point(250.0, 0.0), point(250.0, 400.0), &boxes, 50.5) && segment_clear(point(250.0, 300.0), point(250.0, 400.0), &boxes, 49.0));
+}
+
+#[test]
+fn committed_wall_climbing_pitches_stretches_nearests_and_sights_are_reproduced() {
+    let vectors = fixture("wall-climbing");
+    assert_eq!(WALL_LIP, number(&vectors["constants"]["wallLip"]));
+    for layout in group(&vectors, "layouts") {
+        let found = walls_of(&typed::<Vec<Wall>>(&layout["walls"]), &typed::<Vec<Rect>>(&layout["keepouts"]), number(&layout["width"]), number(&layout["height"]), number(&layout["clearance"]), number(&layout["minimum"]));
+        assert_eq!(found, typed::<Vec<Pitch>>(&layout["expected"]), "layout {}", layout["id"]);
+    }
+    for stand in group(&vectors, "stretches") {
+        let pitches: Vec<Pitch> = typed(&stand["pitches"]);
+        let found: Vec<Option<usize>> = group(stand, "queries").iter().map(|query| index_of(&pitches, wall_at(&pitches, query["wall"].as_str().unwrap_or_default(), number(&query["y"])))).collect();
+        assert_eq!(found, typed::<Vec<Option<usize>>>(&stand["expected"]), "stretch {}", stand["id"]);
+    }
+    for near in group(&vectors, "nearests") {
+        let pitches: Vec<Pitch> = typed(&near["pitches"]);
+        let found: Vec<Option<usize>> = group(near, "points").iter().map(|feet| index_of(&pitches, nearest_wall(&pitches, number(&feet["x"]), number(&feet["y"])))).collect();
+        assert_eq!(found, typed::<Vec<Option<usize>>>(&near["expected"]), "nearest {}", near["id"]);
+    }
+    for sight in group(&vectors, "sights") {
+        let (rects, margin): (Vec<Rect>, f64) = (typed(&sight["rects"]), number(&sight["margin"]));
+        let (segments, expected) = (group(sight, "segments"), group(sight, "expected"));
+        assert_eq!(segments.len(), expected.len(), "sight {}", sight["id"]);
+        for (index, (segment, expected)) in segments.iter().zip(expected).enumerate() {
+            let (from, to): (Point, Point) = (typed(&segment["from"]), typed(&segment["to"]));
+            let hits: Vec<bool> = rects.iter().map(|rect| segment_hits(from, to, rect, margin)).collect();
+            assert_eq!(hits, typed::<Vec<bool>>(&expected["hits"]), "sight {} segment {index}", sight["id"]);
+            assert_eq!(segment_clear(from, to, &rects, margin), expected["clear"] == true, "sight {} segment {index}", sight["id"]);
+        }
+    }
 }
 
 #[test]

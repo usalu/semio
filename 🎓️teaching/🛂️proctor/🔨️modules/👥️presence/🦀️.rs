@@ -20,7 +20,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use quiz::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope, CursorState, Place, PresenceState, Quiz, Screen, Task, ThinkingAnswer, ThinkingState, ValidationIssue};
+use quiz::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope, CursorState, Place, PresenceState, Quiz, Scale, Screen, Task, ThinkingAnswer, ThinkingState, ValidationIssue};
 use serde::Deserialize;
 use server::contract::OpaqueJson;
 
@@ -38,8 +38,9 @@ pub const TASK_UNKNOWN: &str = "task-unknown";
 pub const KIND_MISMATCH: &str = "kind-mismatch";
 /// 🚫️ The code of a drag or draft naming an item, category or dimension its task does not have.
 pub const ID_UNKNOWN: &str = "id-unknown";
-/// 🚫️ The code of a matching draft assigning a value no card of its dimension shows.
-pub const VALUE_UNKNOWN: &str = "value-unknown";
+/// 🚫️ The code of a guess or matching value no answer can carry: one that is not positive on a
+/// logarithmic scale.
+pub const VALUE_INVALID: &str = "value-invalid";
 
 /// 🏠️ What one room carries.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -50,13 +51,13 @@ pub enum Room {
     Thinking(String),
 }
 
-/// 🧩️ The ids one task renders, by the kind of answer it takes; for matching, per dimension the
-/// values its cards show.
+/// 🧩️ The ids one task renders, by the kind of answer it takes, and the scale its numbers are
+/// guessed on: the sorting's quantity, per matching dimension its own.
 #[derive(Clone, Debug, PartialEq)]
 enum Shape {
     Classification { items: HashSet<String>, categories: HashSet<String> },
-    Sorting { items: HashSet<String> },
-    Matching { items: HashSet<String>, dimensions: HashMap<String, Vec<f64>> },
+    Sorting { items: HashSet<String>, scale: Scale },
+    Matching { items: HashSet<String>, dimensions: HashMap<String, Scale> },
 }
 
 /// 🗺️ Every presence room of one catalog, and the ids each quiz renders.
@@ -150,19 +151,26 @@ impl Rooms {
                         return unknown(format!("{at}/assignments/{item}"));
                     }
                 }
-                (Shape::Sorting { items }, ThinkingAnswer::Sorting(answer)) => {
+                (Shape::Sorting { items, scale }, ThinkingAnswer::Sorting(answer)) => {
                     if let Some(index) = answer.order.iter().position(|item| !items.contains(item)) {
                         return unknown(format!("{at}/order/{index}"));
+                    }
+                    let guesses = answer.guesses.iter().flatten();
+                    if let Some((item, _)) = guesses.clone().find(|(item, _)| !items.contains(*item)) {
+                        return unknown(format!("{at}/guesses/{item}"));
+                    }
+                    if let Some((item, _)) = guesses.clone().find(|(_, guess)| !carried(*scale, **guess)) {
+                        return Err(format!("{VALUE_INVALID} {at}/guesses/{item}"));
                     }
                 }
                 (Shape::Matching { items, dimensions }, ThinkingAnswer::Matching(answer)) => {
                     for (dimension, assigned) in &answer.values {
-                        let Some(values) = dimensions.get(dimension) else { return unknown(format!("{at}/values/{dimension}")) };
+                        let Some(scale) = dimensions.get(dimension) else { return unknown(format!("{at}/values/{dimension}")) };
                         if let Some(item) = assigned.keys().find(|item| !items.contains(*item)) {
                             return unknown(format!("{at}/values/{dimension}/{item}"));
                         }
-                        if let Some((item, _)) = assigned.iter().find(|(_, value)| !values.contains(value)) {
-                            return Err(format!("{VALUE_UNKNOWN} {at}/values/{dimension}/{item}"));
+                        if let Some((item, _)) = assigned.iter().find(|(_, value)| !carried(*scale, **value)) {
+                            return Err(format!("{VALUE_INVALID} {at}/values/{dimension}/{item}"));
                         }
                     }
                 }
@@ -177,19 +185,22 @@ impl Shape {
     fn of(task: &Task) -> Self {
         match task {
             Task::Classification(task) => Self::Classification { items: ids(task.items.iter().map(|item| &item.id)), categories: ids(task.categories.iter().map(|category| &category.id)) },
-            Task::Sorting(task) => Self::Sorting { items: ids(task.items.iter().map(|item| &item.id)) },
-            Task::Matching(task) => Self::Matching {
-                items: ids(task.items.iter().map(|item| &item.id)),
-                dimensions: task.dimensions.iter().map(|dimension| (dimension.id.clone(), task.items.iter().filter_map(|item| item.values.get(&dimension.id).copied()).collect())).collect(),
-            },
+            Task::Sorting(task) => Self::Sorting { items: ids(task.items.iter().map(|item| &item.id)), scale: task.quantity.scale },
+            Task::Matching(task) => Self::Matching { items: ids(task.items.iter().map(|item| &item.id)), dimensions: task.dimensions.iter().map(|dimension| (dimension.id.clone(), dimension.quantity.scale)).collect() },
         }
     }
 
     fn items(&self) -> &HashSet<String> {
         match self {
-            Self::Classification { items, .. } | Self::Sorting { items } | Self::Matching { items, .. } => items,
+            Self::Classification { items, .. } | Self::Sorting { items, .. } | Self::Matching { items, .. } => items,
         }
     }
+}
+
+/// 🔢️ Whether an answer can carry `value` on `scale`: a card value or a guess, finite by the core's
+/// rules, and positive where the scale is logarithmic.
+fn carried(scale: Scale, value: f64) -> bool {
+    scale == Scale::Linear || value > 0.0
 }
 
 fn ids<'a>(ids: impl Iterator<Item = &'a String>) -> HashSet<String> {

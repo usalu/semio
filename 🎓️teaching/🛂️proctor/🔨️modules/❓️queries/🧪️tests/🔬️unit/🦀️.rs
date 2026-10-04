@@ -3,7 +3,7 @@ use crate::actors::tests::{id, ADA, BOB, TENANT};
 use crate::catalog::tests::fixture;
 use crate::projections::LEADERBOARD;
 use crate::storage::{Database, SqliteProjectionStore};
-use quiz::{Identity, Leaderboard, LeaderboardPeriod, Transcript, TranscriptRun, LEADERBOARD_PERIODS};
+use quiz::{Identity, Leaderboard, LeaderboardPeriod, Transcript, TranscriptRun, CHALLENGES, LEADERBOARD_PERIODS};
 use server::contract::{Principal, QueryConsistency, QueryId, Scope};
 
 const DAY: Timestamp = 86_400_000;
@@ -37,13 +37,14 @@ fn refusal(result: Result<QueryResult, ServerError>) -> String {
 }
 
 /// 📜️ The transcript of learner `seed`: one run of `power` on one of the nine days up to today, and
-/// for every third learner one of `homes` the day before.
+/// for every third learner one of `homes` the day before, each at a challenge of its own.
 fn record(seed: u8) -> Transcript {
     let learner = id(seed);
     let at = NOW - u64::from(seed % 9) * DAY - u64::from(seed);
-    let mut runs = vec![TranscriptRun { quiz: "power".into(), score: f64::from(seed % 11) / 16.0, at }];
-    if seed % 3 == 0 {
-        runs.insert(0, TranscriptRun { quiz: "homes".into(), score: f64::from(seed % 5) / 4.0, at: at - DAY });
+    let run = |quiz: &str, challenge: usize, score: f64, at: Timestamp| TranscriptRun { quiz: quiz.into(), challenge: CHALLENGES[challenge % 4], score, points: quiz::points(score, CHALLENGES[challenge % 4]), at };
+    let mut runs = vec![run("power", usize::from(seed), f64::from(seed % 11) / 16.0, at)];
+    if seed.is_multiple_of(3) {
+        runs.insert(0, run("homes", usize::from(seed / 3), f64::from(seed % 5) / 4.0, at - DAY));
     }
     Transcript { tag: quiz::learner_tag(&learner), learner, identity: Identity::Anonymous, runs, badges: Vec::new() }
 }
@@ -135,7 +136,7 @@ async fn unknown_ids_scopes_and_mismatched_arguments_are_refused() {
     assert!(matches!(learner.handle(&query("quiz.learner", &board(LeaderboardPeriod::AllTime, None, None), TENANT), &projections).await, Err(ServerError::BadRequest(_))));
     assert!(matches!(learner.handle(&query("quiz.learner", &Query::Learner { learner: ADA.into() }, "elsewhere"), &projections).await, Err(ServerError::NotFound(_))));
     let mut old = query("quiz.learner", &Query::Learner { learner: ADA.into() }, TENANT);
-    old.version = 2;
+    old.version = WIRE_VERSION - 1;
     assert!(matches!(learner.handle(&old, &projections).await, Err(ServerError::BadRequest(_))));
     let mut broken = old.clone();
     broken.version = WIRE_VERSION;

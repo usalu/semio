@@ -66,18 +66,6 @@
         "responsibility": "Loads the chart-kind catalogue, generates the visualization catalogue packages and gallery documents, and checks taxonomy coverage, family registration and option vocabularies."
       },
       {
-        "directory": "📊️viz-kernel",
-        "id": "framework.print.module.viz-kernel",
-        "kind": "module",
-        "module": {
-          "productionConsumers": [
-            "framework.print.module.visualization-gallery",
-            "framework.print.command.viz-catalog-generation"
-          ]
-        },
-        "responsibility": "Implements the visualization kernel in TypeScript — scales, formats, transforms, marks, shapes, coordinate systems, hierarchy, network, flow, geo and spatial layouts, themes — and renders a chart specification into the 2D scene graph and into TikZ source."
-      },
-      {
         "directory": "📥️source-staging",
         "id": "framework.print.module.source-staging",
         "kind": "module",

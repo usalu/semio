@@ -10,8 +10,9 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { planVizChart, renderVizScene, renderVizTikz } from "../../🔨️modules/📊️viz-kernel/🖼️render/🟦️.ts";
-import type { VizChartSpecification } from "../../🔨️modules/📊️viz-kernel/🧬️schema/🟦️.ts";
+import { planVizChart, renderVizScene, renderVizTikz } from "../../🧬️schema/💡️inferences/🖼️render/🟦️.ts";
+import { renderGrammarChecks } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts";
+import type { VizChartSpecification } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -96,6 +97,18 @@ function sceneCounts(): Record<string, number> {
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
+    "customizable-grammar": {
+      subject: async (ctx: AdapterContext) => {
+        const check = (await renderGrammarChecks()).find((entry) => entry.name === `grammar/${ctx.row()}`);
+        if (check === undefined) throw new Error(`unknown render fixture ${ctx.row()}`);
+        return { projection: await check.subject() };
+      },
+      oracle: async (ctx: AdapterContext) => {
+        const check = (await renderGrammarChecks()).find((entry) => entry.name === `grammar/${ctx.row()}`);
+        if (check === undefined) throw new Error(`unknown render fixture ${ctx.row()}`);
+        return { projection: await check.oracle() };
+      },
+    },
     "scene-graph-primitives": {
       /** 📐️ The specified scene: the frame, the primitive census and the two structural invariants. */
       oracle: (ctx: AdapterContext) => ({ projection: specified(ctx) }),

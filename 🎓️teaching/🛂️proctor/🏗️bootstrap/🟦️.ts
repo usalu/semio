@@ -20,7 +20,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { chmodSync, closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { constants } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 import { startNativeProgress } from "../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 
@@ -67,7 +67,7 @@ export interface ProctorStorageFormat {
 /** 🏷️ The storage format the proctor writes and accepts; a database of any other is refused at open, by design without
  * a migration.
  * @see ../🔨️modules/🗄️storage/🦀️.rs — `FORMAT_SCHEMA`, `FORMAT_VERSION` */
-export const PROCTOR_STORAGE_FORMAT: ProctorStorageFormat = { schema: "semio.teaching.proctor.sqlite", version: 2 };
+export const PROCTOR_STORAGE_FORMAT: ProctorStorageFormat = { schema: "semio.teaching.proctor.sqlite", version: 3 };
 
 const FORMAT_ROW = "SELECT schema, version FROM proctor_format WHERE singleton = 1";
 
@@ -242,6 +242,61 @@ export async function buildProctor(repoRoot: string, env: NodeJS.ProcessEnv = pr
   const executable = proctorExecutable(messages);
   if (!executable) throw new Error(`cargo build of ${PROCTOR_PACKAGE} reported no proctor executable`);
   return executable;
+}
+
+/** 📦️ One package as `cargo metadata` describes it. */
+interface CargoPackage {
+  readonly id: string;
+  readonly name: string;
+  readonly source: string | null;
+  readonly manifest_path: string;
+}
+
+/** 🕸️ What `cargo metadata` says of a workspace: its packages and their resolved dependencies, by kind. */
+interface CargoMetadata {
+  readonly packages: readonly CargoPackage[];
+  readonly resolve: { readonly nodes: readonly { readonly id: string; readonly deps: readonly { readonly pkg: string; readonly dep_kinds: readonly { readonly kind: string | null }[] }[] }[] };
+}
+
+/** 🗂️ The directory a package's sources live in: the owner whose `📦️packages/<language>` folder holds the manifest
+ * (the repository's taxonomy keeps sources beside the owner, not beside the manifest), else the manifest's own. */
+function packageRoot(manifest: string): string {
+  const directory = dirname(manifest);
+  return basename(dirname(directory)) === "📦️packages" ? dirname(dirname(directory)) : directory;
+}
+
+/** 🗂️ The directories the `proctor` binary is built from: the root of every package of this repository it depends on
+ * to build (as `cargo metadata` resolves the teaching workspace offline), a directory inside another left out. */
+export async function proctorSourceDirectories(repoRoot: string, env: NodeJS.ProcessEnv = process.env): Promise<string[]> {
+  const child = spawn("cargo", ["metadata", "--format-version", "1", "--offline"], { cwd: join(repoRoot, TEACHING_WORKSPACE), env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  let output = "";
+  let failure = "";
+  child.stdout!.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
+  child.stderr!.setEncoding("utf8").on("data", (chunk: string) => (failure += chunk));
+  const status = await new Promise<number | string>((accept) => {
+    child.once("error", (error) => accept(error.message));
+    child.once("close", (code, ended) => accept(code ?? ended ?? 1));
+  });
+  if (status !== 0) throw new Error(`cargo metadata of ${TEACHING_WORKSPACE} failed (${status}): ${failure.trim().split(/\r?\n/u).at(-1) ?? ""}`);
+  const metadata = JSON.parse(output) as CargoMetadata;
+  const packages = new Map(metadata.packages.map((cargoPackage) => [cargoPackage.id, cargoPackage]));
+  const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
+  const pending = metadata.packages.filter((cargoPackage) => cargoPackage.name === PROCTOR_PACKAGE).map((cargoPackage) => cargoPackage.id);
+  const reached = new Set<string>();
+  for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
+    if (reached.has(id)) continue;
+    reached.add(id);
+    for (const dep of nodes.get(id)?.deps ?? []) if (dep.dep_kinds.some((kind) => kind.kind !== "dev")) pending.push(dep.pkg);
+  }
+  const roots = [...reached].flatMap((id) => (packages.get(id)?.source === null ? [packageRoot(packages.get(id)!.manifest_path)] : [])).sort();
+  return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
+}
+
+/** 🗂️ Whether a changed file — `file` relative to a watched source directory — is one a build of the proctor reads: Rust
+ * sources and manifests, outside build output and installed packages. */
+export function proctorSourceChanged(file: string): boolean {
+  const parts = file.split(/[\\/]/u);
+  return (file.endsWith(".rs") || parts.at(-1) === "Cargo.toml") && !parts.some((part) => part === "target" || part === "node_modules" || part === "dist");
 }
 
 /** 📋️ Copy `executable` into `directory` under a name no other run uses, after removing every copy no process holds

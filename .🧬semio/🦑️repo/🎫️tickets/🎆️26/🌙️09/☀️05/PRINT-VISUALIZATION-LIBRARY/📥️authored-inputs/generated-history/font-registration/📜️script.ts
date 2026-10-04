@@ -1,0 +1,14 @@
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
+import {join} from 'node:path';
+const product=join(process.cwd(),'🧰️framework/🛍️products/📓️print');
+const ticket=process.env.SEMIO_TICKET_DIR!;
+const write=(path:string,text:string)=>{const temporary=join(ticket,'🗑️generated/font-registration.tmp');writeFileSync(temporary,text);renameSync(temporary,path);};
+const projectPath=join(product,'📦️packages/🟦️typescript/📋️project.json'),project=JSON.parse(readFileSync(projectPath,'utf8'));
+project.targets['generate-font-metrics']={executor:'nx:run-commands',options:{cwd:'🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript',command:'bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics'},cache:false};
+write(projectPath,JSON.stringify(project,null,2)+'\n');
+const packagePath=join(product,'📦️packages/🟦️typescript/package.json'),manifest=JSON.parse(readFileSync(packagePath,'utf8'));
+manifest.scripts??={};manifest.scripts['generate-font-metrics']='nx run @semio-tech/print:generate-font-metrics';
+write(packagePath,JSON.stringify(manifest,null,2)+'\n');
+const fixturePath=join(product,'🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🔣️.json'),fixture=JSON.parse(readFileSync(fixturePath,'utf8'));
+fixture.cases.push({language:'en',text:'fl'},{language:'en',text:'ﬁﬂ'},{language:'de',text:'ĿAV'});
+write(fixturePath,JSON.stringify(fixture,null,2)+'\n');

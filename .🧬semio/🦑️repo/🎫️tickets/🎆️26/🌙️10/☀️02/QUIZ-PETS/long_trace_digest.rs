@@ -13,7 +13,7 @@
 //! @see ./long_trace_digest.ts — the TypeScript half, which also composes the sessions
 
 use pets::serde_json::{self, Map, Value};
-use pets::{advance, frame_of, open_stage, Frame, Menagerie, Stage, StageEvent, Ticked, Ticks, ACTIVITIES, PET_MODES, TICKS_PER_SECOND};
+use pets::{advance, frame_of, open_stage, Frame, Menagerie, Stage, StageEvent, Ticked, Ticks, ACTIVITIES, MOODS, PET_MODES, TICKS_PER_SECOND};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -39,7 +39,7 @@ fn fold_frame(hash: u32, menagerie: &Menagerie, frame: &Frame) -> u32 {
         folded = [actor.x, actor.y, actor.facing.sign(), found(ACTIVITIES.iter().position(|activity| *activity == actor.activity)), actor.opacity].into_iter().fold(folded, fold);
         folded = actor.bones.iter().copied().fold(folded, fold);
         folded = actor.eyes.iter().flat_map(|eye| [eye.x, eye.y, eye.lid]).fold(folded, fold);
-        folded = fold(folded, actor.mood);
+        folded = fold(folded, actor.spirits);
     }
     folded
 }
@@ -85,7 +85,7 @@ fn fold_stage(menagerie: &Menagerie, stage: &Stage) -> u32 {
             actor.goal,
         ]);
         numbers.extend([actor.partner.as_deref().map_or(-1.0, kind), actor.clip.as_deref().zip(species).map_or(-1.0, |(id, species)| found(species.clips.iter().position(|clip| clip.id == id)))]);
-        numbers.extend([actor.gaze.x, actor.gaze.y, actor.gaze.vx, actor.gaze.vy, actor.blink as f64, actor.mood, actor.needs.energy, actor.needs.sociability, actor.needs.curiosity, actor.opacity, flag(actor.leaving), f64::from(actor.draws)]);
+        numbers.extend([actor.gaze.x, actor.gaze.y, actor.gaze.vx, actor.gaze.vy, actor.blink as f64, found(MOODS.iter().position(|mood| *mood == actor.feeling.mood)), actor.feeling.intensity, actor.feeling.since as f64, actor.needs.energy, actor.needs.sociability, actor.needs.curiosity, actor.opacity, flag(actor.leaving), f64::from(actor.draws)]);
     }
     numbers.push(stage.rapports.len() as f64);
     numbers.extend(stage.rapports.iter().flat_map(|rapport| [kind(&rapport.between[0]), kind(&rapport.between[1]), rapport.drift]));

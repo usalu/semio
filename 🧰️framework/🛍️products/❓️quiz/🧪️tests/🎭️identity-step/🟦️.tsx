@@ -18,7 +18,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, encodeQueryResult, type CommandEnvelope, type CommandOutcome, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import { handleActorId, normalizeHandle, type HandleView, type IdentifyLearnerCommand, type Query, type Rejection } from "@semio-tech/quiz";
-import { IdentityScreen, ProctorClient, ProctorThrottled, QUIZ_LOCALES, QuizSession, failureProblem, handleFault, handleFaultMessage, localStore, memoryStorageOrigin, quizText, type HandleFault, type SessionFailure } from "@semio-tech/quiz-react";
+import { IdentityScreen, ProctorClient, ProctorThrottled, QUIZ_LOCALES, QuizSession, failureProblem, handleFault, handleFaultMessage, localStore, memoryStorageOrigin, quizInstance, quizText, type HandleFault, type SessionFailure } from "@semio-tech/quiz-react";
 import step from "../../🧫️fixtures/🎭️identity-step/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
@@ -55,6 +55,7 @@ function scriptedProctor(script: { readonly handle: (handle: string) => HandleVi
   const envelopes: CommandEnvelope[] = [];
   const transport: HttpTransport = {
     send: async (request) => {
+      if (request.method === "GET" && request.path === "/instance") return reply(200, quizInstance());
       const body = JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown;
       if (request.path === "/queries") {
         const query = JSON.parse(decoder.decode(decodeQueryEnvelope(body).arguments)) as Query;

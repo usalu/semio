@@ -4,6 +4,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{tikz}
+\RequirePackage{graphicx}
 \usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing}
 \RequirePackage{semio-viz-plot}
 \RequirePackage{semio-viz-mark}
@@ -789,13 +790,22 @@
     }
 }
 
-% 🔠 Centred label inside a node box of width #3.
+\box_new:N \l_semio_viz_dg_label_box
+\dim_new:N \l_semio_viz_dg_label_width_dim
+% 🔠 Centres a measured label within the configured node width without overflowing an unbreakable word.
 \cs_new_protected:Npn \semio_viz_dg_label:nnnn #1#2#3#4 {
   \bool_if:NT \l_semio_viz_dg_labels_bool {
     \tl_if_empty:nF {#4} {
-      \node [ font=\c_semio_viz_theme_font_cell_tl , text=semio-chrome-foreground , anchor=center ,
-              align=center , inner~sep=0.4mm , text~width=\fp_eval:n { max( (#3) - 1.6 , 3 ) } mm ]
-        at ( \fp_eval:n {#1} , \fp_eval:n {#2} ) {#4} ;
+      \hbox_set:Nn \l_semio_viz_dg_label_box {\pgfinterruptpicture\c_semio_viz_theme_font_cell_tl #4\endpgfinterruptpicture}
+      \dim_set:Nn \l_semio_viz_dg_label_width_dim {\fp_eval:n{max((#3)-1.6,1)}mm}
+      \node [ text=semio-chrome-foreground , anchor=center , inner~sep=0pt ]
+        at ( \fp_eval:n {#1} , \fp_eval:n {#2} ) {
+          \dim_compare:nNnTF {\box_wd:N\l_semio_viz_dg_label_box} > {\l_semio_viz_dg_label_width_dim}
+            {\resizebox{\l_semio_viz_dg_label_width_dim}{!}{\box_use:N\l_semio_viz_dg_label_box}}
+            {\box_use:N\l_semio_viz_dg_label_box}
+        };
+      \semio_viz_probe_geometry:nx {diagram-label}
+        {\fp_eval:n{#1},\fp_eval:n{#2},\fp_eval:n{\dim_to_fp:n{\l_semio_viz_dg_label_width_dim}/\dim_to_fp:n{1mm}}}
     }
   }
 }

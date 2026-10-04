@@ -4,10 +4,13 @@
 No third-party library simulates the pets stage, and a second engine written to be compared with it would be the
 same model again (recorded no-oracle decision ``pets-stage-trace``). This file therefore simulates nothing: it reads
 the COMMITTED trace of every script and checks what can be checked on it without the stage — that every recorded
-actor stands on a surveyed surface at the height of that surface (minus its hover), that the box of its body touches
-no keep-out, that no two actors of one surface stand in each other, that no more actors walk or hop than the mode
-allows, that at most one pair has partners, that opacities are whole and that every law flag the recording carries is
-true. The digests are the subject's own; the
+actor on a perch stands on a surveyed surface at the height of that surface (minus its hover; one that scoots to a
+new seat at most two of its widths off it), that an actor clings to a surveyed wall exactly while it is on a wall, that the box of its body touches no keep-out (but on a scooter's way out
+of one), that an upright body is the size box, the hover and a margin of 4 px, that the recorded bodies of no two
+actors overlap anywhere (the shared area of every pair of boxes, by broadcasting), that no more actors walk or hop
+than the mode allows, that at most one pair has partners, that opacities are whole, that the frame of a checkpoint
+shows at most 160 particles and one lifted copy (none, and nobody held, on a still stage) and holds only a pet that is
+in the learner's hand, and that every law flag the recording carries is true. The digests are the subject's own; the
 TypeScript and the Rust twin must reproduce them bit for bit.
 
 The checks run when the vectors are generated (``generate_behavior_vectors.py`` refuses to write a trace that breaks
@@ -32,7 +35,8 @@ VECTORS = "shared://🎪️stage-trace/🔣️.json"
 MOVERS = {"still": 0, "calm": 1, "lively": 2}
 HOP_TICKS = 48
 LAWS = ["perched", "clear", "apart", "paced", "paired", "graphed", "whole"]
-CONTACT = 0.0078125
+MARGIN = 4
+STAGE_CAP = 160
 
 
 def hover_of(species):
@@ -85,6 +89,17 @@ def verify_checkpoint(menagerie, script, checkpoint):
             partners += 1
             if actor["partner"] not in listed:
                 raise AssertionError("%s: %s has a partner that is not on stage" % (where, actor["species"]))
+        if (actor["footing"] == "perch") != (actor["perch"] is not None):
+            raise AssertionError("%s: %s has footing %s and perch %r" % (where, actor["species"], actor["footing"], actor["perch"]))
+        if (actor["footing"] == "wall") != (actor["wall"] is not None):
+            raise AssertionError("%s: %s has footing %s and wall %r" % (where, actor["species"], actor["footing"], actor["wall"]))
+        if actor["wall"] is not None and (survey is None or actor["wall"] not in [wall["id"] for wall in survey["walls"]]):
+            raise AssertionError("%s: %s clings to %s, which is not surveyed" % (where, actor["species"], actor["wall"]))
+        half = kind["size"]["width"] / 2
+        if actor["footing"] in ("perch", "head"):
+            upright = numpy.array([actor["x"] - half - MARGIN, actor["y"] - kind["size"]["height"] - MARGIN, actor["x"] + half + MARGIN, actor["y"] + hover_of(kind) + MARGIN])
+            if not numpy.allclose(numpy.array([actor["body"][edge] for edge in ("x0", "y0", "x1", "y1")]), upright, rtol=0, atol=1e-9):
+                raise AssertionError("%s: the body of %s is not its size box, hover and margin" % (where, actor["species"]))
         if actor["perch"] is None:
             continue
         if survey is None:
@@ -93,26 +108,42 @@ def verify_checkpoint(menagerie, script, checkpoint):
         if len(surfaces) != 1:
             raise AssertionError("%s: %s stands on %s, which is not surveyed" % (where, actor["species"], actor["perch"]))
         surface = surfaces[0]
-        half = kind["size"]["width"] / 2
-        if not (max(surface["x0"], 0) + half <= actor["x"] <= min(surface["x1"], survey["width"]) - half):
+        slack = 2 * kind["size"]["width"] if actor["activity"] == "scoot" else 0
+        if not (max(surface["x0"], 0) + half - slack <= actor["x"] <= min(surface["x1"], survey["width"]) - half + slack):
             raise AssertionError("%s: %s at x=%r does not stand inside %s" % (where, actor["species"], actor["x"], actor["perch"]))
         if actor["y"] != surface["y"] - hover_of(kind):
             raise AssertionError("%s: %s at y=%r is not on %s" % (where, actor["species"], actor["y"], actor["perch"]))
         for keepout in survey["keepouts"]:
-            if overlaps(actor["x"] - half, actor["y"] - kind["size"]["height"], actor["x"] + half, actor["y"], keepout):
+            if actor["activity"] != "scoot" and overlaps(actor["x"] - half, actor["y"] - kind["size"]["height"], actor["x"] + half, actor["y"], keepout):
                 raise AssertionError("%s: %s stands inside a keep-out" % (where, actor["species"]))
-    grounded = [actor for actor in actors if actor["perch"] is not None]
-    for index, one in enumerate(grounded):
-        for two in grounded[index + 1 :]:
-            if one["perch"] != two["perch"]:
-                continue
-            shoulders = (kinds[one["species"]]["size"]["width"] + kinds[two["species"]]["size"]["width"]) / 2
-            if float(numpy.abs(one["x"] - two["x"])) < shoulders - CONTACT:
-                raise AssertionError("%s: %s and %s stand in each other on %s" % (where, one["species"], two["species"], one["perch"]))
+    if actors:
+        boxes = numpy.array([[actor["body"][edge] for edge in ("x0", "y0", "x1", "y1")] for actor in actors])
+        shared = numpy.minimum(boxes[:, None, 2], boxes[None, :, 2]) - numpy.maximum(boxes[:, None, 0], boxes[None, :, 0])
+        tall = numpy.minimum(boxes[:, None, 3], boxes[None, :, 3]) - numpy.maximum(boxes[:, None, 1], boxes[None, :, 1])
+        clash = numpy.argwhere(numpy.triu((shared > 0) & (tall > 0), 1))
+        if clash.size:
+            one, two = clash[0]
+            raise AssertionError("%s: the bodies of %s and %s overlap" % (where, actors[one]["species"], actors[two]["species"]))
     if movers > MOVERS[checkpoint["mode"]] and checkpoint["tick"] - tuned > HOP_TICKS + 1:
         raise AssertionError("%s: %d actors move in mode %s" % (where, movers, checkpoint["mode"]))
     if partners > 2:
         raise AssertionError("%s: %d actors have partners" % (where, partners))
+    verify_scenery(where, checkpoint, listed)
+
+
+def verify_scenery(where, checkpoint, listed):
+    """🎆️ What the frame of a checkpoint shows beside the actors: whole counts, at most ``STAGE_CAP`` particles and one lifted copy, nothing of the kind (and no dust) on a still stage, and a held pet that is on stage in the learner's hand."""
+    drawn = checkpoint["drawn"]
+    counts = numpy.array([drawn["particles"], drawn["ladders"], drawn["lifts"], drawn["puffs"]])
+    if counts.dtype.kind != "i" or bool(numpy.any(counts < 0)):
+        raise AssertionError("%s: the scenery counts %r are no whole numbers" % (where, drawn))
+    if drawn["particles"] > STAGE_CAP or drawn["lifts"] > 1:
+        raise AssertionError("%s: %d particles and %d lifted copies" % (where, drawn["particles"], drawn["lifts"]))
+    if checkpoint["mode"] == "still" and (drawn["particles"] > 0 or drawn["lifts"] > 0 or drawn["puffs"] > 0 or drawn["held"] is not None):
+        raise AssertionError("%s: a still stage shows particles, a lifted copy, dust or a held pet" % where)
+    held = drawn["held"]
+    if held is not None and (held not in listed or [actor for actor in checkpoint["actors"] if actor["species"] == held][0]["footing"] != "hand"):
+        raise AssertionError("%s: %s is held but not in the learner's hand on stage" % (where, held))
 
 
 def verify(document):

@@ -2,9 +2,15 @@
  * (design §9a) and sent through `@semio-tech/framework-server`'s typed {@link ServerClient}.
  *
  * Every command carries a client-minted id that doubles as the idempotency key, so a retry after a connection
- * shortage is applied exactly once. Failures split into transient ones (no answer, a 5xx, a busy actor, a rate limit),
- * which callers retry with jittered backoff — after the wait a rate limit's `Retry-After` asks for — and definitive
- * ones (a quiz {@link Rejection} or a refusal), which they surface.
+ * shortage is applied exactly once. Failures split into transient ones (no answer, a 5xx, a busy actor, a rate limit,
+ * an answer that cannot be read), which callers retry with jittered backoff — after the wait a rate limit's
+ * `Retry-After` asks for — and definitive ones (a quiz {@link Rejection} or a refusal), which they surface.
+ *
+ * Nothing is sent before the client agrees with the proctor on the contract: the proctor must declare every quiz kind
+ * this client uses at its {@link WIRE_VERSION} (`GET /instance`). A proctor of another contract — older or newer, or no
+ * quiz proctor at all — is {@link ProctorIncompatible}: as transient as a silent one, so whatever waits keeps waiting
+ * and a deputy decides meanwhile; it is asked again now and then, and after every refusal, since a refusal may be the
+ * first sign of a proctor that was replaced.
  *
  * @see ../../../../../🖥️server/🟦️.ts — `ServerClient`, `CommandEnvelope`, `QueryEnvelope`
  * @see ../../../../🧬️schema/🔣️.json — `Command`, `Event`, `Query`, `Rejection` and the views
@@ -15,6 +21,7 @@ import { fetchWithTimeout, retryWithJitteredBackoff } from "@semio-tech/framewor
 import {
   ServerCallError,
   ServerClient,
+  WireError,
   type ActorKey,
   type CommandEnvelope,
   type CommandOutcome,
@@ -27,8 +34,10 @@ import {
   type QueryEnvelope,
   type QueryResult,
   type Rejection as ServerRejection,
+  type ServerInstanceDefinition,
 } from "@semio-tech/framework-server";
-import { REJECTIONS, handleActorId, normalizeHandle, type CatalogView, type Command, type CrowdView, type Event, type HandleView, type Id, type Leaderboard, type LeaderboardPeriod, type LearnerView, type Query, type Rejection, type RunView, type Slug } from "@semio-tech/quiz";
+import { REJECTIONS, WIRE_VERSION, handleActorId, normalizeHandle, type CatalogView, type Command, type CrowdView, type Event, type HandleView, type Id, type Leaderboard, type LeaderboardPeriod, type LearnerView, type Query, type Rejection, type RunView, type Slug } from "@semio-tech/quiz";
+import { isCatalogView, isLearnerView, isRunView } from "../💾️persistence/🟦️.ts";
 
 export type { HttpRequest, HttpResponse, HttpTransport };
 
@@ -59,6 +68,24 @@ export class ProctorThrottled extends ProctorUnavailable {
     this.name = "ProctorThrottled";
     this.retryAfterMs = retryAfterMs;
     this.allowance = allowance;
+  }
+}
+
+/** 🧩️ How the contract of a proctor this client does not agree with stands to its own: `newer` and `older` by the
+ * wire version it declares, `foreign` when it declares none this client can use — no quiz proctor, or one whose quiz
+ * kinds disagree among themselves. */
+export type ProctorContract = "newer" | "older" | "foreign";
+
+/** 🧩️ The proctor speaks another contract than this client ({@link ProctorContract}): nothing is sent to it. Transient
+ * like silence — what waits keeps waiting, a deputy decides meanwhile — since the proctor or the page may be replaced
+ * by one that agrees. */
+export class ProctorIncompatible extends ProctorUnavailable {
+  readonly contract: ProctorContract;
+
+  constructor(contract: ProctorContract) {
+    super(contract === "foreign" ? "the proctor serves no quiz contract this client speaks" : `the proctor speaks a ${contract} quiz contract than wire version ${WIRE_VERSION}`);
+    this.name = "ProctorIncompatible";
+    this.contract = contract;
   }
 }
 
@@ -243,8 +270,30 @@ export async function retryTransient<T>(call: () => Promise<T>, timing: RetryTim
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-/** 🔢️ The wire version of every quiz command and query kind. */
-export const QUIZ_WIRE_VERSION = 1;
+const COMMAND_TYPES: Readonly<Record<Command["type"], true>> = { "identify-learner": true, "start-run": true, "open-task": true, "record-answer": true, "submit-run": true };
+const QUERY_TYPES: Readonly<Record<Query["type"], true>> = { catalog: true, learner: true, run: true, leaderboard: true, crowd: true, handle: true };
+
+/** 📇️ The framework kind of every quiz command and query this client sends. */
+export const QUIZ_KINDS: readonly string[] = [...Object.keys(COMMAND_TYPES), ...Object.keys(QUERY_TYPES)].map((type) => `quiz.${type}`);
+
+/** 🪞️ What a proctor serving exactly the quiz kinds of this client at `version` declares at `GET /instance`: one module
+ * of {@link QUIZ_KINDS}, the commands' actors as the wire mapping (design §9a) names them. */
+export function quizInstance(version: number = WIRE_VERSION): ServerInstanceDefinition {
+  const commands = Object.keys(COMMAND_TYPES).map((type) => ({ kind: `quiz.${type}`, version, actorKind: type === "identify-learner" ? "quiz-handle" : "quiz-learner", offline: type === "record-answer" ? ("optimistic" as const) : ("authorityRequired" as const) }));
+  const queries = Object.keys(QUERY_TYPES).map((type) => ({ kind: `quiz.${type}`, version, projection: `quiz.${type}` }));
+  return { id: "teaching-proctor", version: String(version), modules: [{ id: "teaching.proctor", commands, queries, projections: queries.map((query) => query.projection), policies: [], actorKinds: ["quiz-handle", "quiz-learner"] }] };
+}
+
+/** 🤝️ How the contract `definition` declares stands to this client's: `undefined` when every quiz kind this client
+ * sends is declared at its {@link WIRE_VERSION}, else the {@link ProctorContract} — `newer` or `older` when every quiz
+ * kind the proctor declares is of one version, `foreign` otherwise. */
+export function disagreement(definition: ServerInstanceDefinition): ProctorContract | undefined {
+  const declared = definition.modules.flatMap((module) => [...module.commands, ...module.queries]).filter((descriptor) => descriptor.kind.startsWith("quiz."));
+  if (QUIZ_KINDS.every((kind) => declared.some((descriptor) => descriptor.kind === kind && descriptor.version === WIRE_VERSION))) return undefined;
+  const versions = new Set(declared.map((descriptor) => descriptor.version));
+  const [version] = versions;
+  return versions.size !== 1 || version === undefined || version === WIRE_VERSION ? "foreign" : version > WIRE_VERSION ? "newer" : "older";
+}
 
 /** 🎭️ The actor a command is serialized through: the learner — except a registration under a pseudonym or name, which
  * goes through the actor of its handle key, so a handle is claimed once. */
@@ -263,7 +312,7 @@ export function commandEnvelope(command: Command, tenant: string, now: number): 
   return {
     commandId: command.id,
     kind: `quiz.${command.type}`,
-    version: QUIZ_WIRE_VERSION,
+    version: WIRE_VERSION,
     target: commandTarget(command, tenant),
     scope: tenant,
     principal: learnerPrincipal(command.type === "identify-learner" ? undefined : command.learner),
@@ -284,7 +333,7 @@ export function queryEnvelope(query: Query, tenant: string, learner: Id | undefi
   return {
     queryId: newId(),
     kind: `quiz.${query.type}`,
-    version: QUIZ_WIRE_VERSION,
+    version: WIRE_VERSION,
     scope: tenant,
     principal: learnerPrincipal(learner),
     arguments: encoder.encode(JSON.stringify(query)),
@@ -346,15 +395,30 @@ function viewOf<V>(result: QueryResult): V {
 //#endregion 📨️Envelopes
 
 //#region 🛂️Client
-/** 📶️ What the latest call found: nothing asked yet, an answer, the answer "slow down" (a rate limit), or no answer. */
-export type ProctorReachability = "unknown" | "reachable" | "throttled" | "unreachable";
+/** 📶️ What the latest call found: nothing asked yet, an answer, the answer "slow down" (a rate limit), no answer, or a
+ * proctor of another contract, which is not asked anything. */
+export type ProctorReachability = "unknown" | "reachable" | "throttled" | "unreachable" | "incompatible";
 
-/** 🛂️ Quiz commands and queries against one proctor tenant, observing whether the proctor is reachable. */
+/** ⏳️ How long a proctor of another contract is left alone before it is asked again whether it agrees now. */
+export const AGREEMENT_RECHECK_MS = 30_000;
+
+/** 🤝️ What the client knows of the proctor's contract: nothing yet, that it agrees, or since when it does not. */
+type Agreement = { readonly kind: "unknown" } | { readonly kind: "agreed" } | { readonly kind: "incompatible"; readonly contract: ProctorContract; readonly at: number };
+
+/** 📜️ Whether `error` says that an answer of the proctor could not be read: no JSON, or not the shape of the contract. */
+function unreadable(error: unknown): error is Error {
+  return error instanceof WireError || error instanceof SyntaxError;
+}
+
+/** 🛂️ Quiz commands and queries against one proctor tenant, observing whether the proctor is reachable and agrees
+ * with this client on the contract. */
 export class ProctorClient {
   readonly tenant: string;
   private readonly connect: ProctorConnect;
   private readonly now: () => number;
   private reachable: ProctorReachability = "unknown";
+  private agreement: Agreement = { kind: "unknown" };
+  private agreeing: Promise<Agreement> | undefined;
   private readonly listeners = new Set<() => void>();
 
   constructor(connect: ProctorConnect, tenant: string, now: () => number = Date.now) {
@@ -366,6 +430,11 @@ export class ProctorClient {
   /** 📶️ The reachability observed by the latest call. */
   reachability(): ProctorReachability {
     return this.reachable;
+  }
+
+  /** 🧩️ How the proctor's contract stands to this client's while the two do not agree; `undefined` otherwise. */
+  contract(): ProctorContract | undefined {
+    return this.agreement.kind === "incompatible" ? this.agreement.contract : undefined;
   }
 
   /** 🔔️ Calls `listener` whenever {@link reachability} changes; returns the unsubscribe function. */
@@ -380,29 +449,44 @@ export class ProctorClient {
     this.mark("unreachable");
   }
 
-  /** 📨️ Submits one command once (callers retry transient failures with the same command id). */
+  /** 📨️ Submits one command once (callers retry transient failures with the same command id). A refusal is only
+   * answered once the proctor still agrees on the contract. */
   command(command: Command, signal?: AbortSignal): Promise<CommandVerdict> {
-    return this.observe(async () => commandVerdict(await new ServerClient(this.connect(signal)).submitCommand(commandEnvelope(command, this.tenant, this.now()))), signal);
+    return this.observe(async () => {
+      const verdict = commandVerdict(await new ServerClient(this.connect(signal)).submitCommand(commandEnvelope(command, this.tenant, this.now())));
+      if (verdict.kind === "refused") await this.agreed(signal, true);
+      return verdict;
+    }, signal);
   }
 
-  /** ❓️ Answers one query from the proctor's read models. */
-  query<V>(query: Query, learner: Id | undefined, signal?: AbortSignal): Promise<V> {
-    return this.observe(async () => viewOf<V>(await new ServerClient(this.connect(signal)).query(queryEnvelope(query, this.tenant, learner))), signal);
+  /** ❓️ Answers one query from the proctor's read models; a view that is not of the `shaped` the client renders cannot
+   * be read. A malformed request is only answered once the proctor still agrees on the contract. */
+  query<V>(query: Query, learner: Id | undefined, signal?: AbortSignal, shaped?: (value: unknown) => boolean): Promise<V> {
+    return this.observe(async () => {
+      try {
+        const view = viewOf<V>(await new ServerClient(this.connect(signal)).query(queryEnvelope(query, this.tenant, learner)));
+        if (shaped !== undefined && !shaped(view)) throw new WireError(`no ${query.type} view of wire version ${WIRE_VERSION}`, query.type);
+        return view;
+      } catch (error) {
+        if (error instanceof ServerCallError && error.status === 400) await this.agreed(signal, true);
+        throw error;
+      }
+    }, signal);
   }
 
   /** 📚️ The solution-free catalog. */
   catalog(learner: Id | undefined, signal?: AbortSignal): Promise<CatalogView> {
-    return this.query<CatalogView>({ type: "catalog" }, learner, signal);
+    return this.query<CatalogView>({ type: "catalog" }, learner, signal, isCatalogView);
   }
 
   /** 🧑‍🎓️ One learner's runs, badges and best scores. */
   learner(learner: Id, signal?: AbortSignal): Promise<LearnerView> {
-    return this.query<LearnerView>({ type: "learner", learner }, learner, signal);
+    return this.query<LearnerView>({ type: "learner", learner }, learner, signal, isLearnerView);
   }
 
   /** 🏃️ One run with its sheet, answers and result. */
   run(run: Id, learner: Id, signal?: AbortSignal): Promise<RunView> {
-    return this.query<RunView>({ type: "run", run }, learner, signal);
+    return this.query<RunView>({ type: "run", run }, learner, signal, (value) => isRunView(value, run));
   }
 
   /** 👥️ What the learners answered in the submitted runs of `quiz`, per task and item. */
@@ -421,15 +505,49 @@ export class ProctorClient {
     return this.query<HandleView>({ type: "handle", handle }, undefined, signal);
   }
 
+  /** 🔭️ Runs `call` once the proctor agrees on the contract and notes what it found; an answer that cannot be read is a
+   * shortage once the proctor still agrees. */
   private async observe<T>(call: () => Promise<T>, signal?: AbortSignal): Promise<T> {
     try {
+      await this.agreed(signal);
       const value = await abortable(call(), signal);
       this.mark("reachable");
       return value;
-    } catch (error) {
-      if (!signal?.aborted) this.mark(isThrottled(error) ? "throttled" : isTransient(error) ? "unreachable" : "reachable");
+    } catch (thrown) {
+      let error = thrown;
+      if (unreadable(thrown) && !signal?.aborted) error = await this.agreed(signal, true).then(() => new ProctorUnavailable(`an answer of the proctor cannot be read: ${thrown.message}`), (failure: unknown) => failure);
+      if (!signal?.aborted) this.mark(error instanceof ProctorIncompatible ? "incompatible" : isThrottled(error) ? "throttled" : isTransient(error) ? "unreachable" : "reachable");
       throw error;
     }
+  }
+
+  /** 🤝️ Resolves once the proctor agrees on the contract — asking it (`anew` even when it agreed before) unless that is
+   * known — and fails with {@link ProctorIncompatible} while it does not; a proctor found incompatible is asked again
+   * only after {@link AGREEMENT_RECHECK_MS}. Concurrent callers share one question. */
+  private async agreed(signal: AbortSignal | undefined, anew = false): Promise<void> {
+    if (anew && this.agreement.kind === "agreed") this.agreement = { kind: "unknown" };
+    const held = this.agreement;
+    if (held.kind === "agreed") return;
+    if (held.kind === "incompatible" && !anew && this.now() - held.at < AGREEMENT_RECHECK_MS) throw new ProctorIncompatible(held.contract);
+    this.agreeing ??= this.agree().finally(() => (this.agreeing = undefined));
+    const agreement = await abortable(this.agreeing, signal);
+    if (agreement.kind === "incompatible") throw new ProctorIncompatible(agreement.contract);
+  }
+
+  /** 🏛️ Asks the proctor for the contract it serves (`GET /instance`): a shortage — an answer that cannot be read, a
+   * network's sign-in page or a proxy's error page, among them — stays one and leaves the agreement unknown; an
+   * instance that serves not every quiz kind at this client's version, or a server without instances, disagrees. */
+  private async agree(): Promise<Agreement> {
+    let contract: ProctorContract | undefined;
+    try {
+      contract = disagreement(await new ServerClient(this.connect()).instance());
+    } catch (error) {
+      if (unreadable(error)) throw new ProctorUnavailable(`the contract of the proctor cannot be read: ${error.message}`);
+      if (isTransient(error)) throw error;
+      contract = "foreign";
+    }
+    this.agreement = contract === undefined ? { kind: "agreed" } : { kind: "incompatible", contract, at: this.now() };
+    return this.agreement;
   }
 
   private mark(reachable: ProctorReachability): void {

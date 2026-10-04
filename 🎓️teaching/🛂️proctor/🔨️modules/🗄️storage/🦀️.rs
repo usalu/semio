@@ -61,9 +61,11 @@ pub const DATABASE_FILE: &str = "proctor.sqlite";
 /// 🏷️ The format this binary writes and accepts.
 pub const FORMAT_SCHEMA: &str = "semio.teaching.proctor.sqlite";
 
-/// 🔢️ The format version this binary writes and accepts. Version 2 has one stream per handle key
-/// instead of a roster stream and no `learner-recalled` events; a file of version 1 is refused.
-pub const FORMAT_VERSION: i64 = 2;
+/// 🔢️ The format version this binary writes and accepts. Version 3 keeps the one stream per handle
+/// key of version 2 and starts every run at a challenge (`run-started.challenge`), knows
+/// `task-opened`, stamps every `answer-recorded` with the instant the learner acted and scores every
+/// result with its challenge and points. A file of any other version is refused.
+pub const FORMAT_VERSION: i64 = 3;
 
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
 

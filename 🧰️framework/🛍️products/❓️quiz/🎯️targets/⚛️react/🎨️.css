@@ -1,8 +1,9 @@
 /* 🎨️ @semio-tech/quiz-react on the semio design system. Colours, type, spacing, glass and outlines are the system's
    tokens and utilities (`🖱️ui` styles, loaded by the site); this sheet only holds what utilities cannot say: the
    learner's text size as the root font size (every token is rem-based, so the whole system scales), the home grid at
-   the system's breakpoints (768 and 1024 px, `📱️device`), the drag states, the spider diagram's paint and a handful of
-   token-based accents. */
+   the system's breakpoints (768 and 1024 px, `📱️device`), the adaptive layouts every part takes for the room it has
+   (container queries in rem, `🧫️fixtures/📐️adaptive-layout`), the drag states, the spider diagram's paint and a
+   handful of token-based accents. */
 
 :root {
   font-size: calc(100% * var(--quiz-text-scale, 1));
@@ -42,42 +43,40 @@
   margin-inline-end: 0.4em;
 }
 
-/* 🎞️ Icons play their motion as a slow loop with long rests, only where the learner neither prefers reduced motion nor
-   switched the animation off in the preferences (`data-icon-motion="off"`); everywhere else they stand still. Icons
-   in a list carry their place (`--quiz-icon-order`) and start that many steps into the loop, so neighbours never move
-   in step. */
-@media (prefers-reduced-motion: no-preference) {
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion] {
-    display: inline-block;
-    animation-duration: 3.2s;
-    animation-delay: calc(var(--quiz-icon-order, 0) * -0.7s);
-    animation-iteration-count: infinite;
-    animation-timing-function: ease-in-out;
-  }
+/* 🎞️ Icons play their motion as a slow loop with long rests only where the client says so (`data-icon-motion="on"`):
+   the learner's own choice in the preferences, and until they choose, every device but one that asks for reduced
+   motion; everywhere else they stand still. Icons in a list carry their place (`--quiz-icon-order`) and start that
+   many steps into the loop, so neighbours never move in step. */
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion] {
+  display: inline-block;
+  animation-duration: 3.2s;
+  animation-delay: calc(var(--quiz-icon-order, 0) * -0.7s);
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="bounce"] {
-    animation-name: quiz-icon-bounce;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="bounce"] {
+  animation-name: quiz-icon-bounce;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="pulse"] {
-    animation-name: quiz-icon-pulse;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="pulse"] {
+  animation-name: quiz-icon-pulse;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="spin"] {
-    animation-name: quiz-icon-spin;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="spin"] {
+  animation-name: quiz-icon-spin;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="sway"] {
-    animation-name: quiz-icon-sway;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="sway"] {
+  animation-name: quiz-icon-sway;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="float"] {
-    animation-name: quiz-icon-float;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="float"] {
+  animation-name: quiz-icon-float;
+}
 
-  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="flip"] {
-    animation-name: quiz-icon-flip;
-  }
+.quiz-app[data-icon-motion="on"] .quiz-glyph[data-motion="flip"] {
+  animation-name: quiz-icon-flip;
 }
 
 @keyframes quiz-icon-bounce {
@@ -241,8 +240,22 @@
   overflow-y: auto;
 }
 
-.quiz-home-cell > * {
-  width: 100%;
+/* 🃏️ The card itself takes the width — the overview hosts each card in a `display: contents` element, which has no box
+   to size, and a card whose content measures its own room (a size container) cannot be sized by that content: left to
+   its content it collapses to its title. */
+.quiz-home-cell [data-overview-card] {
+  inline-size: 100%;
+}
+
+/* 📜️ A card of the overview's list (phones, short windows, large text) is as wide as the screen leaves it, up to a
+   width that keeps its lines readable on a wide one; its width never follows its content, which its card lays out for
+   the width it gets. */
+.quiz-home-entry {
+  inline-size: min(100%, 36rem);
+}
+
+.quiz-home-entry [data-overview-card] {
+  inline-size: 100%;
 }
 
 /* 🖼️ A first-visit screen with the preferences beside it from 1024 px. */
@@ -258,6 +271,547 @@
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     align-items: start;
   }
+}
+
+/* 📐️ Adaptive layouts. Every part is laid out by hand for the room it actually has — the width of its own card, task
+   or list, never of the window, because the same card stands in a phone's column, a pane of the overview, a dialog and
+   a desktop page — measured in rem, so larger text gets the layout of the narrower room it leaves. A control that fits
+   beside what it belongs to stands on the same line, left and right; only where the room ends do they stack. A touch
+   device gets targets a finger hits. DOM order is reading order in every layout. */
+.quiz-app [data-slot="quiz-card-content"] {
+  container: quiz-card / inline-size;
+}
+
+.quiz-task {
+  container: quiz-task / inline-size;
+}
+
+.quiz-rows {
+  container: quiz-rows / inline-size;
+}
+
+/* 📖️ Running text keeps a line length that reads, however wide its card is. */
+.quiz-prose {
+  max-inline-size: 80ch;
+}
+
+@media (pointer: coarse) {
+  .quiz-task .quiz-target {
+    min-block-size: 2.5rem;
+  }
+
+  .quiz-task :is([data-quiz-grip], button.quiz-target) {
+    min-inline-size: 2.5rem;
+  }
+
+  .quiz-task .quiz-value > [data-quiz-grip] {
+    min-inline-size: 1.75rem;
+  }
+}
+
+/* ▶️ The head of a run: its tasks and how far the learner is. In a narrow card the tasks are a list, each with its
+   title on the left and its state on the right, and the progress fills the line below; from 40rem the tasks are chips
+   in a row; from 64rem the chips stand on the left and the progress on the right of one line. */
+.quiz-run-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.quiz-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-single);
+}
+
+.quiz-step {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-double);
+}
+
+.quiz-step-state {
+  flex: none;
+}
+
+.quiz-run-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-double);
+}
+
+.quiz-run-progress > .quiz-progress {
+  flex: 1 1 4rem;
+  inline-size: auto;
+  min-inline-size: 4rem;
+  max-inline-size: 24rem;
+}
+
+@container quiz-card (min-width: 40rem) {
+  .quiz-steps {
+    flex-flow: row wrap;
+  }
+
+  .quiz-steps > li {
+    min-inline-size: 0;
+  }
+
+  .quiz-step {
+    inline-size: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+}
+
+@container quiz-card (min-width: 64rem) {
+  .quiz-run-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .quiz-run-progress {
+    flex: 0 1 24rem;
+    justify-content: flex-end;
+  }
+}
+
+/* 🗂️ Classification. An item is its grip, its label and its category select: on one line — the select on the right, as
+   wide as its neighbours' — where its list is at least 30rem wide, else the select below the label. The bins share the
+   width of the task in as many columns as fit. In a task of 84rem or more the pool stands beside the bins and stays in
+   view while they scroll, so no item is ever dragged across the whole page. */
+.quiz-classify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.quiz-bins {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--spacing-double);
+}
+
+.quiz-chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-single);
+}
+
+.quiz-chip > select {
+  grid-column: 2;
+  inline-size: 100%;
+}
+
+@container quiz-rows (min-width: 30rem) {
+  .quiz-chip {
+    grid-template-columns: auto minmax(0, 1fr) clamp(10rem, 36%, 18rem);
+    column-gap: var(--spacing-double);
+  }
+
+  .quiz-chip > select {
+    grid-column: 3;
+  }
+}
+
+@container quiz-task (min-width: 84rem) {
+  .quiz-classify {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+  }
+
+  .quiz-pool {
+    position: sticky;
+    inset-block-start: 0;
+  }
+}
+
+/* ↕️ Sorting. An item is its grip, its place, its label, its guess and its two move buttons: one line from 36rem — the
+   guess and the buttons in columns of their own on the right, and from 56rem what the guess reads as beside it in a
+   column that is always there, so nothing moves when it appears —, else the label on the first line and the guess with
+   the buttons on the second. */
+.quiz-sort {
+  display: grid;
+  grid-template-columns: auto 2em minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "grip place label label label"
+    "grip . guess up down";
+  align-items: center;
+  gap: var(--spacing-single);
+}
+
+.quiz-sort > [data-quiz-grip] {
+  grid-area: grip;
+}
+
+.quiz-sort-place {
+  grid-area: place;
+}
+
+.quiz-sort-label {
+  grid-area: label;
+}
+
+.quiz-sort-up {
+  grid-area: up;
+}
+
+.quiz-sort-down {
+  grid-area: down;
+}
+
+.quiz-guess {
+  display: grid;
+  grid-area: guess;
+  grid-template-columns: minmax(0, 16rem);
+  align-items: center;
+  gap: var(--spacing-single) var(--spacing-double);
+}
+
+.quiz-guess > input {
+  inline-size: 100%;
+}
+
+@container quiz-rows (min-width: 36rem) {
+  .quiz-sort {
+    grid-template-columns: auto 2em minmax(0, 1fr) minmax(9rem, 13rem) auto auto;
+    grid-template-areas: "grip place label guess up down";
+    column-gap: var(--spacing-double);
+  }
+
+  .quiz-sort-up {
+    margin-inline-end: calc(var(--spacing-single) - var(--spacing-double));
+  }
+
+  .quiz-guess {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container quiz-rows (min-width: 56rem) {
+  .quiz-sort {
+    grid-template-columns: auto 2em minmax(0, 1fr) 22rem auto auto;
+  }
+
+  .quiz-guess {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+
+  .quiz-guess > [role="alert"] {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 🃏️ Matching. The value cards of a quantity are a grid of equal chips — the value, and below it who uses it, on two
+   lines at most —, the items a list of rows: the label on the left, its select and its remove button on the right from
+   30rem, else below the label, the select as wide as the row. In a task of 64rem or more the cards stand in a column
+   beside the rows and stay in view while they scroll, so a card is never dragged far. */
+.quiz-match {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-single);
+}
+
+.quiz-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--spacing-single);
+}
+
+.quiz-value {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--spacing-single);
+}
+
+.quiz-value-state {
+  display: -webkit-box;
+  grid-column: 2;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.quiz-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label label"
+    "card clear";
+  align-items: center;
+  gap: var(--spacing-single);
+  padding-block: var(--spacing-single);
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.quiz-slot:first-child {
+  border-block-start: var(--stroke-default) solid var(--border-normal-color);
+}
+
+.quiz-slot-label {
+  grid-area: label;
+}
+
+.quiz-slot > select {
+  grid-area: card;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.quiz-slot > button {
+  grid-area: clear;
+}
+
+@container quiz-rows (min-width: 30rem) {
+  .quiz-slot {
+    grid-template-columns: minmax(0, 1fr) clamp(10rem, 40%, 20rem) auto;
+    grid-template-areas: "label card clear";
+    column-gap: var(--spacing-double);
+  }
+
+  .quiz-slot > button {
+    margin-inline-start: calc(var(--spacing-single) - var(--spacing-double));
+  }
+}
+
+@container quiz-task (min-width: 64rem) {
+  .quiz-match {
+    display: grid;
+    grid-template-columns: minmax(18rem, 1fr) minmax(0, 2.5fr);
+    grid-template-areas:
+      "title title"
+      "cards slots";
+    align-items: start;
+    gap: var(--spacing-single) var(--spacing-double);
+  }
+
+  .quiz-match > h3 {
+    grid-area: title;
+  }
+
+  .quiz-cards {
+    position: sticky;
+    inset-block-start: 0;
+    grid-area: cards;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+  }
+
+  .quiz-slots {
+    grid-area: slots;
+  }
+}
+
+/* 🗃️ A table that folds. In a card that is too narrow for its columns a table is no table to scroll sideways but a
+   list of records: every row a block — its lead cells on the first line with the name taking the room between them,
+   then its facts side by side, each under the heading of its column (`data-label`), then its notes, each on lines of
+   their own. The column headings leave the screen (every fact carries its own), except where they are the table's
+   controls (`data-head="sort"`): those become a row of chips above the records. Its wrapper says below how many rem
+   it folds (`--quiz-fold`): its font size is that many 36ths of a rem, so one query in em folds every table at its own
+   width; what is inside sets its own size in rem. Every part keeps its table role, so a folded table still reads as
+   one. */
+.quiz-records {
+  position: relative;
+  container: quiz-records / inline-size;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  font-size: calc(var(--quiz-fold, 36) / 36 * 1rem);
+}
+
+@container quiz-records (max-width: 36em) {
+  .quiz-fold {
+    display: block;
+  }
+
+  .quiz-fold > :is(thead, tbody) {
+    display: block;
+  }
+
+  .quiz-fold:not([data-head="sort"]) > thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .quiz-fold[data-head="sort"] > thead > tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-single);
+    padding-block-end: var(--spacing-double);
+    border-block-end: var(--stroke-default) solid var(--border-normal-color);
+  }
+
+  .quiz-fold[data-head="sort"] > thead > tr > th {
+    display: block;
+    padding: 0 var(--spacing-double);
+    border: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  .quiz-fold > tbody > tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-single) calc(2 * var(--spacing-double));
+    padding: var(--spacing-double) var(--spacing-single);
+    border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  .quiz-fold > tbody > tr::before {
+    content: "";
+    order: 1;
+    flex-basis: 100%;
+    block-size: 0;
+    margin-block: calc(var(--spacing-single) * -0.5);
+  }
+
+  .quiz-fold > tbody > tr > * {
+    display: block;
+    order: 2;
+    min-inline-size: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+
+  .quiz-fold > tbody > tr > :is([data-cell="lead"], [data-cell="name"]) {
+    order: 0;
+  }
+
+  .quiz-fold > tbody > tr > [data-cell="name"] {
+    flex: 1 1 0;
+    min-inline-size: 50%;
+  }
+
+  .quiz-fold > tbody > tr > td[data-label]:not([data-cell]) {
+    min-inline-size: 5.5rem;
+  }
+
+  .quiz-fold > tbody > tr > [data-cell="note"] {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .quiz-fold > tbody > tr > :empty {
+    display: none;
+  }
+
+  .quiz-fold > tbody > tr > td[data-label]:not([data-cell="lead"])::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+
+}
+
+/* 🏁️ The parts of a result. The score with how everyone scored stands beside the badges the run earned where both
+   fit; a task's tables stand beside its figures from 84rem, so a wide screen shows the answer and the crowd at once. */
+.quiz-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--spacing-double) calc(4 * var(--spacing-double));
+}
+
+.quiz-summary > :first-child {
+  flex: 0 1 20rem;
+}
+
+.quiz-summary > :nth-child(2) {
+  flex: 1 1 24rem;
+}
+
+.quiz-result {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--spacing-double);
+}
+
+.quiz-result > * {
+  min-inline-size: 0;
+}
+
+@container quiz-card (min-width: 84rem) {
+  .quiz-result[data-crowd] {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    column-gap: calc(2 * var(--spacing-double));
+  }
+}
+
+/* 🎛️ The preferences: the name of each above its control in a narrow card; from 28rem the names stand in a column of
+   their own on the left and every control starts on the same line right of it. A narrow card's choices are as wide as
+   the card, so every option is a target of its full share. */
+.quiz-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-double);
+}
+
+.quiz-setting {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-single);
+}
+
+.quiz-setting > [role="group"] {
+  inline-size: 100%;
+}
+
+@container quiz-card (min-width: 28rem) {
+  .quiz-settings {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--spacing-double);
+  }
+
+  .quiz-setting {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+
+  .quiz-setting > :not(.quiz-setting-name),
+  .quiz-settings > :not(.quiz-setting) {
+    grid-column: 2;
+  }
+
+  .quiz-setting > [role="group"] {
+    inline-size: fit-content;
+  }
+}
+
+/* 🪪️ The ways to appear: below each other in a narrow card, side by side as three columns from 44rem. */
+.quiz-kinds {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-single) calc(2 * var(--spacing-double));
+}
+
+@container quiz-card (min-width: 44rem) {
+  .quiz-kinds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* 🎚️ A segmented choice that does not fit one line wraps, and every line fills the width of the choice. */
+.quiz-segment {
+  flex: 1 1 auto;
 }
 
 /* 🏆️ The learner's own leaderboard row: a bar and a tint of the active colour, besides bold text and "(you)". */
@@ -310,13 +864,16 @@
   backdrop-filter: blur(0.5rem) saturate(1.45);
 }
 
-/* 🤏️ Pointer drag: the ghost follows the pointer, the source dims, the zone under the pointer is highlighted. */
+/* 🤏️ Pointer drag: the ghost follows the pointer, the source dims, the zone under the pointer is highlighted. The ghost
+   is an empty copy of the source's list holding the copy of the source, so the copy is laid out as its source is. */
 .quiz-drag-ghost {
   position: fixed;
   left: 0;
   top: 0;
   z-index: 1000;
+  display: block;
   margin: 0;
+  padding: 0;
   pointer-events: none;
   opacity: 0.92;
   list-style: none;
@@ -332,9 +889,12 @@
   background: color-mix(in srgb, var(--active-base) 14%, transparent);
 }
 
-/* 🕸️ Spider diagram paint. */
+/* 🕸️ Spider diagram paint. A diagram is laid out for the width it gets, up to the size it reads best at: in a bin
+   wider than that it keeps this size instead of growing with the bin. */
 .quiz-radar {
   position: relative;
+  inline-size: 100%;
+  max-inline-size: 28rem;
 }
 
 .quiz-radar-ruler {
@@ -481,23 +1041,20 @@
 }
 
 .quiz-figures > .quiz-figure {
-  flex: 1 1 24em;
+  flex: 1 1 24rem;
 }
 
 .quiz-figures > .quiz-scores {
-  flex: 0 1 17em;
+  flex: 0 1 17rem;
 }
 
 /* 🗳️ What everyone answered in a task: a row per item, a column per category, place or value, every column as wide as
    the next. A cell is the plot of one share with its marks under the baseline: ● the learner's own answer, ✓ the
-   correct one, a dot per learner thinking it right now. The items take a share of the figure's own width (it is their
-   container, so a phone gives them less than a desktop card) and the columns share the rest, up to a width that keeps
-   a column near its item — a figure of two categories does not stretch across the card —, and the table scrolls in
-   its card when it has more columns than fit. */
-.quiz-figure {
-  container-type: inline-size;
-}
-
+   correct one, a dot per learner thinking it right now. The items take a share of the figure's own width (its wrapper
+   is their container, so a phone gives them less than a desktop card) and the columns share the rest, up to a width
+   that keeps a column near its item — a figure of two categories does not stretch across the card. A figure with more
+   columns than fit beside its items folds (`.quiz-records`): every item stands on a line of its own above its
+   columns, which then share the whole width and each say below their marks what they stand for. */
 .quiz-plot {
   inline-size: min(100%, calc(20em + var(--quiz-plot-columns, 1) * 9em));
   min-inline-size: calc(9em + var(--quiz-plot-columns, 1) * 3.5em);
@@ -546,10 +1103,73 @@
   color: var(--active-base);
 }
 
+@container quiz-records (max-width: 36em) {
+  .quiz-plot {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .quiz-plot > thead {
+    position: absolute;
+    display: block;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .quiz-plot > tbody {
+    display: block;
+  }
+
+  .quiz-plot > tbody > tr {
+    display: grid;
+    grid-template-columns: repeat(var(--quiz-plot-columns, 1), minmax(0, 1fr));
+    padding-block: var(--spacing-single);
+    border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+  }
+
+  .quiz-plot > tbody > tr > * {
+    display: block;
+    align-self: end;
+    padding: 0 1px;
+  }
+
+  .quiz-plot > tbody > tr > .quiz-plot-item {
+    grid-column: 1 / -1;
+    inline-size: auto;
+    padding: var(--spacing-single);
+  }
+
+  .quiz-plot > tbody > tr > td[data-label]::after {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 0.625rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .quiz-plot .quiz-column-cap {
+    font-size: 0.625rem;
+  }
+
+  .quiz-plot[data-sparse] > tbody > tr {
+    grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+    row-gap: var(--spacing-single);
+  }
+
+  .quiz-plot[data-sparse] > tbody > tr > td[data-empty] {
+    display: none;
+  }
+}
+
 /* 📉️ How all runs scored: the score bins side by side with a hairline of the surface between them, over a percent
    axis whose ends are the ends of the plot. */
 .quiz-scores {
-  max-inline-size: 17em;
+  max-inline-size: 17rem;
 }
 
 .quiz-histogram {
@@ -659,5 +1279,134 @@
   .quiz-app :focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 2px;
+  }
+}
+
+/* 🎚️ Challenges. The key of a sorting place stands where a guess would stand; a matching without cards gives its rows
+   the whole width of the task; a hint is a line of its own under its label, marked by a warning bar besides its symbol
+   and question, which wraps (a long factor too) rather than widen its row; the clock of a timed task is text over a bar of the time left, warning in its last 30 s and dashed once
+   the time is up. The bar shortens in whole-second steps, without any transition, so it neither moves smoothly nor
+   asks about reduced motion. A guess field that takes no more answers is dashed like its clock and drops its example.
+   A guess that lies far off is underlined besides its word and symbol. The four challenges
+   to choose from stand below each other in a narrow card, two by two from 44rem and four in a row from 64rem, never
+   three and one. */
+.quiz-sort-key {
+  grid-area: guess;
+}
+
+@container quiz-card (min-width: 44rem) {
+  .quiz-kinds[data-options="4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container quiz-card (min-width: 64rem) {
+  .quiz-kinds[data-options="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.quiz-slot > .quiz-guess {
+  grid-area: card;
+}
+
+@container quiz-task (min-width: 64rem) {
+  .quiz-match[data-keys="hidden"] > .quiz-slots {
+    grid-column: 1 / -1;
+  }
+}
+
+.quiz-hint {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-single);
+  margin-block-start: 0.125rem;
+  padding-inline-start: var(--spacing-single);
+  border-inline-start: 2px solid var(--color-warning);
+  font-weight: 600;
+}
+
+.quiz-hint-symbol {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  border: var(--stroke-hairline) solid currentColor;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.quiz-hint-question {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  text-wrap: pretty;
+}
+
+.quiz-clock:not([data-clock="closed"]) {
+  padding: var(--spacing-single) var(--spacing-double);
+  border: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.quiz-clock[data-clock="thirty"],
+.quiz-clock[data-clock="ten"] {
+  border-inline-start: 4px solid var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.quiz-clock[data-clock="up"] {
+  border-style: dashed;
+}
+
+.quiz-clock-bar {
+  display: block;
+  inline-size: calc(var(--quiz-clock-share, 1) * 100%);
+  block-size: 3px;
+  background: var(--active-base);
+}
+
+.quiz-clock[data-clock="thirty"] > .quiz-clock-bar,
+.quiz-clock[data-clock="ten"] > .quiz-clock-bar {
+  background: var(--color-warning);
+}
+
+.quiz-miss {
+  text-decoration: underline wavy var(--color-warning);
+  text-underline-offset: 3px;
+}
+
+.quiz-guess > input:read-only {
+  border-style: dashed;
+  background: transparent;
+}
+
+.quiz-guess > input:read-only::placeholder {
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .quiz-hint {
+    border-inline-start: 2px solid CanvasText;
+  }
+
+  .quiz-clock[data-clock="thirty"],
+  .quiz-clock[data-clock="ten"] {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+
+  .quiz-clock[data-clock="up"] {
+    outline: 2px dashed GrayText;
+    outline-offset: -2px;
+  }
+
+  .quiz-clock-bar {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .quiz-miss {
+    text-decoration-color: CanvasText;
   }
 }

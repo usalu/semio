@@ -1,14 +1,18 @@
-import { distance as mathDistance } from "mathjs";
+import { abs as mathAbs, distance as mathDistance, divide as mathDivide, log10 as mathLog10, max as mathMax, min as mathMin, sqrt as mathSqrt, subtract as mathSubtract } from "mathjs";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import {
+  CHALLENGES,
+  CHALLENGE_RULES,
   Mt19937,
   scoreRun,
   scoreTask,
   sheetOf,
   shuffle,
   type Answer,
+  type Challenge,
   type ClassificationTask,
+  type ClassificationTaskResult,
   type MatchingTask,
   type MatchingTaskResult,
   type Quiz,
@@ -27,12 +31,12 @@ const TOLERANCE = 1e-12;
 
 /** 📶️ A sorting task over the given values, item `i<index>` carrying `values[index]`. */
 function sortingTask(values: readonly number[], scale: Scale = "linear"): SortingTask {
-  return { kind: "sorting", id: "sorting", title: T("Sorting"), prompt: T("Sort"), quantity: { label: T("Q"), unit: "u", scale, prefixed: false }, items: values.map((value, index) => ({ id: `i${index}`, label: T(`i${index}`), value, ...(index === 0 ? { explanation: T("first") } : {}) })) };
+  return { kind: "sorting", id: "sorting", title: T("Sorting"), prompt: T("Sort"), quantity: { label: T("Q"), unit: "u", scale, prefixed: false, additive: false }, items: values.map((value, index) => ({ id: `i${index}`, label: T(`i${index}`), value, ...(index === 0 ? { explanation: T("first") } : {}) })) };
 }
 
-/** 🪜️ The sheet task of a single-task quiz. */
-function sheetTaskOf(task: SortingTask | MatchingTask | ClassificationTask, seed = 1): SheetTask {
-  return sheetOf({ schema: "semio.quiz/v1", id: "quiz", emoji: "❓", title: T("Quiz"), description: T("Quiz"), tasks: [task] }, seed).tasks[0]!;
+/** 🪜️ The sheet task of a single-task quiz, at medium unless a challenge is named. */
+function sheetTaskOf(task: SortingTask | MatchingTask | ClassificationTask, seed = 1, challenge: Challenge = "medium"): SheetTask {
+  return sheetOf({ schema: "semio.quiz/v1", id: "quiz", emoji: "❓", title: T("Quiz"), description: T("Quiz"), tasks: [task] }, seed, challenge).tasks[0]!;
 }
 
 /** 🧮️ The sorting score of an order of item ids. */
@@ -104,13 +108,21 @@ describe("sorting — magnitude-weighted pair concordance", () => {
     }
   });
 
-  it("scores the order alone: guesses, right or wrong, change neither the score nor the item results", () => {
+  it("scores the order alone where the keys show, alike on easy and medium, with neither a guess nor a miss in the item results", () => {
     const task = sortingTask([1, 60, 2000, 100000], "logarithmic");
-    const sheetTask = sheetTaskOf(task);
     const order = ["i1", "i0", "i3", "i2"];
-    const bare = scoreTask(task, sheetTask, { kind: "sorting", order });
-    expect(scoreTask(task, sheetTask, { kind: "sorting", order, guesses: { i1: 0.5, i0: 3, i2: 1e12 } })).toEqual(bare);
-    expect(scoreTask(task, sheetTask, { kind: "sorting", order, guesses: {} })).toEqual(bare);
+    const medium = scoreTask(task, sheetTaskOf(task), { kind: "sorting", order }) as SortingTaskResult;
+    expect(scoreTask(task, sheetTaskOf(task, 1, "easy"), { kind: "sorting", order })).toEqual(medium);
+    for (const item of medium.items) expect(Object.keys(item).filter((key) => key === "guess" || key === "miss")).toEqual([]);
+  });
+
+  it("scores no answer that carries guesses where the keys show", () => {
+    const task = sortingTask([1, 60, 2000, 100000], "logarithmic");
+    const order = ["i1", "i0", "i3", "i2"];
+    for (const challenge of ["easy", "medium"] as const) {
+      expect(scoreTask(task, sheetTaskOf(task, 1, challenge), { kind: "sorting", order, guesses: { i1: 0.5, i0: 3, i2: 1e12 } })).toBeUndefined();
+      expect(scoreTask(task, sheetTaskOf(task, 1, challenge), { kind: "sorting", order, guesses: {} })).toBeUndefined();
+    }
   });
 
   it("punishes swapping distant magnitudes more than swapping neighbours", () => {
@@ -170,7 +182,7 @@ function matchingTask(dimensions: Readonly<Record<string, { readonly scale: Scal
     id: "matching",
     title: T("Matching"),
     prompt: T("Match"),
-    dimensions: Object.entries(dimensions).map(([id, dimension]) => ({ id, quantity: { label: T(id), unit: "u", scale: dimension.scale, prefixed: false } })),
+    dimensions: Object.entries(dimensions).map(([id, dimension]) => ({ id, quantity: { label: T(id), unit: "u", scale: dimension.scale, prefixed: false, additive: false } })),
     items: Array.from({ length: count }, (_, index) => ({ id: `m${index}`, label: T(`m${index}`), values: Object.fromEntries(Object.entries(dimensions).map(([id, dimension]) => [id, dimension.values[index]!])) })),
   };
 }
@@ -187,7 +199,7 @@ function matchingAnswer(sheetTask: SheetTask, pick: (dimension: string, item: st
           dimension.id,
           Object.fromEntries(
             sheetTask.items.map((item) => {
-              const card = dimension.cards.findIndex((value, index) => value === pick(dimension.id, item.id) && !used.has(index));
+              const card = dimension.cards!.findIndex((value, index) => value === pick(dimension.id, item.id) && !used.has(index));
               used.add(card);
               return [item.id, card];
             }),
@@ -218,12 +230,12 @@ describe("matching — per-dimension weighted concordance", () => {
     const tied = matchingTask({ size: { scale: "linear", values: [1, 2, 2] } });
     const sheetTask = sheetTaskOf(tied, 3);
     if (sheetTask.kind !== "matching") throw new Error("kind");
-    const cards = sheetTask.dimensions[0]!.cards;
+    const cards = sheetTask.dimensions[0]!.cards!;
     const one = cards.indexOf(1);
     const twos = cards.flatMap((value, index) => (value === 2 ? [index] : []));
     const result = scoreTask(tied, sheetTask, { kind: "matching", assignments: { size: { m0: twos[0]!, m1: twos[1]!, m2: one } } }) as MatchingTaskResult;
     expect(result.dimensions[0]!.score).toBe(0.25);
-    expect(result.dimensions[0]!.items.map(({ item, assigned, correct }) => ({ item, assigned, correct }))).toEqual(sheetTask.items.map((item) => ({ item: item.id, assigned: item.id === "m2" ? 1 : 2, correct: tied.items.find((candidate) => candidate.id === item.id)!.values.size })));
+    expect(result.dimensions[0]!.items).toEqual(sheetTask.items.map((item) => ({ item: item.id, assigned: item.id === "m2" ? 1 : 2, correct: tied.items.find((candidate) => candidate.id === item.id)!.values.size })));
   });
 
   it("scores a dimension like the sorting its assigned cards induce", () => {
@@ -236,10 +248,11 @@ describe("matching — per-dimension weighted concordance", () => {
       const single = matchingTask({ power: { scale: "logarithmic", values } });
       const sheetTask = sheetTaskOf(single, round);
       if (sheetTask.kind !== "matching") throw new Error("kind");
-      const permutation = shuffle(random, sheetTask.dimensions[0]!.cards.map((_, index) => index));
+      const cards = sheetTask.dimensions[0]!.cards!;
+      const permutation = shuffle(random, cards.map((_, index) => index));
       const assignments = Object.fromEntries(sheetTask.items.map((item, index) => [item.id, permutation[index]!]));
       const matched = scoreTask(single, sheetTask, { kind: "matching", assignments: { power: assignments } })!.score;
-      const induced = sheetTask.items.map((item) => ({ id: item.id, card: sheetTask.dimensions[0]!.cards[assignments[item.id]!]! })).sort((left, right) => left.card - right.card);
+      const induced = sheetTask.items.map((item) => ({ id: item.id, card: cards[assignments[item.id]!]! })).sort((left, right) => left.card - right.card);
       const sorting = sortingTask(values, "logarithmic");
       const renamed = induced.map(({ id }) => `i${id.slice(1)}`);
       expect(Math.abs(matched - sortingScore(sorting, renamed))).toBeLessThan(TOLERANCE);
@@ -329,6 +342,380 @@ describe("classification — profile similarity", () => {
   });
 });
 
+/** 📐️ A value on its scale, by mathjs. */
+function oracleScaled(value: number, scale: Scale): number {
+  return scale === "logarithmic" ? (mathLog10(value) as number) : value;
+}
+
+/** 📡️ The reach of presented true values, by mathjs: a factor `min(1000, sqrt(hi / lo))` on a logarithmic scale (1000 when they do not spread), a distance `(hi − lo) / 2` on a linear one (unbounded when they do not spread). */
+function oracleReach(values: readonly number[], scale: Scale): number {
+  const [lo, hi] = [mathMin([...values]) as number, mathMax([...values]) as number];
+  if (scale === "linear") return hi > lo ? (mathDivide(mathSubtract(hi, lo), 2) as number) : Infinity;
+  return hi > lo ? (mathMin(1000, mathSqrt(mathDivide(hi, lo) as number) as number) as number) : 1000;
+}
+
+/** 🎯️ Which items miss, by mathjs: no guess, or one off the truth by more than the reach — the ratio of the larger to the smaller on a logarithmic scale, the distance on a linear one. */
+function oracleMisses(truths: readonly number[], guesses: readonly (number | undefined)[], scale: Scale): boolean[] {
+  const within = oracleReach(truths, scale);
+  return truths.map((truth, index) => {
+    const guess = guesses[index];
+    if (guess === undefined) return true;
+    return (scale === "linear" ? (mathAbs(mathSubtract(guess, truth)) as number) : (mathDivide(mathMax(guess, truth), mathMin(guess, truth)) as number)) > within;
+  });
+}
+
+/** ⚗️ The guessed concordance of items in a given order, by mathjs: a pair is discordant when it stands the wrong way round or either item misses, half discordant (matching only) when the guesses tie on distinct truths. */
+function oracleGuessed(truths: readonly number[], guesses: readonly (number | undefined)[], scale: Scale, matching: boolean): number {
+  const missed = oracleMisses(truths, guesses, scale);
+  let total = 0;
+  let discordant = 0;
+  for (let i = 0; i < truths.length; i++) {
+    for (let j = i + 1; j < truths.length; j++) {
+      const weight = mathAbs(oracleScaled(truths[i]!, scale) - oracleScaled(truths[j]!, scale)) as number;
+      total += weight;
+      if (missed[i] || missed[j]) discordant += weight;
+      else if (!matching) discordant += truths[i]! > truths[j]! ? weight : 0;
+      else if ((truths[i]! - truths[j]!) * (guesses[i]! - guesses[j]!) < 0) discordant += weight;
+      else if (guesses[i] === guesses[j] && truths[i] !== truths[j]) discordant += weight / 2;
+    }
+  }
+  return total > 0 ? 1 - discordant / total : missed.includes(true) ? 0 : 1;
+}
+
+/** 🔮️ A sorting answer made of guesses: the guessed items in ascending guess order (ties by item index), the unguessed ones after them. */
+function guessedSorting(task: SortingTask, guesses: Readonly<Record<string, number>>): Extract<Answer, { kind: "sorting" }> {
+  const index = (id: string) => Number(id.slice(1));
+  const guessed = Object.keys(guesses).sort((left, right) => guesses[left]! - guesses[right]! || index(left) - index(right));
+  return { kind: "sorting", order: [...guessed, ...task.items.map((item) => item.id).filter((id) => !Object.hasOwn(guesses, id))], guesses };
+}
+
+/** 🎰️ A guess around a true value: within a few decades on a logarithmic scale, within the spread on a linear one. */
+function randomGuess(random: Mt19937, truth: number, scale: Scale): number {
+  const offset = (random.next() % 10001) / 1000 - 5;
+  return scale === "logarithmic" ? truth * 10 ** offset : truth + offset * 3000;
+}
+
+describe("sorting — guesses where the keys are hidden", () => {
+  const decades = sortingTask([1, 1e3, 1e6, 1e9], "logarithmic");
+
+  it("stays perfect with the right order and every guess within reach: exactness is not required", () => {
+    for (const challenge of ["hard", "expert"] as const) {
+      const result = scoreTask(decades, sheetTaskOf(decades, 1, challenge), guessedSorting(decades, { i0: 5, i1: 200, i2: 3e7, i3: 1e8 })) as SortingTaskResult;
+      expect(result.score).toBe(1);
+      expect(result.items).toEqual([
+        { item: "i0", value: 1, position: 0, rank: 0, guess: 5, miss: false, explanation: T("first") },
+        { item: "i1", value: 1e3, position: 1, rank: 1, guess: 200, miss: false },
+        { item: "i2", value: 1e6, position: 2, rank: 2, guess: 3e7, miss: false },
+        { item: "i3", value: 1e9, position: 3, rank: 3, guess: 1e8, miss: false },
+      ]);
+      expect(Object.keys(result.items[0]!)).toEqual(["item", "value", "position", "rank", "guess", "miss", "explanation"]);
+    }
+  });
+
+  it("earns no perfect score for typing 1, 2, 3, 4 in the right order: a miss costs every pair it touches", () => {
+    const result = scoreTask(decades, sheetTaskOf(decades, 1, "hard"), guessedSorting(decades, { i0: 1, i1: 2, i2: 3, i3: 4 })) as SortingTaskResult;
+    expect(result.items.map((item) => item.miss)).toEqual([false, false, true, true]);
+    expect(result.items.map((item) => item.position)).toEqual([0, 1, 2, 3]);
+    expect(Math.abs(result.score - (1 - (6 + 9 + 3 + 6 + 3) / 30))).toBeLessThan(TOLERANCE);
+  });
+
+  it("reaches the factor 1000 on a logarithmic scale, or the square root of the values' max/min ratio where that is less, and misses only beyond", () => {
+    const wide = (guess: number) => (scoreTask(decades, sheetTaskOf(decades, 1, "hard"), guessedSorting(decades, { i0: 1, i1: guess, i2: 1e6, i3: 1e9 })) as SortingTaskResult).items.find((item) => item.item === "i1")!.miss;
+    expect(wide(1e3)).toBe(false);
+    expect(wide(1e3 * 999)).toBe(false);
+    expect(wide(1)).toBe(false);
+    expect(wide(1e3 * 1001)).toBe(true);
+    expect(wide(0.999)).toBe(true);
+    const narrow = sortingTask([10, 100, 1000], "logarithmic");
+    const within = (guess: number) => (scoreTask(narrow, sheetTaskOf(narrow, 1, "hard"), guessedSorting(narrow, { i0: 10, i1: guess, i2: 1000 })) as SortingTaskResult).items.find((item) => item.item === "i1")!.miss;
+    expect(within(100 * 9.9)).toBe(false);
+    expect(within(100 / 9.9)).toBe(false);
+    expect(within(100 * 10.1)).toBe(true);
+    expect(within(100 / 10.1)).toBe(true);
+  });
+
+  it("reaches half the spread on a linear scale, whatever the magnitudes", () => {
+    const task = sortingTask([0, 10, 20]);
+    const sheetTask = sheetTaskOf(task, 1, "hard");
+    const edge = scoreTask(task, sheetTask, guessedSorting(task, { i0: 10, i1: 20, i2: 30 })) as SortingTaskResult;
+    expect(edge.items.map((item) => item.miss)).toEqual([false, false, false]);
+    expect(edge.score).toBe(1);
+    const beyond = scoreTask(task, sheetTask, guessedSorting(task, { i0: 10, i1: 20, i2: 30.5 })) as SortingTaskResult;
+    expect(beyond.items.map((item) => item.miss)).toEqual([false, false, true]);
+    expect(beyond.score).toBe(1 - 30 / 40);
+    const huge = sortingTask([0, 1e9, 2e9]);
+    expect((scoreTask(huge, sheetTaskOf(huge, 1, "hard"), guessedSorting(huge, { i0: 5e8, i1: 1.4e9, i2: 1.5e9 })) as SortingTaskResult).score).toBe(1);
+  });
+
+  it("scores the wrong order of guesses within reach like the order alone", () => {
+    const sheetTask = sheetTaskOf(decades, 1, "hard");
+    const swapped = scoreTask(decades, sheetTask, guessedSorting(decades, { i1: 50, i0: 60, i2: 1e6, i3: 1e9 })) as SortingTaskResult;
+    expect(swapped.items.map((item) => item.item)).toEqual(["i1", "i0", "i2", "i3"]);
+    expect(swapped.items.map((item) => item.miss)).toEqual([false, false, false, false]);
+    expect(swapped.score).toBe(sortingScore(decades, ["i1", "i0", "i2", "i3"]));
+  });
+
+  it("equals (1 + Spearman ρ) / 2 on equally spaced values when no guess misses — checked against jStat", () => {
+    const random = new Mt19937(404);
+    for (let round = 0; round < 200; round++) {
+      const count = 2 + (round % 12);
+      const offset = (random.next() % 1000) - 500;
+      const step = 1 + (random.next() % 9);
+      const task = sortingTask(Array.from({ length: count }, (_, rank) => offset + step * rank));
+      const order = shuffle(random, task.items.map((item) => item.id));
+      const middle = offset + (step * (count - 1)) / 2;
+      const result = scoreTask(task, sheetTaskOf(task, round, "hard"), { kind: "sorting", order, guesses: Object.fromEntries(order.map((id) => [id, middle])) }) as SortingTaskResult;
+      expect(result.items.every((item) => item.miss === false && item.guess === middle)).toBe(true);
+      const rho = jStat.spearmancoeff(order.map((_, position) => position), order.map((id) => Number(id.slice(1))));
+      expect(Math.abs(result.score - (1 + rho) / 2)).toBeLessThan(TOLERANCE);
+    }
+  });
+
+  it("agrees with the formula written over mathjs, misses and missing guesses included", () => {
+    const random = new Mt19937(31337);
+    for (const scale of ["linear", "logarithmic"] as const) {
+      for (let round = 0; round < 300; round++) {
+        const task = sortingTask(randomValues(random, 2 + (round % 8), scale), scale);
+        const partial = round % 3 === 0;
+        const guesses = Object.fromEntries(task.items.flatMap((item) => (partial && random.next() % 4 === 0 ? [] : [[item.id, randomGuess(random, item.value, scale)] as const])));
+        const answer = guessedSorting(task, guesses);
+        const result = scoreTask(task, sheetTaskOf(task, round, partial ? "expert" : "hard"), answer) as SortingTaskResult;
+        const truths = answer.order.map((id) => task.items.find((item) => item.id === id)!.value);
+        const given = answer.order.map((id) => (Object.hasOwn(guesses, id) ? guesses[id] : undefined));
+        expect(result.items.map((item) => item.miss)).toEqual(oracleMisses(truths, given, scale));
+        expect(result.items.map((item) => item.guess)).toEqual(given);
+        expect(Math.abs(result.score - oracleGuessed(truths, given, scale, false))).toBeLessThan(TOLERANCE);
+        expect(result.score).toBeGreaterThanOrEqual(0);
+        expect(result.score).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it("never misses on a linear scale and misses beyond the factor 1000 on a logarithmic one when the values do not spread", () => {
+    const flat = sortingTask([5, 5, 5]);
+    expect((scoreTask(flat, sheetTaskOf(flat, 1, "hard"), guessedSorting(flat, { i0: -1e9, i1: 5, i2: 1e9 })) as SortingTaskResult).score).toBe(1);
+    const unguessed = scoreTask(flat, sheetTaskOf(flat, 1, "expert"), guessedSorting(flat, { i0: 5, i1: 5 })) as SortingTaskResult;
+    expect(unguessed.items.map((item) => item.miss)).toEqual([false, false, true]);
+    expect(unguessed.score).toBe(0);
+    const level = sortingTask([5, 5, 5], "logarithmic");
+    expect((scoreTask(level, sheetTaskOf(level, 1, "hard"), guessedSorting(level, { i0: 0.006, i1: 5, i2: 4000 })) as SortingTaskResult).score).toBe(1);
+    const off = scoreTask(level, sheetTaskOf(level, 1, "hard"), guessedSorting(level, { i0: 5, i1: 5, i2: 5e4 })) as SortingTaskResult;
+    expect(off.items.map((item) => item.miss)).toEqual([false, false, true]);
+    expect(off.score).toBe(0);
+  });
+
+  it("counts an item without a guess as a miss on a timed sheet and leaves it without a guess in the result", () => {
+    const sheetTask = sheetTaskOf(decades, 1, "expert");
+    const result = scoreTask(decades, sheetTask, guessedSorting(decades, { i0: 1, i1: 1e3, i3: 1e9 })) as SortingTaskResult;
+    expect(result.items).toEqual([
+      { item: "i0", value: 1, position: 0, rank: 0, guess: 1, miss: false, explanation: T("first") },
+      { item: "i1", value: 1e3, position: 1, rank: 1, guess: 1e3, miss: false },
+      { item: "i3", value: 1e9, position: 2, rank: 3, guess: 1e9, miss: false },
+      { item: "i2", value: 1e6, position: 3, rank: 2, miss: true },
+    ]);
+    expect(Math.abs(result.score - (1 - (6 + 3 + 3) / 30))).toBeLessThan(TOLERANCE);
+    expect(scoreTask(decades, sheetTaskOf(decades, 1, "hard"), guessedSorting(decades, { i0: 1, i1: 1e3, i3: 1e9 }))).toBeUndefined();
+  });
+
+  it("scores a timed task without an answer 0, its items in sheet order and all a miss; an untimed one stays unscored", () => {
+    const sheetTask = sheetTaskOf(decades, 5, "expert");
+    const result = scoreTask(decades, sheetTask) as SortingTaskResult;
+    expect(result.score).toBe(0);
+    expect(result.items.map((item) => item.item)).toEqual(sheetTask.items.map((item) => item.id));
+    expect(result.items.map((item) => item.position)).toEqual([0, 1, 2, 3]);
+    expect(result.items.every((item) => item.miss === true && !Object.hasOwn(item, "guess"))).toBe(true);
+    expect((scoreTask(decades, sheetTask, { kind: "sorting", order: sheetTask.items.map((item) => item.id) }) as SortingTaskResult).score).toBe(0);
+    for (const challenge of ["easy", "medium", "hard"] as const) expect(scoreTask(decades, sheetTaskOf(decades, 5, challenge))).toBeUndefined();
+    const flat = sortingTask([5, 5]);
+    expect((scoreTask(flat, sheetTaskOf(flat, 1, "expert")) as SortingTaskResult).score).toBe(0);
+  });
+
+  it("scores a sheet task that shows the keys and is timed — never dealt today — 0 without an answer and by the order with one", () => {
+    const sheetTask = { ...sheetTaskOf(decades, 5, "medium"), seconds: 60 };
+    const unanswered = scoreTask(decades, sheetTask) as SortingTaskResult;
+    expect(unanswered.score).toBe(0);
+    expect(unanswered.items.map((item) => item.item)).toEqual(sheetTask.items.map((item) => item.id));
+    expect(unanswered.items.some((item) => Object.hasOwn(item, "miss") || Object.hasOwn(item, "guess"))).toBe(false);
+    expect((scoreTask(decades, sheetTask, { kind: "sorting", order: ["i0", "i1", "i2", "i3"] }) as SortingTaskResult).score).toBe(1);
+  });
+});
+
+/** 🧾️ A matching answer made of guesses per dimension and item. */
+function guessedMatching(guesses: Readonly<Record<string, Readonly<Record<string, number>>>>): Extract<Answer, { kind: "matching" }> {
+  return { kind: "matching", guesses };
+}
+
+describe("matching — guesses where the keys are hidden", () => {
+  const task = matchingTask({ "u-value": { scale: "linear", values: [1.4, 0.5, 0.24, 0.12] }, demand: { scale: "logarithmic", values: [250, 120, 70, 15] } });
+  const truths = (dimension: string) => Object.fromEntries(task.items.map((item) => [item.id, item.values[dimension]!]));
+
+  it("scores 1 for the true values and for guesses near them, with the guess as the assigned value and a miss mark on every item", () => {
+    for (const challenge of ["hard", "expert"] as const) {
+      for (let seed = 0; seed < 10; seed++) {
+        const sheetTask = sheetTaskOf(task, seed, challenge);
+        const exact = scoreTask(task, sheetTask, guessedMatching({ "u-value": truths("u-value"), demand: truths("demand") })) as MatchingTaskResult;
+        expect(exact.score).toBe(1);
+        expect(exact.dimensions.map((dimension) => dimension.dimension)).toEqual(["u-value", "demand"]);
+        expect(exact.dimensions[1]!.items).toEqual(sheetTask.items.map((item) => ({ item: item.id, assigned: truths("demand")[item.id], correct: truths("demand")[item.id], miss: false })));
+        const near = scoreTask(task, sheetTask, guessedMatching({ "u-value": { m0: 1.2, m1: 0.6, m2: 0.3, m3: 0.1 }, demand: { m0: 300, m1: 100, m2: 60, m3: 20 } })) as MatchingTaskResult;
+        expect(near.score).toBe(1);
+        expect(Object.keys(near.dimensions[0]!.items[0]!)).toEqual(["item", "assigned", "correct", "miss"]);
+      }
+    }
+  });
+
+  it("counts a guess beyond the reach as a miss that costs every pair it touches", () => {
+    const single = matchingTask({ size: { scale: "linear", values: [0, 10, 20] } });
+    const sheetTask = sheetTaskOf(single, 2, "hard");
+    const result = scoreTask(single, sheetTask, guessedMatching({ size: { m0: 0, m1: 10, m2: 31 } })) as MatchingTaskResult;
+    const items = Object.fromEntries(result.dimensions[0]!.items.map((item) => [item.item, item]));
+    expect(items.m2).toEqual({ item: "m2", assigned: 31, correct: 20, miss: true });
+    expect(items.m0!.miss).toBe(false);
+    expect(result.dimensions[0]!.score).toBe(1 - 30 / 40);
+    expect((scoreTask(single, sheetTask, guessedMatching({ size: { m0: 0, m1: 10, m2: 30 } })) as MatchingTaskResult).score).toBe(1);
+  });
+
+  it("counts equal guesses on distinct true values half, and the opposite order whole", () => {
+    const single = matchingTask({ size: { scale: "linear", values: [1, 2, 3] } });
+    const sheetTask = sheetTaskOf(single, 2, "hard");
+    const tied = scoreTask(single, sheetTask, guessedMatching({ size: { m0: 2, m1: 2, m2: 2 } })) as MatchingTaskResult;
+    expect(tied.dimensions[0]!.items.every((item) => item.miss === false)).toBe(true);
+    expect(tied.dimensions[0]!.score).toBe(0.5);
+    const swapped = scoreTask(single, sheetTask, guessedMatching({ size: { m0: 2, m1: 1.9, m2: 2.1 } })) as MatchingTaskResult;
+    expect(swapped.dimensions[0]!.items.every((item) => item.miss === false)).toBe(true);
+    expect(swapped.dimensions[0]!.score).toBe(1 - 1 / 4);
+  });
+
+  it("scores like the sorting the guesses induce when no guess misses and none ties", () => {
+    const random = new Mt19937(8);
+    let swaps = 0;
+    for (let round = 0; round < 200; round++) {
+      const values = shuffle(
+        random,
+        Array.from({ length: 3 + (round % 6) }, (_, rank) => 10 ** (rank * 0.7 + (random.next() % 100) / 1000)),
+      );
+      const single = matchingTask({ power: { scale: "logarithmic", values } });
+      const sheetTask = sheetTaskOf(single, round, "hard");
+      const guesses = Object.fromEntries(single.items.map((item) => [item.id, item.values.power! * 10 ** (((random.next() % 1001) - 500) / 1000)]));
+      const matched = scoreTask(single, sheetTask, guessedMatching({ power: guesses })) as MatchingTaskResult;
+      expect(matched.dimensions[0]!.items.every((item) => item.miss === false)).toBe(true);
+      const induced = [...single.items].sort((left, right) => guesses[left.id]! - guesses[right.id]!).map((item) => `i${item.id.slice(1)}`);
+      const sorting = sortingTask(values, "logarithmic");
+      if (induced.join() !== ascendingIds(sorting).join()) swaps++;
+      expect(Math.abs(matched.score - sortingScore(sorting, induced))).toBeLessThan(TOLERANCE);
+    }
+    expect(swaps).toBeGreaterThan(20);
+  });
+
+  it("agrees with the formula written over mathjs, misses, ties and missing guesses included", () => {
+    const random = new Mt19937(90210);
+    for (const scale of ["linear", "logarithmic"] as const) {
+      for (let round = 0; round < 300; round++) {
+        const values = randomValues(random, 2 + (round % 7), scale);
+        const single = matchingTask({ size: { scale, values } });
+        const partial = round % 3 === 0;
+        const sheetTask = sheetTaskOf(single, round, partial ? "expert" : "hard");
+        const guesses = Object.fromEntries(
+          single.items.flatMap((item, index) => {
+            if (partial && random.next() % 4 === 0) return [];
+            return [[item.id, random.next() % 5 === 0 ? values[(index + 1) % values.length]! : randomGuess(random, item.values.size!, scale)] as const];
+          }),
+        );
+        const result = scoreTask(single, sheetTask, guessedMatching({ size: guesses })) as MatchingTaskResult;
+        const order = sheetTask.items.map((item) => item.id);
+        const truth = order.map((id) => single.items.find((item) => item.id === id)!.values.size!);
+        const given = order.map((id) => (Object.hasOwn(guesses, id) ? guesses[id] : undefined));
+        expect(result.dimensions[0]!.items.map((item) => item.miss)).toEqual(oracleMisses(truth, given, scale));
+        expect(result.dimensions[0]!.items.map((item) => item.assigned)).toEqual(given);
+        expect(Math.abs(result.score - oracleGuessed(truth, given, scale, true))).toBeLessThan(TOLERANCE);
+      }
+    }
+  });
+
+  it("leaves an unguessed item without an assigned value on a timed sheet and counts it as a miss; an untimed sheet stays unscored", () => {
+    const single = matchingTask({ size: { scale: "linear", values: [0, 10, 20] } });
+    const sheetTask = sheetTaskOf(single, 2, "expert");
+    const result = scoreTask(single, sheetTask, guessedMatching({ size: { m0: 0, m2: 20 } })) as MatchingTaskResult;
+    const items = Object.fromEntries(result.dimensions[0]!.items.map((item) => [item.item, item]));
+    expect(items.m1).toEqual({ item: "m1", correct: 10, miss: true });
+    expect(items.m0).toEqual({ item: "m0", assigned: 0, correct: 0, miss: false });
+    expect(result.dimensions[0]!.score).toBe(1 - 20 / 40);
+    expect(scoreTask(single, sheetTaskOf(single, 2, "hard"), guessedMatching({ size: { m0: 0, m2: 20 } }))).toBeUndefined();
+    for (const answer of [undefined, guessedMatching({}), { kind: "matching" } as Answer]) {
+      const empty = scoreTask(single, sheetTask, answer) as MatchingTaskResult;
+      expect(empty.score).toBe(0);
+      expect(empty.dimensions[0]!.items).toEqual(sheetTask.items.map((item) => ({ item: item.id, correct: single.items.find((candidate) => candidate.id === item.id)!.values.size, miss: true })));
+    }
+    expect(scoreTask(single, sheetTaskOf(single, 2, "hard"))).toBeUndefined();
+  });
+
+  it("scores a dimension whose true values do not spread 1 when every item is guessed and 0 when one is not", () => {
+    const flat = matchingTask({ size: { scale: "linear", values: [7, 7, 7] } });
+    expect((scoreTask(flat, sheetTaskOf(flat, 1, "hard"), guessedMatching({ size: { m0: -100, m1: 7, m2: 1e6 } })) as MatchingTaskResult).score).toBe(1);
+    expect((scoreTask(flat, sheetTaskOf(flat, 1, "expert"), guessedMatching({ size: { m0: 7, m1: 7 } })) as MatchingTaskResult).score).toBe(0);
+  });
+
+  it("scores no answer of the other shape: card assignments where the keys are hidden, guesses where they show", () => {
+    const single = matchingTask({ size: { scale: "linear", values: [0, 10, 20] } });
+    for (const challenge of ["hard", "expert"] as const) expect(scoreTask(single, sheetTaskOf(single, 2, challenge), { kind: "matching", assignments: { size: { m0: 0, m1: 1, m2: 2 } } })).toBeUndefined();
+    for (const challenge of ["easy", "medium"] as const) expect(scoreTask(single, sheetTaskOf(single, 2, challenge), guessedMatching({ size: { m0: 0, m1: 10, m2: 20 } }))).toBeUndefined();
+  });
+
+  it("counts an unassigned item of a sheet task that shows the keys and is timed — never dealt today — as a miss without a miss mark", () => {
+    const single = matchingTask({ size: { scale: "linear", values: [0, 10, 20] } });
+    const medium = sheetTaskOf(single, 2, "medium");
+    if (medium.kind !== "matching") throw new Error("kind");
+    const sheetTask = { ...medium, seconds: 60 };
+    const cards = medium.dimensions[0]!.cards!;
+    const result = scoreTask(single, sheetTask, { kind: "matching", assignments: { size: { m0: cards.indexOf(0), m2: cards.indexOf(20) } } }) as MatchingTaskResult;
+    const items = Object.fromEntries(result.dimensions[0]!.items.map((item) => [item.item, item]));
+    expect(items.m1).toEqual({ item: "m1", correct: 10 });
+    expect(items.m2).toEqual({ item: "m2", assigned: 20, correct: 20 });
+    expect(result.dimensions[0]!.score).toBe(1 - 20 / 40);
+    expect((scoreTask(single, sheetTask) as MatchingTaskResult).score).toBe(0);
+  });
+});
+
+describe("classification — unanswered items on a timed sheet", () => {
+  const task: ClassificationTask = {
+    kind: "classification",
+    id: "classification",
+    title: T("C"),
+    prompt: T("C"),
+    categories: [
+      { id: "x", label: T("x") },
+      { id: "y", label: T("y") },
+    ],
+    items: [
+      { id: "p", label: T("p"), category: "x", explanation: T("why") },
+      { id: "q", label: T("q"), category: "y" },
+      { id: "r", label: T("r"), category: "y" },
+    ],
+  };
+
+  it("gives an unassigned item no credit and no assigned category, and scores a task without an answer 0", () => {
+    const sheetTask = sheetTaskOf(task, 4, "expert");
+    const partial = scoreTask(task, sheetTask, { kind: "classification", assignments: { q: "y" } }) as ClassificationTaskResult;
+    expect(partial.items.map((item) => item.item)).toEqual(sheetTask.items.map((item) => item.id));
+    expect(partial.items.find((item) => item.item === "p")).toEqual({ item: "p", correct: "x", credit: 0, explanation: T("why") });
+    expect(partial.items.find((item) => item.item === "q")).toEqual({ item: "q", assigned: "y", correct: "y", credit: 1 });
+    expect(partial.score).toBe(1 / 3);
+    const nothing = scoreTask(task, sheetTask) as ClassificationTaskResult;
+    expect(nothing.score).toBe(0);
+    expect(nothing.items.every((item) => item.credit === 0 && !Object.hasOwn(item, "assigned"))).toBe(true);
+  });
+
+  it("stays unscored on every untimed sheet until every item is assigned, and scores alike at every challenge then", () => {
+    const whole: Answer = { kind: "classification", assignments: { p: "x", q: "x", r: "y" } };
+    const medium = scoreTask(task, sheetTaskOf(task, 4, "medium"), whole);
+    for (const challenge of CHALLENGES) expect(scoreTask(task, sheetTaskOf(task, 4, challenge), whole)).toEqual(medium);
+    for (const challenge of ["easy", "medium", "hard"] as const) {
+      expect(scoreTask(task, sheetTaskOf(task, 4, challenge), { kind: "classification", assignments: { q: "y" } })).toBeUndefined();
+      expect(scoreTask(task, sheetTaskOf(task, 4, challenge))).toBeUndefined();
+    }
+  });
+});
+
 describe("scoreRun", () => {
   const sorting = sortingTask([1, 2, 3]);
   const classification: ClassificationTask = {
@@ -348,16 +735,60 @@ describe("scoreRun", () => {
   const quiz: Quiz = { schema: "semio.quiz/v1", id: "run", emoji: "🏁", title: T("Run"), description: T("Run"), tasks: [sorting, classification] };
 
   it("scores every task in sheet order and averages them", () => {
-    const sheet = sheetOf(quiz, 99);
+    const sheet = sheetOf(quiz, 99, "medium");
     const result = scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"] }, classification: { kind: "classification", assignments: { p: "x", q: "x" } } });
     if (!result) throw new Error("unscored");
     expect(result.quiz).toBe("run");
     expect(result.tasks.map((task) => task.task)).toEqual(sheet.tasks.map((task) => task.id));
     expect(result.score).toBe(0.75);
+    expect(Object.keys(result)).toEqual(["quiz", "challenge", "score", "points", "tasks"]);
+  });
+
+  it("names the challenge of the sheet and earns score × par points: more for the same accuracy on a harder challenge", () => {
+    const answers = (challenge: Challenge): Record<string, Answer> => ({
+      sorting: CHALLENGE_RULES[challenge].keys ? { kind: "sorting", order: ["i0", "i1", "i2"] } : { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 1, i1: 2, i2: 3 } },
+      classification: { kind: "classification", assignments: { p: "x", q: "x" } },
+    });
+    const earned = CHALLENGES.map((challenge) => {
+      const result = scoreRun(quiz, sheetOf(quiz, 99, challenge), answers(challenge));
+      if (!result) throw new Error("unscored");
+      expect(result.challenge).toBe(challenge);
+      expect(result.score).toBe(0.75);
+      expect(result.points).toBe(0.75 * CHALLENGE_RULES[challenge].par);
+      return result.points;
+    });
+    expect(earned).toEqual([75, 150, 225, 300]);
+  });
+
+  it("scores a timed sheet as it stands: a task without an answer or with an incomplete one counts, what is missing as a miss", () => {
+    const sheet = sheetOf(quiz, 99, "expert");
+    const nothing = scoreRun(quiz, sheet, {});
+    if (!nothing) throw new Error("unscored");
+    expect(nothing).toMatchObject({ quiz: "run", challenge: "expert", score: 0, points: 0 });
+    expect(nothing.tasks.map((task) => task.task)).toEqual(sheet.tasks.map((task) => task.id));
+    const sortingOnly = scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 1, i1: 2, i2: 3 } } });
+    expect(sortingOnly).toMatchObject({ score: 0.5, points: 200 });
+    const half = scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 1, i1: 2, i2: 3 } }, classification: { kind: "classification", assignments: { p: "x" } } });
+    expect(half).toMatchObject({ score: 0.75, points: 300 });
+    const classified = half!.tasks.find((task) => task.kind === "classification") as ClassificationTaskResult;
+    expect(classified.items.find((item) => item.item === "p")).toEqual({ item: "p", assigned: "x", correct: "x", credit: 1 });
+    expect(classified.items.find((item) => item.item === "q")).toEqual({ item: "q", correct: "y", credit: 0 });
+    expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1"] } })).toBeUndefined();
+    expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 3, i1: 2 } } })).toBeUndefined();
+    expect(scoreRun(quiz, sheet, { classification: { kind: "classification", assignments: { p: "z" } } })).toBeUndefined();
+  });
+
+  it("scores nothing on an untimed sheet that hides the keys unless every item has a guess", () => {
+    const sheet = sheetOf(quiz, 99, "hard");
+    const units: Answer = { kind: "classification", assignments: { p: "x", q: "y" } };
+    expect(scoreRun(quiz, sheet, { classification: units })).toBeUndefined();
+    expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"] }, classification: units })).toBeUndefined();
+    expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 1, i1: 2 } }, classification: units })).toBeUndefined();
+    expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"], guesses: { i0: 1, i1: 2, i2: 3 } }, classification: units })).toMatchObject({ score: 1, points: 300 });
   });
 
   it("scores nothing unless every sheet task has a valid, complete answer", () => {
-    const sheet = sheetOf(quiz, 99);
+    const sheet = sheetOf(quiz, 99, "medium");
     const units: Answer = { kind: "classification", assignments: { p: "x", q: "y" } };
     expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"] } })).toBeUndefined();
     expect(scoreRun(quiz, sheet, { sorting: { kind: "sorting", order: ["i0", "i1", "i2"] }, classification: { kind: "classification", assignments: { p: "x" } } })).toBeUndefined();
@@ -371,7 +802,7 @@ describe("scoreRun", () => {
 describe("robustness — inputs that bypass validation never throw and never yield NaN", () => {
   it("scores an empty run, an empty classification and a dimensionless matching 0", () => {
     const empty: Quiz = { schema: "semio.quiz/v1", id: "empty", emoji: "🫙", title: T("E"), description: T("E"), tasks: [] };
-    expect(scoreRun(empty, sheetOf(empty, 1), {})).toEqual({ quiz: "empty", score: 0, tasks: [] });
+    for (const challenge of CHALLENGES) expect(scoreRun(empty, sheetOf(empty, 1, challenge), {})).toEqual({ quiz: "empty", challenge, score: 0, points: 0, tasks: [] });
     const nothing: ClassificationTask = { kind: "classification", id: "nothing", title: T("N"), prompt: T("N"), categories: [{ id: "x", label: T("x") }], items: [] };
     expect(scoreTask(nothing, sheetTaskOf(nothing), { kind: "classification", assignments: {} })).toEqual({ kind: "classification", task: "nothing", score: 0, items: [] });
     const flat: MatchingTask = { ...matchingTask({ size: { scale: "linear", values: [1, 2] } }), dimensions: [] };
@@ -414,7 +845,7 @@ describe("robustness — inputs that bypass validation never throw and never yie
     const broken: MatchingTask = { ...task, items: task.items.map((item) => (item.id === "m1" ? { ...item, values: {} } : item)) };
     const sheetTask = sheetTaskOf(broken, 6);
     if (sheetTask.kind !== "matching") throw new Error("kind");
-    const cards = sheetTask.dimensions[0]!.cards;
+    const cards = sheetTask.dimensions[0]!.cards!;
     expect(cards).toHaveLength(3);
     expect(cards.filter((card) => Number.isNaN(card))).toHaveLength(1);
     expect(cards.every((card) => typeof card === "number")).toBe(true);

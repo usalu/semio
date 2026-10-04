@@ -27,6 +27,28 @@ Feature: A sorting answer scores its magnitude-weighted pair concordance
   sheet order, all eight items), a linear task (perfect, reversed, every single swap and a rotation)
   and a task whose values are all equal, where no pair carries weight and every order scores 1.
 
+  Where the sheet task hides its keys (challenge design §3.4: no `keys` on the sheet task) the answer is
+  the learner's `guesses`, and the order is theirs in ascending guess order. An item misses when it has
+  no guess or its guess lies farther from its value than the reach of the presented values — on a
+  logarithmic scale the factor `min(1000, sqrt(hi / lo))`, met when `max(guess, value) / min(guess, value)`
+  exceeds it widened by `1e-9` of itself; on a linear scale the distance `(hi − lo) / 2`, widened alike and
+  unbounded where the values do not spread —,
+  and a pair is also discordant when either of its items misses; a task
+  without weight scores 0 with a miss and 1 without. The item results carry the `guess` where there is
+  one and `miss` on every item. A sheet task that carries `seconds` is timed: its answer may be partly
+  guessed or absent — absent, the items stand in sheet order —, where an untimed one that hides its keys
+  scores none until every item is guessed; guesses where the keys show score none either. The `guessed`
+  group covers exact and rough guesses, guesses counted 1…6, guesses that all miss, the largest item
+  missing, the smallest guessed far too high, exchanged neighbours within the reach, equal guesses with
+  and against the true order, guesses exactly at the reach and just beyond it, an exact ×1000 of the largest
+  value, one double beyond it (within the slack) and clearly beyond it, a typed thousandth of the smallest
+  value (within) and a typed ten-thousandth (missing), the middle item missing,
+  equal values on a linear (never missing) and on a logarithmic scale (in reach and missing), and timed
+  answers: exact, partly guessed, an order without guesses, no answer, and equal values with an unguessed
+  item. Before a guessed score is projected numpy recomputes the reach (`ptp`, `sqrt`, `minimum`), every miss and
+  the score over the pair matrix, and an answer without a miss must score exactly what its order scores
+  where the keys show — the reading scipy's Kendall τ judges.
+
   Design §13 (revisions after audit) adds how both cores degrade on inputs that bypass validation: an
   answer that §5 holds invalid or incomplete, or a sheet task the task cannot resolve, scores none (and a
   submission would be refused `run-incomplete`), an empty mean is 0, and — for classification — a profile
@@ -55,10 +77,19 @@ Feature: A sorting answer scores its magnitude-weighted pair concordance
     When every order of the equally spaced floors — ascending, descending and shuffled subsets of 2, 3, 5 and 8 — is scored
     Then scipy's Spearman ρ of every order implies its score, and every implementation projects the same task result within 1e-12
 
+  @id-guessed
+  @level-fundamental
+  @mode-differential
+  Scenario: Guesses where the keys are hidden score the committed task result, misses costing every pair they touch
+    Given the committed guessed vectors of shared://📏️sorting-concordance/🔣️.json
+    When every guessed answer, or its absence on a timed sheet task, is scored against its task and sheet task
+    Then every implementation projects the same score within 1e-12, the same guesses and the same misses per vector
+    And guesses at the true values or within the reach in the true order score exactly 1, and guesses that all miss exactly 0
+
   @id-degraded
   @level-fundamental
   @mode-error
   Scenario: Inputs that bypass validation degrade identically — scored or none, never a throw or NaN
     Given the committed degraded vectors of shared://📏️sorting-concordance/🔣️.json
     When every degraded vector is scored against its own task and sheet task
-    Then every implementation projects the same result, or none for an order that is not a permutation of the sheet items, a wrong kind or a foreign sheet task, and exactly 1 for an empty sheet
+    Then every implementation projects the same result, or none for an order that is not a permutation of the sheet items, a wrong kind, a foreign sheet task, guesses where the keys show or against the order, and an untimed answer that leaves an item unguessed or is absent, and exactly 1 for an empty sheet

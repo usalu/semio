@@ -664,6 +664,45 @@
   }
 %endregion 🔖️MarchingSquares
 
+%region 🔖️StructuralFit
+\fp_new:N \l_semio_viz_sci_fit_xmin_fp
+\fp_new:N \l_semio_viz_sci_fit_xmax_fp
+\fp_new:N \l_semio_viz_sci_fit_ymin_fp
+\fp_new:N \l_semio_viz_sci_fit_ymax_fp
+\fp_new:N \l_semio_viz_sci_fit_scale_fp
+\fp_new:N \l_semio_viz_sci_fit_pad_fp
+% 🧹 Begins the coordinate bounds of a structural scientific family.
+\cs_new_protected:Npn \semio_viz_sci_fit_reset: {
+  \fp_set:Nn \l_semio_viz_sci_fit_xmin_fp { inf }
+  \fp_set:Nn \l_semio_viz_sci_fit_xmax_fp { -inf }
+  \fp_set:Nn \l_semio_viz_sci_fit_ymin_fp { inf }
+  \fp_set:Nn \l_semio_viz_sci_fit_ymax_fp { -inf }
+}
+% 📍 Includes one authored structural point in the scientific viewport bounds.
+\cs_new_protected:Npn \semio_viz_sci_fit_point:nn #1#2 {
+  \fp_set:Nn \l_semio_viz_sci_fit_xmin_fp { min(\l_semio_viz_sci_fit_xmin_fp,(#1)) }
+  \fp_set:Nn \l_semio_viz_sci_fit_xmax_fp { max(\l_semio_viz_sci_fit_xmax_fp,(#1)) }
+  \fp_set:Nn \l_semio_viz_sci_fit_ymin_fp { min(\l_semio_viz_sci_fit_ymin_fp,(#2)) }
+  \fp_set:Nn \l_semio_viz_sci_fit_ymax_fp { max(\l_semio_viz_sci_fit_ymax_fp,(#2)) }
+}
+% 🖼️ Fits structural coordinates into the family canvas with room for endpoint labels.
+\cs_new_protected:Npn \semio_viz_sci_fit_begin: {
+  \fp_compare:nNnT {\l_semio_viz_sci_fit_xmin_fp} = {inf}
+    {\semio_viz_sci_fit_point:nn {0}{0}}
+  \fp_set:Nn \l_semio_viz_sci_fit_pad_fp { min(4,\l_semio_viz_sci_w_fp/4,\l_semio_viz_sci_h_fp/4) }
+  \fp_set:Nn \l_semio_viz_sci_fit_scale_fp {
+    min(1,
+      (\l_semio_viz_sci_w_fp-2*\l_semio_viz_sci_fit_pad_fp)/max(1,\l_semio_viz_sci_fit_xmax_fp-\l_semio_viz_sci_fit_xmin_fp),
+      (\l_semio_viz_sci_h_fp-2*\l_semio_viz_sci_fit_pad_fp)/max(1,\l_semio_viz_sci_fit_ymax_fp-\l_semio_viz_sci_fit_ymin_fp))
+  }
+  \begin{scope}
+  \pgftransformshift{\pgfpoint
+    {\fp_eval:n{(\l_semio_viz_sci_w_fp-\l_semio_viz_sci_fit_scale_fp*(\l_semio_viz_sci_fit_xmax_fp+\l_semio_viz_sci_fit_xmin_fp))/2}mm}
+    {\fp_eval:n{(\l_semio_viz_sci_h_fp-\l_semio_viz_sci_fit_scale_fp*(\l_semio_viz_sci_fit_ymax_fp+\l_semio_viz_sci_fit_ymin_fp))/2}mm}}
+  \pgftransformscale{\fp_to_decimal:N\l_semio_viz_sci_fit_scale_fp}
+}
+%endregion 🔖️StructuralFit
+
 %region 🔖️Keys
 % 🔑 Injects the canvas keys every scientific family shares into that family's key family.
 %    width (fp, 60): canvas width in mm. height (fp, 40): canvas height in mm.

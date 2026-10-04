@@ -1,17 +1,18 @@
 /** 🪟️ The quiz's pieces of the semio card language: every screen is made of overview cards (the design system's window
  * chrome at dialog level) with the title in the cap chip and the actions as real buttons in the footer chips, plus the
  * small parts the cards share — catalog icons, emoji glyphs in the monochrome emoji face, fact lists, segmented choices,
- * the quiet button of card bodies, the modal dialog every question and notice opens in, and the note of a failure.
+ * the quiet button of card bodies, the modal dialog every question and notice opens in, the note of a failure and the
+ * polite live region that announces what an action changed.
  *
  * @see ../../../../../../🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx — the shared card
  * @see https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html — why actions are at least 24 px tall
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/ — the modal dialog
  */
 
-import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type ReactElement, type ReactNode, type Ref } from "react";
+import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { Icon, OverviewCard, OverviewCardAction, cn, overviewCardChipClass, type IconName, type OverviewCardActionProps } from "@semio-tech/ui-react/chrome";
-import type { Icon as QuizIcon, Motion } from "@semio-tech/quiz";
+import type { Icon as QuizIcon, Motion, TaskKind } from "@semio-tech/quiz";
 import type { QuizText } from "../🌐️i18n/🟦️.ts";
 
 export { cn };
@@ -29,11 +30,13 @@ CardAction.displayName = "CardAction";
  * `anchor` the presence landmark cursors are relative to. A card of the overview opens its page: its heading is a
  * link to `href` (the keyboard and assistive-technology way) and a pointer click anywhere but on a control calls
  * `onOpen`; it takes the pointer although the card layer above the glass lets it pass, and `revealed` lifts it while
- * its page shows clear behind it. */
+ * its page shows clear behind it. `topic` names what the card is about for the pets (`data-pet-topic`: a key among the
+ * grounds of their menagerie that they may match, never a thing they may lift). */
 export function QuizCard(props: {
   readonly id: string;
   readonly card: string;
   readonly anchor?: string;
+  readonly topic?: string;
   readonly href?: string;
   readonly onOpen?: () => void;
   readonly revealed?: boolean;
@@ -57,7 +60,7 @@ export function QuizCard(props: {
       headingLevel={props.headingLevel ?? 2}
       headingRef={props.headingRef}
       focusableHeading={props.focusableHeading}
-      data={{ "data-card": props.card, "data-presence-anchor": props.anchor, "data-revealed": props.revealed ? "" : undefined }}
+      data={{ "data-card": props.card, "data-presence-anchor": props.anchor, "data-pet-topic": props.topic, "data-revealed": props.revealed ? "" : undefined }}
       icon={props.icon}
       title={
         props.href === undefined ? (
@@ -105,7 +108,7 @@ export interface PaneView {
 export function PageFrame(props: { readonly page: string; readonly wide?: boolean; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
     <div data-page={props.page} className="quiz-page-frame relative h-full min-h-0 w-full overflow-auto bg-background p-double text-foreground">
-      <div className={cn("relative mx-auto flex w-full flex-col gap-double", props.wide ? "max-w-6xl" : "max-w-4xl")}>
+      <div className={cn("relative mx-auto flex w-full flex-col gap-double", props.wide ? "max-w-[90rem]" : "max-w-4xl")}>
         {props.children}
         {props.overlay}
       </div>
@@ -131,6 +134,50 @@ export function Glyph(props: { readonly emoji: string; readonly className?: stri
     <span aria-hidden="true" className={cn("quiz-glyph shrink-0", props.className)} data-motion={props.motion} style={props.order === undefined ? undefined : { ["--quiz-icon-order" as string]: props.order }}>
       {textPresentation(props.emoji)}
     </span>
+  );
+}
+
+/** 🗂️ The icon of each task kind in its card's title chip. */
+export const TASK_KIND_ICONS: { readonly [K in TaskKind]: IconName } = { classification: "layout-grid", sorting: "list", matching: "link" };
+
+/** 🖼️ The icon of a task in its title chip: the task's own emoji playing its microanimation, else the icon of its kind. */
+export function TaskGlyph(props: { readonly task: { readonly kind: TaskKind; readonly icon?: QuizIcon } }): ReactElement {
+  const { kind, icon } = props.task;
+  return icon === undefined ? <CardIcon icon={TASK_KIND_ICONS[kind]} /> : <Glyph emoji={icon.emoji} motion={icon.motion} className="text-sm" />;
+}
+
+/** 🔈️ What a polite live region says: the message and how many were said before it, so a repeated message is a new one. */
+export interface Announcement {
+  readonly message: string;
+  readonly serial: number;
+}
+
+/** 🗨️ The message of a polite live region, and the function that replaces it — after `delayMs` without a newer one, so
+ * a burst of changes is announced once, by its last message. */
+export function useAnnouncement(delayMs = 0): { readonly announcement: Announcement; readonly announce: (message: string) => void } {
+  const [announcement, setAnnouncement] = useState<Announcement>({ message: "", serial: 0 });
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const announce = useCallback(
+    (message: string) => {
+      const say = (): void => setAnnouncement((said) => ({ message, serial: said.serial + 1 }));
+      clearTimeout(timer.current);
+      if (delayMs <= 0) say();
+      else timer.current = setTimeout(say, delayMs);
+    },
+    [delayMs],
+  );
+  return { announcement, announce };
+}
+
+/** 📢️ The visually hidden polite live region announcing what a keyboard or pointer action changed; every announcement
+ * is a new node, so the same sentence said twice is spoken twice. */
+export function LiveRegion(props: { readonly announcement: Announcement }): ReactElement {
+  const { message, serial } = props.announcement;
+  return (
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {message === "" ? null : <span key={serial}>{message}</span>}
+    </p>
   );
 }
 
@@ -170,6 +217,30 @@ export function Facts(props: { readonly items: readonly ReactNode[] }): ReactEle
         <li key={index}>{item}</li>
       ))}
     </ul>
+  );
+}
+
+/** 🗃️ The table role of every part of a table that folds into records where its card is too narrow for its columns
+ * (`.quiz-records` around `.quiz-fold` or `.quiz-plot`): a folded part is no table box any more, and with its role
+ * spelled out it stays a table, a row, a heading or a cell for assistive technology in every browser.
+ * @see https://www.w3.org/TR/html-aria/#docconformance — the roles the elements have by themselves */
+export const TABLE = {
+  table: { role: "table" },
+  group: { role: "rowgroup" },
+  row: { role: "row" },
+  column: { role: "columnheader", scope: "col" },
+  name: { role: "rowheader", scope: "row" },
+  cell: { role: "cell" },
+} as const;
+
+/** 🗃️ The frame of a table that folds into records in a card narrower than `fold` rem: its container and, should the
+ * unfolded table still be wider than it, its sideways scroll. */
+export function Records(props: { readonly fold: number; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
+  const { fold, children, className, ...rest } = props;
+  return (
+    <div {...rest} className={cn("quiz-records", className)} style={{ ["--quiz-fold" as string]: fold } as CSSProperties}>
+      {children}
+    </div>
   );
 }
 

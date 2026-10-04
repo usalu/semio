@@ -1,6 +1,6 @@
 use super::*;
 use crate::catalog::tests::fixture;
-use quiz::Identity;
+use quiz::{Challenge, Identity};
 use server::contract::HybridLogicalClock;
 
 pub(crate) const TENANT: &str = "proctor-fixture";
@@ -37,38 +37,35 @@ pub(crate) fn admission(learners: u64) -> Arc<Admission> {
     Arc::new(Admission::new(TENANT, Arc::new(AtomicU64::new(learners))))
 }
 
-/// 💯️ The perfect answer to one presented task, read off the quiz's solutions.
+/// 💯️ The perfect answer to one presented task, read off the quiz's solutions: the keys assigned
+/// where the sheet shows them, the true values guessed where it hides them.
 pub(crate) fn perfect(quiz: &quiz::Quiz, presented: &quiz::SheetTask) -> quiz::Answer {
     use quiz::{Answer, ClassificationAnswer, MatchingAnswer, SheetTask, SortingAnswer, Task};
-    use std::collections::BTreeMap;
     let task = quiz.tasks.iter().find(|task| task.id() == presented.id()).expect("the sheet task exists");
     match (task, presented) {
         (Task::Sorting(task), SheetTask::Sorting(sheet)) => {
             let mut order: Vec<&quiz::SortingItem> = task.items.iter().filter(|item| sheet.items.iter().any(|shown| shown.id == item.id)).collect();
             order.sort_by(|left, right| left.value.total_cmp(&right.value));
-            Answer::Sorting(SortingAnswer { order: order.iter().map(|item| item.id.clone()).collect(), guesses: BTreeMap::new() })
+            let guesses = sheet.keys.is_none().then(|| order.iter().map(|item| (item.id.clone(), item.value)).collect());
+            Answer::Sorting(SortingAnswer { order: order.iter().map(|item| item.id.clone()).collect(), guesses })
         }
         (Task::Classification(task), SheetTask::Classification(sheet)) => Answer::Classification(ClassificationAnswer { assignments: sheet.items.iter().map(|shown| (shown.id.clone(), task.items.iter().find(|item| item.id == shown.id).expect("item").category.clone())).collect() }),
-        (Task::Matching(task), SheetTask::Matching(sheet)) => Answer::Matching(MatchingAnswer {
-            assignments: sheet
-                .dimensions
-                .iter()
-                .map(|dimension| {
-                    let mut used = std::collections::BTreeSet::new();
-                    let cards = sheet
-                        .items
-                        .iter()
-                        .map(|shown| {
-                            let value = task.items.iter().find(|item| item.id == shown.id).expect("item").values[&dimension.id];
-                            let card = (0..dimension.cards.len()).find(|card| dimension.cards[*card] == value && !used.contains(card)).expect("a card of that value");
-                            used.insert(card);
-                            (shown.id.clone(), card)
-                        })
-                        .collect();
-                    (dimension.id.clone(), cards)
-                })
-                .collect(),
-        }),
+        (Task::Matching(task), SheetTask::Matching(sheet)) => {
+            let value = |item: &str, dimension: &str| task.items.iter().find(|defined| defined.id == item).expect("item").values[dimension];
+            let assignments = sheet.dimensions.iter().filter_map(|dimension| {
+                let cards = dimension.cards.as_ref()?;
+                let mut used = std::collections::BTreeSet::new();
+                let assigned = sheet.items.iter().map(|shown| {
+                    let card = (0..cards.len()).find(|card| cards[*card] == value(&shown.id, &dimension.id) && !used.contains(card)).expect("a card of that value");
+                    used.insert(card);
+                    (shown.id.clone(), card)
+                });
+                Some((dimension.id.clone(), assigned.collect()))
+            });
+            let guesses = sheet.dimensions.iter().filter(|dimension| dimension.cards.is_none()).map(|dimension| (dimension.id.clone(), sheet.items.iter().map(|shown| (shown.id.clone(), value(&shown.id, &dimension.id))).collect()));
+            let (assignments, guesses): (std::collections::BTreeMap<_, _>, std::collections::BTreeMap<_, _>) = (assignments.collect(), guesses.collect());
+            Answer::Matching(MatchingAnswer { assignments: (!assignments.is_empty()).then_some(assignments), guesses: (!guesses.is_empty()).then_some(guesses) })
+        }
         _ => panic!("the sheet task has the quiz task's kind"),
     }
 }
@@ -96,7 +93,7 @@ fn registration(stream: ActorKey, learner: &str, identity: Identity) -> EventRec
 
 #[test]
 fn the_wire_names_follow_the_design() {
-    let start = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into() };
+    let start = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
     assert_eq!(command_kind(&start), "quiz.start-run");
     assert_eq!(command_target(&start, TENANT), Ok(learner_key(TENANT, ADA)));
     assert_eq!(command_target(&identify(ADA, Identity::Anonymous), TENANT), Ok(learner_key(TENANT, ADA)));
@@ -120,7 +117,8 @@ fn an_envelope_must_agree_with_its_command() {
             other => panic!("expected a refusal, got {other:?}"),
         }
     };
-    assert!(refused(|envelope| envelope.version = 2).starts_with("envelope-mismatch"));
+    assert!(refused(|envelope| envelope.version = WIRE_VERSION - 1).starts_with("envelope-mismatch"));
+    assert!(refused(|envelope| envelope.version = WIRE_VERSION + 1).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.scope = Scope("other".into())).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.kind = "quiz.start-run".into()).starts_with("envelope-mismatch"));
     assert!(refused(|envelope| envelope.idempotency_key = None).starts_with("envelope-mismatch"));
@@ -139,13 +137,13 @@ fn no_malformed_id_and_no_refused_handle_is_admitted() {
     };
     let megabyte = "a".repeat(1 << 20);
     for learner in ["ADA", "enroll:proctor-fixture:roster:1", megabyte.as_str(), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", ""] {
-        let start = Command::StartRun { id: id(2), learner: learner.into(), run: id(3), quiz: "power".into() };
+        let start = Command::StartRun { id: id(2), learner: learner.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
         assert_eq!(refusal(&start, learner_key(TENANT, learner)), Err(Rejection::Invalid { detail: "id-invalid".into() }), "{:?}", &learner[..learner.len().min(40)]);
         assert_eq!(refusal(&identify(learner, Identity::Anonymous), learner_key(TENANT, learner)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
     }
-    let run = Command::StartRun { id: id(2), learner: ADA.into(), run: "../run".into(), quiz: "power".into() };
+    let run = Command::StartRun { id: id(2), learner: ADA.into(), run: "../run".into(), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
     assert_eq!(admission.admit(&envelope(&run)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
-    let quiz = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "Power".into() };
+    let quiz = Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "Power".into(), challenge: Challenge::Medium, at: 0 };
     assert_eq!(admission.admit(&envelope(&quiz)), Err(Rejection::Invalid { detail: "id-invalid".into() }));
     let mut keyed = envelope(&Command::SubmitRun { id: id(2), learner: ADA.into(), run: id(3) });
     keyed.command_id = CommandId(format!("enroll:{TENANT}:616461"));
@@ -176,7 +174,7 @@ fn a_full_proctor_admits_no_registration_but_every_other_command() {
     assert_eq!(full.caps().learners, 3);
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Anonymous))), Err(Rejection::Invalid { detail: "roster-full".into() }));
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Name { handle: "Ada".into() }))), Err(Rejection::Invalid { detail: "roster-full".into() }));
-    assert_eq!(full.admit(&envelope(&Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into() })), Ok(()));
+    assert_eq!(full.admit(&envelope(&Command::StartRun { id: id(2), learner: ADA.into(), run: id(3), quiz: "power".into(), challenge: Challenge::Medium, at: 0 })), Ok(()));
     full.cap(Limits { learners: 4, ..quiz::DEFAULT_LIMITS });
     assert_eq!(full.admit(&envelope(&identify(ADA, Identity::Anonymous))), Ok(()));
 }
@@ -238,7 +236,7 @@ async fn enrollment_relays_a_handle_registration_to_its_learner_once() {
 async fn an_anonymous_learner_registers_in_its_own_stream_and_runs_only_once_registered() {
     let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
     assert_eq!((learner.actor_kind().await, learner.state_format().await), (LEARNER, STATE_FORMAT));
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into() };
+    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 33 };
     assert_eq!(learner.decide(&ActorState::default(), &envelope(&start), &context(30)).await, invalid("unknown-learner"));
     let mut state = ActorState::default();
     let registered = learner.decide(&state, &envelope(&identify(ADA, Identity::Anonymous)), &context(31)).await;
@@ -257,16 +255,66 @@ async fn the_caps_in_force_reach_the_learner_decisions() {
     let mut state = ActorState::default();
     learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
     let run = id(6);
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: run.clone(), quiz: "power".into() };
+    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: run.clone(), quiz: "power".into(), challenge: Challenge::Medium, at: 40 };
     let Decision::Emit { events: started, .. } = learner.decide(&state, &envelope(&start), &context(40)).await else { panic!("the run starts") };
     learner.evolve(&mut state, &EventRecord { seq: 2, ..started[0].clone() }).await;
     let catalog = fixture();
     let power = &catalog.current()["power"].quiz;
-    let sheet = quiz::sheet_of(power, quiz::run_seed(&run));
-    let answer = |seed: u8| Command::RecordAnswer { id: id(seed), learner: ADA.into(), run: run.clone(), task: sheet.tasks[0].id().clone(), answer: perfect(power, &sheet.tasks[0]) };
+    let sheet = quiz::sheet_of(power, quiz::run_seed(&run), Challenge::Medium);
+    let answer = |seed: u8| Command::RecordAnswer { id: id(seed), learner: ADA.into(), run: run.clone(), task: sheet.tasks[0].id().clone(), answer: perfect(power, &sheet.tasks[0]), at: 41 };
     let Decision::Emit { events: recorded, .. } = learner.decide(&state, &envelope(&answer(7)), &context(41)).await else { panic!("the first answer is recorded") };
     learner.evolve(&mut state, &EventRecord { seq: 3, ..recorded[0].clone() }).await;
     assert_eq!(learner.decide(&state, &envelope(&answer(8)), &context(42)).await, invalid("answers-exhausted"));
+    learner.admission.cap(Limits { runs_per_quiz: 3, ..quiz::DEFAULT_LIMITS });
+    for (seed, challenge) in [(20, Challenge::Easy), (21, Challenge::Medium)] {
+        let switch = Command::StartRun { id: id(seed), learner: ADA.into(), run: id(seed + 10), quiz: "power".into(), challenge, at: 43 };
+        let Decision::Emit { events: switched, .. } = learner.decide(&state, &envelope(&switch), &context(43)).await else { panic!("switching to {challenge:?} voids the open run") };
+        for (offset, record) in switched.iter().enumerate() {
+            learner.evolve(&mut state, &EventRecord { seq: 4 + u64::from(seed) * 2 + offset as u64, ..record.clone() }).await;
+        }
+    }
+    let again = Command::StartRun { id: id(22), learner: ADA.into(), run: id(32), quiz: "power".into(), challenge: Challenge::Hard, at: 44 };
+    assert_eq!(learner.decide(&state, &envelope(&again), &context(44)).await, invalid("runs-exhausted"), "voided runs count against the cap, so switching back and forth stops");
+}
+
+#[tokio::test]
+async fn the_clock_of_a_timed_run_runs_from_the_instants_the_device_claims_and_the_proctors_clock_only_bounds_their_lead() {
+    let learner = LearnerDecider { catalog: Arc::new(fixture()), admission: admission(0) };
+    let mut state = ActorState::default();
+    learner.evolve(&mut state, &registration(learner_key(TENANT, ADA), ADA, Identity::Anonymous)).await;
+    let mut seq = 1;
+    let mut decide = async |state: &mut ActorState, command: Command, millis: u64| {
+        let decision = learner.decide(state, &envelope(&command), &context(millis)).await;
+        if let Decision::Emit { events: records, .. } = &decision {
+            for record in records {
+                seq += 1;
+                learner.evolve(state, &EventRecord { seq, ..record.clone() }).await;
+            }
+        }
+        decision
+    };
+    let (run, plain) = (id(6), id(7));
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(5), learner: ADA.into(), run: run.clone(), quiz: "homes".into(), challenge: Challenge::Expert, at: 1_000 }, 1_000).await)[..], [Event::RunStarted { challenge: Challenge::Expert, at: 1_000, .. }]));
+    let catalog = fixture();
+    let homes = &catalog.current()["homes"].quiz;
+    let sheet = quiz::sheet_of(homes, quiz::run_seed(&run), Challenge::Expert);
+    let (task, seconds) = (sheet.tasks[0].id().clone(), sheet.tasks[0].seconds().expect("an expert sheet task has a clock"));
+    let open = |seed: u8, at: u64| Command::OpenTask { id: id(seed), learner: ADA.into(), run: run.clone(), task: task.clone(), at };
+    let answer = |seed: u8, at: u64| Command::RecordAnswer { id: id(seed), learner: ADA.into(), run: run.clone(), task: task.clone(), answer: perfect(homes, &sheet.tasks[0]), at };
+    assert_eq!(decide(&mut state, answer(8, 1_500), 1_500).await, invalid("task-unopened"));
+    assert_eq!(decide(&mut state, Command::OpenTask { id: id(9), learner: ADA.into(), run: run.clone(), task: "ghost".into(), at: 1_500 }, 1_500).await, invalid("unknown-task"));
+    assert_eq!(events(&decide(&mut state, open(10, 500), 2_000).await), vec![Event::TaskOpened { learner: ADA.into(), run: run.clone(), task: task.clone(), at: 1_000 }], "an opening is never earlier than the run's start");
+    assert_eq!(decide(&mut state, open(11, 2_500), 2_500).await, invalid("already-opened"), "a task opens once and a repeat stores no receipt");
+    let limit = 1_000 + seconds * 1_000;
+    assert_eq!(events(&decide(&mut state, answer(12, 10), 3_000).await), vec![Event::AnswerRecorded { learner: ADA.into(), run: run.clone(), task: task.clone(), answer: perfect(homes, &sheet.tasks[0]), at: 1_000 }], "an answer is never earlier than its task's opening");
+    assert!(matches!(&events(&decide(&mut state, answer(13, limit), limit + 60_000).await)[..], [Event::AnswerRecorded { at, .. }] if *at == limit), "an answer the device made in time counts however late it arrives");
+    assert_eq!(decide(&mut state, answer(14, limit + 1), 3_000).await, invalid("time-up"), "an answer the device made too late is refused however early it arrives: the proctor's own clock is no verdict");
+    let ahead = id(17);
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(19), learner: ADA.into(), run: ahead.clone(), quiz: "power".into(), challenge: Challenge::Expert, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunStarted { .. }]));
+    assert!(matches!(&events(&decide(&mut state, Command::OpenTask { id: id(20), learner: ADA.into(), run: ahead.clone(), task: "appliances".into(), at: limit + 61_000 + 240_000 }, limit + 61_000).await)[..], [Event::TaskOpened { at, .. }] if *at == limit + 61_000 + 240_000), "a device clock four minutes ahead of the proctor's is taken as it claims");
+    assert!(matches!(&events(&decide(&mut state, Command::OpenTask { id: id(21), learner: ADA.into(), run: ahead, task: "sources".into(), at: limit + 9_000_000 }, limit + 61_000).await)[..], [Event::TaskOpened { at, .. }] if *at == limit + 61_000 + quiz::CLOCK_LEAD), "a claim more than five minutes ahead of the proctor's clock is lowered to that lead");
+    assert!(matches!(&events(&decide(&mut state, Command::StartRun { id: id(15), learner: ADA.into(), run: plain.clone(), quiz: "power".into(), challenge: Challenge::Hard, at: limit + 61_000 }, limit + 61_000).await)[..], [Event::RunVoided { .. }, Event::RunStarted { challenge: Challenge::Hard, .. }]), "another challenge voids the open run of the quiz");
+    assert_eq!(decide(&mut state, Command::OpenTask { id: id(16), learner: ADA.into(), run: plain, task: "appliances".into(), at: limit + 61_000 }, limit + 61_000).await, invalid("run-untimed"));
 }
 
 #[tokio::test]
@@ -280,7 +328,7 @@ async fn an_event_or_state_that_does_not_decode_poisons_the_actor_loudly() {
     assert_ne!(state.bytes, healthy, "the fact is not skipped");
     let Stored::Corrupt(corrupt) = stored::<LearnerState>(&state) else { panic!("the actor is poisoned") };
     assert!(corrupt.contains("event 2 of quiz-learner/") && corrupt.contains("quiz.learner-recalled") && corrupt.contains("learner-recalled"), "{corrupt}");
-    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into() };
+    let start = Command::StartRun { id: id(5), learner: ADA.into(), run: id(6), quiz: "power".into(), challenge: Challenge::Medium, at: 0 };
     let Decision::Reject(Rejection::ActorUnavailable { detail }) = learner.decide(&state, &envelope(&start), &context(50)).await else { panic!("a poisoned actor decides nothing") };
     assert!(detail.starts_with("actor-corrupt: event 2 of quiz-learner/"), "{detail}");
     let poisoned = state.bytes.clone();

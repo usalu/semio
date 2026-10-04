@@ -9,16 +9,16 @@
  * @see ../../🎭️e2e/🟦️.ts — the control endpoint
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../📚️catalog/🟦️.ts — the material the device decides with */
-import { answerRun, badgesFor, card, connection, enter, expect, expectFeedback, expectSaved, goHome, handle, learnerId, percent, playQuiz, proctor, quizOf, screen, shownName, submitRun, test, type Device, type Locale, type SourceQuiz } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { PAR, answerRun, badgesFor, card, connection, enter, expect, expectFeedback, expectSaved, goHome, handle, learnerId, playQuiz, proctor, quizOf, screen, shownBest, shownName, submitRun, test, type Device, type Locale, type SourceQuiz } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 /** 📶️ What the connection indicator says while everything stays on the device. */
 const ON_DEVICE: Readonly<Record<Locale, RegExp>> = { en: /Quiz server not reachable – (?:everything is )?saved on this device/u, de: /Quiz-Server nicht erreichbar – (?:alles wird )?auf diesem Gerät gespeichert/u };
 
 test.afterEach(() => proctor("start"));
 
-/** 💯️ The best score of `quiz` in percent as its card on the overview shows it. */
-async function shownBest(device: Device, quiz: SourceQuiz): Promise<number> {
-  return percent(await card(device.page, quiz.id).locator("li", { hasText: "%" }).innerText());
+/** 💰️ The points of the best run of `quiz` as its card on the overview shows them. */
+async function bestPoints(device: Device, quiz: SourceQuiz): Promise<number> {
+  return (await shownBest(device, quiz.id)).points;
 }
 
 /** 🏅️ The labels of the badges the results on screen say the run earned. */
@@ -47,14 +47,14 @@ test("a first visit while the proctor is away is decided on the device, survives
     expect((await expectFeedback(learner, quiz, "perfect")).score).toBe(100);
     expect(await earnedLabels(learner)).toEqual(badges.map((badge) => badge.label.en));
     await goHome(learner);
-    expect(await shownBest(learner, quiz)).toBe(100);
+    expect(await bestPoints(learner, quiz)).toBe(PAR.medium);
     await expect(card(learner.page, "badges").locator("li[data-earned]")).toHaveCount(badges.length);
     await expect(card(learner.page, "board")).toContainText(name);
 
     await learner.page.reload();
     await expect(learner.page.locator("[data-layered-overview]")).toBeVisible();
     expect(await shownName(learner)).toBe(name);
-    expect(await shownBest(learner, quiz)).toBe(100);
+    expect(await bestPoints(learner, quiz)).toBe(PAR.medium);
     await expect(card(learner.page, "badges").locator("li[data-earned]")).toHaveCount(badges.length);
     await expect(connection(learner)).toContainText(ON_DEVICE.en, { timeout: 30_000 });
 
@@ -65,13 +65,13 @@ test("a first visit while the proctor is away is decided on the device, survives
   expect(failures, "the proctor was really away: requests failed").toBeGreaterThan(0);
   await expect(card(learner.page, "board").locator("[data-board-local]")).toHaveCount(0, { timeout: 60_000 });
   await expect(card(learner.page, "board")).toContainText(name);
-  expect(await shownBest(learner, quiz)).toBe(100);
+  expect(await bestPoints(learner, quiz)).toBe(PAR.medium);
   await expect(learner.page.getByRole("alert")).toHaveCount(0);
 
   const elsewhere = await device("en");
   await enter(elsewhere, { kind: "pseudonym", handle: name });
   expect(await learnerId(elsewhere)).toBe(await learnerId(learner));
-  expect(await shownBest(elsewhere, quiz)).toBe(100);
+  expect(await bestPoints(elsewhere, quiz)).toBe(PAR.medium);
   await expect(card(elsewhere.page, "badges").locator("li[data-earned]")).toHaveCount(badges.length);
 });
 
@@ -112,11 +112,11 @@ test("a pseudonym the proctor already knows, taken while it is away, continues a
   expect(await learnerId(away)).toBe(holder);
   await expect(away.page.getByRole("alert")).toContainText(name);
   expect(await shownName(away)).toBe(name);
-  await expect.poll(() => shownBest(away, before), { timeout: 60_000 }).toBe(100);
-  expect(await shownBest(away, during)).toBe(100);
+  await expect.poll(() => bestPoints(away, before), { timeout: 60_000 }).toBe(PAR.medium);
+  expect(await bestPoints(away, during)).toBe(PAR.medium);
 
   await home.page.reload();
   await expect(home.page.locator("[data-layered-overview]")).toBeVisible();
-  await expect.poll(() => shownBest(home, during), { timeout: 60_000 }).toBe(100);
-  expect(await shownBest(home, before)).toBe(100);
+  await expect.poll(() => bestPoints(home, during), { timeout: 60_000 }).toBe(PAR.medium);
+  expect(await bestPoints(home, before)).toBe(PAR.medium);
 });

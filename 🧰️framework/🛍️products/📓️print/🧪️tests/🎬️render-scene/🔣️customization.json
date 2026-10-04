@@ -1,0 +1,3656 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "row-style",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "color",
+              "size",
+              "alpha"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 20,
+                "color": "#ff0000",
+                "size": 12.566370614359172,
+                "alpha": 0.25
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "encodings": {
+              "x": {
+                "column": "x"
+              },
+              "y": {
+                "column": "y"
+              },
+              "fill": {
+                "column": "color"
+              },
+              "size": {
+                "column": "size"
+              },
+              "opacity": {
+                "column": "alpha"
+              }
+            },
+            "options": {
+              "stroke": "#000000",
+              "strokeWidth": 0.7
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 10,
+        "cy": 20,
+        "r": 2,
+        "fill": "#ff0000",
+        "stroke": "#000000",
+        "strokeWidth": 0.7,
+        "opacity": 0.25
+      }
+    },
+    {
+      "id": "empty-area",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": []
+          }
+        ],
+        "layers": [
+          {
+            "mark": "area"
+          },
+          {
+            "mark": "line"
+          },
+          {
+            "mark": "polygon"
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 0
+    },
+    {
+      "id": "heatmap-rectangle",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "x2",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 30,
+                "y": 40,
+                "x2": 10,
+                "y2": 20
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "heatmap"
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "rect",
+        "x": 10,
+        "y": 20,
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "id": "vertical-rule",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x"
+            ],
+            "rows": [
+              {
+                "x": 25
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "rule",
+            "encodings": {
+              "x": {
+                "column": "x"
+              }
+            },
+            "options": {
+              "dash": "2,1"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "line",
+        "x1": 25,
+        "y1": 0,
+        "x2": 25,
+        "y2": 80,
+        "dash": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "id": "polar-point",
+      "spec": {
+        "width": 100,
+        "height": 100,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "coordinate": {
+          "kind": "polar"
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 0.25,
+                "y": 1
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point"
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 100,
+        "cy": 50
+      }
+    },
+    {
+      "id": "top-axis",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "de",
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "top",
+            "tickValues": [
+              0.5
+            ],
+            "tickFormat": ".1f",
+            "tickSize": 2
+          }
+        ]
+      },
+      "expected": {
+        "kind": "line",
+        "x1": 50,
+        "y1": 10,
+        "x2": 50,
+        "y2": 8
+      },
+      "text": "0,5"
+    },
+    {
+      "id": "right-axis",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "name": "y",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              70,
+              10
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "y",
+            "orient": "right",
+            "tickValues": [
+              0.5
+            ],
+            "tickSize": 3
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "line",
+        "x1": 90,
+        "y1": 40,
+        "x2": 93,
+        "y2": 40
+      }
+    },
+    {
+      "id": "grid-only",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              16,
+              92
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "grid",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0.5
+            ]
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 1,
+      "expected": {
+        "kind": "line",
+        "x1": 54,
+        "y1": 8,
+        "x2": 54,
+        "y2": 66
+      }
+    },
+    {
+      "id": "localized-annotation",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "de",
+        "layers": [],
+        "annotations": [
+          {
+            "kind": "text",
+            "x": 12,
+            "y": 13,
+            "text": {
+              "en": "Revenue",
+              "de": "Umsatz"
+            },
+            "options": {
+              "fill": "#008000",
+              "size": 9,
+              "anchor": "start"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "kind": "text",
+        "x": 12,
+        "y": 13,
+        "content": "Umsatz",
+        "size": 9,
+        "fill": "#008000",
+        "anchor": "start"
+      }
+    },
+    {
+      "id": "area-boundary",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15,
+                "y2": 35
+              },
+              {
+                "x": 20,
+                "y": 10,
+                "y2": 45
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "area"
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "area"
+    },
+    {
+      "id": "line-curve",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15
+              },
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 30,
+                "y": 25
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "line",
+            "options": {
+              "curve": "step-after"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "line"
+    },
+    {
+      "id": "link-curve",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "x2",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15,
+                "x2": 30,
+                "y2": 45
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "link",
+            "options": {
+              "orientation": "horizontal"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "link"
+    },
+    {
+      "id": "arc-center",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "startAngle",
+              "endAngle",
+              "innerRadius",
+              "outerRadius"
+            ],
+            "rows": [
+              {
+                "startAngle": 0,
+                "endAngle": 1.5707963267948966,
+                "innerRadius": 5,
+                "outerRadius": 20
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "arc"
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "arc",
+      "tikzIncludes": [
+        "start angle=90,end angle=0,radius=20mm",
+        "start angle=0,end angle=90,radius=5mm"
+      ]
+    },
+    {
+      "id": "rect-dimensions",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 5,
+                "y": 10
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "rect",
+            "options": {
+              "width": 8,
+              "height": 12
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "rect",
+        "x": 5,
+        "y": 10,
+        "width": 8,
+        "height": 12
+      }
+    },
+    {
+      "id": "horizontal-bar",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 35,
+                "y": 10
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "bar",
+            "options": {
+              "orientation": "horizontal",
+              "width": 4
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "rect",
+        "x": 0,
+        "y": 10,
+        "width": 35,
+        "height": 4
+      }
+    },
+    {
+      "id": "circle-radius",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "radius"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 20,
+                "radius": 7
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "circle",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 10,
+        "cy": 20,
+        "r": 7
+      }
+    },
+    {
+      "id": "symbol-shape",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "shape",
+              "size"
+            ],
+            "rows": [
+              {
+                "x": 0,
+                "y": 0,
+                "shape": "diamond",
+                "size": 40
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "symbol",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "symbol"
+    },
+    {
+      "id": "band-boundary",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15,
+                "y2": 35
+              },
+              {
+                "x": 20,
+                "y": 10,
+                "y2": 45
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "band",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "area"
+    },
+    {
+      "id": "polygon-points",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 1,
+                "y": 2
+              },
+              {
+                "x": 3,
+                "y": 4
+              },
+              {
+                "x": 5,
+                "y": 6
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "polygon",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "polygon",
+        "points": [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            5,
+            6
+          ]
+        ]
+      }
+    },
+    {
+      "id": "path-curve",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15
+              },
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 30,
+                "y": 25
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "path",
+            "options": {
+              "curve": "step-after"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "line"
+    },
+    {
+      "id": "trail-width",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "size"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15,
+                "size": 2
+              },
+              {
+                "x": 20,
+                "y": 10,
+                "size": 4
+              },
+              {
+                "x": 30,
+                "y": 25,
+                "size": 6
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "trail",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 2,
+      "expected": {
+        "kind": "path",
+        "strokeWidth": 2
+      }
+    },
+    {
+      "id": "ribbon-geometry",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "startAngle",
+              "endAngle",
+              "targetStartAngle",
+              "targetEndAngle",
+              "radius"
+            ],
+            "rows": [
+              {
+                "x": 0,
+                "y": 0,
+                "startAngle": 0,
+                "endAngle": 0.5,
+                "targetStartAngle": 1,
+                "targetEndAngle": 1.5,
+                "radius": 20
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "ribbon",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "ribbon"
+    },
+    {
+      "id": "pie-layout",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "value"
+            ],
+            "rows": [
+              {
+                "value": 1
+              },
+              {
+                "value": 2
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "pie",
+            "layout": {
+              "algorithm": "pie",
+              "options": {
+                "value": "value",
+                "sort": "none",
+                "innerRadius": 3,
+                "outerRadius": 20
+              }
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "oracle": "pie"
+    },
+    {
+      "id": "text-style",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "text"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15,
+                "text": "Cost & tax 20%_#${}^~\\"
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "text",
+            "options": {
+              "fill": "#0000ff",
+              "opacity": 0.5,
+              "size": 9,
+              "rotation": 15,
+              "anchor": "end"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "text",
+        "x": 10,
+        "y": 15,
+        "content": "Cost & tax 20%_#${}^~\\",
+        "fill": "#0000ff",
+        "opacity": 0.5,
+        "size": 9,
+        "rotation": 15,
+        "anchor": "end"
+      },
+      "tikzIncludes": [
+        "\\&",
+        "\\%",
+        "\\_",
+        "\\#",
+        "\\$",
+        "\\{",
+        "\\}",
+        "\\textasciicircum{}",
+        "\\textasciitilde{}",
+        "\\textbackslash{}",
+        "text opacity=0.5",
+        "rotate=-15"
+      ]
+    },
+    {
+      "id": "encoded-color-scale",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "category"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 20,
+                "category": "b"
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "encodings": {
+              "fill": {
+                "column": "category",
+                "scale": "paint"
+              }
+            }
+          }
+        ],
+        "scales": [
+          {
+            "name": "paint",
+            "kind": "ordinal",
+            "domain": [
+              "a",
+              "b"
+            ],
+            "range": [
+              "#ff0000",
+              "#00ff00"
+            ]
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "fill": "#00ff00"
+      }
+    },
+    {
+      "id": "line-detail-order",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "group",
+              "rank"
+            ],
+            "rows": [
+              {
+                "x": 20,
+                "y": 10,
+                "group": "a",
+                "rank": 2
+              },
+              {
+                "x": 10,
+                "y": 15,
+                "group": "a",
+                "rank": 1
+              },
+              {
+                "x": 30,
+                "y": 20,
+                "group": "b",
+                "rank": 1
+              },
+              {
+                "x": 40,
+                "y": 30,
+                "group": "b",
+                "rank": 2
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "line",
+            "encodings": {
+              "detail": {
+                "column": "group"
+              },
+              "order": {
+                "column": "rank"
+              }
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 2,
+      "expected": {
+        "kind": "path",
+        "commands": [
+          {
+            "op": "moveTo",
+            "args": [
+              10,
+              15
+            ]
+          },
+          {
+            "op": "lineTo",
+            "args": [
+              20,
+              10
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "row-line-styles",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "stroke",
+              "opacity"
+            ],
+            "rows": [
+              {
+                "x": 1,
+                "y": 2,
+                "stroke": "#ff0000",
+                "opacity": 0.2
+              },
+              {
+                "x": 3,
+                "y": 4,
+                "stroke": "#00ff00",
+                "opacity": 0.5
+              },
+              {
+                "x": 5,
+                "y": 6,
+                "stroke": "#0000ff",
+                "opacity": 0.9
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "line",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 2,
+      "expected": {
+        "kind": "path",
+        "stroke": "#ff0000",
+        "opacity": 0.2
+      }
+    },
+    {
+      "id": "point-gap",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 1,
+                "y": 2
+              },
+              {
+                "x": null,
+                "y": 4
+              },
+              {
+                "x": 5,
+                "y": 6
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 2
+    },
+    {
+      "id": "line-gap",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 1,
+                "y": 2
+              },
+              {
+                "x": null,
+                "y": 4
+              },
+              {
+                "x": 5,
+                "y": 6
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "line",
+            "options": {}
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "path",
+        "commands": [
+          {
+            "op": "moveTo",
+            "args": [
+              1,
+              2
+            ]
+          },
+          {
+            "op": "closePath",
+            "args": []
+          },
+          {
+            "op": "moveTo",
+            "args": [
+              5,
+              6
+            ]
+          },
+          {
+            "op": "closePath",
+            "args": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "normalized-cartesian",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 0.25,
+                "y": 0.75
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "options": {}
+          }
+        ],
+        "coordinate": {
+          "kind": "cartesian",
+          "options": {
+            "normalized": true
+          }
+        },
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 25,
+        "cy": 20
+      }
+    },
+    {
+      "id": "transpose-cartesian",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 0.25,
+                "y": 0.75
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point",
+            "options": {}
+          }
+        ],
+        "coordinate": {
+          "kind": "cartesian",
+          "options": {
+            "normalized": true,
+            "transpose": true
+          }
+        },
+        "language": "en"
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 75,
+        "cy": 60
+      }
+    },
+    {
+      "id": "left-axis",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "name": "y",
+            "kind": "linear",
+            "domain": [
+              0,
+              1
+            ],
+            "range": [
+              70,
+              10
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "y",
+            "orient": "left",
+            "tickValues": [
+              0.5
+            ],
+            "tickSize": 3
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "line",
+        "x1": 10,
+        "y1": 40,
+        "x2": 7,
+        "y2": 40
+      }
+    },
+    {
+      "id": "bottom-band-axis",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "name": "x",
+            "kind": "band",
+            "domain": [
+              "a",
+              "b"
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom"
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 7,
+      "expected": {
+        "kind": "line",
+        "x1": 30,
+        "y1": 70,
+        "x2": 30,
+        "y2": 71.4
+      },
+      "text": "a"
+    },
+    {
+      "id": "legend-color",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "scales": [
+          {
+            "name": "paint",
+            "kind": "ordinal",
+            "domain": [
+              "a",
+              "b"
+            ],
+            "range": [
+              "#ff0000",
+              "#00ff00"
+            ]
+          }
+        ],
+        "layers": [],
+        "guides": [
+          {
+            "kind": "legend",
+            "scale": "paint",
+            "orient": "right",
+            "options": {
+              "x": 70,
+              "y": 20,
+              "swatchSize": 4
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 4,
+      "expected": {
+        "kind": "rect",
+        "x": 70,
+        "y": 60,
+        "width": 4,
+        "height": 4,
+        "fill": "#ff0000"
+      },
+      "text": "a"
+    },
+    {
+      "id": "annotation-shapes",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "layers": [],
+        "annotations": [
+          {
+            "kind": "rect",
+            "x": 1,
+            "y": 2,
+            "width": 3,
+            "height": 4,
+            "options": {
+              "fill": "#ff0000"
+            }
+          },
+          {
+            "kind": "circle",
+            "x": 5,
+            "y": 6,
+            "radius": 7
+          },
+          {
+            "kind": "line",
+            "x": 8,
+            "y": 9,
+            "x2": 10,
+            "y2": 11
+          },
+          {
+            "kind": "rule",
+            "x": 12,
+            "y": 13,
+            "x2": 14,
+            "y2": 15
+          },
+          {
+            "kind": "point",
+            "x": 16,
+            "y": 17,
+            "radius": 2
+          }
+        ],
+        "language": "en"
+      },
+      "expectedCount": 5,
+      "expected": {
+        "kind": "rect",
+        "x": 1,
+        "y": 2,
+        "width": 3,
+        "height": 4,
+        "fill": "#ff0000"
+      }
+    },
+    {
+      "id": "localized-title",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "layers": [],
+        "title": {
+          "en": "Revenue",
+          "de": "Umsatz"
+        }
+      },
+      "expected": {
+        "kind": "text",
+        "content": "Revenue"
+      }
+    },
+    {
+      "id": "clip-and-dash",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 10,
+                "y": 15
+              },
+              {
+                "x": 20,
+                "y": 10
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "line",
+            "options": {
+              "clip": true,
+              "dash": "2,1",
+              "stroke": "#ff0000",
+              "cap": "round",
+              "join": "bevel"
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "expected": {
+        "kind": "path",
+        "dash": [
+          2,
+          1
+        ],
+        "clip": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 100,
+          "y1": 80
+        },
+        "cap": "round",
+        "join": "bevel"
+      },
+      "tikzIncludes": [
+        "\\clip (0,0) rectangle (100,80)",
+        "dash pattern=on 2mm off 1mm",
+        "line cap=round",
+        "line join=bevel"
+      ]
+    },
+    {
+      "id": "normalized-rect",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "x2",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 0.2,
+                "y": 0.3,
+                "x2": 0.4,
+                "y2": 0.6
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "rect",
+            "options": {}
+          }
+        ],
+        "coordinate": {
+          "kind": "cartesian",
+          "options": {
+            "normalized": true
+          }
+        }
+      },
+      "expected": {
+        "kind": "polygon",
+        "points": [
+          [
+            20,
+            56
+          ],
+          [
+            40,
+            56
+          ],
+          [
+            40,
+            32
+          ],
+          [
+            20,
+            32
+          ]
+        ]
+      }
+    },
+    {
+      "id": "normalized-rule",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "y"
+            ],
+            "rows": [
+              {
+                "y": 0.25
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "rule",
+            "options": {}
+          }
+        ],
+        "coordinate": {
+          "kind": "cartesian",
+          "options": {
+            "normalized": true
+          }
+        }
+      },
+      "expected": {
+        "kind": "line",
+        "x1": 0,
+        "y1": 60,
+        "x2": 100,
+        "y2": 60
+      }
+    },
+    {
+      "id": "polar-rect",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y",
+              "x2",
+              "y2"
+            ],
+            "rows": [
+              {
+                "x": 0,
+                "y": 0.25,
+                "x2": 0.25,
+                "y2": 0.5
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "rect",
+            "options": {}
+          }
+        ],
+        "coordinate": {
+          "kind": "polar"
+        }
+      },
+      "expected": {
+        "kind": "path"
+      },
+      "tikzIncludes": [
+        "radius=20mm",
+        "radius=10mm"
+      ]
+    },
+    {
+      "id": "full-circle-path",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "startAngle",
+              "endAngle",
+              "outerRadius"
+            ],
+            "rows": [
+              {
+                "startAngle": 0,
+                "endAngle": 6.283185307179586,
+                "outerRadius": 10
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "arc",
+            "options": {}
+          }
+        ]
+      },
+      "expected": {
+        "kind": "path"
+      },
+      "tikzIncludes": [
+        "end angle=-90",
+        "end angle=-270"
+      ],
+      "sceneArcCount": 2
+    },
+    {
+      "id": "geographic-point",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "margin": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "coordinate": {
+          "kind": "geographic",
+          "options": {
+            "projection": "equirectangular"
+          }
+        },
+        "tables": [
+          {
+            "name": "data",
+            "columns": [
+              "x",
+              "y"
+            ],
+            "rows": [
+              {
+                "x": 90,
+                "y": 0
+              }
+            ]
+          }
+        ],
+        "layers": [
+          {
+            "mark": "point"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "circle",
+        "cx": 75,
+        "cy": 40
+      }
+    },
+    {
+      "id": "axis-domain-default",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domainline-off",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "domainLine": false
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domain-alias-off",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "domain": false
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domainline-overrides-alias",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "domain": true,
+              "domainLine": false
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domainline-enabled",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "domain": false,
+              "domainLine": true
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-default",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": true
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-top-custom",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "top",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": true,
+            "offset": 3,
+            "options": {
+              "minorTicks": 2,
+              "minorSize": 1.25
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-left-custom",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "left",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": true,
+            "options": {
+              "minorTicks": 5,
+              "minorSize": 1.5
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-right-reversed",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "right",
+            "tickValues": [
+              10,
+              0
+            ],
+            "minor": true,
+            "options": {
+              "minorTicks": 3
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-options-off",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": true,
+            "options": {
+              "minor": false
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-options-on",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": false,
+            "options": {
+              "minor": true
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-single-major",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              5
+            ],
+            "minor": true
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "grid-minor-default",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "grid",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "minor": true
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-minor-log-position-interpolation",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "log",
+            "domain": [
+              1,
+              100
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              1,
+              10,
+              100
+            ],
+            "minor": true
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domain-scale-range",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              30,
+              60
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "axis-domain-reversed-scale-range",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              90,
+              10
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "axis",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "id": "grid-domainline-explicitly-enabled",
+      "spec": {
+        "width": 100,
+        "height": 80,
+        "margin": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "language": "en",
+        "layers": [],
+        "scales": [
+          {
+            "name": "x",
+            "kind": "linear",
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ]
+          }
+        ],
+        "guides": [
+          {
+            "kind": "grid",
+            "scale": "x",
+            "orient": "bottom",
+            "tickValues": [
+              0,
+              10
+            ],
+            "options": {
+              "domainLine": true
+            }
+          }
+        ]
+      },
+      "oracle": "guide"
+    },
+    {
+      "oracle": "guide-text",
+      "expectedRotation": -45,
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelRotate": 45
+            },
+            "orient": "bottom",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-labelrotate-alias"
+    },
+    {
+      "oracle": "guide-text",
+      "expectedRotation": 30,
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelRotation": -30
+            },
+            "orient": "top",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-labelrotation-primary"
+    },
+    {
+      "oracle": "guide-text",
+      "expectedRotation": 0,
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelRotate": 45,
+              "labelRotation": 0
+            },
+            "orient": "left",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-labelrotation-precedence"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelAlign": "start"
+            },
+            "orient": "bottom",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-label-align-start"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelAlign": "end"
+            },
+            "orient": "left",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-label-align-end"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "labelAlign": "middle"
+            },
+            "orient": "right",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-label-align-middle"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "tickPadding": 4,
+              "tickSize": 3
+            },
+            "orient": "bottom",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-tick-padding-bottom"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "tickPadding": 0,
+              "tickSize": 3
+            },
+            "orient": "top",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-tick-padding-top-zero"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "options": {
+              "tickPadding": 4
+            },
+            "orient": "left",
+            "scale": "x",
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis"
+          }
+        ]
+      },
+      "id": "axis-tick-padding-left"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "orient": "bottom",
+            "options": {
+              "titleAnchor": "start",
+              "titleGap": 6,
+              "tickSize": 3
+            },
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis",
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "scale": "x"
+          }
+        ]
+      },
+      "id": "axis-title-start-gap"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "orient": "left",
+            "options": {
+              "titleAnchor": "end",
+              "titleGap": 6,
+              "tickSize": 3
+            },
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis",
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "scale": "x"
+          }
+        ]
+      },
+      "id": "axis-title-end-gap"
+    },
+    {
+      "oracle": "guide-text",
+      "spec": {
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "name": "x",
+            "kind": "linear"
+          }
+        ],
+        "language": "en",
+        "margin": {
+          "bottom": 10,
+          "top": 10,
+          "left": 10,
+          "right": 10
+        },
+        "width": 100,
+        "layers": [],
+        "height": 80,
+        "guides": [
+          {
+            "orient": "top",
+            "options": {
+              "titleAnchor": "middle",
+              "titleGap": 0
+            },
+            "tickValues": [
+              0,
+              10
+            ],
+            "kind": "axis",
+            "title": {
+              "en": "Axis",
+              "de": "Achse"
+            },
+            "scale": "x"
+          }
+        ]
+      },
+      "id": "axis-title-middle-gap"
+    },
+    {
+      "spec": {
+        "scales": [
+          {
+            "domain": [
+              0,
+              10
+            ],
+            "range": [
+              10,
+              90
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ],
+        "width": 100,
+        "height": 80,
+        "layers": [],
+        "margin": {
+          "bottom": 10,
+          "right": 10,
+          "top": 10,
+          "left": 10
+        },
+        "guides": [
+          {
+            "orient": "bottom",
+            "kind": "axis",
+            "tickValues": [
+              0,
+              10
+            ],
+            "tickSize": 1,
+            "scale": "x",
+            "options": {
+              "tickPadding": 4,
+              "tickSize": 3
+            }
+          }
+        ],
+        "language": "en"
+      },
+      "id": "axis-ticksize-options-overrides-typed",
+      "oracle": "guide-text"
+    },
+    {
+      "id": "axis-options-tickvalues",
+      "oracle": "guide-text",
+      "expectedTicks": [
+        0,
+        5,
+        10
+      ],
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "orient": "bottom",
+            "options": {
+              "tickValues": "0,5,10"
+            },
+            "scale": "x",
+            "kind": "axis",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "axis-options-tickvalues-order",
+      "oracle": "guide-text",
+      "expectedTicks": [
+        10,
+        0,
+        5
+      ],
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "orient": "bottom",
+            "options": {
+              "tickValues": "10, 0, 5"
+            },
+            "scale": "x",
+            "kind": "axis",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "axis-options-ticks-count",
+      "oracle": "guide-text",
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "orient": "bottom",
+            "options": {
+              "ticks": 2
+            },
+            "scale": "x",
+            "kind": "axis",
+            "ticks": 8
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "axis-options-tickvalues-empty",
+      "oracle": "guide-text",
+      "expectedTicks": [
+        0,
+        5,
+        10
+      ],
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "orient": "bottom",
+            "options": {
+              "tickValues": "",
+              "ticks": 2
+            },
+            "scale": "x",
+            "kind": "axis",
+            "tickValues": [
+              0,
+              10
+            ]
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "axis-options-tickformat",
+      "oracle": "guide-text",
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "tickValues": [
+              0,
+              10
+            ],
+            "orient": "bottom",
+            "tickFormat": ".1f",
+            "kind": "axis",
+            "scale": "x",
+            "options": {
+              "tickFormat": ".2f"
+            }
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    },
+    {
+      "id": "axis-options-tick-controls-combined",
+      "oracle": "guide-text",
+      "expectedTicks": [
+        2,
+        8
+      ],
+      "spec": {
+        "layers": [],
+        "width": 100,
+        "height": 80,
+        "language": "en",
+        "guides": [
+          {
+            "tickValues": [
+              0,
+              10
+            ],
+            "orient": "bottom",
+            "tickFormat": ".1f",
+            "kind": "axis",
+            "ticks": 8,
+            "scale": "x",
+            "options": {
+              "tickValues": "2,8",
+              "ticks": 2,
+              "tickFormat": ".2f"
+            }
+          }
+        ],
+        "margin": {
+          "top": 10,
+          "bottom": 10,
+          "right": 10,
+          "left": 10
+        },
+        "scales": [
+          {
+            "range": [
+              10,
+              90
+            ],
+            "domain": [
+              0,
+              10
+            ],
+            "kind": "linear",
+            "name": "x"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 @comparison-viz-probe-exact-v1
 Feature: The TypeScript twin of the layered graph layout answers as the reference implementation does
   `🎚️network-layered` measures the LaTeX kernel — the layered layout ranks and orders a DAG the way a Sugiyama implementation does. This case measures the
-  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-kernel`, on
+  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-inference`, on
   the same vectors and against the same oracle, because a kernel that exists twice is only a
   kernel if both copies answer alike.
 

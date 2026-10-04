@@ -449,7 +449,7 @@
 %    mode (argand|complex-plane|domain-coloring|riemann-surface, argand).
 %    values (clist of `re/im/label`): the numbers of an Argand diagram.
 %    exprRe, exprIm (l3fp over \SemioX,\SemioY): the mapped function for the other modes.
-%    columns, rows (int, 24): raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets.
+%    columns, rows (int, 24): raster resolution of the domain colouring. sheets (int, 3): Riemann-surface sheets. samples (int, 120): intervals per sheet.
 \clist_new:N \l_semio_viz_math_values_clist
 \tl_new:N \l_semio_viz_math_exprre_tl
 \tl_new:N \l_semio_viz_math_exprim_tl
@@ -464,6 +464,7 @@
     values  .clist_set:N = \l_semio_viz_math_values_clist ,
     exprRe  .tl_set:N    = \l_semio_viz_math_exprre_tl ,
     exprIm  .tl_set:N    = \l_semio_viz_math_exprim_tl ,
+    samples .int_set:N   = \l_semio_viz_math_samples_int ,
     columns .int_set:N   = \l_semio_viz_math_cols_int ,
     rows    .int_set:N   = \l_semio_viz_math_rows_int ,
     sheets  .int_set:N   = \l_semio_viz_math_sheets_int ,
@@ -509,7 +510,7 @@
       {
         mode=argand , values={ 1/0.6/z , -0.8/1.1/w , 0.2/-1.3/u } ,
         exprRe={ \SemioX * \SemioX - \SemioY * \SemioY } , exprIm={ 2 * \SemioX * \SemioY } ,
-        columns=24 , rows=24 , sheets=3 , domain={-1.5,1.5} , range={-1.5,1.5}
+        columns=24 , rows=24 , sheets=3 , samples=120 , domain={-1.5,1.5} , range={-1.5,1.5}
       }
       {#1}
     \semio_viz_sci_window_keys:
@@ -643,8 +644,18 @@
       }
   }
 % 🌿 Sweeps the parameter across the columns, discards the settle transient and dots the retained tail.
+\int_new:N \g_semio_viz_math_bif_object_int
+\tl_new:N \l_semio_viz_math_bif_object_tl
 \cs_new_protected:Npn \semio_viz_math_bifurcation:
   {
+    \begin{scope}[fill=semio-primary,fill~opacity=0.55]
+    \int_gincr:N \g_semio_viz_math_bif_object_int
+    \tl_set:Nx \l_semio_viz_math_bif_object_tl { semio-bifurcation-dot-\int_use:N \g_semio_viz_math_bif_object_int }
+    \exp_args:NV \pgfdefobject \l_semio_viz_math_bif_object_tl
+      { \pgfpoint {-0.09mm} {-0.09mm} } { \pgfpoint {0.09mm} {0.09mm} }
+      { \pgftransformreset \pgfpathcircle {\pgfpointorigin} {0.09mm} \pgfusepath {fill} }
+    \pgfsysprotocol@flushcurrentprotocol
+    \pgfsysprotocol@bufferedtrue
     \int_step_inline:nnnn { 0 } { 1 } { \l_semio_viz_math_cols_int }
       {
         \fp_set:Nn \SemioY
@@ -656,10 +667,21 @@
         \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_math_keep_int }
           {
             \fp_set:Nn \SemioX { \l_semio_viz_math_expr_tl }
-            \fill [ fill=semio-primary , fill~opacity=0.55 ]
-              ( \semio_viz_sci_mx:n { \SemioY } , \semio_viz_sci_my:n { \SemioX } ) circle [ radius=0.09 ] ;
+            \pgfscope
+              \pgftransformshift { \pgfpoint {\semio_viz_sci_mx:n {\SemioY} mm} {\semio_viz_sci_my:n {\SemioX} mm} }
+              \pgfpathcircle {\pgfpointorigin} {0.09mm}
+              \pgfusepath {use~as~bounding~box}
+              \pgflowlevelsynccm
+              \exp_args:Nc \pgfsysprotocol@literalbuffered { \l_semio_viz_math_bif_object_tl }
+            \endpgfscope
+            \semio_viz_sci_report_values:nn { bifurcation-point }
+              { \fp_to_decimal:N \SemioY , \fp_to_decimal:N \SemioX ,
+                \semio_viz_sci_mx:n { \SemioY } , \semio_viz_sci_my:n { \SemioX } }
           }
+        \pgfsysprotocol@flushcurrentprotocol
       }
+    \pgfsysprotocol@bufferedfalse
+    \end{scope}
   }
 
 % 🔁 §25 discrete dynamics: index plots, cobweb staircases and the bifurcation cascade of a parameterised map.

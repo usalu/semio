@@ -99,7 +99,14 @@ fn a_thinking_room_admits_drafts_over_the_ids_its_quiz_renders() {
     assert_eq!(rooms.admit(power, &thinking(&json!({ "appliances": { "kind": "sorting", "order": ["kettle", "pellets"] } }))), Err("id-unknown /answers/appliances/order/1".to_string()));
     assert_eq!(rooms.admit(power, &thinking(&json!({ "sources": { "kind": "matching", "values": { "price": {} } } }))), Err("id-unknown /answers/sources/values/price".to_string()));
     assert_eq!(rooms.admit(power, &thinking(&json!({ "sources": { "kind": "matching", "values": { "hours": { "kettle": 950 } } } }))), Err("id-unknown /answers/sources/values/hours/kettle".to_string()));
-    assert_eq!(rooms.admit(power, &thinking(&json!({ "sources": { "kind": "matching", "values": { "hours": { "rooftop-pv": 10000 } } } }))), Err("value-unknown /answers/sources/values/hours/rooftop-pv".to_string()), "a capacity is no hours card");
+    let guessed = json!({
+        "appliances": { "kind": "sorting", "order": ["kettle", "laptop"], "guesses": { "kettle": 1800.5, "laptop": 0.07 } },
+        "sources": { "kind": "matching", "values": { "capacity": { "rooftop-pv": 12345.6 }, "hours": { "rooftop-pv": -3.5, "nuclear-plant": 0 } } }
+    });
+    assert_eq!(rooms.admit(power, &thinking(&guessed)), Ok(()), "where the keys are hidden a draft carries the numbers the learner guessed, on a linear scale any");
+    assert_eq!(rooms.admit(power, &thinking(&json!({ "sources": { "kind": "matching", "values": { "capacity": { "rooftop-pv": 0 } } } }))), Err("value-invalid /answers/sources/values/capacity/rooftop-pv".to_string()), "no answer guesses a capacity of zero on its logarithmic scale");
+    assert_eq!(rooms.admit(power, &thinking(&json!({ "appliances": { "kind": "sorting", "order": ["kettle"], "guesses": { "kettle": -2000 } } }))), Err("value-invalid /answers/appliances/guesses/kettle".to_string()));
+    assert_eq!(rooms.admit(power, &thinking(&json!({ "appliances": { "kind": "sorting", "order": ["kettle"], "guesses": { "pellets": 2000 } } }))), Err("id-unknown /answers/appliances/guesses/pellets".to_string()), "a guess names an item of its task");
     assert_eq!(rooms.admit(power, &thinking(&json!({ "sources": { "kind": "matching", "assignments": { "hours": { "rooftop-pv": 0 } } } }))), Err(STATE_INVALID.to_string()), "card indices mean nothing to peers");
     assert_eq!(rooms.admit(homes, &thinking(&json!({ "systems": { "kind": "classification", "assignments": { "pellets": "coal-oven" } } }))), Err("id-unknown /answers/systems/assignments/pellets".to_string()));
     assert_eq!(rooms.admit(power, &thinking(&json!({ "appliances": { "kind": "sorting", "order": ["kettle", "kettle"] } }))), Err("duplicate-id /answers/appliances/order/1".to_string()), "the core's rules come first");

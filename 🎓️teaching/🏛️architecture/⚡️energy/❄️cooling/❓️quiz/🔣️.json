@@ -21,13 +21,16 @@
       "dimensions": [
         {
           "id": "air-change-rate",
-          "quantity": { "label": { "en": "Air change rate", "de": "Luftwechselrate" }, "unit": "1/h", "scale": "logarithmic", "prefixed": false }
+          "icon": { "emoji": "🔄", "motion": "spin" },
+          "quantity": { "label": { "en": "Air change rate", "de": "Luftwechselrate" }, "unit": "1/h", "scale": "logarithmic", "prefixed": false, "additive": false }
         }
       ],
       "items": [
         {
           "id": "warehouse",
           "label": { "en": "High-bay warehouse without workplaces (10\u00a0m high)", "de": "Hochregallager ohne Arbeitsplätze (10\u00a0m hoch)" },
+          "short": { "en": "High-bay warehouse", "de": "Hochregallager" },
+          "icon": { "emoji": "📦", "motion": "bounce" },
           "values": { "air-change-rate": 0.13 },
           "explanation": {
             "en": "About 0.13\u00a01/h: only the building's own emissions need diluting, 0.35\u00a0l/(s·m²) for very low-polluting buildings (EN 16798-1)\u00a0=\u00a01.26\u00a0m³/(h·m²) spread over 10\u00a0m of height.",
@@ -37,6 +40,8 @@
         {
           "id": "passive-house-dwelling",
           "label": { "en": "Passive-house apartment with heat-recovery ventilation", "de": "Passivhauswohnung mit Wärmerückgewinnungslüftung" },
+          "short": { "en": "Passive-house apartment", "de": "Passivhauswohnung" },
+          "icon": { "emoji": "🌱", "motion": "sway" },
           "values": { "air-change-rate": 0.3 },
           "explanation": {
             "en": "About 0.3\u00a01/h: about 30\u00a0m³/h of fresh air per person gives good air quality without drying out the air in winter. Source: Passive House Institute.",
@@ -46,7 +51,10 @@
         {
           "id": "apartment",
           "label": { "en": "Apartment, nominal ventilation", "de": "Wohnung, Nennlüftung" },
+          "short": { "en": "Apartment at nominal ventilation", "de": "Wohnung bei Nennlüftung" },
+          "icon": { "emoji": "🏠", "motion": "pulse" },
           "values": { "air-change-rate": 0.5 },
+          "familiar": true,
           "explanation": {
             "en": "About 0.5\u00a01/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20\u00a0=\u00a0125\u00a0m³/h for a 100\u00a0m² apartment with 250\u00a0m³ of air.",
             "de": "Rund 0,5\u00a01/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20\u00a0=\u00a0125\u00a0m³/h für eine 100-m²-Wohnung mit 250\u00a0m³ Luft."
@@ -55,7 +63,10 @@
         {
           "id": "sports-hall",
           "label": { "en": "Single sports hall (15\u00a0×\u00a027\u00a0m, 5.5\u00a0m high) with 30 athletes", "de": "Einfeldsporthalle (15\u00a0×\u00a027\u00a0m, 5,5\u00a0m hoch) mit 30 Sporttreibenden" },
+          "short": { "en": "Sports hall during training", "de": "Sporthalle beim Training" },
+          "icon": { "emoji": "🏀", "motion": "bounce" },
           "values": { "air-change-rate": 0.8 },
+          "familiar": true,
           "explanation": {
             "en": "About 0.8\u00a01/h: 60\u00a0m³/h per athlete (DIN 18032-1)\u00a0×\u00a030\u00a0=\u00a01,800\u00a0m³/h in 2,230\u00a0m³ – a large volume for few people.",
             "de": "Rund 0,8\u00a01/h: 60\u00a0m³/h je sporttreibender Person (DIN 18032-1)\u00a0×\u00a030\u00a0=\u00a01.800\u00a0m³/h in 2.230\u00a0m³ – viel Volumen für wenige Menschen."
@@ -64,6 +75,8 @@
         {
           "id": "single-office",
           "label": { "en": "Single office (12\u00a0m², one person)", "de": "Einzelbüro (12\u00a0m², eine Person)" },
+          "short": { "en": "Single office", "de": "Einzelbüro" },
+          "icon": { "emoji": "💼", "motion": "sway" },
           "values": { "air-change-rate": 1.5 },
           "explanation": {
             "en": "About 1.5\u00a01/h: category II of EN 16798-1 requires 7\u00a0l/s per person + 0.7\u00a0l/(s·m²), i.e. 55\u00a0m³/h for 36\u00a0m³ of room.",
@@ -73,6 +86,8 @@
         {
           "id": "residential-car-park",
           "label": { "en": "Underground car park of a residential building, mechanically ventilated", "de": "Tiefgarage eines Wohngebäudes, maschinell belüftet" },
+          "short": { "en": "Underground car park", "de": "Tiefgarage" },
+          "icon": { "emoji": "🚗", "motion": "bounce" },
           "values": { "air-change-rate": 2.4 },
           "explanation": {
             "en": "About 2.4\u00a01/h: the garage ordinances of the German states require 6\u00a0m³/h of exhaust air per m² for garages with little traffic; at 2.5\u00a0m height that is 2.4\u00a0air changes.",
@@ -82,7 +97,10 @@
         {
           "id": "cinema",
           "label": { "en": "Cinema auditorium, sold out", "de": "Kinosaal, ausverkauft" },
+          "short": { "en": "Sold-out cinema auditorium", "de": "Ausverkaufter Kinosaal" },
+          "icon": { "emoji": "🎬", "motion": "flip" },
           "values": { "air-change-rate": 3.5 },
+          "familiar": true,
           "explanation": {
             "en": "About 3.5\u00a01/h: EN 16798-1 category II with one seat per m² (27.7\u00a0m³/(h·m²)) spread over about 8\u00a0m of room height.",
             "de": "Rund 3,5\u00a01/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7\u00a0m³/(h·m²)) verteilt auf rund 8\u00a0m Raumhöhe."
@@ -91,7 +109,10 @@
         {
           "id": "classroom",
           "label": { "en": "Classroom with 28 pupils (60\u00a0m², 3\u00a0m high)", "de": "Klassenzimmer mit 28 Schulkindern (60\u00a0m², 3\u00a0m hoch)" },
+          "short": { "en": "Classroom during lessons", "de": "Klassenzimmer im Unterricht" },
+          "icon": { "emoji": "🏫", "motion": "pulse" },
           "values": { "air-change-rate": 4.8 },
+          "familiar": true,
           "explanation": {
             "en": "About 4.8\u00a01/h: EN 16798-1 category II gives 28\u00a0×\u00a025\u00a0m³/h + 60\u00a0m²\u00a0×\u00a02.5\u00a0m³/(h·m²)\u00a0≈\u00a0860\u00a0m³/h for 180\u00a0m³, which is why window ventilation alone struggles.",
             "de": "Rund 4,8\u00a01/h: EN 16798-1 Kategorie II ergibt 28\u00a0×\u00a025\u00a0m³/h + 60\u00a0m²\u00a0×\u00a02,5\u00a0m³/(h·m²)\u00a0≈\u00a0860\u00a0m³/h für 180\u00a0m³, deshalb kommt Fensterlüftung allein kaum hinterher."
@@ -100,7 +121,9 @@
         {
           "id": "restaurant",
           "label": { "en": "Restaurant dining room", "de": "Gastraum eines Restaurants" },
+          "icon": { "emoji": "🍽️", "motion": "sway" },
           "values": { "air-change-rate": 6.4 },
+          "familiar": true,
           "explanation": {
             "en": "About 6.4\u00a01/h: EN 16798-1 category II with 1.5\u00a0m² per guest and 3\u00a0m room height.",
             "de": "Rund 6,4\u00a01/h: EN 16798-1 Kategorie II mit 1,5\u00a0m² je Gast und 3\u00a0m Raumhöhe."
@@ -109,6 +132,7 @@
         {
           "id": "laboratory",
           "label": { "en": "Chemistry laboratory", "de": "Chemielabor" },
+          "icon": { "emoji": "🧪", "motion": "sway" },
           "values": { "air-change-rate": 8.3 },
           "explanation": {
             "en": "About 8.3\u00a01/h: DIN 1946-7 requires at least 25\u00a0m³/h of outdoor air per m² of floor; at 3\u00a0m height that is 8.3\u00a0air changes.",
@@ -118,6 +142,8 @@
         {
           "id": "operating-room",
           "label": { "en": "Operating room, room class Ib", "de": "Operationssaal, Raumklasse Ib" },
+          "short": { "en": "Class Ib operating room", "de": "Operationssaal der Raumklasse Ib" },
+          "icon": { "emoji": "🩺", "motion": "sway" },
           "values": { "air-change-rate": 20 },
           "explanation": {
             "en": "About 20\u00a01/h: DIN 1946-4 requires 60\u00a0m³/(h·m²) of filtered supply air, 20\u00a0air changes at 3\u00a0m height (and at least 1,200\u00a0m³/h of outdoor air).",
@@ -127,6 +153,7 @@
         {
           "id": "commercial-kitchen",
           "label": { "en": "Commercial kitchen", "de": "Gewerbeküche" },
+          "icon": { "emoji": "🍳", "motion": "bounce" },
           "values": { "air-change-rate": 25 },
           "explanation": {
             "en": "About 25\u00a01/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30\u00a0air changes per hour.",
@@ -136,6 +163,8 @@
         {
           "id": "cleanroom-iso-7",
           "label": { "en": "Cleanroom ISO class 7 (e.g. pharmacy compounding)", "de": "Reinraum ISO-Klasse 7 (z. B. Apothekenherstellung)" },
+          "short": { "en": "Cleanroom ISO class 7", "de": "Reinraum ISO-Klasse 7" },
+          "icon": { "emoji": "💊", "motion": "flip" },
           "values": { "air-change-rate": 60 },
           "explanation": {
             "en": "About 60\u00a01/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
@@ -145,6 +174,7 @@
         {
           "id": "cleanroom-iso-6",
           "label": { "en": "Cleanroom ISO class 6", "de": "Reinraum ISO-Klasse 6" },
+          "icon": { "emoji": "🥼", "motion": "sway" },
           "values": { "air-change-rate": 150 },
           "explanation": {
             "en": "About 150\u00a01/h (90–180\u00a01/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
@@ -154,6 +184,8 @@
         {
           "id": "cleanroom-iso-5",
           "label": { "en": "Cleanroom ISO class 5 with unidirectional airflow (e.g. chip fab)", "de": "Reinraum ISO-Klasse 5 mit turbulenzarmer Verdrängungsströmung (z. B. Chipfabrik)" },
+          "short": { "en": "Cleanroom ISO class 5", "de": "Reinraum ISO-Klasse 5" },
+          "icon": { "emoji": "🔬", "motion": "pulse" },
           "values": { "air-change-rate": 540 },
           "explanation": {
             "en": "About 540\u00a01/h: the whole ceiling blows filtered air downwards at about 0.45\u00a0m/s (ISO 14644-4: 0.2–0.5\u00a0m/s); 0.45\u00a0m/s\u00a0×\u00a03,600\u00a0s\u00a0÷\u00a03\u00a0m\u00a0=\u00a0540.",
@@ -175,17 +207,21 @@
       "dimensions": [
         {
           "id": "cooling-load",
-          "quantity": { "label": { "en": "Specific cooling load", "de": "Spezifische Kühllast" }, "unit": "W/m²", "scale": "logarithmic", "prefixed": false }
+          "icon": { "emoji": "🧊", "motion": "pulse" },
+          "quantity": { "label": { "en": "Specific cooling load", "de": "Spezifische Kühllast" }, "short": { "en": "Cooling load", "de": "Kühllast" }, "unit": "W/m²", "scale": "logarithmic", "prefixed": false, "additive": false }
         },
         {
           "id": "cooling-demand",
-          "quantity": { "label": { "en": "Annual cooling demand", "de": "Jahres-Kühlbedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false }
+          "icon": { "emoji": "📅", "motion": "flip" },
+          "quantity": { "label": { "en": "Annual cooling demand", "de": "Jahres-Kühlbedarf" }, "short": { "en": "Cooling demand", "de": "Kühlbedarf" }, "unit": "kWh/(m²·a)", "scale": "logarithmic", "prefixed": false, "additive": false }
         }
       ],
       "items": [
         {
           "id": "passive-house-home",
           "label": { "en": "Passive-house home with external shading", "de": "Passivhaus-Wohngebäude mit außenliegendem Sonnenschutz" },
+          "short": { "en": "Passive house with shading", "de": "Passivhaus mit Sonnenschutz" },
+          "icon": { "emoji": "🌱", "motion": "sway" },
           "values": { "cooling-load": 6, "cooling-demand": 2 },
           "explanation": {
             "en": "About 6\u00a0W/m² and 2\u00a0kWh/(m²·a): shading and low internal gains keep it comfortable without a chiller; the Passive House Institute limits overheating above 25\u00a0°C to 10% of the hours.",
@@ -195,6 +231,8 @@
         {
           "id": "new-home-geg",
           "label": { "en": "New home to GEG 2024 with external blinds (DIN 4108-2)", "de": "Neues Wohngebäude nach GEG 2024 mit Außenjalousien (DIN 4108-2)" },
+          "short": { "en": "New home with external blinds", "de": "Neues Wohnhaus mit Außenjalousien" },
+          "icon": { "emoji": "🏠", "motion": "pulse" },
           "values": { "cooling-load": 15, "cooling-demand": 5 },
           "explanation": {
             "en": "About 15\u00a0W/m² and 5\u00a0kWh/(m²·a): the summer heat protection of DIN 4108-2, which the GEG (German Buildings Energy Act) requires, limits solar gains, so cooling is needed only on a few hot days (≈\u00a0350\u00a0full-load hours).",
@@ -204,7 +242,10 @@
         {
           "id": "school-new-build",
           "label": { "en": "New school building (GEG), cooled", "de": "Neues Schulgebäude (GEG), gekühlt" },
+          "short": { "en": "Cooled new school building", "de": "Gekühlter Schulneubau" },
+          "icon": { "emoji": "🏫", "motion": "pulse" },
           "values": { "cooling-load": 30, "cooling-demand": 8 },
+          "familiar": true,
           "explanation": {
             "en": "About 30\u00a0W/m² and 8\u00a0kWh/(m²·a): many people per m² make the load high, but the summer holidays fall into the hottest weeks (≈\u00a0250\u00a0full-load hours).",
             "de": "Rund 30\u00a0W/m² und 8\u00a0kWh/(m²·a): viele Menschen je m² machen die Last hoch, doch die Sommerferien fallen in die heißesten Wochen (≈\u00a0250\u00a0Volllaststunden)."
@@ -213,6 +254,7 @@
         {
           "id": "office-passive-house",
           "label": { "en": "Passive-house office building", "de": "Bürogebäude im Passivhausstandard" },
+          "icon": { "emoji": "🏢", "motion": "sway" },
           "values": { "cooling-load": 20, "cooling-demand": 10 },
           "explanation": {
             "en": "About 20\u00a0W/m² and 10\u00a0kWh/(m²·a): efficient equipment, external shading and night ventilation keep the load low (≈\u00a0500\u00a0full-load hours). Source: Passive House Institute criteria for non-residential buildings.",
@@ -222,6 +264,8 @@
         {
           "id": "office-geg-shading",
           "label": { "en": "New office building (GEG) with external sun shading", "de": "Neues Bürogebäude (GEG) mit außenliegendem Sonnenschutz" },
+          "short": { "en": "New office with external shading", "de": "Neues Büro mit Sonnenschutz" },
+          "icon": { "emoji": "⛱️", "motion": "sway" },
           "values": { "cooling-load": 40, "cooling-demand": 20 },
           "explanation": {
             "en": "About 40\u00a0W/m² and 20\u00a0kWh/(m²·a): people, computers and lighting add about 25\u00a0W/m² to the shaded solar gains; offices see about 500\u00a0full-load hours of cooling (VDI 2078 practice).",
@@ -231,7 +275,10 @@
         {
           "id": "attic-flat",
           "label": { "en": "Attic flat under an uninsulated roof with unshaded roof windows", "de": "Dachgeschosswohnung unter ungedämmtem Dach mit unverschatteten Dachfenstern" },
+          "short": { "en": "Attic flat under an uninsulated roof", "de": "Dachwohnung unter ungedämmtem Dach" },
+          "icon": { "emoji": "🔆", "motion": "pulse" },
           "values": { "cooling-load": 50, "cooling-demand": 25 },
+          "familiar": true,
           "explanation": {
             "en": "About 50\u00a0W/m² and 25\u00a0kWh/(m²·a): the sun heats the roof surface to 60–70\u00a0°C (sol-air temperature, VDI 2078), and the heat passes the uninsulated roof almost unhindered.",
             "de": "Rund 50\u00a0W/m² und 25\u00a0kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70\u00a0°C auf (Sonnenlufttemperatur, VDI 2078), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
@@ -240,6 +287,8 @@
         {
           "id": "hospital",
           "label": { "en": "Hospital with operating rooms and intensive care", "de": "Krankenhaus mit OP-Sälen und Intensivstation" },
+          "short": { "en": "Hospital with operating rooms", "de": "Krankenhaus mit OP-Sälen" },
+          "icon": { "emoji": "🏥", "motion": "pulse" },
           "values": { "cooling-load": 70, "cooling-demand": 90 },
           "explanation": {
             "en": "About 70\u00a0W/m² and 90\u00a0kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4) and 24-hour operation add up to about 1,300\u00a0full-load hours.",
@@ -249,6 +298,8 @@
         {
           "id": "office-1970s",
           "label": { "en": "1970s office tower, fully glazed, without external shading", "de": "Bürohochhaus der 1970er-Jahre, vollverglast, ohne außenliegenden Sonnenschutz" },
+          "short": { "en": "Fully glazed office tower", "de": "Vollverglastes Bürohochhaus" },
+          "icon": { "emoji": "🏙️", "motion": "float" },
           "values": { "cooling-load": 100, "cooling-demand": 60 },
           "explanation": {
             "en": "About 100\u00a0W/m² and 60\u00a0kWh/(m²·a): unshaded glass lets in several hundred watts per m² of façade; with about 600\u00a0full-load hours that is three times the demand of a shaded new office.",
@@ -258,6 +309,8 @@
         {
           "id": "data-centre",
           "label": { "en": "Data centre (server room floor)", "de": "Rechenzentrum (Serverraumfläche)" },
+          "short": { "en": "Data centre", "de": "Rechenzentrum" },
+          "icon": { "emoji": "🖥️", "motion": "pulse" },
           "values": { "cooling-load": 1000, "cooling-demand": 8000 },
           "explanation": {
             "en": "About 1,000\u00a0W/m² and 8,000\u00a0kWh/(m²·a): every watt of IT power turns into heat, around the clock (≈\u00a08,000\u00a0full-load hours).",

@@ -1,0 +1,11 @@
+{
+  "frame": [80, 40],
+  "tolerance": 0.0002,
+  "cases": [
+    {"id":"gallery-sunpath","kind":"sun-path-diagram","mode":"stereographic","object":3,"latitude":52.37,"longitude":9.73,"date":"2026-06-21","months":[3,6,12],"hours":[4,6,8,10,12,14,16,18,20],"arcs":[6,8,4],"options":""},
+    {"id":"gallery-shadow","kind":"shadow-diagram","mode":"shadow","object":4,"latitude":52.37,"longitude":9.73,"date":"2026-06-21","months":[3,6,12],"hours":[4,6,8,10,12,14,16,18,20],"options":""},
+    {"id":"computed-south","kind":"sun-path-diagram","mode":"stereographic","object":3,"latitude":-33.86,"longitude":151.21,"date":"2026-12-21","hours":[0,2,4,6,8],"options":"data={},latitude=-33.86,longitude=151.21,date=2026-12-21,hours={0,2,4,6,8}"},
+    {"id":"authored-sunpath","kind":"sun-path-diagram","mode":"stereographic","object":3,"rows":[[1,8,-90,45],[1,12,0,60],[1,14,90,-5],[1,16,60,40],[6,8,90,30]],"arcs":[2,1,1],"options":"data=sunpath-input"},
+    {"id":"authored-shadow","kind":"shadow-diagram","mode":"shadow","object":5,"rows":[[1,8,-90,45],[1,12,0,60],[1,14,90,-5],[1,16,60,40],[6,8,90,30]],"options":"data=sunpath-input,object=5"}
+  ]
+}

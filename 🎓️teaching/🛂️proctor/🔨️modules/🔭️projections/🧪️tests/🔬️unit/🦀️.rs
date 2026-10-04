@@ -3,7 +3,7 @@ use crate::actors::tests::{admission, envelope, id, perfect, ADA, BOB, TENANT};
 use crate::actors::{deciders, enrollment, handle_key, learner_key, ProctorDeciders};
 use crate::catalog::tests::fixture;
 use crate::storage::Database;
-use quiz::{Command, CrowdView, HandleHolder, LearnerView, RunStatus, RunView, TranscriptBadge, TranscriptRun, LEADERBOARD_PERIODS};
+use quiz::{Best, Challenge, Command, CrowdView, HandleHolder, LearnerView, RunStatus, RunView, TranscriptBadge, TranscriptRun, CHALLENGES, LEADERBOARD_PERIODS};
 use server::authority::{AuthorityDirectory, CommandBus};
 use server::contract::{ActorKey, CommandOutcome, EventRecord, HybridLogicalClock, PolicyDecision, TenantId};
 use server::storage::AuthorityStore;
@@ -32,20 +32,25 @@ fn command_id(number: usize, run: &str) -> String {
     format!("c{number:07x}{}", &run[8..])
 }
 
-/// ▶️ Start a run of `quiz` as `learner` and answer every sheet task perfectly, without submitting.
-pub(crate) async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, millis: u64) {
-    submit(bus, &Command::StartRun { id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into() }, millis).await;
+/// ▶️ Start a run of `quiz` at `challenge` as `learner` and answer every sheet task perfectly — on a
+/// timed run each right after opening it —, without submitting.
+pub(crate) async fn answer(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
+    submit(bus, &Command::StartRun { id: command_id(1, run), learner: learner.into(), run: run.into(), quiz: quiz.into(), challenge, at: millis }, millis).await;
     let document = &catalog.current()[quiz].quiz;
-    for (index, task) in quiz::sheet_of(document, quiz::run_seed(run)).tasks.iter().enumerate() {
-        let command = Command::RecordAnswer { id: command_id(2 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), answer: perfect(document, task) };
+    for (index, task) in quiz::sheet_of(document, quiz::run_seed(run), challenge).tasks.iter().enumerate() {
+        if task.seconds().is_some() {
+            let opened = submit(bus, &Command::OpenTask { id: command_id(50 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), at: millis }, millis).await;
+            assert!(matches!(opened, CommandOutcome::Accepted { .. }), "{opened:?}");
+        }
+        let command = Command::RecordAnswer { id: command_id(2 + index, run), learner: learner.into(), run: run.into(), task: task.id().clone(), answer: perfect(document, task), at: millis + 1 };
         let outcome = submit(bus, &command, millis + 1).await;
         assert!(matches!(outcome, CommandOutcome::Accepted { .. }), "{outcome:?}");
     }
 }
 
-/// 🏁️ Play one perfect run of `quiz` as `learner`.
-pub(crate) async fn play(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, millis: u64) {
-    answer(bus, catalog, learner, run, quiz, millis).await;
+/// 🏁️ Play one perfect run of `quiz` at `challenge` as `learner`.
+pub(crate) async fn play(bus: &mut CommandBus<SqliteAuthorityStore, ProctorDeciders>, catalog: &LoadedCatalog, learner: &str, run: &str, quiz: &str, challenge: Challenge, millis: u64) {
+    answer(bus, catalog, learner, run, quiz, challenge, millis).await;
     assert!(matches!(submit(bus, &Command::SubmitRun { id: command_id(99, run), learner: learner.into(), run: run.into() }, millis + 2).await, CommandOutcome::Accepted { .. }));
 }
 
@@ -80,11 +85,12 @@ fn all_time(board: &Board, caller: Option<&str>) -> Leaderboard {
     board.view(LeaderboardPeriod::AllTime, None, 0, caller).expect("the board of every quiz")
 }
 
-/// 🎲️ One more run of a random quiz at a random instant of the four days from Monday, with a dyadic
-/// score, and — one time in three — a badge it earned.
+/// 🎲️ One more run of a random quiz at a random challenge and a random instant of the four days from
+/// Monday, with a dyadic score and its points, and — one time in three — a badge it earned.
 fn played(transcript: &mut Transcript, random: &mut quiz::Mt19937) {
-    let run = TranscriptRun { quiz: QUIZZES[(random.next_u32() % 2) as usize].to_string(), score: f64::from(random.next_u32() % 9) / 8.0, at: TUESDAY - DAY + u64::from(random.next_u32() % 16) * (DAY / 4) + u64::from(random.next_u32() % 3) };
-    if random.next_u32() % 3 == 0 {
+    let (quiz, challenge, score) = (QUIZZES[(random.next_u32() % 2) as usize].to_string(), CHALLENGES[(random.next_u32() % 4) as usize], f64::from(random.next_u32() % 9) / 8.0);
+    let run = TranscriptRun { quiz, challenge, score, points: quiz::points(score, challenge), at: TUESDAY - DAY + u64::from(random.next_u32() % 16) * (DAY / 4) + u64::from(random.next_u32() % 3) };
+    if random.next_u32().is_multiple_of(3) {
         transcript.badges.push(TranscriptBadge { badge: format!("badge-{}", transcript.badges.len()), quiz: run.quiz.clone(), at: run.at });
     }
     transcript.runs.push(run);
@@ -122,15 +128,15 @@ async fn played_runs_fold_into_learner_run_handle_and_leaderboard_views() {
     let mut bus = bus(&database, &catalog).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Pseudonym { handle: " Ada  Lovelace ".into() } }, 100).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(2), learner: BOB.into(), identity: Identity::Anonymous }, 101).await;
-    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Medium, 200).await;
     let projector = Projector::new(Arc::clone(&catalog));
     let CatchUp::Current(at) = catch_up(&projector, &database).await else { panic!("not cancelled") };
     assert_eq!(at.position, SqliteAuthorityStore::new(database.clone()).log_head().unwrap());
     let projections = SqliteProjectionStore::new(database.clone());
     let ada: LearnerView = view(projections.get(LEARNERS, ADA).await);
     assert_eq!(ada.identity, Identity::Pseudonym { handle: "Ada Lovelace".into() });
-    assert_eq!(ada.best.get("power"), Some(&1.0));
-    assert_eq!(ada.total, 100.0);
+    assert_eq!(ada.best.get("power"), Some(&Best { challenge: Challenge::Medium, score: 1.0, points: 200.0 }));
+    assert_eq!((ada.total, ada.runs[0].challenge, ada.runs[0].points), (200.0, Challenge::Medium, Some(200.0)));
     assert_eq!(ada.badges.iter().map(|award| award.badge.as_str()).collect::<Vec<_>>(), ["perfect-power", "sorter"]);
     let run: RunView = view(projections.get(RUNS, &id(10)).await);
     assert_eq!((run.status, run.result.map(|result| result.score)), (RunStatus::Submitted, Some(1.0)));
@@ -140,7 +146,7 @@ async fn played_runs_fold_into_learner_run_handle_and_leaderboard_views() {
     assert_eq!(projections.list(HANDLES, "").await.len(), 1, "an anonymous learner holds no handle");
     assert_eq!((projector.learners().load(Ordering::Acquire), view::<u64>(projections.get(META, LEARNER_COUNT_KEY).await)), (2, 2));
     let board = all_time(&projector.board(), Some(ADA));
-    assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total)).collect::<Vec<_>>(), [(1, quiz::learner_tag(ADA), 100.0)]);
+    assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total)).collect::<Vec<_>>(), [(1, quiz::learner_tag(ADA), 200.0)]);
     assert_eq!((board.learners, board.submissions, board.own.as_ref()), (1, 1, board.rows.first()));
     assert_eq!(all_time(&projector.board(), Some(BOB)).own, None, "a learner without a submitted run has no row");
     let stored = transcripts(&projections).await;
@@ -154,6 +160,32 @@ async fn played_runs_fold_into_learner_run_handle_and_leaderboard_views() {
         assert_eq!(other, quiz::leaderboard(&stored, catalog.view(), period, quiz, at, Some(ADA)));
     }
     assert_eq!(projector.board().view(LeaderboardPeriod::AllTime, Some("cooling"), 0, None), None, "a quiz the catalog does not list has no leaderboard");
+}
+
+#[tokio::test]
+async fn the_best_of_a_quiz_is_its_run_with_the_most_points_and_another_challenge_voids_the_open_run() {
+    let catalog = Arc::new(fixture());
+    let database = Database::memory().unwrap();
+    let mut bus = bus(&database, &catalog).await;
+    submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Anonymous }, 100).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Hard, 200).await;
+    play(&mut bus, &catalog, ADA, &id(11), "power", Challenge::Easy, 300).await;
+    submit(&mut bus, &Command::StartRun { id: id(2), learner: ADA.into(), run: id(12), quiz: "power".into(), challenge: Challenge::Easy, at: 400 }, 400).await;
+    let switched = submit(&mut bus, &Command::StartRun { id: id(3), learner: ADA.into(), run: id(13), quiz: "power".into(), challenge: Challenge::Expert, at: 401 }, 401).await;
+    let CommandOutcome::Accepted { events, .. } = switched else { panic!("another challenge starts: {switched:?}") };
+    assert_eq!(events.iter().map(|event| event.kind.as_str()).collect::<Vec<_>>(), ["quiz.run-voided", "quiz.run-started"]);
+    let projector = Projector::new(Arc::clone(&catalog));
+    catch_up(&projector, &database).await;
+    let projections = SqliteProjectionStore::new(database.clone());
+    let ada: LearnerView = view(projections.get(LEARNERS, ADA).await);
+    let hard = Best { challenge: Challenge::Hard, score: 1.0, points: 300.0 };
+    assert_eq!((ada.best.get("power"), ada.total), (Some(&hard), 300.0), "a perfect easy run earns fewer points than a perfect hard one");
+    assert_eq!(ada.runs.iter().map(|run| (run.challenge, run.status, run.points)).collect::<Vec<_>>(), [(Challenge::Expert, RunStatus::Open, None), (Challenge::Easy, RunStatus::Voided, None), (Challenge::Easy, RunStatus::Submitted, Some(100.0)), (Challenge::Hard, RunStatus::Submitted, Some(300.0))]);
+    let run: RunView = view(projections.get(RUNS, &id(13)).await);
+    assert_eq!((run.sheet.challenge, run.opened, run.hints), (Challenge::Expert, Some(BTreeMap::new()), None), "an expert run shows which tasks are opened, none yet");
+    let board = all_time(&projector.board(), Some(ADA));
+    assert_eq!((board.rows[0].total, board.rows[0].best.get("power")), (300.0, Some(&hard)));
+    assert_eq!(board, quiz::leaderboard(&transcripts(&projections).await, catalog.view(), LeaderboardPeriod::AllTime, None, 0, Some(ADA)));
 }
 
 #[tokio::test]
@@ -190,27 +222,34 @@ async fn only_a_submission_a_badge_or_a_registration_rewrites_a_transcript_and_o
     let projections = SqliteProjectionStore::new(database.clone());
     submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Anonymous }, 100).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(2), learner: BOB.into(), identity: Identity::Anonymous }, 101).await;
-    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
-    play(&mut bus, &catalog, BOB, &id(11), "power", 300).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Medium, 200).await;
+    play(&mut bus, &catalog, BOB, &id(11), "power", Challenge::Medium, 300).await;
     catch_up(&projector, &database).await;
     let before = (projections.get(LEADERBOARD, ADA).await, projections.get(LEADERBOARD, BOB).await, projections.get(LEARNERS, BOB).await, all_time(&projector.board(), Some(BOB)));
     assert_eq!(before.3.own.as_ref().map(|row| row.rank), Some(2));
     let homes = projector.board().view(LeaderboardPeriod::Weekly, Some("homes"), 400, Some(BOB)).expect("a quiz of the catalog");
     assert_eq!((homes.learners, homes.submissions), (0, 2), "nobody submitted this quiz yet");
 
-    submit(&mut bus, &Command::StartRun { id: command_id(1, &id(12)), learner: BOB.into(), run: id(12), quiz: "homes".into() }, 400).await;
+    submit(&mut bus, &Command::StartRun { id: command_id(1, &id(12)), learner: BOB.into(), run: id(12), quiz: "homes".into(), challenge: Challenge::Expert, at: 400 }, 400).await;
     catch_up(&projector, &database).await;
     let started = projections.get(LEARNERS, BOB).await;
     assert_ne!(started, before.2, "a started run is in the learner view");
     assert_eq!((projections.get(LEADERBOARD, ADA).await, projections.get(LEADERBOARD, BOB).await), (before.0.clone(), before.1.clone()));
 
     let document = &catalog.current()["homes"].quiz;
-    for (index, task) in quiz::sheet_of(document, quiz::run_seed(&id(12))).tasks.iter().enumerate() {
-        submit(&mut bus, &Command::RecordAnswer { id: command_id(2 + index, &id(12)), learner: BOB.into(), run: id(12), task: task.id().clone(), answer: perfect(document, task) }, 401).await;
+    let sheet = quiz::sheet_of(document, quiz::run_seed(&id(12)), Challenge::Expert);
+    for (index, task) in sheet.tasks.iter().enumerate() {
+        submit(&mut bus, &Command::OpenTask { id: command_id(50 + index, &id(12)), learner: BOB.into(), run: id(12), task: task.id().clone(), at: 401 }, 401).await;
+    }
+    catch_up(&projector, &database).await;
+    assert_eq!(projections.get(LEARNERS, BOB).await, started, "an opened task leaves the learner view alone");
+    assert_eq!(view::<RunView>(projections.get(RUNS, &id(12)).await).opened, Some(sheet.tasks.iter().map(|task| (task.id().clone(), 401)).collect()), "an opened task is in the run view");
+    for (index, task) in sheet.tasks.iter().enumerate() {
+        submit(&mut bus, &Command::RecordAnswer { id: command_id(2 + index, &id(12)), learner: BOB.into(), run: id(12), task: task.id().clone(), answer: perfect(document, task), at: 402 }, 402).await;
     }
     catch_up(&projector, &database).await;
     assert_eq!(projections.get(LEARNERS, BOB).await, started, "answers leave the learner view alone");
-    assert_eq!((projections.get(LEADERBOARD, ADA).await, projections.get(LEADERBOARD, BOB).await, all_time(&projector.board(), Some(BOB))), (before.0.clone(), before.1.clone(), before.3.clone()), "answers leave every transcript and the board alone");
+    assert_eq!((projections.get(LEADERBOARD, ADA).await, projections.get(LEADERBOARD, BOB).await, all_time(&projector.board(), Some(BOB))), (before.0.clone(), before.1.clone(), before.3.clone()), "opened tasks and answers leave every transcript and the board alone");
     assert!(!view::<RunView>(projections.get(RUNS, &id(12)).await).answers.is_empty(), "answers are in the run view");
 
     submit(&mut bus, &Command::SubmitRun { id: command_id(99, &id(12)), learner: BOB.into(), run: id(12) }, 402).await;
@@ -232,7 +271,7 @@ async fn a_refold_and_a_restarted_projector_reach_the_same_views() {
     let database = Database::memory().unwrap();
     let mut bus = bus(&database, &catalog).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Name { handle: "Ada".into() } }, 100).await;
-    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Expert, 200).await;
     let first = Projector::new(Arc::clone(&catalog));
     catch_up(&first, &database).await;
     let projections = SqliteProjectionStore::new(database.clone());
@@ -336,7 +375,7 @@ async fn a_stored_state_or_transcript_that_does_not_decode_is_an_error_not_a_fre
     catch_up(&projector, &database).await;
     let mut projections = SqliteProjectionStore::new(database.clone());
     projections.put(STATES, ADA, b"{\"seq\":1}".to_vec()).await.unwrap();
-    submit(&mut bus, &Command::StartRun { id: id(3), learner: ADA.into(), run: id(10), quiz: "power".into() }, 200).await;
+    submit(&mut bus, &Command::StartRun { id: id(3), learner: ADA.into(), run: id(10), quiz: "power".into(), challenge: Challenge::Medium, at: 200 }, 200).await;
     let detail = failure(&projector, &database).await;
     assert!(detail.contains(&format!("projection {STATES}/{ADA} does not decode")), "{detail}");
     projections.put(LEADERBOARD, ADA, b"not a transcript".to_vec()).await.unwrap();
@@ -387,7 +426,7 @@ fn a_board_asked_in_the_next_window_forgets_the_runs_of_the_last_one() {
     let catalog = Arc::new(fixture());
     let board = Board::new(Arc::clone(&catalog));
     let learner = format!("{:032x}", 1);
-    let run = |at: Timestamp| TranscriptRun { quiz: "power".to_string(), score: 0.5, at };
+    let run = |at: Timestamp| TranscriptRun { quiz: "power".to_string(), challenge: Challenge::Hard, score: 0.5, points: 150.0, at };
     let mut transcript = Transcript { tag: quiz::learner_tag(&learner), learner: learner.clone(), identity: Identity::Anonymous, runs: vec![run(TUESDAY + 5)], badges: Vec::new() };
     board.fill(vec![transcript.clone()]);
     let ranked = |at: Timestamp| board.view(LeaderboardPeriod::Daily, None, at, Some(&learner)).map(|answer| (answer.learners, answer.own.map(|row| row.runs), answer.window));
@@ -413,15 +452,16 @@ async fn submitted_runs_fold_into_the_crowd_view_of_their_quiz() {
     let mut bus = bus(&database, &catalog).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(1), learner: ADA.into(), identity: Identity::Anonymous }, 100).await;
     submit(&mut bus, &Command::IdentifyLearner { id: id(2), learner: BOB.into(), identity: Identity::Anonymous }, 101).await;
-    play(&mut bus, &catalog, ADA, &id(10), "power", 200).await;
+    play(&mut bus, &catalog, ADA, &id(10), "power", Challenge::Medium, 200).await;
     catch_up(&projector, &database).await;
-    play(&mut bus, &catalog, BOB, &id(11), "power", 300).await;
+    play(&mut bus, &catalog, BOB, &id(11), "power", Challenge::Hard, 300).await;
     catch_up(&projector, &database).await;
 
     let mut results: Vec<quiz::RunResult> = Vec::new();
     for run in [id(10), id(11)] {
         results.push(view::<RunView>(projections.get(RUNS, &run).await).result.expect("submitted"));
     }
+    assert!(serde_json::to_string(&results[1]).unwrap().contains("\"miss\":false"), "the hard run was guessed");
     let crowd: CrowdView = view(projections.get(CROWDS, "power").await);
     assert_eq!(crowd, quiz::crowd_view(&catalog.current()["power"].quiz, &results));
     assert_eq!((crowd.runs, crowd.tasks.iter().map(|task| task.items.iter().map(|item| item.answers).max().unwrap_or(0)).collect::<Vec<_>>()), (2, vec![2, 2, 2]));
@@ -437,7 +477,7 @@ async fn submitted_runs_fold_into_the_crowd_view_of_their_quiz() {
     catch_up(&restarted, &database).await;
     assert_eq!(projections.get(CROWDS, "power").await, before, "the crowd is rebuilt from the log");
     let resumed = Projector::new(Arc::clone(&catalog));
-    play(&mut bus, &catalog, ADA, &id(12), "power", 400).await;
+    play(&mut bus, &catalog, ADA, &id(12), "power", Challenge::Expert, 400).await;
     catch_up(&resumed, &database).await;
     assert_eq!(view::<CrowdView>(projections.get(CROWDS, "power").await).runs, 3, "a restarted projector resumes from the stored tally");
 }

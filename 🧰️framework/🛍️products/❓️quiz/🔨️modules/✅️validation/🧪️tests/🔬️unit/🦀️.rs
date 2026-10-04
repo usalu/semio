@@ -3,7 +3,7 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::{BadgeRule, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind};
+use crate::schema::{BadgeRule, Challenge, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
 use crate::sheet::tests::{quantity, quiz, text};
 use unicode_normalization::{is_nfc, UnicodeNormalization};
 
@@ -23,7 +23,7 @@ fn catalog() -> Catalog {
         title: text("Architecture"),
         introduction: Introduction { title: text("Welcome"), paragraphs: vec![text("Hello")] },
         quizzes: vec!["energy/🔣️.json".to_string()],
-        badges: vec![badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string() }), badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None }), badge("done", BadgeRule::CompletedQuizzes)],
+        badges: vec![badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: None }), badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: Some(Challenge::Medium) }), badge("done", BadgeRule::CompletedQuizzes {})],
     }
 }
 
@@ -137,6 +137,39 @@ fn profiles_without_axes_report_missing_axes_only() {
 }
 
 #[test]
+fn short_labels_hold_one_to_forty_code_points_in_each_language() {
+    assert_eq!(SHORT_LENGTH, 40);
+    let short = |en: &str, de: &str| Some(Text { en: en.to_string(), de: de.to_string() });
+    let mut quiz = quiz();
+    let Task::Classification(classification) = &mut quiz.tasks[0] else { unreachable!() };
+    classification.items[0].short = short(&"ä".repeat(40), "Kurz");
+    classification.categories[1].short = short("", "Niedrig");
+    if let Some(axes) = classification.axes.as_mut() {
+        axes[2].short = short("cost", &"x".repeat(41));
+    }
+    let Task::Sorting(sorting) = &mut quiz.tasks[1] else { unreachable!() };
+    sorting.quantity.short = short("power", "");
+    sorting.items[2].short = short(&"🔥".repeat(41), "Feuer");
+    (sorting.items[3].familiar, sorting.items[4].familiar) = (Some(true), Some(false));
+    let Task::Matching(matching) = &mut quiz.tasks[2] else { unreachable!() };
+    matching.dimensions[1].quantity.short = short(&"y".repeat(41), "Bedarf");
+    matching.items[0].short = short("m", &"z".repeat(40));
+    matching.items[1].short = short("", "");
+    assert_eq!(
+        quiz_issues(&quiz),
+        [
+            issue("/tasks/0/axes/2/short/de", IssueCode::LengthInvalid),
+            issue("/tasks/0/categories/1/short/en", IssueCode::LengthInvalid),
+            issue("/tasks/1/items/2/short/en", IssueCode::LengthInvalid),
+            issue("/tasks/1/quantity/short/de", IssueCode::LengthInvalid),
+            issue("/tasks/2/dimensions/1/quantity/short/en", IssueCode::LengthInvalid),
+            issue("/tasks/2/items/1/short/de", IssueCode::LengthInvalid),
+            issue("/tasks/2/items/1/short/en", IssueCode::LengthInvalid),
+        ]
+    );
+}
+
+#[test]
 fn quiz_emoji_is_required_and_holds_one_to_sixteen_code_points() {
     let with = |emoji: &str| quiz_issues(&Quiz { emoji: emoji.to_string(), ..quiz() });
     for valid in ["⚡", "❄️", "👨‍👩‍👧‍👦", &"x".repeat(16)] {
@@ -159,10 +192,10 @@ fn catalog_issues_cover_paths_quizzes_and_badges() {
     catalog.introduction.paragraphs.clear();
     catalog.quizzes.push("energy/🔣️.json".to_string());
     catalog.quizzes.push(String::new());
-    catalog.badges.push(badge("sorter", BadgeRule::PerfectQuiz { quiz: "heating".to_string() }));
-    catalog.badges.push(badge("matcher", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Matching), quiz: Some("cooling".to_string()) }));
-    catalog.badges.push(badge("none", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Classification), quiz: Some("other".to_string()) }));
-    catalog.badges.push(badge("bad", BadgeRule::PerfectQuiz { quiz: "Heating".to_string() }));
+    catalog.badges.push(badge("sorter", BadgeRule::PerfectQuiz { quiz: "heating".to_string(), challenge: Some(Challenge::Hard) }));
+    catalog.badges.push(badge("matcher", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Matching), quiz: Some("cooling".to_string()), challenge: None }));
+    catalog.badges.push(badge("none", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Classification), quiz: Some("other".to_string()), challenge: Some(Challenge::Expert) }));
+    catalog.badges.push(badge("bad", BadgeRule::PerfectQuiz { quiz: "Heating".to_string(), challenge: None }));
     catalog.badges[0].emoji = String::new();
     let mut other = quiz();
     other.id = "other".to_string();
@@ -197,16 +230,25 @@ fn issues_serialize_as_path_and_kebab_code() {
 }
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), icon: None }).collect()
+    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
 }
 
 fn classification_sheet() -> SheetTask {
     let Task::Classification(task) = &quiz().tasks[0] else { unreachable!() };
-    SheetTask::Classification(SheetClassificationTask { id: "c".to_string(), title: text("c"), prompt: text("c"), icon: None, axes: None, categories: task.categories.clone(), items: items(&["a", "b"]) })
+    SheetTask::Classification(SheetClassificationTask { id: "c".to_string(), title: text("c"), prompt: text("c"), icon: None, axes: None, categories: task.categories.clone(), items: items(&["a", "b"]), seconds: None })
+}
+
+fn sorting_sheet(scale: Scale, keys: Option<&[f64]>) -> SheetTask {
+    SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", scale), keys: keys.map(<[f64]>::to_vec), items: items(&["a", "b", "c"]), seconds: None })
+}
+
+fn matching_sheet_of(load: Option<&[f64]>, demand: Option<&[f64]>) -> SheetTask {
+    let dimension = |id: &str, scale: Scale, cards: Option<&[f64]>| SheetDimension { id: id.to_string(), quantity: quantity("W", scale), icon: None, cards: cards.map(<[f64]>::to_vec) };
+    SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), icon: None, dimensions: vec![dimension("load", Scale::Linear, load), dimension("demand", Scale::Logarithmic, demand)], items: items(&["x", "y"]), seconds: None })
 }
 
 fn matching_sheet() -> SheetTask {
-    SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), icon: None, dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), icon: None, cards: vec![1.0, 2.0] }], items: items(&["x", "y"]) })
+    SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), icon: None, dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), icon: None, cards: Some(vec![1.0, 2.0]) }], items: items(&["x", "y"]), seconds: None })
 }
 
 fn classify(pairs: &[(&str, &str)]) -> Answer {
@@ -214,11 +256,15 @@ fn classify(pairs: &[(&str, &str)]) -> Answer {
 }
 
 fn order(ids: &[&str]) -> Answer {
-    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: BTreeMap::new() })
+    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: None })
 }
 
 fn assign(dimensions: &[(&str, &[(&str, usize)])]) -> Answer {
-    Answer::Matching(MatchingAnswer { assignments: dimensions.iter().map(|(dimension, cards)| ((*dimension).to_string(), cards.iter().map(|(item, card)| ((*item).to_string(), *card)).collect())).collect() })
+    Answer::Matching(MatchingAnswer { assignments: Some(dimensions.iter().map(|(dimension, cards)| ((*dimension).to_string(), cards.iter().map(|(item, card)| ((*item).to_string(), *card)).collect())).collect()), guesses: None })
+}
+
+fn guess(dimensions: &[(&str, &[(&str, f64)])]) -> Answer {
+    Answer::Matching(MatchingAnswer { assignments: None, guesses: Some(dimensions.iter().map(|(dimension, guesses)| ((*dimension).to_string(), guesses.iter().map(|(item, guess)| ((*item).to_string(), *guess)).collect())).collect()) })
 }
 
 #[test]
@@ -236,28 +282,55 @@ fn classification_answers_must_reference_the_sheet() {
 
 #[test]
 fn sorting_answers_must_be_a_bijection_onto_the_sheet_items() {
-    let sheet = SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", Scale::Linear), items: items(&["a", "b", "c"]) });
-    assert_eq!(answer_rejection(&sheet, &order(&["c", "a", "b"])), None);
-    for invalid in [&["a", "b"][..], &["a", "b", "b"], &["a", "b", "c", "a"], &["a", "b", "d"]] {
-        assert_eq!(answer_rejection(&sheet, &order(invalid)), Some(Rejection::AnswerInvalid), "{invalid:?}");
+    for sheet in [sorting_sheet(Scale::Linear, Some(&[1.0, 2.0, 3.0])), sorting_sheet(Scale::Linear, None)] {
+        assert_eq!(answer_rejection(&sheet, &order(&["c", "a", "b"])), None);
+        for invalid in [&["a", "b"][..], &["a", "b", "b"], &["a", "b", "c", "a"], &["a", "b", "d"]] {
+            assert_eq!(answer_rejection(&sheet, &order(invalid)), Some(Rejection::AnswerInvalid), "{invalid:?}");
+        }
+        assert_eq!(answer_rejection(&sheet, &classify(&[])), Some(Rejection::AnswerInvalid));
+        assert!(!answer_complete(&sheet, Some(&classify(&[]))));
+        assert!(!answer_complete(&sheet, None));
     }
-    assert!(answer_complete(&sheet, Some(&order(&["c", "a", "b"]))));
-    assert!(!answer_complete(&sheet, Some(&classify(&[]))));
 }
 
 fn guessed(ids: &[&str], guesses: &[(&str, f64)]) -> Answer {
-    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: guesses.iter().map(|(item, guess)| ((*item).to_string(), *guess)).collect() })
+    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: Some(guesses.iter().map(|(item, guess)| ((*item).to_string(), *guess)).collect()) })
+}
+
+#[test]
+fn a_sorting_that_shows_the_keys_is_complete_with_its_order_and_takes_no_guesses() {
+    for scale in [Scale::Linear, Scale::Logarithmic] {
+        let sheet = sorting_sheet(scale, Some(&[1.0, 2.0, 3.0]));
+        assert_eq!(answer_rejection(&sheet, &order(&["c", "a", "b"])), None);
+        assert!(answer_complete(&sheet, Some(&order(&["c", "a", "b"]))));
+        for refused in [guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 2.0), ("c", 3.0)]), guessed(&["a", "b", "c"], &[("b", 2.0)]), guessed(&["a", "b", "c"], &[])] {
+            assert_eq!(answer_rejection(&sheet, &refused), Some(Rejection::AnswerInvalid), "{refused:?}");
+        }
+    }
+}
+
+#[test]
+fn a_sorting_that_hides_the_keys_is_complete_once_every_item_has_a_guess() {
+    let sheet = sorting_sheet(Scale::Logarithmic, None);
+    for (answer, complete) in [
+        (guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 2.0), ("c", 3.0)]), true),
+        (guessed(&["c", "b", "a"], &[("a", 9.0), ("b", 9.0), ("c", 0.001)]), true),
+        (guessed(&["a", "b", "c"], &[("a", 1.0), ("c", 3.0)]), false),
+        (guessed(&["a", "b", "c"], &[]), false),
+        (order(&["a", "b", "c"]), false),
+    ] {
+        assert_eq!(answer_rejection(&sheet, &answer), None, "{answer:?}");
+        assert_eq!(answer_complete(&sheet, Some(&answer)), complete, "{answer:?}");
+    }
 }
 
 #[test]
 fn sorting_guesses_must_name_items_be_finite_and_ascend_along_the_order() {
-    let sorting = |scale| SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", scale), items: items(&["a", "b", "c"]) });
-    let (linear, logarithmic) = (sorting(Scale::Linear), sorting(Scale::Logarithmic));
+    let (linear, logarithmic) = (sorting_sheet(Scale::Linear, None), sorting_sheet(Scale::Logarithmic, None));
     let rejected = |sheet: &SheetTask, answer: Answer| assert_eq!(answer_rejection(sheet, &answer), Some(Rejection::AnswerInvalid));
     for valid in [guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 2.0), ("c", 3.0)]), guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 1.0), ("c", 1.0)]), guessed(&["c", "a", "b"], &[("c", 0.5), ("b", 9.0)]), guessed(&["c", "a", "b"], &[("a", 7.0)]), guessed(&["a", "b", "c"], &[])] {
         assert_eq!(answer_rejection(&linear, &valid), None, "{valid:?}");
         assert_eq!(answer_rejection(&logarithmic, &valid), None, "{valid:?}");
-        assert!(answer_complete(&linear, Some(&valid)));
     }
     assert_eq!(answer_rejection(&linear, &guessed(&["a", "b", "c"], &[("a", -3.0), ("b", 0.0), ("c", 1.0)])), None, "a linear quantity may be guessed at or below zero");
     rejected(&logarithmic, guessed(&["a", "b", "c"], &[("a", 0.0)]));
@@ -279,16 +352,16 @@ fn shared_answer_vectors_of_the_python_reference_hold() {
     use crate::schema::tests::{entries, fixture, typed};
     let vectors = fixture("answer-validation");
     let sheet_tasks: Vec<SheetTask> = entries(&vectors["sheetTasks"]).iter().map(typed).collect();
+    let mut differing = Vec::new();
     for vector in entries(&vectors["vectors"]) {
         let sheet_task = sheet_tasks.iter().find(|task| Some(task.id().as_str()) == vector["sheetTask"].as_str()).unwrap_or_else(|| panic!("{}", vector["sheetTask"]));
         let answer: Option<Answer> = vector.get("answer").map(typed);
-        if let Some(answer) = &answer {
-            assert_eq!(answer_rejection(sheet_task, answer).map(|rejection| rejection.as_str()), vector["expected"]["rejection"].as_str(), "{}", vector["id"]);
-        }
-        if let Some(complete) = vector["expected"]["complete"].as_bool() {
-            assert_eq!(answer_complete(sheet_task, answer.as_ref()), complete, "{}", vector["id"]);
+        let rejection = answer.as_ref().map(|answer| answer_rejection(sheet_task, answer).map(|rejection| rejection.as_str()));
+        if rejection.is_some_and(|rejection| rejection != vector["expected"]["rejection"].as_str()) || vector["expected"]["complete"].as_bool().is_some_and(|complete| answer_complete(sheet_task, answer.as_ref()) != complete) {
+            differing.push(vector["id"].to_string());
         }
     }
+    assert_eq!(differing, Vec::<String>::new());
     for vector in entries(&vectors["malformed"]) {
         assert!(serde_json::from_value::<Answer>(vector["answer"].clone()).is_err(), "{} violates the schema, so serde refuses it", vector["id"]);
         assert_eq!(vector["expected"]["rejection"].as_str(), Some(Rejection::AnswerInvalid.as_str()), "{}", vector["id"]);
@@ -331,6 +404,73 @@ fn matching_answers_use_each_card_once_per_dimension() {
     assert!(answer_complete(&sheet, Some(&assign(&[("load", &[("x", 1), ("y", 0)])]))));
     assert!(!answer_complete(&sheet, Some(&assign(&[("load", &[("x", 1)])]))));
     assert!(!answer_complete(&sheet, Some(&assign(&[]))));
+    assert_eq!(answer_rejection(&sheet, &assign(&[])), None);
+}
+
+#[test]
+fn a_matching_that_shows_the_keys_takes_card_assignments_and_no_guesses() {
+    let sheet = matching_sheet_of(Some(&[1.0, 2.0]), Some(&[10.0, 20.0]));
+    let whole = assign(&[("load", &[("x", 1), ("y", 0)]), ("demand", &[("x", 0), ("y", 1)])]);
+    assert_eq!(answer_rejection(&sheet, &whole), None);
+    assert!(answer_complete(&sheet, Some(&whole)));
+    assert!(!answer_complete(&sheet, Some(&assign(&[("load", &[("x", 1), ("y", 0)])]))));
+    let Answer::Matching(assigned) = &whole else { unreachable!() };
+    let both = Answer::Matching(MatchingAnswer { guesses: Some(BTreeMap::new()), ..assigned.clone() });
+    let neither = Answer::Matching(MatchingAnswer { assignments: None, guesses: None });
+    for refused in [guess(&[("load", &[("x", 1.0), ("y", 2.0)]), ("demand", &[("x", 10.0), ("y", 20.0)])]), guess(&[]), both] {
+        assert_eq!(answer_rejection(&sheet, &refused), Some(Rejection::AnswerInvalid), "{refused:?}");
+    }
+    assert_eq!(answer_rejection(&sheet, &neither), Some(Rejection::AnswerInvalid), "where the keys show, the assignments are the answer, as before");
+    assert!(!answer_complete(&sheet, Some(&neither)));
+    assert!(!answer_complete(&sheet, Some(&guess(&[("load", &[("x", 1.0), ("y", 2.0)]), ("demand", &[("x", 10.0), ("y", 20.0)])]))));
+}
+
+#[test]
+fn a_matching_that_hides_the_keys_takes_guesses_that_fit_their_dimension_and_no_assignments() {
+    let sheet = matching_sheet_of(None, None);
+    let whole = guess(&[("load", &[("x", -3.0), ("y", 0.0)]), ("demand", &[("x", 0.5), ("y", 0.5)])]);
+    for (answer, complete) in [
+        (whole.clone(), true),
+        (guess(&[("load", &[("x", 1.0), ("y", 1.0)]), ("demand", &[("y", 20.0)])]), false),
+        (guess(&[("load", &[("x", 1.0), ("y", 1.0)])]), false),
+        (guess(&[("load", &[]), ("demand", &[])]), false),
+        (guess(&[]), false),
+        (Answer::Matching(MatchingAnswer { assignments: None, guesses: None }), false),
+    ] {
+        assert_eq!(answer_rejection(&sheet, &answer), None, "{answer:?}");
+        assert_eq!(answer_complete(&sheet, Some(&answer)), complete, "{answer:?}");
+    }
+    let Answer::Matching(guessed) = &whole else { unreachable!() };
+    let both = Answer::Matching(MatchingAnswer { assignments: Some(BTreeMap::new()), ..guessed.clone() });
+    for refused in [
+        assign(&[("load", &[("x", 0)])]),
+        assign(&[]),
+        both,
+        guess(&[("demand", &[("x", 0.0)])]),
+        guess(&[("demand", &[("y", -2.0)])]),
+        guess(&[("load", &[("z", 1.0)])]),
+        guess(&[("area", &[("x", 1.0)])]),
+        guess(&[("load", &[("x", f64::NAN)])]),
+        guess(&[("load", &[("x", f64::INFINITY)])]),
+        guess(&[("demand", &[("x", f64::NEG_INFINITY)])]),
+    ] {
+        assert_eq!(answer_rejection(&sheet, &refused), Some(Rejection::AnswerInvalid), "{refused:?}");
+    }
+    assert_eq!(answer_rejection(&sheet, &order(&["x", "y"])), Some(Rejection::AnswerInvalid));
+    assert!(!answer_complete(&sheet, None));
+}
+
+#[test]
+fn a_matching_with_any_dimension_without_cards_hides_the_keys() {
+    let sheet = matching_sheet_of(Some(&[1.0, 2.0]), None);
+    assert_eq!(answer_rejection(&sheet, &assign(&[("load", &[("x", 1), ("y", 0)])])), Some(Rejection::AnswerInvalid));
+    let guessed = guess(&[("load", &[("x", 1.0), ("y", 2.0)]), ("demand", &[("x", 10.0), ("y", 20.0)])]);
+    assert_eq!(answer_rejection(&sheet, &guessed), None);
+    assert!(!answer_complete(&sheet, Some(&guessed)), "the dimension with cards waits for card assignments no valid answer carries");
+    assert!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "matching", "guesses": {"load": {"x": "1"}}})).is_err());
+    assert!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "matching", "assignments": {"load": {"x": -1}}})).is_err());
+    assert!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "matching", "assignments": {"load": {"x": 0.5}}})).is_err());
+    assert_eq!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "matching"})).ok(), Some(Answer::Matching(MatchingAnswer { assignments: None, guesses: None })));
 }
 
 #[test]
@@ -406,12 +546,39 @@ fn ids_are_32_lowercase_hex_and_commands_and_queries_are_held_to_them() {
     for refused in ["0123456789ABCDEF0123456789ABCDEF", &id[1..], &format!("{id}0"), &format!("{id}\n"), &format!(" {}", &id[1..]), &"g".repeat(32), "", "enroll:architecture:roster:1"] {
         assert!(!is_id(refused), "{refused:?}");
     }
-    let start = |run: &str, quiz: &str| Command::StartRun { id: id.to_string(), learner: id.to_string(), run: run.to_string(), quiz: quiz.to_string() };
-    assert_eq!(command_rejection(&start(id, "cooling-basics")), None);
-    assert_eq!(command_rejection(&start("run-1", "cooling-basics")), Some(Rejection::IdInvalid));
-    assert_eq!(command_rejection(&start(id, "Cooling")), Some(Rejection::IdInvalid));
+    let start = |run: &str, quiz: &str, challenge: Challenge, at: u64| Command::StartRun { id: id.to_string(), learner: id.to_string(), run: run.to_string(), quiz: quiz.to_string(), challenge, at };
+    for challenge in CHALLENGES {
+        assert_eq!(command_rejection(&start(id, "cooling-basics", challenge, 0)), None);
+        assert_eq!(command_rejection(&start(id, "cooling-basics", challenge, MAX_TIMESTAMP)), None);
+        assert_eq!(command_rejection(&start(id, "cooling-basics", challenge, MAX_TIMESTAMP + 1)), Some(Rejection::IdInvalid));
+        assert_eq!(command_rejection(&start("run-1", "cooling-basics", challenge, 0)), Some(Rejection::IdInvalid));
+        assert_eq!(command_rejection(&start(id, "Cooling", challenge, 0)), Some(Rejection::IdInvalid));
+    }
     assert_eq!(command_rejection(&Command::SubmitRun { id: "x".repeat(4096), learner: id.to_string(), run: id.to_string() }), Some(Rejection::IdInvalid));
-    assert_eq!(command_rejection(&Command::RecordAnswer { id: id.to_string(), learner: id.to_string(), run: id.to_string(), task: "../loads".to_string(), answer: Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: BTreeMap::new() }) }), Some(Rejection::IdInvalid));
+    let record = |run: &str, task: &str, at: u64| Command::RecordAnswer { id: id.to_string(), learner: id.to_string(), run: run.to_string(), task: task.to_string(), answer: Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: None }), at };
+    let open = |learner: &str, run: &str, task: &str| Command::OpenTask { id: id.to_string(), learner: learner.to_string(), run: run.to_string(), task: task.to_string(), at: 0 };
+    assert_eq!((command_rejection(&record(id, "loads", MAX_TIMESTAMP)), command_rejection(&open(id, id, "loads"))), (None, None));
+    assert_eq!(command_rejection(&record(id, "../loads", 0)), Some(Rejection::IdInvalid));
+    for beyond in [MAX_TIMESTAMP + 1, u64::MAX] {
+        let opening = Command::OpenTask { id: id.to_string(), learner: id.to_string(), run: id.to_string(), task: "loads".to_string(), at: beyond };
+        assert_eq!((command_rejection(&record(id, "loads", beyond)), command_rejection(&opening)), (Some(Rejection::IdInvalid), Some(Rejection::IdInvalid)), "an instant beyond a safe integer: {beyond}");
+    }
+    for refused in [open(id, id, "../loads"), open(id, id, ""), open(id, "run-1", "loads"), open("ada", id, "loads"), Command::OpenTask { id: "1".to_string(), learner: id.to_string(), run: id.to_string(), task: "loads".to_string(), at: 5 }] {
+        assert_eq!(command_rejection(&refused), Some(Rejection::IdInvalid), "{refused:?}");
+    }
+    for malformed in [
+        serde_json::json!({"type": "start-run", "id": id, "learner": id, "run": id, "quiz": "cooling"}),
+        serde_json::json!({"type": "start-run", "id": id, "learner": id, "run": id, "quiz": "cooling", "challenge": "extreme", "at": 0}),
+        serde_json::json!({"type": "start-run", "id": id, "learner": id, "run": id, "quiz": "cooling", "challenge": "hard"}),
+        serde_json::json!({"type": "start-run", "id": id, "learner": id, "run": id, "quiz": "cooling", "challenge": "hard", "at": -1}),
+        serde_json::json!({"type": "open-task", "id": id, "learner": id, "run": id, "task": "loads"}),
+        serde_json::json!({"type": "open-task", "id": id, "learner": id, "run": id, "task": "loads", "at": -1}),
+        serde_json::json!({"type": "open-task", "id": id, "learner": id, "run": id, "task": "loads", "at": 1.5}),
+        serde_json::json!({"type": "record-answer", "id": id, "learner": id, "run": id, "task": "loads", "answer": {"kind": "sorting", "order": []}}),
+        serde_json::json!({"type": "record-answer", "id": id, "learner": id, "run": id, "task": "loads", "answer": {"kind": "sorting", "order": []}, "at": "now"}),
+    ] {
+        assert!(serde_json::from_value::<Command>(malformed.clone()).is_err(), "a malformed command is never decoded: {malformed}");
+    }
     let board = |quiz: Option<&str>, learner: Option<&str>| Query::Leaderboard { period: LeaderboardPeriod::Weekly, quiz: quiz.map(str::to_string), learner: learner.map(str::to_string) };
     assert_eq!(query_rejection(&board(None, None)), None);
     assert_eq!(query_rejection(&board(Some("cooling-basics"), Some(id))), None);

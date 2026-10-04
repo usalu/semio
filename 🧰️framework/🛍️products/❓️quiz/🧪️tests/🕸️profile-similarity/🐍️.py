@@ -6,7 +6,12 @@ A wrong category earns ``max(0, 1 − d(assigned, correct)/d_max)`` when both ca
 ``(v − min)/(max − min)``, and ``d_max`` the largest such distance between any two profiled categories of
 the task. The credit is computed by the loops below, written from the design text, and every distance
 and every ``d_max`` they use is recomputed by ``scipy.spatial.distance`` (``euclidean`` per pair, ``pdist``
-for the maximum) and must agree before the result is projected.
+for the maximum) and must agree before the result is projected. The credit is always taken from the
+task's own axes and profiles, whatever the sheet task shows of them (challenge design §3.2 hides the
+axis numbers and normalises the profiles where the keys are hidden). On a timed sheet task (one that
+carries ``seconds``, challenge design §3.4) items may be left unassigned and the answer may be absent:
+such an item earns 0 and carries no assigned category, and the score stays the mean over every sheet
+item — recomputed with ``numpy.mean``.
 
 @see https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
 @see ../../🧫️fixtures/🕸️profile-similarity/🔣️.json
@@ -73,30 +78,36 @@ def credit(task, assigned, correct):
 
 
 def scorable(task, sheet_task, answer):
-    """🚦️ Whether §5 holds the answer valid and complete for this resolved sheet task — otherwise it scores none."""
+    """🚦️ Whether the answer can be scored for this resolved sheet task: valid and complete, or on a timed sheet task (one that carries ``seconds``) merely valid or absent — otherwise it scores none."""
     items = {item["id"] for item in sheet_task["items"]}
     categories = {category["id"] for category in task["categories"]}
+    if not (task["kind"] == "classification" == sheet_task["kind"] and task["id"] == sheet_task["id"] and items <= {item["id"] for item in task["items"]}):
+        return False
+    if answer is None:
+        return "seconds" in sheet_task
     return (
-        answer["kind"] == "classification" == task["kind"] == sheet_task["kind"]
-        and task["id"] == sheet_task["id"]
-        and items <= {item["id"] for item in task["items"]}
+        answer["kind"] == "classification"
         and all(item in items and category in {category["id"] for category in sheet_task["categories"]} and category in categories for item, category in answer["assignments"].items())
-        and all(item in answer["assignments"] for item in items)
+        and ("seconds" in sheet_task or all(item in answer["assignments"] for item in items))
     )
 
 
 def classification_result(task, sheet_task, answer):
-    """🧷️ ``scoreTask`` for a classification task: items in sheet order, the score their mean credit (0 without items), or ``None``."""
+    """🧷️ ``scoreTask`` for a classification task: items in sheet order, the score their mean credit (0 without items), or ``None``. An item left unassigned on a timed sheet task earns 0 and carries no assigned category."""
     if not scorable(task, sheet_task, answer):
         return None
     items = {item["id"]: item for item in task["items"]}
+    assignments = answer["assignments"] if answer is not None else {}
     results = []
     total = 0.0
     for sheet_item in sheet_task["items"]:
         item = items[sheet_item["id"]]
-        earned = credit(task, answer["assignments"][item["id"]], item["category"])
+        if item["id"] not in assignments:
+            results.append({"item": item["id"], "correct": item["category"], "credit": 0, **({"explanation": item["explanation"]} if "explanation" in item else {})})
+            continue
+        earned = credit(task, assignments[item["id"]], item["category"])
         total += earned
-        result = {"item": item["id"], "assigned": answer["assignments"][item["id"]], "correct": item["category"], "credit": earned}
+        result = {"item": item["id"], "assigned": assignments[item["id"]], "correct": item["category"], "credit": earned}
         if "explanation" in item:
             result["explanation"] = item["explanation"]
         results.append(result)
@@ -156,11 +167,32 @@ def credits(ctx):
     return Outcome(produced)
 
 
+def timed(ctx):
+    """⏳️ Every committed answer to a timed sheet task — complete, partial or absent — credited and held to its committed result: an unassigned item earns 0 and names no category, and the score is numpy's mean over every sheet item."""
+    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    tasks = {task["id"]: task for task in vectors["tasks"]}
+    produced = {}
+    for vector in vectors["timed"]:
+        task, answer = tasks[vector["task"]], vector.get("answer")
+        if answer is not None:
+            corroborate(vector["id"], task, answer)
+        result = classification_result(task, vector["sheetTask"], answer)
+        left = [entry["item"] for entry in result["items"] if "assigned" not in entry]
+        if left != [item["id"] for item in vector["sheetTask"]["items"] if answer is None or item["id"] not in answer["assignments"]] or any(entry["credit"] != 0 for entry in result["items"] if "assigned" not in entry):
+            raise AssertionError("timed/%s: the unassigned items %r do not all earn 0" % (vector["id"], left))
+        if abs(float(numpy.mean([entry["credit"] for entry in result["items"]])) - result["score"]) > TOLERANCE:
+            raise AssertionError("timed/%s: the score %r is not numpy's mean credit over every sheet item" % (vector["id"], result["score"]))
+        produced[vector["id"]] = result
+        if not close(result, vector["expected"]):
+            raise AssertionError("timed/%s: the reference result %r differs from the committed %r" % (vector["id"], result, vector["expected"]))
+    return Outcome(produced)
+
+
 def degraded(ctx):
     """🩹️ Every committed input that bypasses validation degrades to the committed result or to none — never a throw, never NaN."""
     produced = {}
     for vector in json.loads(ctx.fixture_bytes(VECTORS))["degraded"]:
-        produced[vector["id"]] = classification_result(vector["task"], vector["sheetTask"], vector["answer"])
+        produced[vector["id"]] = classification_result(vector["task"], vector["sheetTask"], vector.get("answer"))
         if not close(produced[vector["id"]], vector["expected"]):
             raise AssertionError("degraded/%s: the reference result %r differs from the committed %r" % (vector["id"], produced[vector["id"]], vector["expected"]))
     return Outcome(produced)
@@ -172,7 +204,7 @@ def degraded(ctx):
 # region 🔖️Registration
 def adapter():
     """🧭️ Oracle role only."""
-    return Adapter("python").oracle("credits", credits).oracle("degraded", degraded)
+    return Adapter("python").oracle("credits", credits).oracle("timed", timed).oracle("degraded", degraded)
 
 
 # endregion 🔖️Registration

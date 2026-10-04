@@ -3,8 +3,15 @@
  * The digest is FNV-1a (32 bit) over the IEEE-754 bit patterns (little-endian doubles) of every number of every
  * frame, in this order: tick, rate, wake (−1 for none), the number of actors, then per actor in frame order the
  * index of its species in the menagerie, x, y, facing, the index of its activity in `ACTIVITIES`, opacity, every
- * bone number, per eye x, y and lid, and mood. It runs on from frame to frame, so a checkpoint vouches for every
- * frame before it.
+ * bone number, per eye x, y and lid, spirits, the index of its footing in `FOOTINGS`, the index of its state among
+ * the states of its species, the index of its mood in `MOODS`, intensity, tilt, pivot x and y, the number of its
+ * tools and per tool the index of its kind (chute 0, rope 1, hook 2, gun 3, ladder 4) and its numbers in the order of
+ * the schema, and its body x, y, width and height; then the number of ladders and per ladder x0, y0, x1, y1, rungs and
+ * opacity; the number of particles and per particle the index of its species, the index of its emitter among the
+ * emitters of that species, x, y, scale, rotation and opacity; the number of lifts and per lift dx, dy, tilt and
+ * opacity; the number of puffs of dust and per puff x, y, width, height and phase; and the index of the species held
+ * (−1 for none). Only the id of a lifted fixture, a string, is left out.
+ * It runs on from frame to frame, so a checkpoint vouches for every frame before it.
  *
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎪️stage/🟦️.ts
@@ -12,7 +19,9 @@
  */
 import { AssertionError } from "node:assert";
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { ACTIVITIES, type Activity, type Frame, type Menagerie, type Slug, type Stage, type StageEvent } from "../../🧬️schema/🟦️.ts";
+import { ACTIVITIES, FOOTINGS, MOODS, type Activity, type Extent, type Footing, type Frame, type Menagerie, type Slug, type Stage, type StageEvent, type ToolFrame } from "../../🧬️schema/🟦️.ts";
+import { overlaps } from "../../🔨️modules/🚧️clearance/🟦️.ts";
+import { bodiesOf, extentOf } from "../../🔨️modules/📏️spacing/🟦️.ts";
 import { MODE_LIMITS, followersOf } from "../../🔨️modules/🧠️behavior/🟦️.ts";
 import { advance, frameOf, openStage } from "../../🔨️modules/🎪️stage/🟦️.ts";
 import { HOP_TICKS } from "../../🔨️modules/🏞️terrain/🟦️.ts";
@@ -21,18 +30,20 @@ const VECTORS = "shared://🎪️stage-trace/🔣️.json";
 const FNV_OFFSET_BASIS = 2166136261;
 const FNV_PRIME = 16777619;
 const CHUNKS = [1, 7, 64, 3, 500, 2, 19, 1000];
-const CONTACT = 0.0078125;
 
 /** 🪜️ The events that happen at one tick of a script, before that tick passes. */
 export type Step = { readonly at: number; readonly events: readonly StageEvent[] };
 
-/** 👁️ One actor as a checkpoint records it. */
-export type Sighting = { readonly species: Slug; readonly perch: string | null; readonly x: number; readonly y: number; readonly activity: Activity; readonly partner: Slug | null; readonly leaving: boolean; readonly opacity: number };
+/** 👁️ One actor as a checkpoint records it: who, what carries it (its perch, the wall of the pitch it clings to), where its feet are, what it does, with whom, whether it leaves, how visible it is and its body (the solid box no other body may overlap). */
+export type Sighting = { readonly species: Slug; readonly perch: string | null; readonly wall: string | null; readonly footing: Footing; readonly x: number; readonly y: number; readonly activity: Activity; readonly partner: Slug | null; readonly leaving: boolean; readonly opacity: number; readonly body: Extent };
 
 /** 📍️ What a checkpoint records: the tick, the digest of every frame up to it, the mode and the actors on stage. */
-export type Checkpoint = { readonly tick: number; readonly digest: number; readonly mode: string; readonly actors: readonly Sighting[] };
+export type Checkpoint = { readonly tick: number; readonly digest: number; readonly mode: string; readonly actors: readonly Sighting[]; readonly drawn: Scenery };
 
-/** ⚖️ The laws every tick of every script keeps: grounded actors stand on perches (`perched`) outside every keep-out (`clear`), no two grounded actors of one surface stand in each other — their feet are at least half of both widths apart, within 1/128 px (`apart`) —, no more actors walk or hop than the mode allows (`paced`), at most one pair has partners (`paired`), activities follow the activity graph (`graphed`), and frames are well-formed — opacity in [0, 1], a known rate, a wake tick only at rate 0 and in the future, actors back to front (`whole`). */
+/** 🎆️ What the frame of a checkpoint shows beside the actors: how many particles, standing ladders, lifted copies and puffs of dust, and who is held. */
+export type Scenery = { readonly particles: number; readonly ladders: number; readonly lifts: number; readonly puffs: number; readonly held: Slug | null };
+
+/** ⚖️ The laws every tick of every script keeps: actors on a perch stand on it, actors on a wall cling to a pitch of a surveyed wall and actors on a ladder ride one that stands (`perched`; one that scoots to a new seat stands at the height of its surface and on its way there, at most two of its widths off its perch) outside every keep-out (`clear`; but for a scooter on its way out of one), the bodies of no two actors overlap, wherever they are — on perches, in the air, under a parachute, in the hand, on a head (`apart`, the invariant of `🚧️clearance`) —, no more actors walk or hop than the mode allows (`paced`), at most one pair has partners (`paired`), activities follow the activity graph (`graphed`), and frames are well-formed — opacity in [0, 1], a known rate, a wake tick only at rate 0 and in the future, actors back to front (`whole`). */
 export type Laws = { readonly perched: boolean; readonly clear: boolean; readonly apart: boolean; readonly paced: boolean; readonly paired: boolean; readonly graphed: boolean; readonly whole: boolean };
 
 /** 🎞️ The trace of a script: how many frames it has, the digest of all of them, the checkpoints and the laws. */
@@ -53,17 +64,44 @@ function fold(hash: number, value: number): number {
   return folded;
 }
 
+/** 🧰️ The numbers of a tool in the order the digest folds them: the index of its kind (chute 0, rope 1, hook 2, gun 3, ladder 4), then its own numbers in the order of the schema. */
+function toolNumbers(tool: ToolFrame): readonly number[] {
+  if (tool.kind === "chute") return [0, tool.open, tool.sway];
+  if (tool.kind === "rope") return [1, tool.x, tool.y, tool.slack];
+  if (tool.kind === "hook") return [2, tool.x, tool.y];
+  if (tool.kind === "gun") return [3, tool.aim];
+  return [4, tool.lean, tool.length];
+}
+
 /** 🧮️ The digest after one more frame. */
 function foldFrame(hash: number, menagerie: Menagerie, frame: Frame): number {
   let folded = fold(fold(fold(fold(hash, frame.tick), frame.rate), frame.wake === null ? -1 : frame.wake), frame.actors.length);
   for (const actor of frame.actors) {
+    const kind = menagerie.species.find((species) => species.id === actor.species);
     folded = fold(folded, menagerie.species.findIndex((species) => species.id === actor.species));
     folded = fold(fold(fold(fold(fold(folded, actor.x), actor.y), actor.facing), ACTIVITIES.indexOf(actor.activity)), actor.opacity);
     for (const number of actor.bones) folded = fold(folded, number);
     for (const eye of actor.eyes) folded = fold(fold(fold(folded, eye.x), eye.y), eye.lid);
-    folded = fold(folded, actor.mood);
+    folded = fold(folded, actor.spirits);
+    folded = fold(fold(fold(fold(folded, FOOTINGS.indexOf(actor.footing)), kind === undefined ? -1 : kind.states.findIndex((state) => state.id === actor.state)), MOODS.indexOf(actor.mood)), actor.intensity);
+    folded = fold(fold(fold(folded, actor.tilt), actor.pivot.x), actor.pivot.y);
+    folded = fold(folded, actor.tools.length);
+    for (const tool of actor.tools) for (const number of toolNumbers(tool)) folded = fold(folded, number);
+    folded = fold(fold(fold(fold(folded, actor.body.x), actor.body.y), actor.body.width), actor.body.height);
   }
-  return folded;
+  folded = fold(folded, frame.ladders.length);
+  for (const ladder of frame.ladders) folded = fold(fold(fold(fold(fold(fold(folded, ladder.x0), ladder.y0), ladder.x1), ladder.y1), ladder.rungs), ladder.opacity);
+  folded = fold(folded, frame.particles.length);
+  for (const particle of frame.particles) {
+    const kind = menagerie.species.find((species) => species.id === particle.species);
+    folded = fold(fold(folded, menagerie.species.findIndex((species) => species.id === particle.species)), kind === undefined ? -1 : kind.emitters.findIndex((emitter) => emitter.id === particle.emitter));
+    folded = fold(fold(fold(fold(fold(folded, particle.x), particle.y), particle.scale), particle.rotation), particle.opacity);
+  }
+  folded = fold(folded, frame.lifts.length);
+  for (const lift of frame.lifts) folded = fold(fold(fold(fold(folded, lift.dx), lift.dy), lift.tilt), lift.opacity);
+  folded = fold(folded, frame.puffs.length);
+  for (const puff of frame.puffs) folded = fold(fold(fold(fold(fold(folded, puff.x), puff.y), puff.width), puff.height), puff.phase);
+  return fold(folded, frame.held === null ? -1 : menagerie.species.findIndex((species) => species.id === frame.held));
 }
 
 /** 🗂️ The events of a script by the tick they happen at. */
@@ -98,12 +136,18 @@ function lawsOf(menagerie: Menagerie, stage: Stage, frame: Frame, tuned: number)
       if (!stage.actors.some((candidate) => candidate.species === actor.partner)) partners += 2;
     }
     if (!(actor.opacity >= 0 && actor.opacity <= 1)) whole = false;
+    if ((actor.footing === "perch") !== (actor.perch !== null)) perched = false;
+    const pitch = actor.pitch;
+    if ((actor.footing === "wall") !== (pitch !== null) || (pitch !== null && !stage.walls.some((wall) => wall.id === pitch.wall && wall.side === pitch.side && wall.x === pitch.x))) perched = false;
+    if (actor.footing === "ladder" && !stage.ladders.some((ladder) => ladder.rider === actor.species)) perched = false;
     if (actor.perch === null) continue;
-    if (!stage.perches.some((perch) => perch.surface === actor.perch && perch.x0 <= actor.x && actor.x <= perch.x1 && actor.y === perch.y - hover)) perched = false;
+    const scoots = actor.activity === "scoot";
+    const slack = scoots ? 2 * species.size.width : 0;
+    if (!stage.perches.some((perch) => perch.surface === actor.perch && perch.x0 - slack <= actor.x && actor.x <= perch.x1 + slack && actor.y === perch.y - hover)) perched = false;
     const left = actor.x - species.size.width / 2;
     const right = actor.x + species.size.width / 2;
     const top = actor.y - species.size.height;
-    for (const keepout of stage.keepouts) if (keepout.width > 0 && keepout.height > 0 && Math.max(left, keepout.x) < Math.min(right, keepout.x + keepout.width) && Math.max(top, keepout.y) < Math.min(actor.y, keepout.y + keepout.height)) clear = false;
+    for (const keepout of stage.keepouts) if (!scoots && keepout.width > 0 && keepout.height > 0 && Math.max(left, keepout.x) < Math.min(right, keepout.x + keepout.width) && Math.max(top, keepout.y) < Math.min(actor.y, keepout.y + keepout.height)) clear = false;
     if (actor.x < 0 || actor.x > stage.width) whole = false;
   }
   for (let index = 1; index < frame.actors.length; index++) {
@@ -111,14 +155,7 @@ function lawsOf(menagerie: Menagerie, stage: Stage, frame: Frame, tuned: number)
     const upper = frame.actors[index]!;
     if (lower.y > upper.y || (lower.y === upper.y && !(lower.species < upper.species))) whole = false;
   }
-  let apart = true;
-  for (const one of stage.actors) {
-    for (const two of stage.actors) {
-      if (one.perch === null || one.perch !== two.perch || one.species >= two.species) continue;
-      const shoulders = (menagerie.species.find((candidate) => candidate.id === one.species)!.size.width + menagerie.species.find((candidate) => candidate.id === two.species)!.size.width) / 2;
-      if (Math.abs(one.x - two.x) < shoulders - CONTACT) apart = false;
-    }
-  }
+  const apart = overlaps(bodiesOf(stage.actors, stage.actors.map((actor) => menagerie.species.find((candidate) => candidate.id === actor.species)!))).length === 0;
   return { perched, clear, apart, paced: movers <= MODE_LIMITS[stage.mode].movers || stage.tick - tuned <= HOP_TICKS + 1, paired: partners <= 2, graphed: true, whole };
 }
 
@@ -141,7 +178,7 @@ export function traceOf(menagerie: Menagerie, script: Script, seed: number = scr
     hash = foldFrame(hash, menagerie, frame);
     stage = ticked;
     if (tick % script.every !== 0 && tick !== script.ticks) continue;
-    checkpoints.push({ tick, digest: hash, mode: stage.mode, actors: stage.actors.map((actor) => ({ species: actor.species, perch: actor.perch, x: actor.x, y: actor.y, activity: actor.activity, partner: actor.partner, leaving: actor.leaving, opacity: actor.opacity })) });
+    checkpoints.push({ tick, digest: hash, mode: stage.mode, actors: stage.actors.map((actor) => ({ species: actor.species, perch: actor.perch, wall: actor.pitch === null ? null : actor.pitch.wall, footing: actor.footing, x: actor.x, y: actor.y, activity: actor.activity, partner: actor.partner, leaving: actor.leaving, opacity: actor.opacity, body: extentOf(actor, menagerie.species.find((candidate) => candidate.id === actor.species)!) })), drawn: { particles: frame.particles.length, ladders: frame.ladders.length, lifts: frame.lifts.length, puffs: frame.puffs.length, held: frame.held } });
   }
   return { trace: { frames: script.ticks, digest: hash, checkpoints, laws }, stage };
 }

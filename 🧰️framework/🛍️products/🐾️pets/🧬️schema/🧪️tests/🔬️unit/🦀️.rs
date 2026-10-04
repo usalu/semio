@@ -75,12 +75,52 @@ fn normative() -> Value {
     serde_json::from_str(include_str!("../../🔣️.json")).unwrap_or_else(|error| panic!("🧬️schema/🔣️.json: {error}"))
 }
 
+fn joined(parts: &[Value]) -> Value {
+    Value::Object(parts.iter().filter_map(Value::as_object).flat_map(|part| part.iter().map(|(key, value)| (key.clone(), value.clone()))).collect())
+}
+
 fn actor() -> Value {
-    json!({"species": "blobby", "perch": "floor", "x": 10.5, "y": 480, "vx": 0, "vy": -2.25, "facing": -1, "faced": 104, "activity": "squabble", "since": 100, "until": 160, "goal": 12, "partner": "hoppy", "clip": null, "gaze": {"x": 0.125, "y": -0.25, "vx": 0, "vy": 1}, "blink": 140, "mood": -0.5, "needs": {"energy": 0.5, "sociability": 0.25, "curiosity": 1}, "opacity": 1, "leaving": false, "draws": 4_294_967_295_u32})
+    let circling = json!({"live": true, "inside": 120, "sx": 1, "sy": -1, "px": 30.5, "py": -12, "turn": -1, "quarters": 2, "steps": 3, "against": 1, "first": 90, "last": 118, "open": 900, "near": 640, "far": 1210.25, "rest": 0});
+    let stroking = json!({"live": false, "way": 0, "from": 0, "began": 0, "peak": 0, "reached": 0, "top": 0, "bottom": 0, "topSince": 0, "bottomSince": 0, "count": -1, "first": 0, "second": 0, "rest": 64});
+    let shot = json!({"surface": "card", "facing": 1, "muzzle": {"x": 14, "y": 450}, "hook": {"x": 120, "y": 300}, "length": 180.5, "reel": "swing"});
+    let hang = json!({"grip": {"x": 10, "y": 440, "vx": 3, "vy": -1.5}, "bob": {"x": 11, "y": 478}, "previous": {"x": 10.75, "y": 479}});
+    let canopy = json!({"x": 10, "y": 430, "vx": 2, "vy": 96, "bob": {"x": 10.5, "y": 474}, "previous": {"x": 10.25, "y": 472.5}});
+    joined(&[
+        json!({"species": "blobby", "perch": "floor", "host": null, "pitch": {"wall": "card-left", "surface": "card", "side": -1, "x": 200, "y0": 300, "y1": 420}, "grip": 383.75, "footing": "perch", "x": 10.5, "y": 480, "vx": 0, "vy": -2.25, "tilt": -0.125, "facing": -1, "faced": 104, "activity": "squabble", "since": 100, "until": 160, "goal": 12, "partner": "hoppy", "clip": null}),
+        json!({"gaze": {"x": 0.125, "y": -0.25, "vx": 0, "vy": 1}, "blink": 140, "needs": {"energy": 0.5, "sociability": 0.25, "curiosity": 1}, "opacity": 1, "leaving": false, "draws": 4_294_967_295_u32}),
+        json!({"feeling": {"mood": "grumpy", "intensity": 0.75, "since": 96}, "state": "glowing", "stateSince": 40, "former": "resting", "trick": null, "warmth": {"heat": 2.5, "since": 110, "until": 0, "tier": "trick", "run": 2, "tricks": 1}}),
+        json!({"hover": {"circling": circling, "stroking": stroking}, "hang": hang, "chute": {"since": 60, "open": 1.125, "opening": -0.5, "canopy": canopy}}),
+        json!({"rope": {"shot": shot, "since": 70, "length": 120, "hand": {"x": 30, "y": 440}, "before": {"x": 29, "y": 442}, "caught": true}, "emitters": [{"emitter": "sparkle", "since": 90, "until": null}, {"emitter": "hum", "since": 20, "until": 150}]}),
+    ])
 }
 
 fn stage() -> Value {
-    json!({"seed": 4_294_967_295_u32, "tick": 128, "mode": "calm", "quiet": false, "width": 640, "height": 480, "pointer": {"x": 1.5, "y": 2}, "pointed": 64, "glances": [{"x": 3, "y": 4}], "surfaces": [{"id": "floor", "x0": 0, "x1": 640, "y": 480}], "keepouts": [{"x": 1, "y": 2, "width": 3, "height": 4}], "perches": [{"surface": "floor", "x0": 0, "x1": 640, "y": 480}], "wanted": ["blobby", "hoppy"], "actors": [actor()], "rapports": [{"between": ["blobby", "hoppy"], "drift": -0.25}], "met": -640, "draws": 3})
+    let press = json!({"phase": "armed", "x": 12.5, "y": 460, "since": 120, "slop": 6});
+    let shaking = json!({"live": true, "ax": 10, "ay": 440, "at": 100, "fx": 52, "fy": 438, "reached": 110, "count": 2, "mark1": 0, "mark2": 80, "mark3": 100, "rest": 0});
+    let ladder = json!({"owner": "hoppy", "wall": "card-left", "surface": "floor", "side": -1, "foot": {"x": 180, "y": 480}, "top": {"x": 200, "y": 320}, "since": 30, "until": 1310, "rider": null});
+    let lift = json!({"fixture": "f1", "pusher": "blobby", "since": 100, "side": 1, "room": 40, "span": 300, "unit": 0.25});
+    joined(&[
+        json!({"seed": 4_294_967_295_u32, "tick": 128, "mode": "calm", "quiet": false, "width": 640, "height": 480, "pointer": {"x": 1.5, "y": 2}, "pointed": 64, "over": "control", "glances": [{"x": 3, "y": 4}]}),
+        json!({"surfaces": [{"id": "floor", "x0": 0, "x1": 640, "y": 480}], "keepouts": [{"x": 1, "y": 2, "width": 3, "height": 4}], "walls": [{"id": "card-left", "surface": "card", "side": -1, "x": 200, "y0": 300, "y1": 420}]}),
+        json!({"fixtures": [{"id": "f1", "key": "quiz/task", "x": 210, "y": 320, "width": 300, "height": 28}], "perches": [{"surface": "floor", "x0": 0, "x1": 640, "y": 480}], "pitches": [{"wall": "card-left", "surface": "card", "side": -1, "x": 200, "y0": 300, "y1": 420}], "wanted": ["blobby", "hoppy"], "actors": [actor()]}),
+        json!({"rapports": [{"between": ["blobby", "hoppy"], "drift": -0.25}], "met": -640, "draws": 3, "play": true, "mischief": false, "stirred": 120, "scrolled": -16, "press": press, "touched": "blobby", "shaking": shaking}),
+        json!({"trail": [{"x": 10, "y": 440}, {"x": 12, "y": 441.5}], "coolings": [{"reaction": "glow-cheers", "when": "blobby", "near": "hoppy", "until": 2048}], "pledges": [{"between": ["blobby", "hoppy"], "encounter": "cuddle", "until": 2048}]}),
+        json!({"ladders": [ladder], "lift": lift, "rested": 0, "poofs": 2, "puffs": [{"x": 300, "y": 456, "width": 40, "height": 48, "tick": 120}]}),
+        json!({"claims": [{"owner": "hoppy", "slices": [{"from": 128, "until": 131, "extent": {"x0": 296, "y0": 400.5, "x1": 340, "y1": 452}}], "rest": null}], "origin": {"x": 10.5, "y": 480}}),
+        json!({"courses": [{"owner": "hoppy", "from": 128, "steps": [{"x": 318, "y": 448, "vx": 0, "vy": 96, "tilt": 0, "canopy": null}, {"x": 318, "y": 449.5, "vx": 0, "vy": 96, "tilt": 0.0625, "canopy": {"x": 318, "y": 405, "vx": 0, "vy": 96, "bob": {"x": 318, "y": 449.5}, "previous": {"x": 318, "y": 448}}}], "ending": "head", "landing": "blobby", "touch": 96}]}),
+        json!({"trips": [{"owner": "blobby", "from": 129, "steps": [{"x": 180, "y": 480, "footing": "perch", "perch": "floor", "activity": "walk", "facing": 1, "hold": -1}, {"x": 180, "y": 479.5, "footing": "wall", "perch": null, "activity": "climb", "facing": 1, "hold": 0}], "pitches": [{"wall": "card-left", "surface": "card", "side": -1, "x": 200, "y0": 300, "y1": 420}], "ladder": null, "ending": "wall", "landing": "", "grip": 383}]}),
+    ])
+}
+
+fn frame() -> Value {
+    let tools = json!([{"kind": "chute", "open": 0.75, "sway": -0.02}, {"kind": "rope", "x": 120, "y": 300, "slack": 4}, {"kind": "hook", "x": 120, "y": 300}, {"kind": "gun", "aim": 0.875}, {"kind": "ladder", "lean": 0.25, "length": 84}]);
+    let actor = joined(&[
+        json!({"species": "blobby", "x": 10.5, "y": 480, "facing": 1, "activity": "greet", "opacity": 0.5, "bones": [1, 0, 0, 1, 0, -12.5], "eyes": [{"x": 0.5, "y": -0.5, "lid": 1}]}),
+        json!({"footing": "hand", "state": "resting", "mood": "happy", "intensity": 0.25, "spirits": 0.25, "tilt": -0.05, "pivot": {"x": 0, "y": -27}, "tools": tools, "body": {"x": -5.5, "y": 450, "width": 32, "height": 30}}),
+    ]);
+    let ladders = json!([{"x0": 180, "y0": 480, "x1": 200, "y1": 320, "rungs": 15, "opacity": 1}]);
+    let particles = json!([{"species": "blobby", "emitter": "sparkle", "x": 12, "y": 440, "scale": 1.2, "rotation": 0.125, "opacity": 0.5}]);
+    json!({"tick": 128, "actors": [actor], "rate": 32, "wake": null, "ladders": ladders, "particles": particles, "lifts": [{"fixture": "f1", "dx": 12.5, "dy": -1, "tilt": 0.002, "opacity": 1}], "puffs": [{"x": 300, "y": 405, "width": 40, "height": 30, "phase": 0.25}], "held": "blobby"})
 }
 
 fn without(document: &Value, member: &str) -> Value {
@@ -176,7 +216,7 @@ fn the_stage_trace_menagerie_and_every_scripted_event_round_trip() {
             }
         }
     }
-    for kind in ["surveyed", "summoned", "pointed", "unpointed", "glanced", "tuned", "hushed", "poked"] {
+    for kind in ["surveyed", "summoned", "pointed", "unpointed", "glanced", "tuned", "hushed", "pressed", "released"] {
         assert!(kinds.contains(kind), "no scripted event is {kind}");
     }
 }
@@ -189,6 +229,33 @@ fn enumerations_spell_the_literals_of_the_normative_file_in_its_order() {
     assert_eq!(json(&GAITS), definitions["Gait"]["enum"]);
     assert_eq!(json(&ACTIVITIES), definitions["Activity"]["enum"]);
     assert_eq!(json(&PET_MODES), definitions["PetMode"]["enum"]);
+    assert_eq!(json(&MOODS), definitions["Mood"]["enum"]);
+    assert_eq!(json(&FOOTINGS), definitions["Footing"]["enum"]);
+    assert_eq!(json(&GEARS), definitions["Gear"]["enum"]);
+    assert_eq!(json(&CUES), definitions["Cue"]["enum"]);
+    assert_eq!(json(&DRIFTS), definitions["Drift"]["enum"]);
+    assert_eq!(json(&DEEDS), definitions["Deed"]["enum"]);
+    assert_eq!(json(&POINTERS), definitions["Pointer"]["enum"]);
+    assert_eq!(json(&PRESS_PHASES), definitions["PressPhase"]["enum"]);
+    assert_eq!(json(&TIERS), definitions["Tier"]["enum"]);
+    assert_eq!(json(&REELINGS), definitions["Shot"]["properties"]["reel"]["enum"]);
+    assert_eq!(json(&OVERS), definitions["Pointed"]["properties"]["over"]["enum"]);
+    assert_eq!(json(&OVERS), definitions["Stage"]["properties"]["over"]["enum"]);
+    assert_eq!(json(&ENDINGS), definitions["Course"]["properties"]["ending"]["enum"]);
+    assert_eq!(json(&ARRIVALS), definitions["Trip"]["properties"]["ending"]["enum"]);
+    assert_eq!(definitions["Foothold"]["properties"]["footing"]["$ref"], json!("#/$defs/Footing"));
+    assert_eq!(definitions["Foothold"]["properties"]["activity"]["$ref"], json!("#/$defs/Activity"));
+    for (definition, member, target) in [("Actor", "footing", "Footing"), ("ActorFrame", "footing", "Footing"), ("ActorFrame", "mood", "Mood"), ("Pressed", "pointer", "Pointer"), ("Press", "phase", "PressPhase"), ("Warmth", "tier", "Tier"), ("Played", "deed", "Deed")] {
+        assert_eq!(definitions[definition]["properties"][member]["$ref"], json!(format!("#/$defs/{target}")), "{definition}.{member}");
+    }
+    assert_eq!(json(&[Activity::Greet, Activity::Cuddle, Activity::Squabble]), definitions["Pledge"]["properties"]["encounter"]["enum"]);
+    for (definition, member) in [("Wall", "side"), ("Pitch", "side"), ("Shot", "facing"), ("Foothold", "facing"), ("Ladder", "side"), ("Prank", "side")] {
+        assert_eq!(json(&FACINGS), definitions[definition]["properties"][member]["enum"], "{definition}.{member}");
+    }
+    assert_eq!(json(&PARTIES), definitions["Effect"]["properties"]["on"]["enum"]);
+    assert_eq!(json(&PLACEMENTS), definitions["Reaction"]["properties"]["where"]["enum"]);
+    assert_eq!(json(&[Activity::Greet, Activity::Cuddle, Activity::Squabble]), definitions["Effect"]["properties"]["encounter"]["enum"]);
+    assert_eq!(Mood::default(), MOODS[0]);
     assert_eq!(json(&MENAGERIE_SCHEMA), definitions["Menagerie"]["properties"]["schema"]["const"]);
     assert_eq!(json(&ENSEMBLE_SCHEMA), definitions["Ensemble"]["properties"]["schema"]["const"]);
     assert_eq!(json(&LANGUAGES), definitions["Text"]["required"]);
@@ -224,8 +291,19 @@ fn closed_sets_of_numbers_decode_nothing_the_contract_refuses() {
     assert!(serde_json::from_value::<StageEvent>(json!({"kind": "ticked", "ticks": 0})).is_ok());
     assert!(serde_json::from_value::<Stage>(with(&stage(), "tick", json!(-1))).is_err());
     assert!(serde_json::from_value::<Stage>(with(&stage(), "tick", json!(0))).is_ok());
-    let frame = json!({"tick": 0, "actors": [], "rate": 0, "wake": null});
-    assert_eq!(typed::<Frame>(&frame), Frame { tick: 0, actors: Vec::new(), rate: Rate::Rest, wake: None });
+    let frame = json!({"tick": 0, "actors": [], "rate": 0, "wake": null, "ladders": [], "particles": [], "lifts": [], "puffs": [], "held": null});
+    assert_eq!(typed::<Frame>(&frame), Frame { tick: 0, actors: Vec::new(), rate: Rate::Rest, wake: None, ladders: Vec::new(), particles: Vec::new(), lifts: Vec::new(), puffs: Vec::new(), held: None });
+    for (definition, value) in [("Wall", json!({"id": "w", "surface": "s", "side": 0, "x": 0, "y0": 0, "y1": 1})), ("Ladder", with(&stage()["ladders"][0], "side", json!(2))), ("Prank", with(&stage()["lift"], "side", json!(-2)))] {
+        let decodes = match definition {
+            "Wall" => serde_json::from_value::<Wall>(value).is_ok(),
+            "Ladder" => serde_json::from_value::<Ladder>(value).is_ok(),
+            _ => serde_json::from_value::<Prank>(value).is_ok(),
+        };
+        assert!(!decodes, "{definition} with a side that is no facing");
+    }
+    assert!(serde_json::from_value::<Pledge>(with(&stage()["pledges"][0], "encounter", json!("sulk"))).is_err());
+    assert!(serde_json::from_value::<Shot>(with(&actor()["rope"]["shot"], "reel", json!("yank"))).is_err());
+    assert!(serde_json::from_value::<Pointed>(json!({"x": 1, "y": 2, "over": "text"})).is_err());
     assert!(serde_json::from_value::<Frame>(with(&frame, "tick", json!(-1))).is_err());
     assert!(serde_json::from_value::<Frame>(with(&frame, "rate", json!(7))).is_err());
     assert!(serde_json::from_value::<Frame>(with(&frame, "wake", json!(-64))).is_ok());
@@ -241,9 +319,9 @@ fn every_definition_of_the_normative_file_has_a_twin_under_its_name() {
         .collect();
     let normative = normative();
     let defined: std::collections::BTreeSet<&str> = normative["$defs"].as_object().into_iter().flat_map(|definitions| definitions.keys().map(String::as_str)).collect();
-    assert_eq!(defined.len(), 57);
-    let inline: std::collections::BTreeSet<&str> = ["Facing", "Rate"].into_iter().collect();
-    assert!(inline.is_subset(&declared) && inline.is_disjoint(&defined), "Facing and Rate type the inline number enums of Actor, ActorFrame and Frame");
+    assert_eq!(defined.len(), 121);
+    let inline: std::collections::BTreeSet<&str> = ["Facing", "Rate", "Party", "Placement", "Over", "Reeling", "Ending", "Arrival"].into_iter().collect();
+    assert!(inline.is_subset(&declared) && inline.is_disjoint(&defined), "Facing and Rate type the inline number enums of Actor, ActorFrame, Frame, Wall, Pitch, Shot, Trip, Ladder and Prank, Party, Placement, Over, Reeling, Ending and Arrival the inline word enums of Effect, Reaction, Pointed, Shot, Course and Trip");
     assert_eq!(declared.difference(&inline).copied().collect::<std::collections::BTreeSet<&str>>(), defined);
 }
 
@@ -255,18 +333,37 @@ fn tagged_unions_carry_their_kind_on_the_wire() {
     assert_eq!(json(&Shape::Line(LineShape { x1: 0.0, y1: 1.0, x2: 2.0, y2: 3.0 })), json!({"kind": "line", "x1": 0.0, "y1": 1.0, "x2": 2.0, "y2": 3.0}));
     for event in [
         json!({"kind": "ticked", "ticks": 8}),
-        json!({"kind": "pointed", "x": 1.5, "y": 2}),
+        json!({"kind": "pointed", "x": 1.5, "y": 2, "over": "free"}),
+        json!({"kind": "pointed", "x": 1.5, "y": 2, "over": "control"}),
         json!({"kind": "unpointed"}),
         json!({"kind": "glanced", "points": [{"x": 1, "y": 2}]}),
-        json!({"kind": "surveyed", "width": 640, "height": 480, "surfaces": [{"id": "floor", "x0": 0, "x1": 640, "y": 480}], "keepouts": [{"x": 1, "y": 2, "width": 3, "height": 4}]}),
+        json!({"kind": "surveyed", "width": 640, "height": 480, "surfaces": [{"id": "floor", "x0": 0, "x1": 640, "y": 480}], "keepouts": [{"x": 1, "y": 2, "width": 3, "height": 4}], "walls": [{"id": "card-right", "surface": "card", "side": 1, "x": 500, "y0": 300, "y1": 420}], "fixtures": [{"id": "f1", "key": "quiz", "x": 1, "y": 2, "width": 3, "height": 4}]}),
         json!({"kind": "summoned", "species": ["blobby"]}),
         json!({"kind": "tuned", "mode": "lively"}),
         json!({"kind": "hushed", "quiet": true}),
-        json!({"kind": "poked", "x": 3, "y": 4}),
+        json!({"kind": "pressed", "x": 3, "y": 4, "pointer": "pen"}),
+        json!({"kind": "dragged", "x": 5, "y": 6}),
+        json!({"kind": "released", "x": 7, "y": 8}),
+        json!({"kind": "cancelled"}),
+        json!({"kind": "reclaimed", "fixture": "f1"}),
+        json!({"kind": "stirred"}),
+        json!({"kind": "scrolled"}),
+        json!({"kind": "played", "species": "blobby", "deed": "toss"}),
+        json!({"kind": "permitted", "play": true, "mischief": false}),
     ] {
         round_trips::<StageEvent>("event", &event);
         assert!(serde_json::from_value::<StageEvent>(with(&event, "extra", json!(1))).is_err(), "{event}");
     }
+    assert!(serde_json::from_value::<StageEvent>(json!({"kind": "poked", "x": 3, "y": 4})).is_err(), "poked is no event any more");
+    assert!(serde_json::from_value::<StageEvent>(json!({"kind": "pointed", "x": 1.5, "y": 2})).is_err(), "a pointer over nothing named");
+    assert!(serde_json::from_value::<StageEvent>(json!({"kind": "pressed", "x": 3, "y": 4, "pointer": "stylus"})).is_err());
+    assert_eq!(typed::<StageEvent>(&json!({"kind": "cancelled"})), StageEvent::Cancelled(Cancelled {}));
+    for tool in entries(&frame()["actors"][0]["tools"]) {
+        round_trips::<ToolFrame>("tool", tool);
+        assert!(serde_json::from_value::<ToolFrame>(with(tool, "extra", json!(1))).is_err(), "{tool}");
+    }
+    assert_eq!(json(&ToolFrame::Gun(GunTool { aim: 0.5 })), json!({"kind": "gun", "aim": 0.5}));
+    assert!(serde_json::from_value::<ToolFrame>(json!({"kind": "parasol", "open": 1})).is_err());
     assert_eq!(typed::<StageEvent>(&json!({"kind": "unpointed"})), StageEvent::Unpointed(Unpointed {}));
     assert_eq!(typed::<StageEvent>(&json!({"kind": "ticked", "ticks": 3})), StageEvent::Ticked(Ticked { ticks: 3 }));
     assert!(serde_json::from_value::<StageEvent>(json!({"kind": "whistled"})).is_err());
@@ -285,18 +382,49 @@ fn stages_and_frames_round_trip_with_their_nullable_members() {
     assert_eq!((decoded.seed, decoded.met, decoded.actors[0].draws, decoded.actors[0].facing, decoded.actors[0].faced), (u32::MAX, -640, u32::MAX, Facing::Left, 104));
     assert_eq!(decoded.actors[0].clip, None);
     assert!(serde_json::from_value::<Actor>(without(&actor(), "faced")).is_err(), "an actor without faced");
-    let empty = with(&with(&stage, "pointer", Value::Null), "actors", json!([with(&with(&actor(), "perch", Value::Null), "partner", Value::Null)]));
-    round_trips::<Stage>("stage without a pointer", &empty);
-    for member in ["perch", "partner", "clip"] {
+    assert_eq!((decoded.actors[0].state_since, decoded.actors[0].warmth.tier, decoded.actors[0].hover.stroking.count, decoded.actors[0].emitters[0].until), (40, Tier::Trick, -1, None));
+    assert_eq!((decoded.press.phase, decoded.touched.as_deref(), decoded.pledges[0].encounter, decoded.ladders[0].side, decoded.poofs, decoded.over), (PressPhase::Armed, Some("blobby"), Activity::Cuddle, Facing::Left, 2, Over::Control));
+    assert_eq!(json(&decoded.actors[0])["stateSince"], json!(40));
+    let mut empty = with(&with(&with(&with(&stage, "pointer", Value::Null), "touched", Value::Null), "lift", Value::Null), "ladders", json!([with(&stage["ladders"][0], "rider", json!("hoppy"))]));
+    let mut bare = actor();
+    for member in ["perch", "pitch", "partner", "trick", "hang", "chute", "rope"] {
+        bare = with(&bare, member, Value::Null);
+    }
+    empty = with(&empty, "actors", json!([bare]));
+    round_trips::<Stage>("stage without a pointer, a press, a lift or anything in an actor's hands", &empty);
+    for member in ["perch", "pitch", "grip", "footing", "partner", "clip", "feeling", "state", "stateSince", "former", "trick", "warmth", "hover", "hang", "chute", "rope", "emitters"] {
         assert!(serde_json::from_value::<Actor>(without(&actor(), member)).is_err(), "an actor without {member}");
     }
-    assert!(serde_json::from_value::<Stage>(without(&stage, "pointer")).is_err());
+    for member in ["mood", "spirits"] {
+        assert!(serde_json::from_value::<Actor>(with(&actor(), member, json!(0.5))).is_err(), "an actor's {member} is read off its feeling, never stored");
+    }
+    assert_eq!((decoded.courses[0].ending, decoded.courses[0].steps[1].canopy.map(|canopy| canopy.y), decoded.claims[0].rest, decoded.origin), (Ending::Head, Some(405.0), None, Some(Point { x: 10.5, y: 480.0 })));
+    for member in ["pointer", "over", "walls", "fixtures", "pitches", "play", "mischief", "stirred", "scrolled", "press", "touched", "shaking", "trail", "coolings", "pledges", "ladders", "lift", "rested", "poofs", "puffs", "claims", "courses", "trips", "origin"] {
+        assert!(serde_json::from_value::<Stage>(without(&stage, member)).is_err(), "a stage without {member}");
+    }
+    assert_eq!((decoded.trips[0].ending, decoded.trips[0].steps[1].footing, decoded.trips[0].steps[1].hold, decoded.trips[0].ladder.as_deref(), decoded.actors[0].pitch.as_ref().map(|pitch| pitch.side), decoded.actors[0].rope.as_ref().map(|rope| rope.caught)), (Arrival::Wall, Footing::Wall, 0, None, Some(Facing::Left), Some(true)));
+    assert!(serde_json::from_value::<Trip>(with(&stage["trips"][0], "ending", json!("head"))).is_err(), "a trip ends on a perch, on a wall or in the air");
+    assert_eq!((decoded.trips[0].steps[0].perch.as_deref(), decoded.trips[0].steps[0].facing, decoded.trips[0].steps[1].perch.as_deref()), (Some("floor"), Facing::Right, None));
+    for member in ["perch", "facing"] {
+        assert!(serde_json::from_value::<Foothold>(without(&stage["trips"][0]["steps"][0], member)).is_err(), "a foothold without {member}");
+    }
+    assert!(serde_json::from_value::<Trip>(with(&stage["trips"][0], "facing", json!(1))).is_err(), "a trip faces the way of each of its footholds, never one way for all");
+    assert!(serde_json::from_value::<Rope>(without(&actor()["rope"], "caught")).is_err(), "a rope without caught");
     assert!(serde_json::from_value::<Stage>(with(&stage, "seed", json!(4_294_967_296_u64))).is_err());
     assert!(serde_json::from_value::<Stage>(with(&stage, "tick", json!(1.5))).is_err());
     assert!(serde_json::from_value::<Stage>(with(&stage, "mode", json!("off"))).is_err());
-    let frame = json!({"tick": 128, "actors": [{"species": "blobby", "x": 10.5, "y": 480, "facing": 1, "activity": "greet", "opacity": 0.5, "bones": [1, 0, 0, 1, 0, -12.5], "eyes": [{"x": 0.5, "y": -0.5, "lid": 1}], "mood": 0.25}], "rate": 32, "wake": null});
+    let frame = frame();
     round_trips::<Frame>("frame", &frame);
     assert_eq!(typed::<Frame>(&frame).actors[0].activity, Activity::Greet);
+    assert_eq!((typed::<Frame>(&frame).actors[0].mood, typed::<Frame>(&frame).actors[0].footing, typed::<Frame>(&frame).actors[0].tools.len()), (Mood::Happy, Footing::Hand, 5));
+    round_trips::<Frame>("frame that holds nobody", &with(&frame, "held", Value::Null));
+    for member in ["footing", "state", "mood", "intensity", "spirits", "tilt", "pivot", "tools", "body"] {
+        assert!(serde_json::from_value::<Frame>(with(&frame, "actors", json!([without(&frame["actors"][0], member)]))).is_err(), "an actor frame without {member}");
+    }
+    for member in ["ladders", "particles", "lifts", "puffs", "held"] {
+        assert!(serde_json::from_value::<Frame>(without(&frame, member)).is_err(), "a frame without {member}");
+    }
+    assert!(serde_json::from_value::<Frame>(with(&frame, "actors", json!([with(&frame["actors"][0], "mood", json!(0.25))]))).is_err(), "a frame's mood is a mood, its spirits a number");
     assert!(serde_json::from_value::<Frame>(with(&frame, "actors", json!([without(&frame["actors"][0], "activity")]))).is_err(), "an actor frame without its activity");
     round_trips::<Frame>("frame with a wake tick", &with(&frame, "wake", json!(192)));
     assert!(serde_json::from_value::<Frame>(without(&frame, "wake")).is_err());
@@ -336,6 +464,72 @@ fn undeclared_members_and_wrong_tuples_are_refused_like_the_schema_refuses_them(
         }
     }
     assert_eq!(refused, entries(&conformance["structural"]).len() - 1);
+}
+
+#[test]
+fn states_tricks_emitters_gear_and_chemistry_carry_their_wire_names_and_refuse_what_the_contract_refuses() {
+    let conformance = fixture("schema-conformance");
+    let walker: Species = typed(&conformance["species"][0]["document"]);
+    assert_eq!(walker.states.iter().map(|state| state.id.as_str()).collect::<Vec<_>>(), ["resting", "glowing", "radiant"]);
+    assert_eq!((walker.states[2].lasts, walker.states[2].then.as_deref()), (Some(12.0), Some("glowing")));
+    assert_eq!(walker.states[1].tint, Some(Tint { body: Some("#35c9b8".to_string()), accent: None, detail: None }));
+    assert_eq!(walker.tricks[2].cues, [Cue::Circle, Cue::Show]);
+    assert_eq!(walker.tricks[1].from.as_deref(), Some(&["resting".to_string()][..]));
+    assert_eq!((walker.tricks[1].to.as_deref(), walker.tricks[1].mood), (Some("glowing"), Some(Mood::Proud)));
+    assert_eq!((walker.emitters[0].motion, walker.emitters[0].count, walker.emitters[1].stroke_width), (Drift::Burst, 6, Some(1.0)));
+    assert_eq!(json(&walker.emitters[1])["strokeWidth"], json!(1.0));
+    assert_eq!(walker.purr, Purr { clip: "nuzzle".to_string(), emitter: Some("hum".to_string()) });
+    assert_eq!(walker.gear, GEARS);
+    assert!(matches!(walker.canopy, Some(Shape::Path(_))));
+    assert_eq!((walker.mood, walker.grip, walker.reach), (Mood::Content, 27.0, 10.0));
+    let menagerie: Menagerie = typed(&conformance["menagerie"]);
+    assert_eq!(menagerie.chemistry.iter().map(|reaction| reaction.place).collect::<Vec<_>>(), [None, Some(Placement::Below), Some(Placement::Above), None, None, None]);
+    assert_eq!((menagerie.chemistry[3].affinity.as_deref(), menagerie.chemistry[3].when.held, menagerie.chemistry[4].when.trick.as_deref()), (Some(&[0.4, 1.0][..]), Some(4.0), Some("boing")));
+    assert_eq!((menagerie.chemistry[4].unless.as_ref().and_then(|unless| unless.mood), menagerie.chemistry[5].when.species.as_deref(), menagerie.chemistry[5].then[0].activity), (Some(Mood::Scared), None, Some(Activity::Sleep)));
+    assert_eq!(json(&menagerie.chemistry[1])["where"], json!("below"));
+    assert_eq!((menagerie.chemistry[2].then[0].encounter, menagerie.chemistry[0].then[2].on), (Some(Activity::Greet), Party::When));
+    assert_eq!(menagerie.chemistry[2].when, Trait { species: Some("floaty".to_string()), state: None, held: None, mood: Some(Mood::Sleepy), activity: Some(Activity::Idle), trick: None });
+    let anyone: Trait = serde_json::from_value(json!({"state": "resting", "held": 2.5, "trick": "cheer"})).expect("a trait of any species");
+    assert_eq!((anyone.species, anyone.held, anyone.trick.as_deref()), (None, Some(2.5), Some("cheer")));
+    let bounded: Reaction = serde_json::from_value(with(&with(&json(&menagerie.chemistry[0]), "unless", json!({"species": "floaty"})), "affinity", json!([0.4, 1]))).expect("a reaction with unless and affinity");
+    assert_eq!((bounded.unless.and_then(|unless| unless.species).as_deref(), bounded.affinity), (Some("floaty"), Some(vec![0.4, 1.0])));
+    assert!(serde_json::from_value::<Reaction>(with(&json(&menagerie.chemistry[0]), "affinity", json!(0.4))).is_err());
+    let effect = json!({"on": "near", "encounter": "cuddle"});
+    round_trips::<Effect>("effect", &effect);
+    for activity in ["idle", "sulk", "purr", "hug"] {
+        assert!(serde_json::from_value::<Effect>(with(&effect, "encounter", json!(activity))).is_err(), "an effect asking for the encounter {activity}");
+    }
+    round_trips::<Effect>("effect", &json!({"on": "when", "activity": "sleep"}));
+    for activity in ["idle", "greet", "trick", "nap"] {
+        assert!(serde_json::from_value::<Effect>(json!({"on": "when", "activity": activity})).is_err(), "an effect setting a pet off on {activity}");
+    }
+    assert!(serde_json::from_value::<Effect>(json!({"on": "both"})).is_err());
+    assert!(serde_json::from_value::<Effect>(json!({"on": "when", "extra": 1})).is_err());
+    assert!(serde_json::from_value::<Effect>(json!({"state": "resting"})).is_err());
+    let reaction = json(&menagerie.chemistry[0]);
+    round_trips::<Reaction>("reaction", &reaction);
+    for member in ["id", "when", "near", "within", "every", "then"] {
+        assert!(serde_json::from_value::<Reaction>(without(&reaction, member)).is_err(), "a reaction without {member}");
+    }
+    assert!(serde_json::from_value::<Reaction>(with(&reaction, "where", json!("inside"))).is_err());
+    let species = &conformance["bases"]["species"];
+    for member in ["states", "tricks", "purr", "emitters", "gear", "grip", "reach", "mood"] {
+        assert!(serde_json::from_value::<Species>(without(species, member)).is_err(), "a species without {member}");
+    }
+    assert!(serde_json::from_value::<Species>(with(species, "canopy", json!({"kind": "ellipse", "cx": 0, "cy": -4, "rx": 8, "ry": 4}))).is_ok());
+    assert!(serde_json::from_value::<Species>(with(species, "mood", json!("hangry"))).is_err());
+    assert!(serde_json::from_value::<Species>(with(species, "gear", json!(["jetpack"]))).is_err());
+    assert!(serde_json::from_value::<Menagerie>(without(&conformance["bases"]["menagerie"], "chemistry")).is_err());
+    assert!(serde_json::from_value::<Ensemble>(without(&conformance["bases"]["ensemble"], "chemistry")).is_err());
+    let emitter = json(&walker.emitters[0]);
+    for count in [json!(2.5), json!(-1), json!("six")] {
+        assert!(serde_json::from_value::<Emitter>(with(&emitter, "count", count.clone())).is_err(), "an emitter of {count} particles");
+    }
+    assert!(serde_json::from_value::<Emitter>(with(&emitter, "motion", json!("swirl"))).is_err());
+    assert!(serde_json::from_value::<Trick>(with(&json(&walker.tricks[0]), "cues", json!(["whistle"]))).is_err());
+    assert!(serde_json::from_value::<Tint>(json!({"glow": "#ffffff"})).is_err());
+    assert_eq!(json(&Tint::default()), json!({}));
+    round_trips::<Repertoire>("repertoire", &json!({"hang": ["dangle"], "push": [], "trick": ["wiggle"]}));
 }
 
 #[test]

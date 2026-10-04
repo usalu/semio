@@ -14,7 +14,16 @@ pattern of every result, so the twins are held to each other and to this third i
 bit — the tolerance of the other scenarios would hide a last-bit difference between languages. The
 restatement is itself held to numpy within 1e-12 before anything is projected.
 
+The way back and the rational decay are approximations by design (MECH §0.1), so numpy judges them
+within their stated error and the restated value is what is projected: ``atanTurns(y, x)`` must lie
+within 2e-6 turns of ``numpy.arctan2(y, x) ÷ 2π`` (compared around the circle, so ½ and −½ are one
+direction), ``fastNegExp(x)`` within 1.9e-2 of ``numpy.exp(−x)`` everywhere and within 6e-4 up to
+``x = 1``. An answer outside its bound is refused; inside it, the restated double and its 64-bit
+pattern are the projection, which holds the twins to each other bit for bit.
+
 @see https://numpy.org/doc/stable/reference/generated/numpy.sin.html
+@see https://numpy.org/doc/stable/reference/generated/numpy.arctan2.html
+@see https://numpy.org/doc/stable/reference/generated/numpy.exp.html
 @see https://www.netlib.org/fdlibm/k_sin.c
 @see https://www.netlib.org/fdlibm/k_cos.c
 @see https://numpy.org/doc/stable/reference/generated/numpy.clip.html
@@ -81,6 +90,26 @@ def smoothstep(amount):
     return float(polynomial.polyval(numpy.clip(numpy.float64(amount), 0.0, 1.0), [0.0, 0.0, 3.0, -2.0]))
 
 
+ARC_BOUND = 2e-6
+DECAY_BOUND = 1.9e-2
+DECAY_NEAR_BOUND = 6e-4
+
+
+def direction(y, x):
+    """🎯️ ``numpy.arctan2`` of the point in turns, a vanished direction as a positive zero."""
+    return float(numpy.arctan2(numpy.float64(y), numpy.float64(x)) / (2.0 * numpy.pi)) + 0.0
+
+
+def around(left, right):
+    """⭕️ How far two directions in turns lie apart around the circle."""
+    return abs((left - right + 0.5) % 1.0 - 0.5)
+
+
+def decay(x):
+    """📉️ ``numpy.exp`` of the negated argument, 1 below 0."""
+    return float(numpy.exp(-numpy.clip(numpy.float64(x), 0.0, None)))
+
+
 # endregion 🔖️Reference
 
 
@@ -128,6 +157,55 @@ def cos_turns(turns):
 def bits(value):
     """🧱️ The 64-bit IEEE pattern of a double as sixteen hexadecimal digits."""
     return struct.pack(">d", float(value)).hex()
+
+
+ARC = (0.9998660, -0.3302995, 0.1801410, -0.0851330, 0.0208351)
+DECAY = (0.48, 0.235)
+
+
+def arc_kernel(ratio):
+    """🏹️ The arctangent polynomial of Abramowitz and Stegun 4.4.49 on [0, 1], in Horner form."""
+    square = ratio * ratio
+    return ratio * (ARC[0] + square * (ARC[1] + square * (ARC[2] + square * (ARC[3] + square * ARC[4]))))
+
+
+def atan_turns(y, x):
+    """🛰️ ``atanTurns`` restated: the polynomial of the smaller magnitude over the larger, a quarter turn minus it past the diagonal, mirrored for a negative ``x``, negated for a negative ``y``, and ½ where that rounds to −½."""
+    rise, run = abs(float(y)), abs(float(x))
+    if rise == 0 and run == 0:
+        return 0.0
+    octant = arc_kernel(rise / run) / TAU if rise <= run else 0.25 - arc_kernel(run / rise) / TAU
+    half = 0.5 - octant if x < 0 else octant
+    turns = 0 - half if y < 0 else half
+    return 0.5 if turns <= -0.5 else turns
+
+
+def fast_neg_exp(x):
+    """🕯️ ``fastNegExp`` restated: one over the cubic ``1 + x·(1 + x·(0.48 + 0.235·x))`` of the argument raised to 0."""
+    held = float(x) if x > 0 else 0.0
+    return 1 / (1 + held * (1 + held * (DECAY[0] + DECAY[1] * held)))
+
+
+def judged_direction(label, y, x):
+    """🧿️ The restated direction of a point, refused when it leaves ``numpy.arctan2`` by more than the stated 2e-6 turns."""
+    turns = atan_turns(y, x)
+    if not -0.5 < turns <= 0.5 or around(turns, direction(y, x)) > ARC_BOUND:
+        raise AssertionError("%s: the restatement answers %r turns for (%r, %r), numpy %r" % (label, turns, y, x, direction(y, x)))
+    return turns
+
+
+def judged_decay(label, x):
+    """🧯️ The restated decay of an argument, refused when it leaves ``numpy.exp`` by more than the stated bound of its range."""
+    value = fast_neg_exp(x)
+    if abs(value - decay(x)) > (DECAY_NEAR_BOUND if x <= 1 else DECAY_BOUND):
+        raise AssertionError("%s: the restatement answers %r for %r, numpy %r" % (label, value, x, decay(x)))
+    return value
+
+
+def lattice(vector):
+    """🕸️ The directions of every point ``(column × step, row × step)`` of a square lattice, row by row from ``−span`` to ``span``."""
+    span, step = vector["span"], vector["step"]
+    return [judged_direction("arctangent-grids/%s" % vector["id"], row * step, column * step) for row in range(-span, span + 1) for column in range(-span, span + 1)]
 
 
 # endregion 🔖️Restatement
@@ -209,13 +287,63 @@ def smoothsteps(ctx):
     return agree("smoothsteps", {vector["id"]: smoothstep(vector["amount"]) for vector in vectors}, vectors)
 
 
+def referred(scenario, vectors, reference):
+    """🪞️ Holds the numpy answer every vector carries beside its expectation to numpy's answer of this run."""
+    for vector in vectors:
+        if not close(reference(vector), vector["reference"]):
+            raise AssertionError("%s/%s: numpy answers %r, the committed vector says %r" % (scenario, vector["id"], reference(vector), vector["reference"]))
+
+
+def arctangent(vector):
+    """🪃️ The judged direction of one committed point and its bit pattern."""
+    turns = judged_direction("arctangents/%s" % vector["id"], vector["y"], vector["x"])
+    return {"turns": turns, "bits": bits(turns)}
+
+
+def arctangents(ctx):
+    """🗼️ ``atanTurns(y, x)`` of every committed point, judged by ``numpy.arctan2``."""
+    vectors = committed(ctx)["arctangents"]
+    referred("arctangents", vectors, lambda vector: direction(vector["y"], vector["x"]))
+    return agree("arctangents", {vector["id"]: arctangent(vector) for vector in vectors}, vectors)
+
+
+def arctangent_grids(ctx):
+    """🏁️ ``atanTurns`` over every committed lattice of points, judged by ``numpy.arctan2`` point by point."""
+    vectors = committed(ctx)["arctangentGrids"]
+    return agree("arctangent-grids", {vector["id"]: lattice(vector) for vector in vectors}, vectors)
+
+
+def faded(vector):
+    """🌫️ The judged decay of one committed argument and its bit pattern."""
+    value = judged_decay("decays/%s" % vector["id"], vector["x"])
+    return {"value": value, "bits": bits(value)}
+
+
+def decays(ctx):
+    """🧊️ ``fastNegExp(x)`` of every committed argument, judged by ``numpy.exp``."""
+    vectors = committed(ctx)["decays"]
+    referred("decays", vectors, lambda vector: decay(vector["x"]))
+    return agree("decays", {vector["id"]: faded(vector) for vector in vectors}, vectors)
+
+
 # endregion 🔖️Handlers
 
 
 # region 🔖️Registration
 def adapter():
     """🔮️ Oracle role only: numpy is the reference, the TypeScript and Rust twins are judged against it."""
-    return Adapter("python").oracle("angles", angles).oracle("bit-patterns", bit_patterns).oracle("sweeps", sweeps).oracle("clamps", clamps).oracle("lerps", lerps).oracle("smoothsteps", smoothsteps)
+    return (
+        Adapter("python")
+        .oracle("angles", angles)
+        .oracle("bit-patterns", bit_patterns)
+        .oracle("sweeps", sweeps)
+        .oracle("clamps", clamps)
+        .oracle("lerps", lerps)
+        .oracle("smoothsteps", smoothsteps)
+        .oracle("arctangents", arctangents)
+        .oracle("arctangent-grids", arctangent_grids)
+        .oracle("decays", decays)
+    )
 
 
 # endregion 🔖️Registration

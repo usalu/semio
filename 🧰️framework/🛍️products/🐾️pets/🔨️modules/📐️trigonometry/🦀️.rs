@@ -6,11 +6,18 @@
 //! cosine even by construction: `sin_turns(−t) = −sin_turns(t)`, `cos_turns(−t) = cos_turns(t)`. No result is a
 //! negative zero (`0.0 − x`, never `−x`). No `mul_add`, no libm call: every product and sum rounds once, as written.
 //!
+//! The way back is coarser on purpose: `atan_turns` reduces a direction to the first octant by exact operations
+//! (magnitudes, one comparison, one division) and evaluates a fifth-degree odd polynomial there, which is right to
+//! 2e-6 turns (0.0007°) — enough for a lean, a rope or a ladder, and the same bits in every language. `fast_neg_exp`
+//! is the rational stand-in for `e⁻ˣ` wherever something saturates or dies out.
+//!
 //! The constants are fdlibm's published decimal literals, which carry more digits than a double holds, and `TAU` is
 //! spelled out like in the twin; the unit tests hold each literal to its bit pattern.
 //!
 //! @see <https://www.netlib.org/fdlibm/k_sin.c> — the sine kernel and its coefficients
 //! @see <https://www.netlib.org/fdlibm/k_cos.c> — the cosine kernel and its coefficients
+//! @see Abramowitz and Stegun, Handbook of Mathematical Functions, 4.4.49 — the arctangent polynomial and its coefficients
+//! @see <https://theorangeduck.com/page/spring-roll-call#exactdamper> — Holden's `fast_negexp`, the rational decay
 //! @see ../../🧬️schema/🦀️.rs — `Turns`
 //! @see ../📐️trigonometry/🟦️.ts — the TypeScript twin
 #![allow(clippy::excessive_precision, clippy::approx_constant)]
@@ -31,6 +38,13 @@ const COSINE_3: f64 = 2.48015872894767294178e-5;
 const COSINE_4: f64 = -2.75573143513906633035e-7;
 const COSINE_5: f64 = 2.0875723212981748279e-9;
 const COSINE_6: f64 = -1.13596475577881948265e-11;
+const ARC_1: f64 = 0.999866;
+const ARC_3: f64 = -0.3302995;
+const ARC_5: f64 = 0.180141;
+const ARC_7: f64 = -0.085133;
+const ARC_9: f64 = 0.0208351;
+const DECAY_2: f64 = 0.48;
+const DECAY_3: f64 = 0.235;
 //#endregion 🔖️Constants
 
 //#region 🔖️Kernels
@@ -46,6 +60,12 @@ fn cosine_kernel(angle: f64) -> f64 {
     let square = angle * angle;
     let tail = COSINE_1 + square * (COSINE_2 + square * (COSINE_3 + square * (COSINE_4 + square * (COSINE_5 + square * COSINE_6))));
     1.0 - (0.5 * square - square * (square * tail))
+}
+
+/// 🏹️ The arctangent of `ratio` in radians for 0 ≤ ratio ≤ 1: `z·(A1 + z²·(A3 + z²·(A5 + z²·(A7 + z²·A9))))`, off by at most 1.15e-5 and rising all the way.
+fn arc_kernel(ratio: f64) -> f64 {
+    let square = ratio * ratio;
+    ratio * (ARC_1 + square * (ARC_3 + square * (ARC_5 + square * (ARC_7 + square * ARC_9))))
 }
 //#endregion 🔖️Kernels
 
@@ -88,6 +108,30 @@ pub fn cos_turns(turns: Turns) -> f64 {
         cosine_kernel(angle)
     }
 }
+
+/// 🎯️ The direction of the point `(x, y)` seen from the origin, in turns from the positive x axis towards the positive y axis: a value in (−½, ½], off by at most 2e-6 turns; 0 for the origin itself.
+///
+/// The smaller magnitude is divided by the larger one, the polynomial of that ratio is the angle to the nearer axis
+/// (`¼ − …` when `|y|` is the larger), a negative `x` mirrors it (`½ − …`) and a negative `y` negates it; a result
+/// that rounds to −½ is given as ½, the same direction. The direction is exactly odd in `y` wherever it is not ½
+/// and exactly unchanged when both coordinates are doubled; a negative zero counts as zero, no result is a negative
+/// zero, and the four axes give exactly 0, ¼, ½ and −¼. Across the four diagonals the value steps by 3.6e-6 turns,
+/// which is inside the stated error. Both coordinates must be finite.
+pub fn atan_turns(y: f64, x: f64) -> Turns {
+    let rise = y.abs();
+    let run = x.abs();
+    if rise == 0.0 && run == 0.0 {
+        return 0.0;
+    }
+    let octant = if rise <= run { arc_kernel(rise / run) / TAU } else { 0.25 - arc_kernel(run / rise) / TAU };
+    let half = if x < 0.0 { 0.5 - octant } else { octant };
+    let turns = if y < 0.0 { 0.0 - half } else { half };
+    if turns <= -0.5 {
+        0.5
+    } else {
+        turns
+    }
+}
 //#endregion 🔖️Turns
 
 //#region 🔖️Blends
@@ -112,6 +156,18 @@ pub fn smoothstep(amount: f64) -> f64 {
     held * held * (3.0 - 2.0 * held)
 }
 //#endregion 🔖️Blends
+
+//#region 🔖️Decay
+/// 📉️ A stand-in for `e⁻ˣ` without the exponential: `1 ÷ (1 + x·(1 + x·(0.48 + 0.235·x)))` for `x ≥ 0`, and 1 for everything else.
+///
+/// It is 1 at 0, falls all the way and never reaches 0, so `1 − fast_neg_exp(x)` rises and saturates like the real
+/// thing. It lies within 1.9e-2 of `e⁻ˣ` everywhere (the widest gap is near `x = 3.3`) and within 6e-4 up to
+/// `x = 1`.
+pub fn fast_neg_exp(x: f64) -> f64 {
+    let held = if x > 0.0 { x } else { 0.0 };
+    1.0 / (1.0 + held * (1.0 + held * (DECAY_2 + DECAY_3 * held)))
+}
+//#endregion 🔖️Decay
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -30,6 +30,7 @@
 %   font         name          default sans       sans|serif|mono, from semio-fonts
 \tl_new:N \l_semio_viz_theme_appearance_tl
 \tl_new:N \l_semio_viz_theme_palette_tl
+\clist_new:N \l_semio_viz_theme_colors_clist
 \tl_new:N \l_semio_viz_theme_scheme_tl
 \tl_new:N \l_semio_viz_theme_interpolator_tl
 \tl_new:N \l_semio_viz_theme_stroke_tl
@@ -40,6 +41,7 @@
   {
     appearance .tl_set:N = \l_semio_viz_theme_appearance_tl,
     palette .tl_set:N = \l_semio_viz_theme_palette_tl,
+    colors .clist_set:N = \l_semio_viz_theme_colors_clist,
     scheme .tl_set:N = \l_semio_viz_theme_scheme_tl,
     interpolator .tl_set:N = \l_semio_viz_theme_interpolator_tl,
     grayscale .bool_set:N = \l_semio_viz_theme_grayscale_bool,
@@ -65,6 +67,7 @@
 \cs_new_protected:Npn \semio_viz_theme_reset: {
   \tl_clear:N \l_semio_viz_theme_appearance_tl
   \tl_set:Nn \l_semio_viz_theme_palette_tl { presence }
+  \clist_clear:N \l_semio_viz_theme_colors_clist
   \tl_set:Nn \l_semio_viz_theme_scheme_tl { primary }
   \tl_set:Nn \l_semio_viz_theme_interpolator_tl { oklab }
   \bool_set_false:N \l_semio_viz_theme_grayscale_bool
@@ -112,50 +115,13 @@
 
 % 🎨 Colour of the categorical slot #1 (zero based, wrapping): a colour name usable by TikZ.
 \cs_new_protected:Npn \semio_viz_theme_color:nN #1#2 {
-  \bool_if:NTF \l_semio_viz_theme_grayscale_bool
-    {
-      \int_set:Nn \l_semio_viz_theme_slot_int
-        {
-          \int_mod:nn { \int_max:nn { 0 } {#1} }
-            { \clist_count:N \c_semio_viz_theme_gray_clist } + 1
-        }
-      \tl_set:Nx #2
-        { \clist_item:Nn \c_semio_viz_theme_gray_clist { \l_semio_viz_theme_slot_int } }
-    }
-    {
-      \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
-        {
-          \int_set:Nn \l_semio_viz_theme_slot_int
-            {
-              \int_mod:nn { \int_max:nn { 0 } {#1} }
-                { \clist_count:N \c_semio_viz_theme_brand_clist } + 1
-            }
-          \tl_set:Nx #2
-            { \clist_item:Nn \c_semio_viz_theme_brand_clist { \l_semio_viz_theme_slot_int } }
-        }
-        {
-          \semio_viz_theme_appearance:N \l_semio_viz_theme_mode_tl
-          \int_set:Nn \l_semio_viz_theme_slot_int
-            { \int_mod:nn { \int_max:nn { 0 } {#1} } { \c_semio_viz_theme_presence_int } }
-          \tl_set:Nx #2
-            {
-              semio-presence- \l_semio_viz_theme_mode_tl -
-              \int_use:N \l_semio_viz_theme_slot_int
-            }
-        }
-    }
+  \tl_set:Nx #2 { \semio_viz_theme_color:n {#1} }
 }
 \cs_generate_variant:Nn \semio_viz_theme_color:nN { VN }
 
 % 🔢 Number of distinct categorical slots the active palette offers.
 \cs_new_protected:Npn \semio_viz_theme_color_count:N #1 {
-  \bool_if:NTF \l_semio_viz_theme_grayscale_bool
-    { \int_set:Nn #1 { \clist_count:N \c_semio_viz_theme_gray_clist } }
-    {
-      \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
-        { \int_set:Nn #1 { \clist_count:N \c_semio_viz_theme_brand_clist } }
-        { \int_set:Nn #1 { \c_semio_viz_theme_presence_int } }
-    }
+  \int_set:Nn #1 { \semio_viz_theme_color_count: }
 }
 
 % 🔢 Expandable twin of the same count, for a ramp that must divide the wheel inside a TikZ
@@ -165,9 +131,13 @@
     \bool_if:NTF \l_semio_viz_theme_grayscale_bool
       { \clist_count:N \c_semio_viz_theme_gray_clist }
       {
-        \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
-          { \clist_count:N \c_semio_viz_theme_brand_clist }
-          { \int_use:N \c_semio_viz_theme_presence_int }
+        \clist_if_empty:NTF \l_semio_viz_theme_colors_clist
+          {
+            \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+              { \clist_count:N \c_semio_viz_theme_brand_clist }
+              { \int_use:N \c_semio_viz_theme_presence_int }
+          }
+          { \clist_count:N \l_semio_viz_theme_colors_clist }
       }
   }
 
@@ -182,16 +152,24 @@
             { \clist_count:N \c_semio_viz_theme_gray_clist } + 1 }
       }
       {
-        \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+        \clist_if_empty:NTF \l_semio_viz_theme_colors_clist
           {
-            \clist_item:Nn \c_semio_viz_theme_brand_clist
-              { \int_mod:nn { \int_max:nn { 0 } {#1} }
-                { \clist_count:N \c_semio_viz_theme_brand_clist } + 1 }
+            \str_if_eq:VnTF \l_semio_viz_theme_palette_tl { brand }
+              {
+                \clist_item:Nn \c_semio_viz_theme_brand_clist
+                  { \int_mod:nn { \int_max:nn { 0 } {#1} }
+                    { \clist_count:N \c_semio_viz_theme_brand_clist } + 1 }
+              }
+              {
+                semio-presence- \semio_viz_theme_appearance:
+                - \int_eval:n
+                  { \int_mod:nn { \int_max:nn { 0 } {#1} } { \c_semio_viz_theme_presence_int } }
+              }
           }
           {
-            semio-presence- \semio_viz_theme_appearance:
-            - \int_eval:n
-              { \int_mod:nn { \int_max:nn { 0 } {#1} } { \c_semio_viz_theme_presence_int } }
+            \clist_item:Nn \l_semio_viz_theme_colors_clist
+              { \int_mod:nn { \int_max:nn { 0 } {#1} }
+                { \clist_count:N \l_semio_viz_theme_colors_clist } + 1 }
           }
       }
   }

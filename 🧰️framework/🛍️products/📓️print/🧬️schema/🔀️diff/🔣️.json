@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/print/chart/diff",
+  "title": "Print Chart Diff",
+  "type": "object",
+  "required": ["edits"],
+  "properties": { "edits": { "type": "array", "items": { "type": "object", "required": ["path"], "properties": { "path": { "$ref": "https://semio.tech/schema/print/chart/mutation#/properties/path" }, "before": {}, "after": {} }, "additionalProperties": false } } },
+  "additionalProperties": false
+}

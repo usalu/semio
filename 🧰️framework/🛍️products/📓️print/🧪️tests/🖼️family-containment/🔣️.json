@@ -1,0 +1,469 @@
+{
+  "version": 1,
+  "frame": [
+    80,
+    40
+  ],
+  "tolerance": 0.6,
+  "flowControls": [
+    {
+      "source": 0,
+      "target": 30,
+      "offset": 14,
+      "scale": 2,
+      "curvature": 0.5
+    },
+    {
+      "source": 12,
+      "target": 30,
+      "offset": 14,
+      "scale": 2,
+      "curvature": 0.5
+    },
+    {
+      "source": 18,
+      "target": 42,
+      "offset": 3,
+      "scale": 1.2,
+      "curvature": 0.35
+    }
+  ],
+  "evaluationCases": [
+    {
+      "id": "decision-boundary",
+      "kind": "decision-boundary",
+      "width": 80,
+      "height": 40,
+      "padding": 3,
+      "cells": 8,
+      "threshold": 8,
+      "above": 1,
+      "otherwise": 2
+    },
+    {
+      "id": "classification-region",
+      "kind": "classification-region-plot",
+      "width": 70,
+      "height": 32,
+      "padding": 4,
+      "cells": 8,
+      "threshold": 8,
+      "above": 1,
+      "otherwise": 2
+    }
+  ],
+  "rejections": [
+    {
+      "id": "board-outside",
+      "kind": "game-board",
+      "columns": [
+        "file",
+        "rank",
+        "piece",
+        "tone"
+      ],
+      "rows": [
+        [
+          7,
+          2,
+          "N",
+          2
+        ]
+      ],
+      "options": "files=6,ranks=6",
+      "diagnostic": "outside"
+    }
+  ],
+  "cases": [
+    {
+      "id": "molecule-default",
+      "kind": "chemical-structure",
+      "options": "",
+      "text": [
+        "O",
+        "N"
+      ]
+    },
+    {
+      "id": "molecule-negative",
+      "kind": "chemical-structure",
+      "options": "atoms={a/-20/-12/N,b/18/10/O},bonds={a/b/2/plain}",
+      "text": [
+        "O",
+        "N"
+      ]
+    },
+    {
+      "id": "reaction-symbol",
+      "kind": "reaction-scheme",
+      "options": "",
+      "text": [
+        "∆"
+      ]
+    },
+    {
+      "id": "feynman-labels",
+      "kind": "feynman-diagram",
+      "options": "",
+      "text": [
+        "γ",
+        "μ"
+      ]
+    },
+    {
+      "id": "board-six",
+      "kind": "game-board",
+      "options": "",
+      "text": [
+        "K",
+        "Q",
+        "R",
+        "N"
+      ]
+    },
+    {
+      "id": "flow-captions",
+      "kind": "parallel-sets",
+      "options": "data=family-flow",
+      "columns": [
+        "source",
+        "target",
+        "value"
+      ],
+      "rows": [
+        [
+          "Origin",
+          "Stage",
+          100
+        ],
+        [
+          "Stage",
+          "Renew",
+          97
+        ],
+        [
+          "Stage",
+          "Cancel",
+          2
+        ],
+        [
+          "Stage",
+          "Buy",
+          1
+        ]
+      ],
+      "text": [
+        "Renew",
+        "Cancel",
+        "Buy"
+      ],
+      "flowLabels": [
+        "Renew",
+        "Cancel",
+        "Buy"
+      ]
+    },
+    {
+      "id": "flow-adjacent",
+      "kind": "parallel-sets",
+      "options": "data=demo-flow-stages",
+      "text": [
+        "Paid",
+        "Renew",
+        "Cancel"
+      ],
+      "flowLabels": [
+        "Paid",
+        "Renew",
+        "Cancel"
+      ]
+    },
+    {
+      "id": "process-horizontal",
+      "kind": "process-flowchart",
+      "options": "",
+      "text": [
+        "Request"
+      ],
+      "labels": [
+        "Requestdata",
+        "Submitform"
+      ]
+    }
+  ],
+  "encodingCases": [
+    {
+      "id": "default-category-paints",
+      "kind": "encoding",
+      "columns": [
+        "cat",
+        "val",
+        "val2",
+        "grp"
+      ],
+      "rows": [
+        [
+          "A",
+          4,
+          2,
+          "x"
+        ],
+        [
+          "B",
+          7,
+          3,
+          "x"
+        ],
+        [
+          "C",
+          3,
+          5,
+          "y"
+        ],
+        [
+          "D",
+          8,
+          4,
+          "y"
+        ],
+        [
+          "E",
+          5,
+          6,
+          "x"
+        ]
+      ],
+      "category": "grp",
+      "colors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "options": "data=encoding-input,category=grp",
+      "captionCount": 1
+    },
+    {
+      "id": "authored-category-paints",
+      "kind": "encoding",
+      "columns": [
+        "cat",
+        "val",
+        "val2",
+        "category"
+      ],
+      "rows": [
+        [
+          "North",
+          3,
+          9,
+          "B"
+        ],
+        [
+          "West",
+          6,
+          16,
+          "A"
+        ],
+        [
+          "East",
+          4,
+          25,
+          "B"
+        ],
+        [
+          "South",
+          9,
+          36,
+          "C"
+        ]
+      ],
+      "category": "category",
+      "colors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "options": "data=encoding-input,category=category",
+      "captionCount": 1
+    },
+    {
+      "id": "default-legend-category-paints",
+      "kind": "legend",
+      "columns": [
+        "cat",
+        "val",
+        "val2",
+        "grp"
+      ],
+      "rows": [
+        [
+          "A",
+          4,
+          2,
+          "x"
+        ],
+        [
+          "B",
+          7,
+          3,
+          "x"
+        ],
+        [
+          "C",
+          3,
+          5,
+          "y"
+        ],
+        [
+          "D",
+          8,
+          4,
+          "y"
+        ],
+        [
+          "E",
+          5,
+          6,
+          "x"
+        ]
+      ],
+      "category": "grp",
+      "colors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "options": "",
+      "captionCount": 1
+    },
+    {
+      "id": "authored-legend-category-paints",
+      "kind": "legend",
+      "columns": [
+        "cat",
+        "val",
+        "val2",
+        "category"
+      ],
+      "rows": [
+        [
+          "North",
+          3,
+          9,
+          "B"
+        ],
+        [
+          "West",
+          6,
+          16,
+          "A"
+        ],
+        [
+          "East",
+          4,
+          25,
+          "B"
+        ],
+        [
+          "South",
+          9,
+          36,
+          "C"
+        ]
+      ],
+      "category": "category",
+      "colors": [
+        "red",
+        "blue",
+        "green"
+      ],
+      "options": "caption=false,options={data=encoding-input,category=category,caption=false}",
+      "captionCount": 0
+    }
+  ],
+  "encodingLayout": {
+    "minimumGap": 0.6
+  },
+  "gridCases": [
+    {
+      "id": "stock-grammar-grid",
+      "kind": "grid",
+      "columns": [
+        "cat",
+        "val",
+        "val2",
+        "grp"
+      ],
+      "rows": [
+        [
+          "A",
+          4,
+          2,
+          "x"
+        ],
+        [
+          "B",
+          7,
+          3,
+          "x"
+        ],
+        [
+          "C",
+          3,
+          5,
+          "y"
+        ],
+        [
+          "D",
+          8,
+          4,
+          "y"
+        ],
+        [
+          "E",
+          5,
+          6,
+          "x"
+        ]
+      ],
+      "x": "cat",
+      "y": "val2",
+      "size": 16,
+      "options": ""
+    },
+    {
+      "id": "authored-grammar-grid",
+      "kind": "grid",
+      "columns": [
+        "abscissa",
+        "ordinate",
+        "height",
+        "grp"
+      ],
+      "rows": [
+        [
+          -1,
+          3,
+          -4,
+          "a"
+        ],
+        [
+          3,
+          6,
+          1,
+          "b"
+        ],
+        [
+          6,
+          4,
+          7,
+          "a"
+        ]
+      ],
+      "x": "abscissa",
+      "y": "height",
+      "size": 16,
+      "options": "data=grid-input,x=abscissa,y=ordinate,y2=height"
+    }
+  ]
+}

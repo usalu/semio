@@ -46,10 +46,10 @@ async fn a_database_file_is_stamped_and_a_foreign_format_is_refused() {
     let Err(StorageError::Backend(detail)) = Database::open(&directory.0) else { panic!("a foreign format must be refused") };
     assert!(detail.contains("v99") && detail.contains(FORMAT_SCHEMA), "{detail}");
     let raw = Connection::open(directory.0.join(DATABASE_FILE)).expect("raw");
-    raw.execute("UPDATE proctor_format SET version = 1", []).expect("an earlier format");
+    raw.execute("UPDATE proctor_format SET version = 2", []).expect("an earlier format");
     drop(raw);
-    let Err(StorageError::Backend(earlier)) = Database::open(&directory.0) else { panic!("the roster format must be refused") };
-    assert!(FORMAT_VERSION == 2 && earlier.contains("v1;") && earlier.contains("v2"), "{earlier}");
+    let Err(StorageError::Backend(earlier)) = Database::open(&directory.0) else { panic!("the format without challenges must be refused") };
+    assert!(FORMAT_VERSION == 3 && earlier.contains("v2;") && earlier.contains("v3"), "{earlier}");
 }
 
 #[tokio::test]

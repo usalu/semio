@@ -1,21 +1,30 @@
-//! 📺️ Unit tests of the views: catalog, learner and run views, leaderboard ordering and tags, shared views.
+//! 📺️ Unit tests of the views: catalog, learner and run views with hints and opened tasks, bests by points, leaderboard ordering and tags, the crowd of every challenge, shared views.
 //!
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::lifecycle::tests::{catalog, fold, id, play_perfect, quizzes, registered, step, ALICE, BOB, REVISION, RUN};
+use crate::challenge::{points, HINTS_PER_TASK};
+use crate::lifecycle::tests::{catalog, command_start_at, fold, id, perfect, play_perfect, play_perfect_at, quizzes, registered, step, ALICE, BOB, REVISION, RUN};
 use crate::lifecycle::{decide_learner, empty_learner_state, LearnerContext};
 use crate::randomness::run_seed;
-use crate::schema::{Answer, Command, Event, Identity, RunResult, SortingAnswer, TaskKind, DEFAULT_LIMITS, LEADERBOARD_PERIODS};
-use crate::sheet::tests::{quiz, text};
+use crate::schema::{Answer, ClassificationAnswer, Command, CompareHint, Event, Identity, ProfileHint, RunResult, SheetTask, SortingAnswer, TaskKind, Verdict, CHALLENGES, DEFAULT_LIMITS, LEADERBOARD_PERIODS};
+use crate::sheet::tests::{matching, quiz, text};
 
-fn submitted(state: &mut LearnerState, run: &str, quiz: &str, score: f64, at: Timestamp) {
+fn submitted_at(state: &mut LearnerState, run: &str, quiz: &str, challenge: Challenge, score: f64, at: Timestamp) {
     for event in [
-        Event::RunStarted { learner: state.learner.clone(), run: run.to_string(), quiz: quiz.to_string(), revision: REVISION.to_string(), seed: run_seed(run), at },
-        Event::RunSubmitted { learner: state.learner.clone(), run: run.to_string(), result: RunResult { quiz: quiz.to_string(), score, tasks: Vec::new() }, at },
+        Event::RunStarted { learner: state.learner.clone(), run: run.to_string(), quiz: quiz.to_string(), challenge, revision: REVISION.to_string(), seed: run_seed(run), at },
+        Event::RunSubmitted { learner: state.learner.clone(), run: run.to_string(), result: RunResult { quiz: quiz.to_string(), challenge, score, points: points(score, challenge), tasks: Vec::new() }, at },
     ] {
         crate::lifecycle::evolve_learner(state, &event);
     }
+}
+
+fn submitted(state: &mut LearnerState, run: &str, quiz: &str, score: f64, at: Timestamp) {
+    submitted_at(state, run, quiz, Challenge::Easy, score, at);
+}
+
+fn best(challenge: Challenge, score: f64) -> Best {
+    Best { challenge, score, points: points(score, challenge) }
 }
 
 fn transcripts(states: &[&LearnerState]) -> Vec<Transcript> {
@@ -59,9 +68,65 @@ fn learner_view_lists_runs_newest_first_with_best_and_total() {
     submitted(&mut state, &id(4), "retired", 1.0, 40);
     let learner = learner_view(&state, &view(&["energy", "heating"])).unwrap_or_else(|| unreachable!());
     assert_eq!(learner.runs.iter().map(|run| run.run.clone()).collect::<Vec<_>>(), [id(4), id(3), id(2), id(1)]);
-    assert_eq!(learner.best, BTreeMap::from([("energy".to_string(), 0.75), ("heating".to_string(), 0.25), ("retired".to_string(), 1.0)]));
+    assert_eq!(learner.best, BTreeMap::from([("energy".to_string(), best(Challenge::Easy, 0.75)), ("heating".to_string(), best(Challenge::Easy, 0.25)), ("retired".to_string(), best(Challenge::Easy, 1.0))]));
     assert_eq!(learner.total, 100.0);
     assert_eq!(learner.identity, Identity::Pseudonym { handle: "aaaa".to_string() });
+}
+
+type Summary = (Challenge, RunStatus, Option<f64>, Option<f64>, Option<Timestamp>);
+
+#[test]
+fn the_best_run_of_a_quiz_is_the_one_with_the_most_points_whatever_its_challenge() {
+    let mut state = registered(ALICE, 1);
+    submitted_at(&mut state, &id(1), "energy", Challenge::Easy, 1.0, 10);
+    submitted_at(&mut state, &id(2), "energy", Challenge::Hard, 0.3, 20);
+    submitted_at(&mut state, &id(3), "energy", Challenge::Medium, 0.6, 30);
+    submitted_at(&mut state, &id(4), "energy", Challenge::Expert, 0.3, 40);
+    submitted_at(&mut state, &id(5), "heating", Challenge::Expert, 0.125, 50);
+    crate::lifecycle::evolve_learner(&mut state, &Event::RunStarted { learner: ALICE.to_string(), run: id(6), quiz: "heating".to_string(), challenge: Challenge::Hard, revision: REVISION.to_string(), seed: 6, at: 60 });
+    crate::lifecycle::evolve_learner(&mut state, &Event::RunVoided { learner: ALICE.to_string(), run: id(6), at: 61 });
+    crate::lifecycle::evolve_learner(&mut state, &Event::RunStarted { learner: ALICE.to_string(), run: id(7), quiz: "heating".to_string(), challenge: Challenge::Easy, revision: REVISION.to_string(), seed: 7, at: 70 });
+    let catalog = view(&["energy", "heating"]);
+    let learner = learner_view(&state, &catalog).unwrap_or_else(|| unreachable!());
+    assert_eq!(learner.best, BTreeMap::from([("energy".to_string(), Best { challenge: Challenge::Medium, score: 0.6, points: 120.0 }), ("heating".to_string(), Best { challenge: Challenge::Expert, score: 0.125, points: 50.0 })]), "a later run of equal points does not replace the best");
+    assert_eq!(learner.total, 170.0);
+    let summaries: Vec<Summary> = learner.runs.iter().map(|run| (run.challenge, run.status, run.score, run.points, run.submitted_at)).collect();
+    assert_eq!(summaries[..3], [(Challenge::Easy, RunStatus::Open, None, None, None), (Challenge::Hard, RunStatus::Voided, None, None, None), (Challenge::Expert, RunStatus::Submitted, Some(0.125), Some(50.0), Some(50))]);
+    assert_eq!(summaries[3..].iter().map(|summary| (summary.0, summary.3)).collect::<Vec<_>>(), [(Challenge::Expert, Some(0.3 * 400.0)), (Challenge::Medium, Some(120.0)), (Challenge::Hard, Some(0.3 * 300.0)), (Challenge::Easy, Some(100.0))]);
+    let json = serde_json::to_value(&learner).unwrap_or_default();
+    assert_eq!(json["runs"][0], serde_json::json!({"run": id(7), "quiz": "heating", "challenge": "easy", "status": "open", "startedAt": 70}));
+    assert_eq!(json["runs"][2], serde_json::json!({"run": id(5), "quiz": "heating", "challenge": "expert", "status": "submitted", "startedAt": 50, "score": 0.125, "points": 50.0, "submittedAt": 50}));
+    assert_eq!(json["best"]["energy"], serde_json::json!({"challenge": "medium", "score": 0.6, "points": 120.0}));
+    let record = transcript(&state).unwrap_or_else(|| unreachable!());
+    assert_eq!(record.runs.iter().map(|run| (run.quiz.as_str(), run.challenge, run.points, run.at)).collect::<Vec<_>>(), [("energy", Challenge::Easy, 100.0, 10), ("energy", Challenge::Hard, 0.3 * 300.0, 20), ("energy", Challenge::Medium, 120.0, 30), ("energy", Challenge::Expert, 0.3 * 400.0, 40), ("heating", Challenge::Expert, 50.0, 50)]);
+    let ranked = standing(&record, &catalog, &BoardScope::default()).unwrap_or_else(|| unreachable!());
+    assert_eq!((ranked.total, ranked.reached_at, ranked.last_activity, ranked.runs, &ranked.best), (170.0, 50, 50, 5, &learner.best));
+    let energy = standing(&record, &catalog, &BoardScope { window: None, quiz: Some("energy".to_string()) }).unwrap_or_else(|| unreachable!());
+    assert_eq!((energy.total, energy.reached_at, energy.last_activity, energy.runs), (120.0, 30, 40, 4), "the run that last raised a best set when the total was reached");
+    let late = standing(&record, &catalog, &BoardScope { window: Some(LeaderboardWindow { from: 35, until: 45 }), quiz: None }).unwrap_or_else(|| unreachable!());
+    assert_eq!((late.total, late.best), (0.3 * 400.0, BTreeMap::from([("energy".to_string(), best(Challenge::Expert, 0.3))])));
+}
+
+#[test]
+fn points_rank_a_harder_run_above_an_easier_run_of_the_same_score() {
+    let catalog = view(&["energy"]);
+    let learners: Vec<LearnerState> = CHALLENGES
+        .into_iter()
+        .enumerate()
+        .map(|(index, challenge)| {
+            let mut state = registered(&id(0xa0 + index as u8), 1);
+            submitted_at(&mut state, &id(index as u8 + 1), "energy", challenge, 0.5, 10 + index as u64);
+            state
+        })
+        .collect();
+    let board = ranked(&learners.iter().collect::<Vec<_>>(), &catalog, None);
+    assert_eq!(board.rows.iter().map(|row| (row.rank, row.total, row.best["energy"].challenge)).collect::<Vec<_>>(), [(1, 200.0, Challenge::Expert), (2, 150.0, Challenge::Hard), (3, 100.0, Challenge::Medium), (4, 50.0, Challenge::Easy)]);
+    let mut climber = registered(&id(0xb0), 1);
+    submitted_at(&mut climber, &id(9), "energy", Challenge::Easy, 1.0, 5);
+    submitted_at(&mut climber, &id(10), "energy", Challenge::Medium, 0.75, 90);
+    let board = ranked(&[&learners[2], &climber], &catalog, None);
+    assert_eq!(board.rows.iter().map(|row| (row.tag.clone(), row.total, row.reached_at)).collect::<Vec<_>>(), [(learner_tag(&id(0xa2)), 150.0, 12), (learner_tag(&id(0xb0)), 150.0, 90)], "equal totals rank by when they were reached");
+    assert_eq!(serde_json::to_value(&board.rows[1]).unwrap_or_default()["best"], serde_json::json!({"energy": {"challenge": "medium", "score": 0.75, "points": 150.0}}));
 }
 
 #[test]
@@ -69,20 +134,127 @@ fn run_view_recomputes_the_sheet_and_carries_answers() {
     let catalog = catalog();
     let quizzes = quizzes(REVISION);
     let context = LearnerContext { now: 50, catalog: &catalog, quizzes: &quizzes, limits: &DEFAULT_LIMITS };
+    for challenge in [Challenge::Medium, Challenge::Hard] {
+        let mut state = registered(ALICE, 1);
+        step(&mut state, &command_start_at(ALICE, RUN, challenge, context.now), &context);
+        let sheet = sheet_of(&quiz(), run_seed(RUN), challenge);
+        let power: Vec<String> = sheet.tasks.iter().find(|task| task.id() == "power").map(|task| task.items().iter().map(|item| item.id.clone()).collect()).unwrap_or_default();
+        let answer = Answer::Sorting(SortingAnswer { order: power, guesses: None });
+        let decision = decide_learner(&state, &Command::RecordAnswer { id: id(2), learner: ALICE.to_string(), run: RUN.to_string(), task: "power".to_string(), answer: answer.clone(), at: 50 }, &context);
+        fold(&mut state, &decision);
+        let view = run_view(&state, RUN, &quizzes).unwrap_or_else(|| unreachable!());
+        assert_eq!((view.status, view.sheet, view.answers.get("power"), view.started_at, view.result, view.opened, view.hints), (RunStatus::Open, sheet, Some(&answer), 50, None, None, None));
+        assert!(run_view(&state, &id(9), &quizzes).is_none());
+        assert!(run_view(&state, RUN, &BTreeMap::new()).is_none());
+    }
+}
+
+fn answered(state: &mut LearnerState, task: &str, answer: Answer, context: &LearnerContext<'_>) {
+    let command = Command::RecordAnswer { id: id(2), learner: state.learner.clone(), run: RUN.to_string(), task: task.to_string(), answer, at: context.now };
+    assert_eq!(step(state, &command, context).len(), 1, "{task} was not recorded");
+}
+
+fn reversed(challenge: Challenge) -> Answer {
+    let sheet = sheet_of(&quiz(), run_seed(RUN), challenge);
+    let Some(Answer::Sorting(mut answer)) = sheet.tasks.iter().find(|task| task.id() == "power").map(|task| perfect(&quiz(), task)) else { unreachable!() };
+    answer.order.reverse();
+    Answer::Sorting(answer)
+}
+
+#[test]
+fn an_open_easy_run_carries_the_hints_of_its_answers() {
+    let (catalog, quizzes) = (catalog(), quizzes(REVISION));
+    let context = LearnerContext { now: 50, catalog: &catalog, quizzes: &quizzes, limits: &DEFAULT_LIMITS };
     let mut state = registered(ALICE, 1);
-    step(&mut state, &Command::StartRun { id: id(1), learner: ALICE.to_string(), run: RUN.to_string(), quiz: "energy".to_string() }, &context);
-    let sheet = sheet_of(&quiz(), run_seed(RUN));
-    let power: Vec<String> = sheet.tasks.iter().find(|task| task.id() == "power").map(|task| match task {
-        crate::schema::SheetTask::Sorting(task) => task.items.iter().map(|item| item.id.clone()).collect(),
-        _ => Vec::new(),
-    }).unwrap_or_default();
-    let answer = Answer::Sorting(SortingAnswer { order: power, guesses: BTreeMap::new() });
-    let decision = decide_learner(&state, &Command::RecordAnswer { id: id(2), learner: ALICE.to_string(), run: RUN.to_string(), task: "power".to_string(), answer: answer.clone() }, &context);
-    fold(&mut state, &decision);
+    step(&mut state, &command_start_at(ALICE, RUN, Challenge::Easy, context.now), &context);
+    let hints = |state: &LearnerState| run_view(state, RUN, &quizzes).and_then(|view| view.hints);
+    assert_eq!(hints(&state), None, "a run without answers has no hints");
+    let sheet = sheet_of(&quiz(), run_seed(RUN), Challenge::Easy);
+    for task in &sheet.tasks {
+        answered(&mut state, task.id(), perfect(&quiz(), task), &context);
+    }
+    assert_eq!(hints(&state), None, "perfect answers earn no hints, and the member is absent rather than empty");
+    let Answer::Sorting(turned) = reversed(Challenge::Easy) else { unreachable!() };
+    answered(&mut state, "power", Answer::Sorting(turned.clone()), &context);
+    let power = hints(&state).and_then(|hints| hints.get("power").cloned()).unwrap_or_default();
+    let questioned: Vec<(&str, &str, bool, Verdict)> = power
+        .iter()
+        .filter_map(|hint| match hint {
+            Hint::Compare(CompareHint { item, other, dimension: None, factor: Some(factor), difference: None, verdict }) => Some((item.as_str(), other.as_str(), *factor < 1.0, *verdict)),
+            _ => None,
+        })
+        .collect();
+    assert!(questioned.len() == power.len() && (2..=HINTS_PER_TASK).contains(&questioned.len()), "{power:?}");
+    assert_eq!((questioned[0].0, questioned[0].2, questioned.last().map(|last| (last.0, last.2))), (turned.order[0].as_str(), true, Some((turned.order[3].as_str(), false))), "in the learner's order, the largest on the smallest key first: {power:?}");
+    assert!(questioned.iter().all(|(item, other, _, verdict)| item != other && *verdict == Verdict::Reversed), "a reversed order claims every relation the wrong way: {power:?}");
+    assert_eq!(hints(&state).map(|hints| hints.len()), Some(1), "only tasks with hints appear");
+    answered(&mut state, "standards", Answer::Classification(ClassificationAnswer { assignments: BTreeMap::from([("a".to_string(), "old".to_string()), ("b".to_string(), "low".to_string()), ("c".to_string(), "low".to_string())]) }), &context);
+    let both = hints(&state).unwrap_or_default();
+    let profiled = |item: &str, category: &str, other: Option<&str>| Hint::Profile(ProfileHint { item: item.to_string(), category: category.to_string(), axis: "heat".to_string(), other: other.map(str::to_string), above: other.map(|_| true) });
+    assert_eq!((both.keys().map(String::as_str).collect::<Vec<_>>(), both.get("standards").map(Vec::len)), (vec!["power", "standards"], Some(2)));
+    let sheet_items: Vec<&str> = sheet.tasks.iter().find(|task| task.id() == "standards").map(|task| task.items().iter().map(|item| item.id.as_str()).collect()).unwrap_or_default();
+    let mut expected = vec![(sheet_items.iter().position(|id| *id == "a"), profiled("a", "old", Some("b"))), (sheet_items.iter().position(|id| *id == "c"), profiled("c", "low", None))];
+    expected.sort_by_key(|(position, _)| *position);
+    assert_eq!(both.get("standards"), Some(&expected.into_iter().map(|(_, hint)| hint).collect::<Vec<_>>()), "each misplaced item names its farthest axis, in sheet order; a is claimed above b, placed in its own category, though it lies below it");
+    let json = serde_json::to_value(run_view(&state, RUN, &quizzes)).unwrap_or_default();
+    assert!(json["hints"]["standards"].as_array().is_some_and(|hints| hints.contains(&serde_json::json!({"kind": "profile", "item": "a", "category": "old", "axis": "heat", "other": "b", "above": true}))));
+    assert_eq!(json.get("opened"), None);
+    for task in &sheet.tasks {
+        answered(&mut state, task.id(), if task.id() == "power" { Answer::Sorting(turned.clone()) } else { perfect(&quiz(), task) }, &context);
+    }
+    assert!(hints(&state).is_some());
+    step(&mut state, &Command::SubmitRun { id: id(3), learner: ALICE.to_string(), run: RUN.to_string() }, &context);
+    let closed = run_view(&state, RUN, &quizzes).unwrap_or_else(|| unreachable!());
+    assert_eq!((closed.status, closed.hints, closed.result.is_some()), (RunStatus::Submitted, None, true), "a submitted run shows its result instead of hints");
+}
+
+#[test]
+fn only_a_challenge_that_hints_carries_hints() {
+    let (catalog, quizzes) = (catalog(), quizzes(REVISION));
+    let context = LearnerContext { now: 50, catalog: &catalog, quizzes: &quizzes, limits: &DEFAULT_LIMITS };
+    for challenge in CHALLENGES {
+        let mut state = registered(ALICE, 1);
+        step(&mut state, &command_start_at(ALICE, RUN, challenge, context.now), &context);
+        if challenge == Challenge::Expert {
+            step(&mut state, &Command::OpenTask { id: id(4), learner: ALICE.to_string(), run: RUN.to_string(), task: "power".to_string(), at: 50 }, &context);
+        }
+        let sheet = sheet_of(&quiz(), run_seed(RUN), challenge);
+        let standards = sheet.tasks.iter().find(|task| task.id() == "standards").unwrap_or_else(|| unreachable!());
+        answered(&mut state, "power", if challenge <= Challenge::Medium { reversed(challenge) } else { sheet.tasks.iter().find(|task| task.id() == "power").map_or_else(|| unreachable!(), |task| perfect(&quiz(), task)) }, &context);
+        if challenge != Challenge::Expert {
+            answered(&mut state, "standards", Answer::Classification(ClassificationAnswer { assignments: standards.items().iter().map(|item| (item.id.clone(), "old".to_string())).collect() }), &context);
+        }
+        let view = run_view(&state, RUN, &quizzes).unwrap_or_else(|| unreachable!());
+        assert_eq!(view.hints.as_ref().map(|hints| hints.keys().map(String::as_str).collect::<Vec<_>>()), (challenge == Challenge::Easy).then(|| vec!["power", "standards"]), "{challenge:?}");
+        assert_eq!(view.sheet.challenge, challenge);
+        let mut voided = state.clone();
+        crate::lifecycle::evolve_learner(&mut voided, &Event::RunVoided { learner: ALICE.to_string(), run: RUN.to_string(), at: 60 });
+        assert_eq!(run_view(&voided, RUN, &quizzes).and_then(|view| view.hints), None);
+    }
+}
+
+#[test]
+fn a_timed_run_carries_when_each_opened_task_was_opened() {
+    let (catalog, quizzes) = (catalog(), quizzes(REVISION));
+    let context = LearnerContext { now: 500, catalog: &catalog, quizzes: &quizzes, limits: &DEFAULT_LIMITS };
+    for challenge in [Challenge::Easy, Challenge::Medium, Challenge::Hard] {
+        let mut state = registered(ALICE, 1);
+        step(&mut state, &command_start_at(ALICE, RUN, challenge, context.now), &context);
+        assert_eq!(run_view(&state, RUN, &quizzes).map(|view| view.opened), Some(None), "{challenge:?}");
+    }
+    let mut state = registered(ALICE, 1);
+    step(&mut state, &command_start_at(ALICE, RUN, Challenge::Expert, context.now), &context);
+    assert_eq!(run_view(&state, RUN, &quizzes).map(|view| view.opened), Some(Some(BTreeMap::new())), "a timed run carries the member before any task is opened");
+    assert_eq!(serde_json::to_value(run_view(&state, RUN, &quizzes)).unwrap_or_default()["opened"], serde_json::json!({}));
+    for (task, at) in [("power", 520), ("standards", 560)] {
+        step(&mut state, &Command::OpenTask { id: id(4), learner: ALICE.to_string(), run: RUN.to_string(), task: task.to_string(), at }, &LearnerContext { now: 600, ..context });
+    }
     let view = run_view(&state, RUN, &quizzes).unwrap_or_else(|| unreachable!());
-    assert_eq!((view.status, view.sheet, view.answers.get("power"), view.started_at, view.result), (RunStatus::Open, sheet, Some(&answer), 50, None));
-    assert!(run_view(&state, &id(9), &quizzes).is_none());
-    assert!(run_view(&state, RUN, &BTreeMap::new()).is_none());
+    assert_eq!(view.opened, Some(BTreeMap::from([("power".to_string(), 520), ("standards".to_string(), 560)])));
+    assert_eq!(view.sheet.tasks.iter().map(SheetTask::seconds).collect::<Vec<_>>().iter().filter(|seconds| seconds.is_some()).count(), 3);
+    step(&mut state, &Command::SubmitRun { id: id(3), learner: ALICE.to_string(), run: RUN.to_string() }, &LearnerContext { now: 700, ..context });
+    let closed = run_view(&state, RUN, &quizzes).unwrap_or_else(|| unreachable!());
+    assert_eq!((closed.status, closed.opened.map(|opened| opened.len()), closed.result.map(|result| (result.challenge, result.points))), (RunStatus::Submitted, Some(2), Some((Challenge::Expert, 0.0))));
 }
 
 #[test]
@@ -115,7 +287,7 @@ fn leaderboard_orders_by_total_badges_reached_at_and_id() {
             (5, learner_tag(&id(0xe5)), 100.0, 0, 70, 1),
         ]
     );
-    assert_eq!(board.rows[3].best, BTreeMap::from([("energy".to_string(), 0.5), ("heating".to_string(), 0.5)]));
+    assert_eq!(board.rows[3].best, BTreeMap::from([("energy".to_string(), best(Challenge::Easy, 0.5)), ("heating".to_string(), best(Challenge::Easy, 0.5))]));
     assert_eq!((board.rows[3].last_activity, board.learners, board.own.is_none()), (80, 5, true));
     assert_eq!((board.period, board.quiz.as_deref(), board.window, board.submissions), (LeaderboardPeriod::AllTime, None, None, 7));
     assert!(transcript(&idle).is_none() && transcript(&anonymous).is_none());
@@ -155,7 +327,7 @@ fn a_standing_is_made_of_the_runs_in_scope_and_the_badges_they_earned() {
     let record = transcript(&state).unwrap_or_else(|| unreachable!());
     assert_eq!(record.badges.iter().map(|award| (award.badge.as_str(), award.quiz.as_str(), award.at)).collect::<Vec<_>>(), [("sorter", "energy", monday + 5), ("done", "heating", tuesday)]);
     let summary = |period: LeaderboardPeriod, quiz: Option<&str>, at: Timestamp| standing(&record, &catalog, &BoardScope::of(period, quiz, at)).map(|standing| (standing.total, standing.best.into_iter().collect::<Vec<_>>(), standing.badges, standing.runs, standing.reached_at, standing.last_activity));
-    let scored = |quiz: &str, score: f64| (quiz.to_string(), score);
+    let scored = |quiz: &str, score: f64| (quiz.to_string(), best(Challenge::Easy, score));
     assert_eq!(summary(LeaderboardPeriod::AllTime, None, 0), Some((125.0, vec![scored("energy", 0.75), scored("heating", 0.5)], vec!["sorter".to_string(), "done".to_string()], 3, tuesday, tuesday + 9)));
     assert_eq!(summary(LeaderboardPeriod::Weekly, None, tuesday), summary(LeaderboardPeriod::AllTime, None, 0));
     assert_eq!(summary(LeaderboardPeriod::Daily, None, monday), Some((75.0, vec![scored("energy", 0.75)], vec!["sorter".to_string()], 1, monday + 5, monday + 5)));
@@ -328,9 +500,10 @@ fn a_transcript_ignores_answers_and_open_runs() {
     let mut state = registered(ALICE, 1);
     submitted(&mut state, &id(1), "energy", 0.5, 10);
     let before = transcript(&state);
-    crate::lifecycle::evolve_learner(&mut state, &Event::RunStarted { learner: ALICE.to_string(), run: id(2), quiz: "heating".to_string(), revision: REVISION.to_string(), seed: run_seed(&id(2)), at: 50 });
-    crate::lifecycle::evolve_learner(&mut state, &Event::AnswerRecorded { learner: ALICE.to_string(), run: id(2), task: "power".to_string(), answer: Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: BTreeMap::new() }), at: 60 });
-    assert_eq!(before.as_ref().map(|record| record.runs.clone()), Some(vec![TranscriptRun { quiz: "energy".to_string(), score: 0.5, at: 10 }]));
+    crate::lifecycle::evolve_learner(&mut state, &Event::RunStarted { learner: ALICE.to_string(), run: id(2), quiz: "heating".to_string(), challenge: Challenge::Expert, revision: REVISION.to_string(), seed: run_seed(&id(2)), at: 50 });
+    crate::lifecycle::evolve_learner(&mut state, &Event::TaskOpened { learner: ALICE.to_string(), run: id(2), task: "power".to_string(), at: 55 });
+    crate::lifecycle::evolve_learner(&mut state, &Event::AnswerRecorded { learner: ALICE.to_string(), run: id(2), task: "power".to_string(), answer: Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: None }), at: 60 });
+    assert_eq!(before.as_ref().map(|record| record.runs.clone()), Some(vec![TranscriptRun { quiz: "energy".to_string(), challenge: Challenge::Easy, score: 0.5, points: 50.0, at: 10 }]));
     assert_eq!(transcript(&state), before);
 }
 
@@ -343,7 +516,11 @@ fn leaderboard_follows_decided_runs() {
     play_perfect(&mut alice, RUN, &quizzes, &catalog, 500);
     play_perfect(&mut bob, &id(5), &quizzes, &catalog, 400);
     let board = ranked(&[&alice, &bob], &catalog_view(&catalog, &[quiz()]), None);
-    assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total, row.reached_at)).collect::<Vec<_>>(), [(1, learner_tag(BOB), 100.0, 400), (2, learner_tag(ALICE), 100.0, 500)]);
+    assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total, row.reached_at)).collect::<Vec<_>>(), [(1, learner_tag(BOB), 200.0, 400), (2, learner_tag(ALICE), 200.0, 500)]);
+    play_perfect_at(&mut alice, &id(6), Challenge::Expert, &quizzes, &catalog, 600);
+    play_perfect_at(&mut bob, &id(7), Challenge::Easy, &quizzes, &catalog, 700);
+    let board = ranked(&[&alice, &bob], &catalog_view(&catalog, &[quiz()]), None);
+    assert_eq!(board.rows.iter().map(|row| (row.rank, row.tag.clone(), row.total, row.reached_at, row.runs, row.best["energy"].challenge)).collect::<Vec<_>>(), [(1, learner_tag(ALICE), 400.0, 600, 2, Challenge::Expert), (2, learner_tag(BOB), 200.0, 400, 2, Challenge::Medium)]);
 }
 
 #[test]
@@ -384,19 +561,32 @@ fn classified(items: &[(&str, &str)]) -> TaskResult {
     TaskResult::Classification {
         task: "standards".to_string(),
         score: 0.0,
-        items: items.iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: (*assigned).to_string(), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
+        items: items.iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: Some((*assigned).to_string()), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
     }
 }
 
 fn sorted(task: &str, order: &[&str]) -> TaskResult {
-    TaskResult::Sorting { task: task.to_string(), score: 0.0, items: order.iter().enumerate().map(|(position, item)| crate::schema::SortingItemResult { item: (*item).to_string(), value: 0.0, position, rank: 0, explanation: None }).collect() }
+    TaskResult::Sorting { task: task.to_string(), score: 0.0, items: order.iter().enumerate().map(|(position, item)| SortingItemResult { item: (*item).to_string(), value: 0.0, position, rank: 0, guess: None, miss: None, explanation: None }).collect() }
+}
+
+fn guessed_order(task: &str, order: &[(&str, Option<f64>, bool)]) -> TaskResult {
+    TaskResult::Sorting { task: task.to_string(), score: 0.0, items: order.iter().enumerate().map(|(position, (item, guess, miss))| SortingItemResult { item: (*item).to_string(), value: 0.0, position, rank: 0, guess: *guess, miss: Some(*miss), explanation: None }).collect() }
 }
 
 fn matched(load: [f64; 3], demand: [f64; 3]) -> TaskResult {
-    let dimension = |id: &str, values: [f64; 3]| crate::schema::DimensionResult {
+    let dimension = |id: &str, values: [f64; 3]| DimensionResult {
         dimension: id.to_string(),
         score: 0.0,
-        items: values.iter().enumerate().map(|(index, &assigned)| crate::schema::MatchingItemResult { item: format!("m{index}"), assigned, correct: assigned, explanation: None }).collect(),
+        items: values.iter().enumerate().map(|(index, &assigned)| MatchingItemResult { item: format!("m{index}"), assigned: Some(assigned), correct: assigned, miss: None, explanation: None }).collect(),
+    };
+    TaskResult::Matching { task: "buildings".to_string(), score: 0.0, dimensions: vec![dimension("load", load), dimension("demand", demand)] }
+}
+
+fn guessed_matching(load: [Option<f64>; 3], demand: [Option<f64>; 3]) -> TaskResult {
+    let dimension = |id: &str, values: [Option<f64>; 3]| DimensionResult {
+        dimension: id.to_string(),
+        score: 0.0,
+        items: values.iter().enumerate().map(|(index, &assigned)| MatchingItemResult { item: format!("m{index}"), assigned, correct: 0.0, miss: Some(assigned.is_none()), explanation: None }).collect(),
     };
     TaskResult::Matching { task: "buildings".to_string(), score: 0.0, dimensions: vec![dimension("load", load), dimension("demand", demand)] }
 }
@@ -405,7 +595,69 @@ type Tally = Vec<(String, usize, Vec<(String, usize)>)>;
 type Rows<'a> = [(&'a str, usize, &'a [(&'a str, usize)])];
 
 fn outcome(quiz: &str, tasks: Vec<TaskResult>) -> RunResult {
-    RunResult { quiz: quiz.to_string(), score: 0.0, tasks }
+    RunResult { quiz: quiz.to_string(), challenge: Challenge::Medium, score: 0.0, points: 0.0, tasks }
+}
+
+fn tally(task: &CrowdTask) -> Tally {
+    task.items.iter().map(|item| (item.item.clone(), item.answers, item.counts.iter().flatten().map(|count| (count.key.clone(), count.count)).collect())).collect()
+}
+
+fn owned(rows: &Rows<'_>) -> Tally {
+    rows.iter().map(|(item, answers, counts)| ((*item).to_string(), *answers, counts.iter().map(|(key, count)| ((*key).to_string(), *count)).collect())).collect()
+}
+
+#[test]
+fn a_guess_counts_under_the_nearest_authored_value_on_its_scale() {
+    let task = matching("buildings", &[(10.0, 15.0), (40.0, 90.0), (120.0, 250.0), (70.0, 1000.0)], None);
+    for (guess, nearest) in [(40.0, Some(40.0)), (24.0, Some(10.0)), (25.0, Some(10.0)), (26.0, Some(40.0)), (55.0, Some(40.0)), (95.0, Some(70.0)), (96.0, Some(120.0)), (1.0e9, Some(120.0)), (-1.0e9, Some(10.0))] {
+        assert_eq!(nearest_value(&task, "load", Scale::Linear, guess), nearest, "load {guess}");
+    }
+    for (guess, nearest) in [(40.0, Some(90.0)), (30.0, Some(15.0)), (160.0, Some(250.0)), (140.0, Some(90.0)), (600.0, Some(1000.0)), (1.0e-6, Some(15.0)), (-1.0, Some(15.0))] {
+        assert_eq!(nearest_value(&task, "demand", Scale::Logarithmic, guess), nearest, "demand {guess}");
+    }
+    assert_eq!((nearest_value(&task, "demand", Scale::Linear, 170.0), nearest_value(&task, "demand", Scale::Logarithmic, 170.0)), (Some(90.0), Some(250.0)), "the distance is measured on the scale it is asked on");
+    assert_eq!(nearest_value(&task, "area", Scale::Linear, 1.0), None);
+    let mut sparse = task.clone();
+    sparse.items[1].values.remove("load");
+    assert_eq!((nearest_value(&task, "load", Scale::Linear, 45.0), nearest_value(&sparse, "load", Scale::Linear, 45.0)), (Some(40.0), Some(70.0)), "an item without a value of the dimension takes no part");
+    let dimension = &task.dimensions[0];
+    let result = |assigned: Option<f64>, miss: Option<bool>| MatchingItemResult { item: "m0".to_string(), assigned, correct: 10.0, miss, explanation: None };
+    assert_eq!(crowd_value(&task, dimension, &result(Some(33.0), None)), Some(33.0), "a card counts under its own value");
+    assert_eq!((crowd_value(&task, dimension, &result(Some(33.0), Some(false))), crowd_value(&task, dimension, &result(Some(33.0), Some(true)))), (Some(40.0), Some(40.0)), "a guess counts under the nearest authored value, missed or not");
+    assert_eq!((crowd_value(&task, dimension, &result(None, Some(true))), crowd_value(&task, dimension, &result(None, None))), (None, None));
+}
+
+#[test]
+fn a_sorting_places_its_items_unless_nobody_guessed_in_it() {
+    let item = |guess: Option<f64>, miss: Option<bool>| SortingItemResult { item: "s0".to_string(), value: 1.0, position: 0, rank: 0, guess, miss, explanation: None };
+    assert!(crowd_orders(&[item(None, None), item(None, None)]), "a sorting that showed the keys always places");
+    assert!(crowd_orders(&[item(None, Some(true)), item(Some(3.0), Some(true))]));
+    assert!(crowd_orders(&[item(None, Some(true)), item(Some(3.0), Some(false))]));
+    assert!(!crowd_orders(&[item(None, Some(true)), item(None, Some(true))]));
+    assert!(!crowd_orders(&[]));
+}
+
+#[test]
+fn the_crowd_mixes_every_challenge_counts_guesses_under_authored_values_and_leaves_unanswered_items_out() {
+    let unanswered = TaskResult::Classification {
+        task: "standards".to_string(),
+        score: 0.25,
+        items: [("a", Some("low")), ("b", None), ("c", Some("old")), ("d", None)].iter().map(|(item, assigned)| crate::schema::ClassificationItemResult { item: (*item).to_string(), assigned: assigned.map(str::to_string), correct: "old".to_string(), credit: 0.0, explanation: None }).collect(),
+    };
+    let at = |challenge: Challenge, score: f64, tasks: Vec<TaskResult>| RunResult { quiz: "energy".to_string(), challenge, score, points: points(score, challenge), tasks };
+    let results = [
+        at(Challenge::Easy, 0.95, vec![classified(&[("a", "low"), ("b", "low"), ("c", "old"), ("d", "low")]), sorted("power", &["s1", "s0", "s2", "s3"]), matched([10.0, 40.0, 120.0], [15.0, 250.0, 90.0])]),
+        at(Challenge::Hard, 0.5, vec![classified(&[("a", "passive")]), guessed_order("power", &[("s0", Some(2.0), false), ("s2", None, true), ("s1", Some(5.0e6), true), ("s3", Some(9.0e6), false)]), guessed_matching([Some(12.0), Some(81.0), None], [Some(20.0), Some(160.0), Some(1.0e6)])]),
+        at(Challenge::Expert, 0.05, vec![unanswered, guessed_order("power", &[("s3", None, true), ("s0", None, true), ("s4", None, true), ("s1", None, true)]), guessed_matching([None; 3], [Some(14.0), None, None])]),
+    ];
+    let crowd = crowd_view(&quiz(), &results);
+    assert_eq!((crowd.runs, crowd.scores), (3, [1, 0, 0, 0, 0, 1, 0, 0, 0, 1]), "run scores of every challenge share one set of bins");
+    assert_eq!(tally(&crowd.tasks[0]), owned(&[("a", 3, &[("low", 2), ("passive", 1)]), ("b", 1, &[("low", 1)]), ("c", 2, &[("old", 2)]), ("d", 1, &[("low", 1)])]));
+    let positions: Vec<(&str, usize, Option<Vec<usize>>)> = crowd.tasks[1].items.iter().map(|item| (item.item.as_str(), item.answers, item.places.clone())).collect();
+    assert_eq!(positions, [("s0", 2, Some(vec![1, 1, 0, 0])), ("s1", 2, Some(vec![1, 0, 1, 0])), ("s2", 2, Some(vec![0, 1, 1, 0])), ("s3", 2, Some(vec![0, 0, 0, 2]))], "a sorting nobody guessed in places nothing");
+    assert_eq!(crowd.tasks[1].scores.iter().sum::<usize>(), 3, "but adds its score");
+    assert_eq!(tally(&crowd.tasks[2]), owned(&[("m0", 2, &[("10", 2)]), ("m1", 2, &[("120", 1), ("40", 1)]), ("m2", 1, &[("120", 1)])]));
+    assert_eq!(tally(&crowd.tasks[3]), owned(&[("m0", 3, &[("15", 3)]), ("m1", 2, &[("250", 2)]), ("m2", 2, &[("250", 1), ("90", 1)])]));
 }
 
 #[test]
@@ -417,8 +669,7 @@ fn the_crowd_counts_categories_and_values_and_averages_positions_in_definition_o
         outcome("energy", vec![sorted("standards", &["a", "b"])]),
     ];
     let crowd = crowd_view(&quiz(), &results);
-    let counts = |task: &CrowdTask| -> Tally { task.items.iter().map(|item| (item.item.clone(), item.answers, item.counts.iter().flatten().map(|count| (count.key.clone(), count.count)).collect())).collect() };
-    let owned = |rows: &Rows<'_>| -> Tally { rows.iter().map(|(item, answers, counts)| ((*item).to_string(), *answers, counts.iter().map(|(key, count)| ((*key).to_string(), *count)).collect())).collect() };
+    let counts = tally;
     assert_eq!((crowd.quiz.as_str(), crowd.runs), ("energy", 3));
     assert_eq!(crowd.tasks.iter().map(|task| (task.task.as_str(), task.kind, task.dimension.as_deref())).collect::<Vec<_>>(), [("standards", TaskKind::Classification, None), ("power", TaskKind::Sorting, None), ("buildings", TaskKind::Matching, Some("load")), ("buildings", TaskKind::Matching, Some("demand"))]);
     assert_eq!(counts(&crowd.tasks[0]), owned(&[("a", 2, &[("low", 1), ("passive", 1)]), ("b", 2, &[("low", 2)]), ("c", 1, &[("old", 1)]), ("d", 1, &[("low", 1)])]));
@@ -492,11 +743,13 @@ fn a_sheet_presents_the_draw_of_a_task_or_every_item() {
 #[test]
 fn the_crowd_bins_run_task_and_dimension_scores_of_the_first_task_result_and_places_orders_of_any_length() {
     let scored = |run: f64, standards: f64, power: f64, load: f64, demand: Option<f64>| {
-        let dimension = |id: &str, score: f64| crate::schema::DimensionResult { dimension: id.to_string(), score, items: Vec::new() };
+        let dimension = |id: &str, score: f64| DimensionResult { dimension: id.to_string(), score, items: Vec::new() };
         let dimensions = [Some(dimension("load", load)), demand.map(|score| dimension("demand", score)), Some(dimension("load", 1.0))].into_iter().flatten().collect();
         RunResult {
             quiz: "energy".to_string(),
+            challenge: Challenge::Hard,
             score: run,
+            points: points(run, Challenge::Hard),
             tasks: vec![
                 TaskResult::Classification { task: "standards".to_string(), score: standards, items: Vec::new() },
                 TaskResult::Sorting { task: "power".to_string(), score: power, items: Vec::new() },
@@ -510,8 +763,8 @@ fn the_crowd_bins_run_task_and_dimension_scores_of_the_first_task_result_and_pla
         scored(0.0, 0.095, 0.1, 0.895, Some(0.9)),
         scored(0.995, 1.0, 0.0949, 0.8949, None),
         scored(0.5, 0.55, 0.59, 0.6, Some(0.25)),
-        RunResult { quiz: "energy".to_string(), score: 0.42, tasks: Vec::new() },
-        RunResult { quiz: "heating".to_string(), score: 1.0, tasks: Vec::new() },
+        RunResult { quiz: "energy".to_string(), challenge: Challenge::Easy, score: 0.42, points: 42.0, tasks: Vec::new() },
+        RunResult { quiz: "heating".to_string(), challenge: Challenge::Expert, score: 1.0, points: 400.0, tasks: Vec::new() },
         ordered(&["s0"]),
         ordered(&["s0", "s1"]),
         ordered(&["s1", "s0"]),

@@ -3,7 +3,7 @@
 @comparison-viz-probe-v1
 Feature: The TypeScript twin of hexagonal binning answers as the reference implementation does
   `🐝️spatial-hexbin` measures the LaTeX kernel — hexagonal binning in semio-viz-spatial agrees with d3-hexbin. This case measures the
-  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-kernel`, on
+  second subject of the same specification, the TypeScript twin `@semio-tech/print-viz-inference`, on
   the same vectors and against the same oracle, because a kernel that exists twice is only a
   kernel if both copies answer alike.
 

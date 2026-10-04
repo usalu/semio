@@ -3,8 +3,10 @@
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
 
 \ExplSyntaxOn
+\cs_if_exist:NF \clist_if_in:NeF {\prg_generate_conditional_variant:Nnn \clist_if_in:Nn {Ne} {T,F,TF}}
 
 %region 🔖️Diagnostics
 \msg_new:nnn { semio-viz } { unknown-layout }
@@ -37,6 +39,15 @@
 
 % ▶️ Runs algorithm #1 over input table or structure #2 into output #3 with option list #4.
 \cs_new_protected:Npn \semio_viz_layout_run:nnnn #1#2#3#4 {
+  \cs_if_exist:cTF { semio_viz_layout_table_#1:nnn }
+    {
+      \seq_if_in:NnTF \g_semio_viz_table_names_seq {#2}
+        { \semio_viz_layout_validate:nn {#1} {#4} \use:c { semio_viz_layout_table_#1:nnn } {#2} {#3} {#4} }
+        { \semio_viz_layout_structure:nnnn {#1} {#2} {#3} {#4} }
+    }
+    { \semio_viz_layout_structure:nnnn {#1} {#2} {#3} {#4} }
+}
+\cs_new_protected:Npn \semio_viz_layout_structure:nnnn #1#2#3#4 {
   \seq_if_in:NnTF \g_semio_viz_layout_names_seq {#1}
     { \use:c { semio_viz_layout_ \tl_to_str:n {#1} :nnn } {#2} {#3} {#4} }
     {
@@ -45,7 +56,149 @@
     }
 }
 \cs_generate_variant:Nn \semio_viz_layout_run:nnnn { nVnV , VVnV , nnnV , VnnV }
+\cs_generate_variant:Nn \semio_viz_layout_structure:nnnn { nVnV , VVnV }
 %endregion 🔖️Registry
+
+%region 🔖️AuthoredTables
+% 📋 Authored layout rows are snapshotted before publishing, including in-place derivations.
+\prop_new:N \l_semio_viz_layout_options_prop
+\clist_new:N \l_semio_viz_layout_allowed_clist
+\prop_new:N \l_semio_viz_layout_vocabulary_prop
+\msg_new:nnn {semio-viz} {authored-layout-option} {Unknown~authored~layout~option~'#1'.}
+\msg_new:nnn {semio-viz} {authored-layout-control} {Invalid~authored~layout~control~'#1'.}
+\msg_new:nnn {semio-viz} {authored-layout-column} {Unknown~authored~layout~column~'#1'.}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {pie} {value,sort,startAngle,endAngle,padAngle,innerRadius,outerRadius,cx,cy}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {tree} {id,parent,value,sort,leaves,separation,cousinSeparation}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {cluster} {id,parent,value,sort,leaves,separation,cousinSeparation}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {treemap} {id,parent,value,sort,leaves,tile,round,paddingInner,paddingOuter,paddingTop,paddingRight,paddingBottom,paddingLeft}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {partition} {id,parent,value,sort,leaves,padding,round}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {pack} {id,parent,value,sort,leaves,padding}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {bundling} {id,parent,value,sort,leaves,separation,cousinSeparation}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {arc} {id,source,target,origin,vertical,output}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {dag} {id,source,target,layerGap,nodeGap,sweeps,output}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {force} {id,source,target,seed,alpha,velocityDecay,charge,distance,radius,iterations,output}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {chord} {source,target,value,padAngle,transpose,output,radius}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {sankey} {source,target,value,nodeWidth,nodePadding,iterations,align,output}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {alluvial} {stages,value,nodeWidth,nodePadding,iterations,align,output}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {projection} {x,y,projection,scale,translateX,translateY,rotateLongitude,rotateLatitude,rotateGamma,centerLongitude,centerLatitude,reflectX,reflectY}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {hexbin} {x,y,radius}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {jitter} {x,y,seed,amount}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {beeswarm} {x,y,radius,axis}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {voronoi} {x,y,x0,y0,x1,y1}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {delaunay} {x,y}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {hull} {x,y}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {contour} {value,columns,rows,thresholds}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {density} {x,y,x0,y0,x1,y1,cellSize,bandwidth,kernel,thresholds}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {stack} {keys,order,offset}
+\prop_put:Nnn \l_semio_viz_layout_vocabulary_prop {bin} {column,thresholds,min,max}
+\cs_new_protected:Npn \semio_viz_layout_validate_option:nn #1#2 {
+  \clist_if_in:NnF \l_semio_viz_layout_allowed_clist {#1}
+    {\msg_fatal:nnn {semio-viz} {authored-layout-option} {#1}}
+}
+\cs_new_protected:Npn \semio_viz_layout_validate_flag:n #1 {\semio_viz_layout_validate_option:nn {#1} {true}}
+\cs_new_protected:Npn \semio_viz_layout_validate:nn #1#2 {
+  \clist_set:Nx \l_semio_viz_layout_allowed_clist {width,height,\prop_item:Nn \l_semio_viz_layout_vocabulary_prop {#1}}
+  \keyval_parse:NNn \semio_viz_layout_validate_flag:n \semio_viz_layout_validate_option:nn {#2}
+}
+\cs_new_protected:Npn \semio_viz_layout_positive:n #1 {
+  \fp_compare:nNnF {\semio_viz_layout_option:n {#1}} > {0}
+    {\msg_fatal:nnn {semio-viz} {authored-layout-control} {#1}}
+}
+\cs_new_protected:Npn \semio_viz_layout_column:n #1 {
+  \clist_if_in:NeF \l_semio_viz_layout_cols_clist {\semio_viz_layout_option:n {#1}}
+    {\msg_fatal:nnn {semio-viz} {authored-layout-column} {#1}}
+}
+\prop_new:N \l_semio_viz_layout_row_prop
+\clist_new:N \l_semio_viz_layout_cols_clist
+\clist_new:N \l_semio_viz_layout_output_cols_clist
+\clist_new:N \l_semio_viz_layout_cells_clist
+\seq_new:N \l_semio_viz_layout_rows_seq
+\seq_new:N \l_semio_viz_layout_output_seq
+\seq_new:N \l_semio_viz_layout_points_seq
+\tl_new:N \l_semio_viz_layout_row_tl
+\tl_new:N \l_semio_viz_layout_a_tl
+\tl_new:N \l_semio_viz_layout_b_tl
+\tl_new:N \l_semio_viz_layout_keys_tl
+\int_new:N \l_semio_viz_layout_index_int
+\int_new:N \l_semio_viz_layout_detail_int
+\fp_new:N \l_semio_viz_layout_a_fp
+\fp_new:N \l_semio_viz_layout_b_fp
+\cs_new_protected:Npn \semio_viz_layout_option:nn #1#2
+  { \prop_put:Nnn \l_semio_viz_layout_options_prop {#1} {#2} }
+\cs_new_protected:Npn \semio_viz_layout_flag:n #1
+  { \semio_viz_layout_option:nn {#1} {true} }
+\cs_new:Npn \semio_viz_layout_option:n #1
+  { \prop_item:Nn \l_semio_viz_layout_options_prop {#1} }
+\cs_new_protected:Npn \semio_viz_layout_table_load:nn #1#2 {
+  \semio_viz_table_require:n {#1}
+  \clist_set_eq:Nc \l_semio_viz_layout_cols_clist {g_semio_viz_table_\l_semio_viz_tab_tl _cols_clist}
+  \seq_set_eq:Nc \l_semio_viz_layout_rows_seq {g_semio_viz_table_\l_semio_viz_tab_tl _rows_seq}
+  \clist_set_eq:NN \l_semio_viz_layout_output_cols_clist \l_semio_viz_layout_cols_clist
+  \seq_clear:N \l_semio_viz_layout_output_seq
+  \prop_clear:N \l_semio_viz_layout_options_prop
+  \keyval_parse:NNn \semio_viz_layout_flag:n \semio_viz_layout_option:nn
+    {width=80,height=40,x=x,y=y,value=value,id=id,parent=parent,source=source,target=target,sort=none,leaves=false,output={}}
+  \keyval_parse:NNn \semio_viz_layout_flag:n \semio_viz_layout_option:nn {#2}
+  \semio_viz_layout_positive:n {width}
+  \semio_viz_layout_positive:n {height}
+}
+\cs_new_protected:Npn \semio_viz_layout_defaults:n #1 {
+  \prop_set_eq:NN \l_tmpa_prop \l_semio_viz_layout_options_prop
+  \keyval_parse:NNn \semio_viz_layout_flag:n \semio_viz_layout_option:nn {#1}
+  \prop_map_inline:Nn \l_tmpa_prop {\prop_put:Nnn \l_semio_viz_layout_options_prop {##1} {##2}}
+}
+\cs_new_protected:Npn \semio_viz_layout_row:n #1 {
+  \prop_clear:N \l_semio_viz_layout_row_prop
+  \clist_set:Nn \l_semio_viz_layout_cells_clist {#1}
+  \int_zero:N \l_semio_viz_layout_index_int
+  \clist_map_inline:Nn \l_semio_viz_layout_cols_clist {
+    \int_incr:N \l_semio_viz_layout_index_int
+    \prop_put:Nnx \l_semio_viz_layout_row_prop {##1}
+      {\clist_item:Nn \l_semio_viz_layout_cells_clist {\l_semio_viz_layout_index_int}}
+  }
+}
+\cs_generate_variant:Nn \semio_viz_layout_row:n {V}
+\cs_new:Npn \semio_viz_layout_cell:n #1 {\prop_item:Nn \l_semio_viz_layout_row_prop {#1}}
+\cs_new:Npn \semio_viz_layout_field:n #1
+  {\exp_args:Ne \semio_viz_layout_cell:n {\semio_viz_layout_option:n {#1}}}
+\cs_new_protected:Npn \semio_viz_layout_set:nn #1#2 {
+  \clist_if_in:NnF \l_semio_viz_layout_output_cols_clist {#1}
+    {\clist_put_right:Nn \l_semio_viz_layout_output_cols_clist {#1}}
+  \prop_put:Nnx \l_semio_viz_layout_row_prop {#1} {#2}
+}
+\cs_new_protected:Npn \semio_viz_layout_put: {
+  \tl_clear:N \l_semio_viz_layout_row_tl
+  \clist_map_inline:Nn \l_semio_viz_layout_output_cols_clist {
+    \tl_if_empty:NF \l_semio_viz_layout_row_tl {\tl_put_right:Nn \l_semio_viz_layout_row_tl {,}}
+    \tl_put_right:Nx \l_semio_viz_layout_row_tl {{\prop_item:Nn \l_semio_viz_layout_row_prop {##1}}}
+  }
+  \seq_put_right:NV \l_semio_viz_layout_output_seq \l_semio_viz_layout_row_tl
+}
+\cs_new_protected:Npn \semio_viz_layout_store:n #1 {
+  \semio_viz_table_new:nx {#1} {\clist_use:Nn \l_semio_viz_layout_output_cols_clist {,}}
+  \seq_map_inline:Nn \l_semio_viz_layout_output_seq {\semio_viz_table_row:nn {#1} {##1}}
+}
+\cs_new_protected:Npn \semio_viz_layout_translate:nn #1#2 {
+  \prop_if_in:NnT \l_semio_viz_layout_options_prop {#1}
+    {\tl_put_right:Nx \l_semio_viz_layout_keys_tl {,#2={\semio_viz_layout_option:n {#1}}}}
+}
+%endregion 🔖️AuthoredTables
+% 🧮 Authored bin and stack layouts share the canonical table transformation implementation.
+\clist_map_inline:nn {bin,stack} {
+  \cs_new_protected:cpn {semio_viz_layout_table_#1:nnn} ##1##2##3
+    {\semio_viz_layout_table_transform:nnnn {#1} {##1} {##2} {##3}}
+}
+\cs_new_protected:Npn \semio_viz_layout_transform_option:nn #1#2 {
+  \str_if_eq:nnF {#1} {width} {
+    \str_if_eq:nnF {#1} {height} {\tl_put_right:Nn \l_semio_viz_layout_keys_tl {,#1={#2}}}
+  }
+}
+\cs_new_protected:Npn \semio_viz_layout_transform_flag:n #1 {\semio_viz_layout_transform_option:nn {#1} {true}}
+\cs_new_protected:Npn \semio_viz_layout_table_transform:nnnn #1#2#3#4 {
+  \tl_set:Nn \l_semio_viz_layout_keys_tl {kind=#1}
+  \keyval_parse:NNn \semio_viz_layout_transform_flag:n \semio_viz_layout_transform_option:nn {#4}
+  \exp_args:NnnV \semio_viz_transform:nnn {#3} {#2} \l_semio_viz_layout_keys_tl
+}
 
 %region 🔖️PublicApi
 % 📐 \SemioVizLayout{algorithm}{in}{out}[options]: the taxonomy 75/78 layout grammar element.

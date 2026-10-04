@@ -1140,6 +1140,10 @@
 \bool_new:N \l_semio_viz_pm_checker_bool
 \bool_new:N \l_semio_viz_pm_lines_bool
 \bool_new:N \l_semio_viz_pm_coords_bool
+\fp_new:N \l_semio_viz_pm_file_fp
+\fp_new:N \l_semio_viz_pm_rank_fp
+\msg_new:nnn {semio-viz} {board-position}
+  {Board~piece~at~file/rank~'#1'~is~outside~the~'#2'~board.}
 
 % ♟️ The `notation-board` option list: piece table, board size in files and ranks, the checker, intersection and coordinate switches and frame size.
 \keys_define:nn { semio / viz / family / notation-board } {
@@ -1224,11 +1228,26 @@
     \semio_viz_table_nrows:nN {#1} \l_semio_viz_pm_n_int
     \int_step_inline:nn { \l_semio_viz_pm_n_int } {
       \semio_viz_table_cell_opt:nnnN {#1} {##1} { file } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_file_fp {\l_semio_viz_pm_val_tl}
       \fp_set:Nn \l_semio_viz_dg_x_fp
         { \l_semio_viz_pm_ox_fp + ( \l_semio_viz_pm_val_tl - 0.5 ) * \l_semio_viz_pm_cw_fp }
       \semio_viz_table_cell_opt:nnnN {#1} {##1} { rank } \l_semio_viz_pm_val_tl
+      \fp_set:Nn \l_semio_viz_pm_rank_fp {\l_semio_viz_pm_val_tl}
+      \bool_if:nT {
+        \fp_compare_p:n {\l_semio_viz_pm_file_fp < 1} ||
+        \fp_compare_p:n {\l_semio_viz_pm_file_fp > \l_semio_viz_pm_files_int} ||
+        \fp_compare_p:n {\l_semio_viz_pm_rank_fp < 1} ||
+        \fp_compare_p:n {\l_semio_viz_pm_rank_fp > \l_semio_viz_pm_ranks_int}}
+        {\msg_error:nnxx {semio-viz} {board-position}
+          {\fp_to_decimal:N\l_semio_viz_pm_file_fp/\fp_to_decimal:N\l_semio_viz_pm_rank_fp}
+          {\int_use:N\l_semio_viz_pm_files_int/\int_use:N\l_semio_viz_pm_ranks_int}}
       \fp_set:Nn \l_semio_viz_dg_y_fp
         { \l_semio_viz_pm_oy_fp + ( \l_semio_viz_pm_val_tl - 0.5 ) * \l_semio_viz_pm_cw_fp }
+      \semio_viz_probe_geometry:nx {board-piece}
+        {\fp_to_decimal:N\l_semio_viz_pm_file_fp,\fp_to_decimal:N\l_semio_viz_pm_rank_fp,
+         \int_use:N\l_semio_viz_pm_files_int,\int_use:N\l_semio_viz_pm_ranks_int,
+         \fp_to_decimal:N\l_semio_viz_pm_cw_fp,\fp_to_decimal:N\l_semio_viz_pm_ox_fp,\fp_to_decimal:N\l_semio_viz_pm_oy_fp,
+         \fp_to_decimal:N\l_semio_viz_dg_x_fp,\fp_to_decimal:N\l_semio_viz_dg_y_fp}
       \semio_viz_table_cell_opt:nnnN {#1} {##1} { tone } \l_semio_viz_dg_cell_tl
       \tl_if_empty:NTF \l_semio_viz_dg_cell_tl
         { \semio_viz_dg_tone:n { 0 } } { \exp_args:NV \semio_viz_dg_tone:n \l_semio_viz_dg_cell_tl }
@@ -1457,8 +1476,8 @@
     \semio_viz_table_new:nn { demo-board } { file, rank, piece, tone }
     \semio_viz_table_row:nn { demo-board } { 4, 4, K, 1 }
     \semio_viz_table_row:nn { demo-board } { 5, 6, Q, 1 }
-    \semio_viz_table_row:nn { demo-board } { 2, 7, R, 2 }
-    \semio_viz_table_row:nn { demo-board } { 7, 2, N, 2 }
+    \semio_viz_table_row:nn { demo-board } { 2, 6, R, 2 }
+    \semio_viz_table_row:nn { demo-board } { 6, 2, N, 2 }
   }
   \seq_if_in:NnF \g_semio_viz_table_names_seq { demo-railroad } {
     \semio_viz_table_new:nn { demo-railroad } { label, kind, branch }

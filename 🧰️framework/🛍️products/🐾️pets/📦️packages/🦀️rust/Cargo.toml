@@ -3,7 +3,7 @@ name = "semio-framework-pets"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Pets product core: the pets contract types (menageries of rigged species, the stage, its events and frames), validation, deterministic trigonometry in turns, counter-based randomness, the forward kinematics of a rig, animation (clips, springs, blinks), terrain (perches, strides, falls, hops), behaviour (weights, dwells, encounters, needs, casts) and the stage that folds events into frames. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+description = "Pets product core: the pets contract types (schema: menageries of rigged species, the stage, its events and frames), validation, deterministic trigonometry in turns, counter-based randomness, the forward kinematics of a rig, animation (clips, springs, blinks), terrain (perches, walls, strides, falls, hops), the swing of ropes and parachutes, climbing (walls, ladders, grappling ropes, routes), behaviour (weights, dwells, encounters, needs, casts), feeling (moods, states, chemistry), gesture recognition, clearance (bodies, claims, the proof that no two overlap), effects (particles), mischief, and the stage that folds events into frames — draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock and projection. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
 
 [package.metadata.semio]
 role = "product"

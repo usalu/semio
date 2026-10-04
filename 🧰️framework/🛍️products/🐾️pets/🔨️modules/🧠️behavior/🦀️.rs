@@ -1,13 +1,16 @@
 //! 🧠️ The character of a pet in numbers: what a mode allows, how much a pet feels like each activity, how long it stays with it, how two pets meet, and how their bond and their drives move. Pure functions over the schema; the stage folds them.
 //!
 //! Every table is an array in `ACTIVITIES` order (idle, fidget, walk, hop, fall, land, sleep, greet, cuddle, squabble,
-//! sulk) and is read at `activity as usize`, every constant is the TypeScript twin's literal and every expression the
-//! twin's, term for term and in its order (no reassociation, no `mul_add`), so both cores yield the same bits. Time is
-//! whole ticks; rates are per second and meet time as `rate × (ticks ÷ 64)`.
+//! sulk, then hang, tumble, glide, aim, reel, climb, mantle, slide, carry, trick, purr, dizzy, shrug, scoot, push) and
+//! is read at `activity as usize`, every constant is the TypeScript twin's literal and every expression the twin's,
+//! term for term and in its order (no reassociation, no `mul_add`), so both cores yield the same bits. Time is whole
+//! ticks; rates are per second and meet time as `rate × (ticks ÷ 64)`.
 //!
 //! Only `idle` decides freely: an idle pet draws its next activity from [`activity_weights`] (idle again, fidget,
-//! walk, hop or sleep); every other activity is entered by what happens on stage and ends where [`followers_of`]
-//! says. Encounters are drawn from [`encounter_shares`]; a squabble always ends in a sulk and a sulk in mending.
+//! walk, hop, sleep or a trick on a whim); every other activity is entered by what happens on stage and ends where
+//! [`followers_of`] says. Encounters are drawn from [`encounter_shares`]; a squabble always ends in a sulk and a sulk
+//! in mending. Of the fifteen later activities only the trick weighs in that draw: the learner's hand, gear, the other
+//! tricks and mischief begin them.
 //!
 //! Where the twin answers `-1` ("no weight is positive") this one answers `None`; the twin's record `MODE_LIMITS[mode]`
 //! is [`ModeLimits`] indexed by a [`PetMode`]; a capacity and an epoch are whole numbers here, so the twin's `floor`
@@ -26,7 +29,7 @@ use serde::{Deserialize, Serialize};
 use std::ops::Index;
 
 //#region 🔖️Modes
-/// 🚦️ What a mode allows and how eager it makes a pet: how many actors may walk or hop at once (`movers`) and fidget at once (`fidgeters`), the range of an idle dwell in ticks, the weights of fidget, walk, hop and sleep beside an idle weight of 1, the longest walk in body widths (`stroll`), the least ticks between two encounters (`encounter_gap`, 0 = never) and the chance of one per second for a pair of full sociability (`encounter_rate`).
+/// 🚦️ What a mode allows and how eager it makes a pet: how many actors may walk or hop at once (`movers`) and fidget at once (`fidgeters`), the range of an idle dwell in ticks, the weights of fidget, walk, hop, sleep and a trick on a whim beside an idle weight of 1, the longest walk in body widths (`stroll`), the least ticks between two encounters (`encounter_gap`, 0 = never) and the chance of one per second for a pair of full sociability (`encounter_rate`).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Limits {
@@ -38,6 +41,7 @@ pub struct Limits {
     pub walk: f64,
     pub hop: f64,
     pub sleep: f64,
+    pub whim: f64,
     pub stroll: f64,
     pub encounter_gap: Ticks,
     pub encounter_rate: f64,
@@ -65,16 +69,16 @@ impl Index<PetMode> for ModeLimits {
     }
 }
 
-/// 🎚️ The limits of every mode: `still` allows nothing, `calm` is slightly active (one mover, long idle dwells, a fidget now and then, a short walk now and then, an encounter every couple of minutes), `lively` is busy but not frantic.
+/// 🎚️ The limits of every mode: `still` allows nothing, `calm` is slightly active (one mover, long idle dwells, a fidget now and then, a short walk now and then, a trick on a whim rarely, an encounter every couple of minutes), `lively` is busy but not frantic.
 pub const MODE_LIMITS: ModeLimits = ModeLimits {
-    still: Limits { movers: 0, fidgeters: 0, idle_low: 0, idle_high: 0, fidget: 0.0, walk: 0.0, hop: 0.0, sleep: 0.0, stroll: 0.0, encounter_gap: 0, encounter_rate: 0.0 },
-    calm: Limits { movers: 1, fidgeters: 1, idle_low: 384, idle_high: 1280, fidget: 0.4, walk: 0.2, hop: 0.12, sleep: 6.0, stroll: 4.0, encounter_gap: 5760, encounter_rate: 0.04 },
-    lively: Limits { movers: 2, fidgeters: 2, idle_low: 192, idle_high: 640, fidget: 1.0, walk: 0.6, hop: 0.3, sleep: 3.0, stroll: 6.0, encounter_gap: 1920, encounter_rate: 0.12 },
+    still: Limits { movers: 0, fidgeters: 0, idle_low: 0, idle_high: 0, fidget: 0.0, walk: 0.0, hop: 0.0, sleep: 0.0, whim: 0.0, stroll: 0.0, encounter_gap: 0, encounter_rate: 0.0 },
+    calm: Limits { movers: 1, fidgeters: 1, idle_low: 384, idle_high: 1280, fidget: 0.4, walk: 0.2, hop: 0.12, sleep: 6.0, whim: 0.04, stroll: 4.0, encounter_gap: 5760, encounter_rate: 0.04 },
+    lively: Limits { movers: 2, fidgeters: 2, idle_low: 192, idle_high: 640, fidget: 1.0, walk: 0.6, hop: 0.3, sleep: 3.0, whim: 0.25, stroll: 6.0, encounter_gap: 1920, encounter_rate: 0.12 },
 };
 //#endregion 🔖️Modes
 
 //#region 🔖️Choice
-/// 🧭️ What an idle pet finds around it when it decides: the mode, whether it is a time of concentration, how many other actors walk or hop and how many fidget right now, whether its perch has room for a walk (`roam`), whether another perch is open to it — in reach of a hop, or with room to wander off to (`hops`) —, how many others stand on its surface (`crowd`) and whether the pointer is close enough to keep it awake (`watched`).
+/// 🧭️ What an idle pet finds around it when it decides: the mode, whether it is a time of concentration, how many other actors walk or hop and how many fidget right now, whether its perch has room for a walk (`roam`), whether another perch is open to it — in reach of a hop, or with room to wander off to (`hops`) —, how many others stand on its surface (`crowd`), whether the pointer is close enough to keep it awake (`watched`) and whether a trick of its own is on offer for a whim (`whims`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Situation {
@@ -86,6 +90,7 @@ pub struct Situation {
     pub hops: bool,
     pub crowd: usize,
     pub watched: bool,
+    pub whims: bool,
 }
 
 const QUIET_DROWSE: f64 = 3.0;
@@ -99,8 +104,9 @@ const DROWSY: f64 = 0.6;
 /// than `limits.movers` others move; `hop = limits.hop × energy × urge × (1 + crowd)` while another perch is open to
 /// it and fewer than `limits.movers` others move — company on its surface makes a pet restless, so a crowd thins out
 /// by itself where there is room elsewhere; `sleep = limits.sleep × tired²` unless watched, with
-/// `tired = (0.6 − energy) ÷ 0.6` held in [0, 1] (a pet with more than 0.6 of its energy never dozes off). Quiet
-/// removes fidget, walk and hop and triples sleep. Everything else is entered by events and weighs 0.
+/// `tired = (0.6 − energy) ÷ 0.6` held in [0, 1] (a pet with more than 0.6 of its energy never dozes off);
+/// `trick = limits.whim × drive` while a trick of its own is on offer for a whim. Quiet removes fidget, walk, hop and
+/// trick and triples sleep. Everything else is entered by events and weighs 0.
 pub fn activity_weights(actor: &Actor, species: &Species, situation: Situation) -> [f64; ACTIVITIES.len()] {
     let limits = MODE_LIMITS[situation.mode];
     let energy = actor.needs.energy;
@@ -115,51 +121,104 @@ pub fn activity_weights(actor: &Actor, species: &Species, situation: Situation) 
     let walk = if awake && free && situation.roam { limits.walk * drive * urge } else { 0.0 };
     let hop = if awake && free && situation.hops { limits.hop * energy * urge * (1.0 + situation.crowd as f64) } else { 0.0 };
     let sleep = if situation.watched { 0.0 } else { limits.sleep * tired * tired * if situation.quiet { QUIET_DROWSE } else { 1.0 } };
-    [1.0, fidget, walk, hop, 0.0, 0.0, sleep, 0.0, 0.0, 0.0, 0.0]
+    let trick = if awake && situation.whims { limits.whim * drive } else { 0.0 };
+    [1.0, fidget, walk, hop, 0.0, 0.0, sleep, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, trick, 0.0, 0.0, 0.0, 0.0, 0.0]
 }
 
-const DWELL_LOW: [Ticks; ACTIVITIES.len()] = [0, 96, 1920, 96, 640, 19, 1280, 128, 128, 128, 192];
-const DWELL_HIGH: [Ticks; ACTIVITIES.len()] = [0, 96, 1920, 96, 640, 19, 3840, 320, 320, 320, 384];
+const DWELL_LOW: [Ticks; ACTIVITIES.len()] = [0, 96, 1920, 96, 640, 19, 1280, 128, 128, 128, 192, 1920, 640, 1280, 32, 640, 1920, 32, 640, 1920, 128, 192, 96, 64, 320, 320];
+const DWELL_HIGH: [Ticks; ACTIVITIES.len()] = [0, 96, 1920, 96, 640, 19, 3840, 320, 320, 320, 384, 1920, 640, 1280, 64, 640, 1920, 32, 640, 1920, 128, 384, 160, 96, 320, 640];
 
 /// ⏳️ How many ticks an activity lasts for a unit draw: `low + floor((high − low) × unit)`.
 ///
 /// `idle` takes its range from the mode (6…20 s calm, 3…10 s lively, 0 still); `sleep` lasts 20…60 s, `greet`,
 /// `cuddle` and `squabble` 2…5 s, `sulk` 3…6 s and `land` 0.3 s. `fidget` (1.5 s) is the span of a fidget whose clip
 /// loops, and `walk` (30 s), `hop` (1.5 s) and `fall` (10 s) are the patience of the stage with motion that ends itself.
+/// Of the later activities `aim` lasts 0.5…1 s, `mantle` 0.5 s, `purr` 3…6 s, `dizzy` 1.5…2.5 s, `shrug` 1…1.5 s,
+/// `push` 5…10 s and `trick` 2 s where its clip does not say; `hang`, `climb` and `carry` (30 s), `glide` (20 s),
+/// `tumble`, `reel` and `slide` (10 s) and `scoot` (5 s) are again the patience of the stage.
 pub fn dwell_of(activity: Activity, mode: PetMode, unit: f64) -> Ticks {
     let index = activity as usize;
     let low = if activity == Activity::Idle { MODE_LIMITS[mode].idle_low } else { DWELL_LOW[index] };
     let high = if activity == Activity::Idle { MODE_LIMITS[mode].idle_high } else { DWELL_HIGH[index] };
     low + ((high - low) as f64 * unit).floor() as Ticks
 }
-
-const MOODS: [f64; ACTIVITIES.len()] = [0.3, 0.5, 0.4, 0.5, -0.2, 0.2, 0.1, 0.7, 1.0, -0.8, -0.6];
-
-/// 🙂️ The mood an activity eases an actor towards, from −1 (sad) to 1 (happy): cuddle 1, greet 0.7, fidget and hop 0.5, walk 0.4, idle 0.3, land 0.2, sleep 0.1, fall −0.2, sulk −0.6, squabble −0.8.
-pub fn mood_of(activity: Activity) -> f64 {
-    MOODS[activity as usize]
-}
 //#endregion 🔖️Choice
 
 //#region 🔖️Graph
-const AFTER_IDLE: [Activity; 9] = [Activity::Idle, Activity::Fidget, Activity::Walk, Activity::Hop, Activity::Fall, Activity::Sleep, Activity::Greet, Activity::Cuddle, Activity::Squabble];
-const AFTER_FIDGET: [Activity; 4] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet];
-const AFTER_WALK: [Activity; 5] = [Activity::Idle, Activity::Fall, Activity::Greet, Activity::Cuddle, Activity::Squabble];
-const AFTER_HOP: [Activity; 3] = [Activity::Idle, Activity::Fall, Activity::Land];
-const AFTER_FALL: [Activity; 2] = [Activity::Idle, Activity::Land];
-const AFTER_LAND: [Activity; 4] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet];
-const AFTER_SLEEP: [Activity; 4] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet];
-const AFTER_GREET: [Activity; 3] = [Activity::Idle, Activity::Walk, Activity::Fall];
-const AFTER_CUDDLE: [Activity; 3] = [Activity::Idle, Activity::Walk, Activity::Fall];
-const AFTER_SQUABBLE: [Activity; 4] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Sulk];
-const AFTER_SULK: [Activity; 4] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet];
+const AFTER_IDLE: [Activity; 24] = [
+    Activity::Idle,
+    Activity::Fidget,
+    Activity::Walk,
+    Activity::Hop,
+    Activity::Fall,
+    Activity::Sleep,
+    Activity::Greet,
+    Activity::Cuddle,
+    Activity::Squabble,
+    Activity::Hang,
+    Activity::Tumble,
+    Activity::Glide,
+    Activity::Aim,
+    Activity::Reel,
+    Activity::Climb,
+    Activity::Mantle,
+    Activity::Slide,
+    Activity::Carry,
+    Activity::Trick,
+    Activity::Purr,
+    Activity::Dizzy,
+    Activity::Shrug,
+    Activity::Scoot,
+    Activity::Push,
+];
+const AFTER_FIDGET: [Activity; 9] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_WALK: [Activity; 12] = [Activity::Idle, Activity::Fall, Activity::Greet, Activity::Cuddle, Activity::Squabble, Activity::Hang, Activity::Aim, Activity::Climb, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_HOP: [Activity; 6] = [Activity::Idle, Activity::Fall, Activity::Land, Activity::Hang, Activity::Glide, Activity::Slide];
+const AFTER_FALL: [Activity; 5] = [Activity::Idle, Activity::Land, Activity::Hang, Activity::Glide, Activity::Slide];
+const AFTER_LAND: [Activity; 10] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Dizzy, Activity::Shrug, Activity::Scoot];
+const AFTER_SLEEP: [Activity; 9] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_GREET: [Activity; 8] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_CUDDLE: [Activity; 6] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Hang, Activity::Purr, Activity::Scoot];
+const AFTER_SQUABBLE: [Activity; 6] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Sulk, Activity::Hang, Activity::Scoot];
+const AFTER_SULK: [Activity; 9] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_HAND: [Activity; 9] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Greet, Activity::Hang, Activity::Trick, Activity::Purr, Activity::Shrug, Activity::Scoot];
+const AFTER_HANG: [Activity; 3] = [Activity::Idle, Activity::Tumble, Activity::Glide];
+const AFTER_TUMBLE: [Activity; 5] = [Activity::Idle, Activity::Land, Activity::Hang, Activity::Glide, Activity::Slide];
+const AFTER_GLIDE: [Activity; 4] = [Activity::Idle, Activity::Land, Activity::Hang, Activity::Slide];
+const AFTER_AIM: [Activity; 6] = [Activity::Idle, Activity::Fall, Activity::Hang, Activity::Reel, Activity::Shrug, Activity::Scoot];
+const AFTER_REEL: [Activity; 4] = [Activity::Idle, Activity::Fall, Activity::Hang, Activity::Mantle];
+const AFTER_CLIMB: [Activity; 6] = [Activity::Idle, Activity::Fall, Activity::Hang, Activity::Mantle, Activity::Slide, Activity::Push];
+const AFTER_CARRY: [Activity; 5] = [Activity::Idle, Activity::Fall, Activity::Hang, Activity::Climb, Activity::Scoot];
+const AFTER_SLIDE: [Activity; 3] = [Activity::Idle, Activity::Fall, Activity::Hang];
+const AFTER_GROUNDED: [Activity; 4] = [Activity::Idle, Activity::Fall, Activity::Hang, Activity::Scoot];
+const AFTER_PUSH: [Activity; 9] = [Activity::Idle, Activity::Walk, Activity::Fall, Activity::Hang, Activity::Tumble, Activity::Climb, Activity::Mantle, Activity::Slide, Activity::Scoot];
 
 /// 🕸️ The activities that may follow an activity on stage, in `ACTIVITIES` order: the activity graph. Every activity is reachable from every other one, and `idle` follows them all (a stage that turns still freezes every actor in it).
 ///
-/// `idle` → idle, fidget, walk, hop, sleep by its own choice, greet by a poke, greet, cuddle or squabble when a
-/// partner has arrived, walk towards a partner or off the stage, fall when its perch vanishes. `walk` → idle at its
-/// goal, or the encounter it walked into. `hop` → land, or fall when its target is gone. `fall` → land. `squabble` →
-/// sulk. `sulk`, `sleep`, `fidget`, `land` → idle, or greet by a poke. Whoever is summoned away walks off.
+/// `idle` → idle, fidget, walk, hop, sleep or a trick by its own choice, greet, a trick, a purr or a shrug by the
+/// learner's hand, greet, cuddle or squabble when a partner has arrived, walk towards a partner or off the stage,
+/// fall when its perch vanishes. `walk` → idle at its goal, or the encounter it walked into. `hop` → land, or fall
+/// when its target is gone. `fall` → land. `squabble` → sulk. `cuddle` → a purr on its own. Whatever a pet does on its
+/// perch by itself — `fidget`, `walk`, `land`, `sleep`, `greet`, `sulk`, `trick`, `purr`, `shrug` — the learner's
+/// click or gesture can turn into a greeting, a trick, a purr or a shrug. Whoever is summoned away walks off.
+///
+/// The body adds: the learner's hand picks a pet up whatever it does (`hang`); whatever stands on a perch falls when
+/// its perch vanishes and scoots to a new seat when a survey re-seats it (`scoot` → idle there, or fall). `hang` →
+/// `tumble` when it is let go, `glide` when it glides back to where it was picked up. In the air a parachute opens
+/// (`fall`, `tumble`, a `hop` planned anew → `glide`), and whatever comes down lands on a perch (`land`, or at rest
+/// at once after a parachute) or on a head (`slide`, which ends in a `fall`); a hard landing from far up makes a pet
+/// `dizzy`.
+///
+/// Gear adds trips that begin in `idle` or at the end of the `walk` to the gear: `carry` the own ladder there →
+/// `climb` it; `aim` the grappling gun → `reel` up the rope → `mantle` onto the edge, or `shrug` after a miss; `climb`
+/// a wall or a ladder (resting on it in the same pose) → `mantle` over the rim, `slide` down the wall, or `idle` on
+/// the perch it steps off onto; whatever holds on falls when its wall, its ladder or its rope gives way, and scoots
+/// while it still stands on its perch.
+///
+/// Mischief adds `push`: a pet that stands `idle` beside a marked element of the page or holds on to the wall beside
+/// it (`climb`) pushes; it ends `idle` on its perch or holding on and climbing, mantling or sliding off its wall,
+/// `tumble`s when the learner takes the element back, falls when what carries it gives way, scoots to a new seat,
+/// walks off when it is summoned away, and is picked up like everybody else.
 pub fn followers_of(activity: Activity) -> &'static [Activity] {
     match activity {
         Activity::Idle => &AFTER_IDLE,
@@ -173,6 +232,17 @@ pub fn followers_of(activity: Activity) -> &'static [Activity] {
         Activity::Cuddle => &AFTER_CUDDLE,
         Activity::Squabble => &AFTER_SQUABBLE,
         Activity::Sulk => &AFTER_SULK,
+        Activity::Trick | Activity::Purr | Activity::Shrug => &AFTER_HAND,
+        Activity::Hang => &AFTER_HANG,
+        Activity::Tumble => &AFTER_TUMBLE,
+        Activity::Glide => &AFTER_GLIDE,
+        Activity::Aim => &AFTER_AIM,
+        Activity::Reel => &AFTER_REEL,
+        Activity::Climb => &AFTER_CLIMB,
+        Activity::Carry => &AFTER_CARRY,
+        Activity::Slide | Activity::Mantle => &AFTER_SLIDE,
+        Activity::Dizzy | Activity::Scoot => &AFTER_GROUNDED,
+        Activity::Push => &AFTER_PUSH,
     }
 }
 //#endregion 🔖️Graph
@@ -184,7 +254,9 @@ pub const ENCOUNTERS: [Activity; 3] = [Activity::Greet, Activity::Cuddle, Activi
 /// 🤗️ One of [`ENCOUNTERS`].
 pub type Encounter = Activity;
 
-const FRIENDS: f64 = 0.4;
+/// 🫂️ The least affinity of two friends: they mostly cuddle when they meet, and a pet with gear sets out for the perch of a friend.
+pub const FRIENDS: f64 = 0.4;
+
 const RIVALS: f64 = -0.3;
 
 /// 🥧️ The chances `[greet, cuddle, squabble]` of an encounter at an affinity; they sum to 1.
@@ -218,7 +290,7 @@ pub const AFFINITY_FLOOR: f64 = -0.6;
 /// 📏️ How far shared history can shift a bond away from its authored affinity, in both directions.
 pub const RAPPORT_SPAN: f64 = 0.5;
 
-const RAPPORT_STEPS: [f64; ACTIVITIES.len()] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.1, -0.15, 0.1];
+const RAPPORT_STEPS: [f64; ACTIVITIES.len()] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.1, -0.15, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 const RAPPORT_FADE_STEP: f64 = 0.1;
 const RAPPORT_FADE_TICKS: f64 = 38400.0;
 
@@ -256,9 +328,9 @@ pub fn rapport_faded(drift: f64, ticks: Ticks) -> f64 {
 //#endregion 🔖️Bonds
 
 //#region 🔖️Needs
-const ENERGY_RATES: [f64; ACTIVITIES.len()] = [-0.001, -0.01, -0.012, -0.02, 0.0, 0.0, 0.02, -0.006, -0.004, -0.012, -0.001];
-const SOCIABILITY_RATES: [f64; ACTIVITIES.len()] = [0.002, 0.002, 0.002, 0.002, 0.0, 0.002, 0.002, -0.12, -0.12, -0.12, -0.02];
-const CURIOSITY_RATES: [f64; ACTIVITIES.len()] = [0.01, -0.08, -0.06, -0.1, 0.0, 0.01, 0.01, 0.0, 0.0, 0.0, 0.01];
+const ENERGY_RATES: [f64; ACTIVITIES.len()] = [-0.001, -0.01, -0.012, -0.02, 0.0, 0.0, 0.02, -0.006, -0.004, -0.012, -0.001, 0.0, 0.0, 0.0, -0.004, -0.012, -0.016, -0.016, -0.002, -0.014, -0.01, 0.004, -0.002, -0.001, -0.012, -0.014];
+const SOCIABILITY_RATES: [f64; ACTIVITIES.len()] = [0.002, 0.002, 0.002, 0.002, 0.0, 0.002, 0.002, -0.12, -0.12, -0.12, -0.02, 0.0, 0.0, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, 0.002, -0.06, 0.002, 0.002, 0.002, 0.002];
+const CURIOSITY_RATES: [f64; ACTIVITIES.len()] = [0.01, -0.08, -0.06, -0.1, 0.0, 0.01, 0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, -0.04, -0.06, -0.08, -0.08, -0.08, -0.04, -0.06, -0.08, 0.01, 0.0, 0.01, -0.02, -0.1];
 
 /// 🌱️ The drives a pet arrives with: energy `0.5 + 0.5 × temperament.energy`, sociability and curiosity as its temperament says.
 pub fn needs_of(temperament: Temperament) -> Needs {
@@ -271,6 +343,10 @@ pub fn needs_of(temperament: Temperament) -> Needs {
 /// species (`× (1.5 − temperament.energy)`), and returns asleep (0.02). Sociability grows alone (0.002, `× (0.5 +
 /// temperament.sociability)`) and is spent in company (0.12 while greeting, cuddling or squabbling). Curiosity grows
 /// at rest (0.01, `× (0.5 + temperament.curiosity)`) and is spent on the move (walk 0.06, fidget 0.08, hop 0.1).
+/// Of the later activities the strenuous ones drain energy (climb and mantle 0.016, carry and push 0.014, reel and
+/// scoot 0.012, trick 0.01) and purring gives a little back (0.004); a purr spends sociability (0.06) on the
+/// learner's company; getting somewhere and showing off spend curiosity (push 0.1, reel, climb, mantle and trick
+/// 0.08, aim and carry 0.06, glide and slide 0.04, scoot 0.02). In the learner's hand and in a tumble nothing moves.
 pub fn needs_after(needs: Needs, activity: Activity, ticks: Ticks, temperament: Temperament) -> Needs {
     let index = activity as usize;
     let seconds = ticks as f64 / TICKS_PER_SECOND as f64;

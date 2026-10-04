@@ -59,7 +59,7 @@ mod subject {
 
     /// 🎪️ A menagerie that carries nothing but bonds.
     fn bonded(bonds: &Value) -> Result<Menagerie, String> {
-        serde_json::from_value(json!({ "schema": "semio.pets.menagerie/v1", "id": "bonds", "title": { "en": "Bonds", "de": "Bande" }, "species": [], "bonds": bonds, "casts": [] })).map_err(|error| format!("bonds: {error}"))
+        serde_json::from_value(json!({ "schema": "semio.pets.menagerie/v1", "id": "bonds", "title": { "en": "Bonds", "de": "Bande" }, "species": [], "bonds": bonds, "casts": [], "chemistry": [] })).map_err(|error| format!("bonds: {error}"))
     }
 
     /// 💞️ `affinity_of` of every committed pair over the committed bonds and rapports.

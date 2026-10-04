@@ -205,6 +205,100 @@ fn smoothstep_is_flat_at_both_ends_symmetric_about_one_half_and_rising() {
 }
 
 #[test]
+fn the_arctangent_and_decay_constants_are_the_published_decimals() {
+    let published = [(ARC_1, "3feffee6fb4c3c19"), (ARC_3, "bfd523a08398a655"), (ARC_5, "3fc70edc3bd59924"), (ARC_7, "bfb5cb46bacf7447"), (ARC_9, "3f9555cbe46f80c1"), (DECAY_2, "3fdeb851eb851eb8"), (DECAY_3, "3fce147ae147ae14")];
+    for (constant, pattern) in published {
+        assert_eq!(bits(constant), pattern);
+    }
+}
+
+#[test]
+fn the_axes_give_exact_directions_and_no_direction_is_a_negative_zero() {
+    assert!(positive_zero(atan_turns(0.0, 0.0)));
+    assert!(positive_zero(atan_turns(0.0, 3.0)));
+    assert!(positive_zero(atan_turns(-0.0, 3.0)));
+    assert!(positive_zero(atan_turns(-1e-300, 1e300)));
+    assert_eq!(atan_turns(2.0, 0.0), 0.25);
+    assert_eq!(atan_turns(0.0, -5.0), 0.5);
+    assert_eq!(atan_turns(-0.0, -5.0), 0.5);
+    assert_eq!(atan_turns(-7.0, 0.0), -0.25);
+    assert_eq!(atan_turns(-1e-300, -1.0), 0.5);
+}
+
+#[test]
+fn a_direction_is_odd_in_y_mirrored_in_x_and_blind_to_doubling() {
+    for row in -12..=12 {
+        for column in -12..=12 {
+            let (y, x) = (f64::from(row) * 0.3, f64::from(column) * 0.3);
+            let turns = atan_turns(y, x);
+            assert!(turns > -0.5 && turns <= 0.5, "{y} {x}");
+            assert_eq!(atan_turns(2.0 * y, 2.0 * x).to_bits(), turns.to_bits(), "{y} {x}");
+            assert_eq!(atan_turns(y / 1024.0, x / 1024.0).to_bits(), turns.to_bits(), "{y} {x}");
+            if turns != 0.5 {
+                assert_eq!(atan_turns(-y, x) + turns, 0.0, "{y} {x}");
+            }
+            if y > 0.0 && x > 0.0 {
+                assert_eq!(atan_turns(y, -x).to_bits(), (0.5 - turns).to_bits(), "{y} {x}");
+            }
+        }
+    }
+}
+
+#[test]
+fn numpy_agrees_on_every_committed_direction_within_the_stated_error() {
+    let vectors = fixture("turn-trigonometry");
+    assert!(entries(&vectors["arctangents"]).len() > 30);
+    for vector in entries(&vectors["arctangents"]) {
+        let turns = atan_turns(number(&vector["y"]), number(&vector["x"]));
+        let apart = ((turns - number(&vector["reference"]) + 0.5).rem_euclid(1.0) - 0.5).abs();
+        assert!(apart <= 2e-6, "{}: {apart}", vector["id"]);
+        assert_eq!(Some(bits(turns).as_str()), vector["expected"]["bits"].as_str(), "{}", vector["id"]);
+    }
+}
+
+#[test]
+fn every_committed_lattice_has_the_committed_directions() {
+    let vectors = fixture("turn-trigonometry");
+    let mut compared = 0;
+    for vector in entries(&vectors["arctangentGrids"]) {
+        let (span, step) = (number(&vector["span"]) as i32, number(&vector["step"]));
+        let expected = entries(&vector["expected"]);
+        let mut index = 0;
+        for row in -span..=span {
+            for column in -span..=span {
+                assert_eq!(atan_turns(f64::from(row) * step, f64::from(column) * step).to_bits(), number(&expected[index]).to_bits(), "{} {row} {column}", vector["id"]);
+                index += 1;
+            }
+        }
+        assert_eq!(index, expected.len());
+        compared += index;
+    }
+    assert!(compared > 1000, "{compared}");
+}
+
+#[test]
+fn the_decay_starts_at_one_falls_all_the_way_and_stays_near_the_exponential() {
+    assert_eq!(fast_neg_exp(0.0), 1.0);
+    assert_eq!(fast_neg_exp(-3.0), 1.0);
+    assert_eq!(fast_neg_exp(f64::NAN), 1.0);
+    assert_eq!(fast_neg_exp(f64::INFINITY), 0.0);
+    let mut before = 1.0;
+    for step in 1..=4096 {
+        let value = fast_neg_exp(f64::from(step) / 128.0);
+        assert!(value < before && value > 0.0, "{step}");
+        before = value;
+    }
+    let vectors = fixture("turn-trigonometry");
+    assert!(entries(&vectors["decays"]).len() > 15);
+    for vector in entries(&vectors["decays"]) {
+        let x = number(&vector["x"]);
+        let value = fast_neg_exp(x);
+        assert!((value - number(&vector["reference"])).abs() <= if x <= 1.0 { 6e-4 } else { 1.9e-2 }, "{}", vector["id"]);
+        assert_eq!(Some(bits(value).as_str()), vector["expected"]["bits"].as_str(), "{}", vector["id"]);
+    }
+}
+
+#[test]
 fn the_module_calls_no_platform_transcendental_and_fuses_no_product() {
     let source = include_str!("../../🦀️.rs");
     for call in [".sin(", ".cos(", ".tan(", ".atan2(", ".exp(", ".powf(", ".powi(", ".hypot(", ".ln(", ".log", ".mul_add(", ".sin_cos(", "rand", "Instant", "SystemTime"] {
@@ -224,5 +318,37 @@ mod quick {
             worst = worst.max((cos_turns(turns) - radians.cos()).abs()).max((sin_turns(turns) - radians.sin()).abs());
         }
         assert!(worst <= 1e-12, "{worst}");
+    }
+
+    #[test]
+    fn the_platform_arctangent_agrees_within_two_millionths_of_a_turn_on_a_lattice_and_around_the_circle() {
+        let mut worst = 0.0f64;
+        for row in -200..=200 {
+            for column in -200..=200 {
+                let (y, x) = (f64::from(row) * 0.37, f64::from(column) * 0.37);
+                let apart = (atan_turns(y, x) - y.atan2(x) / std::f64::consts::TAU + 0.5).rem_euclid(1.0) - 0.5;
+                worst = worst.max(apart.abs());
+            }
+        }
+        for step in -32_768..=32_768 {
+            let turns = f64::from(step) / 65_537.0;
+            let back = atan_turns(sin_turns(turns), cos_turns(turns));
+            worst = worst.max(((back - turns + 0.5).rem_euclid(1.0) - 0.5).abs());
+        }
+        assert!(worst <= 2e-6 && worst > 1.5e-6, "{worst}");
+    }
+
+    #[test]
+    fn the_platform_exponential_stays_within_the_stated_gaps_of_the_decay() {
+        let (mut near, mut far) = (0.0f64, 0.0f64);
+        for step in 0..=20_000 {
+            let x = f64::from(step) / 1000.0;
+            let gap = (fast_neg_exp(x) - (-x).exp()).abs();
+            if x <= 1.0 {
+                near = near.max(gap);
+            }
+            far = far.max(gap);
+        }
+        assert!(near <= 6e-4 && far <= 1.9e-2 && far > 1.8e-2, "{near} {far}");
     }
 }

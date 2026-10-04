@@ -1,0 +1,13 @@
+{
+  "frame": [100,80],
+  "majorLengthMm": 2,
+  "minorLengthMm": 0.7,
+  "gridLengthMm": 60,
+  "cases": [
+    {"id":"light-default","theme":"light","color":"#001117","widthTeXPoints":0.75,"options":{}},
+    {"id":"dark-default","theme":"dark","color":"#f7f3e3","widthTeXPoints":0.75,"options":{}},
+    {"id":"light-overrides","theme":"light","color":"#ff0000","widthMm":0.6,"options":{"stroke":"red","strokeWidth":0.6,"grid":true,"gridLength":60,"gridStroke":"blue","minor":true,"minorTicks":4}},
+    {"id":"dark-overrides","theme":"dark","color":"#ff0000","widthMm":0.6,"options":{"stroke":"red","strokeWidth":0.6,"grid":true,"gridLength":60,"gridStroke":"blue","minor":true,"minorTicks":4}},
+    {"id":"light-opaque-style","theme":"light","color":"#001117","widthTeXPoints":0.75,"opacity":0.25,"options":{"style":"opacity=0.25"}}
+  ]
+}

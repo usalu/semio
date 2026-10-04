@@ -36,6 +36,10 @@
                 "en": "Seasonal efficiency",
                 "de": "Jahresnutzungsgrad"
               },
+              "short": {
+                "en": "efficiency",
+                "de": "Nutzungsgrad"
+              },
               "unit": "%",
               "min": 0,
               "max": 400
@@ -120,6 +124,10 @@
                 "en": "Direct electric heating",
                 "de": "Elektrodirektheizung"
               },
+              "short": {
+                "en": "Direct electric",
+                "de": "Direktstrom"
+              },
               "description": {
                 "en": "Resistance heaters without storage or pump.",
                 "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
@@ -132,6 +140,10 @@
               "label": {
                 "en": "Borehole with brine circuit",
                 "de": "Erdsonde mit Solekreislauf"
+              },
+              "short": {
+                "en": "Borehole",
+                "de": "Erdsonde"
               },
               "category": "heat-pump",
               "explanation": {
@@ -204,7 +216,8 @@
             },
             "unit": "W",
             "scale": "logarithmic",
-            "prefixed": true
+            "prefixed": true,
+            "additive": true
           },
           "items": [
             {
@@ -273,6 +286,10 @@
                 "en": "Nuclear power plant",
                 "de": "Kernkraftwerk"
               },
+              "short": {
+                "en": "Nuclear plant",
+                "de": "AKW"
+              },
               "value": 1600000000,
               "explanation": {
                 "en": "About 1.6 GW of electric power.",
@@ -304,7 +321,8 @@
             },
             "unit": "°C",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           },
           "items": [
             {
@@ -321,7 +339,8 @@
                 "en": "Living room",
                 "de": "Wohnzimmer"
               },
-              "value": 21
+              "value": 21,
+              "familiar": true
             },
             {
               "id": "bathroom",
@@ -352,9 +371,14 @@
                   "en": "Energy density",
                   "de": "Energiedichte"
                 },
+                "short": {
+                  "en": "density",
+                  "de": "Dichte"
+                },
                 "unit": "MJ/kg",
                 "scale": "logarithmic",
-                "prefixed": false
+                "prefixed": false,
+                "additive": false
               }
             },
             {
@@ -366,7 +390,8 @@
                 },
                 "unit": "kg/kWh",
                 "scale": "linear",
-                "prefixed": false
+                "prefixed": false,
+                "additive": false
               }
             }
           ],
@@ -488,7 +513,8 @@
             },
             "unit": "W/m²",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           },
           "items": [
             {
@@ -699,6 +725,40 @@
       "rule": {
         "kind": "perfect-tasks"
       }
+    },
+    {
+      "id": "hard-cooling",
+      "emoji": "🥶",
+      "label": {
+        "en": "Cold reckoner",
+        "de": "Kaltrechner"
+      },
+      "description": {
+        "en": "A perfect cooling run with the keys hidden.",
+        "de": "Ein perfekter Kühlen-Durchgang mit verdeckten Werten."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "cooling-basics",
+        "challenge": "hard"
+      }
+    },
+    {
+      "id": "expert-sorter",
+      "emoji": "⏱️",
+      "label": {
+        "en": "Sorter against the clock",
+        "de": "Sortieren gegen die Uhr"
+      },
+      "description": {
+        "en": "Every sorting task perfect against the clock.",
+        "de": "Jede Sortieraufgabe perfekt gegen die Uhr."
+      },
+      "rule": {
+        "kind": "perfect-tasks",
+        "taskKind": "sorting",
+        "challenge": "expert"
+      }
     }
   ],
   "vectors": [
@@ -713,7 +773,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -918,7 +980,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.6611022844259731,
+          "points": 132.2204568851946,
           "tasks": [
             {
               "kind": "classification",
@@ -1121,7 +1185,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -1321,7 +1387,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -1395,7 +1463,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -1595,7 +1665,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -1670,7 +1742,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "classification",
@@ -1870,7 +1944,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -1944,7 +2020,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.4686575589772475,
+          "points": 93.73151179544949,
           "tasks": [
             {
               "kind": "classification",
@@ -2148,7 +2226,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.41200894133653804,
+          "points": 82.40178826730761,
           "tasks": [
             {
               "kind": "classification",
@@ -2344,7 +2424,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -2414,7 +2496,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.1575889516507884,
+          "points": 31.51779033015768,
           "tasks": [
             {
               "kind": "classification",
@@ -2618,7 +2702,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 0.0,
+          "points": 0.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -2687,7 +2773,9 @@
       "results": [
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -2752,7 +2840,9 @@
       "results": [
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.5,
+          "points": 100.0,
           "tasks": [
             {
               "kind": "classification",
@@ -2944,7 +3034,9 @@
         },
         {
           "quiz": "energy-basics",
+          "challenge": "medium",
           "score": 0.6736658351455512,
+          "points": 134.73316702911023,
           "tasks": [
             {
               "kind": "classification",
@@ -3148,7 +3240,9 @@
         },
         {
           "quiz": "cooling-basics",
+          "challenge": "medium",
           "score": 1.0,
+          "points": 200.0,
           "tasks": [
             {
               "kind": "sorting",
@@ -3216,6 +3310,2139 @@
         "perfect-cooling",
         "every-task"
       ]
+    },
+    {
+      "id": "perfect-cooling-on-easy",
+      "results": [
+        {
+          "quiz": "cooling-basics",
+          "challenge": "easy",
+          "score": 1.0,
+          "points": 100.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "cooling-classifier",
+        "perfect-cooling"
+      ]
+    },
+    {
+      "id": "perfect-cooling-on-medium",
+      "results": [
+        {
+          "quiz": "cooling-basics",
+          "challenge": "medium",
+          "score": 1.0,
+          "points": 200.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "cooling-classifier",
+        "perfect-cooling"
+      ]
+    },
+    {
+      "id": "perfect-cooling-on-hard",
+      "results": [
+        {
+          "quiz": "cooling-basics",
+          "challenge": "hard",
+          "score": 1.0,
+          "points": 300.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "cooling-classifier",
+        "perfect-cooling",
+        "hard-cooling"
+      ]
+    },
+    {
+      "id": "perfect-cooling-on-expert",
+      "results": [
+        {
+          "quiz": "cooling-basics",
+          "challenge": "expert",
+          "score": 1.0,
+          "points": 400.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "cooling-classifier",
+        "perfect-cooling",
+        "hard-cooling"
+      ]
+    },
+    {
+      "id": "imperfect-cooling-on-hard-after-perfect-on-medium",
+      "results": [
+        {
+          "quiz": "cooling-basics",
+          "challenge": "medium",
+          "score": 1.0,
+          "points": 200.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "chiller",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "cooling-basics",
+          "challenge": "hard",
+          "score": 0.5,
+          "points": 150.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 15,
+                  "miss": true
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 1000,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "night-ventilation",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "chiller",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1
+                },
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [
+        "perfect-cooling",
+        "cooling-classifier"
+      ],
+      "expected": []
+    },
+    {
+      "id": "sorting-on-expert-spread-over-runs",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 0.26814703730015166,
+          "points": 107.25881492006066,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.05424903133678531,
+              "items": [
+                {
+                  "item": "condensing-gas",
+                  "assigned": "electric-resistance",
+                  "correct": "gas-boiler",
+                  "credit": 0
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "heat-pump",
+                  "correct": "district-heating",
+                  "credit": 0.27124515668392657
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "wood-pellets",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 18,
+                  "miss": true
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 23.5,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.018339117863821364,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0133449023943093,
+                  "items": [
+                    {
+                      "item": "natural-gas",
+                      "assigned": 42.6,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 120,
+                      "correct": 29,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 29,
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 50,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.023333333333333428,
+                  "items": [
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.27,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0,
+                      "correct": 0.34,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.34,
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.2,
+                      "correct": 0.27,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 0.25,
+          "points": 100.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "night-storage-heater",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "correct": "gas-boiler",
+                  "credit": 0
+                },
+                {
+                  "item": "ground-source",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "correct": "wood-pellets",
+                  "credit": 0
+                },
+                {
+                  "item": "air-source",
+                  "correct": "heat-pump",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "correct": 29,
+                      "miss": true
+                    },
+                    {
+                      "item": "natural-gas",
+                      "correct": 50,
+                      "miss": true
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "correct": 18,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "correct": 42.6,
+                      "miss": true,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "correct": 0.34,
+                      "miss": true
+                    },
+                    {
+                      "item": "natural-gas",
+                      "correct": 0.2,
+                      "miss": true
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "correct": 0.027,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "correct": 0.27,
+                      "miss": true,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 5,
+                  "guess": 60,
+                  "miss": true,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 4,
+                  "guess": 2200,
+                  "miss": true
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 2,
+                  "rank": 3,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 2,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 4,
+                  "rank": 1,
+                  "guess": 3000000,
+                  "miss": true
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 0,
+                  "guess": 1600000000,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "cooling-basics",
+          "challenge": "expert",
+          "score": 0.5,
+          "points": 200.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "passive",
+                  "correct": "active",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "active",
+                  "correct": "passive",
+                  "credit": 0
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "active",
+                  "correct": "passive",
+                  "credit": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "sorting-master",
+        "all-rounder",
+        "expert-sorter"
+      ]
+    },
+    {
+      "id": "sorting-on-expert-but-one-on-hard",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 0.26814703730015166,
+          "points": 107.25881492006066,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.05424903133678531,
+              "items": [
+                {
+                  "item": "condensing-gas",
+                  "assigned": "electric-resistance",
+                  "correct": "gas-boiler",
+                  "credit": 0
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "heat-pump",
+                  "correct": "district-heating",
+                  "credit": 0.27124515668392657
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "wood-pellets",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2,
+                  "guess": 18,
+                  "miss": true
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0,
+                  "guess": 23.5,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.018339117863821364,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0133449023943093,
+                  "items": [
+                    {
+                      "item": "natural-gas",
+                      "assigned": 42.6,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 120,
+                      "correct": 29,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 29,
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 50,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.023333333333333428,
+                  "items": [
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.27,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0,
+                      "correct": 0.34,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.34,
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.2,
+                      "correct": 0.27,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "challenge": "hard",
+          "score": 0.29514626910122305,
+          "points": 88.54388073036691,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.18058507640489216,
+              "items": [
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "gas-boiler",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "wood-pellets",
+                  "correct": "gas-boiler",
+                  "credit": 0.23445279008433084
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "electric-resistance",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "electric-resistance",
+                  "correct": "heat-pump",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 50,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 29,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 120,
+                      "correct": 18,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 18,
+                      "correct": 120,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.0,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 0,
+                      "correct": 0.34,
+                      "miss": true
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.27,
+                      "correct": 0.027,
+                      "miss": true
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.34,
+                      "correct": 0,
+                      "miss": true
+                    },
+                    {
+                      "item": "heating-oil",
+                      "assigned": 0.027,
+                      "correct": 0.27,
+                      "miss": true,
+                      "explanation": {
+                        "en": "Heating oil and diesel are nearly the same fuel.",
+                        "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 5,
+                  "guess": 60,
+                  "miss": true,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 4,
+                  "guess": 2200,
+                  "miss": true
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 2,
+                  "rank": 3,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 2,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 4,
+                  "rank": 1,
+                  "guess": 3000000,
+                  "miss": true
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 0,
+                  "guess": 1600000000,
+                  "miss": true
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "cooling-basics",
+          "challenge": "expert",
+          "score": 0.5,
+          "points": 200.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "split-unit",
+                  "assigned": "passive",
+                  "correct": "active",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                },
+                {
+                  "item": "external-shading",
+                  "assigned": "active",
+                  "correct": "passive",
+                  "credit": 0
+                },
+                {
+                  "item": "night-ventilation",
+                  "assigned": "active",
+                  "correct": "passive",
+                  "credit": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "sorting-master",
+        "all-rounder"
+      ]
+    },
+    {
+      "id": "perfect-everything-on-expert",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 1.0,
+          "points": 400.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 18,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0.34,
+                      "correct": 0.34,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "cooling-basics",
+          "challenge": "expert",
+          "score": 1.0,
+          "points": 400.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "chiller",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1
+                },
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [],
+      "expected": [
+        "perfect-energy",
+        "sorting-master",
+        "cooling-classifier",
+        "all-rounder",
+        "perfect-cooling",
+        "every-task",
+        "hard-cooling",
+        "expert-sorter"
+      ]
+    },
+    {
+      "id": "perfect-everything-on-expert-all-held",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "challenge": "expert",
+          "score": 1.0,
+          "points": 400.0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 18,
+                  "miss": false
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 21,
+                  "miss": false
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 23.5,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 40,
+                  "miss": false,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 60,
+                  "miss": false
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 2200,
+                  "miss": false
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3,
+                  "guess": 11000,
+                  "miss": false
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 4,
+                  "rank": 4,
+                  "guess": 3000000,
+                  "miss": false
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 5,
+                  "rank": 5,
+                  "guess": 1600000000,
+                  "miss": false,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1.0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 18,
+                      "correct": 18,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 50,
+                      "correct": 50,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15,
+                      "miss": false
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 42.6,
+                      "correct": 42.6,
+                      "miss": false
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 1.0,
+                  "items": [
+                    {
+                      "item": "wood-pellets",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "coal",
+                      "assigned": 0.34,
+                      "correct": 0.34,
+                      "miss": false
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0.2,
+                      "correct": 0.2,
+                      "miss": false
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027,
+                      "miss": false
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.27,
+                      "correct": 0.27,
+                      "miss": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "cooling-basics",
+          "challenge": "expert",
+          "score": 1.0,
+          "points": 400.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0,
+                  "guess": 15,
+                  "miss": false
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1,
+                  "guess": 40,
+                  "miss": false
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2,
+                  "guess": 1000,
+                  "miss": false
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "cooling-strategies",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "external-shading",
+                  "assigned": "passive",
+                  "correct": "passive",
+                  "credit": 1
+                },
+                {
+                  "item": "chiller",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1
+                },
+                {
+                  "item": "split-unit",
+                  "assigned": "active",
+                  "correct": "active",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A split unit runs a refrigeration cycle.",
+                    "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "held": [
+        "perfect-energy",
+        "sorting-master",
+        "cooling-classifier",
+        "matching-in-cooling",
+        "all-rounder",
+        "perfect-cooling",
+        "every-task",
+        "hard-cooling",
+        "expert-sorter"
+      ],
+      "expected": []
     }
   ]
 }

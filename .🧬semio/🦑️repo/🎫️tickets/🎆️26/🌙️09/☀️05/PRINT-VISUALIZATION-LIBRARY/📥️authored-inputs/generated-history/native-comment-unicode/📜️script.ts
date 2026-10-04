@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
+const root='C:/git/semio/🧰️framework/🛍️products/📓️print/🖋️latex';for(const file of ['semio-viz-guide.sty','semio-viz-charts-financial.sty']){const path=root+'/'+file,s=readFileSync(path,'utf8'),after=s.replace(/(^% )\\u\{([0-9a-f]+)\}(?:\\uFE0F)?/gm,(_,prefix,code)=>prefix+String.fromCodePoint(parseInt(code,16)));if(after!==s){writeFileSync(import.meta.dir+'/'+file,after);renameSync(import.meta.dir+'/'+file,path);}}

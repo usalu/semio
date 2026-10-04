@@ -172,8 +172,8 @@ export function IdentityScreen(props: { readonly session: QuizSession; readonly 
           </CardAction>
         }
       >
-        <p className="m-0 text-sm leading-normal">{text("quiz.identity.lead")}</p>
-        <fieldset className="m-0 flex flex-col gap-single border border-normal p-double">
+        <p className="quiz-prose m-0 text-sm leading-normal">{text("quiz.identity.lead")}</p>
+        <fieldset className="quiz-kinds m-0 min-w-0 border border-normal p-double">
           <legend className="px-single text-sm font-semibold">{text("quiz.identity.kind")}</legend>
           {KINDS.map((option) => (
             <div key={option.kind} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
@@ -221,7 +221,7 @@ export function IdentityScreen(props: { readonly session: QuizSession; readonly 
             </p>
           </div>
         )}
-        <div className="quiz-note flex flex-col gap-single border-l-2 px-double py-single text-xs leading-normal">
+        <div className="quiz-note quiz-prose flex flex-col gap-single border-l-2 px-double py-single text-xs leading-normal">
           <p id={publicId} className="m-0">
             {text("quiz.identity.public")}
           </p>

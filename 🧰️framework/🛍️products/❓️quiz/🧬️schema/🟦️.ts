@@ -18,14 +18,30 @@ export type Id = string;
 /** ✒️ A handle as registered and shown: 1…64 code points of Latin letters, ASCII digits, `'` `.` `_` `-` and single spaces between words, with at least one letter or digit; always in NFC. */
 export type Handle = string;
 
-/** ⏱️ Milliseconds since the Unix epoch. */
+/** ⏱️ Milliseconds since the Unix epoch, a safe integer (at most {@link MAX_TIMESTAMP}). */
 export type Timestamp = number;
+
+/** 🌌️ The latest timestamp: 2^53 − 1, the largest integer every language reads exactly. */
+export const MAX_TIMESTAMP: Timestamp = Number.MAX_SAFE_INTEGER;
+
+/** 🤝️ The version of this contract on the wire: the `version` of every quiz envelope and of every quiz kind a proctor
+ * declares; raised with every change of the contract beyond its prose. */
+export type WireVersion = 4;
+
+/** 🤝️ The wire version of this contract (`$defs/WireVersion`). */
+export const WIRE_VERSION: WireVersion = 4;
 
 /** 💯️ A score or credit in [0, 1]. */
 export type Score = number;
 
 /** 🌍️ A learner-visible text in every supported language; there is no default language. */
 export type Text = { readonly en: string; readonly de: string };
+
+/** ✂️ A short form of a label in every supported language, at most {@link SHORT_LENGTH} code points each, that hints name the labelled thing by instead of its label. */
+export type ShortText = Text;
+
+/** 🤏️ How many code points a {@link ShortText} carries at most per language. */
+export const SHORT_LENGTH = 40;
 
 /** 🗣️ The languages every {@link Text} carries, English first. */
 export const LANGUAGES = ["en", "de"] as const;
@@ -42,6 +58,12 @@ export const TASK_KINDS = ["classification", "sorting", "matching"] as const;
 /** 🔤️ One of {@link TASK_KINDS}. */
 export type TaskKind = (typeof TASK_KINDS)[number];
 
+/** 🏔️ The challenges of a run, each the one before plus one step: easy shows the keys and hints, medium shows the keys, hard hides them, expert hides them and runs every task against a clock. */
+export const CHALLENGES = ["easy", "medium", "hard", "expert"] as const;
+
+/** 🧗️ One of {@link CHALLENGES}: how demanding a run is, chosen when it starts and fixed for it. */
+export type Challenge = (typeof CHALLENGES)[number];
+
 /** 🎞️ The looping microanimations of an icon, still for learners who prefer reduced motion. */
 export const MOTIONS = ["bounce", "pulse", "spin", "sway", "float", "flip"] as const;
 
@@ -50,14 +72,14 @@ export type Motion = (typeof MOTIONS)[number];
 //#endregion 🔖️Scalars
 
 //#region 🔖️Quiz
-/** ⚖️ A measured quantity: label, unit symbol, distance scale and whether display scales the unit with SI prefixes. */
-export type Quantity = { readonly label: Text; readonly unit: string; readonly scale: Scale; readonly prefixed: boolean };
+/** ⚖️ A measured quantity: label (and its short form for hints), unit symbol, distance scale, whether display scales the unit with SI prefixes and whether amounts of it add up (powers, energies; not U-values, loads per m² or air change rates). */
+export type Quantity = { readonly label: Text; readonly short?: ShortText; readonly unit: string; readonly scale: Scale; readonly prefixed: boolean; readonly additive: boolean };
 
 /** 🧭️ One quantity a matching task asks for per item. */
 export type Dimension = { readonly id: Slug; readonly quantity: Quantity; readonly icon?: Icon };
 
 /** 🕸️ One spoke of a profile (spider diagram); values normalise to (value − min) / (max − min). */
-export type Axis = { readonly id: Slug; readonly label: Text; readonly unit: string; readonly min: number; readonly max: number };
+export type Axis = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly unit: string; readonly min: number; readonly max: number };
 
 /** 🎯️ Values of a category on every axis of its task, keyed by axis id. */
 export type Profile = Readonly<Record<Slug, number>>;
@@ -66,16 +88,16 @@ export type Profile = Readonly<Record<Slug, number>>;
 export type Icon = { readonly emoji: string; readonly motion: Motion };
 
 /** 🗂️ A category of a classification task, optionally carrying a profile. */
-export type Category = { readonly id: Slug; readonly label: Text; readonly icon?: Icon; readonly description?: Text; readonly profile?: Profile };
+export type Category = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly description?: Text; readonly profile?: Profile };
 
 /** 🔖️ An item to classify together with its correct category. */
-export type ClassificationItem = { readonly id: Slug; readonly label: Text; readonly icon?: Icon; readonly category: Slug; readonly explanation?: Text };
+export type ClassificationItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly category: Slug; readonly explanation?: Text };
 
-/** 🔢️ An item to sort together with its true value. */
-export type SortingItem = { readonly id: Slug; readonly label: Text; readonly icon?: Icon; readonly value: number; readonly explanation?: Text };
+/** 🔢️ An item to sort together with its true value; `familiar` marks an everyday thing a compare hint prefers as its reference (never presented). */
+export type SortingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly value: number; readonly familiar?: boolean; readonly explanation?: Text };
 
-/** 🧷️ An item to match together with its true value per dimension id. */
-export type MatchingItem = { readonly id: Slug; readonly label: Text; readonly icon?: Icon; readonly values: Readonly<Record<Slug, number>>; readonly explanation?: Text };
+/** 🧷️ An item to match together with its true value per dimension id; `familiar` marks an everyday thing a compare hint prefers as its reference (never presented). */
+export type MatchingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly values: Readonly<Record<Slug, number>>; readonly familiar?: boolean; readonly explanation?: Text };
 
 /** 🗃️ Assign every item to one category; a wrong category with a profile earns partial credit by profile similarity. */
 export type ClassificationTask = {
@@ -130,8 +152,11 @@ export type Quiz = {
 //#endregion 🔖️Quiz
 
 //#region 🔖️Catalog
-/** 📜️ When a badge is earned: a perfect quiz, every selected task perfect once, or every catalog quiz submitted. */
-export type BadgeRule = { readonly kind: "perfect-quiz"; readonly quiz: Slug } | { readonly kind: "perfect-tasks"; readonly taskKind?: TaskKind; readonly quiz?: Slug } | { readonly kind: "completed-quizzes" };
+/** 📜️ When a badge is earned: a perfect quiz, every selected task perfect once, or every catalog quiz submitted; `challenge` is the least challenge whose runs count. */
+export type BadgeRule =
+  | { readonly kind: "perfect-quiz"; readonly quiz: Slug; readonly challenge?: Challenge }
+  | { readonly kind: "perfect-tasks"; readonly taskKind?: TaskKind; readonly quiz?: Slug; readonly challenge?: Challenge }
+  | { readonly kind: "completed-quizzes" };
 
 /** 🏅️ A badge of a catalog. */
 export type Badge = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text; readonly rule: BadgeRule };
@@ -152,22 +177,26 @@ export type Catalog = {
 //#endregion 🔖️Catalog
 
 //#region 🔖️Sheet
-/** 🪧️ A solution-free item of a sheet. */
-export type SheetItem = { readonly id: Slug; readonly label: Text; readonly icon?: Icon };
+/** 🪧️ A solution-free item of a sheet: its id, label, short label when it has one, and icon. */
+export type SheetItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon };
 
-/** 🗄️ A classification task as presented: shuffled categories, drawn items in order. */
+/** 🛞️ One spoke of a profile as a sheet presents it: `unit`, `min` and `max` travel together and are present exactly when the challenge shows the keys; without them the profile values of the sheet are shares of the axis range. */
+export type SheetAxis = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly unit?: string; readonly min?: number; readonly max?: number };
+
+/** 🗄️ A classification task as presented: shuffled categories (without descriptions where the keys are hidden), drawn items in order, and its `seconds` on a timed sheet. */
 export type SheetClassificationTask = {
   readonly kind: "classification";
   readonly id: Slug;
   readonly title: Text;
   readonly prompt: Text;
   readonly icon?: Icon;
-  readonly axes?: readonly Axis[];
+  readonly axes?: readonly SheetAxis[];
   readonly categories: readonly Category[];
   readonly items: readonly SheetItem[];
+  readonly seconds?: number;
 };
 
-/** 🪜️ A sorting task as presented: drawn items in a never-already-sorted order. */
+/** 🪜️ A sorting task as presented: drawn items in a never-already-sorted order, their true values as an ascending ladder of `keys` where the challenge shows them, and its `seconds` on a timed sheet. */
 export type SheetSortingTask = {
   readonly kind: "sorting";
   readonly id: Slug;
@@ -175,13 +204,15 @@ export type SheetSortingTask = {
   readonly prompt: Text;
   readonly icon?: Icon;
   readonly quantity: Quantity;
+  readonly keys?: readonly number[];
   readonly items: readonly SheetItem[];
+  readonly seconds?: number;
 };
 
-/** 🎴️ One dimension of a presented matching task: its card values in presentation order, addressed by index. */
-export type SheetDimension = { readonly id: Slug; readonly quantity: Quantity; readonly icon?: Icon; readonly cards: readonly number[] };
+/** 🎴️ One dimension of a presented matching task: its card values in presentation order, addressed by index, where the challenge shows the keys. */
+export type SheetDimension = { readonly id: Slug; readonly quantity: Quantity; readonly icon?: Icon; readonly cards?: readonly number[] };
 
-/** 🪢️ A matching task as presented: drawn items in order and shuffled cards per dimension. */
+/** 🪢️ A matching task as presented: drawn items in order, shuffled cards per dimension where the challenge shows the keys, and its `seconds` on a timed sheet. */
 export type SheetMatchingTask = {
   readonly kind: "matching";
   readonly id: Slug;
@@ -190,38 +221,43 @@ export type SheetMatchingTask = {
   readonly icon?: Icon;
   readonly dimensions: readonly SheetDimension[];
   readonly items: readonly SheetItem[];
+  readonly seconds?: number;
 };
 
 /** 🧱️ One presented task of a sheet. */
 export type SheetTask = SheetClassificationTask | SheetSortingTask | SheetMatchingTask;
 
-/** 🃏️ The randomized, solution-free presentation of a quiz for one run seed; a pure function of (quiz, seed). */
-export type Sheet = { readonly quiz: Slug; readonly seed: number; readonly title: Text; readonly description: Text; readonly tasks: readonly SheetTask[] };
+/** 🃏️ The randomized presentation of a quiz for one run seed at one challenge, never saying which item a number belongs to; a pure function of (quiz, seed, challenge) that deals the same items in the same order at every challenge. */
+export type Sheet = { readonly quiz: Slug; readonly seed: number; readonly challenge: Challenge; readonly title: Text; readonly description: Text; readonly tasks: readonly SheetTask[] };
 //#endregion 🔖️Sheet
 
 //#region 🔖️Answer
 /** ☑️ Category id per item id. */
 export type ClassificationAnswer = { readonly kind: "classification"; readonly assignments: Readonly<Record<Slug, Slug>> };
 
-/** 🔃️ Item ids, smallest first. */
+/** 🔃️ Item ids, smallest first; where the sheet task hides the keys, the learner's numeric guess per item id is the answer. */
 export type SortingAnswer = { readonly kind: "sorting"; readonly order: readonly Slug[]; readonly guesses?: Readonly<Record<Slug, number>> };
 
-/** 🔀️ Per dimension id: the card index per item id. */
-export type MatchingAnswer = { readonly kind: "matching"; readonly assignments: Readonly<Record<Slug, Readonly<Record<Slug, number>>>> };
+/** 🔀️ Per dimension id: the card index per item id where the sheet task shows the keys (`assignments`), the guessed number per item id where it hides them (`guesses`). */
+export type MatchingAnswer = {
+  readonly kind: "matching";
+  readonly assignments?: Readonly<Record<Slug, Readonly<Record<Slug, number>>>>;
+  readonly guesses?: Readonly<Record<Slug, Readonly<Record<Slug, number>>>>;
+};
 
 /** ✍️ A learner's answer to one task. */
 export type Answer = ClassificationAnswer | SortingAnswer | MatchingAnswer;
 //#endregion 🔖️Answer
 
 //#region 🔖️Result
-/** 🎚️ The credit of one classified item. */
-export type ClassificationItemResult = { readonly item: Slug; readonly assigned: Slug; readonly correct: Slug; readonly credit: Score; readonly explanation?: Text };
+/** 🎚️ The credit of one classified item; `assigned` is absent when the learner left it unanswered (timed runs only). */
+export type ClassificationItemResult = { readonly item: Slug; readonly assigned?: Slug; readonly correct: Slug; readonly credit: Score; readonly explanation?: Text };
 
-/** 📍️ One sorted item: its value, the learner's position and its true rank (both zero-based). */
-export type SortingItemResult = { readonly item: Slug; readonly value: number; readonly position: number; readonly rank: number; readonly explanation?: Text };
+/** 📍️ One sorted item: its value, the learner's position and its true rank (both zero-based); where the keys were hidden also the learner's `guess` (when there is one) and whether the item is a `miss`. */
+export type SortingItemResult = { readonly item: Slug; readonly value: number; readonly position: number; readonly rank: number; readonly guess?: number; readonly miss?: boolean; readonly explanation?: Text };
 
-/** 🧮️ One matched item: the assigned card value and the correct value. */
-export type MatchingItemResult = { readonly item: Slug; readonly assigned: number; readonly correct: number; readonly explanation?: Text };
+/** 🧮️ One matched item: the assigned card value or the guess (absent when unanswered), the correct value and, where the keys were hidden, whether the item is a `miss`. */
+export type MatchingItemResult = { readonly item: Slug; readonly assigned?: number; readonly correct: number; readonly miss?: boolean; readonly explanation?: Text };
 
 /** 📊️ The score of one matching dimension and its items in sheet order. */
 export type DimensionResult = { readonly dimension: Slug; readonly score: Score; readonly items: readonly MatchingItemResult[] };
@@ -238,8 +274,8 @@ export type MatchingTaskResult = { readonly kind: "matching"; readonly task: Slu
 /** 📑️ One scored task. */
 export type TaskResult = ClassificationTaskResult | SortingTaskResult | MatchingTaskResult;
 
-/** 🏁️ The scored run: the mean of its task scores, tasks in sheet order. */
-export type RunResult = { readonly quiz: Slug; readonly score: Score; readonly tasks: readonly TaskResult[] };
+/** 🏁️ The scored run: its challenge, the mean of its task scores (accuracy at every challenge), its points = score × par of the challenge, tasks in sheet order. */
+export type RunResult = { readonly quiz: Slug; readonly challenge: Challenge; readonly score: Score; readonly points: number; readonly tasks: readonly TaskResult[] };
 //#endregion 🔖️Result
 
 //#region 🔖️Lifecycle
@@ -260,17 +296,20 @@ export const DEFAULT_LIMITS: Limits = { learners: 100_000, runsPerQuiz: 200, run
 /** 🙋️ Register a new learner: an anonymous one in its own stream, a pseudonym or name in the stream of its handle key. */
 export type IdentifyLearnerCommand = { readonly type: "identify-learner"; readonly id: Id; readonly learner: Id; readonly identity: IdentityClaim };
 
-/** ▶️ Start a run of a quiz. */
-export type StartRunCommand = { readonly type: "start-run"; readonly id: Id; readonly learner: Id; readonly run: Id; readonly quiz: Slug };
+/** ▶️ Start a run of a quiz at a challenge at `at`, the instant the learner started it by the device's clock; at another challenge than the open run of the quiz it voids that run. */
+export type StartRunCommand = { readonly type: "start-run"; readonly id: Id; readonly learner: Id; readonly run: Id; readonly quiz: Slug; readonly challenge: Challenge; readonly at: Timestamp };
 
-/** 🖊️ Record the latest answer to one task of an open run. */
-export type RecordAnswerCommand = { readonly type: "record-answer"; readonly id: Id; readonly learner: Id; readonly run: Id; readonly task: Slug; readonly answer: Answer };
+/** ⏰️ Open one task of a timed run at `at`, the instant the learner acted by the device's clock: its clock starts. */
+export type OpenTaskCommand = { readonly type: "open-task"; readonly id: Id; readonly learner: Id; readonly run: Id; readonly task: Slug; readonly at: Timestamp };
+
+/** 🖊️ Record the latest answer to one task of an open run, given at `at` by the device's clock. */
+export type RecordAnswerCommand = { readonly type: "record-answer"; readonly id: Id; readonly learner: Id; readonly run: Id; readonly task: Slug; readonly answer: Answer; readonly at: Timestamp };
 
 /** 📨️ Submit an open run for scoring. */
 export type SubmitRunCommand = { readonly type: "submit-run"; readonly id: Id; readonly learner: Id; readonly run: Id };
 
 /** 📮️ Learner intent; the client-generated id makes a retry after a connection shortage apply exactly once. */
-export type Command = IdentifyLearnerCommand | StartRunCommand | RecordAnswerCommand | SubmitRunCommand;
+export type Command = IdentifyLearnerCommand | StartRunCommand | OpenTaskCommand | RecordAnswerCommand | SubmitRunCommand;
 
 /** 🚫️ Every reason a command is rejected. */
 export const REJECTIONS = [
@@ -290,6 +329,10 @@ export const REJECTIONS = [
   "roster-full",
   "runs-exhausted",
   "answers-exhausted",
+  "run-untimed",
+  "task-unopened",
+  "time-up",
+  "already-opened",
 ] as const;
 
 /** ⛔️ One of {@link REJECTIONS}. */
@@ -298,11 +341,14 @@ export type Rejection = (typeof REJECTIONS)[number];
 /** 🆕️ A learner was registered under the given identity. */
 export type LearnerRegisteredEvent = { readonly type: "learner-registered"; readonly learner: Id; readonly identity: Identity; readonly at: Timestamp };
 
-/** 🚀️ A run started against the quiz revision (content hash) with the seed of its sheet. */
-export type RunStartedEvent = { readonly type: "run-started"; readonly learner: Id; readonly run: Id; readonly quiz: Slug; readonly revision: string; readonly seed: number; readonly at: Timestamp };
+/** 🚀️ A run started at a challenge against the quiz revision (content hash) with the seed of its sheet. */
+export type RunStartedEvent = { readonly type: "run-started"; readonly learner: Id; readonly run: Id; readonly quiz: Slug; readonly challenge: Challenge; readonly revision: string; readonly seed: number; readonly at: Timestamp };
 
-/** 🗑️ An open run was voided because its quiz was revised. */
+/** 🗑️ An open run was voided because its quiz was revised or the learner started the quiz at another challenge. */
 export type RunVoidedEvent = { readonly type: "run-voided"; readonly learner: Id; readonly run: Id; readonly at: Timestamp };
+
+/** ⏳️ A task of a timed run was opened: its clock runs from `at`. */
+export type TaskOpenedEvent = { readonly type: "task-opened"; readonly learner: Id; readonly run: Id; readonly task: Slug; readonly at: Timestamp };
 
 /** 💾️ The latest answer to one task of an open run. */
 export type AnswerRecordedEvent = { readonly type: "answer-recorded"; readonly learner: Id; readonly run: Id; readonly task: Slug; readonly answer: Answer; readonly at: Timestamp };
@@ -314,7 +360,7 @@ export type RunSubmittedEvent = { readonly type: "run-submitted"; readonly learn
 export type BadgeAwardedEvent = { readonly type: "badge-awarded"; readonly learner: Id; readonly badge: Slug; readonly run: Id; readonly at: Timestamp };
 
 /** ⚡️ A fact of the learner stream; a registration under a pseudonym or name is first the one fact of its handle stream. */
-export type Event = LearnerRegisteredEvent | RunStartedEvent | RunVoidedEvent | AnswerRecordedEvent | RunSubmittedEvent | BadgeAwardedEvent;
+export type Event = LearnerRegisteredEvent | RunStartedEvent | RunVoidedEvent | TaskOpenedEvent | AnswerRecordedEvent | RunSubmittedEvent | BadgeAwardedEvent;
 //#endregion 🔖️Lifecycle
 
 //#region 🔖️Views
@@ -336,7 +382,31 @@ export const RUN_STATUSES = ["open", "submitted", "voided"] as const;
 /** 🚦️ One of {@link RUN_STATUSES}. */
 export type RunStatus = (typeof RUN_STATUSES)[number];
 
-/** 🏃️ One run with its sheet, answers and, once submitted, its result. */
+/** 🪞️ How a claimed relation between two items stands to the true one around its pivot (1 for a ratio, 0 for a difference): `reversed` when the claim lies on one side and the truth at the pivot or on the other, else `under` when the truth lies beyond the claim (a claim at the pivot: when the truth lies above it), else `over`. */
+export const VERDICTS = ["under", "over", "reversed"] as const;
+
+/** 🩻️ One of {@link VERDICTS}. */
+export type Verdict = (typeof VERDICTS)[number];
+
+/** 🤨️ Questions the relation the learner's keys claim between `item`, whose key misses, and `other` (in `dimension` for matching): `factor` = key(item) / key(other) on a logarithmic scale, `difference` = key(item) − key(other) on a linear one, exactly one of them; `verdict` says how the claim stands to the truth. */
+export type CompareHint = { readonly kind: "compare"; readonly item: Slug; readonly other: Slug; readonly dimension?: Slug; readonly factor?: number; readonly difference?: number; readonly verdict: Verdict };
+
+/** 🧐️ Questions whether `item` fits `category`, the assigned category, on `axis`, where the two categories' profiles lie farthest apart beyond the axis's reach; `other`, an item placed in its own category whose value on the axis lies strictly between the assigned and the own category's, and `above`, the side the placement claims for `item`, come together or not at all. */
+export type ProfileHint = { readonly kind: "profile"; readonly item: Slug; readonly category: Slug; readonly axis: Slug; readonly other?: Slug; readonly above?: boolean };
+
+/** 👯️ Questions whether `item` and `other` belong to the same category (`together`) or to different ones, as the learner's classification claims. */
+export type GroupHint = { readonly kind: "group"; readonly item: Slug; readonly other: Slug; readonly together: boolean };
+
+/** 📛️ Questions whether `item` belongs to `category`, the assigned category, where no pairing exists to question. */
+export type CategoryHint = { readonly kind: "category"; readonly item: Slug; readonly category: Slug };
+
+/** 💡️ What an open run at a challenge that hints asks the learner about the recorded answer of a task: one concrete relation the learner's answer claims, questioned, at most one per item (and dimension) and at most three per task. */
+export type Hint = CompareHint | ProfileHint | GroupHint | CategoryHint;
+
+/** 🥇️ The best submitted run of a quiz: the one with the most points (the earliest of equals), with its challenge and score. */
+export type Best = { readonly challenge: Challenge; readonly score: Score; readonly points: number };
+
+/** 🏃️ One run with its sheet, answers and, once submitted, its result; on a timed run also when each opened task was opened, and while it is open at a challenge that hints the hints per task. */
 export type RunView = {
   readonly run: Id;
   readonly learner: Id;
@@ -347,32 +417,43 @@ export type RunView = {
   readonly result?: RunResult;
   readonly startedAt: Timestamp;
   readonly submittedAt?: Timestamp;
+  readonly opened?: Readonly<Record<Slug, Timestamp>>;
+  readonly hints?: Readonly<Record<Slug, readonly Hint[]>>;
 };
 
-/** 📇️ One run of a learner as listed. */
-export type RunSummary = { readonly run: Id; readonly quiz: Slug; readonly status: RunStatus; readonly score?: Score; readonly startedAt: Timestamp; readonly submittedAt?: Timestamp };
+/** 📇️ One run of a learner as listed, with its score and points once submitted. */
+export type RunSummary = {
+  readonly run: Id;
+  readonly quiz: Slug;
+  readonly challenge: Challenge;
+  readonly status: RunStatus;
+  readonly startedAt: Timestamp;
+  readonly score?: Score;
+  readonly points?: number;
+  readonly submittedAt?: Timestamp;
+};
 
 /** 🎗️ A badge held by a learner with the run and time that earned it. */
 export type BadgeAward = { readonly badge: Slug; readonly run: Id; readonly at: Timestamp };
 
-/** 👤️ A learner's runs (newest first), badges, best score per quiz and total points. */
+/** 👤️ A learner's runs (newest first), badges, best run per quiz and total points. */
 export type LearnerView = {
   readonly learner: Id;
   readonly identity: Identity;
   readonly runs: readonly RunSummary[];
   readonly badges: readonly BadgeAward[];
-  readonly best: Readonly<Record<Slug, Score>>;
+  readonly best: Readonly<Record<Slug, Best>>;
   readonly total: number;
 };
 
-/** 🥇️ One learner on a public leaderboard; it never carries the learner id, only its non-reversible tag (FNV-1a as 8 lowercase hex digits). `runs` counts the submitted runs in the scope of the leaderboard, `lastActivity` is the last of them. */
+/** 🎽️ One learner on a public leaderboard; it never carries the learner id, only its non-reversible tag (FNV-1a as 8 lowercase hex digits). `best` is the best run per quiz by points whatever the challenge, `total` their points, `runs` counts the submitted runs in the scope of the leaderboard, `lastActivity` is the last of them. */
 export type LeaderboardRow = {
   readonly rank: number;
   readonly tag: string;
   readonly identity: Identity;
   readonly total: number;
   readonly reachedAt: Timestamp;
-  readonly best: Readonly<Record<Slug, Score>>;
+  readonly best: Readonly<Record<Slug, Best>>;
   readonly badges: readonly Slug[];
   readonly runs: number;
   readonly lastActivity: Timestamp;
@@ -384,7 +465,7 @@ export const LEADERBOARD_TOP = 100;
 /** 🗓️ Which runs a leaderboard counts by when they were submitted, in the order they are offered: those of the current day, ISO week (from Monday) or month — calendar periods in UTC around the proctor's clock — or all of them. */
 export const LEADERBOARD_PERIODS = ["daily", "weekly", "monthly", "all-time"] as const;
 
-/** 🗓️ One of {@link LEADERBOARD_PERIODS}. */
+/** 📅️ One of {@link LEADERBOARD_PERIODS}. */
 export type LeaderboardPeriod = (typeof LEADERBOARD_PERIODS)[number];
 
 /** 🪟️ The time a leaderboard period spans: a run counts when it was submitted at or after `from` and before `until`. */
@@ -415,7 +496,7 @@ export type Query =
 //#endregion 🔖️Views
 
 //#region 🔖️Presence
-/** 🖼️ Every page a learner can be on: `quiz` is the read-only page of one quiz, `learner` the own profile, `badges` every badge, `preferences` the settings; `run` and `results` belong to a run. */
+/** 🖥️ Every page a learner can be on: `quiz` is the read-only page of one quiz, `learner` the own profile, `badges` every badge, `preferences` the settings; `run` and `results` belong to a run. */
 export const SCREENS = ["introduction", "identity", "home", "quiz", "run", "results", "leaderboard", "learner", "badges", "preferences"] as const;
 
 /** 📺️ One of {@link SCREENS}. */
@@ -436,7 +517,7 @@ export type PresenceState = { readonly tag: string; readonly identity: Identity;
 /** 👆️ Ephemeral shared pointer, keyboard focus and the item being dragged in the room of one place; anchors may be cards, items (`item:<id>`) or categories (`category:<id>`). */
 export type CursorState = { readonly tag: string; readonly cursor?: Cursor; readonly focus?: Anchor; readonly drag?: { readonly item: Slug } };
 
-/** 🧪️ A matching draft in semantic form: per dimension id the value assigned to each item id (card indices mean nothing to peers). */
+/** 🧪️ A matching draft in semantic form: per dimension id the value assigned to each item id (card indices mean nothing to peers), or the guessed number where the keys are hidden. */
 export type ThinkingMatchingAnswer = { readonly kind: "matching"; readonly values: Readonly<Record<Slug, Readonly<Record<Slug, number>>>> };
 
 /** 🗨️ A draft answer as peers can read it: classification and sorting answers are already semantic, matching drafts carry values. */

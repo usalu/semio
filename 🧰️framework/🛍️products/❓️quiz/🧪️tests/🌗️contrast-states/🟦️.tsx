@@ -1,7 +1,8 @@
 /** 🌗️ Colour never carries a name or a state alone: the ink of another learner's name label reaches 4.5 : 1 on every
- * palette slot in both appearances — judged by `colord`'s WCAG contrast as the third-party oracle — and every state the
- * stylesheet paints with a background, a shadow or a custom colour has a rule for forced colours, read from the
- * stylesheet as parsed by `lightningcss`.
+ * palette slot in both appearances — judged by `colord`'s WCAG contrast as the third-party oracle —, so does the text of
+ * the challenges' hints, miss marks and the clock's last seconds and end on the page's ground and tint, the design
+ * system's tokens read from its own stylesheets, and every state the stylesheet paints with a background, a shadow or
+ * a custom colour has a rule for forced colours, read from the stylesheet as parsed by `lightningcss`.
  *
  * @see ../../🧫️fixtures/🌗️contrast-states/🔣️.json
  * @see https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
@@ -16,6 +17,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { presenceColor } from "@semio-tech/ui-react/chrome";
 import { EMPTY_PRESENCE_VIEW, PresenceOverlay, paintStyle, peerInk, type PeerCursor } from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
+import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
+import chrome from "../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css?raw";
 import states from "../../🧫️fixtures/🌗️contrast-states/🔣️.json";
 
 extend([a11y]);
@@ -25,9 +28,41 @@ type Appearance = "light" | "dark";
 interface Fixture {
   readonly labels: { readonly minimumContrast: number; readonly slots: number; readonly appearances: readonly string[] };
   readonly forcedColors: readonly { readonly state: string; readonly selector: string; readonly properties: readonly string[] }[];
+  readonly texts: {
+    readonly minimumContrast: number;
+    readonly appearances: readonly string[];
+    readonly ground: string;
+    readonly states: readonly { readonly state: string; readonly selector: string; readonly ink: string; readonly tint?: { readonly colour: string; readonly share: number } }[];
+  };
 }
 
 const fixture: Fixture = states;
+
+/** 🧪️ The colour a token of the design system takes in `appearance` with no theme of its own: its declaration in the
+ * appearance's block of the chrome stylesheet (`:root` for light, `.dark` for dark), followed through its `var()`
+ * fallback to the palette's colour; a palette colour is read directly. */
+function resolved(token: string, appearance: Appearance): string {
+  const own = new RegExp(`(?:^|[\\s;{])${token}:\\s*(#[0-9a-fA-F]{6})\\s*;`, "u").exec(palette)?.[1];
+  if (own !== undefined) return own;
+  const block = (appearance === "light" ? /:root,\s*\[data-ui-theme\],\s*\.semio-scope\s*\{([^}]*)\}/u : /\.dark\s*\{([^}]*--base:[^}]*)\}/u).exec(chrome)?.[1] ?? "";
+  const declared = new RegExp(`${token}:\\s*([^;]+);`, "u").exec(block)?.[1] ?? "";
+  const fallback = [...declared.matchAll(/var\((--[\w-]+)/gu)].at(-1)?.[1];
+  if (fallback === undefined || fallback === token) throw Error(`${token} (${appearance}) does not resolve: ${declared}`);
+  return resolved(fallback, appearance);
+}
+
+/** 🫗️ `colour` laid at `share` over `ground`, as `color-mix(in srgb, colour share, transparent)` composites over it:
+ * per sRGB channel `share × colour + (1 − share) × ground`. */
+function composited(colour: string, share: number, ground: string): string {
+  const [top, under] = [colord(colour).toRgb(), colord(ground).toRgb()];
+  return colord({ r: share * top.r + (1 - share) * under.r, g: share * top.g + (1 - share) * under.g, b: share * top.b + (1 - share) * under.b }).toHex();
+}
+
+/** 📜️ Every rule at the top of `css` (not inside an at-rule) whose selector list holds `selector`, as its body. */
+function topRules(css: string, selector: string): readonly string[] {
+  const written = selector.replace(/=([\w-]+)\]/gu, '="$1"]');
+  return [...css.matchAll(/^([^\s@{}][^{}]*)\{([^{}]*)\}/gmu)].filter((rule) => rule[1]!.split(",").some((part) => part.trim() === written)).map((rule) => rule[2]!);
+}
 
 function slotColour(slot: number, appearance: Appearance): string {
   const { h, s, l } = presenceColor(slot, appearance);
@@ -105,6 +140,34 @@ describe("🌗️ contrast and states", () => {
     }
     expect(stylesheet).toMatch(/\.quiz-peer-label \{[^}]*color: var\(--quiz-peer-ink-light\);/u);
     expect(stylesheet).toMatch(/\.dark \.quiz-peer-label \{\s*color: var\(--quiz-peer-ink-dark\);/u);
+  });
+
+  for (const appearance of fixture.texts.appearances as readonly Appearance[]) {
+    it(`gives the text of every state the challenges add an ink of at least ${fixture.texts.minimumContrast} : 1 on its ground (${appearance})`, () => {
+      const failing: string[] = [];
+      for (const entry of fixture.texts.states) {
+        const ground = resolved(fixture.texts.ground, appearance);
+        const behind = entry.tint === undefined ? ground : composited(resolved(entry.tint.colour, appearance), entry.tint.share, ground);
+        const ink = resolved(entry.ink, appearance);
+        const ratio = colord(ink).contrast(behind);
+        if (ratio < fixture.texts.minimumContrast) failing.push(`${entry.state}: ${ink} on ${behind} = ${ratio}`);
+      }
+      expect(failing).toEqual([]);
+    });
+  }
+
+  for (const entry of fixture.texts.states) {
+    it(`paints ${entry.state} in the inherited ink${entry.tint === undefined ? "" : " over its tint"}, never in a colour of its own`, () => {
+      const rules = topRules(stylesheet, entry.selector);
+      expect(rules.length, entry.selector).toBeGreaterThan(0);
+      for (const body of rules) expect(body, entry.selector).not.toMatch(/(?:^|[\s;])color\s*:/u);
+      if (entry.tint !== undefined) expect(rules.some((body) => body.includes(`background: color-mix(in srgb, var(${entry.tint!.colour}) ${entry.tint!.share * 100}%, transparent)`)), entry.selector).toBe(true);
+    });
+  }
+
+  it("reads the design system's tokens as the browser does: the light ground and ink of the palette, and the dark ones", () => {
+    expect([resolved("--base", "light"), resolved("--foreground", "light"), resolved("--base", "dark"), resolved("--foreground", "dark")]).toEqual(["#f7f3e3", "#001117", "#001117", "#f7f3e3"]);
+    expect(composited("#ffffff", 0.5, "#000000")).toBe(colord({ r: 127.5, g: 127.5, b: 127.5 }).toHex());
   });
 
   for (const entry of fixture.forcedColors) {

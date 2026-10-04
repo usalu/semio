@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ENSEMBLE_SCHEMA, MENAGERIE_SCHEMA, type Ensemble, type Menagerie, type Species } from "../../../../🧬️schema/🟦️.ts";
+import { ACTIVITIES, CUES, ENSEMBLE_SCHEMA, GEARS, MENAGERIE_SCHEMA, type Ensemble, type Menagerie, type Species } from "../../../../🧬️schema/🟦️.ts";
 import { sampled } from "../../../../🧪️tests/🎚️config/🟦️.ts";
 import { assembleMenagerie, ensembleIssues, menagerieIssues, speciesIssues, type Issue } from "../../🟦️.ts";
 
@@ -38,8 +38,8 @@ const JUDGES: Record<Definition, ValidateFunction> = { Species: AJV.getSchema(`$
 /** 🧱️ The codes that restate the type-level structure of the schema; every other code is a value-level or rule finding. */
 const STRUCTURAL = new Set(["type-invalid", "required", "property-unknown", "value-invalid"]);
 
-/** 📜️ The document rules of the design (§3); every one of them needs a committed vector. */
-const RULES = ["duplicate-id", "unknown-reference", "bone-order", "key-order", "loop-seam", "ease-range", "out-of-range", "self-bond", "duplicate-bond", "missing-gait-clip", "float-hover", "empty-cast", "duplicate-scene"];
+/** 📜️ The document rules of the design (§3 of the first round, §19 and §21 of the second); every one of them needs a committed vector. */
+const RULES = ["duplicate-id", "unknown-reference", "bone-order", "key-order", "loop-seam", "ease-range", "out-of-range", "self-bond", "duplicate-bond", "missing-gait-clip", "float-hover", "empty-cast", "duplicate-scene", "duplicate-entry", "lasts-then", "missing-gear-clip", "missing-activity-clip", "floater-gear"];
 
 /** ⚖️ The findings of the owned validator of a definition. */
 function issuesOf(definition: Definition, document: unknown): Issue[] {
@@ -109,9 +109,33 @@ describe("accepted documents", () => {
     const species = VECTORS.menagerie.species;
     expect(new Set(species.flatMap((member) => member.parts.map((part) => part.shape.kind)))).toEqual(new Set(["path", "ellipse", "rect", "line"]));
     expect(species.map((member) => member.locomotion.gait)).toEqual(["walk", "hop", "float"]);
-    expect(Object.keys(species[0]!.repertoire).sort()).toEqual(["cuddle", "fall", "fidget", "greet", "hop", "idle", "land", "sleep", "squabble", "sulk", "walk"]);
+    expect(Object.keys(species[0]!.repertoire).sort()).toEqual([...ACTIVITIES].sort());
     expect(VECTORS.menagerie.casts.map((cast) => cast.scene)).toEqual(["home", "meadow"]);
     expect(VECTORS.menagerie.bonds).toHaveLength(3);
+  });
+
+  it("the sample menagerie exercises the second round: a state ladder, tricks for every cue, emitters of several motions, purrs, every gear, a canopy, moods and chemistry", () => {
+    const [walker, hopper, floater] = VECTORS.menagerie.species;
+    expect(walker!.states.map((state) => state.id)).toEqual(["resting", "glowing", "radiant"]);
+    expect(walker!.states.slice(1).map((state) => state.then)).toEqual(["resting", "glowing"]);
+    for (const [cue, from, to] of [["circle", "resting", "glowing"], ["circle", "glowing", "radiant"], ["countercircle", "radiant", "glowing"], ["countercircle", "glowing", "resting"]] as const) {
+      expect(walker!.tricks.filter((trick) => trick.cues.includes(cue) && trick.from?.includes(from) && trick.to === to), `${cue} ${from}`).toHaveLength(1);
+    }
+    expect(new Set(VECTORS.menagerie.species.flatMap((member) => member.tricks.flatMap((trick) => trick.cues)))).toEqual(new Set(CUES));
+    expect(walker!.emitters.map((emitter) => emitter.motion)).toEqual(["burst", "rise"]);
+    expect([walker!.purr, hopper!.purr, floater!.purr]).toEqual([{ clip: "nuzzle", emitter: "hum" }, { clip: "snuggle" }, { clip: "glow" }]);
+    expect([walker!.gear, hopper!.gear, floater!.gear]).toEqual([[...GEARS], ["grapple", "parachute"], ["parachute"]]);
+    expect([walker!.canopy?.kind, hopper!.canopy, floater!.canopy]).toEqual(["path", undefined, undefined]);
+    expect(VECTORS.menagerie.species.map((member) => member.mood)).toEqual(["content", "playful", "sleepy"]);
+    for (const member of VECTORS.menagerie.species) {
+      expect(member.grip).toBeLessThanOrEqual(member.size.height);
+      expect(member.reach).toBeLessThanOrEqual(member.size.width);
+    }
+    expect(VECTORS.menagerie.chemistry).toHaveLength(6);
+    expect(VECTORS.menagerie.chemistry.flatMap((reaction) => reaction.then.map((effect) => effect.on)).sort()).toEqual(["near", "near", "near", "near", "near", "near", "near", "near", "when", "when", "when"]);
+    const [, , , friends, entertainer, lullaby] = VECTORS.menagerie.chemistry;
+    expect([friends!.when.held, friends!.near, friends!.affinity, entertainer!.when.trick, entertainer!.unless, lullaby!.when.species, lullaby!.then[0]!.activity]).toEqual([4, {}, [0.4, 1], "boing", { species: "floaty", mood: "scared" }, undefined, "sleep"]);
+    expect(VECTORS.ensemble.chemistry).toEqual(VECTORS.menagerie.chemistry);
   });
 });
 

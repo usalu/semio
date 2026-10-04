@@ -20,6 +20,7 @@ import a11y from "colord/plugins/a11y";
 import { scaleLinear } from "d3-scale";
 import groupBy from "lodash/groupBy";
 import max from "lodash/max";
+import minBy from "lodash/minBy";
 import orderBy from "lodash/orderBy";
 import round from "lodash/round";
 import sortBy from "lodash/sortBy";
@@ -27,7 +28,7 @@ import sum from "lodash/sum";
 import uniq from "lodash/uniq";
 import type { ReactElement, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { scoreRun, thinkingScope, type CatalogView, type CrowdView, type Quiz, type RunView, type Sheet, type SheetTask, type ThinkingState } from "@semio-tech/quiz";
+import { CHALLENGES, challengeRules, crowdView, scoreRun, thinkingScope, valueKey, type CatalogView, type CrowdView, type Quiz, type RunView, type Sheet, type SheetTask, type ThinkingState } from "@semio-tech/quiz";
 import {
   AnswerFigure,
   CROWD_DOTS,
@@ -48,6 +49,7 @@ import {
   crowdShown,
   evolveQuizState,
   initialQuizState,
+  keysHidden,
   formatQuantity,
   formatScore,
   formatShare,
@@ -113,7 +115,14 @@ function state(status: "open" | "submitted", crowds: QuizState["crowds"] = {}, a
     introduced: true,
     learner: { id: LEARNER, identity: { kind: "pseudonym", handle: "Ada" } },
     catalog: CATALOG,
-    learnerView: { learner: LEARNER, identity: { kind: "pseudonym", handle: "Ada" }, runs: [{ run: RUN, quiz: QUIZ.id, status, startedAt: 10 }], badges: [], best: status === "submitted" ? { [QUIZ.id]: RESULT.score } : {}, total: 0 },
+    learnerView: {
+      learner: LEARNER,
+      identity: { kind: "pseudonym", handle: "Ada" },
+      runs: [{ run: RUN, quiz: QUIZ.id, challenge: SHEET.challenge, status, startedAt: 10 }],
+      badges: [],
+      best: status === "submitted" ? { [QUIZ.id]: { challenge: RESULT.challenge, score: RESULT.score, points: RESULT.points } } : {},
+      total: 0,
+    },
     runs: { [RUN]: run(status) },
   });
   return { ...held, step: status === "open" ? { screen: "run", run: RUN } : { screen: "results", run: RUN }, crowds, asked };
@@ -198,8 +207,8 @@ function draftedTags(vector: FigureVector, item: string, key: string, columns: n
 
 describe("🚪️ when the others show", () => {
   for (const vector of vectors.gates) {
-    it(`${vector.others} · ${vector.place} · ${vector.asked ? "asked" : "not asked"} · ${vector.submitted ? "submitted" : "not submitted"} → ${vector.expected}`, () => {
-      const gate = crowdGate(vector.others as OthersChoice, vector.place as CrowdPlace, { asked: vector.asked, submitted: vector.submitted });
+    it(`${vector.others} · ${vector.place} · ${vector.asked ? "asked" : "not asked"} · ${vector.submitted ? "submitted" : "not submitted"} · ${vector.hidden ? "keys hidden" : "keys shown"} → ${vector.expected}`, () => {
+      const gate = crowdGate(vector.others as OthersChoice, vector.place as CrowdPlace, { asked: vector.asked, submitted: vector.submitted, hidden: vector.hidden });
       expect(gate).toBe(vector.expected);
       expect(crowdShown(gate)).toBe(vector.expected === "open" || vector.expected === "asked");
     });
@@ -288,12 +297,57 @@ describe("🧮️ the figures of what everyone answered", () => {
     for (const vector of [known, unknown]) expect(answerFigure(inputOf(vector)).columns).toEqual(["1", "2", "3"].map((label, place) => ({ key: String(place), label })));
   });
 
+  it("hides the others beside an open run whose challenge hides the keys, and beside no other run", () => {
+    for (const challenge of CHALLENGES)
+      for (const status of ["open", "submitted", "voided"] as const) expect(keysHidden({ ...run("open"), status, sheet: { ...SHEET, challenge } }), `${challenge} ${status}`).toBe(status === "open" && !challengeRules(challenge).keys);
+    expect(CHALLENGES.filter((challenge) => keysHidden({ ...run("open"), sheet: { ...SHEET, challenge } }))).toEqual(["hard", "expert"]);
+  });
+
+  it("marks a guessed value as the learner's own under the nearest value on the quantity's scale", () => {
+    const shown = sheetTask("lamps");
+    if (shown.kind !== "matching") throw new Error("lamps is a matching");
+    const hidden: SheetTask = { ...shown, dimensions: shown.dimensions.map(({ cards: _, ...dimension }) => dimension) };
+    const guesses = { led: 9, halogen: 1500, floodlight: 30 };
+    const figure = answerFigure({ task: hidden, dimension: "power", crowd: VIEW, answer: { kind: "matching", guesses: { power: guesses } }, locale: "en" });
+    const keys = figure.columns.map((column) => column.key);
+    expect(keys).toEqual(["8", "45", "120", "2000"]);
+    const nearest = (value: number): string => minBy(keys, (key) => Math.abs(Math.log10(Number(key)) - Math.log10(value)))!;
+    expect(figure.rows.map((row) => [row.item, row.cells.find((cell) => cell.own)?.key])).toEqual(Object.entries(guesses).map(([item, value]) => [item, nearest(value)]));
+    expect(figure.rows.map((row) => row.cells.find((cell) => cell.own)?.key)).toEqual(["8", "2000", "45"]);
+  });
+
+  it("marks a guess of a result where the crowd will tally it and the correct value under its own column, also before the crowd holds the learner's run", () => {
+    const shown = sheetTask("lamps");
+    const authored = QUIZ.tasks.find((task) => task.id === "lamps");
+    if (shown.kind !== "matching" || authored?.kind !== "matching") throw new Error("lamps is a matching");
+    const hidden: SheetTask = { ...shown, dimensions: shown.dimensions.map(({ cards: _, ...dimension }) => dimension) };
+    const sheet: Sheet = { ...SHEET, challenge: "hard", tasks: [hidden] };
+    const guesses = { led: 30, halogen: 1500, floodlight: 900 };
+    const own = scoreRun(QUIZ, sheet, { lamps: { kind: "matching", guesses: { power: guesses } } })!;
+    const others = scoreRun(QUIZ, sheet, { lamps: { kind: "matching", guesses: { power: { led: 2000, halogen: 2000, floodlight: 2000 } } } })!;
+    const result = own.tasks.find((task) => task.task === "lamps")!;
+    const tallied = crowdView(QUIZ, [own]).tasks.find((task) => task.task === "lamps" && task.dimension === "power")!.items;
+    const truth = (item: string): number => authored.items.find((candidate) => candidate.id === item)!.values.power!;
+    const nearest = (value: number): number => minBy(authored.items.map((item) => item.values.power!), (candidate) => Math.abs(Math.log10(candidate) - Math.log10(value)))!;
+    for (const crowd of [crowdView(QUIZ, [others]), crowdView(QUIZ, [others, own])]) {
+      const figure = answerFigure({ task: hidden, dimension: "power", crowd, result, locale: "en" });
+      const marked = figure.rows.map((row) => [row.item, row.cells.find((cell) => cell.own)?.key, row.cells.find((cell) => cell.correct)?.key]);
+      expect(marked).toEqual(figure.rows.map((row) => [row.item, tallied.find((item) => item.item === row.item)!.counts![0]!.key, valueKey(truth(row.item))]));
+      expect(marked.map(([item, mark]) => [item, mark])).toEqual(Object.entries(guesses).map(([item, value]) => [item, valueKey(nearest(value))]));
+      expect(marked).toEqual([
+        ["led", "8", "8"],
+        ["halogen", "2000", "120"],
+        ["floodlight", "2000", "2000"],
+      ]);
+    }
+  });
+
   it("orders the columns of a matching by value — the sheet's cards and every value anyone gave — and writes them as quantities", () => {
     const vector = vectors.figures.find((candidate) => candidate.id === "matching-values-ascending-with-a-value-of-another-sheet")!;
     const task = sheetTask("lamps");
     if (task.kind !== "matching") throw new Error("lamps is a matching");
     const quantity = task.dimensions[0]!.quantity;
-    const given = [...task.dimensions[0]!.cards.map(String), ...VIEW.tasks.find((crowd) => crowd.task === "lamps")!.items.flatMap((item) => (item.counts ?? []).map((count) => count.key)), ...OTHERS.flatMap((other) => (other.answers.lamps?.kind === "matching" ? Object.values(other.answers.lamps.values.power ?? {}).map(String) : []))];
+    const given = [...task.dimensions[0]!.cards!.map(String), ...VIEW.tasks.find((crowd) => crowd.task === "lamps")!.items.flatMap((item) => (item.counts ?? []).map((count) => count.key)), ...OTHERS.flatMap((other) => (other.answers.lamps?.kind === "matching" ? Object.values(other.answers.lamps.values.power ?? {}).map(String) : []))];
     for (const locale of ["en", "de"] as const) {
       expect(answerFigure(inputOf(vector, locale)).columns).toEqual(orderBy(uniq(given), Number).map((key) => ({ key, label: formatQuantity(Number(key), quantity, locale) })));
     }
@@ -536,7 +590,7 @@ describe("🧘️ a page that stays still while the crowd arrives and the others
   it("gives every plot one height and every table columns of one width, whatever stands in them", () => {
     expect(rule(".quiz-column")).toMatch(/block-size: 3\.5em;/u);
     expect(rule(".quiz-plot")).toMatch(/table-layout: fixed;/u);
-    expect(rule(".quiz-figure")).toMatch(/container-type: inline-size;/u);
+    expect(rule(".quiz-records")).toMatch(/container: quiz-records \/ inline-size;/u);
     expect(rule(".quiz-plot")).toMatch(/inline-size: min\(100%, calc\(20em \+ var\(--quiz-plot-columns, 1\) \* 9em\)\);/u);
     expect(rule(".quiz-plot")).toMatch(/min-inline-size: calc\(9em \+ var\(--quiz-plot-columns, 1\) \* 3\.5em\);/u);
     expect(rule(".quiz-plot .quiz-plot-item")).toMatch(/inline-size: clamp\(9em, 36cqi, 20em\);/u);
@@ -577,7 +631,7 @@ describe("🧘️ a page that stays still while the crowd arrives and the others
     const quiz = CATALOG.quizzes[0]!;
     const page = (learning: number) => (
       <PresenceProvider view={{ ...EMPTY_PRESENCE_VIEW, roster: { online: learning, active: learning, learners: [], quizzes: { [QUIZ.id]: learning } } }} setTask={() => undefined}>
-        <QuizPage quiz={quiz} session={stubSession()} state={{ ...state("submitted"), step: { screen: "home", page: QUIZ.id } }} text={quizText("en")} locale="en" busy={false} act={() => undefined} view={{ opened: true, revealed: false }} />
+        <QuizPage quiz={quiz} session={stubSession()} state={{ ...state("submitted"), step: { screen: "home", page: QUIZ.id } }} text={quizText("en")} locale="en" busy={false} act={() => undefined} view={{ opened: true, revealed: false }} challenge="medium" onChallenge={() => undefined} />
       </PresenceProvider>
     );
     const fact = (): HTMLElement => document.querySelector<HTMLElement>('[data-card="quiz"] [data-learning]')!;
@@ -673,7 +727,7 @@ describe("🏃️ the run, the results and a quiz's page", () => {
   it("shows on a quiz's page what everyone answered once the learner has submitted the quiz, and before that only when asked", () => {
     const quiz = CATALOG.quizzes[0]!;
     const page = (session: QuizSession, status: "open" | "submitted", crowds: QuizState["crowds"], asked: readonly string[] = [], others?: OthersChoice, thinking: readonly ThinkingState[] = []) =>
-      thinkingAlong(thinking, <QuizPage quiz={quiz} session={session} state={{ ...state(status, crowds, asked), step: { screen: "home", page: QUIZ.id } }} text={quizText("en")} locale="en" busy={false} act={() => undefined} view={{ opened: true, revealed: false }} others={others} />);
+      thinkingAlong(thinking, <QuizPage quiz={quiz} session={session} state={{ ...state(status, crowds, asked), step: { screen: "home", page: QUIZ.id } }} text={quizText("en")} locale="en" busy={false} act={() => undefined} view={{ opened: true, revealed: false }} others={others} challenge="medium" onChallenge={() => undefined} />);
     const card = () => document.querySelector<HTMLElement>('[data-card="quiz-crowd"]');
     const session = stubSession();
     const { rerender } = render(page(session, "open", { [QUIZ.id]: VIEW }));

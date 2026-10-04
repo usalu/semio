@@ -44,7 +44,7 @@ VECTORS = "shared://🪪️identity-shapes/🔣️.json"
 WHITE_SPACE = frozenset([*range(0x09, 0x0E), 0x20, 0x85, 0xA0, 0x1680, *range(0x2000, 0x200B), 0x2028, 0x2029, 0x202F, 0x205F, 0x3000])
 LATIN_BLOCKS = [(0x0000, 0x007F), (0x0080, 0x00FF), (0x0100, 0x017F), (0x0180, 0x024F), (0x1E00, 0x1EFF)]
 HANDLE_INPUT_MAX = 256
-IDS = ("id", "learner", "run", "quiz", "task")
+IDS = ("id", "learner", "run", "quiz", "task", "at")
 SCALARS =[point for point in range(0x110000) if not 0xD800 <= point <= 0xDFFF]
 
 
@@ -123,7 +123,7 @@ def alphabet_of(pattern):
 
 
 def rejection(vector, handles):
-    """🚫️ Why a command or query is refused for its shapes — ``id-invalid`` for an id or slug, ``handle-invalid`` for a handle query — or ``None``."""
+    """🚫️ Why a command or query is refused for its shapes — ``id-invalid`` for an id or slug or an instant beyond the largest timestamp, ``handle-invalid`` for a handle query — or ``None``."""
     document = vector["document"]
     broken = paths(vector["definition"], document)
     if any(path in IDS for path in broken):

@@ -27,6 +27,7 @@ import {
   memoryStorageOrigin,
   navigationWays,
   placeName,
+  quizInstance,
   quizText,
   sameStep,
   stepAbove,
@@ -82,8 +83,8 @@ const CATALOG: CatalogView = {
 
 /** 🏃️ A run of `quiz` without tasks: open, submitted with a perfect result, or voided. */
 function runOf(run: string, quiz: string, status: RunStatus): RunView {
-  const sheet = { quiz, seed: 1, title: text(`Quiz ${quiz}`, `Quiz ${quiz}`), description: text(`About ${quiz}.`, `Über ${quiz}.`), tasks: [] };
-  return { run, learner: LEARNER, quiz, status, sheet, answers: {}, startedAt: 1, ...(status === "submitted" ? { result: { quiz, score: 1, tasks: [] }, submittedAt: 2 } : {}) };
+  const sheet = { quiz, seed: 1, challenge: "medium" as const, title: text(`Quiz ${quiz}`, `Quiz ${quiz}`), description: text(`About ${quiz}.`, `Über ${quiz}.`), tasks: [] };
+  return { run, learner: LEARNER, quiz, status, sheet, answers: {}, startedAt: 1, ...(status === "submitted" ? { result: { quiz, challenge: "medium", score: 1, points: 200, tasks: [] }, submittedAt: 2 } : {}) };
 }
 
 /** 🧭️ The state of an identified learner at `start` with the fixture's runs and a trail of its own. */
@@ -96,7 +97,7 @@ function stateAt(start: Step): QuizState {
 function moved(state: QuizState, move: Move): QuizState {
   if (move.open !== undefined) return evolveQuizState(state, { type: "step-opened", step: step(move.open) });
   if (move.enter !== undefined) return evolveQuizState(state, { type: "step-opened", step: step(move.enter), instead: true });
-  if (move.submit !== undefined) return evolveQuizState(state, { type: "run-submitted", run: move.submit, result: { quiz: fixture.runs[move.submit]!.quiz, score: 1, tasks: [] }, badges: [], at: 2 });
+  if (move.submit !== undefined) return evolveQuizState(state, { type: "run-submitted", run: move.submit, result: { quiz: fixture.runs[move.submit]!.quiz, challenge: "medium", score: 1, points: 200, tasks: [] }, badges: [], at: 2 });
   if (move.close !== undefined) return evolveQuizState(state, { type: "run-loaded", view: runOf(move.close, fixture.runs[move.close]!.quiz, move.as as RunStatus) });
   if (move.void !== undefined) return evolveQuizState(state, { type: "run-voided", run: move.void });
   if (move.go === "back" || move.go === "forward") return evolveQuizState(state, { type: "step-retraced", to: move.go });
@@ -146,15 +147,15 @@ const LEARNER_VIEW: LearnerView = {
   learner: LEARNER,
   identity: IDENTITY,
   runs: [
-    { run: RUN_OPEN, quiz: "heating", status: "open", startedAt: 1 },
-    { run: RUN_DONE, quiz: "cooling", status: "submitted", score: 1, startedAt: 1, submittedAt: 2 },
+    { run: RUN_OPEN, quiz: "heating", challenge: "medium", status: "open", startedAt: 1 },
+    { run: RUN_DONE, quiz: "cooling", challenge: "medium", status: "submitted", score: 1, points: 200, startedAt: 1, submittedAt: 2 },
   ],
   badges: [],
-  best: { cooling: 1 },
-  total: 100,
+  best: { cooling: { challenge: "medium", score: 1, points: 200 } },
+  total: 200,
 };
 const TIMING = { minMs: 1, maxMs: 4 };
-const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
+const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onopen: null, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
 const LOGO = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="M0 0h1v1z"/></svg>';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -167,6 +168,7 @@ function reply(status: number, body: unknown): HttpResponse {
 /** 🛂️ A proctor that answers every read from fixed views and takes no command: finding the way writes nothing. */
 const PROCTOR: HttpTransport = {
   send: async (request) => {
+    if (request.method === "GET" && request.path === "/instance") return reply(200, quizInstance());
     if (request.path !== "/queries") return reply(404, { kind: "notFound", message: request.path });
     const query = JSON.parse(decoder.decode(decodeQueryEnvelope(JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown).arguments)) as Query;
     const answer = query.type === "catalog" ? CATALOG : query.type === "learner" ? LEARNER_VIEW : query.type === "run" ? RUNS[query.run] : query.type === "leaderboard" ? { rows: [], learners: 0 } : query.type === "crowd" ? { quiz: query.quiz, runs: 0, tasks: [] } : undefined;
@@ -305,8 +307,10 @@ describe("🔗️ the address", () => {
   it("names every place a way can lead to, in both languages, and nothing that is no place", () => {
     const state = stateAt({ screen: "home" });
     const names = (locale: "en" | "de") => (shown: Step) => placeName(step(shown), state, locale, quizText(locale));
-    expect([{ screen: "home" }, { screen: "home", page: "board" }, { screen: "home", page: "learner" }, { screen: "home", page: "heating" }, { screen: "run", run: "run-open" }, { screen: "results", run: "run-done" }].map(names("en"))).toEqual(["Overview", "Leaderboard", "Ada", "Quiz heating", "Quiz heating", "Results: Quiz cooling"]);
-    expect([{ screen: "home" }, { screen: "home", page: "board" }, { screen: "results", run: "run-done" }].map(names("de"))).toEqual(["Übersicht", "Rangliste", "Ergebnisse: Quiz cooling"]);
+    expect([{ screen: "home" }, { screen: "home", page: "board" }, { screen: "home", page: "learner" }, { screen: "home", page: "heating" }, { screen: "run", run: "run-open" }, { screen: "results", run: "run-done" }].map(names("en"))).toEqual(["Overview", "Leaderboard", "Ada", "Quiz heating", "Quiz heating (Medium)", "Results: Quiz cooling"]);
+    expect([{ screen: "home" }, { screen: "home", page: "board" }, { screen: "run", run: "run-open" }, { screen: "results", run: "run-done" }].map(names("de"))).toEqual(["Übersicht", "Rangliste", "Quiz heating (Mittel)", "Ergebnisse: Quiz cooling"]);
+    const hard = { ...state, runs: Object.fromEntries(Object.entries(state.runs).map(([run, view]) => [run, { ...view, sheet: { ...view.sheet, challenge: "expert" as const } }])) };
+    expect(placeName(step({ screen: "run", run: "run-open" }), hard, "en", quizText("en"))).toBe("Quiz heating (Expert)");
     expect([{ screen: "home", page: "nowhere" }, { screen: "run", run: "run-unknown" }, { screen: "introduction" }, { screen: "identity" }].map(names("en"))).toEqual([undefined, undefined, undefined, undefined]);
   });
 });
@@ -378,7 +382,7 @@ describe("🚏️ the navbar", () => {
     expect(openedPage()).toBeNull();
     expect(leads("back")).toEqual(["Back: Leaderboard", true]);
 
-    await user.click(within(screen.getByRole("region", { name: "Quiz heating" })).getByRole("button", { name: "Resume quiz" }));
+    await user.click(within(screen.getByRole("region", { name: "Quiz heating" })).getByRole("button", { name: "Resume (Medium)" }));
     await screen.findByRole("heading", { level: 1, name: "Quiz heating" });
     expect(document.querySelector("[data-layered-overview]")).toBeNull();
     expect([leads("overview"), leads("back"), leads("up")]).toEqual([["Overview", true], ["Back: Overview", true], ["Up: Quiz heating", true]]);
@@ -388,7 +392,7 @@ describe("🚏️ the navbar", () => {
     await user.click(way("up"));
     expect(openedPage()).toBe("heating");
     expect(window.location.hash).toBe("#heating");
-    expect(leads("back")).toEqual(["Back: Quiz heating", true]);
+    expect(leads("back")).toEqual(["Back: Quiz heating (Medium)", true]);
     await user.click(way("back"));
     await screen.findByRole("heading", { level: 1, name: "Quiz heating" });
     expect(window.location.hash).toBe("");

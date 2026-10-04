@@ -6,7 +6,9 @@
 // #region 🔌️Adapters
 import { ticks } from "d3-array";
 import { formatLocale, type FormatLocaleDefinition } from "d3-format";
-import { scaleBand, scaleLog } from "d3-scale";
+import { scaleBand, scaleLog, scaleLinear } from "d3-scale";
+import { utcFormat } from "d3-time-format";
+import { rgb } from "d3-color";
 import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -48,6 +50,17 @@ const LOCALES: Readonly<Record<string, FormatLocaleDefinition>> = {
 export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
+    "custom-controls": {
+      subject: async (ctx: AdapterContext) => {
+        const projection=(await subject(ctx,"custom-controls.tex")).projection;
+        return {projection:{ticks:projection["geometry/axis-tick-positions"]??[],label:projection["format/de"]??[],time:projection["format/time"]??[],color:projection["legend-color/mid"]??[]}};
+      },
+      oracle: (ctx: AdapterContext) => {
+        const row=rows(ctx)[0]!,scale=scaleLinear().domain(row.domain!.split(",").map(Number)).range(row.range!.split(",").map(Number));
+        const color=rgb(scaleLinear<string>().domain([0,10]).range(["red","blue"])(5));
+        return {projection:{ticks:row.ticks!.split(",").map(Number).map(scale),label:[formatLocale(LOCALES[row.locale!]!).format(row.specifier!)(0.5)],time:[utcFormat(row.timeSpecifier!)(new Date(Number(row.timestamp)))],color:[color.r,color.g,color.b]}};
+      },
+    },
     "linear-ticks": {
       /** 🔮️ d3-array's ticks(start, stop, count), the published tick algorithm an axis follows. */
       oracle: (ctx: AdapterContext) => ({

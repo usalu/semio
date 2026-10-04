@@ -20,9 +20,14 @@
               "en": "Energy density",
               "de": "Energiedichte"
             },
+            "short": {
+              "en": "density",
+              "de": "Dichte"
+            },
             "unit": "MJ/kg",
             "scale": "logarithmic",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           }
         },
         {
@@ -34,7 +39,8 @@
             },
             "unit": "kg/kWh",
             "scale": "linear",
-            "prefixed": false
+            "prefixed": false,
+            "additive": false
           }
         }
       ],
@@ -144,7 +150,8 @@
             },
             "unit": "W",
             "scale": "linear",
-            "prefixed": true
+            "prefixed": true,
+            "additive": true
           }
         }
       ],
@@ -180,6 +187,55 @@
           }
         }
       ]
+    },
+    {
+      "kind": "matching",
+      "id": "equal-masses",
+      "title": {
+        "en": "Equal masses",
+        "de": "Gleiche Massen"
+      },
+      "prompt": {
+        "en": "Match every stone with its mass.",
+        "de": "Ordne jedem Stein seine Masse zu."
+      },
+      "dimensions": [
+        {
+          "id": "mass",
+          "quantity": {
+            "label": {
+              "en": "Mass",
+              "de": "Masse"
+            },
+            "unit": "kg",
+            "scale": "logarithmic",
+            "prefixed": true,
+            "additive": true
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "brick",
+          "label": {
+            "en": "Brick",
+            "de": "Backstein"
+          },
+          "values": {
+            "mass": 2.5
+          }
+        },
+        {
+          "id": "paver",
+          "label": {
+            "en": "Paver",
+            "de": "Pflasterstein"
+          },
+          "values": {
+            "mass": 2.5
+          }
+        }
+      ]
     }
   ],
   "vectors": [
@@ -205,9 +261,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -226,7 +287,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -394,9 +456,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -415,7 +482,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -583,9 +651,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -604,7 +677,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -772,9 +846,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -793,7 +872,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -961,9 +1041,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -982,7 +1067,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -1150,9 +1236,14 @@
                 "en": "Energy density",
                 "de": "Energiedichte"
               },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
               "unit": "MJ/kg",
               "scale": "logarithmic",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               18,
@@ -1171,7 +1262,8 @@
               },
               "unit": "kg/kWh",
               "scale": "linear",
-              "prefixed": false
+              "prefixed": false,
+              "additive": false
             },
             "cards": [
               0.27,
@@ -1341,7 +1433,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -1437,7 +1530,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -1533,7 +1627,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -1606,6 +1701,2993 @@
       }
     }
   ],
+  "guessed": [
+    {
+      "id": "exact",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 18,
+            "coal": 29,
+            "hydrogen": 120,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": 0,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 18,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 29,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "rough-in-reach",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 40,
+            "wood-pellets": 20,
+            "coal": 30,
+            "hydrogen": 100,
+            "heating-oil": 45
+          },
+          "co2-factor": {
+            "diesel": 0.25,
+            "wood-pellets": 0.05,
+            "coal": 0.3,
+            "hydrogen": 0.01,
+            "heating-oil": 0.28
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 40,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 20,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 30,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 100,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 45,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.25,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.05,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.3,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0.01,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.28,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hydrogen-misses-in-both-dimensions",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 18,
+            "coal": 29,
+            "hydrogen": 1000,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": 0.5,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.431956878830401,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.3552463687117229,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 18,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 29,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 1000,
+                "correct": 120,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 0.5086673889490791,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0.5,
+                "correct": 0,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "equal-guesses-for-different-values",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 25,
+            "coal": 25,
+            "hydrogen": 120,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": 0,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.9857338154646831,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.971467630929366,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 25,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 25,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neighbours-exchanged-in-reach",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 28,
+            "coal": 20,
+            "hydrogen": 120,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": 0,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.971467630929366,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.9429352618587321,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 28,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 20,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "every-guess-misses",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 1,
+            "wood-pellets": 1,
+            "coal": 1,
+            "hydrogen": 1,
+            "heating-oil": 1
+          },
+          "co2-factor": {
+            "diesel": 5,
+            "wood-pellets": 5,
+            "coal": 5,
+            "hydrogen": 5,
+            "heating-oil": 5
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 1,
+                "correct": 42.6,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 1,
+                "correct": 18,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "assigned": 1,
+                "correct": 29,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 1,
+                "correct": 120,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 1,
+                "correct": 42.6,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 5,
+                "correct": 0.27,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 5,
+                "correct": 0.027,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "assigned": 5,
+                "correct": 0.34,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 5,
+                "correct": 0,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 5,
+                "correct": 0.27,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "negative-guess-on-a-linear-scale",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 18,
+            "coal": 29,
+            "hydrogen": 120,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": -0.1,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 18,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 29,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": -0.1,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "power-exact",
+      "task": "appliance-power",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 3000,
+            "toaster": 800,
+            "microwave": 800
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "appliance-power",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "power",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "oven",
+                "assigned": 3000,
+                "correct": 3000,
+                "miss": false
+              },
+              {
+                "item": "toaster",
+                "assigned": 800,
+                "correct": 800,
+                "miss": false
+              },
+              {
+                "item": "microwave",
+                "assigned": 800,
+                "correct": 800,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "power-at-the-reach",
+      "task": "appliance-power",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 1900,
+            "toaster": 1900,
+            "microwave": 800
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "appliance-power",
+        "score": 0.75,
+        "dimensions": [
+          {
+            "dimension": "power",
+            "score": 0.75,
+            "items": [
+              {
+                "item": "oven",
+                "assigned": 1900,
+                "correct": 3000,
+                "miss": false
+              },
+              {
+                "item": "toaster",
+                "assigned": 1900,
+                "correct": 800,
+                "miss": false
+              },
+              {
+                "item": "microwave",
+                "assigned": 800,
+                "correct": 800,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "power-just-beyond-the-reach",
+      "task": "appliance-power",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 3000,
+            "toaster": 1901,
+            "microwave": 800
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "appliance-power",
+        "score": 0.5,
+        "dimensions": [
+          {
+            "dimension": "power",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "oven",
+                "assigned": 3000,
+                "correct": 3000,
+                "miss": false
+              },
+              {
+                "item": "toaster",
+                "assigned": 1901,
+                "correct": 800,
+                "miss": true
+              },
+              {
+                "item": "microwave",
+                "assigned": 800,
+                "correct": 800,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-in-reach",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 0.01,
+            "paver": 2000
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 1,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 0.01,
+                "correct": 2.5,
+                "miss": false
+              },
+              {
+                "item": "paver",
+                "assigned": 2000,
+                "correct": 2.5,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-miss",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 2.5,
+            "paver": 5000
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 0,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 2.5,
+                "correct": 2.5,
+                "miss": false
+              },
+              {
+                "item": "paver",
+                "assigned": 5000,
+                "correct": 2.5,
+                "miss": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-thousandfold-in-reach",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 2500,
+            "paver": 0.0025
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 1,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 2500,
+                "correct": 2.5,
+                "miss": false
+              },
+              {
+                "item": "paver",
+                "assigned": 0.0025,
+                "correct": 2.5,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-thousandfold-one-double-beyond-within-the-slack",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 2500.0000000000005,
+            "paver": 2.5
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 1,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 2500.0000000000005,
+                "correct": 2.5,
+                "miss": false
+              },
+              {
+                "item": "paver",
+                "assigned": 2.5,
+                "correct": 2.5,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-weight-thousandfold-beyond-the-slack",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 2500.000005,
+            "paver": 2.5
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 0,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 2500.000005,
+                "correct": 2.5,
+                "miss": true
+              },
+              {
+                "item": "paver",
+                "assigned": 2.5,
+                "correct": 2.5,
+                "miss": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-exact",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ],
+        "seconds": 150
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "wood-pellets": 18,
+            "coal": 29,
+            "hydrogen": 120,
+            "heating-oil": 42.6
+          },
+          "co2-factor": {
+            "diesel": 0.27,
+            "wood-pellets": 0.027,
+            "coal": 0.34,
+            "hydrogen": 0,
+            "heating-oil": 0.27
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 1.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 18,
+                "correct": 18,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 29,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 1.0,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "assigned": 0.027,
+                "correct": 0.027,
+                "miss": false
+              },
+              {
+                "item": "coal",
+                "assigned": 0.34,
+                "correct": 0.34,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 0,
+                "correct": 0,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "assigned": 0.27,
+                "correct": 0.27,
+                "miss": false,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-partly-guessed",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ],
+        "seconds": 150
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "energy-density": {
+            "diesel": 42.6,
+            "hydrogen": 120,
+            "coal": 29
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.16992874257274226,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.33985748514548453,
+            "items": [
+              {
+                "item": "diesel",
+                "assigned": 42.6,
+                "correct": 42.6,
+                "miss": false
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 18,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "assigned": 29,
+                "correct": 29,
+                "miss": false
+              },
+              {
+                "item": "hydrogen",
+                "assigned": 120,
+                "correct": 120,
+                "miss": false
+              },
+              {
+                "item": "heating-oil",
+                "correct": 42.6,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "correct": 0.27,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 0.027,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "correct": 0.34,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "correct": 0,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "correct": 0.27,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-without-guesses",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ],
+        "seconds": 150
+      },
+      "answer": {
+        "kind": "matching"
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "correct": 42.6,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 18,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "correct": 29,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "correct": 120,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "correct": 42.6,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "correct": 0.27,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 0.027,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "correct": 0.34,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "correct": 0,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "correct": 0.27,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-unanswered",
+      "task": "energy-carriers",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "energy-carriers",
+        "title": {
+          "en": "Energy carriers",
+          "de": "Energieträger"
+        },
+        "prompt": {
+          "en": "Match every carrier with its energy density and its CO₂ factor.",
+          "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+        },
+        "dimensions": [
+          {
+            "id": "energy-density",
+            "quantity": {
+              "label": {
+                "en": "Energy density",
+                "de": "Energiedichte"
+              },
+              "short": {
+                "en": "density",
+                "de": "Dichte"
+              },
+              "unit": "MJ/kg",
+              "scale": "logarithmic",
+              "prefixed": false,
+              "additive": false
+            }
+          },
+          {
+            "id": "co2-factor",
+            "quantity": {
+              "label": {
+                "en": "CO₂ factor",
+                "de": "CO₂-Faktor"
+              },
+              "unit": "kg/kWh",
+              "scale": "linear",
+              "prefixed": false,
+              "additive": false
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "diesel",
+            "label": {
+              "en": "Diesel",
+              "de": "Diesel"
+            }
+          },
+          {
+            "id": "wood-pellets",
+            "label": {
+              "en": "Wood pellets",
+              "de": "Holzpellets"
+            }
+          },
+          {
+            "id": "coal",
+            "label": {
+              "en": "Hard coal",
+              "de": "Steinkohle"
+            }
+          },
+          {
+            "id": "hydrogen",
+            "label": {
+              "en": "Hydrogen",
+              "de": "Wasserstoff"
+            }
+          },
+          {
+            "id": "heating-oil",
+            "label": {
+              "en": "Heating oil",
+              "de": "Heizöl"
+            }
+          }
+        ],
+        "seconds": 150
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "energy-carriers",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "energy-density",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "correct": 42.6,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 18,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "correct": 29,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "correct": 120,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "correct": 42.6,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          },
+          {
+            "dimension": "co2-factor",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "diesel",
+                "correct": 0.27,
+                "miss": true
+              },
+              {
+                "item": "wood-pellets",
+                "correct": 0.027,
+                "miss": true
+              },
+              {
+                "item": "coal",
+                "correct": 0.34,
+                "miss": true
+              },
+              {
+                "item": "hydrogen",
+                "correct": 0,
+                "miss": true
+              },
+              {
+                "item": "heating-oil",
+                "correct": 0.27,
+                "miss": true,
+                "explanation": {
+                  "en": "Heating oil and diesel are nearly the same fuel.",
+                  "de": "Heizöl und Diesel sind fast derselbe Brennstoff."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-zero-weight-one-unguessed",
+      "task": "equal-masses",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ],
+        "seconds": 54
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 2.5
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "equal-masses",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "mass",
+            "score": 0,
+            "items": [
+              {
+                "item": "brick",
+                "assigned": 2.5,
+                "correct": 2.5,
+                "miss": false
+              },
+              {
+                "item": "paver",
+                "correct": 2.5,
+                "miss": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-cards-one-unassigned",
+      "task": "appliance-power",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              3000,
+              800,
+              800
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "answer": {
+        "kind": "matching",
+        "assignments": {
+          "power": {
+            "oven": 0,
+            "toaster": 1
+          }
+        }
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "appliance-power",
+        "score": 0.5,
+        "dimensions": [
+          {
+            "dimension": "power",
+            "score": 0.5,
+            "items": [
+              {
+                "item": "oven",
+                "assigned": 3000,
+                "correct": 3000
+              },
+              {
+                "item": "toaster",
+                "assigned": 800,
+                "correct": 800
+              },
+              {
+                "item": "microwave",
+                "correct": 800
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "timed-cards-unanswered",
+      "task": "appliance-power",
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              3000,
+              800,
+              800
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "expected": {
+        "kind": "matching",
+        "task": "appliance-power",
+        "score": 0.0,
+        "dimensions": [
+          {
+            "dimension": "power",
+            "score": 0.0,
+            "items": [
+              {
+                "item": "oven",
+                "correct": 3000
+              },
+              {
+                "item": "toaster",
+                "correct": 800
+              },
+              {
+                "item": "microwave",
+                "correct": 800
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "degraded": [
     {
       "id": "card-out-of-range",
@@ -1630,7 +4712,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -1688,7 +4771,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -1756,7 +4840,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -1814,7 +4899,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -1882,7 +4968,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -1940,7 +5027,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -2007,7 +5095,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -2065,7 +5154,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -2127,7 +5217,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -2185,7 +5276,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -2256,7 +5348,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             }
           }
         ],
@@ -2314,7 +5407,8 @@
               },
               "unit": "W",
               "scale": "linear",
-              "prefixed": true
+              "prefixed": true,
+              "additive": true
             },
             "cards": [
               3000,
@@ -2450,6 +5544,965 @@
         "score": 0,
         "dimensions": []
       }
+    },
+    {
+      "id": "guesses-where-the-cards-show",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              3000,
+              800,
+              800
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 3000,
+            "toaster": 800,
+            "microwave": 800
+          }
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "assignments-where-the-cards-are-hidden",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "assignments": {
+          "power": {
+            "oven": 0,
+            "toaster": 1,
+            "microwave": 2
+          }
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-partly-guessed-untimed",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 3000,
+            "toaster": 800
+          }
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-without-guesses-untimed",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching"
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-unanswered-untimed",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "hidden-guess-for-an-unknown-item",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ]
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "power": {
+            "oven": 3000,
+            "toaster": 800,
+            "microwave": 800,
+            "kettle": 2200
+          }
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-zero-guess-on-a-logarithmic-scale",
+      "task": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            },
+            "values": {
+              "mass": 2.5
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            },
+            "values": {
+              "mass": 2.5
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "equal-masses",
+        "title": {
+          "en": "Equal masses",
+          "de": "Gleiche Massen"
+        },
+        "prompt": {
+          "en": "Match every stone with its mass.",
+          "de": "Ordne jedem Stein seine Masse zu."
+        },
+        "dimensions": [
+          {
+            "id": "mass",
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "brick",
+            "label": {
+              "en": "Brick",
+              "de": "Backstein"
+            }
+          },
+          {
+            "id": "paver",
+            "label": {
+              "en": "Paver",
+              "de": "Pflasterstein"
+            }
+          }
+        ],
+        "seconds": 54
+      },
+      "answer": {
+        "kind": "matching",
+        "guesses": {
+          "mass": {
+            "brick": 0,
+            "paver": 2.5
+          }
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "timed-cards-index-out-of-range",
+      "task": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            }
+          }
+        ],
+        "items": [
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            },
+            "values": {
+              "power": 800
+            }
+          },
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            },
+            "values": {
+              "power": 3000
+            }
+          }
+        ]
+      },
+      "sheetTask": {
+        "kind": "matching",
+        "id": "appliance-power",
+        "title": {
+          "en": "Appliance power",
+          "de": "Geräteleistung"
+        },
+        "prompt": {
+          "en": "Match every appliance with its power.",
+          "de": "Ordne jedem Gerät seine Leistung zu."
+        },
+        "dimensions": [
+          {
+            "id": "power",
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "linear",
+              "prefixed": true,
+              "additive": true
+            },
+            "cards": [
+              3000,
+              800,
+              800
+            ]
+          }
+        ],
+        "items": [
+          {
+            "id": "oven",
+            "label": {
+              "en": "Oven",
+              "de": "Backofen"
+            }
+          },
+          {
+            "id": "toaster",
+            "label": {
+              "en": "Toaster",
+              "de": "Toaster"
+            }
+          },
+          {
+            "id": "microwave",
+            "label": {
+              "en": "Microwave",
+              "de": "Mikrowelle"
+            }
+          }
+        ],
+        "seconds": 66
+      },
+      "answer": {
+        "kind": "matching",
+        "assignments": {
+          "power": {
+            "oven": 3
+          }
+        }
+      },
+      "expected": null
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "id": "current", "fresh": true },
+    { "id": "stale-version", "path": ["schemaVersion"], "value": 0, "fresh": false },
+    { "id": "same-version-key", "path": ["packages", 0, "keyFamilies", 0, "keys", 0, "name"], "value": "stale-anchor", "fresh": false },
+    { "id": "same-version-description", "path": ["packages", 0, "keyFamilies", 0, "keys", 0, "description", "en"], "value": "Stale authored description", "fresh": false },
+    { "id": "missing-marker", "path": ["_comment"], "value": "", "fresh": false },
+    { "id": "same-content-extra-byte", "suffix": "\n", "fresh": false }
+  ]
+}

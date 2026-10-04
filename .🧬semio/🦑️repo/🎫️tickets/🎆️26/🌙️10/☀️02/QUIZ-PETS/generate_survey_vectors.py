@@ -16,6 +16,21 @@ grown by the keep-out margin to the left and the right only (pets stand on thing
 to shoulder with their sides — which also cuts the edge of a body where a tab stands on it);
 and the margin of a keep-out never reaches over an edge the element lies under (text at the top of a body does not
 block the edge of that body), except for a focused surface, which keeps its whole halo.
+
+The walls of the second round (design-v2 §16, §21, work package C1a): the left and the right side of every surface
+element, then of every other element that the host names as a wall, each in document order, left before right, from the top
+of what one can see of the element down to its bottom, but only where that side itself can be seen (a side a scrolling
+ancestor cuts away is no wall), and only for an element of which something shows on the stage. A wall is named by its
+element and its side (`-1` the left side, its air on the left; `1` the right side); its `surface` is the id of the
+same element. An element the host names as a wall only is a wall and nothing else: no surface, no solid, no keep-out.
+
+The fixtures of the second round (design-v2 §20, §21, work package C1b): the elements the host names as props
+(`data-pet-prop` unless the scene names other attributes) that carry a non-empty `data-pet-prop` key, in document
+order, with their whole box — but only an element that is neither inert nor hidden, that shows whole (no clipping
+ancestor cuts any of it and it lies wholly on the stage), that is neither the focused element nor an ancestor of it,
+that does not lie under the pointer (edges included) and that a copy can stand in for: no table part (`tr`, `td`, `th`,
+`thead`, `tbody`, `tfoot`, `caption`, `col`, `colgroup`), nothing in it a canvas, a video, a sound, an inline frame,
+an object, an embed or a custom element (a tag with a hyphen), and at most 80 elements in all, itself included.
 """
 
 import io
@@ -28,7 +43,10 @@ OUT = os.path.join(ROOT, "🧰️framework", "🛍️products", "🐾️pets", "
 SURFACE_WIDTH = 48
 KEEPOUT_MARGIN = 4
 FOCUS_MARGIN = 8
+FIXTURE_ELEMENTS = 80
 
+UNCOPYABLE_TAGS = {"canvas", "video", "audio", "iframe", "object", "embed"}
+TABLE_PART_TAGS = {"tr", "td", "th", "thead", "tbody", "tfoot", "caption", "col", "colgroup"}
 CONTROL_TAGS = {"button", "input", "select", "textarea", "summary"}
 CONTROL_ROLES = {"button", "link", "checkbox", "radio", "tab", "menuitem", "option", "slider", "switch"}
 TEXT_TAGS = {"p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "label", "figcaption", "td", "th", "legend", "dt", "dd", "blockquote", "pre", "code", "output", "progress", "meter"}
@@ -122,7 +140,65 @@ def grown(region, margin, lines, stage):
     return staged((region[0] - margin, top, region[2] + margin, region[3] + margin), stage)
 
 
-def expectation(scene, is_surface, is_keepout):
+def walls_of(scene, stage, is_surface, is_wall):
+    """🧱️ The walls of a scene: both sides of every visible surface element where that side shows, in document order, left before right; then those of the elements that are walls only."""
+    walls = []
+    for wanted in (is_surface, lambda item: is_wall(item) and not is_surface(item)):
+        for item, ancestors in walk(scene["nodes"]):
+            if not wanted(item) or unseen(item, ancestors):
+                continue
+            region = visible(item, ancestors)
+            if region is None or staged(region, stage) is None:
+                continue
+            left, _, right, _ = edges(item)
+            for side, x, shows in ((-1, left, region[0] == left), (1, right, region[2] == right)):
+                if shows:
+                    walls.append({"element": item["key"], "side": side, "x": x - stage[0], "y0": region[1] - stage[1], "y1": region[3] - stage[1]})
+    return walls
+
+
+def elements(item):
+    """🔢️ How many elements a subtree holds, its root included."""
+    return 1 + sum(elements(child) for child in item["children"])
+
+
+def copyable(item):
+    """🪞️ Whether a copy can stand in for an element: no table part, nothing uncopyable or custom in it, at most the limit of elements."""
+    if item["tag"] in TABLE_PART_TAGS:
+        return False
+    if any("-" in each["tag"] or each["tag"] in UNCOPYABLE_TAGS for each, _ in walk([item])):
+        return False
+    return elements(item) <= FIXTURE_ELEMENTS
+
+
+def fixtures_of(scene, stage, is_prop):
+    """🧸️ The fixtures of a scene: the props with a key that show whole on the stage, hold no focus, lie not under the pointer and can be copied, in document order."""
+    holders = set()
+    for item, ancestors in walk(scene["nodes"]):
+        if item["key"] == scene.get("focus"):
+            holders = {item["key"]} | {each["key"] for each in ancestors}
+    pointer = scene.get("pointer")
+    fixtures = []
+    for item, ancestors in walk(scene["nodes"]):
+        key = item["attributes"].get("data-pet-prop", "")
+        if not is_prop(item) or key == "" or unseen(item, ancestors):
+            continue
+        box = edges(item)
+        if visible(item, ancestors) != box:
+            continue
+        left, top, right, bottom = box
+        if left < stage[0] or top < stage[1] or right > stage[0] + stage[2] or bottom > stage[1] + stage[3]:
+            continue
+        if item["key"] in holders:
+            continue
+        if pointer is not None and left <= pointer["x"] <= right and top <= pointer["y"] <= bottom:
+            continue
+        if copyable(item):
+            fixtures.append({"element": item["key"], "key": key, "x": left - stage[0], "y": top - stage[1], "width": right - left, "height": bottom - top})
+    return fixtures
+
+
+def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_prop=lambda item: "data-pet-prop" in item["attributes"]):
     viewport = scene["viewport"]
     frame = scene.get("frame")
     stage = (frame["left"], frame["top"], frame["width"], frame["height"]) if frame and frame["width"] > 0 and frame["height"] > 0 else (0, 0, viewport["width"], viewport["height"])
@@ -162,20 +238,22 @@ def expectation(scene, is_surface, is_keepout):
         box = None if region is None else grown(region, FOCUS_MARGIN, [] if item["key"] in grounds else lines, stage)
         if box is not None:
             keepouts.append(box)
-    return {"kind": "surveyed", "width": stage[2], "height": stage[3], "surfaces": surfaces, "keepouts": keepouts}
+    return {"kind": "surveyed", "width": stage[2], "height": stage[3], "surfaces": surfaces, "keepouts": keepouts, "walls": walls_of(scene, stage, is_surface, is_wall), "fixtures": fixtures_of(scene, stage, is_prop)}
 
 
 def marked(attribute):
     return lambda item: attribute in item["attributes"]
 
 
-def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=None, keepouts=None):
-    """🎬️ A scene with its expectation; `surfaces` and `keepouts` name the attributes that replace or extend the defaults."""
+def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=None, keepouts=None, walls=None, props=None, pointer=None):
+    """🎬️ A scene with its expectation; `surfaces` and `keepouts` name the attributes that replace or extend the defaults, `walls` those of the elements that are walls besides the surfaces, `props` those that replace the default props; `pointer` is where the pointer rests in viewport pixels."""
     made = {"name": name, "viewport": {"width": viewport[0], "height": viewport[1]}, "nodes": nodes}
     if frame is not None:
         made["frame"] = {"left": frame[0], "top": frame[1], "width": frame[2], "height": frame[3]}
     if focus is not None:
         made["focus"] = focus
+    if pointer is not None:
+        made["pointer"] = {"x": pointer[0], "y": pointer[1]}
     options = {}
     is_surface = marked("data-pet-surface")
     is_keepout = default_keepout
@@ -185,9 +263,17 @@ def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=No
     if keepouts is not None:
         options["keepoutsBesidesDefaults"] = ", ".join(f"[{attribute}]" for attribute in keepouts)
         is_keepout = lambda item: default_keepout(item) or any(attribute in item["attributes"] for attribute in keepouts)
+    is_wall = lambda item: False
+    if walls is not None:
+        options["walls"] = ", ".join(f"[{attribute}]" for attribute in walls)
+        is_wall = lambda item: any(attribute in item["attributes"] for attribute in walls)
+    is_prop = marked("data-pet-prop")
+    if props is not None:
+        options["props"] = ", ".join(f"[{attribute}]" for attribute in props)
+        is_prop = lambda item: any(attribute in item["attributes"] for attribute in props)
     if options:
         made["options"] = options
-    made["expected"] = expectation(made, is_surface, is_keepout)
+    made["expected"] = expectation(made, is_surface, is_keepout, is_wall, is_prop)
     return made
 
 
@@ -426,11 +512,113 @@ SCENES = [
             card("below", (100, 300, 900, 200)),
         ],
     ),
+    scene(
+        "walls: both sides of every part of a silhouette, from its top down to its bottom, a narrow part included",
+        [
+            node("window", "section", (100.5, 199.5, 400, 150.5), children=[
+                node("window-tab", "div", (100.5, 199.5, 90, 26.5), {"data-part": ""}, children=[
+                    node("window-title", "h2", (122, 202.5, 64, 19)),
+                ]),
+                node("window-body", "div", (100.5, 226, 400, 124), {"data-part": ""}, children=[
+                    node("window-text", "p", (107, 232, 386, 40)),
+                    node("window-go", "button", (420, 318, 72, 24)),
+                ]),
+            ]),
+            node("chip", "div", (620, 260, 32, 20), {"data-part": ""}),
+            node("footer", "footer", (0, 774, 1200, 26), {"data-part": ""}),
+        ],
+        surfaces=["data-part"],
+    ),
+    scene(
+        "walls in a scrolling pane: a side the pane cuts away is no wall, a top it cuts shortens the wall, and what it scrolls away has none",
+        [
+            node("pane", "div", (100, 100, 600, 400), overflow="auto", children=[
+                node("pane-content", "div", (100, 20, 600, 900), children=[
+                    card("pane-gone", (120, 20, 300, 60)),
+                    card("pane-under-the-top", (450, 60, 200, 100)),
+                    card("pane-whole", (120, 200, 300, 100)),
+                    card("pane-cut-left", (40, 320, 200, 60)),
+                    card("pane-cut-right", (560, 320, 300, 60)),
+                    card("pane-under-the-bottom", (300, 450, 200, 120)),
+                    card("pane-below", (120, 560, 300, 100)),
+                ]),
+            ]),
+        ],
+    ),
+    scene(
+        "the host may name more walls: their sides are walls and nothing else, measured from a framed stage's corner, and a wall element that is hidden has none",
+        [
+            node("rail", "aside", (40, 120, 120, 500), {"data-pet-wall": ""}),
+            node("rail-hidden", "aside", (1000, 120, 120, 500), {"data-pet-wall": "", "hidden": ""}),
+            card("frame-card", (300, 250, 300, 150), {"data-pet-wall": ""}, children=[node("frame-card-text", "p", (316, 266, 268, 40))]),
+            node("rail-off-stage", "aside", (1040, 700, 100, 80), {"data-pet-wall": ""}),
+        ],
+        frame=(20, 100, 1000, 600),
+        walls=["data-pet-wall"],
+    ),
+    scene(
+        "fixtures: the rows a pet may play with, by their key, whole and in document order; a row without a key, a table row and what holds a film, a custom element or more than eighty elements are none, a surface may be one",
+        [
+            node("tasks", "ol", (300, 120, 600, 220), children=[
+                node("task-1", "li", (300, 120, 600, 30), {"data-pet-prop": "heating/u-values"}, children=[
+                    node("task-1-index", "span", (306, 125, 16, 20)),
+                    node("task-1-glyph", "svg", (330, 126, 18, 18)),
+                    node("task-1-title", "span", (356, 125, 300, 20)),
+                ]),
+                node("task-2", "li", (300, 153.5, 600, 30), {"data-pet-prop": "heating/heating-load-and-demand"}),
+                node("task-keyless", "li", (300, 187, 600, 30), {"data-pet-prop": ""}),
+                node("task-film", "li", (300, 220.5, 600, 30), {"data-pet-prop": "heating/film"}, children=[
+                    node("task-film-holder", "span", (306, 222, 60, 26), children=[node("task-film-video", "video", (306, 222, 40, 26))]),
+                ]),
+                node("task-custom", "li", (300, 254, 600, 30), {"data-pet-prop": "heating/custom"}, children=[node("task-custom-glyph", "quiz-glyph", (306, 256, 20, 20))]),
+                node("task-crowded", "li", (300, 287.5, 600, 30), {"data-pet-prop": "heating/crowded"}, children=[node(f"task-crowded-{index}", "i") for index in range(FIXTURE_ELEMENTS)]),
+                node("task-full", "li", (300, 321, 600, 19), {"data-pet-prop": "heating/full"}, children=[node(f"task-full-{index}", "i") for index in range(FIXTURE_ELEMENTS - 1)]),
+            ]),
+            node("table", "table", (300, 400, 600, 60), children=[
+                node("table-body", "tbody", (300, 400, 600, 60), children=[
+                    node("table-row", "tr", (300, 400, 600, 30), {"data-pet-prop": "heating/row"}, children=[node("table-cell", "td", (300, 400, 600, 30))]),
+                ]),
+            ]),
+            card("badge", (950, 150, 120, 60), {"data-pet-prop": "heating"}),
+        ],
+    ),
+    scene(
+        "fixtures: what a scrolling pane cuts, what lies off the stage, what is inert or hidden, what holds the focus and what lies under the pointer — its very edge included — are none",
+        [
+            node("pane", "div", (100, 100, 400, 200), overflow="auto", children=[
+                node("pane-content", "div", (100, 100, 400, 400), children=[
+                    node("pane-whole", "div", (110, 110, 380, 40), {"data-pet-prop": "cooling/air-change-rates"}),
+                    node("pane-cut", "div", (110, 270, 380, 40), {"data-pet-prop": "cooling/cooling-load-and-demand"}),
+                    node("pane-gone", "div", (110, 350, 380, 40), {"data-pet-prop": "cooling"}),
+                ]),
+            ]),
+            node("off-stage", "div", (1100, 50, 200, 30), {"data-pet-prop": "physics"}),
+            node("backstage", "section", (600, 100, 300, 100), {"inert": ""}, children=[node("backstage-row", "div", (610, 110, 280, 30), {"data-pet-prop": "physics/powers"})]),
+            node("folded-row", "div", (600, 250, 300, 30), {"data-pet-prop": "physics/energies", "hidden": ""}),
+            node("focus-row", "div", (600, 400, 300, 40), {"data-pet-prop": "demand/final-energy"}, children=[node("focus-field", "input", (610, 405, 100, 30))]),
+            node("pointer-row", "div", (600, 500, 300, 40), {"data-pet-prop": "demand/standard-profiles"}),
+            node("free-row", "div", (600, 600, 300, 40), {"data-pet-prop": "demand"}),
+        ],
+        focus="focus-field",
+        pointer=(900, 540),
+    ),
+    scene(
+        "fixtures: a host may name its own props — the key still comes from data-pet-prop — measured from a framed stage's corner",
+        [
+            node("toy", "div", (200, 100, 300, 40), {"data-toy": "", "data-pet-prop": "demand"}),
+            node("toy-keyless", "div", (200, 200, 300, 40), {"data-toy": ""}),
+            node("prop-no-toy", "div", (200, 300, 300, 40), {"data-pet-prop": "demand/final-energy"}),
+            node("toy-beyond-frame", "div", (50, 400, 100, 40), {"data-toy": "", "data-pet-prop": "demand/standard-profiles"}),
+            node("toy-last", "div", (700, 500.5, 250, 40.5), {"data-toy": "", "data-pet-prop": "cooling"}),
+        ],
+        frame=(100, 50, 1000, 700),
+        props=["data-toy"],
+    ),
 ]
 
 DOCUMENT = {
     "$comment":"📡️ Shared vectors of the React suite 🧪️tests/📡️surface-survey: document trees with the box of every element and the `surveyed` event a stage must receive for them. Generated by `python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/generate_survey_vectors.py` from a second reading of design §6.3 written in Python (tag and attribute tables instead of a selector engine, interval arithmetic); never edited by hand. `expected.surfaces[].element` names the element of the scene whose surface it is (`floor` for the floor); `options.keepoutsBesidesDefaults` extends the default keep-outs.",
-    "margins": {"surfaceWidth": SURFACE_WIDTH, "keepout": KEEPOUT_MARGIN, "focus": FOCUS_MARGIN},
+    "margins": {"surfaceWidth": SURFACE_WIDTH, "keepout": KEEPOUT_MARGIN, "focus": FOCUS_MARGIN, "fixtureElements": FIXTURE_ELEMENTS},
     "scenes": SCENES,
 }
 
@@ -438,4 +626,4 @@ os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with io.open(OUT, "w", encoding="utf-8", newline="\n") as handle:
     json.dump(DOCUMENT, handle, ensure_ascii=False, indent=2)
     handle.write("\n")
-print(json.dumps({"scenes": len(SCENES), "surfaces": sum(len(each["expected"]["surfaces"]) for each in SCENES), "keepouts": sum(len(each["expected"]["keepouts"]) for each in SCENES)}))
+print(json.dumps({"scenes": len(SCENES), "surfaces": sum(len(each["expected"]["surfaces"]) for each in SCENES), "keepouts": sum(len(each["expected"]["keepouts"]) for each in SCENES), "walls": sum(len(each["expected"]["walls"]) for each in SCENES), "fixtures": sum(len(each["expected"]["fixtures"]) for each in SCENES)}))

@@ -6,7 +6,10 @@
  * folder as an example (the Rust half of the long-run bit-exactness proof) and one host stand-in per case of this
  * work package. Everything below `🗑️generated` may be deleted; this command brings it back.
  *
- * `mutants` copies the behaviour and the stage twin, breaks one expression in each copy (a fused multiply-add, a
+ * Since the stage was split (work package A1 of the second round) the crate also mounts its ten parts, privately as
+ * the real glue does, and a mutant names the part its expression lives in (`MUTANTS[].module`).
+ *
+ * `mutants` copies the behaviour twin and the parts of the stage twin, breaks one expression in each copy (a fused multiply-add, a
  * reassociated product or quotient, a constant one unit in the last place off, two words of a draw swapped, a span
  * one tick long, a rule of the pointer or of spreading out bent), replays the recorded sessions of `long_trace_digest.ts` through each copy and fails unless every
  * mutant yields other digests than the TypeScript twin — except the mutants marked `survives`, which record what the
@@ -31,27 +34,39 @@ const UP = "../../../../../../../../../../../..";
 const SCRATCH = join(import.meta.dir, "🗑️generated", "wp-m");
 const CRATE = join(SCRATCH, "crate", "📦️packages", "🦀️rust");
 const CASES: readonly (readonly [string, string])[] = [["behavior_choice", "🧠️behavior-choice"], ["bond_dynamics", "🤝️bond-dynamics"], ["stage_trace", "🎪️stage-trace"]];
-const MODULES: readonly (readonly [string, string])[] = [["schema", "🧬️schema"], ["trigonometry", "🔨️modules/📐️trigonometry"], ["randomness", "🔨️modules/🎲️randomness"], ["rig", "🔨️modules/🦴️rig"], ["animation", "🔨️modules/🎞️animation"], ["terrain", "🔨️modules/🏞️terrain"], ["behavior", "🔨️modules/🧠️behavior"], ["stage", "🔨️modules/🎪️stage"]];
-const MUTABLE = ["behavior", "stage"];
+const MODULES: readonly (readonly [string, string])[] = [["schema", "🧬️schema"], ["trigonometry", "🔨️modules/📐️trigonometry"], ["randomness", "🔨️modules/🎲️randomness"], ["rig", "🔨️modules/🦴️rig"], ["animation", "🔨️modules/🎞️animation"], ["terrain", "🔨️modules/🏞️terrain"], ["behavior", "🔨️modules/🧠️behavior"], ["feeling", "🔨️modules/💗️feeling"], ["gesture", "🔨️modules/👆️gesture"], ["stage", "🔨️modules/🎪️stage"]];
+const PARTS: readonly (readonly [string, string])[] = [
+  ["draft", "🔨️modules/📝️draft"],
+  ["spacing", "🔨️modules/📏️spacing"],
+  ["schedule", "🔨️modules/🗓️schedule"],
+  ["attention", "🔨️modules/👀️attention"],
+  ["locomotion", "🔨️modules/🚶️locomotion"],
+  ["sociability", "🔨️modules/💞️sociability"],
+  ["choice", "🔨️modules/🎯️choice"],
+  ["population", "🔨️modules/👥️population"],
+  ["clock", "🔨️modules/🕰️clock"],
+  ["projection", "🔨️modules/🎥️projection"],
+];
+const MUTABLE = ["behavior", "spacing", "attention", "locomotion", "sociability", "choice", "population"];
 const TEST_ATTACH = '#[cfg(test)]\n#[path = "🧪️tests/🔬️unit/🦀️.rs"]\nmod tests;\n';
 
-type Mutant = { readonly name: string; readonly module: "behavior" | "stage"; readonly edits: readonly (readonly [string, string])[]; readonly survives?: string };
+type Mutant = { readonly name: string; readonly module: string; readonly edits: readonly (readonly [string, string])[]; readonly survives?: string };
 const MUTANTS: readonly Mutant[] = [
-  { name: "stage_fused_mood", module: "stage", edits: [["let next = body.mood + (want - body.mood) * MOOD_EASE;", "let next = (want - body.mood).mul_add(MOOD_EASE, body.mood);"]], survives: "an equivalent mutant: MOOD_EASE is 2⁻⁵, the product is exact, so fusing it rounds nothing differently" },
-  { name: "stage_fused_goal", module: "stage", edits: [["let mut goal = clamp(low + (high - low) * place, at - reach, at + reach);", "let mut goal = clamp((high - low).mul_add(place, low), at - reach, at + reach);"]] },
-  { name: "stage_reassociated_goal", module: "stage", edits: [["let mut goal = clamp(low + (high - low) * place, at - reach, at + reach);", "let mut goal = clamp(low * (1.0 - place) + high * place, at - reach, at + reach);"]] },
-  { name: "stage_swapped_blink_words", module: "stage", edits: [["if unit_of(words[1]) * 6.0 < 1.0 { now + BLINK_AGAIN } else { blink_at(now, unit_of(words[0])) }", "if unit_of(words[0]) * 6.0 < 1.0 { now + BLINK_AGAIN } else { blink_at(now, unit_of(words[1])) }"]] },
-  { name: "stage_eye_height_one_ulp_off", module: "stage", edits: [["const EYE_HEIGHT: f64 = 0.6;", "const EYE_HEIGHT: f64 = 0.600_000_000_000_000_1;"]] },
-  { name: "stage_reassociated_glide", module: "stage", edits: [["launches.push(Launch { x, vx: (dx * RATE) / ticks, vy: (dy * RATE) / ticks, ticks: ticks as Ticks });", "launches.push(Launch { x, vx: dx * (RATE / ticks), vy: dy * (RATE / ticks), ticks: ticks as Ticks });"]] },
-  { name: "stage_eager_one_tick_longer", module: "stage", edits: [["let eager = needs_after(one.needs, Activity::Idle, now - one.since, draft.kinds[first].temperament).sociability;", "let eager = needs_after(one.needs, Activity::Idle, now - one.since + 1, draft.kinds[first].temperament).sociability;"]], survives: "a blind spot: the sociability of the moment only weighs a pairing draw, and 3e-5 more of it flips no draw in these sessions" },
-  { name: "stage_fused_eye", module: "stage", edits: [["let eye = Point { x: actor.x, y: actor.y - kinds[index].size.height * EYE_HEIGHT };", "let eye = Point { x: actor.x, y: (0.0 - kinds[index].size.height).mul_add(EYE_HEIGHT, actor.y) };"]] },
-  { name: "stage_turn_rest_one_tick_longer", module: "stage", edits: [["const TURN_REST: Ticks = 56;", "const TURN_REST: Ticks = 57;"]] },
-  { name: "stage_perk_one_tick_later", module: "stage", edits: [["const PERK_LINGER: Ticks = 32;", "const PERK_LINGER: Ticks = 33;"]] },
-  { name: "stage_perk_cost_one_ulp_off", module: "stage", edits: [["const PERK_COST: f64 = 0.6;", "const PERK_COST: f64 = 0.600_000_000_000_000_1;"]] },
-  { name: "stage_fused_lean", module: "stage", edits: [["x: bone.x + LEAN_REACH * across,", "x: LEAN_REACH.mul_add(across, bone.x),"]] },
-  { name: "stage_ground_as_good_as_a_shelf", module: "stage", edits: [["let raised = |room: &Room| draft.stage.perches[room.perch].y < ground;", "let raised = |room: &Room| draft.stage.perches[room.perch].y <= ground;"]] },
-  { name: "stage_every_survey_brings_new_ground", module: "stage", edits: [["draft.stage.surfaces.iter().any(|surface| surface_of(before, &surface.id).is_none())", "!draft.stage.surfaces.is_empty()"]] },
-  { name: "stage_falls_from_vanished_ground", module: "stage", edits: [["if uprooted || draft.stage.mode == PetMode::Still {", "if draft.stage.mode == PetMode::Still {"]] },
+  { name: "stage_fused_mood", module: "attention", edits: [["let next = body.mood + (want - body.mood) * MOOD_EASE;", "let next = (want - body.mood).mul_add(MOOD_EASE, body.mood);"]], survives: "an equivalent mutant: MOOD_EASE is 2⁻⁵, the product is exact, so fusing it rounds nothing differently" },
+  { name: "stage_fused_goal", module: "choice", edits: [["let mut goal = clamp(low + (high - low) * place, at - reach, at + reach);", "let mut goal = clamp((high - low).mul_add(place, low), at - reach, at + reach);"]] },
+  { name: "stage_reassociated_goal", module: "choice", edits: [["let mut goal = clamp(low + (high - low) * place, at - reach, at + reach);", "let mut goal = clamp(low * (1.0 - place) + high * place, at - reach, at + reach);"]] },
+  { name: "stage_swapped_blink_words", module: "attention", edits: [["if unit_of(words[1]) * 6.0 < 1.0 { now + BLINK_AGAIN } else { blink_at(now, unit_of(words[0])) }", "if unit_of(words[0]) * 6.0 < 1.0 { now + BLINK_AGAIN } else { blink_at(now, unit_of(words[1])) }"]] },
+  { name: "stage_eye_height_one_ulp_off", module: "attention", edits: [["const EYE_HEIGHT: f64 = 0.6;", "const EYE_HEIGHT: f64 = 0.600_000_000_000_000_1;"]] },
+  { name: "stage_reassociated_glide", module: "locomotion", edits: [["launches.push(Launch { x, vx: (dx * RATE) / ticks, vy: (dy * RATE) / ticks, ticks: ticks as Ticks });", "launches.push(Launch { x, vx: dx * (RATE / ticks), vy: dy * (RATE / ticks), ticks: ticks as Ticks });"]] },
+  { name: "stage_eager_one_tick_longer", module: "sociability", edits: [["let eager = needs_after(one.needs, Activity::Idle, now - one.since, draft.kinds[first].temperament).sociability;", "let eager = needs_after(one.needs, Activity::Idle, now - one.since + 1, draft.kinds[first].temperament).sociability;"]], survives: "a blind spot: the sociability of the moment only weighs a pairing draw, and 3e-5 more of it flips no draw in these sessions" },
+  { name: "stage_fused_eye", module: "attention", edits: [["let eye = Point { x: actor.x, y: actor.y - kinds[index].size.height * EYE_HEIGHT };", "let eye = Point { x: actor.x, y: (0.0 - kinds[index].size.height).mul_add(EYE_HEIGHT, actor.y) };"]] },
+  { name: "stage_turn_rest_one_tick_longer", module: "attention", edits: [["const TURN_REST: Ticks = 56;", "const TURN_REST: Ticks = 57;"]] },
+  { name: "stage_perk_one_tick_later", module: "attention", edits: [["const PERK_LINGER: Ticks = 32;", "const PERK_LINGER: Ticks = 33;"]] },
+  { name: "stage_perk_cost_one_ulp_off", module: "attention", edits: [["const PERK_COST: f64 = 0.6;", "const PERK_COST: f64 = 0.600_000_000_000_000_1;"]] },
+  { name: "stage_fused_lean", module: "attention", edits: [["x: bone.x + LEAN_REACH * across,", "x: LEAN_REACH.mul_add(across, bone.x),"]] },
+  { name: "stage_ground_as_good_as_a_shelf", module: "spacing", edits: [["let raised = |room: &Room| draft.stage.perches[room.perch].y < ground;", "let raised = |room: &Room| draft.stage.perches[room.perch].y <= ground;"]] },
+  { name: "stage_every_survey_brings_new_ground", module: "population", edits: [["draft.stage.surfaces.iter().any(|surface| surface_of(before, &surface.id).is_none())", "!draft.stage.surfaces.is_empty()"]] },
+  { name: "stage_falls_from_vanished_ground", module: "population", edits: [["if uprooted || draft.stage.mode == PetMode::Still {", "if draft.stage.mode == PetMode::Still {"]] },
   { name: "behavior_fused_energy", module: "behavior", edits: [["energy: clamp(needs.energy + (if energy < 0.0 { energy * (1.5 - temperament.energy) } else { energy }) * seconds, 0.0, 1.0),", "energy: clamp((if energy < 0.0 { energy * (1.5 - temperament.energy) } else { energy }).mul_add(seconds, needs.energy), 0.0, 1.0),"]] },
   { name: "behavior_reassociated_fidget", module: "behavior", edits: [["{ limits.fidget * drive * (0.5 + curiosity) }", "{ limits.fidget * (drive * (0.5 + curiosity)) }"]], survives: "a blind spot of the long run: a weight one unit in the last place off flips no pick; the weights themselves are held to the TypeScript twin bit for bit by rehearse_stage_adapters.ts" },
   { name: "behavior_reassociated_fade", module: "behavior", edits: [["let step = (RAPPORT_FADE_STEP * ticks as f64) / RAPPORT_FADE_TICKS;", "let step = RAPPORT_FADE_STEP * (ticks as f64 / RAPPORT_FADE_TICKS);"]] },
@@ -112,13 +127,15 @@ function manifest(): string {
   ].join("\n");
 }
 
-/** 🔌️ The glue of the scratch crate: the mounts of the real glue (without validation) and the flat names of the façade, with a mutant in place of a twin when its feature is on. */
+/** 🔌️ The glue of the scratch crate: the mounts of the real glue (without validation) — the parts of the stage private, as there — and the flat names of the façade, with a mutant in place of a twin when its feature is on. */
 function glue(): string {
-  const mount = ([module, path]: readonly [string, string]): string =>
-    MUTABLE.includes(module) ? `#[cfg_attr(not(feature = "mutant-${module}"), path = "${UP}/${PETS}/${path}/🦀️.rs")]\n#[cfg_attr(feature = "mutant-${module}", path = "mutants/current_${module}.rs")]\npub mod ${module};\n` : `#[path = "${UP}/${PETS}/${path}/🦀️.rs"]\npub mod ${module};\n`;
+  const mount = ([module, path]: readonly [string, string], keyword: string): string =>
+    MUTABLE.includes(module) ? `#[cfg_attr(not(feature = "mutant-${module}"), path = "${UP}/${PETS}/${path}/🦀️.rs")]\n#[cfg_attr(feature = "mutant-${module}", path = "mutants/current_${module}.rs")]\n${keyword} ${module};\n` : `#[path = "${UP}/${PETS}/${path}/🦀️.rs"]\n${keyword} ${module};\n`;
   return [
     "//! 📦️ Scratch glue of work package M, written by `stage_scratch.ts prepare` — the mounts the real package glue carries for the simulation and what it imports. The `mutant-…` features swap in a deliberately broken copy.\n",
-    ...MODULES.map(mount),
+    ...MODULES.slice(0, -1).map((entry) => mount(entry, "pub mod")),
+    ...PARTS.map((entry) => mount(entry, "mod")),
+    mount(MODULES[MODULES.length - 1]!, "pub mod"),
     `${MODULES.map(([module]) => `pub use ${module}::*;`).join("\n")}\n`,
     '#[cfg(feature = "sut")]\npub use serde_json;\n',
   ].join("\n");
@@ -142,8 +159,10 @@ function mutants(): void {
   let survived = 0;
   let surprises = 0;
   for (const mutant of MUTANTS) {
-    let source = readFileSync(join(ROOT, PETS, "🔨️modules", mutant.module === "behavior" ? "🧠️behavior" : "🎪️stage", "🦀️.rs"), "utf8");
-    for (const [from, to] of [[TEST_ATTACH, ""] as const, ...mutant.edits]) {
+    const home = [...MODULES, ...PARTS].find(([module]) => module === mutant.module);
+    if (home === undefined) throw new Error(`${mutant.name}: no module ${mutant.module}`);
+    let source = readFileSync(join(ROOT, PETS, home[1], "🦀️.rs"), "utf8");
+    for (const [from, to] of [...(source.includes(TEST_ATTACH) ? [[TEST_ATTACH, ""] as const] : []), ...mutant.edits]) {
       if (source.split(from).length !== 2) throw new Error(`${mutant.name}: the twin does not contain exactly once: ${from}`);
       source = source.replace(from, () => to);
     }

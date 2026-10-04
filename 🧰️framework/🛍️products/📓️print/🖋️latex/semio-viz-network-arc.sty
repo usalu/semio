@@ -126,11 +126,11 @@
   \semio_viz_net_layopts_build:
   \str_if_eq:VnTF \l_semio_viz_arc_mode_tl { circular }
     {
-      \semio_viz_layout_run:VVnV \c_semio_viz_arc_ring_tl \l_semio_viz_net_data_tl
+      \semio_viz_layout_structure:VVnV \c_semio_viz_arc_ring_tl \l_semio_viz_net_data_tl
         { semio-net-arc } \l_semio_viz_net_layopts_tl
     }
     {
-      \semio_viz_layout_run:VVnV \c_semio_viz_arc_layout_tl \l_semio_viz_net_data_tl
+      \semio_viz_layout_structure:VVnV \c_semio_viz_arc_layout_tl \l_semio_viz_net_data_tl
         { semio-net-arc } \l_semio_viz_net_layopts_tl
     }
   \semio_viz_network_components:
@@ -219,7 +219,7 @@
   \fp_set:Nn \l_semio_viz_hive_rout_fp { 1 }
   \keys_set:nn { semio / viz / family / hive-plot } {#1}
   \semio_viz_net_layopts_build:
-  \semio_viz_layout_run:VVnV \c_semio_viz_hive_layout_tl \l_semio_viz_net_data_tl
+  \semio_viz_layout_structure:VVnV \c_semio_viz_hive_layout_tl \l_semio_viz_net_data_tl
     { semio-net-hive } \l_semio_viz_net_layopts_tl
   \semio_viz_hive_place:
   \semio_viz_network_components:

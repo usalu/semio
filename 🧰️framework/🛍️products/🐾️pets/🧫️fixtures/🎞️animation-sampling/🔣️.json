@@ -485,9 +485,34 @@
         ]
       }
     ],
-    "repertoire": {"idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle"], "greet": ["wave"], "sleep": ["doze"]},
+    "repertoire": {
+      "idle": ["breathe"],
+      "walk": ["stroll"],
+      "fidget": ["wiggle"],
+      "greet": ["wave"],
+      "sleep": ["doze"],
+      "hang": ["breathe"],
+      "tumble": ["breathe"],
+      "purr": ["breathe"],
+      "dizzy": ["wiggle"],
+      "shrug": ["wiggle"],
+      "push": ["wiggle"]
+    },
     "locomotion": {"gait": "walk", "speed": 36},
-    "temperament": {"energy": 0.6, "sociability": 0.7, "curiosity": 0.6}
+    "temperament": {"energy": 0.6, "sociability": 0.7, "curiosity": 0.6},
+    "states": [
+      {
+        "id": "resting",
+        "name": {"en": "Resting", "de": "In Ruhe"}
+      }
+    ],
+    "tricks": [],
+    "purr": {"clip": "breathe"},
+    "emitters": [],
+    "gear": [],
+    "grip": 27,
+    "reach": 10,
+    "mood": "content"
   },
   "poses": [
     {

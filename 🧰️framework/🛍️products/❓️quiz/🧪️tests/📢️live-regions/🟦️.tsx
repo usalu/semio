@@ -1,7 +1,8 @@
 /** 📢️ What speaks by itself and what stays quiet: the connection indicator is plain visible text — never a live region,
  * judged by the roles and implicit `aria-live` values of `aria-query` (the WAI-ARIA role model `@testing-library` itself
  * queries with) as the third-party oracle — and one polite status speaks only when the connection enters an alert state
- * and when it recovers (shared vectors, both languages).
+ * and when it recovers (shared vectors, both languages). The clock of a timed task is a timer, which by the same oracle
+ * never speaks by itself, and its text says the time left in words.
  *
  * @see ../../🧫️fixtures/📢️live-regions/🔣️.json
  * @see https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html
@@ -10,7 +11,7 @@
 import { render } from "@testing-library/react";
 import { roles } from "aria-query";
 import { describe, expect, it } from "vitest";
-import { ConnectionStatus, QUIZ_LOCALES, connectionMessage, quizText, type QuizConnection } from "@semio-tech/quiz-react";
+import { ConnectionStatus, QUIZ_LOCALES, TaskClock, connectionMessage, formatDuration, quizText, type QuizConnection } from "@semio-tech/quiz-react";
 import regions from "../../🧫️fixtures/📢️live-regions/🔣️.json";
 
 type Locale = (typeof QUIZ_LOCALES)[number];
@@ -48,7 +49,25 @@ describe("📢️ live regions", () => {
     expect(roles.get("alert")?.props["aria-live"]).toBe("assertive");
   });
 
+  it("knows that a timer never speaks by itself", () => {
+    expect(roles.has("timer")).toBe(true);
+    expect(roles.get("timer")?.props["aria-live"] ?? "off").toBe("off");
+  });
+
   for (const locale of QUIZ_LOCALES) {
+    it(`makes the clock of a timed task a timer that is read in words on demand and never speaks by itself (${locale})`, () => {
+      const text = quizText(locale);
+      const at = 5_000_000;
+      const { container, unmount } = render(<TaskClock seconds={120} deadline={at + 65_000} now={() => at} onStart={() => Promise.resolve(undefined)} onStarted={() => undefined} announce={() => undefined} text={text} locale={locale} />);
+      const clock = container.querySelector<HTMLElement>(".quiz-clock")!;
+      expect(clock.getAttribute("role")).toBe("timer");
+      expect(spoken(clock)).toBe(false);
+      expect([...container.querySelectorAll("*")].filter((element) => liveness(element) !== "off")).toHaveLength(0);
+      expect(clock.querySelector(".sr-only")?.textContent).toBe(text("quiz.run.clockLeft", { time: formatDuration(65_000, locale) }));
+      expect(clock.querySelector(".sr-only")?.textContent).toBe(locale === "en" ? "Time left: 1 minute, 5 seconds" : "Verbleibende Zeit: 1 Minute, 5 Sekunden");
+      unmount();
+    });
+
     it(`shows every connection state and speaks only of an outage and its end (${locale})`, () => {
       const text = quizText(locale);
       const { container, rerender } = render(<ConnectionStatus connection={connection(steps[0]!)} text={text} />);

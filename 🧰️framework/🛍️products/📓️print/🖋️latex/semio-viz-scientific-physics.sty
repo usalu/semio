@@ -14,10 +14,44 @@
 \seq_new:N \l_semio_viz_phys_rec_seq
 % ✂️ Splits one slash-separated record #1 into the shared field sequence.
 \cs_new_protected:Npn \semio_viz_phys_record:n #1
-  { \seq_set_split:Nnx \l_semio_viz_phys_rec_seq { / } {#1} }
+  { \seq_set_split:Nnn \l_semio_viz_phys_rec_seq { / } {#1} }
 % 🔢 Expands to field #1 of the record most recently split.
 \cs_new:Npn \semio_viz_phys_field:n #1
   { \seq_item:Nn \l_semio_viz_phys_rec_seq {#1} }
+\box_new:N \l_semio_viz_phys_label_box
+\fp_new:N \l_semio_viz_phys_label_width_fp
+\fp_new:N \l_semio_viz_phys_label_height_fp
+\fp_new:N \l_semio_viz_phys_inset_x_fp
+\fp_new:N \l_semio_viz_phys_inset_y_fp
+% 🧹 Resets physical coordinates and measured fixed-size caption gutters.
+\cs_new_protected:Npn \semio_viz_phys_fit_reset: {
+  \semio_viz_sci_fit_reset:
+  \fp_zero:N \l_semio_viz_phys_label_width_fp
+  \fp_zero:N \l_semio_viz_phys_label_height_fp
+}
+% 🏷️ Reserves measured caption space before mapping physical coordinates.
+\cs_new_protected:Npn \semio_viz_phys_fit_label:nnn #1#2#3 {
+  \pgfinterruptpicture
+  \hbox_gset:Nn \l_semio_viz_phys_label_box { \normalfont \c_semio_viz_theme_font_label_tl \strut #3 }
+  \endpgfinterruptpicture
+  \fp_set:Nn \l_semio_viz_phys_label_width_fp {max(\l_semio_viz_phys_label_width_fp,\dim_to_fp:n{\box_wd:N\l_semio_viz_phys_label_box}/(\dim_to_fp:n{100mm}/100))}
+  \fp_set:Nn \l_semio_viz_phys_label_height_fp {max(\l_semio_viz_phys_label_height_fp,(\dim_to_fp:n{\box_ht:N\l_semio_viz_phys_label_box}+\dim_to_fp:n{\box_dp:N\l_semio_viz_phys_label_box})/(\dim_to_fp:n{100mm}/100))}
+  \semio_viz_sci_fit_point:nn {#1}{#2}
+}
+% 🖼️ Maps physical coordinates into the canvas while retaining authored caption fonts.
+\cs_new_protected:Npn \semio_viz_phys_fit_begin: {
+  \fp_set:Nn \l_semio_viz_phys_inset_x_fp {max(4,\l_semio_viz_phys_label_width_fp+1.2)}
+  \fp_set:Nn \l_semio_viz_phys_inset_y_fp {max(4,\l_semio_viz_phys_label_height_fp+1.2)}
+  \fp_set:Nn \l_semio_viz_sci_fit_scale_fp {min(1,
+    (\l_semio_viz_sci_w_fp-2*\l_semio_viz_phys_inset_x_fp)/max(1,\l_semio_viz_sci_fit_xmax_fp-\l_semio_viz_sci_fit_xmin_fp),
+    (\l_semio_viz_sci_h_fp-2*\l_semio_viz_phys_inset_y_fp)/max(1,\l_semio_viz_sci_fit_ymax_fp-\l_semio_viz_sci_fit_ymin_fp))}
+  \begin{scope}
+  \pgftransformshift{\pgfpoint
+    {\fp_eval:n{(\l_semio_viz_sci_w_fp-\l_semio_viz_sci_fit_scale_fp*(\l_semio_viz_sci_fit_xmax_fp+\l_semio_viz_sci_fit_xmin_fp))/2}mm}
+    {\fp_eval:n{(\l_semio_viz_sci_h_fp-\l_semio_viz_sci_fit_scale_fp*(\l_semio_viz_sci_fit_ymax_fp+\l_semio_viz_sci_fit_ymin_fp))/2}mm}}
+  \pgftransformscale{\fp_to_decimal:N\l_semio_viz_sci_fit_scale_fp}
+  \semio_viz_sci_report_values:nn {physics/fit} {\fp_to_decimal:N\l_semio_viz_sci_fit_scale_fp,\fp_to_decimal:N\l_semio_viz_phys_inset_x_fp,\fp_to_decimal:N\l_semio_viz_phys_inset_y_fp}
+}
 %endregion 🔖️Parsing
 
 %region 🔖️Families
@@ -59,6 +93,24 @@
         frames={ 0/0/t0 , 12/4/t1 , 26/10/t2 , 42/18/t3 , 60/28/t4 }
       }
       {#1}
+    \semio_viz_phys_fit_reset:
+    \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_bodysize_fp/2}{-\l_semio_viz_phys_bodysize_fp/2}
+    \semio_viz_sci_fit_point:nn {\l_semio_viz_phys_bodysize_fp/2}{\l_semio_viz_phys_bodysize_fp/2}
+    \str_if_eq:VnTF \l_semio_viz_phys_mode_tl {motion}
+      { \clist_map_inline:Nn \l_semio_viz_phys_frames_clist {
+          \semio_viz_phys_record:n {##1}
+          \semio_viz_sci_fit_point:nn {\semio_viz_phys_field:n{1}-\l_semio_viz_phys_bodysize_fp/4}{\semio_viz_phys_field:n{2}-\l_semio_viz_phys_bodysize_fp/4}
+          \semio_viz_sci_fit_point:nn {\semio_viz_phys_field:n{1}+\l_semio_viz_phys_bodysize_fp/4}{\semio_viz_phys_field:n{2}+\l_semio_viz_phys_bodysize_fp/4}
+          \semio_viz_phys_fit_label:nnn {\semio_viz_phys_field:n{1}}{\semio_viz_phys_field:n{2}-\l_semio_viz_phys_bodysize_fp/4-0.6}{\semio_viz_phys_field:n{3}}
+        } }
+      { \clist_map_inline:Nn \l_semio_viz_phys_forces_clist {
+          \semio_viz_phys_record:n {##1}
+          \semio_viz_phys_fit_label:nnn
+            {\l_semio_viz_phys_scale_fp*\semio_viz_phys_field:n{1}*cosd(\semio_viz_phys_field:n{2})}
+            {\l_semio_viz_phys_scale_fp*\semio_viz_phys_field:n{1}*sind(\semio_viz_phys_field:n{2})}
+            {\semio_viz_phys_field:n{3}}
+        } }
+    \semio_viz_phys_fit_begin:
     \str_if_eq:VnTF \l_semio_viz_phys_mode_tl { motion }
       { \semio_viz_phys_motion: }
       {
@@ -67,6 +119,7 @@
           { \semio_viz_phys_decompose: }
           { \semio_viz_phys_forces: }
       }
+    \end{scope}
   }
 % 🧊 Draws the body the forces act on at the origin: a filled dot, a circle, or a square as the fallback.
 \cs_new_protected:Npn \semio_viz_phys_body:
@@ -421,21 +474,24 @@
     \semio_viz_sci_enter:nnn { sci-feynman }
       {
         wiggle=1.6 , coils=7 , axes=false , grid=false ,
-        vertices={ i1/0/18/e- , i2/0/2/e+ , v1/16/10/ , v2/38/10/ , o1/54/18/μ- , o2/54/2/μ+ } ,
-        propagators={ i1/v1/fermion/ , i2/v1/antifermion/ , v1/v2/photon/γ ,
+        vertices={ i1/0/18/e- , i2/0/2/e+ , v1/16/10/ , v2/38/10/ , o1/54/18/\ensuremath{\mu^-} , o2/54/2/\ensuremath{\mu^+} } ,
+        propagators={ i1/v1/fermion/ , i2/v1/antifermion/ , v1/v2/photon/\ensuremath{\gamma} ,
                       v2/o1/fermion/ , v2/o2/antifermion/ }
       }
       {#1}
     \prop_clear:N \l_semio_viz_phys_vx_prop
     \prop_clear:N \l_semio_viz_phys_vy_prop
+    \semio_viz_sci_fit_reset:
     \clist_map_inline:Nn \l_semio_viz_phys_vertices_clist
       {
         \semio_viz_phys_record:n {##1}
+        \semio_viz_sci_fit_point:nn {\semio_viz_phys_field:n{2}} {\semio_viz_phys_field:n{3}}
         \prop_put:Nxx \l_semio_viz_phys_vx_prop
           { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 2 } }
         \prop_put:Nxx \l_semio_viz_phys_vy_prop
           { \semio_viz_phys_field:n { 1 } } { \semio_viz_phys_field:n { 3 } }
       }
+    \semio_viz_sci_fit_begin:
     \clist_map_inline:Nn \l_semio_viz_phys_props_clist
       {
         \semio_viz_phys_record:n {##1}
@@ -453,6 +509,7 @@
               { \semio_viz_phys_field:n { 4 } } ;
           }
       }
+    \end{scope}
   }
 % 🎽 Looks up the two endpoint vertices of the pending propagator record and strokes it in its own style: wavy photon, coiled gluon, dashed scalar, dotted ghost, or a fermion arrow that reverses for an antifermion.
 \cs_new_protected:Npn \semio_viz_phys_propagator:
@@ -494,6 +551,12 @@
           ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) --
           ( \fp_eval:n { \l_semio_viz_sci_c_fp } , \fp_eval:n { \l_semio_viz_sci_d_fp } ) ;
       }
+    \tl_set:Nx \l_semio_viz_phys_style_tl {\semio_viz_phys_field:n{4}}
+    \tl_if_empty:NF \l_semio_viz_phys_style_tl {
+      \node [font=\c_semio_viz_theme_font_label_tl,text=semio-chrome-foreground,fill=semio-chrome-base,above,inner~sep=0.8mm]
+        at (\fp_eval:n{(\l_semio_viz_sci_a_fp+\l_semio_viz_sci_c_fp)/2},\fp_eval:n{(\l_semio_viz_sci_b_fp+\l_semio_viz_sci_d_fp)/2})
+        {\tl_use:N\l_semio_viz_phys_style_tl};
+    }
     \semio_viz_sci_report_values:nn { feynman/propagator }
       { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp ,
         \fp_to_decimal:N \l_semio_viz_sci_c_fp , \fp_to_decimal:N \l_semio_viz_sci_d_fp }
@@ -557,96 +620,198 @@
   }
 
 % 🪜 §30 level diagrams: an energy ladder with transitions, a potential well with its bound states, and a band structure.
-\SemioVizFamily { sci-levels }
-  {
-    \semio_viz_sci_enter:nnn { sci-levels }
-      {
-        mode=energy-level , expr={ 0.5 * \SemioX * \SemioX } ,
-        levels={ -13.6/n=1 , -3.4/n=2 , -1.51/n=3 , -0.85/n=4 , -0.54/n=5 } ,
-        transitions={ 2/1/Lyman~α , 3/2/Balmer~α } ,
-        bands={ -4/-1.2/valence , 0.8/3/conduction } ,
-        domain={-3,3} , range={-15,1} , grid=false
-      }
-      {#1}
-    \str_case:VnF \l_semio_viz_phys_mode_tl
-      {
-        { potential }
-          {
-            \semio_viz_sci_window_keys:
-            \semio_viz_sci_frame:
-            \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq { \l_semio_viz_phys_expr_tl }
-              { \l_semio_viz_sci_dxmin_fp } { \l_semio_viz_sci_dxmax_fp } { 120 }
-            \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq { semio~sci~curve }
-            \semio_viz_phys_level_lines:
-          }
-        { band }
-          {
-            \semio_viz_sci_window_keys:
-            \semio_viz_sci_frame:
-            \clist_map_inline:Nn \l_semio_viz_phys_bands_clist
-              {
-                \semio_viz_phys_record:n {##1}
-                \fill [ fill=semio-primary , fill~opacity=0.24 ]
-                  ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmin_fp } ,
-                    \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } )
-                  rectangle
-                  ( \semio_viz_sci_mx:n { \l_semio_viz_sci_dxmax_fp } ,
-                    \semio_viz_sci_my:n { \semio_viz_phys_field:n { 2 } } ) ;
-                \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=west ]
-                  at ( 1 , \semio_viz_sci_my:n
-                    { ( \semio_viz_phys_field:n { 1 } + \semio_viz_phys_field:n { 2 } ) / 2 } )
-                  { \semio_viz_phys_field:n { 3 } } ;
-              }
-          }
-      }
-      {
-        \semio_viz_sci_window_keys:
-        \semio_viz_sci_frame:
-        \semio_viz_phys_level_lines:
-        \semio_viz_phys_transitions:
-      }
+\seq_new:N \l_semio_viz_phys_level_order_seq
+\prop_new:N \l_semio_viz_phys_level_y_prop
+\fp_new:N \l_semio_viz_phys_level_gap_fp
+\fp_new:N \l_semio_viz_phys_level_cursor_fp
+\fp_new:N \l_semio_viz_phys_level_width_fp
+% 📚 Derives an absent ordinate window from every authored level, potential sample or band edge.
+\cs_new_protected:Npn \semio_viz_phys_level_window: {
+  \semio_viz_sci_window_keys:
+  \seq_clear:N \l_semio_viz_sci_pts_b_seq
+  \str_if_eq:VnT \l_semio_viz_phys_mode_tl {potential} {
+    \semio_viz_sci_sample:Nnnnn \l_semio_viz_sci_pts_seq {\l_semio_viz_phys_expr_tl}
+      {\l_semio_viz_sci_dxmin_fp}{\l_semio_viz_sci_dxmax_fp}{120}
+    \seq_set_eq:NN \l_semio_viz_sci_pts_b_seq \l_semio_viz_sci_pts_seq
   }
-% 🪜 Strokes each energy level as a horizontal rung across the middle of the frame, captions it to the right and reports its energy.
-\cs_new_protected:Npn \semio_viz_phys_level_lines:
-  {
-    \clist_map_inline:Nn \l_semio_viz_phys_levels_clist
-      {
-        \semio_viz_phys_record:n {##1}
-        \draw [ semio~sci~curve ]
-          ( \fp_eval:n { 0.12 * \l_semio_viz_sci_w_fp } ,
-            \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } ) --
-          ( \fp_eval:n { 0.72 * \l_semio_viz_sci_w_fp } ,
-            \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } ) ;
-        \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-text-normal , anchor=west ]
-          at ( \fp_eval:n { 0.75 * \l_semio_viz_sci_w_fp } ,
-               \semio_viz_sci_my:n { \semio_viz_phys_field:n { 1 } } )
-          { \semio_viz_phys_field:n { 2 } } ;
-        \semio_viz_sci_report_values:nn { levels/line } { \semio_viz_phys_field:n { 1 } }
-      }
+  \str_if_eq:VnTF \l_semio_viz_phys_mode_tl {band}
+    {\clist_map_inline:Nn \l_semio_viz_phys_bands_clist {
+      \semio_viz_phys_record:n {##1}
+      \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq {0}{\semio_viz_phys_field:n{1}}
+      \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq {0}{\semio_viz_phys_field:n{2}}
+    }}
+    {\clist_map_inline:Nn \l_semio_viz_phys_levels_clist {
+      \semio_viz_phys_record:n {##1}
+      \semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq {0}{\semio_viz_phys_field:n{1}}
+    }}
+  \seq_if_empty:NT \l_semio_viz_sci_pts_b_seq {\semio_viz_points_put:Nnn \l_semio_viz_sci_pts_b_seq {0}{0}}
+  \semio_viz_sci_window_from:Nn \l_semio_viz_sci_pts_b_seq {0.12}
+  \semio_viz_sci_window_keys:
+  \semio_viz_sci_report_values:nn {levels/window}
+    {\fp_to_decimal:N\l_semio_viz_sci_dxmin_fp,\fp_to_decimal:N\l_semio_viz_sci_dxmax_fp,\fp_to_decimal:N\l_semio_viz_sci_dymin_fp,\fp_to_decimal:N\l_semio_viz_sci_dymax_fp}
+}
+% 📏 Schedules measured paragraph captions in energy order within the authored canvas.
+\cs_new_protected:Npn \semio_viz_phys_caption_positions:Nn #1#2 {
+  \prop_clear:N \l_semio_viz_phys_level_y_prop
+  \fp_zero:N \l_semio_viz_phys_label_height_fp
+  \seq_map_inline:Nn #1 {
+    \semio_viz_phys_record:n {##1}
+    \pgfinterruptpicture
+    \hbox_gset:Nn \l_semio_viz_phys_label_box {\normalfont\c_semio_viz_theme_font_label_tl
+      \parbox[c]{\fp_eval:n{#2}mm}{\raggedright\strut\semio_viz_phys_field:n{2}}}
+    \endpgfinterruptpicture
+    \fp_set:Nn \l_semio_viz_phys_label_height_fp {max(\l_semio_viz_phys_label_height_fp,
+      (\dim_to_fp:n{\box_ht:N\l_semio_viz_phys_label_box}+\dim_to_fp:n{\box_dp:N\l_semio_viz_phys_label_box})/(\dim_to_fp:n{100mm}/100))}
   }
-% 🎇 Draws a hue-cycled vertical arrow between the two level indices of each transition and reports the energy difference.
-\cs_new_protected:Npn \semio_viz_phys_transitions:
-  {
-    \int_zero:N \l_tmpa_int
-    \clist_map_inline:Nn \l_semio_viz_phys_trans_clist
-      {
-        \int_incr:N \l_tmpa_int
-        \semio_viz_phys_record:n {##1}
-        \seq_set_split:Nnx \l_tmpb_seq { / }
-          { \clist_item:Nn \l_semio_viz_phys_levels_clist { \semio_viz_phys_field:n { 1 } } }
-        \fp_set:Nn \l_semio_viz_sci_a_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
-        \seq_set_split:Nnx \l_tmpb_seq { / }
-          { \clist_item:Nn \l_semio_viz_phys_levels_clist { \semio_viz_phys_field:n { 2 } } }
-        \fp_set:Nn \l_semio_viz_sci_b_fp { \seq_item:Nn \l_tmpb_seq { 1 } }
-        \draw [ semio~sci~arrow , draw=\semio_viz_sci_hue:n { \l_tmpa_int } ]
-          ( \fp_eval:n { ( 0.2 + 0.16 * \l_tmpa_int ) * \l_semio_viz_sci_w_fp } ,
-            \semio_viz_sci_my:n { \l_semio_viz_sci_a_fp } ) --
-          ( \fp_eval:n { ( 0.2 + 0.16 * \l_tmpa_int ) * \l_semio_viz_sci_w_fp } ,
-            \semio_viz_sci_my:n { \l_semio_viz_sci_b_fp } ) ;
-        \semio_viz_sci_report_values:nn { levels/transition }
-          { \fp_to_decimal:n { \l_semio_viz_sci_a_fp - \l_semio_viz_sci_b_fp } }
-      }
+  \seq_sort:Nn #1 {
+    \seq_set_split:Nnn \l_tmpa_seq {/}{##1}
+    \seq_set_split:Nnn \l_tmpb_seq {/}{##2}
+    \fp_compare:nNnTF {\seq_item:Nn\l_tmpa_seq{1}} > {\seq_item:Nn\l_tmpb_seq{1}}
+      {\sort_return_swapped:}{\sort_return_same:}
   }
+  \fp_set:Nn \l_semio_viz_phys_level_gap_fp {\l_semio_viz_phys_label_height_fp+0.8}
+  \fp_set:Nn \l_semio_viz_phys_level_cursor_fp {2+\l_semio_viz_phys_label_height_fp/2-\l_semio_viz_phys_level_gap_fp}
+  \seq_map_inline:Nn #1 {
+    \semio_viz_phys_record:n {##1}
+    \fp_set:Nn \l_semio_viz_phys_level_cursor_fp {max(\l_semio_viz_phys_level_cursor_fp+\l_semio_viz_phys_level_gap_fp,\semio_viz_sci_my:n{\semio_viz_phys_field:n{1}})}
+    \prop_put:Nnx \l_semio_viz_phys_level_y_prop {##1}{\fp_to_decimal:N\l_semio_viz_phys_level_cursor_fp}
+  }
+  \seq_reverse:N #1
+  \fp_set:Nn \l_semio_viz_phys_level_cursor_fp {\l_semio_viz_sci_h_fp-2-\l_semio_viz_phys_label_height_fp/2+\l_semio_viz_phys_level_gap_fp}
+  \seq_map_inline:Nn #1 {
+    \fp_set:Nn \l_semio_viz_phys_level_cursor_fp {min(\l_semio_viz_phys_level_cursor_fp-\l_semio_viz_phys_level_gap_fp,\prop_item:Nn\l_semio_viz_phys_level_y_prop{##1})}
+    \prop_put:Nnx \l_semio_viz_phys_level_y_prop {##1}{\fp_to_decimal:N\l_semio_viz_phys_level_cursor_fp}
+  }
+}
+\seq_new:N \l_semio_viz_phys_transition_order_seq
+\prop_new:N \l_semio_viz_phys_transition_y_prop
+\fp_new:N \l_semio_viz_phys_transition_width_fp
+% ⚡ Resolves the two declared level indices without changing their energy values.
+\cs_new_protected:Npn \semio_viz_phys_transition_energies: {
+  \seq_set_split:Nnx \l_tmpb_seq {/}{\clist_item:Nn\l_semio_viz_phys_levels_clist{\semio_viz_phys_field:n{1}}}
+  \fp_set:Nn \l_semio_viz_sci_a_fp {\seq_item:Nn\l_tmpb_seq{1}}
+  \seq_set_split:Nnx \l_tmpb_seq {/}{\clist_item:Nn\l_semio_viz_phys_levels_clist{\semio_viz_phys_field:n{2}}}
+  \fp_set:Nn \l_semio_viz_sci_b_fp {\seq_item:Nn\l_tmpb_seq{1}}
+}
+% 🗂️ Reserves the transition caption column and separates equal-energy captions before drawing.
+\cs_new_protected:Npn \semio_viz_phys_transition_prepare: {
+  \seq_clear:N \l_semio_viz_phys_transition_order_seq
+  \prop_clear:N \l_semio_viz_phys_transition_y_prop
+  \fp_zero:N \l_semio_viz_phys_transition_width_fp
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:Nn \l_semio_viz_phys_trans_clist {
+    \int_incr:N \l_tmpa_int
+    \semio_viz_phys_record:n {##1}
+    \semio_viz_phys_transition_energies:
+    \int_compare:nNnTF {\seq_count:N\l_semio_viz_phys_rec_seq} > {2}
+      {\seq_get_right:NN \l_semio_viz_phys_rec_seq \l_semio_viz_phys_style_tl}
+      {\tl_clear:N \l_semio_viz_phys_style_tl}
+    \tl_if_empty:NF \l_semio_viz_phys_style_tl {
+      \seq_put_right:Nx \l_semio_viz_phys_transition_order_seq
+        {\fp_to_decimal:n{(\l_semio_viz_sci_a_fp+\l_semio_viz_sci_b_fp)/2}/\exp_not:V\l_semio_viz_phys_style_tl/\int_use:N\l_tmpa_int}
+    }
+  }
+  \seq_if_empty:NF \l_semio_viz_phys_transition_order_seq {
+    \fp_set:Nn \l_semio_viz_phys_transition_width_fp {0.25*\l_semio_viz_sci_w_fp}
+    \semio_viz_phys_caption_positions:Nn \l_semio_viz_phys_transition_order_seq {\l_semio_viz_phys_transition_width_fp}
+    \seq_map_inline:Nn \l_semio_viz_phys_transition_order_seq {
+      \semio_viz_phys_record:n {##1}
+      \prop_put:Nxx \l_semio_viz_phys_transition_y_prop {\semio_viz_phys_field:n{3}}{\prop_item:Nn\l_semio_viz_phys_level_y_prop{##1}}
+    }
+  }
+}
+% 🏷️ Measures and schedules all visible level captions before painting their viewport.
+\cs_new_protected:Npn \semio_viz_phys_level_prepare: {
+  \seq_clear:N \l_semio_viz_phys_level_order_seq
+  \clist_map_inline:Nn \l_semio_viz_phys_levels_clist {
+    \semio_viz_phys_record:n {##1}
+    \fp_compare:nNnF {\semio_viz_phys_field:n{1}} < {\l_semio_viz_sci_dymin_fp} {
+      \fp_compare:nNnF {\semio_viz_phys_field:n{1}} > {\l_semio_viz_sci_dymax_fp} {\seq_put_right:Nn\l_semio_viz_phys_level_order_seq{##1}}
+    }
+  }
+  \semio_viz_phys_caption_positions:Nn \l_semio_viz_phys_level_order_seq {0.30*\l_semio_viz_sci_w_fp-2}
+}
+% 🪜 Draws physically positioned rungs with measured, separated captions and connecting leaders.
+\cs_new_protected:Npn \semio_viz_phys_level_lines: {
+  \clist_map_inline:Nn \l_semio_viz_phys_levels_clist {
+    \semio_viz_phys_record:n {##1}
+    \prop_if_in:NnT \l_semio_viz_phys_level_y_prop {##1} {
+      \draw [semio~sci~curve] (\fp_eval:n{max(0.12*\l_semio_viz_sci_w_fp,\l_semio_viz_phys_transition_width_fp+3)},\semio_viz_sci_my:n{\semio_viz_phys_field:n{1}})
+        -- (\fp_eval:n{0.65*\l_semio_viz_sci_w_fp},\semio_viz_sci_my:n{\semio_viz_phys_field:n{1}});
+      \draw [semio~sci~aux] (\fp_eval:n{0.65*\l_semio_viz_sci_w_fp},\semio_viz_sci_my:n{\semio_viz_phys_field:n{1}})
+        -- (\fp_eval:n{0.70*\l_semio_viz_sci_w_fp},\prop_item:Nn\l_semio_viz_phys_level_y_prop{##1});
+      \node [font=\c_semio_viz_theme_font_label_tl,text=semio-chrome-text-normal,anchor=west,inner~sep=0pt,
+        text~width=\fp_eval:n{0.30*\l_semio_viz_sci_w_fp-2}mm,align=left]
+        at (\fp_eval:n{0.70*\l_semio_viz_sci_w_fp},\prop_item:Nn\l_semio_viz_phys_level_y_prop{##1}){\strut\semio_viz_phys_field:n{2}};
+      \semio_viz_sci_report_values:nn {levels/line}{\semio_viz_phys_field:n{1}}
+    }
+  }
+}
+% 🪐 Renders complete authored level, potential and band windows while preserving explicit ranges.
+\SemioVizFamily { sci-levels } {
+  \semio_viz_sci_enter:nnn {sci-levels}
+    {mode=energy-level,expr={0.5*\SemioX*\SemioX},levels={-13.6/n=1,-3.4/n=2,-1.51/n=3,-0.85/n=4,-0.54/n=5},
+     transitions={2/1/Lyman~$\alpha$,3/2/Balmer~$\alpha$},bands={-4/-1.2/valence,0.8/3/conduction},domain={-3,3},range={},grid=false}{#1}
+  \semio_viz_phys_level_window:
+  \fp_zero:N \l_semio_viz_phys_transition_width_fp
+  \str_if_eq:VnT \l_semio_viz_phys_mode_tl {energy-level}{\semio_viz_phys_transition_prepare:}
+  \str_if_eq:VnF \l_semio_viz_phys_mode_tl {band}{\semio_viz_phys_level_prepare:}
+  \fp_set_eq:NN \l_semio_viz_phys_level_width_fp \l_semio_viz_sci_w_fp
+  \str_if_eq:VnT \l_semio_viz_phys_mode_tl {potential}{\fp_set:Nn \l_semio_viz_sci_w_fp {0.65*\l_semio_viz_phys_level_width_fp}}
+  \semio_viz_sci_frame:
+  \str_case:VnF \l_semio_viz_phys_mode_tl {
+    {potential}{
+      \begin{scope}
+      \clip (0,0) rectangle (\fp_eval:n{\l_semio_viz_sci_w_fp},\fp_eval:n{\l_semio_viz_sci_h_fp});
+      \semio_viz_sci_polyline:Nn \l_semio_viz_sci_pts_seq {semio~sci~curve}
+      \end{scope}
+      \fp_set_eq:NN \l_semio_viz_sci_w_fp \l_semio_viz_phys_level_width_fp
+      \semio_viz_phys_level_lines:
+    }
+    {band}{\clist_map_inline:Nn \l_semio_viz_phys_bands_clist {
+      \semio_viz_phys_record:n {##1}
+      \fp_set:Nn \l_semio_viz_sci_a_fp {max(\l_semio_viz_sci_dymin_fp,\semio_viz_phys_field:n{1})}
+      \fp_set:Nn \l_semio_viz_sci_b_fp {min(\l_semio_viz_sci_dymax_fp,\semio_viz_phys_field:n{2})}
+      \fp_compare:nNnF {\l_semio_viz_sci_a_fp} > {\l_semio_viz_sci_b_fp} {
+        \fill [fill=semio-primary,fill~opacity=0.24]
+          (0,\semio_viz_sci_my:n{\l_semio_viz_sci_a_fp}) rectangle
+          (\fp_eval:n{\l_semio_viz_sci_w_fp},\semio_viz_sci_my:n{\l_semio_viz_sci_b_fp});
+        \node [font=\c_semio_viz_theme_font_label_tl,text=semio-chrome-foreground,anchor=west]
+          at (1,\semio_viz_sci_my:n{(\l_semio_viz_sci_a_fp+\l_semio_viz_sci_b_fp)/2}){\semio_viz_phys_field:n{3}};
+      }
+    }}
+  }{\semio_viz_phys_level_lines:\begin{scope}
+      \clip (0,0) rectangle (\fp_eval:n{\l_semio_viz_sci_w_fp},\fp_eval:n{\l_semio_viz_sci_h_fp});
+      \semio_viz_phys_transitions:\end{scope}}
+}
+% 🎇 Draws physical transition arrows and their declared measured captions with leaders.
+\cs_new_protected:Npn \semio_viz_phys_transitions: {
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:Nn \l_semio_viz_phys_trans_clist {
+    \int_incr:N \l_tmpa_int
+    \semio_viz_phys_record:n {##1}
+    \semio_viz_phys_transition_energies:
+    \fp_set:Nn \l_semio_viz_sci_c_fp {max(0.12*\l_semio_viz_sci_w_fp,\l_semio_viz_phys_transition_width_fp+3)+2
+      +(0.65*\l_semio_viz_sci_w_fp-max(0.12*\l_semio_viz_sci_w_fp,\l_semio_viz_phys_transition_width_fp+3)-3)*\l_tmpa_int/(\clist_count:N\l_semio_viz_phys_trans_clist+1)}
+    \draw [semio~sci~arrow,draw=\semio_viz_sci_hue:n{\l_tmpa_int}]
+      (\fp_to_decimal:N\l_semio_viz_sci_c_fp,\semio_viz_sci_my:n{\l_semio_viz_sci_a_fp}) --
+      (\fp_to_decimal:N\l_semio_viz_sci_c_fp,\semio_viz_sci_my:n{\l_semio_viz_sci_b_fp});
+    \int_compare:nNnTF {\seq_count:N\l_semio_viz_phys_rec_seq} > {2}
+      {\seq_get_right:NN \l_semio_viz_phys_rec_seq \l_semio_viz_phys_style_tl}
+      {\tl_clear:N \l_semio_viz_phys_style_tl}
+    \tl_if_empty:NF \l_semio_viz_phys_style_tl {
+      \draw [semio~sci~aux]
+        (\fp_eval:n{\l_semio_viz_phys_transition_width_fp+2},\prop_item:Ne\l_semio_viz_phys_transition_y_prop{\int_use:N\l_tmpa_int}) --
+        (\fp_to_decimal:N\l_semio_viz_sci_c_fp,\semio_viz_sci_my:n{(\l_semio_viz_sci_a_fp+\l_semio_viz_sci_b_fp)/2});
+      \node [font=\c_semio_viz_theme_font_label_tl,text=semio-chrome-foreground,anchor=west,inner~sep=0pt,
+        text~width=\fp_to_decimal:N\l_semio_viz_phys_transition_width_fp mm,align=left]
+        at (1,\prop_item:Ne\l_semio_viz_phys_transition_y_prop{\int_use:N\l_tmpa_int}){\strut\tl_use:N\l_semio_viz_phys_style_tl};
+      \semio_viz_sci_report_values:nn {levels/transition-label}
+        {\int_use:N\l_tmpa_int,1,\prop_item:Ne\l_semio_viz_phys_transition_y_prop{\int_use:N\l_tmpa_int},\fp_to_decimal:N\l_semio_viz_phys_transition_width_fp}
+    }
+    \semio_viz_sci_report_values:nn {levels/transition}{\fp_to_decimal:n{\l_semio_viz_sci_a_fp-\l_semio_viz_sci_b_fp}}
+  }
+}
 
 %region 🔖️Keys
 % 🔑 Keys of `sci-fieldlines` (§30 field maps):
@@ -1026,6 +1191,16 @@
       }
     \fp_set:Nn \l_semio_viz_sci_b_fp
       { - \l_semio_viz_phys_objheight_fp * \l_semio_viz_sci_a_fp / \l_semio_viz_phys_objdist_fp }
+    \semio_viz_phys_fit_reset:
+    \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_objdist_fp-8}{0}
+    \semio_viz_sci_fit_point:nn {abs(\l_semio_viz_sci_a_fp)+12}{0}
+    \semio_viz_sci_fit_point:nn {-5}{-16}
+    \semio_viz_sci_fit_point:nn {5}{16}
+    \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_objdist_fp}{\l_semio_viz_phys_objheight_fp}
+    \semio_viz_sci_fit_point:nn {\l_semio_viz_sci_a_fp}{\l_semio_viz_sci_b_fp}
+    \semio_viz_sci_fit_point:nn {-abs(\l_semio_viz_phys_focal_fp)-0.7}{-0.7}
+    \semio_viz_sci_fit_point:nn {abs(\l_semio_viz_phys_focal_fp)+0.7}{0.7}
+    \semio_viz_phys_fit_begin:
     \draw [ semio~sci~axis ]
       ( \fp_eval:n { - \l_semio_viz_phys_objdist_fp - 8 } , 0 ) --
       ( \fp_eval:n { abs ( \l_semio_viz_sci_a_fp ) + 12 } , 0 ) ;
@@ -1044,6 +1219,7 @@
     \bool_if:NT \l_semio_viz_phys_rays_bool { \semio_viz_phys_rays: }
     \semio_viz_sci_report_values:nn { optics/image }
       { \fp_to_decimal:N \l_semio_viz_sci_a_fp , \fp_to_decimal:N \l_semio_viz_sci_b_fp }
+    \end{scope}
   }
 % 🪞 Draws the optical element on the axis: one curved arc for a mirror, or a two-arc lens outline otherwise.
 \cs_new_protected:Npn \semio_viz_phys_element:
@@ -1103,6 +1279,15 @@
         states={ 1/0/0/H , 0/1/0/D , 0/0/1/R , 0.5/0.5/0.7/E }
       }
       {#1}
+    \semio_viz_phys_fit_reset:
+    \semio_viz_sci_fit_point:nn {-\l_semio_viz_phys_sphere_fp}{-\l_semio_viz_phys_sphere_fp}
+    \semio_viz_sci_fit_point:nn {\l_semio_viz_phys_sphere_fp}{\l_semio_viz_phys_sphere_fp}
+    \clist_map_inline:Nn \l_semio_viz_phys_states_clist {
+      \semio_viz_phys_record:n {##1}
+      \semio_viz_phys_stokes_position:
+      \semio_viz_phys_fit_label:nnn {\l_semio_viz_sci_a_fp}{\l_semio_viz_sci_b_fp}{\semio_viz_phys_field:n{4}}
+    }
+    \semio_viz_phys_fit_begin:
     \draw [ semio~sci~axis ] ( 0 , 0 ) circle [ radius=\fp_eval:n { \l_semio_viz_phys_sphere_fp } ] ;
     \int_step_inline:nnnn { 1 } { 1 } { \l_semio_viz_phys_meridians_int }
       {
@@ -1126,9 +1311,10 @@
         \semio_viz_phys_record:n {##1}
         \semio_viz_phys_stokes:
       }
+    \end{scope}
   }
-% 🔮 Normalises the pending Stokes vector, projects it onto the sphere through the camera angles, then dots and labels it and reports the screen position.
-\cs_new_protected:Npn \semio_viz_phys_stokes:
+% 🧭 Normalises a Stokes vector and projects it through the authored camera angles.
+\cs_new_protected:Npn \semio_viz_phys_stokes_position:
   {
     \fp_set:Nn \l_semio_viz_sci_g_fp
       {
@@ -1149,6 +1335,11 @@
               * sind ( \l_semio_viz_phys_beta_fp )
             + \semio_viz_phys_field:n { 3 } * cosd ( \l_semio_viz_phys_beta_fp ) )
       }
+  }
+% 🔮 Dots and labels the pending projected Stokes vector and reports its physical position.
+\cs_new_protected:Npn \semio_viz_phys_stokes:
+  {
+    \semio_viz_phys_stokes_position:
     \fill [ fill=semio-primary ]
       ( \fp_eval:n { \l_semio_viz_sci_a_fp } , \fp_eval:n { \l_semio_viz_sci_b_fp } ) circle [ radius=1.1 ] ;
     \node [ font=\c_semio_viz_theme_font_label_tl , text=semio-chrome-foreground , anchor=south~west ]

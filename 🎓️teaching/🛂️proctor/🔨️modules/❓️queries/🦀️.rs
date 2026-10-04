@@ -1,5 +1,5 @@
 //! ❓️ The six quiz reads (design §9a, §17): `quiz.catalog`, `quiz.learner`, `quiz.run`,
-//! `quiz.leaderboard`, `quiz.crowd` and `quiz.handle`, version `1`, arguments = the quiz `Query`
+//! `quiz.leaderboard`, `quiz.crowd` and `quiz.handle`, version [`WIRE_VERSION`] of the contract, arguments = the quiz `Query`
 //! JSON, answered as a `snapshot` whose value is the view JSON. The catalog view is derived from the
 //! loaded catalog; every other view is read from the projections, never from an actor.
 //!
@@ -19,12 +19,11 @@
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use quiz::{HandleHolder, HandleView, Query, Timestamp};
+use quiz::{HandleHolder, HandleView, Query, Timestamp, WIRE_VERSION};
 use server::contract::{QueryEnvelope, QueryResult};
 use server::gateway::{QueryHandler, ServerError};
 use server::storage::ProjectionStore;
 
-use crate::actors::WIRE_VERSION;
 use crate::projections::{decoded, Board, CROWDS, HANDLES, LEARNERS, RUNS};
 
 /// 🔭️ Which of the six reads a handler answers.

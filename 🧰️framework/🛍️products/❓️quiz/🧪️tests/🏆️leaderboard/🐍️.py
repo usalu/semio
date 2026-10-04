@@ -14,10 +14,12 @@ leaderboard orders the standings by total descending, badge count descending, ``
 and learner id ascending, ranks them from 1, answers the top 100 rows, the number of ranked learners,
 the number of runs submitted in all and — when the caller is ranked — the caller's own row, and
 publishes a learner only as its ``tag``, the FNV-1a 32-bit hash of the learner id as 8 lowercase hex
-digits, never the id itself. The total is the sum of the best score per quiz in points (score × 100);
-``reachedAt`` is the submission that last raised a best score (a first submission of a quiz raises
-it); ``lastActivity`` is the last submission that counts; the badges are those the counted runs
-earned.
+digits, never the id itself. A run earns points — its score times the par of its challenge, carried by
+its result (challenge design §3.6) — and the best run of a quiz is the one with the most points, a later
+run replacing it only with strictly more; ``best`` names it per quiz with its challenge, score and
+points, and the total is the sum of those points. ``reachedAt`` is the submission that last raised a
+best (a first submission of a quiz raises it); ``lastActivity`` is the last submission that counts; the
+badges are those the counted runs earned.
 
 @see ../../🧬️schema/🔣️.json
 @see ../../🧫️fixtures/🏆️leaderboard/🔣️.json
@@ -36,6 +38,7 @@ from semio_repo_test import Adapter, Outcome
 # region 🔖️Reference
 VECTORS = "shared://🏆️leaderboard/🔣️.json"
 TOLERANCE = 1e-12
+PAR = {"easy": 100, "medium": 200, "hard": 300, "expert": 400}
 
 
 def fnv1a32(text):
@@ -79,36 +82,43 @@ def evolve_learner(state, event):
     if kind == "learner-registered":
         state["identity"] = event["identity"]
     elif kind == "run-started":
-        state["runs"].append({"run": event["run"], "quiz": event["quiz"], "status": "open", "result": None, "startedAt": event["at"], "submittedAt": None})
+        state["runs"].append({"run": event["run"], "quiz": event["quiz"], "challenge": event["challenge"], "status": "open", "result": None, "startedAt": event["at"], "submittedAt": None})
     elif kind == "run-voided":
         run_of(state, event["run"])["status"] = "voided"
     elif kind == "run-submitted":
         run = run_of(state, event["run"])
         run["status"], run["result"], run["submittedAt"] = "submitted", event["result"], event["at"]
         quiz = event["result"]["quiz"]
-        if quiz not in state["best"] or event["result"]["score"] > state["best"][quiz]:
-            state["best"][quiz] = event["result"]["score"]
+        if quiz not in state["best"] or event["result"]["points"] > state["best"][quiz]["points"]:
+            state["best"][quiz] = best_of(event["result"])
             state["reachedAt"] = event["at"]
     elif kind == "badge-awarded":
         state["badges"].append({"badge": event["badge"], "run": event["run"], "at": event["at"]})
     return state
 
 
+def best_of(scored):
+    """🏵️ A scored run as the best of its quiz: its challenge, its score and its points — which must be the score times the par of the challenge."""
+    if abs(scored["points"] - scored["score"] * PAR[scored["challenge"]]) > TOLERANCE:
+        raise AssertionError("a %s run scored %r carries %r points" % (scored["challenge"], scored["score"], scored["points"]))
+    return {"challenge": scored["challenge"], "score": scored["score"], "points": scored["points"]}
+
+
 def total_of(state):
-    """💯️ The sum of the best scores in points."""
+    """💯️ The sum of the points of the best runs."""
     total = 0.0
-    for score in state["best"].values():
-        total += score * 100
+    for best in state["best"].values():
+        total += best["points"]
     return total
 
 
 def learner_view(state):
-    """👤️ The learner's runs newest first, badges in award order, best score per quiz and the total in points."""
+    """👤️ The learner's runs newest first with their challenge, badges in award order, the best run per quiz — the one with the most points, the earliest of equals — and the total of their points."""
     runs = []
     for run in sorted(state["runs"], key=lambda candidate: candidate["startedAt"], reverse=True):
-        summary = {"run": run["run"], "quiz": run["quiz"], "status": run["status"], "startedAt": run["startedAt"]}
+        summary = {"run": run["run"], "quiz": run["quiz"], "challenge": run["challenge"], "status": run["status"], "startedAt": run["startedAt"]}
         if run["status"] == "submitted":
-            summary["score"], summary["submittedAt"] = run["result"]["score"], run["submittedAt"]
+            summary["score"], summary["points"], summary["submittedAt"] = run["result"]["score"], run["result"]["points"], run["submittedAt"]
         runs.append(summary)
     return {"learner": state["learner"], "identity": state["identity"], "runs": runs, "badges": state["badges"], "best": state["best"], "total": total_of(state)}
 
@@ -120,7 +130,7 @@ EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 def transcript(state):
     """📜️ What every standing of a learner is made of — the submitted runs in submission order and the badges with the quiz of the run that earned them — or ``None`` before registration or the first submission."""
-    runs = [{"quiz": run["quiz"], "score": run["result"]["score"], "at": run["submittedAt"]} for run in sorted((run for run in state["runs"] if run["status"] == "submitted"), key=lambda run: run["submittedAt"])]
+    runs = [{"quiz": run["quiz"], "challenge": run["result"]["challenge"], "score": run["result"]["score"], "points": run["result"]["points"], "at": run["submittedAt"]} for run in sorted((run for run in state["runs"] if run["status"] == "submitted"), key=lambda run: run["submittedAt"])]
     if state["identity"] is None or not runs:
         return None
     badges = [{"badge": award["badge"], "quiz": run_of(state, award["run"])["quiz"], "at": award["at"]} for award in state["badges"] if run_of(state, award["run"]) is not None]
@@ -156,11 +166,11 @@ def standing(record, window, quiz):
         return None
     best, reached = {}, None
     for run in runs:
-        if run["quiz"] not in best or run["score"] > best[run["quiz"]]:
-            best[run["quiz"]], reached = run["score"], run["at"]
+        if run["quiz"] not in best or run["points"] > best[run["quiz"]]["points"]:
+            best[run["quiz"]], reached = best_of(run), run["at"]
     total = 0.0
-    for score in best.values():
-        total += score * 100
+    for entry in best.values():
+        total += entry["points"]
     return {
         "learner": record["learner"],
         "tag": record["tag"],

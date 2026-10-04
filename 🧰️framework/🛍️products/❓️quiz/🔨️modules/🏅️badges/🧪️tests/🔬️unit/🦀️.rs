@@ -1,9 +1,10 @@
-//! 🎀️ Unit tests of the badges: every rule, held badges and the shared badge vectors.
+//! 🎀️ Unit tests of the badges: every rule, least challenges, held badges and the shared badge vectors.
 //!
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::{Task, TaskKind, TaskResult};
+use crate::challenge::points;
+use crate::schema::{Task, TaskKind, TaskResult, CHALLENGES};
 use crate::sheet::tests::{quiz, text};
 
 fn badge(id: &str, rule: BadgeRule) -> Badge {
@@ -12,12 +13,12 @@ fn badge(id: &str, rule: BadgeRule) -> Badge {
 
 fn badges() -> Vec<Badge> {
     vec![
-        badge("all-done", BadgeRule::CompletedQuizzes),
-        badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string() }),
-        badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None }),
-        badge("energy-classifier", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Classification), quiz: Some("energy".to_string()) }),
-        badge("heating-master", BadgeRule::PerfectTasks { task_kind: None, quiz: Some("heating".to_string()) }),
-        badge("nobody", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Matching), quiz: Some("heating".to_string()) }),
+        badge("all-done", BadgeRule::CompletedQuizzes {}),
+        badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: None }),
+        badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: None }),
+        badge("energy-classifier", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Classification), quiz: Some("energy".to_string()), challenge: None }),
+        badge("heating-master", BadgeRule::PerfectTasks { task_kind: None, quiz: Some("heating".to_string()), challenge: None }),
+        badge("nobody", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Matching), quiz: Some("heating".to_string()), challenge: None }),
     ]
 }
 
@@ -32,7 +33,7 @@ fn quizzes() -> Vec<Quiz> {
     vec![quiz(), heating]
 }
 
-fn result(quiz: &str, tasks: &[(&str, TaskKind, f64)]) -> RunResult {
+fn result_at(quiz: &str, challenge: Challenge, tasks: &[(&str, TaskKind, f64)]) -> RunResult {
     let tasks: Vec<TaskResult> = tasks
         .iter()
         .map(|&(task, kind, score)| match kind {
@@ -42,11 +43,19 @@ fn result(quiz: &str, tasks: &[(&str, TaskKind, f64)]) -> RunResult {
         })
         .collect();
     let score = tasks.iter().map(TaskResult::score).fold(0.0, |sum, score| sum + score) / tasks.len() as f64;
-    RunResult { quiz: quiz.to_string(), score, tasks }
+    RunResult { quiz: quiz.to_string(), challenge, score, points: points(score, challenge), tasks }
+}
+
+fn result(quiz: &str, tasks: &[(&str, TaskKind, f64)]) -> RunResult {
+    result_at(quiz, Challenge::Medium, tasks)
+}
+
+fn energy_at(challenge: Challenge, classification: f64, sorting: f64, matching: f64) -> RunResult {
+    result_at("energy", challenge, &[("standards", TaskKind::Classification, classification), ("power", TaskKind::Sorting, sorting), ("buildings", TaskKind::Matching, matching)])
 }
 
 fn energy(classification: f64, sorting: f64, matching: f64) -> RunResult {
-    result("energy", &[("standards", TaskKind::Classification, classification), ("power", TaskKind::Sorting, sorting), ("buildings", TaskKind::Matching, matching)])
+    energy_at(Challenge::Medium, classification, sorting, matching)
 }
 
 #[test]
@@ -74,6 +83,31 @@ fn held_badges_and_empty_selectors_never_award() {
     let held = BTreeSet::from(["sorter".to_string(), "all-done".to_string()]);
     assert_eq!(earned_badges(&badges(), &quizzes(), &results, &held), ["perfect-energy", "energy-classifier", "heating-master"]);
     assert!(earned_badges(&badges()[..1], &[] as &[Quiz], &results, &BTreeSet::new()).is_empty());
+}
+
+#[test]
+fn a_perfect_quiz_with_a_least_challenge_counts_only_runs_that_meet_it() {
+    for least in CHALLENGES {
+        let rule = [badge("hard-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: Some(least) })];
+        for challenge in CHALLENGES {
+            let earned = earned_badges(&rule, &quizzes(), &[energy_at(challenge, 1.0, 1.0, 1.0)], &BTreeSet::new());
+            assert_eq!(earned.len(), usize::from(challenge >= least), "{challenge:?} against {least:?}");
+        }
+    }
+    let rule = [badge("hard-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: Some(Challenge::Hard) })];
+    assert!(earned_badges(&rule, &quizzes(), &[energy_at(Challenge::Easy, 1.0, 1.0, 1.0), energy_at(Challenge::Expert, 1.0, 1.0, 0.9)], &BTreeSet::new()).is_empty(), "a perfect easy run and an imperfect expert run do not add up");
+    assert_eq!(earned_badges(&rule, &quizzes(), &[energy_at(Challenge::Easy, 0.0, 0.0, 0.0), energy_at(Challenge::Hard, 1.0, 1.0, 1.0)], &BTreeSet::new()), ["hard-energy"]);
+}
+
+#[test]
+fn perfect_tasks_with_a_least_challenge_collect_only_runs_that_meet_it() {
+    let rule = [badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: Some(Challenge::Medium) })];
+    let heating = |challenge: Challenge, power: f64, again: f64| result_at("heating", challenge, &[("power", TaskKind::Sorting, power), ("power-again", TaskKind::Sorting, again)]);
+    assert!(earned_badges(&rule, &quizzes(), &[energy_at(Challenge::Easy, 0.0, 1.0, 0.0), heating(Challenge::Easy, 1.0, 1.0)], &BTreeSet::new()).is_empty());
+    assert!(earned_badges(&rule, &quizzes(), &[energy_at(Challenge::Easy, 0.0, 1.0, 0.0), heating(Challenge::Hard, 1.0, 1.0)], &BTreeSet::new()).is_empty(), "the easy perfect sorting does not count");
+    assert_eq!(earned_badges(&rule, &quizzes(), &[energy_at(Challenge::Medium, 0.0, 1.0, 0.0), heating(Challenge::Expert, 1.0, 0.0), heating(Challenge::Hard, 0.5, 1.0)], &BTreeSet::new()), ["sorter"], "perfect tasks collect across runs of different challenges that all meet the least one");
+    let done = [badge("done", BadgeRule::CompletedQuizzes {})];
+    assert_eq!(earned_badges(&done, &quizzes(), &[energy_at(Challenge::Easy, 0.0, 0.0, 0.0), heating(Challenge::Expert, 0.0, 0.0)], &BTreeSet::new()), ["done"], "completing counts at every challenge");
 }
 
 #[test]

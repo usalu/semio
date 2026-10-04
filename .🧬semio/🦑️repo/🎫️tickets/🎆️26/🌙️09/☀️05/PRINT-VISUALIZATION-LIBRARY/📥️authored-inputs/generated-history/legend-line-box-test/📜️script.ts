@@ -1,0 +1,5 @@
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
+const root='C:/git/semio/🧰️framework/🛍️products/📓️print/🧪️tests/🎬️render-scene';let path=root+'/🔣️legend.json',fixture=JSON.parse(readFileSync(path,'utf8'));
+if(!fixture.cases.some((entry:any)=>entry.id==='vertical-metrics'))fixture.cases.push({id:'vertical-metrics',scale:'letters',options:{at:'10,40',labelSize:14,swatchSize:3,itemGap:1,labelGap:2}});
+writeFileSync(import.meta.dir+'/legend.json',JSON.stringify(fixture,null,2)+'\n');renameSync(import.meta.dir+'/legend.json',path);
+path=root+'/🧭️legend/🟦️.ts';let s=readFileSync(path,'utf8');s=s.replace('y=y!-sw-gap;','y=y!-Math.max(sw,Number(o.titleSize??7.2)*25.4/72.27)-gap;').replace('Math.floor(index/columns)*(sw+gap)','Math.floor(index/columns)*(Math.max(sw,size*25.4/72.27)+gap)');writeFileSync(import.meta.dir+'/oracle.ts',s);renameSync(import.meta.dir+'/oracle.ts',path);

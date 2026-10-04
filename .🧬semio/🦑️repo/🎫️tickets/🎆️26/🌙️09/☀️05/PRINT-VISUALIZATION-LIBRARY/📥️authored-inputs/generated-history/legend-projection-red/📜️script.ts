@@ -1,0 +1,6 @@
+import {readFileSync,writeFileSync,renameSync} from 'node:fs';
+const product='C:/git/semio/🧰️framework/🛍️products/📓️print/',temporary=import.meta.dir+'/source.tmp';
+function edit(path:string,change:(source:string)=>string){const file=product+path;writeFileSync(temporary,change(readFileSync(file,'utf8')));renameSync(temporary,file);}
+edit('🧪️tests/🎬️render-scene/🧭️legend/🟦️.ts',source=>source.replace('const cx=col+sw/2,cy=row+sw/2','const cx=col+sw/2,cy=fixture.height-row-sw/2').replace('  return {nativeFonts:true,paths,kinds,glyphs,labels,',`  const glyphKinds=kinds.filter(kind=>kind!=="text");glyphs.forEach((glyph,index)=>{if(glyphKinds[index]==="rect")glyph[1]=fixture.height-glyph[1]!-glyph[3]!;else if(glyphKinds[index]==="circle")glyph[1]=fixture.height-glyph[1]!;else if(glyphKinds[index]==="line"){glyph[1]=fixture.height-glyph[1]!;glyph[3]=fixture.height-glyph[3]!;}});labels.forEach(item=>item.y=fixture.height-item.y);
+  return {nativeFonts:true,paths,kinds,glyphs,labels,`));
+edit('🧪️tests/🎬️render-scene/🔣️customization.json',source=>{const fixture=JSON.parse(source);fixture.cases.find((entry:{id:string})=>entry.id==='legend-color').expected.y=60;return JSON.stringify(fixture,null,2)+'\n';});

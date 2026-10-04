@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LegalFooter, QUIZ_LOCALES, QuizApp, legalLink, memoryStorageOrigin, quizText, type PresenceConnect } from "@semio-tech/quiz-react";
 
-const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
+const QUIET_PRESENCE: PresenceConnect = () => ({ readyState: 0, onopen: null, onmessage: null, onclose: null, onerror: null, send: () => undefined, close: () => undefined });
 const SILENT = { send: () => new Promise<never>(() => undefined) };
 const LEGAL = { imprint: "https://example.org/impressum", privacy: "https://example.org/datenschutz" };
 

@@ -205,6 +205,28 @@ describe("🕷️ radar geometry", () => {
         .map((cell) => cell.textContent),
     ).toEqual([withUnit("550", "t"), withUnit("100", "t"), withUnit("1.000", "t")]);
   });
+
+  it("draws a profile whose keys are hidden as shares of each range, said as percentages without values, units or ranges", async () => {
+    const text = quizText("de");
+    const axes = [
+      { id: "heat", label: "Wärme", unit: "", min: 0, max: 1 },
+      { id: "light", label: "Licht", unit: "", min: 0, max: 1 },
+      { id: "mass", label: "Masse", unit: "", min: 0, max: 1 },
+    ];
+    const shares = { heat: 0.075, light: 0.8, mass: 0.5 };
+    const { container } = render(<RadarChart name="Passivhaus" axes={axes} values={shares} normalised text={text} locale="de" />);
+    const image = screen.getByRole("img", { name: "Netzdiagramm von Passivhaus" });
+    const scale = scaleLinear().domain([0, 1]).range([0, 1]).clamp(true);
+    const frame = { cx: 0, cy: 0, radius: 1 };
+    expect(radarPolygon(frame, axes, shares).map((point) => Math.hypot(point.x, point.y))).toEqual(axes.map((axis) => expect.closeTo(scale(shares[axis.id as keyof typeof shares]), 12)));
+    const percent = (share: number): string => new Intl.NumberFormat("de", { style: "percent", maximumFractionDigits: 1 }).format(share);
+    expect(document.getElementById(image.getAttribute("aria-describedby") ?? "")?.textContent).toBe(`Wärme: ${percent(0.075)}; Licht: ${percent(0.8)}; Masse: ${percent(0.5)}. Die Werte folgen als Tabelle.`);
+    await userEvent.setup().click(screen.getByText("Werte als Tabelle"));
+    const table = screen.getByRole("table", { name: "Netzdiagramm von Passivhaus" });
+    expect(within(table).getAllByRole("columnheader").map((head) => head.textContent)).toEqual(["Achse", "Anteil am Bereich"]);
+    expect(within(table).getAllByRole("cell").map((cell) => cell.textContent)).toEqual([percent(0.075), percent(0.8), percent(0.5)]);
+    expect(container.textContent).not.toMatch(/Minimum|Maximum/u);
+  });
 });
 
 describe("🏷️ radar labels", () => {

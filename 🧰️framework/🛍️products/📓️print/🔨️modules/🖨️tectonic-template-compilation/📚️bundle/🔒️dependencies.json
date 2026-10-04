@@ -227,6 +227,12 @@
       "sha256": "52859584f1baa4aea9e5c6318ded82b1b5bfa713dcdc945bda7e26b206c8bdc4"
     },
     {
+      "name": "cmex10.pfb",
+      "offset": 1119651328,
+      "bytes": 30251,
+      "sha256": "791b31aa1db8608d0144b3a40fc0fe53383a60f6b00d0e8fd9f06ac4a11df8cb"
+    },
+    {
       "name": "cmex10.tfm",
       "offset": 362266624,
       "bytes": 992,
@@ -255,6 +261,12 @@
       "offset": 362280960,
       "bytes": 1508,
       "sha256": "8839e40838381a0a3c976bdd5becf72afd60bde5a965c3d9b985c3479c6cf75e"
+    },
+    {
+      "name": "cmmi6.pfb",
+      "offset": 1119952384,
+      "bytes": 37166,
+      "sha256": "c31dbaffb861162eadf3a7210bdf271b0dda577841aed4c0572069b0d52662b6"
     },
     {
       "name": "cmmi6.tfm",
@@ -287,10 +299,22 @@
       "sha256": "65af8c1e162a952cab8e93c834fcf43ce09b508e6c16e512ebb673cd850b0d41"
     },
     {
+      "name": "cmmi9.pfb",
+      "offset": 1120069632,
+      "bytes": 36094,
+      "sha256": "c7d9ebe6b8313e0eeee8f9ed4d4e7069c74cfa9d9b64295f0f487e4662281a62"
+    },
+    {
       "name": "cmmi9.tfm",
       "offset": 362289152,
       "bytes": 1524,
       "sha256": "20672649a2f07eef8fe07ccb42eeb731023e48f2e0797ecef57c0887da46c032"
+    },
+    {
+      "name": "cmr10.pfb",
+      "offset": 1120148480,
+      "bytes": 35752,
+      "sha256": "fdcede8794018df5f2b58f0905fb20a2b418ed8f67b73ee12445855dfbe5b1be"
     },
     {
       "name": "cmr10.tfm",
@@ -299,10 +323,22 @@
       "sha256": "87f2d8981927644cbecaf3d639e96e348ea4e7be49d8804468bd8ba9ff3f5244"
     },
     {
+      "name": "cmr5.pfb",
+      "offset": 1120257536,
+      "bytes": 31809,
+      "sha256": "84d38aac226b5274baca7a292e2039f5284a35d8a2ae31074a475fad87da310b"
+    },
+    {
       "name": "cmr5.tfm",
       "offset": 362299392,
       "bytes": 1220,
       "sha256": "581be818f67bd11a1792d05e129abe3ea30c5cbdfce3bed8da7c5fb50f5ba95b"
+    },
+    {
+      "name": "cmr6.pfb",
+      "offset": 1120292352,
+      "bytes": 32734,
+      "sha256": "9fe20cb9ef24a0f4c74d38a65d4eee5cff3165f3b8600407ceba396aeb2b7617"
     },
     {
       "name": "cmr6.tfm",
@@ -323,10 +359,22 @@
       "sha256": "28f9f4d237bdae4babef4a59d90f17686a09d6f9df0b2c3c23b2ba15f20eee82"
     },
     {
+      "name": "cmr8.pfb",
+      "offset": 1120363008,
+      "bytes": 32726,
+      "sha256": "8150cbfac5cfe53040327df171c3059f10730b32cabf2504b01713d639a11feb"
+    },
+    {
       "name": "cmr8.tfm",
       "offset": 362305536,
       "bytes": 1292,
       "sha256": "4c5ae243ac0aa254e7ec7f0602cc2a4351e5011ff0cb6dc150a5f6de19585de6"
+    },
+    {
+      "name": "cmr9.pfb",
+      "offset": 1120398336,
+      "bytes": 33993,
+      "sha256": "ba5207eea69eaa9b598de2bd3d9aef27c4ff9831524400f70ff6a0dd3e36059b"
     },
     {
       "name": "cmr9.tfm",
@@ -347,10 +395,22 @@
       "sha256": "0ca13d421ac7133271aed7c935099ecf3d1d08ac9e15f81acb34a16564ab8a46"
     },
     {
+      "name": "cmsy5.pfb",
+      "offset": 1121054208,
+      "bytes": 32915,
+      "sha256": "46da57e5a06866efa9a20f3dd350811b5d3279a5ae789af63e530f1f570e3c7f"
+    },
+    {
       "name": "cmsy5.tfm",
       "offset": 362350080,
       "bytes": 1112,
       "sha256": "6b7dc18cba9ca8996d7b146f1ed78d9227577b26248083310fec227692198ca5"
+    },
+    {
+      "name": "cmsy6.pfb",
+      "offset": 1121089536,
+      "bytes": 32587,
+      "sha256": "73eed8a83a07d8ef04d240da22bce1fd3646074f46179e3677f4f42a542f20b6"
     },
     {
       "name": "cmsy6.tfm",
@@ -371,10 +431,22 @@
       "sha256": "4f59bbf683e947c807158641621982dc83f55fec042fea7963d8ce9f9da98256"
     },
     {
+      "name": "cmsy8.pfb",
+      "offset": 1121159168,
+      "bytes": 32626,
+      "sha256": "2313392f0f4cd974d9da5fb54a52feae126059759edc04a4e47e33ea6027418b"
+    },
+    {
       "name": "cmsy8.tfm",
       "offset": 362356224,
       "bytes": 1120,
       "sha256": "84c37f07ca360c41ad0a0fba7387d279d72457c69bdae03653208c683d8de6bc"
+    },
+    {
+      "name": "cmsy9.pfb",
+      "offset": 1121193984,
+      "bytes": 32442,
+      "sha256": "8049871d56d74fe3f8f2375afbb1e59b149bf6835027b4a101051cfca1c1a779"
     },
     {
       "name": "cmsy9.tfm",

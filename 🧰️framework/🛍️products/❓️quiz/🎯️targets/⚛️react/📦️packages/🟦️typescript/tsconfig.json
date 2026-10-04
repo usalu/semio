@@ -41,7 +41,8 @@
     "../../../../🧪️tests/🎭️identity-step/🟦️.tsx",
     "../../../../🧪️tests/🔏️privacy-notice/🟦️.tsx",
     "../../../../🧪️tests/🐾️pet-companions/🟦️.tsx",
-    "../../../../🧪️tests/🚏️navigation/🟦️.tsx"
+    "../../../../🧪️tests/🚏️navigation/🟦️.tsx",
+    "../../../../🧪️tests/🪜️challenge-views/🟦️.tsx"
   ],
   "exclude": ["**/node_modules/**"]
 }
