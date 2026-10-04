@@ -1,0 +1,898 @@
+{
+  "fixture": {
+    "schema": "semio.pack.value-record-materialization.v1",
+    "wire": "SPK/1.0-record-body",
+    "bridge": {
+      "fieldId": 1,
+      "rootTag": "11",
+      "exact": true
+    },
+    "cases": [
+      {
+        "id": "canonical-null",
+        "rawHex": "0001011112",
+        "limits": {
+          "maxFileLen": 5,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "zero"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "accepted",
+          "value": null
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": null
+        }
+      },
+      {
+        "id": "interned-repeat-at-limit",
+        "rawHex": "012030313233343536373839616263646566303132333435363738396162636465660101110c03060006000600",
+        "limits": {
+          "maxFileLen": 128,
+          "maxSegmentLen": 32,
+          "maxSymbols": 1,
+          "maxDepth": 1,
+          "maxItems": 3
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "exact"
+        },
+        "ownedUtf8Bytes": 128,
+        "grammar": {
+          "outcome": "accepted",
+          "value": [
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef"
+          ]
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": [
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef"
+          ]
+        }
+      },
+      {
+        "id": "interned-repeat-over-limit",
+        "rawHex": "012030313233343536373839616263646566303132333435363738396162636465660101110c03060006000600",
+        "limits": {
+          "maxFileLen": 128,
+          "maxSegmentLen": 32,
+          "maxSymbols": 1,
+          "maxDepth": 1,
+          "maxItems": 3
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "oneByteShort"
+        },
+        "ownedUtf8Bytes": 128,
+        "grammar": {
+          "outcome": "accepted",
+          "value": [
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcdef"
+          ]
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "inline-string-at-limit",
+        "rawHex": "00010111070474657874",
+        "limits": {
+          "maxFileLen": 10,
+          "maxSegmentLen": 4,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "exact"
+        },
+        "ownedUtf8Bytes": 4,
+        "grammar": {
+          "outcome": "accepted",
+          "value": "text"
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": "text"
+        }
+      },
+      {
+        "id": "inline-string-over-limit",
+        "rawHex": "00010111070474657874",
+        "limits": {
+          "maxFileLen": 10,
+          "maxSegmentLen": 4,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "oneByteShort"
+        },
+        "ownedUtf8Bytes": 4,
+        "grammar": {
+          "outcome": "accepted",
+          "value": "text"
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "array-slots-at-limit",
+        "rawHex": "000101110c021202",
+        "limits": {
+          "maxFileLen": 9,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 1,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "exact"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "accepted",
+          "value": [
+            null,
+            true
+          ]
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": [
+            null,
+            true
+          ]
+        }
+      },
+      {
+        "id": "array-slots-over-limit",
+        "rawHex": "000101110c021202",
+        "limits": {
+          "maxFileLen": 9,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 1,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "oneByteShort"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "accepted",
+          "value": [
+            null,
+            true
+          ]
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "map-slots-at-limit",
+        "rawHex": "000101111002070161120702626202",
+        "limits": {
+          "maxFileLen": 15,
+          "maxSegmentLen": 2,
+          "maxSymbols": 0,
+          "maxDepth": 1,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "exact"
+        },
+        "ownedUtf8Bytes": 3,
+        "grammar": {
+          "outcome": "accepted",
+          "value": {
+            "a": null,
+            "bb": true
+          }
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": {
+            "a": null,
+            "bb": true
+          }
+        }
+      },
+      {
+        "id": "map-slots-over-limit",
+        "rawHex": "000101111002070161120702626202",
+        "limits": {
+          "maxFileLen": 15,
+          "maxSegmentLen": 2,
+          "maxSymbols": 0,
+          "maxDepth": 1,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "oneByteShort"
+        },
+        "ownedUtf8Bytes": 3,
+        "grammar": {
+          "outcome": "accepted",
+          "value": {
+            "a": null,
+            "bb": true
+          }
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "nested-array-map-at-depth",
+        "rawHex": "000101110c01100107016b0c0112",
+        "limits": {
+          "maxFileLen": 14,
+          "maxSegmentLen": 1,
+          "maxSymbols": 0,
+          "maxDepth": 3,
+          "maxItems": 1
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "exact"
+        },
+        "ownedUtf8Bytes": 1,
+        "grammar": {
+          "outcome": "accepted",
+          "value": [
+            {
+              "k": [
+                null
+              ]
+            }
+          ]
+        },
+        "expect": {
+          "outcome": "accepted",
+          "value": [
+            {
+              "k": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "nested-array-map-over-depth",
+        "rawHex": "000101110c01100107016b0c0112",
+        "limits": {
+          "maxFileLen": 14,
+          "maxSegmentLen": 1,
+          "maxSymbols": 0,
+          "maxDepth": 2,
+          "maxItems": 1
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 1,
+        "grammar": {
+          "outcome": "limit"
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "list-count-over-items",
+        "rawHex": "000101110cffffffffffffffffff01",
+        "limits": {
+          "maxFileLen": 15,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 4
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "limit"
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "map-count-over-items",
+        "rawHex": "0001011110ffffffffffffffffff01",
+        "limits": {
+          "maxFileLen": 15,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 4
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "limit"
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "field-count-zero",
+        "rawHex": "0000",
+        "limits": {
+          "maxFileLen": 2,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "field-count-two",
+        "rawHex": "0002011112021112",
+        "limits": {
+          "maxFileLen": 8,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "duplicate-field-id",
+        "rawHex": "0002011112011112",
+        "limits": {
+          "maxFileLen": 8,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 2
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "foreign-field-id",
+        "rawHex": "0001021112",
+        "limits": {
+          "maxFileLen": 5,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 1
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "non-value-root-tag",
+        "rawHex": "00010112",
+        "limits": {
+          "maxFileLen": 4,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 1
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "trailing-byte",
+        "rawHex": "000101111200",
+        "limits": {
+          "maxFileLen": 6,
+          "maxSegmentLen": 0,
+          "maxSymbols": 0,
+          "maxDepth": 0,
+          "maxItems": 1
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "malformed"
+        },
+        "expect": {
+          "outcome": "malformed"
+        }
+      },
+      {
+        "id": "symbol-count-over-limit",
+        "rawHex": "02",
+        "limits": {
+          "maxFileLen": 1,
+          "maxSegmentLen": 0,
+          "maxSymbols": 1,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "unbounded"
+        },
+        "ownedUtf8Bytes": 0,
+        "grammar": {
+          "outcome": "limit"
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      },
+      {
+        "id": "symbol-bytes-over-materialization",
+        "rawHex": "01056162636465",
+        "allowanceProbeHex": "0105616263646501011112",
+        "limits": {
+          "maxFileLen": 7,
+          "maxSegmentLen": 5,
+          "maxSymbols": 1,
+          "maxDepth": 0,
+          "maxItems": 0
+        },
+        "physicalAllowance": {
+          "basis": "observedRequests",
+          "mode": "oneByteShort"
+        },
+        "ownedUtf8Bytes": 5,
+        "grammar": {
+          "outcome": "truncated",
+          "offset": 7
+        },
+        "expect": {
+          "outcome": "limit"
+        }
+      }
+    ]
+  },
+  "definitions": {
+    "WireValueMaterialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "wire",
+        "bridge",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.pack.value-record-materialization.v1"
+        },
+        "wire": {
+          "const": "SPK/1.0-record-body"
+        },
+        "bridge": {
+          "$ref": "#/$defs/WireValueMaterializationBridge"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 21,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/WireValueMaterializationCase"
+          },
+          "maxItems": 21
+        }
+      }
+    },
+    "WireValueMaterializationBridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldId",
+        "rootTag",
+        "exact"
+      ],
+      "properties": {
+        "fieldId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rootTag": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{1,2}$"
+        },
+        "exact": {
+          "type": "boolean"
+        }
+      }
+    },
+    "WireValueMaterializationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rawHex",
+        "limits",
+        "physicalAllowance",
+        "ownedUtf8Bytes",
+        "grammar",
+        "expect"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "canonical-null",
+            "interned-repeat-at-limit",
+            "interned-repeat-over-limit",
+            "inline-string-at-limit",
+            "inline-string-over-limit",
+            "array-slots-at-limit",
+            "array-slots-over-limit",
+            "map-slots-at-limit",
+            "map-slots-over-limit",
+            "nested-array-map-at-depth",
+            "nested-array-map-over-depth",
+            "list-count-over-items",
+            "map-count-over-items",
+            "field-count-zero",
+            "field-count-two",
+            "duplicate-field-id",
+            "foreign-field-id",
+            "non-value-root-tag",
+            "trailing-byte",
+            "symbol-count-over-limit",
+            "symbol-bytes-over-materialization"
+          ]
+        },
+        "rawHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$"
+        },
+        "allowanceProbeHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})+$"
+        },
+        "limits": {
+          "$ref": "#/$defs/WireValueMaterializationLimits"
+        },
+        "physicalAllowance": {
+          "$ref": "#/$defs/WireValueMaterializationPhysicalAllowance"
+        },
+        "ownedUtf8Bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "grammar": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/WireValueMaterializationAccepted"
+            },
+            {
+              "$ref": "#/$defs/WireValueMaterializationRejected"
+            },
+            {
+              "$ref": "#/$defs/WireValueMaterializationTruncated"
+            }
+          ]
+        },
+        "expect": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/WireValueMaterializationAccepted"
+            },
+            {
+              "$ref": "#/$defs/WireValueMaterializationRejected"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "const": "symbol-bytes-over-materialization"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "allowanceProbeHex": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              }
+            },
+            "required": [
+              "allowanceProbeHex"
+            ]
+          },
+          "else": {
+            "not": {
+              "type": "object",
+              "properties": {
+                "allowanceProbeHex": {}
+              },
+              "required": [
+                "allowanceProbeHex"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "physicalAllowance": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "const": "oneByteShort"
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            },
+            "required": [
+              "physicalAllowance"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expect": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "limit"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "physicalAllowance": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "exact",
+                      "zero"
+                    ]
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            },
+            "required": [
+              "physicalAllowance"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expect": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "accepted"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              },
+              "grammar": {
+                "type": "object",
+                "properties": {
+                  "outcome": {
+                    "const": "accepted"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "WireValueMaterializationLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFileLen",
+        "maxSegmentLen",
+        "maxSymbols",
+        "maxDepth",
+        "maxItems"
+      ],
+      "properties": {
+        "maxFileLen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSegmentLen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSymbols": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "WireValueMaterializationAccepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "value"
+      ],
+      "properties": {
+        "outcome": {
+          "const": "accepted"
+        },
+        "value": {}
+      }
+    },
+    "WireValueMaterializationRejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "limit",
+            "malformed"
+          ]
+        }
+      }
+    },
+    "WireValueMaterializationPhysicalAllowance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "mode"
+      ],
+      "properties": {
+        "basis": {
+          "const": "observedRequests"
+        },
+        "mode": {
+          "enum": [
+            "zero",
+            "exact",
+            "oneByteShort",
+            "unbounded"
+          ]
+        }
+      }
+    },
+    "WireValueMaterializationTruncated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "offset"
+      ],
+      "properties": {
+        "outcome": {
+          "const": "truncated"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

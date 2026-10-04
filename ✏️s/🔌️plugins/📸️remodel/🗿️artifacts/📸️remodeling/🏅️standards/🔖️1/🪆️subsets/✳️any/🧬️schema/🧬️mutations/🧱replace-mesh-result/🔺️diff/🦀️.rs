@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ReplaceMeshResult, base: &RemodelingSnapshot) -> pr
     }
     let mesh = (*payload.mesh).clone();
     if mesh == base.results.mesh {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mesh result is already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Mesh result is already up to date.".to_string());
     }
     let mut results = base.results.clone();
     results.mesh = mesh;

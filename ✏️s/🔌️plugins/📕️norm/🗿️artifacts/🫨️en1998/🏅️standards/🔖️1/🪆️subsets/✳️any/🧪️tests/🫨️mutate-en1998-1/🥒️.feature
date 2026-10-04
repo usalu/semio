@@ -66,8 +66,8 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-assessment-rkn        | 🏋️change-assessment-rkn        | ✅apply  |
       | insert-silo                  | 🫙insert-silo                   | ✅apply  |
       | insert-silo-dupe             | 🫙insert-silo                   | ⛔dupe   |
-      | insert-tank                  | 🛢insert-tank                   | ✅apply  |
-      | insert-tank-dupe             | 🛢insert-tank                   | ⛔dupe   |
+      | insert-tank                  | 🛢️insert-tank                   | ✅apply  |
+      | insert-tank-dupe             | 🛢️insert-tank                   | ⛔dupe   |
       | insert-foundation            | 🪨insert-foundation             | ✅apply  |
       | insert-foundation-dupe       | 🪨insert-foundation             | ⛔dupe   |
       | insert-retaining-wall        | 🧱️insert-retaining-wall        | ✅apply  |
@@ -112,7 +112,7 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | insert-assessment            | 🔧insert-assessment             | ✅apply  |
       | change-assessment-rkn        | 🏋️change-assessment-rkn        | ✅apply  |
       | insert-silo                  | 🫙insert-silo                   | ✅apply  |
-      | insert-tank                  | 🛢insert-tank                   | ✅apply  |
+      | insert-tank                  | 🛢️insert-tank                   | ✅apply  |
       | insert-foundation            | 🪨insert-foundation             | ✅apply  |
       | insert-retaining-wall        | 🧱️insert-retaining-wall        | ✅apply  |
       | insert-tower                 | 🗼insert-tower                  | ✅apply  |

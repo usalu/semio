@@ -14,11 +14,7 @@ fn pptx_transform_wire_vectors_match_independent_serde_signed64() {
             Json::Null => DslValue::Null,
             _ => panic!("closed scalar corpus"),
         };
-        let reference = wire.as_str().and_then(|text| {
-            serde_json::from_str::<i64>(text).ok().filter(|value| {
-                serde_json::to_string(value).unwrap() == text
-            })
-        });
+        let reference = wire.as_str().and_then(|text| serde_json::from_str::<i64>(text).ok().filter(|value| serde_json::to_string(value).unwrap() == text));
         let decoded = from_value(value);
         let expected = row["codecAccepted"].as_bool().unwrap();
         assert_eq!(reference.is_some(), expected, "independent {}", row["id"]);

@@ -17,9 +17,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveVmlPart 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
         agg_diff(&DocxStrictMutation::RemoveVmlPart(self.clone()), base)
     }
-    fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
-        agg_inverse(&DocxStrictMutation::RemoveVmlPart(self.clone()), base)
-    }
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&DocxStrictMutation::RemoveVmlPart(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove VML part", "VML-Paketteil entfernen")
     }

@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.semio.dev/framework/schema/source/closure",
+  "$defs": {
+    "errorCode": {"enum":["byte-budget","cancelled","coordinate-byte-budget","depth-budget","document-byte-budget","duplicate-anchor","duplicate-input-identity","duplicate-input-path","duplicate-member","duplicate-resource-id","invalid-anchor","invalid-base-uri","invalid-control","invalid-input","invalid-policy","invalid-resource-id","invalid-schema","invalid-source","invalid-unicode","invalid-vocabulary","malformed-json","malformed-json-pointer","malformed-reference-fragment","node-budget","reference-budget","resource-budget","schema-budget","source-byte-budget","unknown-anchor","unknown-keyword","unknown-resource","unknown-schema-pointer","unsupported-dialect","unsupported-dynamic-reference","unsupported-keyword","unsupported-vocabulary"]},
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "baseUri", "source"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "baseUri": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1}
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dialect", "root", "resources", "annotations"],
+      "properties": {
+        "dialect": {"enum": ["draft-07", "2020-12"]},
+        "root": {"$ref": "#/$defs/input"},
+        "resources": {"type": "array", "items": {"$ref": "#/$defs/input"}},
+        "annotations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceBytes", "documentBytes", "coordinateBytes", "depth", "schemas", "resources", "references", "chunk"],
+      "properties": {
+        "sourceBytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "documentBytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "coordinateBytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "depth": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "schemas": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "resources": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "references": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "chunk": {"type": "integer", "minimum": 1, "maximum": 4096}
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "pointer"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "pointer": {"type": "string"}
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "reference", "resourceUri", "target"],
+      "properties": {
+        "origin": {"$ref": "#/$defs/position"},
+        "reference": {"type": "string"},
+        "resourceUri": {"type": "string", "minLength": 1},
+        "target": {"$ref": "#/$defs/position"}
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uri", "origin"],
+      "properties": {
+        "uri": {"type": "string", "minLength": 1},
+        "origin": {"$ref": "#/$defs/position"}
+      }
+    },
+    "closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "documents", "edges", "resources"],
+      "properties": {
+        "root": {"$ref": "#/$defs/input"},
+        "documents": {"type": "array", "items": {"$ref": "#/$defs/input"}},
+        "edges": {"type": "array", "items": {"$ref": "#/$defs/edge"}},
+        "resources": {"type": "array", "items": {"$ref": "#/$defs/resource"}}
+      }
+    }
+  },
+  "$ref": "#/$defs/request"
+}

@@ -68,7 +68,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture written directly by `png` 0.18.1's own `Encoder`/`Writer`. `png` then decodes both sides with its own `Decoder`, and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `png-png-1-2-mutate` entry is not.\n\nPRODUCTION REACHABLE, measured rather than copied from the sibling entry's own claim: `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs` uses `png::{BitDepth, ColorType, Encoder}` directly to rasterize SVG to PNG for a real, registered OS media-export handler (`register_os_media_export_handler_kind(artifact_kind, \"png\", ...)`); `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs` uses `png::Encoder`/`png::Decoder` directly in its own (non-test) image-editing engine. All three of `os/host`, `remodel` and `lowpoly`'s own `Cargo.toml` declare `png = \"0.17.16\"` as a real, non-optional, non-dev dependency. `🔒️dependencies.json`'s repo-root entry for `png` (`productionReachable: false`, version `0.17.16`) is STALE against this source evidence and against this subset's own pre-existing `png-png-1-2-mutate` registration, which already records `productionReachable: true` with a `productionDebt` naming the same OS host path — not corrected here because touching a shared, generated, repo-root ledger is out of this ticket's PNG-only scope, but the discrepancy is recorded so it is not mistaken for agreement.\n\n12 of this subset's 15 declared kinds are witnessable through `png::Info`'s public fields (`width`, `height`, `bit_depth`, `color_type`, `interlaced`, `palette`, `trns`, `gama_chunk`, `chrm_chunk`, `srgb`, `pixel_dims`, `bkgd`, `uncompressed_latin1_text`) plus the decoded pixel sample buffer for `replace-pixels`. Three are not: `png::Info` 0.18.1 has no `tIME` field at all, and the decoder skips unrecognised ancillary chunks entirely rather than surfacing them (`src/decoder/stream.rs`'s own `SkippedAncillaryChunk`, with no public accessor) — `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` are registered `png-1-2-mutate-uncarried` rather than discharged. Full research: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md`, independently re-verified against the vendored crate source (`~/.cargo/registry/src/*/png-0.18.1/`) while building this retrofit.",
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately.\n\nThis subset also carries a `🦀️.rs` that COMPUTES what each mutation should produce. That entry is registered `cross-semio-implementation` and does not discharge anything, because both halves of such a comparison descend from one reading of the specification.\n\nThis entry is a different mechanism. The expected state is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture written directly by `png` 0.18.1's own `Encoder`/`Writer`. `png` then decodes both sides with its own `Decoder`, and the comparison is over what it recovered. The probes say so in their own header: \"Everything here MARSHALS and READS; nothing here applies a mutation or predicts what one should.\"\n\nSo the judge is a third-party implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `png-png-1-2-mutate` entry is not.\n\nPRODUCTION REACHABLE, measured rather than copied from the sibling entry's own claim: `🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs` uses `png::{BitDepth, ColorType, Encoder}` directly to rasterize SVG to PNG for a real, registered OS media-export handler (`register_os_media_export_handler_kind(artifact_kind, \"png\", ...)`); `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️.rs` uses `png::Encoder`/`png::Decoder` directly in its own (non-test) image-editing engine. All three of `os/host`, `remodel` and `lowpoly`'s own `Cargo.toml` declare `png = \"0.17.16\"` as a real, non-optional, non-dev dependency. `🔒️dependencies.json`'s repo-root entry for `png` (`productionReachable: false`, version `0.17.16`) is STALE against this source evidence and against this subset's own pre-existing `png-png-1-2-mutate` registration, which already records `productionReachable: true` with a `productionDebt` naming the same OS host path — not corrected here because touching a shared, generated, repo-root ledger is out of this ticket's PNG-only scope, but the discrepancy is recorded so it is not mistaken for agreement.\n\nEvery live kind of the byte-authoritative vocabulary is witnessable through `png::Info`'s public fields (`width`, `height`, `bit_depth`, `color_type`, `interlaced`, `palette`, `trns`, `gama_chunk`, `chrm_chunk`, `srgb`, `pixel_dims`, `bkgd`, `uncompressed_latin1_text`) plus the decoded sample buffer. `png::Info` 0.18.1 has no `tIME` field and the decoder skips unrecognised ancillary chunks (`src/decoder/stream.rs`'s own `SkippedAncillaryChunk`), which is why the chunk-level reader below exists. Research: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md`.",
       "comparisonProfiles": [
         "semantic-raster-v1"
       ]
@@ -106,19 +106,7 @@
         "win32-x64"
       ],
       "homepage": "https://python-pillow.org",
-      "rationale": "📖️ A SECOND reader, at the CHUNK level the first one does not model.\n\n`png` 0.18 models a DECODED image: it has no `tIME` field and its stream skips unrecognised ancillary chunks outright. A peer session's crate research established that and this ticket re-verified it, which is why `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` were recorded `-uncarried` against it. Honest about `png`, and not a claim about PNG readers generally.\n\nPillow's `PngImagePlugin.ChunkStream` walks the chunk sequence and validates every CRC, so each chunk is observable by type, order and payload — `tIME` and a private ancillary chunk included. Pillow also WRITES both via `PngInfo.add`, so writer and reader are one library, the precedent gif already sets here (its Encoder writes, its Decoder judges).\n\n`IDAT` payloads are projected by LENGTH only: they are compressed pixel data, none of these three kinds changes them, and projecting megabytes of deflate stream would add cost without adding discrimination. Every other chunk carries its full payload."
-    }
-  ],
-  "noOracleDecisions": [
-    {
-      "id": "png-time-and-unknown-ancillary-chunks-uncarried",
-      "capabilities": [
-        "png-1-2-mutate-uncarried"
-      ],
-      "rationale": "The `png` 0.18.1 reader cannot witness three of this subset's fifteen kinds, for a crate-API reason rather than a carrier-export reason (contrast `sequence`'s `csv` case, where the export itself never writes the field). `change-timestamp`: `png::Info` has no `tIME` field in this version — confirmed absent from `src/common.rs`. `insert-unknown-chunk`/`remove-unknown-chunk`: the decoder's own `SkippedAncillaryChunk` path discards any chunk type it does not recognise before it ever reaches `Info`, and no public accessor exposes what was skipped. All three fixtures are still built — `png-codec`'s `Writer::write_chunk` raw escape hatch writes real tIME/unknown-chunk bytes for both `before` and `after` — so the byte-level material exists and is committed; what is missing is a public read path in this specific crate version to compare it back. See `📓️png-reader-witnessability.md` for the line-level crate-source evidence.",
-      "substitutes": [
-        "specification-vectors"
-      ]
+      "rationale": "📖️ A SECOND reader, at the CHUNK level the first one does not model.\n\n`png` 0.18 models a DECODED image: it has no `tIME` field and its stream skips unrecognised ancillary chunks outright, so a document's tIME and private chunks are witnessed at the chunk level by this reader instead. Honest about `png`, and not a claim about PNG readers generally.\n\nPillow's `PngImagePlugin.ChunkStream` walks the chunk sequence and validates every CRC, so each chunk is observable by type, order and payload — `tIME` and a private ancillary chunk included. Pillow also WRITES both via `PngInfo.add`, so writer and reader are one library, the precedent gif already sets here (its Encoder writes, its Decoder judges).\n\n`IDAT` payloads are projected by LENGTH only: they are compressed pixel data, none of these three kinds changes them, and projecting megabytes of deflate stream would add cost without adding discrimination. Every other chunk carries its full payload."
     }
   ],
   "comparisonProfiles": [
@@ -142,39 +130,6 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-header",
-          "sourceMutationDirectoryName": "📐️change-header",
-          "mutationDirectoryName": "📐️change-header",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-palette",
-          "sourceMutationDirectoryName": "🎨️replace-palette",
-          "mutationDirectoryName": "🎨️replace-palette",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-transparency",
-          "sourceMutationDirectoryName": "👁️change-transparency",
-          "mutationDirectoryName": "👁️change-transparency",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
           "mutationId": "change-gamma",
           "sourceMutationDirectoryName": "🌗️change-gamma",
           "mutationDirectoryName": "🌗️change-gamma",
@@ -184,148 +139,14 @@
               "directoryName": "🎯️direct"
             }
           ]
-        },
-        {
-          "mutationId": "change-chromaticities",
-          "sourceMutationDirectoryName": "🌈️change-chromaticities",
-          "mutationDirectoryName": "🌈️change-chromaticities",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-srgb-intent",
-          "sourceMutationDirectoryName": "🖌️change-srgb-intent",
-          "mutationDirectoryName": "🖌️change-srgb-intent",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-physical-dims",
-          "sourceMutationDirectoryName": "📏️change-physical-dims",
-          "mutationDirectoryName": "📏️change-physical-dims",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-timestamp",
-          "sourceMutationDirectoryName": "🕰️change-timestamp",
-          "mutationDirectoryName": "🕰️change-timestamp",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-background",
-          "sourceMutationDirectoryName": "🖼️change-background",
-          "mutationDirectoryName": "🖼️change-background",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-text-chunk",
-          "sourceMutationDirectoryName": "📥️insert-text-chunk",
-          "mutationDirectoryName": "📥️insert-text-chunk",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-text-chunk",
-          "sourceMutationDirectoryName": "🗑️remove-text-chunk",
-          "mutationDirectoryName": "🗑️remove-text-chunk",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-text-chunk",
-          "sourceMutationDirectoryName": "✏️replace-text-chunk",
-          "mutationDirectoryName": "✏️replace-text-chunk",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-pixels",
-          "sourceMutationDirectoryName": "🔲️replace-pixels",
-          "mutationDirectoryName": "🔲️replace-pixels",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-unknown-chunk",
-          "sourceMutationDirectoryName": "📦️insert-unknown-chunk",
-          "mutationDirectoryName": "📦️insert-unknown-chunk",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-unknown-chunk",
-          "sourceMutationDirectoryName": "📤️remove-unknown-chunk",
-          "mutationDirectoryName": "📤️remove-unknown-chunk",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
         }
       ],
       "kinds": [
-        "change-header",
-        "replace-palette",
-        "change-transparency",
-        "change-gamma",
-        "change-chromaticities",
-        "change-srgb-intent",
-        "change-physical-dims",
-        "change-timestamp",
-        "change-background",
-        "insert-text-chunk",
-        "remove-text-chunk",
-        "replace-text-chunk",
-        "replace-pixels",
-        "insert-unknown-chunk",
-        "remove-unknown-chunk",
         "set-snapshot",
         "patch-snapshot",
-        "patch-pixels"
+        "change-gamma",
+        "patch-pixels",
+        "paint-native-samples"
       ]
     }
   ],
@@ -657,46 +478,6 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-background",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-background",
-            "bridgeVersion": 1,
-            "variant": "ChangeBackground"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "change-chromaticities",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-chromaticities",
-            "bridgeVersion": 1,
-            "variant": "ChangeChromaticities"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
           "id": "change-gamma",
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -717,107 +498,7 @@
           ]
         },
         {
-          "id": "change-header",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-header",
-            "bridgeVersion": 1,
-            "variant": "ChangeHeader"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "change-physical-dims",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-physical-dims",
-            "bridgeVersion": 1,
-            "variant": "ChangePhysicalDims"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "change-srgb-intent",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-srgb-intent",
-            "bridgeVersion": 1,
-            "variant": "ChangeSrgbIntent"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "change-timestamp",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-timestamp",
-            "bridgeVersion": 1,
-            "variant": "ChangeTimestamp"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate-chunk",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-png-1-2-chunk-reader"
-            }
-          ]
-        },
-        {
-          "id": "change-transparency",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-transparency",
-            "bridgeVersion": 1,
-            "variant": "ChangeTransparency"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "insert-text-chunk",
+          "id": "paint-native-samples",
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
@@ -825,36 +506,15 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "insert-text-chunk",
+            "operation": "paint-native-samples",
             "bridgeVersion": 1,
-            "variant": "InsertTextChunk"
+            "variant": "PaintNativeSamples"
           },
           "oracleRequirements": [
             {
               "capability": "png-1-2-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "insert-unknown-chunk",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "insert-unknown-chunk",
-            "bridgeVersion": 1,
-            "variant": "InsertUnknownChunk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate-chunk",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-png-1-2-chunk-reader"
             }
           ]
         },
@@ -901,110 +561,6 @@
           ]
         },
         {
-          "id": "remove-text-chunk",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-text-chunk",
-            "bridgeVersion": 1,
-            "variant": "RemoveTextChunk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "remove-unknown-chunk",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-unknown-chunk",
-            "bridgeVersion": 1,
-            "variant": "RemoveUnknownChunk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate-chunk",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-png-1-2-chunk-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-palette",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "replace-palette",
-            "bridgeVersion": 1,
-            "variant": "ReplacePalette"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-pixels",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "replace-pixels",
-            "bridgeVersion": 1,
-            "variant": "ReplacePixels"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-text-chunk",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "replace-text-chunk",
-            "bridgeVersion": 1,
-            "variant": "ReplaceTextChunk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
           "id": "set-snapshot",
           "capability": "png-1-2-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -1037,8 +593,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-header",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1088,8 +642,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "replace-palette",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1139,8 +691,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-transparency",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1241,8 +791,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-chromaticities",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1292,8 +840,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-srgb-intent",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1343,8 +889,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-physical-dims",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1394,8 +938,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-timestamp",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1445,8 +987,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-background",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1496,8 +1036,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "insert-text-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1547,8 +1085,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "remove-text-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1598,8 +1134,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "replace-text-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1649,8 +1183,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "replace-pixels",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1700,8 +1232,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "insert-unknown-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1751,8 +1281,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "remove-unknown-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1802,8 +1330,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "change-timestamp",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1851,8 +1377,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "insert-unknown-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -1900,8 +1424,6 @@
         "standard": "1.2",
         "subset": "any"
       },
-      "mutation": "remove-unknown-chunk",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -2024,7 +1546,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "png-carrier",
-      "notes": "PatchSnapshot{edits:[set /gama = 45455]} is the editor's compact path-addressed patch: the gAMA chunk changes in place and every other member stays untouched."
+      "notes": "PatchSnapshot{set /gama = 45455} is the editor's compact path-addressed patch: the gAMA chunk changes in place and every other member stays untouched."
     },
     {
       "schema": "semio.repository-test.fixture/v2",

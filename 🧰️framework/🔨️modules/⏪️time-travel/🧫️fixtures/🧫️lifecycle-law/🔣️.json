@@ -11143,6 +11143,11 @@
       "key": "refusalMemberGone",
       "en": "The part this history edit targets was closed",
       "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
+    },
+    {
+      "key": "memberEdited",
+      "en": "History of a composed part edited",
+      "de": "Verlauf eines eingebetteten Teils bearbeitet"
     }
   ],
   "codeLabels": [

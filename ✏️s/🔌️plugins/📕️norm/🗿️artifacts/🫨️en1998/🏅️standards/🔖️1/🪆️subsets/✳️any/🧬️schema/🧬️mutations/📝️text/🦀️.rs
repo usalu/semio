@@ -39,11 +39,11 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-fn enc_json<T: dsl::ToValue>(value: &T) -> String {
-    enc_str(&pack::json::to_json_string(value))
+fn enc_json<T: semio_framework_value::ToValue>(value: &T) -> String {
+    enc_str(&semio_framework_pack_json::to_json_string(value))
 }
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 
 fn tokenize_args(rest: &str) -> Vec<String> {
@@ -156,21 +156,21 @@ impl protocol::OpText for En1998Mutation {
     fn print_op(&self) -> String {
         print_en1998_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_en1998_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_en1998_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
-fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
-    let bytes = pack::json::to_json_string(value);
+fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
+    let bytes = semio_framework_pack_json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes.as_bytes());
 }
-fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+fn read_json_bin<T: semio_framework_value::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-    pack::json::from_json_str(text).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 
 const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");

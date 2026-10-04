@@ -54,7 +54,7 @@ for (const locale of fixture.locales as ("en" | "de")[]) {
     expect(expanded.sections[0].actions?.map(action => action.id?.split("-").at(-1))).toEqual(fixture.formActions);
     expect(expanded.sections[0].actions?.[0].disabled).toBe(true);
     mounted.rerender(<Tree sections={expanded.sections} />);
-    expect(mounted.getByText(entry.definition.args[0].label, { exact: true })).toBeDefined();
+    expect(mounted.container.querySelector(`[id="${expanded.sections[0].items?.[0]?.id}.disclosureLabel"]`)?.textContent).toBe(entry.definition.args[0].label);
     const header = () => mounted.container.querySelector(`[id="${expanded.sections[0].id}"]`)!;
     expect(header().getAttribute("aria-expanded")).toBe(String(fixture.formDefaultOpen));
     const arg = () => mounted.container.querySelector(`[id="${entry.definition.args[0].id}"]`)!;

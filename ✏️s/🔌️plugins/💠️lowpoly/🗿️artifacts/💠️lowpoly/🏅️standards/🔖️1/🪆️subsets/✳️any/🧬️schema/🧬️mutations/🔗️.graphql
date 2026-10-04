@@ -1,3 +1,4 @@
+# import LowpolyMeshState,LowpolyMeshStateInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
 # `LowpolyMutation` enum (`dsl::Mutations`-derived, seventeen variants: nine object-lane verbs, a
 # create/delete pair for the `mesh` CHILD slot, and six paint-layer verbs plus one pixel edit).
@@ -49,6 +50,7 @@ input LowpolyObjectInput {
   mesh: LowpolyMeshHandleInput
   paintLayers: [LowpolyPaintLayerInput!]!
   meshContent: String
+  meshState: LowpolyMeshStateInput
 }
 
 input PixelRunInput {
@@ -100,6 +102,7 @@ input CreateMeshInput {
   childId: String!
   target: ArtifactRefInput!
   meshWorkspace: String!
+  meshState: LowpolyMeshStateInput
 }
 
 input DeleteMeshInput {
@@ -334,6 +337,7 @@ type CreateMeshPayload {
   childId: String!
   target: ArtifactRef!
   meshWorkspace: String!
+  meshState: LowpolyMeshState
 }
 
 type DeleteMeshMutation {

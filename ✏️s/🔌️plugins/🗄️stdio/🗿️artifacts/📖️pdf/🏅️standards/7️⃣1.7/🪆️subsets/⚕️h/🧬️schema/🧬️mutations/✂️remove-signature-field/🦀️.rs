@@ -22,9 +22,12 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfHMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         support::signature_field_named(base, &self.name).map(|_| PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" entfernen", self.name))

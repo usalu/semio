@@ -8,7 +8,7 @@ fn sample_dwg() -> DwgSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_drawing_imports_as_an_empty_plan() {
-    let cad = semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
+    let cad = ::semio_framework_async::poll::resolve_ready(SemioCadFromDwg::deserialize(&sample_dwg())).expect("deserialize");
     assert!(cad.blocks.is_empty());
     assert!(cad.entities.is_empty());
     assert_eq!(cad.schema, STDIO_SEMIOCAD_DOCUMENT_SCHEMA);
@@ -17,5 +17,5 @@ async fn an_empty_drawing_imports_as_an_empty_plan() {
 #[semio_framework_async_macros::async_test]
 async fn rejects_missing_version() {
     let bad = DwgSnapshot { version: String::new(), ..DwgSnapshot::default() };
-    assert!(semio_framework_plugin::resolve_ready(SemioCadFromDwg::deserialize(&bad)).is_err());
+    assert!(::semio_framework_async::poll::resolve_ready(SemioCadFromDwg::deserialize(&bad)).is_err());
 }

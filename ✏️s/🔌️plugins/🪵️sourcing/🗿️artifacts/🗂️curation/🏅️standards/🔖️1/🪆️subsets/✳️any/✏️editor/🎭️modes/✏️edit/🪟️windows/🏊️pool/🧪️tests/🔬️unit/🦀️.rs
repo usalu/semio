@@ -68,7 +68,7 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
     let document = crate::schema::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let row: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
     assert_eq!(row["id"], kind.id.as_str());
     assert_eq!(row["_drag"]["objectId"], kind.id.as_str());
     assert_eq!(row["curated"]["kind"], "stepper");
@@ -83,11 +83,11 @@ async fn pool_row_has_no_actions_column_and_only_a_curated_stepper() {
     let mut document = crate::schema::default_document();
     let kind = crate::stock_of(&document).remove(0);
     let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let uncurated: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let uncurated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
     assert!(uncurated.get("actions").is_none(), "the pool must not render a second +/- column");
     assert_eq!(uncurated["curated"]["kind"], "stepper");
     crate::schema::curation_delta(&mut document, &kind.id, 1);
-    let curated: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
+    let curated: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&pool_row(&document, &kind, labels))).unwrap();
     assert_eq!(curated["curated"]["value"].as_f64().unwrap(), 1.0);
 }
 

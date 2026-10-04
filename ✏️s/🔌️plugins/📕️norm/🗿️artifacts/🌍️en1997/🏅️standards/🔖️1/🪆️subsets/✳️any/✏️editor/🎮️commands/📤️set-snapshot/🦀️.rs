@@ -15,7 +15,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "set-snapshot")]
 pub struct ReplaceSnapshot {
     #[dsl(block)]
@@ -25,7 +25,7 @@ pub struct ReplaceSnapshot {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1997Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1997Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot_fields(En1997Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
+    crate::app_surface::commit_snapshot_fields(En1997Mutation::from_snapshot(doc.snapshot, &payload.snapshot))
 }
 //#endregion 🔖️Handler
 

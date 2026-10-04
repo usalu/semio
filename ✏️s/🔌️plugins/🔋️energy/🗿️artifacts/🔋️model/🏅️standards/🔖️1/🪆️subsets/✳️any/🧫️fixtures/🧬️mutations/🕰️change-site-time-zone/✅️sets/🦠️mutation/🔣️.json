@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "changeSiteTimeZone",
+  "newTimeZoneHours": -7.0
+}

@@ -10,7 +10,7 @@ async fn every_variant_has_diff_and_inverse() {
     let base = En1998Snapshot::default();
     for mutation in every_mutation() {
         let _ = mutation.diff(&base);
-        let _ = mutation.inverse(&base);
+        let _ = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     }
 }
 

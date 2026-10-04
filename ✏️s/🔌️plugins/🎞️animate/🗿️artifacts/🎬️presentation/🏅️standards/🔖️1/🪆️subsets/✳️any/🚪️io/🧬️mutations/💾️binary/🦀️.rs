@@ -31,7 +31,7 @@ struct PresentationFreshSnapshotRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for PresentationFreshSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 || maximum_bytes < PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -72,7 +72,7 @@ struct PresentationUnexpectedMutationRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for PresentationUnexpectedMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.value.is_none() {
             return Ok(store::SnapshotRetirementStep::Complete);
         }
@@ -412,7 +412,7 @@ impl PresentationProjectionCompletion {
         }
     }
 
-    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         let mut state = match self.state.try_lock() {
             Ok(state) => state,
             Err(_) => return Ok(store::SnapshotRetirementStep::Blocked),
@@ -433,7 +433,7 @@ impl PresentationProjectionCompletion {
                 drop(state.retirement.take());
                 Ok(store::SnapshotRetirementStep::Complete)
             }
-            store::SnapshotRetirementStep::Complete => Err("Presentation projection retirement reported Complete without its terminal-empty witness".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation projection retirement reported Complete without its terminal-empty witness")),
             step => Ok(step),
         }
     }
@@ -570,14 +570,14 @@ impl PresentationEnvelopeMaterializeJob {
         self.state = state;
     }
 
-    fn pump_materialize_retirement(&mut self) -> Result<bool, String> {
+    fn pump_materialize_retirement(&mut self) -> Result<bool, semio_framework_value::ValueError> {
         if let Some(retirement) = self.materialize_snapshot_retirement.as_mut() {
             return match retirement.close_step(1, PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.materialize_snapshot_retirement.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Presentation materialized snapshot retirement completed without its terminal witness".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation materialized snapshot retirement completed without its terminal witness")),
                 _ => Ok(false),
             };
         }
@@ -587,7 +587,7 @@ impl PresentationEnvelopeMaterializeJob {
                     drop(self.materialize_envelope_retirement.take());
                     Ok(true)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Presentation materialized envelope retirement completed without its terminal witness".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation materialized envelope retirement completed without its terminal witness")),
                 _ => Ok(false),
             };
         }
@@ -724,7 +724,7 @@ impl semio_framework_job::InteractiveJob for PresentationEnvelopeMaterializeJob 
                     if let Some(mutation) = edit.forwards.get(self.materialize_mutation) {
                         let current = self.materialize_snapshot.as_ref().expect("materialized snapshot authority was established");
                         let (diff, messages) = mutation.diff(current).into_parts();
-                        if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
+                        if messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal) {
                             self.record_fault(b"presentation-envelope.materialize-fatal-mutation");
                             self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeFault);
                             return semio_framework_job::StepOutcome::Yield;
@@ -1274,7 +1274,7 @@ impl PresentationEnvelopeMaterializeHandle {
     }
 
     /// 🧹️ Cancels and cursor-retires the exact worker/result owner without a run loop.
-    pub fn close_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1554,7 +1554,7 @@ impl PresentationEnvelopeMaterializeRegistry {
         pool: &semio_framework_job::WorkerPool,
         maximum_items: usize,
         maximum_bytes: usize,
-    ) -> Result<store::SnapshotRetirementStep, String> {
+    ) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         let step = self.get_mut(operation, generation).map_err(|_| "Presentation envelope materialize close received a stale operation/generation")?.close_step(pool, maximum_items, maximum_bytes)?;
         if step == store::SnapshotRetirementStep::Complete {
             self.reclaim_terminal(operation, generation).map_err(|_| "Presentation envelope terminal handle changed before exact registry removal")?;
@@ -1563,7 +1563,7 @@ impl PresentationEnvelopeMaterializeRegistry {
     }
 
     /// 🧹️ App close advances one retained caller and removes only its witnessed terminal shell.
-    pub fn close_next_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    pub fn close_next_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.occupied == 0 {
             return Ok(store::SnapshotRetirementStep::Complete);
         }

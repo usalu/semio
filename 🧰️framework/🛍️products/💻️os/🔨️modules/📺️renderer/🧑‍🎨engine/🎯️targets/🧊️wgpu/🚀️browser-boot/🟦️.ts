@@ -1,6 +1,7 @@
 import { DEFAULT_PLAYGROUND_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { documentBootMetaReader, resolveWgpuBootDescriptor, stripBootBrokerProof, wgpuReadinessBeacon, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost } from "../🌐️browser-host/🟦️.ts";
+import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/🟦️.ts";
 
 export { WGPU_CANVAS_ID, WGPU_INTROSPECTION_GLOBAL, WGPU_HUB_PROJECTION_GLOBAL, WGPU_ACCESSIBILITY_MIRROR_ID } from "../🌐️browser-host/🟦️.ts";
 
@@ -13,7 +14,7 @@ if (!root) throw new Error("missing-root: #root is unavailable");
 try {
   const descriptor = resolveWgpuBootDescriptor({ search: window.location.search, hash: window.location.hash, meta: documentBootMetaReader(document), defaultVariant: DEFAULT_PLAYGROUND_VARIANT });
   stripBootBrokerProof(window.location, window.history);
-  const locale = descriptor.locks.locale === "de" ? "de" : descriptor.locks.locale === "en" ? "en" : navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
+  const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
   await mountWgpuBrowserHost(root, { descriptor, locale, mountId: "root", pageBindings: true });
 } catch (error) {
   const detail = error instanceof Error ? error.message : String(error);

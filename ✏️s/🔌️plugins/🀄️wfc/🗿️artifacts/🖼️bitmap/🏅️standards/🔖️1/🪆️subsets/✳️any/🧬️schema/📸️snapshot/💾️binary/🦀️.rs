@@ -53,7 +53,7 @@ impl BitmapSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for BitmapSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if self.stage >= BitmapRetirementStage::ORDER.len() {
             return Ok(SnapshotRetirementStep::Complete);
         }

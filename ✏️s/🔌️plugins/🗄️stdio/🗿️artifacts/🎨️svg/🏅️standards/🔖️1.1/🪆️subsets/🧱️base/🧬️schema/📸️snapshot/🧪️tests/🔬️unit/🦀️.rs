@@ -3,29 +3,46 @@ use protocol::MutationDiff;
 use semio_framework_plugin::ArtifactBuilder;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlNode, XmlQuote};
 
+fn assert_owned_literal_roundtrip(snapshot:&SvgSnapshot){
+    use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
+    let text=crate::schema::mutation_support::encode_snapshot(snapshot);
+    assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).expect("literal structured text state"),*snapshot);
+    let mut binary=Vec::new();
+    crate::schema::mutation_support::encode_snapshot_binary(snapshot,&mut binary);
+    assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).expect("literal binary state"),*snapshot);
+    let mut callback=|_|true;
+    let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());
+    let database=snapshot.to_sqlite_database(&mut control).expect("literal relational state");
+    let restored=SvgSnapshot::from_sqlite_database(&database,&mut control).expect("literal relational reconstruction");
+    assert_eq!(restored,*snapshot);
+    restored.retire_sqlite_snapshot();
+    for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+        let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut control).expect("literal controlled native state");
+        let restored=SvgSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).expect("literal controlled native reconstruction");
+        assert_eq!(restored,*snapshot);
+        restored.retire_sqlite_snapshot();
+    }
+}
+
 #[semio_framework_async_macros::async_test]
-async fn snapshot_decoders_and_builder_refuse_invalid_document_boundaries() {
+async fn owned_snapshot_codecs_preserve_literal_boundaries_and_builder_refuses_external_xml() {
     let mut invalid = crate::schema::empty_svg_snapshot();
     invalid.doc.doctype = Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype { prolog_position: 1, name: "svg".into(), external_id: None, declarations: Vec::new() });
 
-    let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject an out-of-range doctype position");
-
-    let mut binary = Vec::new();
-    crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-    assert!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).is_err(), "binary ingress must reject an out-of-range doctype position");
+    assert_owned_literal_roundtrip(&invalid);
+    assert!(write_svg_xml(&invalid.doc).is_err(),"external XML writer must reject an out-of-range doctype position");
     assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
 
     let mut invalid_epilog = crate::schema::empty_svg_snapshot();
     invalid_epilog.doc.epilog = vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Text { text: "outside".into() }];
-    let text = crate::schema::mutation_support::encode_snapshot(&invalid_epilog);
-    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject a non-miscellaneous epilog node");
+    assert_owned_literal_roundtrip(&invalid_epilog);
+    assert!(write_svg_xml(&invalid_epilog.doc).is_err(),"external XML writer must reject a non-miscellaneous epilog node");
     assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn every_svg_snapshot_ingress_refuses_unpublishable_declarations() {
-    let fixture = pack::parse_json(include_str!("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
+async fn owned_snapshot_codecs_preserve_literal_declarations_and_external_ingress_refuses() {
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral XML document-boundary fixture");
     for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
         let mut invalid = crate::schema::empty_svg_snapshot();
         invalid.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: case["rootText"].as_str().expect("root text").into() }] });
@@ -33,11 +50,7 @@ async fn every_svg_snapshot_ingress_refuses_unpublishable_declarations() {
             Some(XmlDeclaration { version: "1.0".into(), encoding: Some(case["encoding"].as_str().expect("encoding").into()), standalone: None, quote: if case["quote"] == "single" { XmlQuote::Single } else { XmlQuote::Double } });
         let expected = case["error"].as_str().expect("error");
 
-        let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).expect_err("structured text ingress"), expected, "{}", case["id"]);
-        let mut binary = Vec::new();
-        crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).expect_err("binary ingress"), expected, "{}", case["id"]);
+        assert_owned_literal_roundtrip(&invalid);
         assert!(crate::schema::SvgBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
         assert_eq!(crate::SvgArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
         let mut artifact = crate::SvgArtifact::default();
@@ -47,6 +60,10 @@ async fn every_svg_snapshot_ingress_refuses_unpublishable_declarations() {
         let diff = crate::SvgDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(crate::schema::diff::SvgNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
         assert!(<crate::SvgDiff as MutationDiff<SvgSnapshot>>::apply(&diff, &crate::schema::empty_svg_snapshot()).is_err(), "{} diff ingress", case["id"]);
         assert_eq!(write_svg_xml(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
+    }
+
+    for case in fixture["invalid"].as_array().expect("invalid external XML cases"){
+        assert_eq!(xml_document_from_text(case["source"].as_str().expect("external XML source")).expect_err("external XML import"),case["error"].as_str().expect("external XML error"));
     }
 
     let valid = crate::SvgArtifact::from_snapshot(crate::schema::empty_svg_snapshot()).expect("valid raw artifact conversion");

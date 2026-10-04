@@ -9,7 +9,10 @@ impl protocol::Mutation<Snapshot> for Mutation {
     const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[];
     fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{match *self{}}
     fn diff(&self,_base:&Snapshot)->protocol::MutationOutcome<Diff>{match *self{}}
-    fn inverse(&self,_base:&Snapshot)->Vec<Self>{match *self{}}
+    fn inverse(&self,_base:&Snapshot)-> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {match *self{}
+    })())
+}
 }
 /// 🕳️ An empty vocabulary has no kinds, so no operation of it is ever labelled.
 impl semio_framework_os_kernel::SemanticMutation<Snapshot> for Mutation {
@@ -19,7 +22,7 @@ impl semio_framework_os_kernel::SemanticMutation<Snapshot> for Mutation {
     fn target(&self)->Vec<String>{match *self{}}
 }
 impl protocol::OpText for Mutation {
-    fn parse_op(_line:&str)->Result<Self,store::TextError>{Err(store::TextError::new("fixture has no mutations",store::TextSpan::at(1,1)))}
+    fn parse_op(_line:&str)->Result<Self,store::TextError>{Err(store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "fixture has no mutations",store::TextSpan::at(1,1)))}
     fn print_op(&self)->String{match *self{}}
 }
 impl protocol::OpBinary for Mutation {

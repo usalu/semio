@@ -9,7 +9,7 @@ use crate::ProgramSnapshot;
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the title is unchanged.
 pub fn diff(payload: &RenameMeta, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.meta.title == payload.new_title {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Document metadata already has this title.").at([base.meta.document_id.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Document metadata already has this title.").at([base.meta.document_id.clone()])]);
     }
     let mut value = base.meta.clone();
     value.title = payload.new_title.clone();

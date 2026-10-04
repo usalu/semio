@@ -1,0 +1,5 @@
+{
+ "authority":"literalSqlTopologyBeforeCallback",
+ "layoutTables":43,
+ "mutations":["tableMetadata","rowOwnerArray","cellOwnerArray","literalCellReplacement","tableOwnerArray"]
+}

@@ -1,9 +1,9 @@
 /** 🛤️ Normalize SVG path commands to editable absolute Draw segments. */
-import {parsePathSegment,type PathSegment} from "../../../../../../../../🧬️schema/🟦️.ts";
+import {parsePathGeometrySegment,type PathGeometrySegment} from "../../../../../../../../🧬️schema/🟦️.ts";
 
-export function parseEditableSvgPath(source:string):PathSegment[] {
+export function parseEditableSvgPath(source:string):PathGeometrySegment[] {
   let offset=0,command="",current:[number,number]=[0,0],start:[number,number]=[0,0],cubic:[number,number]|null=null,quad:[number,number]|null=null,closed=false;
-  const segments:PathSegment[]=[],number=/[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/y;
+  const segments:PathGeometrySegment[]=[],number=/[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/y;
   const skip=()=>{while(offset<source.length && /[\t\n\r ,]/.test(source[offset]!))offset++;};
   const read=()=>{skip();number.lastIndex=offset;const found=number.exec(source);if(!found)throw new Error(`Missing SVG coordinate at ${offset}`);offset=number.lastIndex;const value=Number(found[0]);if(!Number.isFinite(value))throw new Error("Nonfinite SVG coordinate");return value;};
   const flag=()=>{skip();const value=source[offset++];if(value!=="0" && value!=="1")throw new Error("Invalid SVG arc flag");return value==="1";};
@@ -15,7 +15,7 @@ export function parseEditableSvgPath(source:string):PathSegment[] {
     if(!segments.length && kind!=="M")throw new Error("SVG path must start with a move");
     if(closed && kind!=="M")segments.push({kind:"move",to:[...current]});
     const point=():[number,number]=>{const x=read(),y=read();return relative?[current[0]+x,current[1]+y]:[x,y];};
-    let segment:PathSegment,nextCubic:[number,number]|null=null,nextQuad:[number,number]|null=null;
+    let segment:PathGeometrySegment,nextCubic:[number,number]|null=null,nextQuad:[number,number]|null=null;
     switch(kind) {
       case "M":segment={kind:"move",to:point()};command=relative?"l":"L";break;
       case "L":segment={kind:"line",to:point()};break;
@@ -29,7 +29,7 @@ export function parseEditableSvgPath(source:string):PathSegment[] {
       case "Z":segment={kind:"close"};command="";break;
       default:throw new Error(`Unknown SVG path command ${command}`);
     }
-    segment=parsePathSegment(segment);
+    segment=parsePathGeometrySegment(segment);
     if(segment.kind==="close")current=[...start];else current=[...segment.to];
     if(segment.kind==="move")start=[...current];
     cubic=nextCubic;quad=nextQuad;closed=segment.kind==="close";segments.push(segment);

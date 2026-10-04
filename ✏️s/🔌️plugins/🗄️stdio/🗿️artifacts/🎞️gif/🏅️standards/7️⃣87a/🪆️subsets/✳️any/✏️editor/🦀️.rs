@@ -5,7 +5,7 @@
 
 use crate::editor::gif_87a::modes::edit;
 use crate::editor::gif_87a::modes::edit::windows::main;
-use crate::standards::v87a::subsets::any::schema::mutations::{set_snapshot as snapshot_edit_set_snapshot,set_image_pixels, GifMutation};
+use crate::standards::v87a::subsets::any::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot,set_image_pixels, GifMutation};
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::{GIF_87A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -56,11 +56,11 @@ impl protocol::OpBinary for Gif87aEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = STDIO_GIF_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "gif_87a-edit-command", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "gif_87a-edit-command", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "gif_87a-edit-command", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "gif_87a-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -86,7 +86,7 @@ fn gif87aEditor_command_id(command: &Gif87aEditCommand) -> &'static str {
     if let Gif87aEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command { Gif87aEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
 }
-fn gif87aEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Gif87aEditCommand, Fault> {
+fn gif87aEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Gif87aEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Gif87aEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(Gif87aEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -176,7 +176,7 @@ impl ArtifactEditor for Gif87aEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_GIF_DOCUMENT_SCHEMA, operation, generation))
     }
     fn command_id(command: &Self::Command) -> &'static str { gif87aEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { gif87aEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { gif87aEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v87a::subsets::any::schema::blank_gif_snapshot()
@@ -204,7 +204,7 @@ impl ArtifactEditor for Gif87aEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.gif@87a/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.gif@87a/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -217,7 +217,7 @@ impl editing::SnapshotEditingEditor for Gif87aEditor {
         match command { Gif87aEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| GifMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| GifMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| GifMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
     }
 }
 

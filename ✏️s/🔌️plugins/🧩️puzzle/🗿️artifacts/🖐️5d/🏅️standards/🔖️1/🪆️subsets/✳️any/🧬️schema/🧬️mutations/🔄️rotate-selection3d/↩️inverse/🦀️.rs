@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_selection_i
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
-    puzzle5d_selection_inverse(base, super::diff::diff(payload, base))
+pub fn inverse(payload: &super::RotateSelection3d, base: &Puzzle5dSnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    puzzle5d_selection_inverse(base, super::diff::diff(payload, base))?
+
+    })
 }
 //#endregion 🔖️Inverse

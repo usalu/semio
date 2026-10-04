@@ -22,13 +22,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused `replace-node` still applies cleanly — the refusal is carried as a diagnostic beside an
@@ -51,7 +51,7 @@ fn the_refusal_is_the_declared_diagnostic() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-node/🪪️denies-rename-e69720: the refusal is reported as mutation.target-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["n7".to_string(), "n7_b".to_string()], "the diagnostic addresses the offending id");
     let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-node", "the fixture must be bound to replace-node's own descriptor");
@@ -60,7 +60,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// ↩️ `replace-node`'s inverse is BASE-derived. It restores the node `before` holds, addressed by the SELECTED id.
 #[test]
 fn inverse_of_the_refused_mutation() {
-    let inverse = inverse_fem2d_mutation(&before(), &mutation());
+    let inverse = inverse_fem2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "replace-node/🪪️denies-rename-e69720: replace-node undoes with exactly one step, got {inverse:?}");
     let Fem2dMutation::ReplaceNode(undo) = &inverse[0] else {
         panic!("replace-node's inverse must be a ReplaceNode, got {:?}", inverse[0]);
@@ -72,12 +72,12 @@ fn inverse_of_the_refused_mutation() {
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(dsl::DslValue::as_str), Some("rejected"), "replace-node/🪪️denies-rename-e69720 declares a rejected outcome");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "replace-node/🪪️denies-rename-e69720 declares a rejected outcome");
     let produced = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(dsl::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared: Vec<String> = outcome.get("path").and_then(dsl::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_value::DslValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
+    let declared: Vec<String> = outcome.get("path").and_then(semio_framework_value::DslValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared, message.target, "the declared path must match the emitted target");
 }
 
@@ -85,14 +85,14 @@ fn declared_outcome_holds() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = dsl::ToValue::to_value(&decoded);
-        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
+        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_value::ToValue::to_value(&decoded);
+        let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-node/🪪️denies-rename-e69720: committed {label} JSON is not canonical");
     }
     assert_eq!(BEFORE, AFTER, "replace-node/🪪️denies-rename-e69720 changes nothing: the two committed snapshots must be byte-identical");
     let decoded_mutation = mutation();
-    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
-    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
+    let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-node/🪪️denies-rename-e69720: committed mutation JSON is not canonical");
 }

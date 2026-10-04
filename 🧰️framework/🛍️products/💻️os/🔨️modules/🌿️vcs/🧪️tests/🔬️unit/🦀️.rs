@@ -266,7 +266,7 @@ async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reserva
 fn change_to_json_string_matches_serde_json_byte_for_byte() {
     for description in [Some("a change".to_string()), None] {
         let change = Change { id: "change-x".into(), edit_ids: vec!["edit-1".into(), "edit-2".into()], description, saved_at: "2026-09-01T00:00:00Z".into() };
-        let mine = crate::os_pack::json::to_json_string(&change);
+        let mine = semio_framework_pack_json::to_json_string(&change);
         let theirs = serde_json::to_string(&change).unwrap();
         assert_eq!(mine, theirs, "Change's ToValue/pack::json bridge diverged from serde_json for description={:?}", change.description);
     }
@@ -408,7 +408,6 @@ fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
         assert_eq!(serde_json::to_value(actual).unwrap(), vector["expected"]);
         assert_eq!(serde_json::to_value(iterator.cloned().collect::<Vec<_>>()).unwrap(), vector["remaining"]);
         assert_eq!(stack.len(), vector["forward"].as_array().unwrap().len());
-        eprintln!("[DEBUG] paged-history vector={} owned={} traversal=front-back exact-size=true", vector["id"], stack.len());
     }
 }
 
@@ -426,7 +425,7 @@ async fn history_branch_provenance_follows_portable_required_wire_vectors() {
         log.schema = "neutral.counter.v1".into();
         log.edits.push(crate::os_spr::HistoryEdit {
             id: edit.id.clone(), actor: None, line: edit.line.clone(), started_at: edit.started_at,
-            finished_at: None, coalesce_key: None, description: None, verb: None,
+            finished_at: None, description: None, verb: None,
             ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None,
         });
         let text = crate::os_spr::history::print_ops_text(&log).unwrap();
@@ -440,6 +439,5 @@ async fn history_branch_provenance_follows_portable_required_wire_vectors() {
         let mut missing = text.clone();
         missing.replace_range(start..end, "");
         assert!(crate::os_spr::history::parse_ops_text(&missing).is_err());
-        eprintln!("[DEBUG] branch-provenance vector={} line={:?} text-binary-twins=true missing-line-refused=true", vector["id"], edit.line);
     }
 }

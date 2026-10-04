@@ -9,7 +9,7 @@ pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &GltfSnapshot) -> Result<JsonSnapshot, store::PackError> {
     let embedded = crate::engine::serialize_gltf_document(from);
-    let text = String::from_utf8(embedded).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    let value = parse_json_text(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let text = String::from_utf8(embedded).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
+    let value = parse_json_text(&text).map_err(|e| store::PackError::from(e))?;
     Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
 }

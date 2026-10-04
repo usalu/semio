@@ -36,12 +36,12 @@ fn dec_str(s: &str) -> Result<String, String> {
     }
     Ok(out)
 }
-fn enc_json<T: dsl::ToValue>(v: &T) -> String {
-    enc_str(&pack::json::to_json_string(v))
+fn enc_json<T: semio_framework_value::ToValue>(v: &T) -> String {
+    enc_str(&semio_framework_pack_json::to_json_string(v))
 }
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
     let raw = dec_str(s)?;
-    pack::json::from_json_str(&raw).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&raw, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 fn tokenize_args(rest: &str) -> Result<Vec<(String, String)>, String> {
     let mut out = Vec::new();
@@ -184,8 +184,8 @@ impl protocol::OpText for En1990Mutation {
     fn print_op(&self) -> String {
         print_en1990_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_en1990_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_en1990_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpTextCodec

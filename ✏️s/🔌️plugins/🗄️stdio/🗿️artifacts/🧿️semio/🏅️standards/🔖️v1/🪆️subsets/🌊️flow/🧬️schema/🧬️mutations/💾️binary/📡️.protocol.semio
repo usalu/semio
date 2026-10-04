@@ -37,3 +37,5 @@ record set-edge-kind tag=11
 field payload bytes
 record drag-nodes tag=12
 field payload bytes
+record patch-snapshot tag=13
+field payload bytes

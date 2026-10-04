@@ -14,11 +14,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// foreign `protocol::CollectionMutation` in its shape), so this is a pure `DslVariants` pass-through
 /// — no local DSL-mirror type needed, unlike the pre-taxonomy-overhaul version of this file.
 impl protocol::OpText for GisMapMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 

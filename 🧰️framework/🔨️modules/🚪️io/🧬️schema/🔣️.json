@@ -140,6 +140,25 @@
           "$ref": "#/$defs/IoFidelity"
         }
       }
+    },
+    "IoError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause",
+        "diagnostics"
+      ],
+      "properties": {
+        "cause": {
+          "$ref": "https://semio.tech/schema/value/refusal/codec#/$defs/wire"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "https://semio.tech/schema/diagnostic/controlled#/$defs/Diagnostic"
+          }
+        }
+      }
     }
   }
 }

@@ -92,7 +92,7 @@ pub(crate) mod context {
     /// 🏛️ Redispatches one armed `Effect::DispatchAction` exactly the way `makeEffectDispatchOne`
     /// (`🛠️ShellHelpers/🟦️.tsx`) does: an action id the app declares as a COMMAND re-enters the typed
     /// command channel with the shell's own live view attached, never the scoped action channel.
-    pub async fn dispatch_effect_command(app: &mut Generation3dViewerHarness, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
+    pub async fn dispatch_effect_command(app: &mut Generation3dViewerHarness, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
         crate::brep_extension::dispatch_effect_command(app, command_id, args, action_meta).await
     }
     
@@ -132,7 +132,7 @@ pub(crate) mod context {
         effects
             .iter()
             .filter_map(|effect| match effect {
-                Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string()),
+                Effect::DispatchAction { action, args, .. } if action == "flowEvalTick" => Some(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string()),
                 _ => None,
             })
             .collect()
@@ -254,7 +254,7 @@ fn the_interaction_topology_declares_node_handle_and_edge_targets() {
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = <Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg);
+    let topology = <Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg).expect("the valid viewer fixture admits interaction topology");
     let domain = topology.domains.get("graph").expect("graph domain");
     let granularities: std::collections::BTreeSet<&str> = domain.ordered.iter().map(|node| node.granularity.as_str()).collect();
     assert!(granularities.contains("node"), "every widget must be a declared node target");
@@ -333,4 +333,3 @@ async fn every_emitted_action_is_declared_on_the_preview_window_kind() {
     assert_eq!(emitted, GENERATION3D_VIEW_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<String>>(), "the viewer's one window kind must dispatch exactly the app's own view actions");
 }
 //#endregion 📇️WindowActionLawTests
-

@@ -96,113 +96,9 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level,strip_brackets};
+use crate::standards::v1::subsets::graph::schema::snapshot::{enc_node,dec_node,enc_edge,dec_edge};
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort, SemioGraphPortKind};
-use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value_entry, enc_semio_value_entry};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_node_id(id: &GraphNodeId) -> String {
-    enc_str(&id.value)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
-    Ok(GraphNodeId::new(dec_str(s)?))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_edge_id(id: &GraphEdgeId) -> String {
-    enc_str(&id.value)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
-    Ok(GraphEdgeId::new(dec_str(s)?))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_point2_fields(p: &SemioPoint2) -> String {
-    format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_f64_hex(s: &str) -> Result<f64, String> {
-    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_port_kind(k: SemioGraphPortKind) -> char {
-    crate::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
-    crate::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_port(p: &SemioGraphPort) -> String {
-    format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_property(p: &SemioValueEntry) -> String {
-    enc_semio_value_entry(p)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
-    dec_semio_value_entry(s)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_node(n: &SemioGraphNode) -> String {
-    let ports = n.ports.iter().map(enc_port).collect::<Vec<_>>().join(",");
-    let properties = n.properties.iter().map(enc_property).collect::<Vec<_>>().join(",");
-    format!("[{},{},{},{},[{}],[{}]]", enc_node_id(&n.id), enc_str(&n.kind), enc_str(&n.label), enc_point2_fields(&n.position), ports, properties)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_node(s: &str) -> Result<SemioGraphNode, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, kind, label, x, y, ports, properties] = parts.as_slice() else {
-        return Err(format!("node: expected 7 fields, got {}", parts.len()));
-    };
-    let ports = split_top_level(strip_brackets(ports)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect::<Result<Vec<_>, String>>()?;
-    let properties = split_top_level(strip_brackets(properties)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioGraphNode { id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?, position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? }, ports, properties })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_edge(e: &SemioGraphEdge) -> String {
-    format!("[{},{},{},{},{}]", enc_edge_id(&e.id), enc_node_id(&e.source), enc_node_id(&e.target), enc_str(&e.kind), enc_str(&e.label))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_edge(s: &str) -> Result<SemioGraphEdge, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, source, target, kind, label] = parts.as_slice() else {
-        return Err(format!("edge: expected 5 fields, got {}", parts.len()));
-    };
-    Ok(SemioGraphEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)? })
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_nodes(list: &SemioGraphNodeList) -> String {
     format!("[{}]", list.values.iter().map(enc_node).collect::<Vec<_>>().join(","))
@@ -257,8 +153,8 @@ impl protocol::DiffCodec for SemioGraphDiff {
     fn print_diff(&self) -> String {
         print_graph_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_graph_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_graph_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`nodes`, bit1=`edges`) are two

@@ -1,5 +1,5 @@
 /** 🧩️ Exact persisted Puzzle5d fields shared by its artifact facade and SQLite provider. */
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 
 export interface ArtifactDialect { artifactKind: string; standard: string; subset: string }
 export interface ArtifactRef { artifactId: string; dialect: ArtifactDialect }
@@ -44,7 +44,7 @@ const object = (value: unknown, at: string): Record<string, unknown> => value !=
 const text = (value: unknown, at: string): string => typeof value === "string" ? value : fail(at, "requires text");
 const bool = (value: unknown, at: string): boolean => typeof value === "boolean" ? value : fail(at, "requires a boolean");
 const int32 = (value: unknown, at: string): number => typeof value === "number" && Number.isInteger(value) && value >= -2147483648 && value <= 2147483647 ? value : fail(at, "requires a signed32 integer");
-const word = (value: unknown, at: string): Binary64 => { try { return parseBinary64(value); } catch { return fail(at, "requires an owned binary64 word"); } };
+const word = (value: unknown, at: string): Binary64 => { try { return parseBinary64Transport(value); } catch { return fail(at, "requires a binary64 word or number"); } };
 const optional = <T>(value: unknown, at: string, parse: (value: unknown, at: string) => T): T | null => value === null ? null : parse(value, at);
 const list = <T>(value: unknown, at: string, parse: (value: unknown, at: string) => T): T[] => Array.isArray(value) ? value.map((item, i) => parse(item, at + "[" + i + "]")) : fail(at, "requires an array");
 const member = <T extends string>(value: unknown, at: string, values: readonly T[]): T => values.includes(value as T) ? value as T : fail(at, "requires one of " + values.join(", "));

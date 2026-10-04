@@ -154,6 +154,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-version",
         "insert-topic",
         "remove-topic",
@@ -344,6 +345,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bcf-2-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "jszip-bcf-2-1-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "bcf-2-1-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -2,7 +2,7 @@ use super::super::{workflow_parameter_entity_id, RemoveParameter, WorkflowDiff, 
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-parameter")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddParameter
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::AddParameter { parameter: (*self.parameter).clone() })
     }
-    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: workflow_parameter_entity_id(&self.parameter).into() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter)), &format!("Arbeitsablaufparameter {} hinzufügen", workflow_parameter_entity_id(&self.parameter)))
     }

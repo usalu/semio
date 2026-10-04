@@ -1,0 +1,283 @@
+{
+  "privateRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental",
+  "qualification": "Read-only exact proposed paths: completed older siblings before finite92, skip all working groups, retain newest sibling/compiled outputs/logs/inputs",
+  "candidates": [
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_artifact_flow_flow-35rz9bchqtvcb/s-hmvuwtbwdo-09h68ua-6osozxl2img5uovwwaphoo5ys",
+      "mtime": 1791080287.0502572,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_artifact_flow_flow-35rz9bchqtvcb/s-hmvwy8ode7-1gfphz3-dg7we2ds7wrj5tob1bdt4tz6r"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_dsl-0vfkeupe2b6vb/s-hmvuuj51tg-1ezclue-bjjythet54gynozqk0f59strc",
+      "mtime": 1791080127.0276275,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_dsl-0vfkeupe2b6vb/s-hmvwxn7ne3-1nrtbg1-0ptnhk4v62rcx2s6cbiz6ksj7"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_validator-2dz2jpv84yzt6/s-hmvuutdz4w-0pimbdq-5s21nkcqbd89oczegvyevk17t",
+      "mtime": 1791080142.1646264,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_validator-2dz2jpv84yzt6/s-hmvwxow2e7-1j2q9nw-8j1rvc42az0ihb13uhdxselxf"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_deflate-1yye25wxskmr6/s-hmvuxwdpzf-0aylkil-03mbg31l4katl4btar5bw2usz",
+      "mtime": 1791080345.175289,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_deflate-1yye25wxskmr6/s-hmvwyj3xw0-17x9cww-3fdnxema5cpuyypdvgcm50q72"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_scene-33qdsge0m1rrs/s-hmvuv4h75h-1x2io9b-6eh7sg14ukhotfaosihk876hv",
+      "mtime": 1791080169.8095877,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_scene-33qdsge0m1rrs/s-hmvwxqgnll-05jyfvr-bkqy63tr1yhyxxopsmbfknapx"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_3d-026hte7o55je7/s-hmvuuwl2vl-0jtazii-a5r0nje1utcuekg8tyc5for1s",
+      "mtime": 1791080203.8703852,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_3d-026hte7o55je7/s-hmvwxpi07x-1s9eb7r-djvaxtx1iumi9s48h1xdc9qi5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_plugin-13wtagr805dek/s-hmvuwtbyaq-1hrkw8m-9b8bjjf3nl0xody2zvnrsds25",
+      "mtime": 1791080328.2103777,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_plugin-13wtagr805dek/s-hmvwy8plw5-06u68oi-6mp0189kd175bk6lfiywpbs8f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_pack_json-1jecz1xkun426/s-hmvuuhd3v4-1w3wa4p-btvoghjtuofvgwbosx58h3z7x",
+      "mtime": 1791080121.9420176,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_pack_json-1jecz1xkun426/s-hmvwxmyyct-0dayty4-5xafj5rnqksm09te0zj3q11j4"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_jack-1rw2nqkfk49ut/s-hmvv1znneb-1j80m41-3udnybeae8u0rx2wz57f6y798",
+      "mtime": 1791080606.0399685,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_trinity_jack-1rw2nqkfk49ut/s-hmvwz4q6k4-0i9xjlg-2zntm4vr6mqqv8nluyc6buzip"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_math-06saqdt7p674h/s-hmvuuk5ayk-1bad1lj-353rfwqyk1mjuzrdphmrtuimf",
+      "mtime": 1791080141.5399044,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_math-06saqdt7p674h/s-hmvwxneaou-1hnala7-353rfwqyk1mjuzrdphmrtuimf"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_png-2h7193jh0atqt/s-hmvuzirbiv-0te8u04-4bo4686twuck1i6c3a2nue24h",
+      "mtime": 1791080482.6071303,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_png-2h7193jh0atqt/s-hmvwyx8y9v-1jg5adb-2e27rvj3fo280aik1ihqh3rsy"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_state-2crckyls2zue4/s-hmvuuhb9b9-06j7xjr-dosbxytkprlpseb8y8cj03ych",
+      "mtime": 1791080117.5850744,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_state-2crckyls2zue4/s-hmvwxmxgjj-0pj4ro6-00ffmmxpct49kbvnthgeo3fur"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_value-1jhszdna4fcy4/s-hmvuueozh3-1jv0zwa-8c8a0adun2y5u03hq240wil89",
+      "mtime": 1791080120.0242836,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_value-1jhszdna4fcy4/s-hmvwxmfpk7-182sqbv-9jpztgj7wri7jumt5mtz7no3z"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_pdf-0kh5lpdga9460/s-hmvuy2m8c1-1kt7isj-8t5jlxdtvlwi9qvdynwk1i2tf",
+      "mtime": 1791080627.6894424,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_pdf-0kh5lpdga9460/s-hmvwymhohx-1bo57yn-euc8g101smpnpiwvl04v0h2wy"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_locale-0kf9mvfm8xcq1/s-hmvuuhfqb3-0geddye-egz1vl4rb9m342j88c77fjk9k",
+      "mtime": 1791080119.7341967,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_locale-0kf9mvfm8xcq1/s-hmvwxmz3wu-1qrrv8t-4ncmn3kczn9ecfvxmm3ffo3sa"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_2d-1e1nlc068bo0f/s-hmvuuidjgw-0mlcsf6-85jsvrmxi5wy7wa8l12z1ym3f",
+      "mtime": 1791080123.06562,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_2d-1e1nlc068bo0f/s-hmvwxna539-1hcw0e8-dca9n0jahghjolu4jilqbzn6q"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_tool_run-1id6m2zmbefss/s-hmvuw7g077-0xkfek0-87sa0vcnzqcpgg339ls2t67vw",
+      "mtime": 1791080227.7148833,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_tool_run-1id6m2zmbefss/s-hmvwy4ue3x-1agrx2c-a7wuv6x68sxpu89iem56icgwk"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_mesh_engine-0ump8h2wsy8go/s-hmvuute47f-0xopyq5-9ew06zuwd11srp43bf1rms0qq",
+      "mtime": 1791080147.1802032,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_mesh_engine-0ump8h2wsy8go/s-hmvwxowvzd-1ie67uw-7im6366pg2pu9eoxiv7k416wa"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_md-3om557d61c6pk/s-hmvuy23cx5-0dm1jv0-16pguv0ew2cqufv9dj3j8vbxq",
+      "mtime": 1791080394.6250453,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_md-3om557d61c6pk/s-hmvwylkmmv-0zx2goe-5freaeo2wvt7908fvrocxr7g8"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_dsl_record-3vhujeqb8x2fa/s-hmvuul92qo-092tdo9-5deeul9pnsm1wuv29d9mfnb3y",
+      "mtime": 1791080133.864042,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_dsl_record-3vhujeqb8x2fa/s-hmvwxnjn0h-1jtr92o-b9c87binuffxigoo2qvbsz1og"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_os_kernel-0sidv2rc7xoz1/s-hmvuuxi2c5-01j0x5a-3teg3cfpkf0jpxqg9t0m2hc37",
+      "mtime": 1791080218.9648,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_os_kernel-0sidv2rc7xoz1/s-hmvwxpjfad-0x105co-3f21vnqljzeo1pdoj7ujx1jjx"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_xml-052c2tfwnorpd/s-hmvuy22kjc-0wn24nc-7dqmkqckmz5ktabxwj9uwkmmb",
+      "mtime": 1791080420.2364583,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_xml-052c2tfwnorpd/s-hmvwyll5u9-1wbmlun-9tda0xed38whvde2efttz9gzn"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/protocol-1ilctsk71jvyj/s-hmvuuj5uud-0gp0yi2-eam8n3fhlmmmhvl66cnoj2uzh",
+      "mtime": 1791080143.5634127,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/protocol-1ilctsk71jvyj/s-hmvwxn6t81-194p1t7-01dlbrmymfw8ca4v7wcoub6mu"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/pack-2xdis24s6pcg6/s-hmvuupka4x-1qkk0m0-b5qenolne8037tdk983l88h2w",
+      "mtime": 1791080139.1676927,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/pack-2xdis24s6pcg6/s-hmvwxo599u-1ps8c7c-2k2cpxeuxw4707he3fejt6erl"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_csv-0xnymyzpshf3q/s-hmvuy23lew-02k3n0z-ds6ygmq1t3llddi6eysptowyp",
+      "mtime": 1791080361.2288249,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_csv-0xnymyzpshf3q/s-hmvwylmjkd-0w9vcxr-4dbqju42yhxq39fquwlcrhy87"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_artifact_infinite_dag-2x6ehvtoeqo27/s-hmvuw7gb0k-00i2zb7-94q9cnyo72dkkh81epvr865ep",
+      "mtime": 1791080233.887027,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_artifact_infinite_dag-2x6ehvtoeqo27/s-hmvwy4uem0-0jr4sqf-51n2lkf5az4zb1k2tpgm5t823"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/neural_engine-0y6tb803igeop/s-hmvuutew1r-1drdf4u-dmnev4b3kcxlqmwp2s87t9kxs",
+      "mtime": 1791080149.4903603,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/neural_engine-0y6tb803igeop/s-hmvwxowpg8-1ymel5u-5lrc1gb05m4m4jvqxlido6nhs"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_io_schema-30axjl6wh3eej/s-hmvuuormlq-0olfuo8-9hon0lfncmwkkv2lroaz8r2v0",
+      "mtime": 1791080133.8928185,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_io_schema-30axjl6wh3eej/s-hmvwxo1eto-0ernuvk-2ffs1x2flbrvjm6w9o4oolrfv"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_binary-0jk7a1hlrmpbb/s-hmvuxmt2g7-1twoehi-0mgwey1pjammwuf7dpy6fvotd",
+      "mtime": 1791080329.3003097,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_binary-0jk7a1hlrmpbb/s-hmvwyfv3ve-1mk5lwh-6l24mvq39m6ic7oqv4eyoe993"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework-3mdqlo81y7y63/s-hmvuw9rppl-0vx2p7d-2qkk25i2qo173zbezet03je1u",
+      "mtime": 1791080287.3248053,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework-3mdqlo81y7y63/s-hmvwy57njw-0fwls4r-3roaw66gct3biya8jnsm53vld"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_contract-3opulb2bto8v5/s-hmvuxjlzv1-0yrecir-f3ns72054vlsqbx55sbh5nip2",
+      "mtime": 1791080316.6549563,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_contract-3opulb2bto8v5/s-hmvwyd6m34-0hu0ewl-4x4fgnwv33uoabsy0yxc574jx"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_semio-2mdcw8u92tpne/s-hmvuxmr3kj-0redu1n-6us3v5rldoksslokm9dazq9x7",
+      "mtime": 1791080756.5726302,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_semio-2mdcw8u92tpne/s-hmvwygh1fu-0edlhwq-8cvm9pu31fi15fepkp6037h02"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_value-0l4dx46g9kc7k/s-hmvuuepced-1b91w0e-dvdsjc3tz6rno4fhsqyggck3z",
+      "mtime": 1791080121.160459,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_value-0l4dx46g9kc7k/s-hmvwxmfpnk-0dbhnlv-24w2ijwnwm58kuj0b5ubnczpu"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema-2yx11yq61nvry/s-hmvuuwkfv1-1dvnjm0-d7rp6s8pka3moxg16930jnpxi",
+      "mtime": 1791080145.1563418,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema-2yx11yq61nvry/s-hmvwxp5yn0-09aqbwc-2ejrnlv9bw0c6ez7yatud295s"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_contract-3ifyzf22kjcko/s-hmvuupisy4-0zac36y-59f49truel13vim4t83431ov5",
+      "mtime": 1791080166.7867725,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_contract-3ifyzf22kjcko/s-hmvwxo5uz3-1betxqv-bnueaa9pbdpkdy7l435ttps03"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_runtime-2m6z0b84mvz9u/s-hmvuv4ixlz-18snxjq-09cwr6m3fwc56e4jswa2zilu3",
+      "mtime": 1791080163.532948,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_runtime-2m6z0b84mvz9u/s-hmvwxqglde-07q7dup-712cdhkyys3y5j11j4h72g5zf"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/dsl_derive-1lp9t7iuafmmw/s-hmvuujbq9j-06n2t16-14o97y79dkzoolq2lmltmax4b",
+      "mtime": 1791080127.3894985,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/dsl_derive-1lp9t7iuafmmw/s-hmvwxnf4kd-14q2qtr-14o97y79dkzoolq2lmltmax4b"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_job-2zoqo2jpd3t07/s-hmvuu2xinc-1dqagph-907lqs9ezqsz80c5r9fvfdndy",
+      "mtime": 1791080096.4964418,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_job-2zoqo2jpd3t07/s-hmvwxmra2n-1lmunrr-cyhcnc3vgysqnjc7myb8aj8sa"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_txt-2aeyx25rwlfiy/s-hmvuxwek5b-1uebe62-cx2zobijchf0uwqcp2dspbbme",
+      "mtime": 1791080342.4580996,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_txt-2aeyx25rwlfiy/s-hmvwyj3qkz-0bbw8si-0q7y04sfv7xgna0l4zmqn44fn"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_docx-00cdyfsjh3x7q/s-hmvuzkhnit-0r2j3zx-ezmya6phlpd9yu8orhle74i2d",
+      "mtime": 1791080521.1851444,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_docx-00cdyfsjh3x7q/s-hmvwyyqpvv-1tnwvk9-e59yb97zu5h4uawyhypbzqxks"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_locale-3pxj0vjkfhsco/s-hmvuuh251g-1b2fg0j-88ik4xl3ih34eypzevf9jdanf",
+      "mtime": 1791080118.5087757,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_locale-3pxj0vjkfhsco/s-hmvwxmwkrv-16yvurz-5kl0xw7j8yi3o40tgze50b0aq"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_json-2mbur8xjdzl8w/s-hmvuy25nfj-0enovov-eq0pn04ls10sq81f5tvsqh7bx",
+      "mtime": 1791080397.0806472,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_json-2mbur8xjdzl8w/s-hmvwylktq5-1p5h69k-2i0dk2kjlydad47rwyc68wyu2"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_derive-0kbb2frja9jjq/s-hmvuujzpzc-021gk5q-0it8ors38ter84h1zy8ystf3x",
+      "mtime": 1791080123.1755066,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_derive-0kbb2frja9jjq/s-hmvwxnf451-1wddzay-0it8ors38ter84h1zy8ystf3x"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_diagnostic-1jjcl1fn7v2zg/s-hmvuuh80wc-0k101x6-9os9r8n4evh55d2t07qpod60z",
+      "mtime": 1791080121.4684865,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_diagnostic-1jjcl1fn7v2zg/s-hmvwxmxe3u-0tlfx7n-b5bkgkst5ntpihbb4vet43j13"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_deflate-12xitu2kkxzaf/s-hmvuuh8ea1-1ekk2vz-c99l7ebwx6il33nlw6yhm1xg7",
+      "mtime": 1791080119.713323,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_deflate-12xitu2kkxzaf/s-hmvwxmxfea-1iwc7l0-0iu3fb3x25tef6e9eysv5ms9j"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_async-2pe7cxn3u5xa8/s-hmvuu0vj8e-1jgb6t6-0ca18xdfjedlnsfk3l47uswwq",
+      "mtime": 1791080095.4613962,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_async-2pe7cxn3u5xa8/s-hmvwxmfpls-0xvebns-bymiz3vmeb5fax1nq48qt81v7"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_time_travel-08u3f67mse30a/s-hmvuuq6fz6-1mpddjf-7rcichco1r45tapnllajrodrw",
+      "mtime": 1791080135.9135776,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_time_travel-08u3f67mse30a/s-hmvwxo9gke-11av41c-5qvpq2q78akrl37o6av673a2e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_svg-3pddkmq90h5hr/s-hmvuz3lk8e-15cn8hd-cyj1wifjepahb88t9cgvxbvb6",
+      "mtime": 1791080506.5644894,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_svg-3pddkmq90h5hr/s-hmvwyreu4i-1imbweh-d8918ex4pvxb9pnpvdstbuarl"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_actor-09lcfmavp7q4u/s-hmvuuy98lz-0hno5c8-2g5qet0wrw976vabymhumaruk",
+      "mtime": 1791080170.3430488,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_actor-09lcfmavp7q4u/s-hmvwxoycpr-1p4hs2w-6s6srcdtdmdyeguboao2iln2i"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_state-1znwbng7kl0de/s-hmvuuh1y3j-0uoexlu-0ilk5ppczozn7te0xxxy5c7by",
+      "mtime": 1791080116.7507095,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_schema_state-1znwbng7kl0de/s-hmvwxmwihi-0hqlilv-9l7wx66dpxu1ig03wswtihfvi"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_graph-0f15fmkvy8vdq/s-hmvuv6clea-0udzlf4-2x4jcp2f8m5estlllom9fq0ec",
+      "mtime": 1791080177.6961815,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_graph-0f15fmkvy8vdq/s-hmvwxqgzmc-0e2a29g-2qh4ajcs9lgjasjynuh5luh1z"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui-31eqy8m88iwob/s-hmvuvafo8v-14u2l1c-7u7m3jn1o16ql876ao8sacnho",
+      "mtime": 1791080203.5526178,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui-31eqy8m88iwob/s-hmvwxscs7e-1hqt680-boonwi7wcsh6eaczup78nh6bb"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_zip-2y8qam0j3sl5p/s-hmvuyjgxgw-1519bnn-54g3gra0s9rbex7o2aet62k7l",
+      "mtime": 1791080461.5741553,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_s_artifact_stdio_zip-2y8qam0j3sl5p/s-hmvwyr2h8u-0elcjpp-243vjr9taz82pjcd7einjmyu7"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_tool_machine-1fu532308uq6d/s-hmvuupkc41-05yww8m-9bffuv1m92h3r7mo96bqet8yy",
+      "mtime": 1791080134.7427454,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_tool_machine-1fu532308uq6d/s-hmvwxo6cqk-0b6waj9-elgrz6schmqmartod1sqtsuyp"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_viewport-3ns8wgj1cjzct/s-hmvuuos765-0lewqrb-34gm9kffmycv41gjrarxd29u2",
+      "mtime": 1791080132.9533315,
+      "newestKept": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-root-norm-owned/debug/incremental/semio_framework_ui_viewport-3ns8wgj1cjzct/s-hmvwxo1frm-1nk0tbr-4wrjnbkcj6q69113zykaiixxr"
+    }
+  ],
+  "uniqueSelectedBytes": 6442756898,
+  "estimatedUnlinkedBytes": 4072066885
+}

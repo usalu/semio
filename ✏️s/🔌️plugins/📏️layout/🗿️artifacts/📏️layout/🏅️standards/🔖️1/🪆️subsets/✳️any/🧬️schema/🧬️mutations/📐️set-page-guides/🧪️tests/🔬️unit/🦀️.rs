@@ -9,6 +9,6 @@ fn set_page_guides_adds_a_guide_and_inverse_clears_it() {
     let next = mutation.diff(&base).diff().apply(&base).expect("guides apply");
     assert_eq!(next.pages[0].guides.len(), 1);
     assert_eq!(next.pages[0].guides[0].x, 12.0);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
     assert!(restored.pages[0].guides.is_empty());
 }

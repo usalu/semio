@@ -6,7 +6,7 @@ use crate::En1999Snapshot;
 
 pub fn diff(payload: &ChangeFatigueDetails, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.fatigue_details == &payload.fatigue_details {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "List unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "List unchanged.");
     }
     protocol::MutationOutcome::new(En1999Diff { fatigue_details: Some(payload.fatigue_details.clone()), ..Default::default() })
 }

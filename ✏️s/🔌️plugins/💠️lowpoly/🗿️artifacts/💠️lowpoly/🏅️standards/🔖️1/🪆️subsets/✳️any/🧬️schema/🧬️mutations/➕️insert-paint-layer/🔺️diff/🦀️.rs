@@ -14,7 +14,7 @@ pub fn diff(payload: &InsertPaintLayer, base: &LowpolySnapshot) -> protocol::Mut
     let clamped_index = payload.index.min(object.paint_layers.len());
     let outcome = protocol::MutationOutcome::new(diff_add_paint_layer(payload.object_id.clone(), clamped_index, payload.layer.clone()));
     if clamped_index != payload.index {
-        outcome.warn("mutation.clamped", format!("Paint layer index {} clamped to {} on object \"{}\".", payload.index, clamped_index, payload.object_id))
+        outcome.warning("mutation.clamped", format!("Paint layer index {} clamped to {} on object \"{}\".", payload.index, clamped_index, payload.object_id))
     } else {
         outcome
     }

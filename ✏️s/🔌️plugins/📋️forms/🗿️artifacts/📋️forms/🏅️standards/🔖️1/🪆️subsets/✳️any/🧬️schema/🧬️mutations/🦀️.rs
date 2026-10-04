@@ -28,7 +28,7 @@ pub mod discard_response;
 //#region 🔖️FormMutation
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<FormsSnapshot, FormMutation>` payload
 /// struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {
@@ -56,8 +56,11 @@ pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -
 }
 
 /// ⚖️ Whole-document inverse — a thin delegation to the derive-generated `Mutation::inverse`.
-pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> Vec<FormMutation> {
-    mutation.inverse(spec)
+pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(spec)?
+
+    })
 }
 //#endregion 🔖️CompatDelegates
 
@@ -92,28 +95,31 @@ pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &Form
 /// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
 /// `protocol` extern-crate alias is private to `🦀️.rs`.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot) -> Vec<FormMutation> {
-    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)
+pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <FormMutation as Mutation<FormsSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_form_mutation_json(text: &str) -> Result<FormMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_form_snapshot_json(text: &str) -> Result<FormsSnapshot, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
-    dsl::os_pack::json::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 /// 🌱 Seeds the working-scene cache behind this snapshot's composed `s.stdio.semio.value` `structure` child handle from a committed
 /// `[FormStep]` JSON document, and hands back what it decoded.
@@ -128,7 +134,7 @@ pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::FormStep>, String> {
-    let steps: Vec<crate::FormStep> = dsl::os_pack::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
+    let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(steps_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())?;
     crate::replace_forms_steps(snapshot, steps.clone());
     Ok(steps)
 }

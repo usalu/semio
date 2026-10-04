@@ -45,7 +45,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 
 # endregion 🔖️Imports
 
@@ -57,6 +57,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 KINDS = (
     "no-mutation",
     "set-snapshot",
+    "patch-snapshot",
     "add-layer",
     "remove-layer",
     "set-layer",
@@ -532,6 +533,8 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return result
+    if kind == "patch-snapshot":
+        return patched_snapshot(snapshot, args["patch"])
     if kind == "set-snapshot":
         return clone(args["snapshot"])
     if kind == "add-layer":
@@ -590,6 +593,8 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     kind, args = parts(mutation)
     if kind == "no-mutation":
         return {"mutation": TAG_OF_KIND[kind]}
+    if kind == "patch-snapshot":
+        return {"mutation": TAG_OF_KIND["set-snapshot"], "snapshot": clone(snapshot)}
     if kind == "set-snapshot":
         return {"mutation": TAG_OF_KIND[kind], "snapshot": clone(snapshot)}
     if kind == "add-layer":

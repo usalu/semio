@@ -19,14 +19,14 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.
-fn from_json<T: dsl::FromValue>(text: &str) -> T {
+fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
     let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-    dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
 }
 
 /// 🔒️ Re-encodes through the same codec so canonicality assertions compare like with like.
-fn to_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-    dsl::ToValue::to_value(value).into()
+fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    semio_framework_value::ToValue::to_value(value).into()
 }
 
 fn before() -> LowpolySnapshot {
@@ -51,7 +51,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base);
+    let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
     for step in &inverse {
         snapshot = protocol::apply_mutation(&snapshot, step).expect("inverse step applies").0;

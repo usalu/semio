@@ -12,9 +12,9 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 🔣️ Parses rfc8259 text into this subset's snapshot. An absent/empty `schema` is filled with
 /// `REMODELING_DOCUMENT_SCHEMA` so a hand-authored json is still accepted.
 pub fn from_json_text(text: &str) -> Result<RemodelingSnapshot, IoError> {
-    let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→remodeling: parse failed: {error}"), diagnostics: Vec::new() })?;
-    let raw = crate::standards::v1::subsets::any::io::remodeling_json::convert(pack::json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()),true).map_err(|message|IoError{message,diagnostics:Vec::new()})?;
-    let mut snapshot: RemodelingSnapshot = dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→remodeling: {error}"), diagnostics: Vec::new() })?;
+    let value = parse_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→remodeling: parse failed: {error}"))))?;
+    let raw = crate::standards::v1::subsets::any::io::remodeling_json::convert(semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()),true).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
+    let mut snapshot: RemodelingSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→remodeling: {error}"))))?;
     if snapshot.schema.is_empty() {
         snapshot.schema = REMODELING_DOCUMENT_SCHEMA.to_string();
     }
@@ -35,7 +35,7 @@ impl Deserializer<RemodelingSnapshot> for JsonIntoRemodeling {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Text(text) = payload else {
-            return Err(IoError { message: "json→remodeling: expected a text json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "json→remodeling: expected a text json payload".to_string())));
         };
         Ok(IoOutcome::clean(from_json_text(text)?))
     }

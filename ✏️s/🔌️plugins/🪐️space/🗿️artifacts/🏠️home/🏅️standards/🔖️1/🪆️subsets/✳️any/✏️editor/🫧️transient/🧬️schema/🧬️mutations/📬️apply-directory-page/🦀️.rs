@@ -7,7 +7,7 @@
 use super::{HomeTransient, HomeTransientMutation};
 use crate::editor::home::transient::DirectoryPageAdmission;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "apply-directory-page")]
 #[mutation_leaf(contract = ::protocol)]
@@ -23,14 +23,17 @@ impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirec
             return protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", "The directory page is not one canonical, receipt-sealed page.").at(["directory"])]);
         };
         match base.directory().admit_page(&page) {
-            Ok(DirectoryPageAdmission::Held) => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("The directory projection already holds the frontier through sequence {}.", page.through_seq_inclusive)),
+            Ok(DirectoryPageAdmission::Held) => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("The directory projection already holds the frontier through sequence {}.", page.through_seq_inclusive)),
             Ok(DirectoryPageAdmission::Fold) => protocol::MutationOutcome::new(HomeTransient::with_directory(base.directory().fold_page(&page))),
             Err(fault) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("mutation.target-mismatch", format!("The directory page does not continue the frontier the projection holds ({}).", fault.code.0)).at(["directory"])]),
         }
     }
-    fn inverse(&self, _base: &HomeTransient) -> Vec<HomeTransientMutation> {
+    fn inverse(&self, _base: &HomeTransient) -> Result<Vec<HomeTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
     }

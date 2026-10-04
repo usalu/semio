@@ -49,5 +49,5 @@ export const demonstratorPlaygroundDiffTextGuardConstant = <T extends string | n
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundDiffText(value: unknown, at = "$"): PlaygroundDiffText {
-  return demonstratorPlaygroundDiffTextGuardObject(value, `${at}`);
+  return demonstratorPlaygroundDiffTextGuardString(value, at);
 }

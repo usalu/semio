@@ -25,8 +25,9 @@ start document
 # gets its own bracket (the depth marker `dsl`'s own flat `Shape::Tuple` printer is missing), which
 # is exactly what sidesteps that bug: `split_top_level`'s bracket-depth-aware comma split recovers
 # nesting unambiguously.
-document = set-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
+document = set-snapshot | patch-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
 
+patch-snapshot = "patch-snapshot" "patch" "=" hex
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-value
 set-solid-name = "set-solid-name" "name" "=" hex
 insert-triangle = "insert-triangle" "index" "=" INT "triangle" "=" triangle-value

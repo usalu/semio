@@ -4,8 +4,8 @@
 //! correctness-critical (design-abi.md §4).
 //!
 //! ⚠️ Scope note (reported honestly): this wave ships the pack ENVELOPE — `instances` (id +
-//! app_id + document/config/draft packs via the SAME `plugin_document_pack`/`plugin_load_document_
-//! pack` round trip `AppCommand::LoadDocument`/`ReadDocument` already use), `timers` (id list from
+//! app_id + the document pack `plugin_document_pack` reads, restored through the stepped document
+//! archive load of `📓️api-stepped-document-load.md` §4), `timers` (id list from
 //! `⚛️reactor`'s pending `SetTimer` bookkeeping), `pending_requests` (from `RequestRegistry::
 //! pending_ids`, per design-abi.md §4: async tasks are never serialised, only marked
 //! re-run-on-restore), and `task_restarts` (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: one
@@ -70,9 +70,8 @@ impl CheckpointPack {
 }
 
 /// 📸️ Builds the checkpoint pack for every currently-open instance in this actor. `document_pack`
-/// is `store::encode_document_pack_bytes(files.pack, files.spr)` — the SAME wire codec
-/// `AppCommand::LoadDocument`/`ReadDocument` already use for a whole document as one binary blob;
-/// `files.ops` (a derived text mirror, never authoritative) is not carried.
+/// is `store::encode_document_pack_bytes(files.pack, files.spr)` — a whole document as one binary
+/// blob; `files.ops` (a derived text mirror, never authoritative) is not carried.
 pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
@@ -81,25 +80,39 @@ pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::Plu
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
     }
     let pack = CheckpointPack { instances, timers, pending_requests, task_restarts };
-    Ok(dsl::os_pack::json::to_json_string(&pack).into_bytes())
+    Ok(semio_framework_pack_json::to_json_string(&pack).into_bytes())
 }
 
-/// 📸️ Restores every instance recorded in `state`, re-creating each and reloading its document
-/// pack — `⚛️reactor::poll`'s caller is responsible for re-arming `timers`/treating
-/// `pending_requests` as stale (design-abi.md §4).
-pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<CheckpointPack, Fault> {
+/// 🛬️ The archive operation every restored instance's document load runs under: bit 62 alone, below the cold-pair
+/// namespace (bit 63) and above any host-chosen archive load sequence. One id suffices because each restored instance is
+/// fresh and owns at most one load.
+pub(crate) const RESTORE_DOCUMENT_LOAD_OPERATION: u64 = 1 << 62;
+
+/// 📸️ A decoded checkpoint and the instances whose document load it admitted under [`RESTORE_DOCUMENT_LOAD_OPERATION`].
+pub struct RestoredCheckpoint {
+    pub pack: CheckpointPack,
+    pub document_loads: Vec<u32>,
+}
+
+/// 📸️ Restores every instance recorded in `state` under its checkpointed id and admits its document pack as a stepped
+/// whole-document archive load (`📓️api-stepped-document-load.md` §4), which `⚛️reactor`'s turn drives to `Ready` while
+/// the instance answers `document.loading`. `⚛️reactor::poll`'s caller is responsible for re-arming
+/// `timers`/treating `pending_requests` as stale (design-abi.md §4).
+pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<RestoredCheckpoint, Fault> {
     let state_text = std::str::from_utf8(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
-    let pack: CheckpointPack = dsl::os_pack::json::from_json_str(state_text).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
+    let pack: CheckpointPack = semio_framework_pack_json::from_json_str(state_text, semio_framework_pack_json::JsonMemberPolicy::Reject)
+        .map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
+    let mut document_loads = Vec::with_capacity(pack.instances.len());
     for instance in &pack.instances {
-        let new_id = plugin_runtime::plugin_create_app(runtime, &instance.app_id).await?;
+        let id = plugin_runtime::plugin_create_app_with_id(runtime, instance.id, &instance.app_id).await?;
         if !instance.document_pack.is_empty() {
-            let (doc_pack, spr) =
+            let (parent_pack, parent_spr) =
                 store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
-            let files = store::ArtifactPackFiles { pack: doc_pack, spr, ops: String::new() };
-            plugin_runtime::plugin_load_document_pack(runtime, new_id, &files).await?;
+            plugin_runtime::plugin_begin_document_archive_load(runtime, id, RESTORE_DOCUMENT_LOAD_OPERATION, store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).await?;
+            document_loads.push(id);
         }
     }
-    Ok(pack)
+    Ok(RestoredCheckpoint { pack, document_loads })
 }
 
 #[cfg(test)]

@@ -344,7 +344,7 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
     let new_handle = handle_of(&painted, "extrude", "solid").expect("edited solid handle");
     assert_ne!(old_handle, new_handle, "a height edit mints a new solid handle");
 
-    let painted_eval = semio_framework_os_flow::os_pack::json::parse(&painted).expect("painted eval json");
+    let painted_eval = semio_framework_pack_json::parse(&painted, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted eval json");
     let live = preview_eval::preview_mesh_retention_handles(&painted_eval, &host.host_snapshot, &session);
     assert!(live.contains(&old_handle), "the converged pack must stay retained across handle supersession");
     assert!(live.contains(&new_handle));

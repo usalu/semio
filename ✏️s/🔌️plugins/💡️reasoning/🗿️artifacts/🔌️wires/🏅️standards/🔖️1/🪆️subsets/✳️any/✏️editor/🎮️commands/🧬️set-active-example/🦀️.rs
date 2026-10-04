@@ -1,8 +1,8 @@
-//! 🧬️ 🧬️ Wires play app commands command — `set-active-example`.
+//! 🧬️ Wires play app command — `set-active-example`.
 
 use crate::empty_wires_snapshot;
-use crate::op::WiresMutation;
 use crate::schema::metabolism_wires_example_snapshot;
+use crate::WiresMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,19 +14,15 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// load the EMPTY document instead of the example the combobox names.
 pub const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = crate::examples::demo::ID;
 
-//#region 🔖️SetActiveExample
-//#endregion 🔖️SetActiveExample
-
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,
 }
 
-/// 🧬️ Whole-document replace has no in-history mutation (a whole-snapshot variant is banned
-/// outright — see `📓️taxonomy.md`'s forbidden vocabulary), so loading a named example builds
-/// `editor::wires::reset_wires_document_effect` (a `Effect::LoadDocument`, outside undo history)
-/// instead of an `artifact_mutations` entry.
+/// 🧬️ Whole-document replace has no in-history mutation, so loading a named example builds
+/// `editor::wires::reset_wires_document_effect` (an `Effect::LoadDocument`, outside undo history): the parent pack, whose
+/// board child genesis composes from the bundled content its handle addresses (`crate::genesis_wires_child_pack`).
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::WiresSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<WiresMutation, NoConfigMutation>, Fault> {
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
         metabolism_wires_example_snapshot().map_err(|error| {

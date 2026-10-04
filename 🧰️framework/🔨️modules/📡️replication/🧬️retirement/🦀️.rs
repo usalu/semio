@@ -32,7 +32,6 @@ semio_framework_value::artifact_retire_struct!(crate::TransitionAuthor { id, nam
 semio_framework_value::artifact_retire_struct!(crate::TransitionPin { child_uri, checkpoint_id });
 semio_framework_value::artifact_retire_struct!(crate::MutationMessage { level, code, message, target, op_index });
 semio_framework_value::artifact_retire_struct!(crate::EditMessages { edit_id, messages });
-semio_framework_value::artifact_retire_leaf!(crate::diagnostic::Severity);
 impl semio_framework_value::retirement::RetireOwned for crate::MutationId {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         semio_framework_value::retirement::RetireOwned::retirement(self.0)
@@ -44,11 +43,6 @@ impl semio_framework_value::retirement::RetireOwned for crate::InputReplacement 
             Self::Input { schema, payload } => semio_framework_value::artifact_retirement_sequence![schema, payload],
             Self::Withdrawn => semio_framework_value::retirement::sequence(Vec::new()),
         }
-    }
-}
-impl semio_framework_value::retirement::RetireOwned for crate::diagnostic::FaultCode {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.0)
     }
 }
 impl semio_framework_value::retirement::RetireOwned for crate::MutationOrigin {

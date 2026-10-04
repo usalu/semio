@@ -1,11 +1,11 @@
 //! 📋️ Retained cloning and retirement for the first-party fixed-page value list.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_retirement, admit_retained_clone_scaffold_retirement};
+use crate::value::list::PagedList;
 use crate::{
     SnapshotRetirementStep,
     retirement::{RetireOwned, RetirementCursor, RetirementStep},
 };
-use crate::value::list::PagedList;
 use std::{
     mem::{ManuallyDrop, size_of},
     ops::{Deref, DerefMut},
@@ -21,6 +21,16 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
         if self.released {
             return RetirementStep::Complete;
         }
+        let width = size_of::<T>();
+        if width != 0 && !std::mem::needs_drop::<T>() && !self.owner.is_empty() {
+            let count = (maximum_bytes / width).min(self.owner.len());
+            if count != 0 {
+                for _ in 0..count {
+                    self.owner.pop();
+                }
+                return RetirementStep::Bytes(count * width);
+            }
+        }
         if let Some(value) = self.owner.pop() {
             return RetirementStep::Child(value.retirement());
         }
@@ -29,9 +39,7 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
             self.released = true;
             return RetirementStep::Complete;
         }
-        let Ok(required) = self.owner.next_release_allocation_bytes() else {
-            return RetirementStep::BudgetExhausted;
-        };
+        let Ok(required) = self.owner.next_release_allocation_bytes() else { return RetirementStep::BudgetExhausted; };
         if required > maximum_bytes {
             return RetirementStep::BudgetExhausted;
         }
@@ -43,6 +51,14 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
 
     fn terminal_is_empty(&self) -> bool {
         self.released
+    }
+
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        if self.released || !self.owner.is_empty() || self.owner.terminal_is_empty() {
+            None
+        } else {
+            self.owner.next_release_allocation_bytes().ok()
+        }
     }
 }
 
@@ -111,20 +127,20 @@ impl<T: RetainedClone, const N: usize> Drop for PagedListCursor<T, N> {
 }
 
 impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for PagedListCursor<T, N> {
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedList<T, N>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedList<T, N>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
-            return Err("retained paged list clone cursor is closing".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list clone cursor is closing"));
         }
         source.bind(&mut self.source)?;
         let source_value = source.get();
         if source_value.len() > N {
-            return Err("retained paged list source exceeds its declared logical capacity".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit, "retained paged list source exceeds its declared logical capacity"));
         }
         if self.phase == 1 {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
         if self.phase == 2 {
-            return Err("retained paged list clone cursor is spent".into());
+            return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list clone cursor is spent"));
         }
         let mut used = RetainedCloneProgress::default();
         loop {
@@ -138,13 +154,13 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                 if remaining.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(used));
                 }
-                let Some(required) = self.values.next_capacity_allocation_bytes(source_value.len()).map_err(str::to_owned)? else {
-                    return Err("retained paged list capacity state is inconsistent".into());
+                let Some(required) = self.values.next_capacity_allocation_bytes(source_value.len())? else {
+                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list capacity state is inconsistent"));
                 };
                 if required > remaining.maximum_capacity_bytes {
                     return Ok(RetainedCloneStep::Progress(used));
                 }
-                let progress = self.values.reserve_capacity_one(source_value.len(), remaining.maximum_capacity_bytes).map_err(|error| error.reason.to_owned())?;
+                let progress = self.values.reserve_capacity_one(source_value.len(), remaining.maximum_capacity_bytes).map_err(|error| crate::ValueError::from(error.refusal()))?;
                 if !progress.progressed {
                     return Ok(RetainedCloneStep::Progress(used));
                 }
@@ -159,7 +175,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                         if remaining.maximum_items == 0 {
                             return Ok(RetainedCloneStep::Progress(used));
                         }
-                        match admit_retained_clone_retirement(child.close_step(remaining.maximum_items, remaining.maximum_copy_bytes)?, remaining.maximum_items, remaining.maximum_copy_bytes, "retained paged list child scaffold close")? {
+                        match admit_retained_clone_scaffold_retirement(child.close_step(remaining.maximum_items, remaining.maximum_copy_bytes)?, remaining.maximum_items, remaining.maximum_copy_bytes, "retained paged list child scaffold close")? {
                             SnapshotRetirementStep::Pending { released_items, released_bytes } => {
                                 let progress = admit_retained_clone_progress(remaining, RetainedCloneProgress { copied_items: released_items, copied_bytes: released_bytes, retained_capacity_bytes: 0 }, "retained paged list child scaffold close")?;
                                 if progress == RetainedCloneProgress::default() {
@@ -168,26 +184,26 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                                 used = used.checked_add(progress)?;
                                 continue;
                             }
-                            SnapshotRetirementStep::Blocked => return Err("retained paged list child scaffold close blocked".into()),
+                            SnapshotRetirementStep::Blocked => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list child scaffold close blocked")),
                             SnapshotRetirementStep::Complete => {
                                 if !child.terminal_is_empty() {
-                                    return Err("retained paged list child scaffold completed with a live owner".into());
+                                    return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list child scaffold completed with a live owner"));
                                 }
                                 used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
                                 continue;
                             }
                         }
                     }
-                    if remaining.maximum_items == 0 || remaining.maximum_copy_bytes < size_of::<T>() {
+                    if remaining.maximum_items == 0 {
                         return Ok(RetainedCloneStep::Progress(used));
                     }
-                    let progress = state.values.place_reserved(&mut state.child_value, remaining.maximum_copy_bytes).map_err(str::to_owned)?;
+                    let progress = state.values.adopt_reserved(&mut state.child_value)?;
                     if !progress.progressed {
                         return Ok(RetainedCloneStep::Progress(used));
                     }
                     state.child = None;
                     state.index += 1;
-                    let progress = admit_retained_clone_progress(remaining, RetainedCloneProgress { copied_items: 1, copied_bytes: progress.placed_bytes, retained_capacity_bytes: 0 }, "retained paged list owner placement")?;
+                    let progress = admit_retained_clone_progress(remaining, RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0 }, "retained paged list owner adoption")?;
                     used = used.checked_add(progress)?;
                     continue;
                 }
@@ -221,7 +237,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                     if used.copied_items == grant.maximum_items {
                         return Ok(RetainedCloneStep::Progress(used));
                     }
-                    state.child_value = Some(child.take().ok_or("retained paged list child completed without an owner")?);
+                    state.child_value = Some(child.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list child completed without an owner"))?);
                     let _ = child.begin_close();
                     used = used.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
                 }
@@ -245,7 +261,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
         true
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError> {
         let state = &mut *self.state;
         if let Some(child) = state.child.as_mut() {
             if child.begin_close() {
@@ -259,7 +275,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                 return Ok(step);
             }
             if !child.terminal_is_empty() {
-                return Err("retained paged list child close completed with a live owner".into());
+                return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained paged list child close completed with a live owner"));
             }
             if maximum_items == 0 {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });

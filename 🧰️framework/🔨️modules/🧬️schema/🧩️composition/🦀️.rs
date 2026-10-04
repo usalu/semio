@@ -78,3 +78,7 @@ pub trait ArtifactCompositionFields {
         &[]
     }
 }
+
+#[path = "👁️read/🦀️.rs"]
+mod child_read;
+pub use child_read::{ArtifactChildReadAdmission,ChildFieldReadAdmission,ChildReadSource};

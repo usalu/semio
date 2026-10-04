@@ -1,6 +1,9 @@
 use super::*;
 use crate::playbook::{PlaybookBlock, PlaybookStep};
-use crate::playbook_snapshot_with_steps;
+
+fn spec_with_steps(title: Option<&str>, steps: Vec<PlaybookStep>) -> crate::PlaybookSpec {
+    crate::PlaybookSpec { schema: "playbook.program".into(), id: "playbook".into(), version: "1".into(), title: title.map(str::to_string), steps }
+}
 
 fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
     PlaybookBlock {
@@ -44,7 +47,7 @@ async fn definition_restamps_the_tree_window_kit_with_this_windows_own_id_and_bo
 #[semio_framework_async_macros::async_test]
 async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
     let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
-    let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
+    let spec = spec_with_steps(Some("Recipe"), vec![step]);
     let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
     let json = projected_body(node);
     assert!(json.contains("Intro"), "step title must appear as a root node label: {json}");
@@ -54,7 +57,7 @@ async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
 #[semio_framework_async_macros::async_test]
 async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
     let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
-    let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);
+    let spec = spec_with_steps(None, vec![step]);
     let node = render(&spec, &semio_framework_plugin::TreeWindows::unhosted()).expect("steps tree");
     let json = projected_body(node);
     assert!(json.contains("\"s1\""), "an empty step title must fall back to the step id: {json}");
@@ -81,13 +84,13 @@ use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 const MEASURED_VIEWPORT_ROWS: u32 = 4;
 
 /// 🪟️ A recipe with far more blocks in one step than the 32 siblings this window used to refuse outright.
-fn oversized_spec(blocks: usize) -> crate::PlaybookSnapshot {
+fn oversized_spec(blocks: usize) -> crate::PlaybookSpec {
     let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: (0..blocks).map(|index| sample_block(&format!("b{index}"), &format!("Field {index}"), "text")).collect() };
-    playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step])
+    spec_with_steps(Some("Recipe"), vec![step])
 }
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
-fn window_body(spec: &crate::PlaybookSnapshot, requests: Vec<TreeWindowRequest>) -> String {
+fn window_body(spec: &crate::PlaybookSpec, requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     projected_body(render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree"))
 }

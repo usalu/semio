@@ -11,7 +11,13 @@
 //! Scope (Wave 1 of the compiler plan): parses/prints math snippets only. Layout, fonts, and SVG
 //! emission are later waves — this crate produces an AST, nothing renders yet.
 
-use crate::os_dsl::{escape_text, lex as core_lex, unescape_text, Limits, TextError, TextSpan, TokenKind as CoreKind};
+use semio_framework_dsl::escape_text;
+use semio_framework_dsl::lex as core_lex;
+use semio_framework_dsl::unescape_text;
+use semio_framework_diagnostic::Limits;
+use semio_framework_diagnostic::TextError;
+use semio_framework_diagnostic::TextSpan;
+use semio_framework_dsl::TokenKind as CoreKind;
 
 //#region 🔖️Model
 /// 🌳️ One parsed math expression. Function/structure names (`frac`, `sqrt`, `mat`, `hat`, …)
@@ -174,7 +180,7 @@ fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
                 CoreKind::RBrace => MKind::RBrace,
                 CoreKind::LBracket => MKind::LBracket,
                 CoreKind::RBracket => MKind::RBracket,
-                other => return Err(TextError::new(format!("math notation cannot contain a {other:?} token here"), token.span)),
+                other => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("math notation cannot contain a {other:?} token here"), token.span)),
             };
             tokens.push(MToken { kind, text: token.text.as_str().to_string(), span: token.span });
         }
@@ -218,7 +224,7 @@ fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
                 seg_start = i;
                 continue;
             }
-            return Err(TextError::new("expected `!=` (bare `!` is not a math notation operator)", TextSpan::at(line, col)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected `!=` (bare `!` is not a math notation operator)", TextSpan::at(line, col)));
         }
         // `->` is already `Arrow` in `dsl_core`'s alphabet — when this `>` is the second half of
         // one (immediately preceded by `-`), leave it in the ambient segment instead of cutting it
@@ -275,7 +281,7 @@ impl Cursor {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
-            Err(TextError::new(format!("expected {kind:?}, found {:?} {:?}", self.peek().kind, self.peek().text), self.peek().span))
+            Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected {kind:?}, found {:?} {:?}", self.peek().kind, self.peek().text), self.peek().span))
         }
     }
 }
@@ -286,7 +292,7 @@ pub fn parse_formula(text: &str) -> Result<MathNode, TextError> {
     let mut cursor = Cursor { tokens, pos: 0 };
     let node = parse_relation(&mut cursor)?;
     if cursor.peek().kind != MKind::Eof {
-        return Err(TextError::new(format!("unexpected trailing token {:?} {:?}", cursor.peek().kind, cursor.peek().text), cursor.peek().span));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unexpected trailing token {:?} {:?}", cursor.peek().kind, cursor.peek().text), cursor.peek().span));
     }
     Ok(node)
 }
@@ -392,7 +398,7 @@ fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
         MKind::Int | MKind::Float => Ok(MathNode::Number(cursor.advance().text)),
         MKind::Text => {
             let token = cursor.advance();
-            let text = unescape_text(&token.text, false).map_err(|message| TextError::new(message, token.span))?;
+            let text = unescape_text(&token.text, false).map_err(|message| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, token.span))?;
             Ok(MathNode::Text(text))
         }
         MKind::Colon => {
@@ -428,7 +434,7 @@ fn parse_atom(cursor: &mut Cursor) -> Result<MathNode, TextError> {
                 Ok(MathNode::Symbol(name))
             }
         }
-        other => Err(TextError::new(format!("expected a math atom, found {other:?} {:?}", cursor.peek().text), cursor.peek().span)),
+        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a math atom, found {other:?} {:?}", cursor.peek().text), cursor.peek().span)),
     }
 }
 

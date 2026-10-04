@@ -1,0 +1,13 @@
+{
+  "contract": "intrinsic-media-depth-v1",
+  "leafWord": "fff800000000002a",
+  "cases": [
+    { "edges": 0, "maxDepth": 0, "accepted": true },
+    { "edges": 1, "maxDepth": 0, "accepted": false },
+    { "edges": 64, "maxDepth": 64, "accepted": true },
+    { "edges": 65, "maxDepth": 64, "accepted": false },
+    { "edges": 65, "maxDepth": 65, "accepted": true },
+    { "edges": 128, "maxDepth": 128, "accepted": true },
+    { "edges": 256, "maxDepth": 256, "accepted": true }
+  ]
+}

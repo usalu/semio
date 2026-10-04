@@ -12,7 +12,7 @@ fn sample_stl() -> StlSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&sample_stl())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&sample_stl())).expect("deserialize");
     assert_eq!(semio.meshes.len(), 1);
     assert_eq!(semio.meshes[0].id, "pyramid");
     let prim = &semio.meshes[0].primitives[0];
@@ -29,6 +29,6 @@ async fn deserialize_expands_face_normals_and_flattens_triangle_soup() {
 async fn empty_solid_name_falls_back_to_a_generated_mesh_id() {
     let mut stl = sample_stl();
     stl.solid_name.clear();
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromStl::deserialize(&stl)).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&stl)).expect("deserialize");
     assert_eq!(semio.meshes[0].id, "mesh-0");
 }

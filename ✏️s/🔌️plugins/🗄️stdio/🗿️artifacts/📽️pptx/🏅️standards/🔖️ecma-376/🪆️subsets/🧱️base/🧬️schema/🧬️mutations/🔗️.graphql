@@ -1,14 +1,33 @@
-# 🧬️ Logical PresentationML mutation command.
+# 🧭️ Revision-bound canonical PresentationML XML identity.
+type PptxXmlAddress {
+  partPath: String!
+  nodePath: [Int!]!
+  namespaceUri: String!
+  localName: String!
+  revision: String!
+}
+
+type PptxSlideAddress {
+  entry: PptxXmlAddress!
+  slidePartPath: String!
+  relationshipId: String!
+  slideId: String!
+}
+
+type PptxShapeAddress { node: PptxXmlAddress!, shapeId: String! }
+type PptxXmlVacancyAddress { container: PptxXmlAddress!, index: Int! }
+
+# 🧬️ Revision-addressed PresentationML mutation command.
 type PptxMutation {
   mutation: String!
   snapshot: PptxSnapshot
-  index: Int
-  from: Int
-  to: Int
-  slideIndex: Int
-  shapeIndex: Int
-  slide: PptxSlide
-  shape: PptxShape
-  textFrame: [PptxParagraph!]
+  address: PptxXmlAddress
+  slideAddress: PptxSlideAddress
+  shapeAddress: PptxShapeAddress
+  vacancy: PptxXmlVacancyAddress
+  entry: PptxXmlNode
+  shape: PptxXmlNode
+  destinationIndex: Int
+  text: String
   position: PptxTransform
 }

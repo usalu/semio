@@ -25,14 +25,14 @@ function compareKeys(left: string, right: string): number {
   return left.length - right.length;
 }
 
-function exact(value: DslValue, fields: readonly string[]): Record<string, DslValue> {
+function exact(value: unknown, fields: readonly string[]): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== fields.length || fields.some((key) => !Object.hasOwn(value, key))) throw new Error("map delta record has incorrect fields");
-  return value;
+  return value as Record<string, unknown>;
 }
 
 /** 🪪️ Validates one shared wire delta and delegates each set payload to its owning schema. */
 export function parseMapDelta<V = DslValue>(value: unknown, parseValue: (value: unknown) => V = parseDslValue as (value: unknown) => V): MapDelta<V> {
-  const row = exact(parseDslValue(value), ["entries"]);
+  const row = exact(value, ["entries"]);
   if (!Array.isArray(row.entries)) throw new Error("map delta entries must be a list");
   const seen = new Set<string>();
   const entries = row.entries.map((value): MapEntryDelta<V> => {
@@ -43,7 +43,7 @@ export function parseMapDelta<V = DslValue>(value: unknown, parseValue: (value: 
     if (precondition !== "any" && precondition !== "present" && precondition !== "absent" && precondition !== "never") throw new Error("unknown map presence requirement");
     const raw = entry.operation!;
     if (raw === null || typeof raw !== "object" || Array.isArray(raw)) throw new Error("map operation must be a record");
-    const operation = exact(raw, raw.kind === "set" ? ["kind", "value"] : ["kind"]);
+    const operation = exact(raw, "kind" in raw && raw.kind === "set" ? ["kind", "value"] : ["kind"]);
     const kind = operation.kind;
     if (kind !== "set" && kind !== "remove" && kind !== "reject") throw new Error("unknown map operation");
     if ((precondition === "never") !== (kind === "reject")) throw new Error("unsatisfiable map changes must be explicit rejections");

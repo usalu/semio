@@ -32,7 +32,7 @@ fn every_config_operation_inverts_back_to_the_prior_pane_state() {
     ];
     for operation in operations {
         let mut restored = operation.diff(&base).diff().clone();
-        for back in operation.inverse(&base) {
+        for back in operation.inverse(&base).expect("valid retained mutation inverse fixture") {
             restored = back.diff(&restored).diff().clone();
         }
         assert_eq!(restored, base, "{operation:?} must invert exactly");

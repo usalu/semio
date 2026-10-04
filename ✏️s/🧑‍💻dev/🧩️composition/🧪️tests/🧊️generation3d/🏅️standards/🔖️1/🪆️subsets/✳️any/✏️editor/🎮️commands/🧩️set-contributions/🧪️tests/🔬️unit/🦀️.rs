@@ -60,10 +60,10 @@ fn assert_contributed_kind(kind: &str) {
 /// unknown (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn the_packaged_brep_manifest_parses_as_a_flow_extension_manifest() {
-    let json = crate::flow_operators::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
+    let json = ::semio_framework_async::poll::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
     let third_party: serde_json::Value = serde_json::from_str(&json).expect("RFC 8259 brep manifest");
     assert!(third_party["contributes"]["operators"].as_array().unwrap().iter().any(|operator| operator["id"] == "brep.curve.polygon"), "third-party JSON names brep.curve.polygon");
-    let mut parsed: semio_framework_os_flow::FlowExtensionManifest = semio_framework_os_flow::os_pack::json::from_json_str(&json).unwrap_or_else(|error| panic!("packaged brep manifest must parse as FlowExtensionManifest: {error}"));
+    let mut parsed: semio_framework_os_flow::FlowExtensionManifest = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("packaged brep manifest must parse as FlowExtensionManifest: {error}"));
     let has_polygon = parsed.contributes.operators.iter().any(|operator| operator.id == "brep.curve.polygon");
     for operator in parsed.contributes.operators.drain(..) {
         operator.retire_cold();
@@ -87,7 +87,7 @@ fn a_one_page_host_shaped_run_indexes_contributed_operators() {
 }
 
 fn host_shaped_contributions_json() -> String {
-    let brep = crate::flow_operators::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
+    let brep = ::semio_framework_async::poll::resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json());
     let math = semio_s_plugin_flow_extension_math::extension_manifest_json();
     serde_json::json!([
         {

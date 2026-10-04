@@ -160,7 +160,8 @@ async fn curve_monotonicity_remedy_path_is_scalar_point_y() {
 #[semio_framework_async_macros::async_test]
 async fn apply_remedy_flips_curve_monotonicity_fail_to_pass() {
     use crate::app_surface::set_value_at_path;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
     let mut doc = conforming_valve_dataset();
     let curve = doc.curves.get_mut("curve-kvs").expect("curve");
@@ -170,7 +171,7 @@ async fn apply_remedy_flips_curve_monotonicity_fail_to_pass() {
     let remedy = &fail.remedies[0];
     assert!(remedy.applicable);
     let mut tree = doc.to_value();
-    set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("set_value_at_path");
+    set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("set_value_at_path");
     let fixed = Vdi3805Snapshot::from_value(tree).expect("decode");
     let after = evaluate(&fixed);
     let again = after.checks.iter().find(|c| c.id == fail.id);
@@ -196,7 +197,7 @@ async fn operative_sheets_without_product_are_not_applicable() {
 #[semio_framework_async_macros::async_test]
 async fn every_emitted_path_resolves() {
     use crate::app_surface::{get_value_at_path, parse_path};
-    use dsl::ToValue;
+    use semio_framework_value::ToValue;
 
     for doc in [conforming_valve_dataset(), nonconforming_valve_dataset()] {
         let tree = doc.to_value();
@@ -219,24 +220,25 @@ async fn every_emitted_path_resolves() {
 async fn every_editable_leaf_has_en_de_field_meta() {
     use crate::app_surface::NormFieldMeta;
     use crate::editor::field_meta::vdi3805_field_meta;
-    use dsl::{DslValue, ToValue};
+    use semio_framework_value::DslValue;
+use semio_framework_value::ToValue;
 
     fn walk(value: &DslValue, prefix: &str, out: &mut Vec<String>) {
         match value {
-            DslValue::Object(map) => {
+            semio_framework_value::DslValue::Object(map) => {
                 for (k, v) in map {
                     let path = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
                     match v {
-                        DslValue::Object(_) | DslValue::Array(_) => walk(v, &path, out),
+                        semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk(v, &path, out),
                         _ => out.push(path),
                     }
                 }
             }
-            DslValue::Array(items) => {
+            semio_framework_value::DslValue::Array(items) => {
                 for (i, v) in items.iter().enumerate() {
                     let path = format!("{prefix}[{i}]");
                     match v {
-                        DslValue::Object(_) | DslValue::Array(_) => walk(v, &path, out),
+                        semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk(v, &path, out),
                         _ => out.push(path),
                     }
                 }
@@ -264,7 +266,8 @@ async fn every_editable_leaf_has_en_de_field_meta() {
 #[semio_framework_async_macros::async_test]
 async fn sync_fail_remedy_targets_writable_attribute_leaf() {
     use crate::app_surface::set_value_at_path;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
     let mut doc = conforming_valve_dataset();
     if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
@@ -276,7 +279,7 @@ async fn sync_fail_remedy_targets_writable_attribute_leaf() {
     assert!(!remedy.target.path.ends_with(".records"), "sync remedy must not target records root: {}", remedy.target.path);
     assert!(remedy.target.path.contains("attributes"), "path={}", remedy.target.path);
     let mut tree = doc.to_value();
-    set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("set");
+    set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("set");
     let fixed = Vdi3805Snapshot::from_value(tree).expect("decode");
     let after = evaluate(&fixed);
     assert!(after.checks.iter().find(|c| c.id == fail.id).is_none_or(|c| c.status == CheckStatus::Pass));
@@ -332,9 +335,9 @@ async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
 }
 
 
-fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&str, &dsl::DslValue)) {
+fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit: &mut dyn FnMut(&str, &semio_framework_value::DslValue)) {
     match value {
-        dsl::DslValue::Object(map) => {
+        semio_framework_value::DslValue::Object(map) => {
             for (k, v) in map.iter() {
                 // Map keys with `.` (geometry/curve ids) must use [id=…] so set_value_at_path can resolve them.
                 let path = if prefix.is_empty() {
@@ -345,16 +348,16 @@ fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&s
                     format!("{prefix}.{k}")
                 };
                 match v {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => walk_dsl_leaves(&path, v, visit),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk_dsl_leaves(&path, v, visit),
                     _ => visit(&path, v),
                 }
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             for (i, item) in items.iter().enumerate() {
                 let id = match item {
-                    dsl::DslValue::Object(map) => map.iter().find(|(k, _)| *k == "id").and_then(|(_, v)| match v {
-                        dsl::DslValue::String(s) => Some(s.clone()),
+                    semio_framework_value::DslValue::Object(map) => map.iter().find(|(k, _)| *k == "id").and_then(|(_, v)| match v {
+                        semio_framework_value::DslValue::String(s) => Some(s.clone()),
                         _ => None,
                     }),
                     _ => None,
@@ -362,7 +365,7 @@ fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&s
                 let seg = id.map(|id| format!("[id={id}]")).unwrap_or_else(|| format!("[{i}]"));
                 let path = format!("{prefix}{seg}");
                 match item {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => walk_dsl_leaves(&path, item, visit),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => walk_dsl_leaves(&path, item, visit),
                     _ => visit(&path, item),
                 }
             }
@@ -407,34 +410,34 @@ fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, Strin
         .collect()
 }
 
-fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> {
+fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Option<semio_framework_value::DslValue> {
     match value {
-        dsl::DslValue::Number(n) => {
+        semio_framework_value::DslValue::Number(n) => {
             let v = n.as_f64();
             Some(if n.is_integer() {
                 let base = if v < 0.0 { (v as i64).saturating_sub(1) as u64 } else { (v as u64).saturating_add(1) };
-                dsl::DslValue::uint(base.max(0))
+                semio_framework_value::DslValue::uint(base.max(0))
             } else if path.contains(".points[") || path.contains("si_factor") || path.contains("siFactor") {
                 // Break monotonicity / unit scale rather than a ratio-preserving stretch.
                 let next = if v.abs() < 1e-12 { -1.0 } else { -v.abs() * 1.5 - 0.5 };
-                dsl::DslValue::float(next)
+                semio_framework_value::DslValue::float(next)
             } else {
                 let next = if v.abs() < 1e-12 { 1.0 } else { v * 1.35 + 0.01 };
-                dsl::DslValue::float(next)
+                semio_framework_value::DslValue::float(next)
             })
         }
-        dsl::DslValue::Bool(b) => Some(dsl::DslValue::Bool(!*b)),
-        dsl::DslValue::String(s) => {
+        semio_framework_value::DslValue::Bool(b) => Some(semio_framework_value::DslValue::Bool(!*b)),
+        semio_framework_value::DslValue::String(s) => {
             use crate::editor::field_meta::vdi3805_field_meta;
             if is_reference_or_entity_id_leaf(path) {
-                return Some(dsl::DslValue::String("__dangling__".into()));
+                return Some(semio_framework_value::DslValue::String("__dangling__".into()));
             }
             if let Some(choices) = vdi3805_field_meta(path).and_then(|m| m.choices) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
-                return Some(dsl::DslValue::String(alt.to_string()));
+                return Some(semio_framework_value::DslValue::String(alt.to_string()));
             }
             let next = if s.is_empty() { "x".into() } else { format!("{s}__pert") };
-            Some(dsl::DslValue::String(next))
+            Some(semio_framework_value::DslValue::String(next))
         }
         _ => None,
     }
@@ -442,7 +445,8 @@ fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> 
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_perturbation_changes_a_check() {
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
     let subjects: Vec<(String, Vdi3805Snapshot)> = all_conforming_blatt_examples()
         .into_iter()
         .map(|(sheet, doc)| (format!("blatt-{sheet}"), doc))
@@ -452,7 +456,7 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
     for (label, base) in subjects {
         let base_report = evaluate(&base);
         let base_sig = report_signature(&base_report);
-        let value0 = ToValue::to_value(&base);
+        let value0 = semio_framework_value::ToValue::to_value(&base);
         let mut leaves = Vec::new();
         walk_dsl_leaves("", &value0, &mut |path, leaf| {
             if path.is_empty() || is_descriptive_name_or_title_leaf(path) {
@@ -462,7 +466,7 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
         });
         for (path, leaf) in leaves {
             let Some(next) = perturb_dsl_leaf(&path, &leaf) else { continue };
-            let mut tree = ToValue::to_value(&base);
+            let mut tree = semio_framework_value::ToValue::to_value(&base);
             if crate::app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
                 inert.push(format!("{label}:{path} (set failed)"));
                 continue;

@@ -39,34 +39,34 @@ pub struct JackArtifact {
 /// `semio_framework_value::FromValue::from_value` seam instead of widening the derive macro to understand child-slot
 /// handles. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 /// 🔍️research/📓️serde-fanout-playbook.md`'s "composed/child-slot fields" trap.
-impl dsl::ToValue for JackArtifact {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([
-            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
-            ("name".to_string(), dsl::ToValue::to_value(&self.name)),
-            ("manifestId".to_string(), dsl::ToValue::to_value(&self.manifest_id)),
-            ("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)),
-            ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
+impl semio_framework_value::ToValue for JackArtifact {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
+            ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
+            ("manifestId".to_string(), semio_framework_value::ToValue::to_value(&self.manifest_id)),
+            ("manifest".to_string(), semio_framework_value::ToValue::to_value(&self.manifest)),
+            ("camera".to_string(), semio_framework_value::ToValue::to_value(&self.camera)),
             ("content".to_string(), semio_framework_value::ToValue::to_value(&self.content)),
-            ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
-            ("query".to_string(), dsl::ToValue::to_value(&self.query)),
+            ("rootNodeId".to_string(), semio_framework_value::ToValue::to_value(&self.root_node_id)),
+            ("query".to_string(), semio_framework_value::ToValue::to_value(&self.query)),
         ])
     }
 }
-impl dsl::FromValue for JackArtifact {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for JackArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
-            schema: dsl::FromValue::from_value(field("schema")?)?,
-            name: dsl::FromValue::from_value(field("name")?)?,
-            manifest_id: dsl::FromValue::from_value(field("manifestId")?)?,
-            manifest: dsl::FromValue::from_value(field("manifest")?)?,
-            camera: dsl::FromValue::from_value(field("camera")?)?,
+            schema: semio_framework_value::FromValue::from_value(field("schema")?)?,
+            name: semio_framework_value::FromValue::from_value(field("name")?)?,
+            manifest_id: semio_framework_value::FromValue::from_value(field("manifestId")?)?,
+            manifest: semio_framework_value::FromValue::from_value(field("manifest")?)?,
+            camera: semio_framework_value::FromValue::from_value(field("camera")?)?,
             content: semio_framework_value::FromValue::from_value(field("content")?)?,
-            root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
-            query: dsl::FromValue::from_value(field("query")?)?,
+            root_node_id: semio_framework_value::FromValue::from_value(field("rootNodeId")?)?,
+            query: semio_framework_value::FromValue::from_value(field("query")?)?,
         })
     }
 }
@@ -112,13 +112,13 @@ impl JackArtifact {
     }
 
     /// 🔎 Live node list, read through the working-scene cache.
-    pub fn nodes(&self) -> Vec<crate::Node> {
-        crate::jack_working_scene_for_handle(&self.content).nodes
+    pub fn nodes(&self)->Result<Vec<crate::Node>,semio_framework_value::ValueError>{
+        Ok(crate::jack_working_scene_for_handle(&self.content)?.nodes)
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub fn edges(&self) -> Vec<crate::Edge> {
-        crate::jack_working_scene_for_handle(&self.content).edges
+    pub fn edges(&self)->Result<Vec<crate::Edge>,semio_framework_value::ValueError>{
+        Ok(crate::jack_working_scene_for_handle(&self.content)?.edges)
     }
 }
 //#endregion 🔖️Conversions
@@ -177,7 +177,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct JackBuilderConstruction {
         snapshot: JackSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for JackBuilderConstruction {
@@ -190,7 +190,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<JackSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -200,7 +200,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -209,7 +209,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -251,14 +251,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <JackSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -288,3 +288,6 @@ semio_framework_plugin::derive_artifact_facets!(
 pub use crate::Camera;
 pub use crate::Manifest;
 //#endregion 🔁️Re-exports
+
+#[path="♻️retirement/🦀️.rs"]
+mod retirement;

@@ -1,0 +1,13 @@
+{
+  "name": "semio-framework-pixels",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test": "bun nx run semio-framework-pixels:test"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

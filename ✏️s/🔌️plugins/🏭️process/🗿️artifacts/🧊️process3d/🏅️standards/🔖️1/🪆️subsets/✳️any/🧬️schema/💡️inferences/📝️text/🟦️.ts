@@ -49,5 +49,5 @@ export const processProcess3dInferenceTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseProcess3dInferenceText(value: unknown, at = "$"): Process3dInferenceText {
-  return processProcess3dInferenceTextGuardObject(value, `${at}`);
+  return processProcess3dInferenceTextGuardString(value, `${at}`);
 }

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "neutralRoots": [
+    "🧰️framework/🔨️modules/🗣️dsl",
+    "🧰️framework/🔨️modules/⚠️diagnostic",
+    "🧰️framework/🔨️modules/🏃️process",
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator"
+  ],
+  "absentRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub"
+  ],
+  "reference": {
+    "script": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts",
+    "command": "test-reference",
+    "budgetMs": 30000
+  }
+}

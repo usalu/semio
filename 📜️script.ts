@@ -58,7 +58,7 @@ import { policyLineOfIndex } from "./🧰️framework/🛍️products/🦑️rep
 import { policySurfaceRoots } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗺️surface/🟦️.ts";
 import { policyListPluginArtifactDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { POLICY_STANDARDS_DIR, POLICY_SUBSETS_DIR, policyListArtifactDialectDirs, type PolicyArtifactDialect } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts";
-import { verifyTaxonomy } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { verifyTaxonomy, verifyTaxonomyScopes } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
 import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { mutationTaxonomySourceAdmission, policyFindAllMutationsDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
@@ -2309,7 +2309,8 @@ function toolJobWriterEnvelopeCallerRetainedExact(writer: string, editor: string
   return (
     writer.includes("struct WriterStoreInitializationAuthority") &&
     writer.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority") &&
-    writer.includes("WriterStoreInitializationPhase::ValidateEditPair") &&
+    writer.includes("WriterStoreInitializationPhase::ValidateEdit { index }") &&
+    writer.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     writer.includes("WriterStoreInitializationPhase::SeedHistory") &&
     writer.includes("WriterStoreInitializationPhase::BuildCandidate") &&
     writer.includes("ArtifactStoreInitializationRuntime::new") &&
@@ -2370,7 +2371,8 @@ function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, edi
     jack.includes("struct JackSnapshotCloneAuthority") &&
     jack.includes("struct JackStoreInitializationAuthority") &&
     jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
-    jack.includes("JackStoreInitializationPhase::ValidateEditPair") &&
+    jack.includes("JackStoreInitializationPhase::ValidateEdit { index }") &&
+    jack.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     jack.includes("JackStoreInitializationPhase::SeedHistory") &&
     jack.includes("JackStoreInitializationPhase::BuildCandidate") &&
     jack.includes("ArtifactStoreInitializationRuntime::new") &&
@@ -2423,7 +2425,8 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     jack.includes("struct JackSnapshotCloneAuthority") &&
     jack.includes("struct JackStoreInitializationAuthority") &&
     jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
-    jack.includes("JackStoreInitializationPhase::ValidateEditPair") &&
+    jack.includes("JackStoreInitializationPhase::ValidateEdit { index }") &&
+    jack.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     jack.includes("JackStoreInitializationPhase::SeedHistory") &&
     jack.includes("JackStoreInitializationPhase::BuildCandidate") &&
     jack.includes("ArtifactStoreInitializationRuntime::new") &&
@@ -2521,7 +2524,8 @@ function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string,
     gisMap.includes("struct GisMapSnapshotCloneAuthority") &&
     gisMap.includes("struct GisMapStoreInitializationAuthority") &&
     gisMap.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority") &&
-    gisMap.includes("GisMapStoreInitializationPhase::ValidateEditPair") &&
+    gisMap.includes("GisMapStoreInitializationPhase::ValidateEdit { index }") &&
+    gisMap.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     gisMap.includes("GisMapStoreInitializationPhase::SeedHistory") &&
     gisMap.includes("GisMapStoreInitializationPhase::BuildCandidate") &&
     gisMap.includes("ArtifactStoreInitializationRuntime::new") &&
@@ -2641,14 +2645,14 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     raster.includes("OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>") &&
     raster.includes("struct RasterSnapshotBoundsAuthority") &&
     raster.includes("struct RasterSnapshotCloneAuthority") &&
-    raster.includes("struct RasterMutationDigestAuthority") &&
     raster.includes("struct RasterMutationCandidateAuthority") &&
     raster.includes("RASTER_RETIREMENT_STACK_CAPACITY") &&
     raster.includes("pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>") &&
     raster.includes("pending_push: std::mem::ManuallyDrop<Option<RasterRetirementOwner>>") &&
     raster.includes("struct RasterStoreInitializationAuthority") &&
     raster.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority") &&
-    raster.includes("RasterStoreInitializationPhase::ValidateEditPair") &&
+    raster.includes("RasterStoreInitializationPhase::ValidateEdit { index }") &&
+    raster.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     raster.includes("RasterStoreInitializationPhase::SeedHistory") &&
     raster.includes("RasterStoreInitializationPhase::BuildCandidate") &&
     (raster.match(/if cx\.should_yield\(\)/g) ?? []).length === 3 &&
@@ -3037,7 +3041,8 @@ function toolJobDrawingEnvelopeCallerRetainedExact(store: string, drawing: strin
     drawing.includes("DrawingStoreInitializationPhase::PrepareApplied") &&
     drawing.includes("DrawingStoreInitializationPhase::PrepareRedo") &&
     drawing.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapshot, DrawingMutation> for DrawingStoreInitializationAuthority") &&
-    drawing.includes("DrawingStoreInitializationPhase::ValidateEditPair") &&
+    drawing.includes("DrawingStoreInitializationPhase::ValidateEdit { index }") &&
+    drawing.includes("self.edit_index.admit(&envelope.vcs.edits, index,") &&
     drawing.includes("DrawingStoreInitializationPhase::SeedHistory") &&
     drawing.includes("DrawingStoreInitializationPhase::BuildCandidate") &&
     drawing.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
@@ -7101,6 +7106,47 @@ async function runDocstringCensusGate(root: string, rule: string | undefined): P
   }
 }
 
+/** ❄️ The per-file docstring-emoji gate (acceptance ledger 5.11, design §21.2): fails on any emoji that opens more than one
+ * docstring of one source. Without `--files-from <list>` it scans every tracked Rust / TypeScript source and publishes the
+ * acceptance record; with it (one repository-relative path per line, e.g. a ticket's touched files) it scans exactly those. Prints
+ * the reusing files with their repeat counts, most first.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runDocstringEmojiCensus` */
+async function runDocstringEmojiGate(root: string, args: readonly string[]): Promise<void> {
+  const listAt = args.indexOf("--files-from");
+  if ((listAt >= 0 && args[listAt + 1] === undefined) || args.length !== (listAt >= 0 ? 2 : 0)) throw new Error("usage: verify docstrings emoji-unique [--files-from <list>]");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult, runDocstringEmojiCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const paths = listAt >= 0 ? readFileSync(resolve(root, args[listAt + 1]!), "utf8").split("\n").map((line) => line.trim()).filter(Boolean) : undefined;
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  const startedAt = new Date();
+  try {
+    const census = runDocstringEmojiCensus(root, controller.signal, (line) => console.error(`[verify docstrings] ${line}`), paths);
+    const perFile = new Map<string, { repeats: number; emojis: string[] }>();
+    for (const reuse of census.reuse) {
+      const row = perFile.get(reuse.path) ?? { repeats: 0, emojis: [] };
+      perFile.set(reuse.path, { repeats: row.repeats + reuse.lines.length - 1, emojis: [...row.emojis, `${reuse.emoji}×${reuse.lines.length} :${reuse.lines.join(",")}`] });
+    }
+    const ranked = [...perFile].sort(([leftPath, left], [rightPath, right]) => right.repeats - left.repeats || leftPath.localeCompare(rightPath));
+    for (const [path, row] of ranked.slice(0, 200)) console.log(`[verify docstrings] emoji-unique ${path} repeats=${row.repeats} ${row.emojis.join(" ")}`);
+    const repeats = ranked.reduce((sum, [, row]) => sum + row.repeats, 0);
+    const status = repeats === 0 ? "pass" : "fail";
+    console.log(`[verify docstrings] rule=emoji-unique files=${census.files} reusing=${ranked.length} repeats=${repeats}${paths === undefined ? "" : ` over ${args[listAt + 1]}`}`);
+    if (paths === undefined) {
+      publishAcceptanceCheckResult(root, acceptanceCheckResult({
+        check: "docstring-emoji-unique",
+        status,
+        startedAt,
+        measured: { files: census.files, reusing: ranked.length, repeats },
+        summary: { en: `${repeats} docstrings reuse their file's opening emoji in ${ranked.length} of ${census.files} Rust/TypeScript sources`, de: `${repeats} Docstrings wiederholen das Eröffnungs-Emoji ihrer Datei in ${ranked.length} von ${census.files} Rust-/TypeScript-Quellen` },
+      }));
+    }
+    if (status !== "pass") process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
 /** 🐞️ The debug-tag census as a gate (acceptance ledger 5.12): fails on any tracked line outside the ticket tree and Markdown
  * prose that carries the tag AGENTS.md reserves for temporary logs, cross-checks the scanner against `git grep -c`, prints
  * the findings and publishes the acceptance record.
@@ -7204,7 +7250,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "docstrings") {
-      await runDocstringCensusGate(this.root, segments[1]);
+      await (segments[1] === "emoji-unique" ? runDocstringEmojiGate(this.root, segments.slice(2)) : runDocstringCensusGate(this.root, segments[1]));
       return;
     }
     if (segments[0] === "debug-tags") {
@@ -7813,6 +7859,24 @@ export class VerifyScript extends Script {
     }
     const mode = args[0];
     if (mode !== "report" && mode !== "enforce") throw new Error(`[verify taxonomy] expected report or enforce, got ${JSON.stringify(mode)}.`);
+    const scopesFrom = taxonomyOption(args, "--scopes-from");
+    if (scopesFrom !== undefined) {
+      const scopes = readFileSync(resolve(this.root, scopesFrom), "utf8").split("\n").map((line) => line.trim()).filter(Boolean);
+      let dirty = 0, done = 0;
+      for (const verification of verifyTaxonomyScopes({ repoRoot: this.root, scopes })) {
+        const errors = verification.violations.filter((violation) => violation.severity === "error").length;
+        dirty += Number(!verification.clean);
+        done += 1;
+        if (args.includes("--json")) console.log(JSON.stringify(verification));
+        else {
+          console.log(`[verify taxonomy ${mode}] clean=${verification.clean} errors=${errors} warnings=${verification.violations.length - errors} scope=${verification.scope}`);
+          for (const violation of verification.violations) console.log(`[verify taxonomy ${mode}] ${violation.severity} ${violation.code} ${violation.path}: ${violation.message}`);
+        }
+      }
+      console.error(`[verify taxonomy ${mode}] scopes=${done} dirty=${dirty} from=${scopesFrom}`);
+      if (mode === "enforce" && dirty > 0) throw new Error(`[verify taxonomy enforce] ${dirty} of ${done} scope(s) not clean.`);
+      return;
+    }
     const scope = taxonomyOption(args, "--scope");
     let previousPhase = "";
     let previousReportAt = 0;
@@ -8431,6 +8495,15 @@ export class VerifyScript extends Script {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
         throw new Error(`[verify] ${mutationOutcomeBreaches.length} mutation-outcome/merge-policy law breach(es)`);
+      }
+    }
+    console.log("[verify] history closure…");
+    {
+      if (historyClosurePolicySelfTests() === 0) throw new Error("[verify] history-closure self-test executed no cases");
+      const historyClosureBreaches = policyHistoryClosureBreaches(this.root);
+      if (historyClosureBreaches.length > 0) {
+        for (const breach of historyClosureBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
+        throw new Error(`[verify] ${historyClosureBreaches.length} history-closure breach(es)`);
       }
     }
     console.log("[verify] dsl fixture laws…");
@@ -9534,9 +9607,10 @@ export function interactivityPuzzleFillRunJobFailures(sources: InteractivityPuzz
     if (evidence.includes(`fn ${fixture}`)) failures.push(`Puzzle fill lock-is-commit fixture survives: ${fixture}`);
   }
   try {
-    const fixture = JSON.parse(sources.runFixture) as { laws?: { opsPerPlacement?: unknown; parryOracle?: unknown; delivery?: { candidates?: unknown }; interactive?: { document?: unknown; turns?: unknown; budgetUs?: unknown } }; cases?: { expected?: { verdictPrefix?: unknown } }[] };
+    const fixture = JSON.parse(sources.runFixture) as { laws?: { opsPerPlacement?: unknown; parryOracle?: unknown; delivery?: { candidates?: unknown }; interactive?: { document?: unknown; turns?: unknown; budgetWork?: unknown; stepWorkCeiling?: unknown; appendOpsCeiling?: unknown } }; cases?: { expected?: { verdictPrefix?: unknown } }[] };
     const laws = fixture.laws;
-    if (!laws || !(Number(laws.opsPerPlacement) >= 1) || typeof laws.parryOracle !== "object" || laws.parryOracle === null || !(Number(laws.delivery?.candidates) >= 5000) || laws.interactive?.document !== "nakagin" || !(Number(laws.interactive?.turns) >= 771) || laws.interactive?.budgetUs !== 2000) failures.push("Puzzle fill run fixture does not pin the parry3d oracle, the 5 000-candidate delivery law and the unchanged 2 ms Nakagin budget");
+    const interactive = laws?.interactive;
+    if (!laws || !(Number(laws.opsPerPlacement) >= 1) || typeof laws.parryOracle !== "object" || laws.parryOracle === null || !(Number(laws.delivery?.candidates) >= 5000) || interactive?.document !== "nakagin" || !(Number(interactive?.turns) >= 1) || interactive?.budgetWork !== 1000 || !(Number(interactive?.stepWorkCeiling) > 0 && Number(interactive?.stepWorkCeiling) <= 100000) || !(Number(interactive?.appendOpsCeiling) > 0)) failures.push("Puzzle fill run fixture does not pin the parry3d oracle, the 5 000-candidate delivery law and the deterministic Nakagin work slice (budgetWork 1000, stepWorkCeiling at most 100 000)");
     if (!Array.isArray(fixture.cases) || fixture.cases.length === 0 || !fixture.cases.every((entry) => Array.isArray(entry.expected?.verdictPrefix) && (entry.expected.verdictPrefix as unknown[]).every((verdict) => typeof verdict === "string" && /^(?:testing|success|warning|danger):[\w.-]+$/.test(verdict)))) failures.push("Puzzle fill run fixture cases do not carry verdict:reason prefixes");
   } catch {
     failures.push("Puzzle fill run fixture is missing or malformed");
@@ -9986,7 +10060,7 @@ export function interactivityToolRunReservedActionFailures(sources: readonly Int
  * contain before the rule's `pattern` runs, `applies` narrows the files the rule reads, `allow` names the files whose hit is a deliberate negative case, `functions` the enclosing Rust functions
  * whose hit is a declared whole-document intent.
  */
-export type HistoryClosureRule = { readonly id: string; readonly anchors: readonly string[]; readonly pattern: RegExp; readonly applies: (path: string) => boolean; readonly allow: readonly string[]; readonly functions?: readonly string[]; readonly reason: string };
+export type HistoryClosureRule = { readonly id: string; readonly anchors: readonly string[]; readonly pattern: RegExp; readonly applies: (path: string) => boolean; readonly allow: readonly string[]; readonly functions?: readonly string[]; readonly within?: RegExp; readonly unless?: RegExp; readonly item?: { readonly header: RegExp; readonly unless: RegExp }; readonly reason: string };
 
 /** 🚫️ One closure violation anchored to its rule, a repo-relative file and a 1-based line. */
 export type HistoryClosureFinding = { readonly rule: string; readonly file: string; readonly line: number; readonly text: string };
@@ -10011,13 +10085,43 @@ function historyClosurePluginProduction(path: string): boolean {
 export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
   { id: "amend-emit", anchors: ["Emit::amend", "amend_config"], pattern: /\b(?:Action)?Emit::amend\b|\bamend_config\b/, applies: () => true, allow: [], reason: "a gesture is a tool transaction (artifact lane) or one config edit at gesture end (config lane); no emission amends the previous edit" },
   { id: "amend-last", anchors: ["AmendLast", "amendLast"], pattern: /\bAmendLast\w*|\bamendLast\w*/, applies: () => true, allow: [], reason: "the Store has no amend command on any lane; a transaction-scoped open edit (§15) is the only growing edit" },
-  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: [], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
+  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧫️fixtures/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
   { id: "preview-contract", anchors: ["UtilityPreviewContract"], pattern: /\bUtilityPreviewContract\b/, applies: () => true, allow: [], reason: "the actions-vs-tools contract is `🔖️ToolContract`; there is no preview pattern beside tool machines" },
   { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
-  { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: () => true, allow: [], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation" },
+  { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: (path) => !HISTORY_CLOSURE_TESTS.test(path), allow: ["🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation (refusal laws and the shared refusal fixture name it)" },
   { id: "edit-literal", anchors: ["Edit"], pattern: /\bprotocol::Edit\s*\{|(?<![\w:])Edit\s*\{\s*line\s*:/, applies: historyClosurePluginProduction, allow: [], reason: "plugins never hand-build an edit; `ArtifactStoreOneItemLiveAuthority::next_edit` mints it from the Store authority" },
+  { id: "release-plain-commit", anchors: ["artifact_mutations", "Emit::mutations(", "Emit::commit("], pattern: /\bartifact_mutations\s*:|\bEmit::(?:mutations|commit)\(/, applies: historyClosurePluginProduction, allow: [], within: /pointer_up|_release$|^release_/, unless: /\b(?:commit|stream|abort)_transaction\b|\bnode_drag\w*|\bToolStep::/, reason: "a pointer/drag sequence commits through its tool machine (`commit_transaction`); a release handler never publishes an absolute final-state leaf (L6)" },
   { id: "footprint-hand", anchors: ["for_one_", "ArtifactStoreOneItemFootprint"], pattern: /\bfor_one_invertible_item\b|\bfor_one_item\b|\bArtifactStoreOneItemFootprint\s*\{\s*work_items\b/, applies: (path) => path.endsWith(".rs") && !path.startsWith(HISTORY_CLOSURE_STORE) && !HISTORY_CLOSURE_TESTS.test(path), allow: [], reason: "a fold footprint is derived from the leaf's `x-semio-inverse-rows` through `ArtifactStoreOneItemFootprint::for_leaf`; a hand count under-declares multi-row inverses" },
+  { id: "footprint-default", anchors: ["INPUT_SCHEMAS"], pattern: /\bconst\s+INPUT_SCHEMAS\b/, applies: (path) => path.endsWith(".rs") && !HISTORY_CLOSURE_TESTS.test(path), allow: [], item: { header: /^\s*impl\b.*(?<!Semantic)\bMutation</, unless: /\bfn\s+inverse_rows\b/ }, reason: "a hand-written aggregate that forwards leaf payload schemas forwards their `x-semio-inverse-rows` too (`fn inverse_rows`); the default single row under-declares every multi-row leaf (§20.5, CLOSURE-4)" },
 ];
+
+/** 🪧️ The header line and brace-balanced body of the Rust `impl`/`trait` item enclosing `index` in `lines`, or `undefined`. */
+function historyClosureEnclosingItem(lines: readonly string[], index: number): { readonly header: string; readonly body: string } | undefined {
+  for (let cursor = index; cursor >= 0; cursor--) if (/^\s*(?:pub(?:\([^)]*\))?\s+)?(?:unsafe\s+)?(?:impl|trait)\b/.test(lines[cursor]!)) return { header: lines[cursor]!, body: historyClosureFunctionBody(lines, cursor) };
+  return undefined;
+}
+
+/** 🧱️ The brace-balanced body text of the Rust function whose `fn` line is `start` in `lines`. */
+function historyClosureFunctionBody(lines: readonly string[], start: number): string {
+  let depth = 0;
+  let opened = false;
+  const body: string[] = [];
+  for (let cursor = start; cursor < lines.length; cursor++) {
+    body.push(lines[cursor]!);
+    for (const character of lines[cursor]!) {
+      if (character === "{") [depth, opened] = [depth + 1, true];
+      else if (character === "}") depth--;
+    }
+    if (opened && depth <= 0) break;
+  }
+  return body.join("\n");
+}
+
+/** 🔎️ The line index of the Rust `fn` enclosing `index` in `lines` (nearest preceding `fn name`), or `-1`. */
+function historyClosureEnclosingFunctionLine(lines: readonly string[], index: number): number {
+  for (let cursor = index; cursor >= 0; cursor--) if (/\bfn\s+\w+/.test(lines[cursor]!)) return cursor;
+  return -1;
+}
 
 /** 🔎️ The Rust function enclosing `index` in `lines` (nearest preceding `fn name`), or `undefined`. */
 function historyClosureEnclosingFunction(lines: readonly string[], index: number): string | undefined {
@@ -10041,6 +10145,15 @@ export function historyClosureFindings(sources: readonly { readonly path: string
         const hit = line.match(rule.pattern)?.[0];
         if (hit === undefined) continue;
         if (rule.functions && path.endsWith(".rs") && rule.functions.includes(historyClosureEnclosingFunction(lines, index) ?? "")) continue;
+        if (rule.within) {
+          const start = historyClosureEnclosingFunctionLine(lines, index);
+          const name = start < 0 ? "" : (lines[start]!.match(/\bfn\s+(\w+)/)?.[1] ?? "");
+          if (!rule.within.test(name) || (rule.unless && rule.unless.test(historyClosureFunctionBody(lines, start)))) continue;
+        }
+        if (rule.item) {
+          const item = historyClosureEnclosingItem(lines, index);
+          if (item === undefined || !rule.item.header.test(item.header) || rule.item.unless.test(item.body)) continue;
+        }
         findings.push({ rule: rule.id, file: path, line: index + 1, text: `[🚫️ ${rule.id}] ${hit}: ${rule.reason}` });
       }
     });
@@ -13727,6 +13840,11 @@ export class TestScript extends Script {
     const { level, rest } = resolveTestLevel(segments);
     if (rest[0] === "storybook") {
       await this.runStorybookPlaywright();
+      return;
+    }
+    if (rest[0] === "outcome-law-gate") {
+      if (rest.length !== 1) throw new Error("Expected test outcome-law-gate");
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.root, "🧪️tests/🧪️outcome-law-gate/🟦️.ts")], { cwd: this.root });
       return;
     }
     if (rest[0] === "repo-client") {
@@ -20817,10 +20935,10 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
  * (`OUTCOME_CODES`, persistence) and the TypeScript twin (`outcomeCodeLevel`) share. */
 const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json";
 type PolicyOutcomeLevel = "info" | "warning" | "error" | "fatal";
-type PolicyOutcomeVocabulary = Readonly<{ codes: ReadonlyMap<string, PolicyOutcomeLevel>; applyPattern: RegExp; applyLevel: PolicyOutcomeLevel }>;
+export type PolicyOutcomeVocabulary = Readonly<{ codes: ReadonlyMap<string, PolicyOutcomeLevel>; applyPattern: RegExp; applyLevel: PolicyOutcomeLevel }>;
 
 /** 📖️Reads the frozen vocabulary; a missing or malformed document fails the gate instead of admitting everything. */
-function policyOutcomeVocabulary(repoRoot: string): PolicyOutcomeVocabulary {
+export function policyOutcomeVocabulary(repoRoot: string): PolicyOutcomeVocabulary {
   const document = JSON.parse(policyReadFileSafe(repoRoot, POLICY_OUTCOME_CODE_FIXTURE)) as { codes: { code: string; level: PolicyOutcomeLevel }[]; apply: { pattern: string; level: PolicyOutcomeLevel } };
   return { codes: new Map(document.codes.map((row) => [row.code, row.level])), applyPattern: new RegExp(document.apply.pattern), applyLevel: document.apply.level };
 }
@@ -20925,17 +21043,19 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
         scope: artRel,
         priority: "high",
         reason: "The verb-family table requires real Error/Warning/Fatal/Info detection per verb family; no mutation architecture is exempt.",
-        solution: `Add the real detection this verb family requires (target missing ⇒ ::error("mutation.target-missing", ..), idempotent ⇒ .warn("mutation.no-op", ..), duplicate id / invariant ⇒ ::fatal(..), cascade ⇒ .info("mutation.cascade", ..)).`,
+        solution: `Add the real detection this verb family requires (target missing ⇒ ::error("mutation.target-missing", ..), idempotent ⇒ .warning("mutation.no-op", ..), duplicate id / invariant ⇒ ::fatal(..), cascade ⇒ .info("mutation.cascade", ..)).`,
       });
     }
   }
   return breaches;
 }
 
-/** 🔎️Rust outcome builders with the level they fix: `MutationOutcome::(error|fatal)(..)` and `MutationMessage::(info|warn|error|fatal)(..)`. */
-const POLICY_OUTCOME_RUST_BUILDER_RE = /\b(?:MutationOutcome::(error|fatal)|MutationMessage::(info|warn|error|fatal))\s*\(\s*"([^"]*)"/g;
-/** 🔎️The chainable `.info(..)`/`.warn(..)` shorthand — checked only inside a `fn` body that builds a `MutationOutcome`, so an unrelated `console.warn(..)`/`tracing::warn!` never matches. */
-const POLICY_OUTCOME_RUST_CHAIN_RE = /\.(info|warn)\s*\(\s*"([^"]*)"/g;
+/** 🔎️Rust outcome builders with the level they fix: `MutationOutcome::(error|fatal)(..)` and `MutationMessage::(info|warning|error|fatal)(..)`. */
+const POLICY_OUTCOME_RUST_BUILDER_RE = /\b(?:MutationOutcome::(error|fatal)|MutationMessage::(info|warning|error|fatal))\s*\(\s*"([^"]*)"/g;
+/** 🔎️The chainable `.info(..)`/`.warning(..)` shorthand — checked only inside a `fn` body that builds a `MutationOutcome`, so an unrelated sink's `.warning(..)`/`tracing::warn!` never matches. */
+const POLICY_OUTCOME_RUST_CHAIN_RE = /\.(info|warning)\s*\(\s*"([^"]*)"/g;
+/** 🔎️The retired `warn` builder spelling: `MutationMessage::warn(..)` anywhere, the chainable `.warn(..)` inside an outcome-building body. */
+const POLICY_OUTCOME_RUST_RETIRED_BUILDER_RE = /(?:\bMutationMessage::|\.)warn\s*\(/g;
 /** 🔎️Apply-time rejections (`MutationOutcome::apply_to` persists them as `Fatal` messages): `MutationApplyError::new("…")`, `MutationApplyError { code: "…" }`. */
 const POLICY_OUTCOME_RUST_APPLY_RE = /\bMutationApplyError(?:::new\s*\(\s*|\s*\{\s*code:\s*)"([^"]*)"/g;
 /** 🔎️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages (the retired `warn` spelling is matched so it is reported, never skipped). */
@@ -20991,84 +21111,108 @@ function policyOutcomeFnBodyMask(content: string): Uint8Array {
  */
 export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecord[] {
   const vocabulary = policyOutcomeVocabulary(repoRoot);
+  return policyMutationLawInventory(repoRoot).files.flatMap((relPath) => policyOutcomeCodeFileBreaches(vocabulary, relPath, policyReadFileSafe(repoRoot, relPath)));
+}
+
+/**
+ * 🔬️Rule 2 over ONE file, pure: the outcome-code positions of `content` (classified by `relPath`'s extension and domain
+ * segments) checked against `vocabulary`. A scanned level is whatever the source spells (`warn` included), so a retired or
+ * foreign spelling is reported instead of being cast into the vocabulary's level type. The planted-violation law
+ * (`🧪️tests/🧪️outcome-law-gate`) drives exactly this function.
+ */
+export function policyOutcomeCodeFileBreaches(vocabulary: PolicyOutcomeVocabulary, relPath: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const relPath of policyMutationLawInventory(repoRoot).files) {
-    const content = policyReadFileSafe(repoRoot, relPath);
-    if (!content) continue;
-    const reported = new Set<string>();
-    const check = (code: string, level: PolicyOutcomeLevel | null, index: number, apply = false) => {
-      const expected = policyOutcomeCodeLevel(vocabulary, code);
-      const fault = apply ? (vocabulary.applyPattern.test(code) ? null : "is not a mutation.apply.<detail> apply-rejection code") : expected === null ? "is not in the frozen outcome vocabulary" : level !== null && level !== expected ? `is fixed at ${expected}, not ${level}` : null;
-      if (fault === null) return;
-      const line = policyLineOfIndex(content, index);
-      if (reported.has(`${line}:${code}`)) return;
-      reported.add(`${line}:${code}`);
+  if (!content || (relPath.endsWith(".py") && !relPath.includes("🧪️tests/"))) return breaches;
+  const reported = new Set<string>();
+  const check = (code: string, level: string | null, index: number, apply = false) => {
+    const expected = policyOutcomeCodeLevel(vocabulary, code);
+    const fault = apply ? (vocabulary.applyPattern.test(code) ? null : "is not a mutation.apply.<detail> apply-rejection code") : expected === null ? "is not in the frozen outcome vocabulary" : level !== null && level !== expected ? `is fixed at ${expected}, not ${level}` : null;
+    if (fault === null) return;
+    const line = policyLineOfIndex(content, index);
+    if (reported.has(`${line}:${code}`)) return;
+    reported.add(`${line}:${code}`);
+    breaches.push({
+      id: `mutation-message-code-${relPath}-${line}-${code}`,
+      summary: `"${relPath}:${line}" outcome code "${code}"${level === null ? "" : ` at ${level}`} ${fault}`,
+      kind: "mutation-migration/message-code",
+      scope: relPath,
+      line,
+      priority: "high",
+      reason: "Persistence admits exactly the frozen outcome vocabulary, each code at its one level (`🎮️mutation/🧫️fixtures/🧫️outcome-code`); any other code or level makes the history unpersistable. There are no per-plugin codes.",
+      solution: "Map the refusal by meaning: missing → mutation.target-missing, still referenced → mutation.target-referenced, inconsistent with the current state → mutation.target-mismatch, duplicate identity → mutation.duplicate-id, payload-intrinsic → mutation.invariant (+ schema bound or x-semio-invariant), apply-time failure → mutation.apply.<detail>; use the level the vocabulary fixes (MutationOutcome::refuse picks it for runtime codes).",
+    });
+  };
+  const scan = (re: RegExp, visit: (m: RegExpExecArray) => void) => {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(content))) visit(m);
+  };
+  const leaf = POLICY_OUTCOME_LEAF_SEGMENTS.some((segment) => `/${relPath}`.includes(segment));
+  if (relPath.endsWith(".rs")) {
+    scan(POLICY_OUTCOME_RUST_BUILDER_RE, (m) => check(m[3]!, (m[1] ?? m[2])!, m.index));
+    scan(POLICY_OUTCOME_RUST_APPLY_RE, (m) => check(m[1]!, null, m.index, true));
+    if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+    const bodies = content.includes("MutationOutcome") ? policyOutcomeFnBodyMask(content) : new Uint8Array(content.length);
+    scan(POLICY_OUTCOME_RUST_CHAIN_RE, (m) => {
+      if (bodies[m.index] === 1) check(m[2]!, m[1]!, m.index);
+    });
+    scan(POLICY_OUTCOME_RUST_RETIRED_BUILDER_RE, (m) => {
+      if (m[0].startsWith(".") && bodies[m.index] !== 1) return;
+      const line = policyLineOfIndex(content, m.index);
       breaches.push({
-        id: `mutation-message-code-${relPath}-${line}-${code}`,
-        summary: `"${relPath}:${line}" outcome code "${code}"${level === null ? "" : ` at ${level}`} ${fault}`,
+        id: `mutation-message-retired-builder-${relPath}-${line}-${m.index}`,
+        summary: `"${relPath}:${line}" outcome builder "warn" is a retired spelling of "warning"`,
         kind: "mutation-migration/message-code",
         scope: relPath,
         line,
         priority: "high",
-        reason: "Persistence admits exactly the frozen outcome vocabulary, each code at its one level (`🎮️mutation/🧫️fixtures/🧫️outcome-code`); any other code or level makes the history unpersistable. There are no per-plugin codes.",
-        solution: "Map the refusal by meaning: missing → mutation.target-missing, still referenced → mutation.target-referenced, inconsistent with the current state → mutation.target-mismatch, duplicate identity → mutation.duplicate-id, payload-intrinsic → mutation.invariant (+ schema bound or x-semio-invariant), apply-time failure → mutation.apply.<detail>; use the level the vocabulary fixes (MutationOutcome::refuse picks it for runtime codes).",
+        reason: "An outcome level has one spelling in the API as on the wire: `MutationMessage::warning` / `MutationOutcome::warning` build the `warning` level.",
+        solution: "Call `MutationMessage::warning(..)` / `.warning(..)`.",
       });
+    });
+    scan(POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE, (m) => {
+      const line = policyLineOfIndex(content, m.index);
+      breaches.push({
+        id: `mutation-message-level-alias-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" outcome level "warn" is a retired spelling of "warning"`,
+        kind: "mutation-migration/message-code",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "An outcome level has one wire spelling (`info`, `warning`, `error`, `fatal` — `Severity`'s own encoding); a decoder that also admits `warn` lets a non-canonical document pass as valid.",
+        solution: 'Decode only "warning" (or use the `Severity` value decoder) and write "warning" in every committed outcome.',
+      });
+    });
+  } else if (relPath.endsWith(".ts") || relPath.endsWith(".tsx")) {
+    scan(POLICY_OUTCOME_TS_REFUSE_RE, (m) => check(m[2]!, m[1]!, m.index));
+    scan(POLICY_OUTCOME_TS_OBJECT_RE, (m) => check((m[2] ?? m[3])!, (m[1] ?? m[4])!, m.index));
+    if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+  } else if (relPath.endsWith(".py")) {
+    scan(POLICY_OUTCOME_PY_TUPLE_RE, (m) => check(m[2]!, m[1]!, m.index));
+    scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+  } else if (relPath.endsWith(".feature")) {
+    scan(POLICY_OUTCOME_FEATURE_TOKEN_RE, (m) => {
+      if (!/\.(json|rs|ts|tsx|py|md|txt)$/.test(m[1]!)) check(m[1]!, null, m.index);
+    });
+    scan(POLICY_OUTCOME_FEATURE_MESSAGE_RE, (m) => check(m[2]!, m[1]!, m.index));
+  } else {
+    let outcome: unknown;
+    try {
+      outcome = JSON.parse(content);
+    } catch {
+      return breaches;
+    }
+    if (outcome === null || typeof outcome !== "object") return breaches;
+    const level = (value: unknown): string | null => (typeof value === "string" ? value : null);
+    const record = outcome as { code?: unknown; level?: unknown; messages?: unknown };
+    let cursor = 0;
+    const locate = (code: string): number => {
+      const at = content.indexOf(JSON.stringify(code), cursor);
+      cursor = at === -1 ? cursor : at + 1;
+      return at === -1 ? 0 : at;
     };
-    const scan = (re: RegExp, visit: (m: RegExpExecArray) => void) => {
-      re.lastIndex = 0;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(content))) visit(m);
-    };
-    const leaf = POLICY_OUTCOME_LEAF_SEGMENTS.some((segment) => `/${relPath}`.includes(segment));
-    if (relPath.endsWith(".rs")) {
-      scan(POLICY_OUTCOME_RUST_BUILDER_RE, (m) => check(m[3]!, ((m[1] ?? m[2]) === "warn" ? "warning" : (m[1] ?? m[2])) as PolicyOutcomeLevel, m.index));
-      scan(POLICY_OUTCOME_RUST_APPLY_RE, (m) => check(m[1]!, null, m.index, true));
-      if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
-      if (content.includes("MutationOutcome")) {
-        const bodies = policyOutcomeFnBodyMask(content);
-        scan(POLICY_OUTCOME_RUST_CHAIN_RE, (m) => {
-          if (bodies[m.index] === 1) check(m[2]!, m[1] === "warn" ? "warning" : "info", m.index);
-        });
-      }
-      scan(POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE, (m) => {
-        const line = policyLineOfIndex(content, m.index);
-        breaches.push({
-          id: `mutation-message-level-alias-${relPath}-${line}`,
-          summary: `"${relPath}:${line}" outcome level "warn" is a retired spelling of "warning"`,
-          kind: "mutation-migration/message-code",
-          scope: relPath,
-          line,
-          priority: "high",
-          reason: "An outcome level has one wire spelling (`info`, `warning`, `error`, `fatal` — `Severity`'s own encoding); a decoder that also admits `warn` lets a non-canonical document pass as valid.",
-          solution: 'Decode only "warning" (or use the `Severity` value decoder) and write "warning" in every committed outcome.',
-        });
-      });
-    } else if (relPath.endsWith(".ts") || relPath.endsWith(".tsx")) {
-      scan(POLICY_OUTCOME_TS_REFUSE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
-      scan(POLICY_OUTCOME_TS_OBJECT_RE, (m) => check((m[2] ?? m[3])!, (m[1] ?? m[4]) as PolicyOutcomeLevel, m.index));
-      if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
-    } else if (relPath.endsWith(".py")) {
-      if (!relPath.includes("🧪️tests/")) continue;
-      scan(POLICY_OUTCOME_PY_TUPLE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
-      scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
-    } else if (relPath.endsWith(".feature")) {
-      scan(POLICY_OUTCOME_FEATURE_TOKEN_RE, (m) => {
-        if (!/\.(json|rs|ts|tsx|py|md|txt)$/.test(m[1]!)) check(m[1]!, null, m.index);
-      });
-      scan(POLICY_OUTCOME_FEATURE_MESSAGE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
-    } else {
-      let outcome: unknown;
-      try {
-        outcome = JSON.parse(content);
-      } catch {
-        continue;
-      }
-      const level = (value: unknown): PolicyOutcomeLevel | null => (typeof value === "string" ? (value as PolicyOutcomeLevel) : null);
-      const record = outcome as { code?: unknown; level?: unknown; messages?: unknown };
-      if (typeof record.code === "string") check(record.code, level(record.level), content.indexOf(`"${record.code}"`));
-      for (const message of Array.isArray(record.messages) ? (record.messages as { code?: unknown; level?: unknown }[]) : []) {
-        if (typeof message.code === "string") check(message.code, level(message.level), content.indexOf(`"${message.code}"`));
-      }
+    for (const message of [record, ...(Array.isArray(record.messages) ? (record.messages as { code?: unknown; level?: unknown }[]) : [])]) {
+      if (message !== null && typeof message === "object" && typeof message.code === "string") check(message.code, level(message.level), locate(message.code));
     }
   }
   return breaches;

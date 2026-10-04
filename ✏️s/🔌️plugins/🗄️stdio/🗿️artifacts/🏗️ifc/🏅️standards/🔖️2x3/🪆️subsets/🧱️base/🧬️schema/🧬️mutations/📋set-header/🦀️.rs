@@ -17,9 +17,12 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for SetHeader {
     fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
         agg_diff(&Ifc2x3Mutation::SetHeader(self.clone()), base)
     }
-    fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Mutation> {
-        agg_inverse(&Ifc2x3Mutation::SetHeader(self.clone()), base)
-    }
+    fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&Ifc2x3Mutation::SetHeader(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set header", "Header setzen")
     }

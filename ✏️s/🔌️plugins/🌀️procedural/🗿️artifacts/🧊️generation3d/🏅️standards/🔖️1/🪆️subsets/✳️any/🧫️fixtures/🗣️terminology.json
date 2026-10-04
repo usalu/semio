@@ -20,7 +20,9 @@
     "input_name_v",
     "input_name_x",
     "input_name_y",
-    "input_name_z"
+    "input_name_z",
+    "mesh_interpolation",
+    "input_name_matrix"
   ],
   "labels": {
     "widgets": {
@@ -1762,6 +1764,622 @@
       "nativeDe": "Achse",
       "reuseEn": "Axis",
       "reuseDe": "Achse"
+    },
+    "input_list_item": {
+      "nativeEn": "Item",
+      "nativeDe": "Eintrag",
+      "reuseEn": "Item",
+      "reuseDe": "Eintrag"
+    },
+    "input_list_add": {
+      "nativeEn": "Add item",
+      "nativeDe": "Eintrag hinzufügen",
+      "reuseEn": "Add item",
+      "reuseDe": "Eintrag hinzufügen"
+    },
+    "input_list_remove": {
+      "nativeEn": "Remove item",
+      "nativeDe": "Eintrag entfernen",
+      "reuseEn": "Remove item",
+      "reuseDe": "Eintrag entfernen"
+    },
+    "input_list_up": {
+      "nativeEn": "Move item up",
+      "nativeDe": "Eintrag nach oben",
+      "reuseEn": "Move item up",
+      "reuseDe": "Eintrag nach oben"
+    },
+    "input_list_down": {
+      "nativeEn": "Move item down",
+      "nativeDe": "Eintrag nach unten",
+      "reuseEn": "Move item down",
+      "reuseDe": "Eintrag nach unten"
+    },
+    "input_variable_name": {
+      "nativeEn": "Variable name",
+      "nativeDe": "Variablenname",
+      "reuseEn": "Variable name",
+      "reuseDe": "Variablenname"
+    },
+    "input_variable_type": {
+      "nativeEn": "Variable type",
+      "nativeDe": "Variablentyp",
+      "reuseEn": "Variable type",
+      "reuseDe": "Variablentyp"
+    },
+    "input_export_format": {
+      "nativeEn": "Export format",
+      "nativeDe": "Exportformat",
+      "reuseEn": "Export format",
+      "reuseDe": "Exportformat"
+    },
+    "input_export_connected": {
+      "nativeEn": "Export connected geometry",
+      "nativeDe": "Verbundene Geometrie exportieren",
+      "reuseEn": "Export connected geometry",
+      "reuseDe": "Verbundene Geometrie exportieren"
+    },
+    "input_value_unavailable": {
+      "nativeEn": "Value not available",
+      "nativeDe": "Wert nicht verfügbar",
+      "reuseEn": "Value not available",
+      "reuseDe": "Wert nicht verfügbar"
+    },
+    "input_export_pending": {
+      "nativeEn": "Connected geometry is not ready",
+      "nativeDe": "Verbundene Geometrie ist noch nicht bereit",
+      "reuseEn": "Connected geometry is not ready",
+      "reuseDe": "Verbundene Geometrie ist noch nicht bereit"
+    },
+    "mesh_source": {
+      "nativeEn": "Mesh source",
+      "nativeDe": "Netzquelle",
+      "reuseEn": "Mesh source",
+      "reuseDe": "Netzquelle"
+    },
+    "mesh_attributes": {
+      "nativeEn": "Attributes",
+      "nativeDe": "Attribute",
+      "reuseEn": "Attributes",
+      "reuseDe": "Attribute"
+    },
+    "mesh_domain": {
+      "nativeEn": "Domain",
+      "nativeDe": "Zuordnung",
+      "reuseEn": "Domain",
+      "reuseDe": "Zuordnung"
+    },
+    "mesh_semantic": {
+      "nativeEn": "Meaning",
+      "nativeDe": "Bedeutung",
+      "reuseEn": "Meaning",
+      "reuseDe": "Bedeutung"
+    },
+    "mesh_interpolation": {
+      "nativeEn": "Interpolation",
+      "nativeDe": "Interpolation",
+      "reuseEn": "Interpolation",
+      "reuseDe": "Interpolation"
+    },
+    "mesh_values": {
+      "nativeEn": "Values",
+      "nativeDe": "Werte",
+      "reuseEn": "Values",
+      "reuseDe": "Werte"
+    },
+    "mesh_indices": {
+      "nativeEn": "Sample indices",
+      "nativeDe": "Abtastindizes",
+      "reuseEn": "Sample indices",
+      "reuseDe": "Abtastindizes"
+    },
+    "mesh_invalid": {
+      "nativeEn": "Mesh source is invalid",
+      "nativeDe": "Netzquelle ist ungültig",
+      "reuseEn": "Mesh source is invalid",
+      "reuseDe": "Netzquelle ist ungültig"
+    },
+    "catalogue_brep_mesh_transform": {
+      "nativeEn": "Transform Mesh",
+      "nativeDe": "Mesh transformieren",
+      "reuseEn": "Transform Mesh",
+      "reuseDe": "Mesh transformieren"
+    },
+    "input_name_matrix": {
+      "nativeEn": "Matrix",
+      "nativeDe": "Matrix",
+      "reuseEn": "Matrix",
+      "reuseDe": "Matrix"
+    },
+    "mesh_add_uv": {
+      "nativeEn": "Add UV attribute",
+      "nativeDe": "UV-Attribut hinzufügen",
+      "reuseEn": "Add UV attribute",
+      "reuseDe": "UV-Attribut hinzufügen"
+    },
+    "mesh_add_normal": {
+      "nativeEn": "Add normal attribute",
+      "nativeDe": "Normalenattribut hinzufügen",
+      "reuseEn": "Add normal attribute",
+      "reuseDe": "Normalenattribut hinzufügen"
+    },
+    "mesh_add_color": {
+      "nativeEn": "Add color attribute",
+      "nativeDe": "Farbattribut hinzufügen",
+      "reuseEn": "Add color attribute",
+      "reuseDe": "Farbattribut hinzufügen"
+    },
+    "mesh_add_number": {
+      "nativeEn": "Add number attribute",
+      "nativeDe": "Zahlenattribut hinzufügen",
+      "reuseEn": "Add number attribute",
+      "reuseDe": "Zahlenattribut hinzufügen"
+    },
+    "mesh_add_text": {
+      "nativeEn": "Add text attribute",
+      "nativeDe": "Textattribut hinzufügen",
+      "reuseEn": "Add text attribute",
+      "reuseDe": "Textattribut hinzufügen"
+    },
+    "mesh_add_boolean": {
+      "nativeEn": "Add boolean attribute",
+      "nativeDe": "Wahrheitsattribut hinzufügen",
+      "reuseEn": "Add boolean attribute",
+      "reuseDe": "Wahrheitsattribut hinzufügen"
+    },
+    "mesh_add_vector": {
+      "nativeEn": "Add vector attribute",
+      "nativeDe": "Vektorattribut hinzufügen",
+      "reuseEn": "Add vector attribute",
+      "reuseDe": "Vektorattribut hinzufügen"
+    },
+    "mesh_materials": {
+      "nativeEn": "Materials",
+      "nativeDe": "Materialien",
+      "reuseEn": "Materials",
+      "reuseDe": "Materialien"
+    },
+    "mesh_textures": {
+      "nativeEn": "Textures",
+      "nativeDe": "Texturen",
+      "reuseEn": "Textures",
+      "reuseDe": "Texturen"
+    },
+    "mesh_add_material": {
+      "nativeEn": "Add material",
+      "nativeDe": "Material hinzufügen",
+      "reuseEn": "Add material",
+      "reuseDe": "Material hinzufügen"
+    },
+    "mesh_asset_name": {
+      "nativeEn": "Asset name",
+      "nativeDe": "Assetname",
+      "reuseEn": "Asset name",
+      "reuseDe": "Assetname"
+    },
+    "mesh_base_color": {
+      "nativeEn": "Base color",
+      "nativeDe": "Grundfarbe",
+      "reuseEn": "Base color",
+      "reuseDe": "Grundfarbe"
+    },
+    "mesh_metallic": {
+      "nativeEn": "Metallic",
+      "nativeDe": "Metallisch",
+      "reuseEn": "Metallic",
+      "reuseDe": "Metallisch"
+    },
+    "mesh_roughness": {
+      "nativeEn": "Roughness",
+      "nativeDe": "Rauheit",
+      "reuseEn": "Roughness",
+      "reuseDe": "Rauheit"
+    },
+    "mesh_emissive": {
+      "nativeEn": "Emissive",
+      "nativeDe": "Emission",
+      "reuseEn": "Emissive",
+      "reuseDe": "Emission"
+    },
+    "mesh_normal_scale": {
+      "nativeEn": "Normal scale",
+      "nativeDe": "Normalenskalierung",
+      "reuseEn": "Normal scale",
+      "reuseDe": "Normalenskalierung"
+    },
+    "mesh_occlusion_strength": {
+      "nativeEn": "Occlusion strength",
+      "nativeDe": "Verdeckungsstärke",
+      "reuseEn": "Occlusion strength",
+      "reuseDe": "Verdeckungsstärke"
+    },
+    "mesh_alpha_mode": {
+      "nativeEn": "Alpha mode",
+      "nativeDe": "Alphamodus",
+      "reuseEn": "Alpha mode",
+      "reuseDe": "Alphamodus"
+    },
+    "mesh_alpha_cutoff": {
+      "nativeEn": "Alpha cutoff",
+      "nativeDe": "Alphagrenzwert",
+      "reuseEn": "Alpha cutoff",
+      "reuseDe": "Alphagrenzwert"
+    },
+    "mesh_double_sided": {
+      "nativeEn": "Double sided",
+      "nativeDe": "Doppelseitig",
+      "reuseEn": "Double sided",
+      "reuseDe": "Doppelseitig"
+    },
+    "mesh_base_color_texture": {
+      "nativeEn": "Base color texture",
+      "nativeDe": "Grundfarbtextur",
+      "reuseEn": "Base color texture",
+      "reuseDe": "Grundfarbtextur"
+    },
+    "mesh_metallic_roughness_texture": {
+      "nativeEn": "Metallic roughness texture",
+      "nativeDe": "Metall-Rauheit-Textur",
+      "reuseEn": "Metallic roughness texture",
+      "reuseDe": "Metall-Rauheit-Textur"
+    },
+    "mesh_normal_texture": {
+      "nativeEn": "Normal texture",
+      "nativeDe": "Normalentextur",
+      "reuseEn": "Normal texture",
+      "reuseDe": "Normalentextur"
+    },
+    "mesh_occlusion_texture": {
+      "nativeEn": "Occlusion texture",
+      "nativeDe": "Verdeckungstextur",
+      "reuseEn": "Occlusion texture",
+      "reuseDe": "Verdeckungstextur"
+    },
+    "mesh_emissive_texture": {
+      "nativeEn": "Emissive texture",
+      "nativeDe": "Emissionstextur",
+      "reuseEn": "Emissive texture",
+      "reuseDe": "Emissionstextur"
+    },
+    "mesh_uv_set": {
+      "nativeEn": "UV set",
+      "nativeDe": "UV-Satz",
+      "reuseEn": "UV set",
+      "reuseDe": "UV-Satz"
+    },
+    "mesh_wrap_s": {
+      "nativeEn": "Wrap S",
+      "nativeDe": "S-Wiederholung",
+      "reuseEn": "Wrap S",
+      "reuseDe": "S-Wiederholung"
+    },
+    "mesh_wrap_t": {
+      "nativeEn": "Wrap T",
+      "nativeDe": "T-Wiederholung",
+      "reuseEn": "Wrap T",
+      "reuseDe": "T-Wiederholung"
+    },
+    "mesh_mag_filter": {
+      "nativeEn": "Magnification filter",
+      "nativeDe": "Vergrößerungsfilter",
+      "reuseEn": "Magnification filter",
+      "reuseDe": "Vergrößerungsfilter"
+    },
+    "mesh_min_filter": {
+      "nativeEn": "Minification filter",
+      "nativeDe": "Verkleinerungsfilter",
+      "reuseEn": "Minification filter",
+      "reuseDe": "Verkleinerungsfilter"
+    },
+    "mesh_no_texture": {
+      "nativeEn": "No texture",
+      "nativeDe": "Keine Textur",
+      "reuseEn": "No texture",
+      "reuseDe": "Keine Textur"
+    },
+    "mesh_material_assignment": {
+      "nativeEn": "Assign material",
+      "nativeDe": "Material zuweisen",
+      "reuseEn": "Assign material",
+      "reuseDe": "Material zuweisen"
+    },
+    "mesh_vertex_domain": {
+      "nativeEn": "Vertex",
+      "nativeDe": "Punkt",
+      "reuseEn": "Vertex",
+      "reuseDe": "Punkt"
+    },
+    "mesh_face_domain": {
+      "nativeEn": "Face",
+      "nativeDe": "Fläche",
+      "reuseEn": "Face",
+      "reuseDe": "Fläche"
+    },
+    "mesh_edge_domain": {
+      "nativeEn": "Edge",
+      "nativeDe": "Kante",
+      "reuseEn": "Edge",
+      "reuseDe": "Kante"
+    },
+    "mesh_corner_domain": {
+      "nativeEn": "Corner",
+      "nativeDe": "Ecke",
+      "reuseEn": "Corner",
+      "reuseDe": "Ecke"
+    },
+    "mesh_outputs": {
+      "nativeEn": "Outputs",
+      "nativeDe": "Ausgaben",
+      "reuseEn": "Outputs",
+      "reuseDe": "Ausgaben"
+    },
+    "mesh_output_stale": {
+      "nativeEn": "Value is stale",
+      "nativeDe": "Wert ist veraltet",
+      "reuseEn": "Value is stale",
+      "reuseDe": "Wert ist veraltet"
+    },
+    "mesh_output_error": {
+      "nativeEn": "Evaluation failed",
+      "nativeDe": "Auswertung fehlgeschlagen",
+      "reuseEn": "Evaluation failed",
+      "reuseDe": "Auswertung fehlgeschlagen"
+    },
+    "mesh_import_texture": {
+      "nativeEn": "Import texture",
+      "nativeDe": "Textur importieren",
+      "reuseEn": "Import texture",
+      "reuseDe": "Textur importieren"
+    },
+    "mesh_replace_texture": {
+      "nativeEn": "Replace texture",
+      "nativeDe": "Textur ersetzen",
+      "reuseEn": "Replace texture",
+      "reuseDe": "Textur ersetzen"
+    },
+    "mesh_alpha_opaque": {
+      "nativeEn": "Opaque",
+      "nativeDe": "Undurchsichtig",
+      "reuseEn": "Opaque",
+      "reuseDe": "Undurchsichtig"
+    },
+    "mesh_alpha_mask": {
+      "nativeEn": "Cutout",
+      "nativeDe": "Ausschnitt",
+      "reuseEn": "Cutout",
+      "reuseDe": "Ausschnitt"
+    },
+    "mesh_alpha_blend": {
+      "nativeEn": "Blend",
+      "nativeDe": "Mischen",
+      "reuseEn": "Blend",
+      "reuseDe": "Mischen"
+    },
+    "mesh_wrap_clamp": {
+      "nativeEn": "Clamp to edge",
+      "nativeDe": "Am Rand begrenzen",
+      "reuseEn": "Clamp to edge",
+      "reuseDe": "Am Rand begrenzen"
+    },
+    "mesh_wrap_mirror": {
+      "nativeEn": "Mirrored repeat",
+      "nativeDe": "Gespiegelt wiederholen",
+      "reuseEn": "Mirrored repeat",
+      "reuseDe": "Gespiegelt wiederholen"
+    },
+    "mesh_wrap_repeat": {
+      "nativeEn": "Repeat",
+      "nativeDe": "Wiederholen",
+      "reuseEn": "Repeat",
+      "reuseDe": "Wiederholen"
+    },
+    "mesh_filter_nearest": {
+      "nativeEn": "Nearest pixel",
+      "nativeDe": "Nächstes Pixel",
+      "reuseEn": "Nearest pixel",
+      "reuseDe": "Nächstes Pixel"
+    },
+    "mesh_filter_linear": {
+      "nativeEn": "Smooth pixels",
+      "nativeDe": "Pixel glätten",
+      "reuseEn": "Smooth pixels",
+      "reuseDe": "Pixel glätten"
+    },
+    "mesh_filter_nearest_nearest": {
+      "nativeEn": "Nearest pixels, nearest level",
+      "nativeDe": "Nächste Pixel, nächste Stufe",
+      "reuseEn": "Nearest pixels, nearest level",
+      "reuseDe": "Nächste Pixel, nächste Stufe"
+    },
+    "mesh_filter_linear_nearest": {
+      "nativeEn": "Smooth pixels, nearest level",
+      "nativeDe": "Geglättete Pixel, nächste Stufe",
+      "reuseEn": "Smooth pixels, nearest level",
+      "reuseDe": "Geglättete Pixel, nächste Stufe"
+    },
+    "mesh_filter_nearest_linear": {
+      "nativeEn": "Nearest pixels, smooth levels",
+      "nativeDe": "Nächste Pixel, geglättete Stufen",
+      "reuseEn": "Nearest pixels, smooth levels",
+      "reuseDe": "Nächste Pixel, geglättete Stufen"
+    },
+    "mesh_filter_linear_linear": {
+      "nativeEn": "Smooth pixels and levels",
+      "nativeDe": "Pixel und Stufen glätten",
+      "reuseEn": "Smooth pixels and levels",
+      "reuseDe": "Pixel und Stufen glätten"
+    },
+    "mesh_output_area": {
+      "nativeEn": "Area",
+      "nativeDe": "Fläche",
+      "reuseEn": "Area",
+      "reuseDe": "Fläche"
+    },
+    "mesh_output_volume": {
+      "nativeEn": "Volume",
+      "nativeDe": "Volumen",
+      "reuseEn": "Volume",
+      "reuseDe": "Volumen"
+    },
+    "mesh_output_report": {
+      "nativeEn": "Report",
+      "nativeDe": "Bericht",
+      "reuseEn": "Report",
+      "reuseDe": "Bericht"
+    },
+    "mesh_output_topology": {
+      "nativeEn": "Topology",
+      "nativeDe": "Topologie",
+      "reuseEn": "Topology",
+      "reuseDe": "Topologie"
+    },
+    "mesh_output_triangles": {
+      "nativeEn": "Triangles",
+      "nativeDe": "Dreiecke",
+      "reuseEn": "Triangles",
+      "reuseDe": "Dreiecke"
+    },
+    "mesh_output_boundary_edges": {
+      "nativeEn": "Boundary edges",
+      "nativeDe": "Randkanten",
+      "reuseEn": "Boundary edges",
+      "reuseDe": "Randkanten"
+    },
+    "mesh_output_non_manifold_edges": {
+      "nativeEn": "Non-manifold edges",
+      "nativeDe": "Nicht-mannigfaltige Kanten",
+      "reuseEn": "Non-manifold edges",
+      "reuseDe": "Nicht-mannigfaltige Kanten"
+    },
+    "mesh_output_inconsistent_edges": {
+      "nativeEn": "Inconsistent edges",
+      "nativeDe": "Inkonsistente Kanten",
+      "reuseEn": "Inconsistent edges",
+      "reuseDe": "Inkonsistente Kanten"
+    },
+    "mesh_output_degenerate_triangles": {
+      "nativeEn": "Degenerate triangles",
+      "nativeDe": "Entartete Dreiecke",
+      "reuseEn": "Degenerate triangles",
+      "reuseDe": "Entartete Dreiecke"
+    },
+    "mesh_output_minimum": {
+      "nativeEn": "Minimum point",
+      "nativeDe": "Minimalpunkt",
+      "reuseEn": "Minimum point",
+      "reuseDe": "Minimalpunkt"
+    },
+    "mesh_output_maximum": {
+      "nativeEn": "Maximum point",
+      "nativeDe": "Maximalpunkt",
+      "reuseEn": "Maximum point",
+      "reuseDe": "Maximalpunkt"
+    },
+    "mesh_output_center": {
+      "nativeEn": "Center",
+      "nativeDe": "Mittelpunkt",
+      "reuseEn": "Center",
+      "reuseDe": "Mittelpunkt"
+    },
+    "input_connect_hint": {
+      "nativeEn": "Connect an output",
+      "nativeDe": "Ausgang verbinden",
+      "reuseEn": "Connect an output",
+      "reuseDe": "Ausgang verbinden"
+    },
+    "input_connected": {
+      "nativeEn": "Connected",
+      "nativeDe": "Verbunden",
+      "reuseEn": "Connected",
+      "reuseDe": "Verbunden"
+    },
+    "input_text_too_long": {
+      "nativeEn": "Edit large text in the graph source",
+      "nativeDe": "Langen Text im Quellknoten bearbeiten",
+      "reuseEn": "Edit large text in the graph source",
+      "reuseDe": "Langen Text im Quellknoten bearbeiten"
+    },
+    "input_name_shell": {
+      "nativeEn": "Shells",
+      "nativeDe": "Schalen",
+      "reuseEn": "Shells",
+      "reuseDe": "Schalen"
+    },
+    "input_name_label": {
+      "nativeEn": "Topology label",
+      "nativeDe": "Topologiekennzeichnung",
+      "reuseEn": "Topology label",
+      "reuseDe": "Topologiekennzeichnung"
+    },
+    "catalogue_brep_shell": {
+      "nativeEn": "Shell",
+      "nativeDe": "Schale",
+      "reuseEn": "Shell",
+      "reuseDe": "Schale"
+    },
+    "input_name_shell_out": {
+      "nativeEn": "Shell",
+      "nativeDe": "Schale",
+      "reuseEn": "Shell",
+      "reuseDe": "Schale"
+    },
+    "input_name_errors": {
+      "nativeEn": "Errors",
+      "nativeDe": "Fehler",
+      "reuseEn": "Errors",
+      "reuseDe": "Fehler"
+    },
+    "input_name_edge_labels": {
+      "nativeEn": "Selected edge labels",
+      "nativeDe": "Kennzeichnungen ausgewählter Kanten",
+      "reuseEn": "Selected edge labels",
+      "reuseDe": "Kennzeichnungen ausgewählter Kanten"
+    },
+    "input_name_face_labels": {
+      "nativeEn": "Selected face labels",
+      "nativeDe": "Kennzeichnungen ausgewählter Flächen",
+      "reuseEn": "Selected face labels",
+      "reuseDe": "Kennzeichnungen ausgewählter Flächen"
+    },
+    "input_name_selected_edges": {
+      "nativeEn": "Selected edges",
+      "nativeDe": "Ausgewählte Kanten",
+      "reuseEn": "Selected edges",
+      "reuseDe": "Ausgewählte Kanten"
+    },
+    "input_name_source_handle": {
+      "nativeEn": "Source geometry",
+      "nativeDe": "Quellgeometrie",
+      "reuseEn": "Source geometry",
+      "reuseDe": "Quellgeometrie"
+    },
+    "input_name_source_index": {
+      "nativeEn": "Source index",
+      "nativeDe": "Quellindex",
+      "reuseEn": "Source index",
+      "reuseDe": "Quellindex"
+    },
+    "input_name_selected_faces": {
+      "nativeEn": "Selected faces",
+      "nativeDe": "Ausgewählte Flächen",
+      "reuseEn": "Selected faces",
+      "reuseDe": "Ausgewählte Flächen"
     }
+  },
+  "portLabels": {
+    "shell": "input_name_shell",
+    "label": "input_name_label",
+    "shellOut": "input_name_shell_out",
+    "handleOut": "input_name_handle",
+    "errors": "input_name_errors",
+    "edgeLabels": "input_name_edge_labels",
+    "faceLabels": "input_name_face_labels",
+    "selectedEdges": "input_name_selected_edges",
+    "selectedFaces": "input_name_selected_faces",
+    "sourceHandle": "input_name_source_handle",
+    "sourceIndex": "input_name_source_index"
+  },
+  "catalogueLabels": {
+    "brep.shell": "catalogue_brep_shell"
   }
 }

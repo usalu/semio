@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::puzzle3d_apply_distribution_weight;
 use crate::editor::puzzle3d::puzzle3d_kind_ids;
 use crate::editor::puzzle3d::sync_precompute_weights;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🎲️ `setObjectKindWeight`/`setVortexKindWeight` — joint probabilities across the nested tree sum to 1.
 pub fn set_kind_weight(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {

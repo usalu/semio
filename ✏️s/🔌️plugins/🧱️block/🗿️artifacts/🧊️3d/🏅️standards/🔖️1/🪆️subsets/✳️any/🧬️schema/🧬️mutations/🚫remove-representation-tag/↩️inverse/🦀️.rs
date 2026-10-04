@@ -4,7 +4,8 @@ use crate::Block3dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
+pub fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -13,5 +14,7 @@ pub fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot)
     } else {
         Vec::new()
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

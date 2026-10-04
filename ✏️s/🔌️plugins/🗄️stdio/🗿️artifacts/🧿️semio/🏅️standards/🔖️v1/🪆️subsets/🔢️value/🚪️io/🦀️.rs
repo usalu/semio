@@ -66,7 +66,7 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioValueValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
@@ -74,7 +74,7 @@ pub mod derived_composition {
             let snapshot = match decoded {
                 Some(snapshot) => snapshot,
                 None => {
-                    return vec![dsl::Diagnostic::error("stdio.semio_value.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioValueValidator: payload did not decode as a SemioValueSnapshot".to_string())];
+                    return vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_value.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioValueValidator: payload did not decode as a SemioValueSnapshot".to_string())];
                 }
             };
 
@@ -84,7 +84,7 @@ pub mod derived_composition {
             let mut seen_ids: HashSet<&ValueId> = HashSet::new();
             for node in &snapshot.nodes {
                 if !seen_ids.insert(&node.id) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_value.validate-duplicate-id", dsl::TextSpan::at(1, 1), format!("SemioValueValidator: duplicate value id '{}' in `nodes`", node.id.value)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_value.validate-duplicate-id", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioValueValidator: duplicate value id '{}' in `nodes`", node.id.value)));
                 }
             }
 
@@ -96,7 +96,7 @@ pub mod derived_composition {
             let mut reported_dangling: HashSet<String> = HashSet::new();
             for id in refs {
                 if !known_ids.contains(&id) && reported_dangling.insert(id.value.clone()) {
-                    diagnostics.push(dsl::Diagnostic::error("stdio.semio_value.validate-dangling-ref", dsl::TextSpan::at(1, 1), format!("SemioValueValidator: Ref{{id: '{}'}} does not resolve to any entry in `nodes`", id.value)));
+                    diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.semio_value.validate-dangling-ref", semio_framework_diagnostic::TextSpan::at(1, 1), format!("SemioValueValidator: Ref{{id: '{}'}} does not resolve to any entry in `nodes`", id.value)));
                 }
             }
 

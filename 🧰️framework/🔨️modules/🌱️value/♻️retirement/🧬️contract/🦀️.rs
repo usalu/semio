@@ -8,7 +8,7 @@ pub enum SnapshotRetirementStep {
 }
 
 pub trait ErasedSnapshotRetirement: Send {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, crate::ValueError>;
     fn terminal_is_empty(&self) -> bool;
 
     /// 📏️ The SMALLEST byte grant this retirement's next `close_step` can spend to make physical

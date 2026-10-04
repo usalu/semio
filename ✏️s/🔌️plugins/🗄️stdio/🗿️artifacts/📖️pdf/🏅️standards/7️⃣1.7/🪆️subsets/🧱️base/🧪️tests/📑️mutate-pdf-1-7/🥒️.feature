@@ -117,6 +117,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
       | move-page            | {"from": 10, "to": 40} |
       | set-page-content     | {"index": 20, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Replaced page content for wave 7 mutation testing"}}, {"op": "endText"}]} |
       | set-page-rotation    | {"index": 5, "rotation": 90} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/pages/15/mediaBox", "value": [0, 0, 595, 842]}} |
 
   @id-inverse
   @level-exhaustive
@@ -146,6 +147,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
       | move-page            | {"from": 10, "to": 40} |
       | set-page-content     | {"index": 20, "content": [{"op": "beginText"}, {"op": "setFont", "name": "F1", "size": 12}, {"op": "moveText", "tx": 72, "ty": 720}, {"op": "showText", "text": {"kind": "text", "text": "Replaced page content for wave 7 mutation testing"}}, {"op": "endText"}]} |
       | set-page-rotation    | {"index": 5, "rotation": 90} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/pages/15/mediaBox", "value": [0, 0, 595, 842]}} |
 
   @id-identity-round-trip
   @level-long

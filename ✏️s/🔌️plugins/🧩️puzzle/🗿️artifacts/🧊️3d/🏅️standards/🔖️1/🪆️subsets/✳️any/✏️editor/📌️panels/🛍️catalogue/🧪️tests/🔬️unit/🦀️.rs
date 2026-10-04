@@ -88,7 +88,7 @@ fn wide_catalog(kinds: usize, templates: usize) -> crate::editor::puzzle3d::Puzz
         })
         .collect();
     let mut fixture = crate::editor::puzzle3d::empty_fixture();
-    fixture.meta.kind_catalogs = Some(json::to_dsl_value(&json!({ "objects": Value::from(entries) })));
+    fixture.meta.kind_catalogs = Some(semio_framework_pack_json::to_dsl_value(&json!({ "objects": Value::from(entries) })));
     fixture
 }
 
@@ -108,7 +108,7 @@ fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
         .expect("draggable object kind");
     let drag_data = draggable.drag_data.as_ref().expect("drag data");
     let encoded = drag_data.iter().find(|(mime, _)| mime.as_str() == PUZZLE3D_CATALOGUE_DRAG_MIME).map(|(_, value)| value.as_str()).expect("catalogue mime");
-    let payload: Value = json::parse(encoded).expect("drag payload json");
+    let payload: Value = semio_framework_pack_json::parse(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drag payload json");
     assert!(payload.get("objectKind").and_then(Value::as_str).is_some(), "drag payload must carry objectKind");
     assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "drag payload must carry meshUrl for preview");
     drop(node);
@@ -239,13 +239,13 @@ fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_url
     let index = crate::editor::puzzle3d::Puzzle3dKindMeshIndex::of(&fixture.meta);
     let lane = crate::editor::puzzle3d::collect_mesh_urls(&fixture);
     for entry in entries {
-        let kind_id = entry.get("id").and_then(dsl::DslValue::as_str).expect("every catalogue row names a kind").to_string();
+        let kind_id = entry.get("id").and_then(semio_framework_value::DslValue::as_str).expect("every catalogue row names a kind").to_string();
         let url = entry
             .get("representations")
-            .and_then(dsl::DslValue::as_array)
+            .and_then(semio_framework_value::DslValue::as_array)
             .into_iter()
             .flatten()
-            .filter_map(|representation| representation.get("url").and_then(dsl::DslValue::as_str))
+            .filter_map(|representation| representation.get("url").and_then(semio_framework_value::DslValue::as_str))
             .find(|url| !url.is_empty())
             .unwrap_or_else(|| panic!("catalogue row {kind_id} declares no representations[].url"))
             .to_string();
@@ -286,7 +286,7 @@ fn the_default_concrete_forest_catalogue_renders_a_draggable_row_for_every_kind(
         assert!(row.bindings.len() <= 2, "catalogue row {} declares {} bindings, over the two a panel row admits", row.key.as_str(), row.bindings.len());
         let drag_data = props.drag_data.as_ref().unwrap_or_else(|| panic!("catalogue row {} carries no drag data", row.key.as_str()));
         let encoded = drag_data.iter().find(|(mime, _)| mime.as_str() == PUZZLE3D_CATALOGUE_DRAG_MIME).map(|(_, value)| value.as_str()).expect("catalogue mime");
-        let payload: Value = json::parse(encoded).expect("drag payload json");
+        let payload: Value = semio_framework_pack_json::parse(encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drag payload json");
         assert_eq!(payload.get("objectKind").and_then(Value::as_str), Some(row.key.as_str()), "the drag payload must name the kind its row renders");
         assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "catalogue row {} carries no meshUrl for the drop preview", row.key.as_str());
     }

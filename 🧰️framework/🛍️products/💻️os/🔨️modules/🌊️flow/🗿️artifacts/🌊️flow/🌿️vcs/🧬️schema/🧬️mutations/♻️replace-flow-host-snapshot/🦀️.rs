@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
 /// 🔮️ First-party Replace Flow Fixture payload.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-flow-host-snapshot")]
@@ -19,9 +19,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ReplaceFlowHostSnapshot {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::HostSnapshot(self.host_snapshot.clone())))
     }
-    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![FlowMutation::ReplaceFlowHostSnapshot(Self { host_snapshot: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Replace flow fixture", "Flussbeispiel ersetzen")
     }

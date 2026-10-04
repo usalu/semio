@@ -23,7 +23,6 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderK
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
 use semio_s_artifact_stdio_pptx::PptxSnapshot;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -90,7 +89,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }))
+        Ok(semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation { slides }))
     }
 }
 //#endregion 🔖️Serializer

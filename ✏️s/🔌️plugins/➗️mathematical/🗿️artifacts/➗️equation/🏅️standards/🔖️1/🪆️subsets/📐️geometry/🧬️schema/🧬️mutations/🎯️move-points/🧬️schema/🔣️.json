@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/geometry/mutation/move-points/schema.json",
+  "title": "MovePoints",
+  "description": "The `move-points` mutation record — one point-cloud drag as intent: the canvas offset every addressed point moves by from its BASE position, so an edited drag replays on any base.",
+  "x-semio-inverse-rows": {
+    "fixed": 1
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "indices",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Points",
+          "de": "Punkte"
+        },
+        "description": {
+          "en": "The points this drag moves, by base index; missing ones are skipped.",
+          "de": "Die Punkte, die dieser Zug verschiebt, nach Basisindex; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "point"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal canvas offset every point moves by.",
+          "de": "Horizontaler Zeichenflächenversatz, um den jeder Punkt verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical canvas offset every point moves by.",
+          "de": "Vertikaler Zeichenflächenversatz, um den jeder Punkt verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

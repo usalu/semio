@@ -52,7 +52,7 @@ fn clears_the_whole_active_session() {
 #[test]
 fn restoring_the_prior_session_restores_before() {
     let base = before();
-    let inverse = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::inverse(&mutation(), &base);
+    let inverse = <IdentityConfigMutation as protocol::Mutation<IdentitySetting>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "sign-out/clears-the-active-session: clearing an active session undoes in exactly one step");
     let IdentityConfigMutation::SignIn(undo) = &inverse[0] else {
         panic!("sign-out/clears-the-active-session: undoing a sign-out must be a sign-in");

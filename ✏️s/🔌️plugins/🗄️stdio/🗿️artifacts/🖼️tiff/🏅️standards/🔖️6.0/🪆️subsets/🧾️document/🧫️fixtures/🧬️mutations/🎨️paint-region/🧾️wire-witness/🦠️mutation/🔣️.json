@@ -1,0 +1,15 @@
+{
+  "mutation": "paint-region",
+  "payload": {
+    "revision": "7985741d54001585",
+    "ifdIndex": 0,
+    "x": 0,
+    "y": 0,
+    "width": 1,
+    "height": 1,
+    "red": 10,
+    "green": 20,
+    "blue": 30,
+    "alpha": 255
+  }
+}

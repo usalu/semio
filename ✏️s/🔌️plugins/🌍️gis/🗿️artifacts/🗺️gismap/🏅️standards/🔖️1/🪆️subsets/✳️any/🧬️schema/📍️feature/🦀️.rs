@@ -1,13 +1,14 @@
 //! 📍️ Identified GIS features and their domain payload patch.
 
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use protocol::{Identified, Patchable};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Types
 /// 🗺️ One id-keyed spatial feature carried as its full opaque descriptor payload.
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -15,7 +16,7 @@ pub struct MapFeature {
     #[dsl(positional)]
     pub id: String,
     /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch.
-    pub data: dsl::DslValue,
+    pub data: semio_framework_value::DslValue,
 }
 
 impl Identified<String> for MapFeature {
@@ -25,12 +26,12 @@ impl Identified<String> for MapFeature {
 }
 
 /// 🩹️ Whole-payload replacement patch; inverts to the prior feature payload.
-#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MapFeaturePatch {
-    pub data: Option<dsl::DslValue>,
+    pub data: Option<semio_framework_value::DslValue>,
 }
 
 impl Patchable<MapFeaturePatch> for MapFeature {

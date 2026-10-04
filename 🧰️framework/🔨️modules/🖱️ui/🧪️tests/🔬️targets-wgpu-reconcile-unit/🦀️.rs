@@ -387,7 +387,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         content_lines: None,
         inline_toolbar: None,
         detail: None,
-        actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu), disabled: false }]),
+        actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu), disabled: false, reason: None }]),
         ..tree_item("leaf", "Leaf")
     };
     let ui = tree_ui(vec![UiTreeSectionNode { header_toolbar: None, window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
@@ -444,4 +444,71 @@ fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
     let node = tree.node(root).expect("retained field");
     assert!(node.flags.contains(NodeFlags::DIRTY_LAYOUT));
     assert!(node.flags.contains(NodeFlags::DIRTY_PAINT));
+}
+
+#[test]
+fn node_graph_surface_reconciles_paged_records_and_host_snapshot() {
+    use ui_scene::SceneDoc;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json")).unwrap();
+    let node: ui_scene::NodeGraphNodeRecord = serde_json::from_value(fixture["node"].clone()).unwrap();
+    let count = fixture["nodeCount"].as_u64().unwrap() as usize;
+    let nodes = (0..count).map(|index| ui_scene::NodeGraphNodeRecord { id: index.to_string(), ..node.clone() }).collect();
+    let mut scene = ui_scene::NodeGraphScene::base(nodes, Vec::new(), semio_framework_ui_viewport::Viewport2d::default());
+    scene.host_snapshot_json = Some(serde_json::json!({ "label": fixture["hostSnapshotLabel"].as_str().unwrap().repeat(count) }).to_string());
+    let (spine, lanes) = scene.split_lanes();
+    let props = ui_scene::encode(ui_contract::SurfaceKind::NodeGraph, &spine).unwrap();
+    let record = |id: u64, key: &str, component: ui_contract::Component, children: &[u64]| -> ui_contract::UiNodeRecord {
+        let mut value = serde_json::json!({ "id": id, "key": key, "children": children, "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {} });
+        value["component"] = serde_json::to_value(component).unwrap();
+        serde_json::from_value(value).unwrap()
+    };
+    let mut records = Vec::new();
+    let mut carrier_ids = Vec::new();
+    let mut next_id = 1;
+    for lane in &lanes {
+        let root_id = next_id;
+        next_id += 1;
+        let mut leaves = Vec::new();
+        let mut payload = lane.payload.as_str();
+        while !payload.is_empty() {
+            let mut parts = Vec::new();
+            for _ in 0..=ui_contract::UI_FIXED_LIST_ITEMS {
+                if payload.is_empty() { break; }
+                let mut end = payload.len().min(ui_contract::UI_TEXT_MAX_BYTES);
+                while !payload.is_char_boundary(end) { end -= 1; }
+                parts.push(&payload[..end]);
+                payload = &payload[end..];
+            }
+            let attributes = parts.iter().skip(1).enumerate().map(|(index, value)| (format!("{index:02}"), serde_json::json!(value))).collect::<serde_json::Map<_, _>>();
+            let text: ui_contract::Component = serde_json::from_value(serde_json::json!({ "type": "text", "value": parts[0], "dataAttributes": attributes })).unwrap();
+            records.push(record(next_id, "page", text, &[]));
+            leaves.push(next_id);
+            next_id += 1;
+        }
+        let container = || serde_json::from_value::<ui_contract::Component>(serde_json::json!({ "type": "container", "role": "plain" })).unwrap();
+        while leaves.len() > 32 {
+            let mut parents = Vec::new();
+            for children in leaves.chunks(32) {
+                records.push(record(next_id, "branch", container(), children));
+                parents.push(next_id);
+                next_id += 1;
+            }
+            leaves = parents;
+        }
+        records.push(record(root_id, lane.key, container(), &leaves));
+        carrier_ids.push(root_id);
+    }
+    let surface = record(0, "graph", ui_contract::Component::Surface(props), &carrier_ids);
+    assert!(records.len() + 1 <= ui_contract::UI_DOCUMENT_NODES);
+    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("node.graph").unwrap(), revision: ui_contract::UiRevision(0), root: surface.id, layout_epoch: 0, node_count: records.len() + 1 };
+    let mut document = UiDocumentTree::new(header).unwrap();
+    document.try_upsert_record(surface).unwrap();
+    for record in records { document.try_upsert_record(record).unwrap(); }
+    let surface = document.record(ui_contract::UiNodeId(0)).unwrap();
+    let ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };
+    let projected = surface_scene_node(&document, surface, props, "node.graph", "procedural");
+    let mut restored = projected.node_graph.unwrap();
+    restored.lanes.clear();
+    assert_eq!(restored, scene);
+    println!("[DEBUG] wgpu node graph lane projection restores {count} nodes through {} records", next_id);
 }

@@ -138,7 +138,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut restored = original.clone();
         apply_gif_mutation(&mut restored, &mutation);
-        for undo in mutation_inverse(&mutation, &original) {
+        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
             apply_gif_mutation(&mut restored, &undo);
         }
         let bytes = encode_gif(&restored)?;

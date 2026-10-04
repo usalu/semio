@@ -49,5 +49,5 @@ export const trinityRewritingSnapshotTextGuardConstant = <T extends string | num
 //#endregion 🚪️Parsers
 
 export function parseRewritingSnapshotText(value: unknown, at = "$"): RewritingSnapshotText {
-  return trinityRewritingSnapshotTextGuardObject(value, `${at}`);
+  return trinityRewritingSnapshotTextGuardString(value, `${at}`);
 }

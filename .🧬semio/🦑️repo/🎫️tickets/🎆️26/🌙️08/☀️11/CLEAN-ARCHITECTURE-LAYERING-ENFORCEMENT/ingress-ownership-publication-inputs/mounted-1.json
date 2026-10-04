@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-03T12:22:58.798Z",
+  "reviewed": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/ingress-ownership-publication-inputs/reviewed-before-1.json",
+  "mutations": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧬️schema/🔣️.json",
+      "expected": "55768d4a8f0769e2b6c0070543ffd5a2757ba28238352ef905a0030aedcb663d",
+      "actual": "55768d4a8f0769e2b6c0070543ffd5a2757ba28238352ef905a0030aedcb663d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/🔣️.json",
+      "expected": "61a7a6bdfbdfc8423a0250f9edfd10a1df78315d5fd08c445a4738175196b0e8",
+      "actual": "61a7a6bdfbdfc8423a0250f9edfd10a1df78315d5fd08c445a4738175196b0e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts",
+      "expected": "e76eac7ff072eefdaa9cdca0465ba08511ac59ca88966f1375eb2913b77f038d",
+      "actual": "e76eac7ff072eefdaa9cdca0465ba08511ac59ca88966f1375eb2913b77f038d"
+    }
+  ],
+  "sourceWrites": true,
+  "rustWrites": false,
+  "registeredRuntimePending": true
+}

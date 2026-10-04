@@ -5,15 +5,11 @@
 //! legitimately cannot keep, and therefore the property that proves the index buffer really
 //! survived rather than being rebuilt from a soup.
 //!
-//! Import goes through the normalization path (`SemioMeshFromPly` → `SemioMeshToStl` → ASCII STL on
-//! a `brep.io.importStl` neuron), because the flow evaluator has no PLY operator — so the document
-//! case asserts the planted payload really is STL that still describes the cube.
+//! Import preserves the indexed surface through the existing editable mesh constructor.
 
-use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, retire_document, unit_cube_semio_mesh};
+use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, assert_imported_polygon_is_unit_cube, unit_cube_semio_mesh};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::ply::v1_0::any as export;
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::ply::v1_0::any as import;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any as stl_import;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge;
 
 fn exported() -> Vec<u8> {
     export::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as ply")
@@ -41,15 +37,9 @@ fn ply_round_trip_preserves_the_unit_cube_including_its_shared_vertex_pool() {
 }
 
 #[test]
-fn ply_import_normalizes_onto_the_stl_import_neuron_without_losing_the_cube() {
-    let bytes = exported();
-    let document = import::deserialize_bytes(&bytes).expect("ply imports into a document");
-    let (kind, payload) = mesh_bridge::imported_source(&document).expect("the import fixture plants a source note and an import neuron");
-    assert_eq!(kind, import::IMPORT_NEURON_KIND, "ply has no flow operator of its own, so it normalizes to stl");
-    let planted = mesh_bridge::base64_decode(payload).expect("the note holds base64");
-    let recovered = stl_import::mesh_from_bytes(&planted).expect("the planted payload is real stl");
-    assert_is_unit_cube("ply→stl", &project(&recovered));
-    retire_document(document);
+fn ply_import_plants_editable_polygon_geometry_without_losing_the_cube() {
+    let document = import::deserialize_bytes(&exported()).expect("ply imports into an editable document");
+    assert_imported_polygon_is_unit_cube("ply editable import", document);
 }
 
 #[test]

@@ -52,7 +52,7 @@ async fn inverse_deletes_the_created_object() {
     let base = base();
     let mutation = create_b(1);
     let mut snapshot = mutation.diff(&base).diff().apply(&base).expect("create-object applies");
-    for step in mutation.inverse(&base) {
+    for step in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
         snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "create-object inverse did not restore the before-snapshot");

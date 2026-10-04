@@ -6,7 +6,7 @@ use crate::{writer_snapshot_with_text, WriterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "open-document")]
 pub struct OpenDocument {
     pub uri: String,
@@ -16,7 +16,7 @@ pub struct OpenDocument {
 pub(crate) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, NoConfigMutation> {
     let id = payload.uri.rsplit('/').next().unwrap_or("document").to_string();
     let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
-    let language_id = dsl::language_for_semio_content(payload.text.as_bytes()).or_else(|| ext.and_then(|e| dsl::language_for_extension(e))).map(|spec| spec.id.to_string()).unwrap_or_else(|| "plaintext".to_string());
+    let language_id = dsl::language_for_semio_content(payload.text.as_bytes()).or_else(|| ext.and_then(|e| semio_framework_dsl::language_for_extension(e))).map(|spec| spec.id.to_string()).unwrap_or_else(|| "plaintext".to_string());
     let document = writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, &id, &language_id, &payload.uri, &payload.text);
     Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }
 }

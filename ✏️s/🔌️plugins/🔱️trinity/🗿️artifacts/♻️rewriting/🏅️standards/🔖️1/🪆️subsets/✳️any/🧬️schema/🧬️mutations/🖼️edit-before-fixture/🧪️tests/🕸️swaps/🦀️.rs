@@ -5,10 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 //!
-//! ♻️ Every `RewritingSnapshot` field is INLINE — `before_fixture_json`/`lhs_json`/`rhs_json` are
-//! plain `String`s, `parameter_bindings`/`rule_layout` plain `BTreeMap`s — so this artifact carries no
-//! composed child and no content-addressed handle anywhere. Nothing here is unhashable, so this leaf
-//! gets a real APPLIED case with a full `🔺️diff/🔣️.json`.
+//! 🪆️ Typed LHS/RHS and keyed maps accompany the actual content-addressed Semio child.
 //!
 //! 🖼️ `edit-before-fixture` is the one rewriting verb whose body is a whole FOREIGN document — a
 //! `trinity.graph` fixture — carried as an opaque JSON string. That string is still an ordinary inline
@@ -23,16 +20,18 @@ const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutatio
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/📸️snapshot/➡️after/🔣️.json");
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/🔺️diff/🔣️.json");
+const BEFORE_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/📸️snapshot/⬅️before/🪆️child/🔣️.json");
+const AFTER_CHILD:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/📸️snapshot/➡️after/🪆️child/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/🎯️outcome/🔣️.json");
 
 fn before() -> RewritingSnapshot {
-    pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    {let mut value=crate::standards::v1::subsets::any::schema::snapshot::decode_rewriting_snapshot_json(BEFORE).expect("before snapshot decodes");let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(BEFORE_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
 }
 fn expected_after() -> RewritingSnapshot {
-    pack::from_json_str(AFTER).expect("after snapshot decodes")
+    {let mut value=crate::standards::v1::subsets::any::schema::snapshot::decode_rewriting_snapshot_json(AFTER).expect("after snapshot decodes");let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared complete Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut value.working_graph.content,child);value}
 }
 fn mutation() -> RewriteRuleMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    crate::standards::v1::subsets::any::schema::mutations::text::decode_rewriting_mutation_json(MUTATION).map(|mut value|{if let RewriteRuleMutation::EditBeforeFixture(payload)=&mut value{let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared replacement Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut payload.new_working_graph.content,child);}value}).expect("mutation decodes")
 }
 
 /// ▶️ `edit-before-fixture` carries `before` to exactly the committed `after` by replacing the whole
@@ -43,10 +42,12 @@ async fn applies_to_committed_after() {
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation()).expect("edit-before-fixture applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "edit-before-fixture/swaps-in-a-two-node-before-graph: applied state differs from committed after-snapshot");
-    assert_ne!(snapshot.before_fixture_json, base.before_fixture_json, "edit-before-fixture must actually replace the before-graph body");
-    assert!(snapshot.before_fixture_json.contains("\"nodes\""), "the committed after must carry the two-node graph the payload supplied");
-    assert_eq!(snapshot.lhs_json, base.lhs_json, "edit-before-fixture must not touch the LHS match pattern");
-    assert_eq!(snapshot.rhs_json, base.rhs_json, "edit-before-fixture must not touch the RHS rewriting program");
+    assert_ne!(snapshot.working_graph, base.working_graph, "edit-before-fixture must actually replace the before-graph body");
+    assert_eq!(snapshot.working_graph.content, expected_after().working_graph.content, "the committed after retains the exact authored child identity");
+    let child: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️edit-before-fixture/🕸️swaps/📸️snapshot/➡️after/🪆️child/🔣️.json")).expect("typed committed child");
+    assert_eq!(child["nodes"].as_array().expect("typed child nodes").len(), 2, "the committed after retains the two-node graph");
+    assert_eq!(snapshot.lhs, base.lhs, "edit-before-fixture must not touch the LHS match pattern");
+    assert_eq!(snapshot.rhs, base.rhs, "edit-before-fixture must not touch the RHS rewriting program");
     assert_eq!(snapshot.parameter_bindings, base.parameter_bindings, "edit-before-fixture must not reach the parameter-binding map");
     assert_eq!(snapshot.rule_layout, base.rule_layout, "edit-before-fixture must not reach the rule-layout map");
 }
@@ -57,12 +58,12 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_rewrite_rule_mutation(&base, &mutation);
+    let inverse = inverse_rewrite_rule_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "edit-before-fixture always undoes with exactly one step, got {inverse:?}");
     let RewriteRuleMutation::EditBeforeFixture(undo) = &inverse[0] else {
         panic!("edit-before-fixture's inverse must itself be an edit-before-fixture, got {:?}", inverse[0]);
     };
-    assert_eq!(undo.new_before_fixture_json, base.before_fixture_json, "the inverse restores exactly the before-graph body BASE carried");
+    assert_eq!(undo.new_working_graph, base.working_graph, "the inverse restores exactly the before-graph body BASE carried");
     let mut snapshot = base.clone();
     apply_rewrite_rule_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -76,12 +77,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RewritingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: RewritingSnapshot = crate::standards::v1::subsets::any::schema::snapshot::decode_rewriting_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::snapshot::encode_rewriting_snapshot_json(&decoded).expect("declared snapshot JSON encodes")).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-before-fixture/swaps-in-a-two-node-before-graph: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::mutations::text::encode_rewriting_mutation_json(&mutation()).expect("declared mutation JSON encodes")).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "edit-before-fixture/swaps-in-a-two-node-before-graph: committed mutation JSON is not canonical");
 }
@@ -101,17 +102,17 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `edit-before-fixture` produces is exactly the committed diff: the single
-/// `before_fixture_json` slot set, with neither authored rule half disturbed.
+/// `working_graph` slot set, with neither authored rule half disturbed.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::diff::encode_rewriting_diff_json(outcome.diff()).expect("declared diff JSON encodes")).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-before-fixture/swaps-in-a-two-node-before-graph: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into RewritingDiff");
-    assert!(typed.before_fixture_json.is_some(), "edit-before-fixture's delta must set the before_fixture_json slot");
-    assert!(typed.lhs_json.is_none() && typed.rhs_json.is_none(), "edit-before-fixture must never disturb either authored rule half");
+    let typed: RewritingDiff = crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(DIFF).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes into RewritingDiff");
+    assert!(typed.working_graph.is_some(), "edit-before-fixture's delta must set the working_graph slot");
+    assert!(typed.lhs.is_none() && typed.rhs.is_none(), "edit-before-fixture must never disturb either authored rule half");
     assert!(typed.parameter_bindings.is_none() && typed.rule_layout.is_none(), "edit-before-fixture's delta must never reach either key-addressed map");
 }
 
@@ -121,8 +122,8 @@ async fn produces_committed_diff() {
 /// `edit-before-fixture` never touches — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: RewritingDiff = crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(DIFF).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::diff::encode_rewriting_diff_json(&decoded).expect("declared diff JSON encodes")).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-before-fixture/swaps-in-a-two-node-before-graph: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -134,7 +135,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the `edit-before-fixture` change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: RewritingDiff = crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(DIFF).map(|mut value|{if let Some(parent)=&mut value.working_graph{let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER_CHILD).expect("declared diff Semio child decodes");semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut parent.content,child);}value}).expect("committed diff decodes");
     let produced = <RewritingDiff as protocol::MutationDiff<RewritingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-before-fixture/swaps-in-a-two-node-before-graph: committed diff did not carry before to after");
 }

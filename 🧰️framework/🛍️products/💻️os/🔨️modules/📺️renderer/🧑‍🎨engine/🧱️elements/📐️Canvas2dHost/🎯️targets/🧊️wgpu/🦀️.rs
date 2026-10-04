@@ -1,4 +1,4 @@
-//! 🧭️ wgpu twin of `📐️Canvas2dHost/🟦️GumballOverlay.tsx`: the Canvas2d transform gumball a plugin arms with its
+//! 🧭️ wgpu twin of `📐️Canvas2dHost/🧭️gumball/🟦️.tsx`: the Canvas2d transform gumball a plugin arms with its
 //! `meta:gumball` layer (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`). The handle geometry, the press hit test and the
 //! gesture algebra are the overlay's, replayed over the shared corpus `📐️Canvas2dHost/🧫️fixtures/🧫️gumball-dispatch`: a
 //! live gumball streams its gesture (`phase` stream/commit/abort) into the app's ONE open tool transaction, a non-live
@@ -190,7 +190,7 @@ pub(crate) struct GumballDispatch {
 }
 
 impl GumballDispatch {
-    /// 🧾️ The dispatch's action args, exactly as `🟦️GumballOverlay.tsx` sends them.
+    /// 🧾️ The dispatch's action args, exactly as `🧭️gumball/🟦️.tsx` sends them.
     pub(crate) fn args(&self) -> Value {
         let mut args = serde_json::Map::new();
         args.insert("ids".into(), json!(self.ids));
@@ -554,7 +554,7 @@ fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color
 }
 
 /// 🎨️ Paints the armed gumball of `scene` over its canvas `inner` under `camera` — the handles of
-/// `🟦️GumballOverlay.tsx`, the press marker while a gesture is open and the ghost of a non-live gesture.
+/// `🧭️gumball/🟦️.tsx`, the press marker while a gesture is open and the ghost of a non-live gesture.
 pub(crate) fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &ui_wgpu::wgpu::Theme, draw: &mut ui_wgpu::wgpu::DrawList) {
     if !armed(scene) || inner.w <= 0.0 || inner.h <= 0.0 {
         return;

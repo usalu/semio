@@ -15,7 +15,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialInfraredEmissivity, base: &Ene
         }
     }
     if existing.infrared_emissivity_front == payload.new_infrared_emissivity_front && existing.infrared_emissivity_back == payload.new_infrared_emissivity_back {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Glazing material {} already carries these infrared emissivities.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries these infrared emissivities.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {

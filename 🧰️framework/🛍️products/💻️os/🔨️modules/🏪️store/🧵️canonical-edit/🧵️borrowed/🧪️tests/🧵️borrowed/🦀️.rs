@@ -49,7 +49,7 @@ impl FromValue for MapValue {
             DslValue::String(value) => Ok(Self::Text(value)),
             DslValue::Array(value) => value.into_iter().map(Self::from_value).collect::<Result<_, _>>().map(Self::Array),
             DslValue::Object(value) => value.into_iter().map(|(key, value)| Ok((key, Self::from_value(value)?))).collect::<Result<_, ValueError>>().map(Self::Object),
-            _ => Err(ValueError("map fixture requires text, array, or object".into())),
+            _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "map fixture requires text, array, or object")),
         }
     }
 }
@@ -120,7 +120,7 @@ struct MapRetirement {
     active: Option<Vec<u8>>,
 }
 impl ErasedSnapshotRetirement for MapRetirement {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if items == 0 || bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }

@@ -10,19 +10,20 @@ import { type TaxonomyProgress, TaxonomyCancellationError, report } from "./🏃
 import { type SemanticExactDescendantContract, type SemanticDescendantKindNode, type LoadedTaxonomy, type FileKindSpec, type GeneratorContractSpec, type PackageBoundaryRule, type FixedFilenameContract, type FixedDirectoryContract, type FixedContractScope, type ConfigurableEntryContract, type PackageGlueGrammar, type SemanticDistributedJsonManifestCatalogContract, type SemanticExactOwnerVectorsCatalogContract, type SemanticProjectionCaptureField, type SemanticPathProjectionContract, loadTaxonomy, type GeneratorInputTaxonomy, type SemanticPathProjectionReferenceConsumerContract, TAXONOMY_RELATIVE_PATH } from "./🔣️taxonomy/🟦️.ts";
 import { normalizeRelative, splitLeadingEmoji, sourceRelative, SEGMENTER, isEmojiGrapheme, emojiFold, inScope } from "./🛣️path/🟦️.ts";
 import { sha256, assertLexicalInputOutsideOpaque, lstatOrNull, assertNoFollowAncestors, LEXICAL_OPAQUE_ROOTS, noFollowDirectoryChain } from "./📁️input/🟦️.ts";
-import { sourceAdmissionPrepareOptions, sourceAdmissionCheckCancellation, collectTaxonomySourceAdmission, sourceAdmissionAssertLexical, sourceAdmissionGitRows } from "./🚪️source-admission/📁️io/🟦️.ts";
+import { sourceAdmissionPrepareOptions, sourceAdmissionCheckCancellation, collectTaxonomySourceAdmission, sourceAdmissionAssertLexical, sourceAdmissionGitRows, sourceAdmissionCapture, sourceAdmissionScopedOptions, type SourceAdmissionCapture } from "./🚪️source-admission/📁️io/🟦️.ts";
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, linkSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, readlinkSync, renameSync, rmdirSync, rmSync, symlinkSync, writeFileSync, writeSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { canonicalJson } from "../🧾️serialization/🔣️json/🟦️.ts";
 
-import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
+import { generatorPreviewExecution, generatorPreviewResourceLimits, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 
 import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
 
 import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
@@ -309,6 +310,16 @@ export interface TaxonomyInventory {
 export interface TaxonomyVerification {
   readonly inventory: TaxonomyInventory;
   readonly plan: TaxonomyPlan;
+  readonly violations: readonly TaxonomyViolation[];
+  readonly clean: boolean;
+}
+
+/** 🗝️ The options of {@link verifyTaxonomyScopes}: {@link TaxonomyInventoryOptions} with the admitted scopes in place of one scope. */
+export type TaxonomyScopesOptions = Omit<TaxonomyInventoryOptions, "scope"> & { readonly scopes: readonly string[] };
+
+/** 🏁️ One scope's verdict of {@link verifyTaxonomyScopes}: the violations and cleanliness {@link verifyTaxonomy} reports for that scope. */
+export interface TaxonomyScopeVerification {
+  readonly scope: string;
   readonly violations: readonly TaxonomyViolation[];
   readonly clean: boolean;
 }
@@ -1413,7 +1424,6 @@ interface RetainedSourceAdmission {
   readonly originInventory: TaxonomyInventory;
   readonly originalInputText: string;
   readonly sourceInventoryText: string;
-  readonly repositoryAuthority: TransactionRepositoryAuthority;
   readonly originSourceTreeDigest: string;
   readonly originInventoryDigest: string;
 }
@@ -1440,6 +1450,25 @@ interface IncomingReferenceSnapshot {
 }
 
 const referenceInventoryContexts = new WeakMap<TaxonomyInventory, ReferenceInventoryContext>();
+
+/** 🪧️ The incoming-reference candidates of a multi-scope run, read once for every scope: the candidate paths, their coordinate
+ * roots, and each symlink plus each textual file whose content the union of all scopes' changing paths lexically admits. */
+interface IncomingReferenceScan {
+  readonly paths: readonly string[];
+  readonly coordinateRoots: readonly string[];
+  readonly observed: ReadonlyMap<string, Readonly<{ stat: Stats; target?: string; bytes?: Buffer }>>;
+}
+
+/** 📸️ The repository reads every scope of {@link verifyTaxonomyScopes} shares: the source admission, the taxonomy, the registry catalog
+ * input view and, once any scope plans a move, the incoming-reference scan. */
+interface TaxonomyRepositoryCapture {
+  readonly source: SourceAdmissionCapture;
+  readonly taxonomy: LoadedTaxonomy;
+  incoming?: IncomingReferenceScan;
+  catalogView?: RegistryCatalogInputView;
+}
+
+const inventoryCaptures = new WeakMap<TaxonomyInventory, TaxonomyRepositoryCapture>();
 const incomingReferenceSnapshots = new WeakMap<TaxonomyInventory, IncomingReferenceSnapshot>();
 
 function inheritReferenceInventoryContext(source: TaxonomyInventory, target: TaxonomyInventory, transactionRoot?: string, exactEvidencePath?: string): TaxonomyInventory {
@@ -1560,6 +1589,35 @@ function incomingReferenceLexicalAdmission(targets: Iterable<string>): (content:
   };
 }
 
+/** 👁️ One incoming-reference candidate as the snapshot reads it: a symlink with its target, a textual file with its bytes (its frozen
+ * evidence coordinates checked), or `undefined` for anything else. */
+function incomingReferenceObservation(repoRoot: string, path: string, taxonomy: LoadedTaxonomy): Readonly<{ stat: Stats; target?: string; bytes?: Buffer }> | undefined {
+  const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Incoming reference candidate"), stat = lstatOrNull(absolute);
+  if (!stat || stat.isDirectory()) return undefined;
+  if (stat.isSymbolicLink()) return { stat, target: readlinkSync(absolute) };
+  if (!stat.isFile() || !textualPath(path)) return undefined;
+  const bytes = readFileSync(absolute);
+  frozenEvidenceCoordinateAuthority(path, bytes, taxonomy);
+  return { stat, bytes };
+}
+
+/** 🔦️ Reads the incoming-reference candidates once for every inventory of a multi-scope run (see {@link IncomingReferenceScan}); keeps a
+ * textual file only when the union of all inventories' changing paths lexically admits it, a superset of what each scope admits. */
+function incomingReferenceScan(inventories: readonly TaxonomyInventory[], taxonomy: LoadedTaxonomy, options: Pick<TaxonomyPlanOptions, "cancelFile" | "progress">): IncomingReferenceScan | undefined {
+  const changing = new Set(inventories.flatMap((inventory) => inventory.entries.filter((entry) => entry.sourcePath !== entry.normalizedPath).map((entry) => entry.sourcePath)));
+  if (changing.size === 0 || inventories.length === 0) return undefined;
+  const repoRoot = inventories[0]!.repoRoot;
+  const paths = repositoryReferenceCandidatePaths(repoRoot, taxonomy, referenceInventoryContexts.get(inventories[0]!), options.cancelFile);
+  const coordinateRoots = referenceCoordinateRoots(repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
+  const admits = incomingReferenceLexicalAdmission(changing), observed = new Map<string, Readonly<{ stat: Stats; target?: string; bytes?: Buffer }>>();
+  for (const [, path] of referenceCandidatesWithProgress(paths, "plan", options.progress)) {
+    checkCancellation(repoRoot, options.cancelFile);
+    const row = incomingReferenceObservation(repoRoot, path, taxonomy);
+    if (row && (row.target !== undefined || admits(row.bytes!.toString("utf8")))) observed.set(path, row);
+  }
+  return { paths, coordinateRoots, observed };
+}
+
 function referenceEntry(repoRoot: string, path: string, taxonomy: LoadedTaxonomy): TaxonomyInventoryEntry | null {
   if (isExcluded(path, taxonomy)) throw new Error(`Reference candidate is opaque: ${path}`);
   const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Reference candidate"), stat = lstatOrNull(absolute);
@@ -1588,25 +1646,26 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
   if (cached) return cached;
   const changing = new Set(inventory.entries.filter((entry) => entry.sourcePath !== entry.normalizedPath).map((entry) => entry.sourcePath));
   const context = referenceInventoryContexts.get(inventory);
-  const paths = changing.size > 0 ? repositoryReferenceCandidatePaths(inventory.repoRoot, taxonomy, context, options.cancelFile) : [];
+  const scan = changing.size > 0 ? inventoryCaptures.get(inventory)?.incoming : undefined;
+  const paths = scan?.paths ?? (changing.size > 0 ? repositoryReferenceCandidatePaths(inventory.repoRoot, taxonomy, context, options.cancelFile) : []);
   const knownPaths = new Set([...paths, ...inventory.entries.map((entry) => entry.sourcePath)]);
   for (const path of paths) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) knownPaths.add(parent);
   validateObservedFrozenEvidenceNodes(inventory.repoRoot, knownPaths, taxonomy);
-  const coordinateRoots = referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
+  const coordinateRoots = scan?.coordinateRoots ?? referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
   const known = referencePathIndex(knownPaths, inventory.repoRoot, coordinateRoots, undefined, options.cancelFile, changing), admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const admitsText = incomingReferenceLexicalAdmission(changing);
   const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>();
-  for (const [index, path] of referenceCandidatesWithProgress(paths, "plan", options.progress)) {
+  for (const [index, path] of referenceCandidatesWithProgress(scan ? [...scan.observed.keys()] : paths, "plan", options.progress)) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
     if (admitted.has(path)) continue;
-    const absolute = assertLexicalInputOutsideOpaque(inventory.repoRoot, path, "Incoming reference candidate"), stat = lstatOrNull(absolute);
-    if (!stat || stat.isDirectory()) continue;
-    if (stat.isSymbolicLink()) {
-      const target = readlinkSync(absolute), logical = logicalRepositorySymlinkTargetPath(inventory.repoRoot, path, target);
+    const observed = scan ? scan.observed.get(path)! : incomingReferenceObservation(inventory.repoRoot, path, taxonomy);
+    if (!observed) continue;
+    const stat = observed.stat;
+    if (observed.target !== undefined) {
+      const logical = logicalRepositorySymlinkTargetPath(inventory.repoRoot, path, observed.target);
       if (logical && !isExcluded(logical, taxonomy) && projectedPath(logical, inventory.entries) !== logical) entries.push(referenceEntry(inventory.repoRoot, path, taxonomy)!);
-    } else if (stat.isFile() && textualPath(path)) {
-      const bytes = readFileSync(absolute), content = bytes.toString("utf8");
-      frozenEvidenceCoordinateAuthority(path, bytes, taxonomy);
+    } else if (observed.bytes !== undefined) {
+      const bytes = observed.bytes, content = bytes.toString("utf8");
       if (!admitsText(content)) continue;
       report(options.progress, "plan", "incoming-parse", index + 1, paths.length, path);
       const relevant = referenceTokensIncludingUnsupported(path, content, known).some((token) => {
@@ -4595,13 +4654,13 @@ export function inventoryTaxonomyWithCapturedSourceRead(options: TaxonomyInvento
 }
 
 /** 🪵️ Projects only transaction-proven empty source parents into package authority before final classification. */
-function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, sourceRead: TaxonomyCapturedSourceRead = (path) => readFileSync(path)): TaxonomyInventory {
+function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, sourceRead: TaxonomyCapturedSourceRead = (path) => readFileSync(path), capture?: TaxonomyRepositoryCapture): TaxonomyInventory {
   const request = { ...options };
   options = Object.freeze({ ...request, structuralDirectoryNames: request.structuralDirectoryNames && Object.freeze([...request.structuralDirectoryNames]) });
-  const prepared = sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
+  const prepared = capture && options.scope !== undefined ? sourceAdmissionScopedOptions(capture.source, options.scope) : sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
   report(options.progress, "inventory", "setup", 0, 1, scope);
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
-  const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: prepared.taxonomyPath });
+  const taxonomy = capture?.taxonomy ?? loadTaxonomy({ repoRoot, taxonomyPath: prepared.taxonomyPath });
   if (scope && isExcluded(scope, taxonomy)) throw new Error(`Inventory scope is opaque: ${scope}`);
   sourceAdmissionCheckCancellation(repoRoot, prepared.cancelFile, prepared.repositoryFences);
   report(options.progress, "inventory", "setup", 1, 1, scope);
@@ -4821,12 +4880,12 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
         originInventory: inventory,
         originalInputText: collectedSourceAdmission.inputText,
         sourceInventoryText: JSON.stringify(sourceAdmission),
-        repositoryAuthority: new TransactionRepositoryAuthority(repoRoot, prepared.indexRows),
         originSourceTreeDigest: inventory.sourceTreeDigest,
         originInventoryDigest: inventory.inventoryDigest,
       }),
     }),
   });
+  if (capture) inventoryCaptures.set(inventory, capture);
   report(options.progress, "inventory", "complete", frozenEntries.length, frozenEntries.length);
   return inventory;
 }
@@ -5022,14 +5081,14 @@ function generatorPreviewProjection(contractId: GeneratorInputProjection["contra
 
 function invokeGeneratorPreview(inventory: TaxonomyInventory, id: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, projection?: GeneratorInputProjection, cancelFile?: string): { readonly manifest: TaxonomyGeneratorPreviewManifest; readonly digest: string } {
   if (!contract.ownerPath || !contract.previewTarget) throw new Error(`Owned generator ${id} has no preview target`);
-  assertGeneratorPreviewTarget(inventory.repoRoot, contract);
+  const execution = assertGeneratorPreviewTarget(inventory.repoRoot, contract);
   checkCancellation(inventory.repoRoot, cancelFile);
   const protocol = contract.inputDiscovery?.previewInput ?? contract.packageGeneration?.previewInput;
   const input = projection ? canonicalJson(projection) + "\n" : undefined;
   if (input && (!protocol || Buffer.byteLength(input) > protocol.maxBytes)) throw new Error(`Generator ${id} projected input exceeds its declared byte limit`);
   const cancellationPath = cancelFile ? assertLexicalInputOutsideOpaque(inventory.repoRoot, cancelFile, "Generator preview cancellation", true) : "";
   const limits = generatorPreviewResourceLimits(contract);
-  const result = spawnSync("bun", ["./📜️script.ts", ...generatorPreviewScriptArguments(contract)], { cwd: absolutePath(inventory.repoRoot, contract.ownerPath), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: limits.timeoutMs, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
+  const result = spawnSync(execution.command, execution.args, { cwd: absolutePath(inventory.repoRoot, execution.cwd), encoding: "utf8", input, maxBuffer: limits.maxOutputBytes, timeout: limits.timeoutMs, env: { ...process.env, REPO_ROOT: inventory.repoRoot, SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: projection ? protocol!.protocol : "", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancellationPath } });
   checkCancellation(inventory.repoRoot, cancelFile);
   const stdout = result.stdout ?? "", stderr = result.stderr ?? "";
   if (result.error || result.status !== 0 || result.signal !== null || stderr !== "") throw new Error(`Generator preview command failed for ${id}: status=${result.status ?? -1}, stdout=${sha256(stdout)}, stderr=${sha256(stderr)}`);
@@ -5870,7 +5929,8 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
   }
   const rows: TaxonomyViolation[] = [];
   const regenerations: TaxonomyRegeneration[] = [];
-  const catalogView = registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
+  const capture = inventoryCaptures.get(inventory);
+  const catalogView = capture ? (capture.catalogView ??= registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema)) : registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
   const contracts = Object.entries(taxonomy.schema.generatorContracts).sort(([left], [right]) => left.localeCompare(right));
   for (let index = 0; index < contracts.length; index++) {
     const [id, contract] = contracts[index];
@@ -6208,6 +6268,32 @@ export function verifyTaxonomy(options: TaxonomyInventoryOptions): TaxonomyVerif
     cancelFile: options.cancelFile,
     progress: options.progress,
   });
+  return { inventory, plan, ...taxonomyPlanVerdict(plan, options.progress) };
+}
+
+/**
+ * 🗺️ Verifies many admitted scopes against ONE read of the repository: the index enumeration, repository fences and taxonomy are
+ * captured once, every scope inventories only its own index rows, and — when any scope plans a move — the repository-wide
+ * incoming-reference candidates and the registry catalog input view are read once for all of them. Yields each scope's verdict as soon
+ * as it is planned — first every scope that plans no move, then (after the one incoming-reference scan) every scope that does, each in
+ * the listed order; each verdict equals {@link verifyTaxonomy} for that scope.
+ */
+export function* verifyTaxonomyScopes(options: TaxonomyScopesOptions): Generator<TaxonomyScopeVerification> {
+  const { scopes, ...shared } = options;
+  const source = sourceAdmissionCapture(shared);
+  const capture: TaxonomyRepositoryCapture = { source, taxonomy: loadTaxonomy({ repoRoot: source.prepared.repoRoot, taxonomyPath: source.prepared.taxonomyPath }) };
+  const inventories = scopes.map((scope) => inventoryTaxonomyWithSourceParentPruning({ ...shared, scope }, new Set(), undefined, capture));
+  const moving = (inventory: TaxonomyInventory): boolean => inventory.entries.some((entry) => entry.sourcePath !== entry.normalizedPath);
+  const baselineCommit = shared.baselineCommit ?? repositoryHead(source.prepared.repoRoot);
+  const verdict = (index: number): TaxonomyScopeVerification => ({ scope: scopes[index]!, ...taxonomyPlanVerdict(planTaxonomy(inventories[index]!, { baselineCommit, excludedTreeDigests: shared.excludedTreeDigests ?? [], cancelFile: shared.cancelFile, progress: shared.progress }), shared.progress) });
+  for (const [index, inventory] of inventories.entries()) if (!moving(inventory)) yield verdict(index);
+  capture.incoming = incomingReferenceScan(inventories, capture.taxonomy, shared);
+  for (const [index, inventory] of inventories.entries()) if (moving(inventory)) yield verdict(index);
+}
+
+/** ⚖️ A plan's verdict: its unresolved problems plus one violation per planned move, relocation, symlink retarget, evidence removal and
+ * structured reference edit; clean when none is an error. */
+function taxonomyPlanVerdict(plan: TaxonomyPlan, progress?: TaxonomyInventoryOptions["progress"]): Pick<TaxonomyVerification, "violations" | "clean"> {
   const violations: TaxonomyViolation[] = [...plan.unresolved];
   for (const move of plan.moves) violations.push(violation("normalization-move-required", move.sourcePath, `Path must move to ${move.destinationPath}`));
   for (const relocation of plan.embeddedTicketRootRelocations) violations.push(violation("embedded-ticket-root-relocation-required", relocation.sourcePath, `Embedded ticket evidence must relocate to ${relocation.destinationPath}`));
@@ -6216,8 +6302,8 @@ export function verifyTaxonomy(options: TaxonomyInventoryOptions): TaxonomyVerif
   for (const edit of plan.edits) violations.push(violation("reference-edit-required", edit.path, `Structured reference must change at ${edit.structuredLocation}`));
   const stable = stableViolations(violations);
   const clean = stable.every((entry) => entry.severity !== "error");
-  report(options.progress, "verify", "complete", stable.length, stable.length);
-  return { inventory, plan, violations: stable, clean };
+  report(progress, "verify", "complete", stable.length, stable.length);
+  return { violations: stable, clean };
 }
 //#endregion ✅️Verification API
 
@@ -6907,12 +6993,11 @@ function assertNxTarget(repoRoot: string, ownerPath: string, target: string): vo
   nxTargetRecord(repoRoot, ownerPath, target);
 }
 
-function assertGeneratorPreviewTarget(repoRoot: string, contract: GeneratorContractSpec): void {
+function assertGeneratorPreviewTarget(repoRoot: string, contract: GeneratorContractSpec): ReturnType<typeof generatorPreviewExecution> {
   const { ownerPath, previewTarget: target } = contract;
   if (!ownerPath || !target) throw new Error("Generator lacks an exact owner JSON preview command");
   const preview = nxTargetRecord(repoRoot, ownerPath, target);
-  const options = requireRecord(preview.options, `Nx target ${target}.options`);
-  if (preview.executor !== "nx:run-commands" || options.cwd !== ownerPath || options.command !== `bun ./📜️script.ts ${generatorPreviewScriptArguments(contract).join(" ")}`) throw new Error(`Nx target ${target} is not the exact owner JSON preview command`);
+  return generatorPreviewExecution(contract, { executor: preview.executor, options: requireRecord(preview.options, `Nx target ${target}.options`) });
 }
 
 function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy: LoadedTaxonomy, repoRoot: string): GeneratorContractSpec {

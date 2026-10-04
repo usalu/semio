@@ -3,8 +3,21 @@ use super::*;
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
     assert!(md_command_from_action(MD_KIT_ACTION_ID, None).is_err());
-    let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(String::new()))]);
+    let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(String::new()))]);
     assert_eq!(md_command_from_action(MD_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), MdEditCommand::ReplaceText { text: String::new() });
+}
+
+#[test]
+fn natural_file_route_exports_commonmark_and_reopens_through_one_mutation() {
+    let edited = MdSnapshot::from_text("# Natural Open Save\n\nEdited body.\n");
+    let bytes = <MdEditor as ArtifactEditor>::encode_natural_file(&edited).expect("Markdown natural bytes");
+    let oracle = semio_s_artifact_stdio_md_test_oracle::standards::v_commonmark::subsets::any::project_md;
+    assert_eq!(oracle(&bytes).expect("Comrak reads exported Markdown"), oracle(b"# Natural Open Save\n\nEdited body.\n").expect("Comrak reads expected Markdown"));
+    let reopened = <MdEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("Markdown natural bytes reopen");
+    let Some(MdMutation::SetSnapshot(SetSnapshot { snapshot: opened })) = <MdEditor as ArtifactEditor>::whole_document_operation(reopened) else {
+        panic!("natural Markdown opens through one event-sourced snapshot mutation")
+    };
+    assert_eq!(opened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -65,11 +78,8 @@ async fn the_curated_example_carries_visible_content() {
 #[semio_framework_async_macros::async_test]
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
-        let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
-        assert_eq!(
-            md_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"),
-            MdEditCommand::SetActiveExample { example_id: "demo".into() }
-        );
+        let args = semio_framework_value::DslValue::object([(key.to_string(), semio_framework_value::DslValue::String("demo".into()))]);
+        assert_eq!(md_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), MdEditCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(md_command_from_action("noSuchVerb", None).is_err());
 }
@@ -83,10 +93,8 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<MdEditor>>
 async fn kit_fixture_holding(document: &MdSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<MdEditor>, _>(async { semio_framework_plugin::App { definition: create_md_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_MD_DOCUMENT_SCHEMA) else {
-        panic!("the example switch hands the host one whole document")
-    };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_MD_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
 
@@ -95,7 +103,7 @@ async fn kit_fixture_holding(document: &MdSnapshot) -> KitFixtureApp {
 async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    let args = dsl::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
+    let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
     app.handle_action(action, Some(&args), &meta).await?;
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }
@@ -146,10 +154,10 @@ fn an_applied_text_is_its_net_block_leaves_and_they_reach_exactly_that_text() {
         let mut state = base.clone();
         let mut undo = Vec::new();
         for leaf in &leaves {
-            let inverse = protocol::Mutation::inverse(leaf, &state);
+            let inverse = protocol::Mutation::inverse(leaf, &state).expect("valid retained mutation inverse fixture");
             assert_eq!(inverse.len(), 1, "{id}: {leaf:?} undoes with exactly one row");
             undo.extend(inverse);
-            assert!(crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf).messages().iter().all(|message| message.level != protocol::Severity::Fatal), "{id}: {leaf:?} applies");
+            assert!(crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf).messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Fatal), "{id}: {leaf:?} applies");
         }
         assert_eq!(state, next, "{id}: the net leaves reach exactly the applied text");
         for leaf in undo.iter().rev() {
@@ -159,8 +167,22 @@ fn an_applied_text_is_its_net_block_leaves_and_they_reach_exactly_that_text() {
     }
 }
 
+/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot` the net leaves emit is the named replace intent — an applied envelope
+/// naming another document schema — and no net-leaves corpus change (every one keeps its schema) emits one.
+#[test]
+fn only_another_document_schema_is_a_whole_document_set_snapshot() {
+    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
+        assert!(md_net_mutations(&base, &next).iter().all(|leaf| !matches!(leaf, MdMutation::SetSnapshot(_))), "{}: a block edit is never a whole-document set-snapshot", case["id"]);
+    }
+    let base = MdSnapshot::from_text("# Title\n\nBody.\n");
+    let other = MdSnapshot { schema: "stdio.md.other-schema".into(), ..base.clone() };
+    assert_eq!(md_net_mutations(&base, &other), vec![MdMutation::SetSnapshot(SetSnapshot { snapshot: other.clone() })], "another document schema replaces the document");
+}
+
 /// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net block leaves — exactly the corpus leaves of
-/// the same change, never a whole `set-snapshot` for a block edit — with no description, so its row is labelled from its leaves.
+/// the same change, with each history row labelled by its own leaf in every supported locale.
 #[test]
 fn a_document_details_edit_is_its_net_block_leaves() {
     use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
@@ -172,7 +194,16 @@ fn a_document_details_edit_is_its_net_block_leaves() {
         let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&next) };
         let emit = <MdEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).unwrap_or_else(|fault| panic!("{id}: the details edit publishes: {fault:?}"));
         assert_eq!(serde_json::Value::Array(emit.artifact_mutations.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the details edit is the net leaves");
-        assert_eq!(emit.description, None, "{id}: the row is labelled from its leaves");
+        for leaf in &emit.artifact_mutations {
+            let (en, de) = match leaf {
+                MdMutation::InsertBlock(_) => ("Insert block", "Block einfügen"),
+                MdMutation::RemoveBlock(_) => ("Remove block", "Block entfernen"),
+                MdMutation::ReplaceBlock(_) => ("Replace block", "Block ersetzen"),
+                MdMutation::SetInlines(_) => ("Set inlines", "Inline-Elemente setzen"),
+                MdMutation::SetSnapshot(_) => ("Set snapshot", "Momentaufnahme setzen"),
+            };
+            assert_eq!(protocol::SemanticMutation::<MdSnapshot>::label(leaf), semio_framework_ui_locale::LocalizedLabel::native(en, de), "{id}: the row is labelled from its leaf in every supported locale");
+        }
     }
 }
 
@@ -192,8 +223,8 @@ async fn one_applied_markdown_text_is_one_edit_of_its_net_leaves() {
     let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
     let row = rows.iter().max_by_key(|row| row.seq).expect("the applied text's row");
     assert_eq!(row.mutations.len(), 1, "one changed paragraph is one net leaf: {:?}", row.mutations);
-    assert_eq!(row.mutations[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Set inlines");
-    assert_eq!(row.mutations[0].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Inline-Elemente setzen");
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Set inlines");
+    assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Inline-Elemente setzen");
     semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(before), "one undo restores the committed document");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);

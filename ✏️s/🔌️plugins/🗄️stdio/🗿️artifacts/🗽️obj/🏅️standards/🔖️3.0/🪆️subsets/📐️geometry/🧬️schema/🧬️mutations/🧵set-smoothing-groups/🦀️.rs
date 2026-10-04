@@ -11,7 +11,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-smoothing-groups")]
@@ -25,9 +25,12 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetSmoothingGroups {
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         agg_diff(&ObjMutation::SetSmoothingGroups(self.clone()), base)
     }
-    fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
-        agg_inverse(&ObjMutation::SetSmoothingGroups(self.clone()), base)
-    }
+    fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&ObjMutation::SetSmoothingGroups(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set smoothing groups", "Glättungsgruppen setzen")
     }

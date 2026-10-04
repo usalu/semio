@@ -7,8 +7,8 @@ use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
 
 /// 🏗️ A payload outside its schema bounds (empty address, overlong name or text, non-finite number) is
-/// `mutation.invariant`; a missing widget is `target-missing`; a widget without this input, an input a wire drives, or one
-/// holding a literal of another type is `target-mismatch`; the value the input already holds is `no-op`.
+/// `mutation.invariant`; a missing widget or an input its record does not hold is `target-missing`; an input a wire drives,
+/// or one holding a literal of another type or shape, is `target-mismatch`; the value the input already holds is `no-op`.
 pub fn diff(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let target = || [payload.id.clone()];
     if !payload.admissible() {
@@ -19,8 +19,8 @@ pub fn diff(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> protoco
     };
     let wired = base.host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.id && synapse.to_port == payload.channel);
     match payload.landing(&base.host_snapshot.widgets[index], wired) {
-        Err(mismatch) => protocol::MutationOutcome::error("mutation.target-mismatch", format!("Input \"{}\" of \"{}\" {}.", payload.channel, payload.id, mismatch.reason()), target()),
-        Ok(None) => protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("Input \"{}\" of \"{}\" already holds this value.", payload.channel, payload.id)).at(target())]),
+        Err(refusal) => protocol::MutationOutcome::error(refusal.code(), format!("Input \"{}\" of \"{}\" {}.", payload.channel, payload.id, refusal.reason()), target()),
+        Ok(None) => protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("Input \"{}\" of \"{}\" already holds this value.", payload.channel, payload.id)).at(target())]),
         Ok(Some(next)) => {
             let widgets = WidgetsDiff { removed: Vec::new(), set: vec![(index, next)] };
             let diff = diff_fixture_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);

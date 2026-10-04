@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.txt.mutation;
+import "../../📸️snapshot/🛰️.proto";
+message SetSnapshotPayload { semio.s_stdio_txt.snapshot.TxtSnapshot snapshot = 1; }

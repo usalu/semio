@@ -6,7 +6,6 @@
 
 use crate::WriterSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -15,7 +14,7 @@ use serde_json::json;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — writer is a
 /// plain-text document with no structured fields, so its "outline" is derived straight from the
 /// `text` field: markdown-style `#` headings plus real word/line counts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.inference")]
@@ -25,8 +24,11 @@ pub struct WriterInference {
 }
 
 impl protocol::Inference<WriterSnapshot> for WriterInference {
-    fn infer(snapshot: &WriterSnapshot) -> Self {
+    fn infer(snapshot: &WriterSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: WriterOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<WriterSnapshot> for WriterInference {
 /// plugin's own inference facet uses for its non-empty default snapshot).
 impl Default for WriterInference {
     fn default() -> Self {
-        <Self as protocol::Inference<WriterSnapshot>>::infer(&WriterSnapshot::default())
+        let snapshot = &WriterSnapshot::default();
+
+        Self { outline: WriterOutline::compute(snapshot) }
     }
 }
 
@@ -51,20 +55,6 @@ impl protocol::InferenceSpec<WriterSnapshot> for WriterInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🪧️ Zero-sized marker anchor for `ArtifactInferrer::infer` (takes `&Self::Snapshot`, never
-/// `&self` — a pure type-level anchor, no live callers by value). NOT `semio_framework_plugin::
-/// app::SnapshotBuilder<WriterSnapshot, WriterMutation>`: that is a foreign, non-`#[fundamental]`
-/// generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>` is an orphan-rule
-/// violation (E0117) regardless of the type parameters being local — see `📓️w4-sequence-report.md`
-/// `## recipeGaps` #1, the first agent to hit and document this exact trap.
-pub struct WriterInferrer;
-impl ArtifactInferrer for WriterInferrer {
-    type Snapshot = WriterSnapshot;
-    type Inference = WriterInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.writer.writer.inference`'s facet leaves into the OS-wide inference catalog —
@@ -83,11 +73,11 @@ pub fn writer_artifact_inference_descriptor() -> semio_framework_schema_registry
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
 pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     let text = crate::writer_text(document);
-    if let Some(spec) = dsl::language(&document.language_id) {
+    if let Some(spec) = semio_framework_dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
-        return Some(dsl::os_pack::json::to_json_string(&session.semantic_tokens_lsp()));
+        return Some(semio_framework_pack_json::to_json_string(&session.semantic_tokens_lsp()));
     }
-    if dsl::idiom(&document.language_id).is_some() {
+    if semio_framework_dsl::idiom(&document.language_id).is_some() {
         let tokens = crate::schema::tokenize_language(&text, &document.language_id);
         return serde_json::to_string(&tokens).ok();
     }
@@ -98,15 +88,15 @@ pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) ->
     let text = crate::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();
-        let diagnostics: Vec<dsl::JsonValue> = lint(&graph, &text).into_iter().map(|diag| dsl::json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
-        return Some(dsl::os_pack::json::to_json_string(&diagnostics));
+        let diagnostics: Vec<semio_framework_pack_json::Value> = lint(&graph, &text).into_iter().map(|diag| semio_framework_pack_json::json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
+        return Some(semio_framework_pack_json::to_json_string(&diagnostics));
     }
-    if let Some(hooks) = dsl::idiom(&document.language_id) {
+    if let Some(hooks) = semio_framework_dsl::idiom(&document.language_id) {
         if let Err(err) = (hooks.canonicalize)(&text) {
             let end = text.len().max(1);
             return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
         }
-    } else if let Some(spec) = dsl::language(&document.language_id) {
+    } else if let Some(spec) = semio_framework_dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
         if let Err(err) = session.canonicalize() {
             let end = text.len().max(1);

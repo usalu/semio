@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/source/closure/absence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owners",
+    "sharedSources",
+    "absentRoots",
+    "lawSuffix"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owners": {
+      "const": [
+        "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure",
+        "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode"
+      ]
+    },
+    "sharedSources": {
+      "const": [
+        "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts"
+      ]
+    },
+    "absentRoots": {
+      "const": [
+        "✏️s",
+        "🌎️hub",
+        "🧰️framework/🛍️products"
+      ]
+    },
+    "lawSuffix": {
+      "const": "🧪️tests/🟦️.ts"
+    }
+  }
+}
+

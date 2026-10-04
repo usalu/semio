@@ -1,7 +1,7 @@
 /** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import {
-  parseCharacterStyle, parseFrame, parseGridSettings, parseImageLink, parseLayoutArtifact, parseLayoutDrawingChild,
+  parseFormDictionary,type FormDictionary, parseCharacterStyle, parseFrame, parseGridSettings, parseImageLink, parseLayoutArtifact, parseLayoutDrawingChild,
   parseLayer, parseLayoutRect, parsePage, parsePageOverride, parseParagraphStyle, parseParentPage, parseSpread, parseTextStory, parseTextStyleRun,
   type ArtifactLink, type CharacterStyle, type Frame, type GridSettings, type ImageLink, type Layer,
   type LayoutArtifact, type LayoutDrawingChild, type LayoutRect, type Page, type PageOverride, type ParagraphStyle, type ParentPage,
@@ -50,7 +50,7 @@ export interface LayoutDiff {
   /** @state artifact */ spreads: LayoutSpreadsDelta | null;
   /** @state artifact */ pages: LayoutPagesDelta | null;
   /** @state artifact */ printTarget: string | null;
-  /** @state artifact */ dataFieldsJson: string | null;
+  /** @state artifact */ dataFields: {dictionary:FormDictionary|null} | null;
   /** @state artifact @child kind=s.stdio.semio */ backgroundDrawing: LayoutDrawingChild | null;
   /** @state artifact @link_slot roles=model */ referencedModel: ArtifactLink | null;
 }
@@ -147,10 +147,10 @@ export const parseLayoutSpreadsDelta = (value: unknown, at = "$" ): LayoutSpread
 
 /** 🔺️ Parses the exact, full native diff record and rejects stale wrapper or window fields. */
 export function parseLayoutDiff(value: unknown, at = "$" ): LayoutDiff {
-  const keys = ["artifact", "schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFieldsJson", "backgroundDrawing", "referencedModel"], row = record(value, keys, at);
+  const keys = ["artifact", "schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields", "backgroundDrawing", "referencedModel"], row = record(value, keys, at);
   return {
     artifact: nullable(row.artifact, parseLayoutArtifact, `${at}.artifact`), schema: nullable(row.schema, string, `${at}.schema`), name: nullable(row.name, string, `${at}.name`), grid: nullable(row.grid, parseGridSettings, `${at}.grid`),
     paragraphStyles: nullable(row.paragraphStyles, parseLayoutParagraphStylesDelta, `${at}.paragraphStyles`), characterStyles: nullable(row.characterStyles, parseLayoutCharacterStylesDelta, `${at}.characterStyles`), stories: nullable(row.stories, parseLayoutStoriesDelta, `${at}.stories`), links: nullable(row.links, parseLayoutLinksDelta, `${at}.links`), parentPages: nullable(row.parentPages, parseLayoutParentPagesDelta, `${at}.parentPages`), spreads: nullable(row.spreads, parseLayoutSpreadsDelta, `${at}.spreads`), pages: nullable(row.pages, parseLayoutPagesDelta, `${at}.pages`),
-    printTarget: nullable(row.printTarget, string, `${at}.printTarget`), dataFieldsJson: nullable(row.dataFieldsJson, string, `${at}.dataFieldsJson`), backgroundDrawing: nullable(row.backgroundDrawing, parseLayoutDrawingChild, `${at}.backgroundDrawing`), referencedModel: nullable(row.referencedModel, parseArtifactLink, `${at}.referencedModel`),
+    printTarget: nullable(row.printTarget, string, `${at}.printTarget`), dataFields: nullable(row.dataFields, (value,at)=>{const change=required(record(value,["dictionary"],at),["dictionary"],at);return{dictionary:nullable(change.dictionary,parseFormDictionary,`${at}.dictionary`)};}, `${at}.dataFields`), backgroundDrawing: nullable(row.backgroundDrawing, parseLayoutDrawingChild, `${at}.backgroundDrawing`), referencedModel: nullable(row.referencedModel, parseArtifactLink, `${at}.referencedModel`),
   };
 }

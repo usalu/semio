@@ -11,7 +11,7 @@ async fn invite_member_relays_upsert_member() {
     match &result.requested_effects[0] {
         Effect::ReplayShellCommand { action_id, args } => {
             assert_eq!(action_id, "os.directory.upsert-member");
-            let args = pack::json_from_dsl_value(&args.clone().unwrap());
+            let args = semio_framework_pack_json::from_dsl_value(&args.clone().unwrap());
             assert_eq!(args.get("email").and_then(|v| v.as_str()), Some("a@example.com"));
             assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("author"));
         }

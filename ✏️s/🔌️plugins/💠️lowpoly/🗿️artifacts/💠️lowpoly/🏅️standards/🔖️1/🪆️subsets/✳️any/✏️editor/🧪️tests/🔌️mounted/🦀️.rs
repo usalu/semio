@@ -11,7 +11,7 @@ type Mounted = LowpolyApp;
 /// 🔌️ The shared unit-test harness IS the mounted harness: registry-backed, instance-bound, settling
 /// through the same loop, closing its stores on drop.
 fn mounted() -> Mounted {
-    semio_framework_plugin::resolve_ready(app_with_registry())
+    ::semio_framework_async::poll::resolve_ready(app_with_registry())
 }
 
 fn select(targets: &[(&str, &str)]) -> serde_json::Value {

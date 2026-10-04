@@ -54,6 +54,8 @@ pub mod set_file_schema;
 /// no longer hand-written, though — `#[derive(dsl::Mutations)]` synthesizes both from the per-leaf
 /// `🔣️.json` descriptors beside this file, which does not need `DslField`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -65,6 +67,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum IfcMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 📇️ Sets the `FILE_DESCRIPTION` header record's raw value tuple.
     SetFileDescription(set_file_description::SetFileDescription),
     /// 📇️ Sets the `FILE_NAME` header record's raw value tuple.
@@ -89,7 +92,7 @@ pub enum IfcMutation {
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -137,6 +140,7 @@ fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
 fn print_ifc_mutation(m: &IfcMutation) -> String {
     match m {
         IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_ifc_snapshot(snapshot)),
+        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => format!("set-file-description values={}", enc_ifc_value_list(values)),
         IfcMutation::SetFileName(set_file_name::SetFileName { values }) => format!("set-file-name values={}", enc_ifc_value_list(values)),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => format!("set-file-schema values={}", enc_ifc_value_list(values)),
@@ -155,6 +159,7 @@ fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let u64_arg = |k: &str| -> Result<u64, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-snapshot" => Ok(IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_ifc_snapshot(arg("snapshot")?)? })),
         "set-file-description" => Ok(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: dec_ifc_value_list(arg("values")?)? })),
         "set-file-name" => Ok(IfcMutation::SetFileName(set_file_name::SetFileName { values: dec_ifc_value_list(arg("values")?)? })),
@@ -173,8 +178,8 @@ impl OpText for IfcMutation {
     fn print_op(&self) -> String {
         print_ifc_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_ifc_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -212,6 +217,7 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 /// 🏷️ Op tags of `IfcMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
 const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
 const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");
@@ -236,6 +242,7 @@ impl OpBinary for IfcMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             IfcMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
+            IfcMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             IfcMutation::SetFileDescription(..) => TAG_SET_FILE_DESCRIPTION,
             IfcMutation::SetFileName(..) => TAG_SET_FILE_NAME,
             IfcMutation::SetFileSchema(..) => TAG_SET_FILE_SCHEMA,
@@ -249,6 +256,7 @@ impl OpBinary for IfcMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_ifc_snapshot_bin(snapshot, &mut out),
+            IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileName(set_file_name::SetFileName { values }) => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => enc_ifc_value_list_bin(values, &mut out),
@@ -285,6 +293,7 @@ impl OpBinary for IfcMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
+            TAG_PATCH_SNAPSHOT => Ok(IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
             TAG_SET_SNAPSHOT => {
                 let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
@@ -347,6 +356,7 @@ impl OpBinary for IfcMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
+        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_ifc_snapshot() }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("demo".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("demo.ifc".into())] }),
@@ -383,6 +393,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
 pub(crate) fn agg_diff(this: &IfcMutation, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
     protocol::MutationOutcome::new(match this {
         IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
+        IfcMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<IfcSnapshot, IfcMutation>>::diff(patch, base),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => diff::diff_set_file_description(values.clone()),
         IfcMutation::SetFileName(set_file_name::SetFileName { values }) => diff::diff_set_file_name(values.clone()),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => diff::diff_set_file_schema(values.clone()),
@@ -401,32 +412,36 @@ pub(crate) fn agg_diff(this: &IfcMutation, base: &IfcSnapshot) -> protocol::Muta
 /// since that variant no longer exists — `apply_ifc_mutation`-ing zero steps and applying a former
 /// `NoMutation` step were always observationally identical.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &IfcMutation, base: &IfcSnapshot) -> Vec<IfcMutation> {
+pub(crate) fn agg_inverse(this: &IfcMutation, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
+    Ok({
     let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
     vec![match this {
         IfcMutation::SetSnapshot(_) => IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        IfcMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<IfcSnapshot, IfcMutation>>::inverse(patch, base)?),
         IfcMutation::SetFileDescription(_) => IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: base.header.file_description.clone() }),
         IfcMutation::SetFileName(_) => IfcMutation::SetFileName(set_file_name::SetFileName { values: base.header.file_name.clone() }),
         IfcMutation::SetFileSchema(_) => IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: base.header.file_schema.clone() }),
         IfcMutation::InsertEntity(insert_entity::InsertEntity { entity, .. }) => IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id }),
         IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => match base.entities.iter().position(|e| e.id == *id) {
             Some(index) => IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: base.entities[index].clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         IfcMutation::SetEntityName(set_entity_name::SetEntityName { id, .. }) => match entity(*id) {
             Some(e) => IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, .. }) => match entity(*id).and_then(|e| e.args.get(*index)) {
             Some(v) => IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: *id, index: *index, value: v.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
         IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, .. }) => IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, index: *index }),
         IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }) => match entity(*id).and_then(|e| e.args.get(*index)) {
             Some(v) => IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: *id, index: *index, value: v.clone() }),
-            None => return Vec::new(),
+            None => return Ok(Vec::new()),
         },
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

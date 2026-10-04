@@ -12,11 +12,17 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the DSL body is the committed grammar
   `../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line nodes-line edges-line`, `node = "[" hex "," hex "," hex ","
-  hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"`, `port-kind = "i" | "o" | "x"`,
-  and the restated `SemioValue` production `Z|B|I|F|S|Y|L|M|R`);
+  hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "]"` — id, kind, label,
+  x, y, width, height —, `port = "[" hex "," port-kind "," hex "," "[" property-list? "]" "]"`,
+  `edge = "[" hex "," hex "," hex "," hex "," hex "," optional-text "," optional-text "," "["
+  property-list? "]" "]"`, `port-kind = "i" | "o" | "x"`, and the restated `SemioValue` production
+  `Z|B|I|F|S|Y|L|M|R`);
 * the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`, whose `ports.kind`
-  enum is `in|out|inOut`, plus `🔢️value`'s own `…/🔢️value/🧬️schema/📸️snapshot/🔣️.json` for
-  the `SemioValue` member names (`lexeme`, `value`, `items`, `entries`, `id`);
+  enum is `in|out|inOut` and whose geometry (`position.x`/`position.y`/`width`/`height`) is the
+  declared binary64 WORD `{"bits": "<16 lowercase hex digits>"}` — the IEEE 754 bit pattern, so no
+  float ever round-trips through a decimal lexeme in the projection — plus `🔢️value`'s own
+  `…/🔢️value/🧬️schema/📸️snapshot/🔣️.json` for the `SemioValue` member names (`lexeme`, `value`,
+  `items`, `entries`, `id`);
 * the eleven verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
@@ -42,7 +48,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest
+from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
 
 # endregion 🔖️Imports
 
@@ -74,9 +80,10 @@ LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
 #: `🐍️derive-graph-fixture.py` in the ticket folder.
 TOWER_DSL = "shared://🌳️mutate-semio-graph/🏢️nakagin-capsule-tower/🗣️.dsl.semio"
 TOWER_PACK = "shared://🌳️mutate-semio-graph/🎒️.pack.semio"
-#: 🕸️ The tiny committed wires graph, kept for the BYTE half of the identity law: its two files were
-#: written by the RUST codec, so this implementation reproducing them is a cross-language byte
-#: agreement the tower pair — written by this implementation — cannot restate.
+#: 🕸️ The tiny committed wires graph, kept for the BYTE half of the identity law on a document that
+#: carries a property on every node. Both pairs were re-emitted by THIS implementation when the
+#: layout grew `width`/`height`, port `category`/`properties` and edge ports/properties (2026-10-04),
+#: so the Rust codec reproducing all four files byte for byte is the cross-language agreement.
 WIRES_DSL = "asset://🕸️wires/🗣️.dsl.semio"
 WIRES_PACK = "asset://🕸️wires/🎒️.pack.semio"
 
@@ -105,6 +112,29 @@ def print_number(value: float) -> str:
     if "e" in lexeme or "E" in lexeme:
         raise AssertionError("%r has no plain-decimal lexeme" % value)
     return lexeme
+
+
+def word(value: float) -> dict:
+    """🔢️ A binary64 as the projection's declared geometry word: its IEEE 754 bits, big-endian, lowercase hex."""
+    return {"bits": struct.pack(">d", float(value)).hex()}
+
+
+def number(geometry: dict) -> float:
+    """🔢️ The reading direction of `word`."""
+    bits = geometry["bits"]
+    if len(bits) != 16 or any(digit not in "0123456789abcdef" for digit in bits):
+        raise AssertionError("a geometry word is 16 lowercase hex digits, got %r" % bits)
+    return struct.unpack(">d", bytes.fromhex(bits))[0]
+
+
+def point_word(point: dict) -> dict:
+    """📍️ A mutation payload's plain `{x, y}` as the projection's pair of words."""
+    return {"x": word(point["x"]), "y": word(point["y"])}
+
+
+def point_number(point: dict) -> dict:
+    """📍️ The projection's pair of words as a mutation payload's plain `{x, y}`."""
+    return {"x": number(point["x"]), "y": number(point["y"])}
 
 
 def split_preamble(text: str) -> str:
@@ -219,39 +249,8 @@ def print_value(value: dict) -> str:
     return "M[%s]" % ",".join("%s:%s" % (hex_of(entry["key"]), print_value(entry["value"])) for entry in value["entries"])
 
 
-def read_port(reader: Reader) -> dict:
-    """🔌️ `port = "[" hex "," port-kind "]"`."""
-    reader.take("[")
-    name = reader.hex()
-    reader.take(",")
-    letter = reader.letter()
-    if letter not in LETTER_PORT:
-        raise AssertionError("unknown port-kind %r — the grammar declares i, o, x" % letter)
-    reader.take("]")
-    return {"name": name, "kind": LETTER_PORT[letter]}
-
-
-def read_node(reader: Reader) -> dict:
-    """🔵️ One `node` record — id, kind, label, x, y, ports, properties."""
-    reader.take("[")
-    node_id = reader.hex()
-    reader.take(",")
-    kind = reader.hex()
-    reader.take(",")
-    label = reader.hex()
-    reader.take(",")
-    x = float(reader.hex())
-    reader.take(",")
-    y = float(reader.hex())
-    reader.take(",")
-    reader.take("[")
-    ports = []
-    while reader.peek() != "]":
-        ports.append(read_port(reader))
-        if reader.peek() == ",":
-            reader.take(",")
-    reader.take("]")
-    reader.take(",")
+def read_properties(reader: Reader) -> list:
+    """🏷️ `"[" property-list? "]"` with `property = hex ":" value`."""
     reader.take("[")
     properties = []
     while reader.peek() != "]":
@@ -261,19 +260,88 @@ def read_node(reader: Reader) -> dict:
         if reader.peek() == ",":
             reader.take(",")
     reader.take("]")
+    return properties
+
+
+def print_properties(properties: list) -> str:
+    """🏷️ The writing direction of `read_properties`."""
+    return "[%s]" % ",".join("%s:%s" % (hex_of(entry["key"]), print_value(entry["value"])) for entry in properties)
+
+
+def read_port(reader: Reader) -> dict:
+    """🔌️ `port = "[" hex "," port-kind "," hex "," "[" property-list? "]" "]"` — name, kind, category, properties."""
+    reader.take("[")
+    name = reader.hex()
+    reader.take(",")
+    letter = reader.letter()
+    if letter not in LETTER_PORT:
+        raise AssertionError("unknown port-kind %r — the grammar declares i, o, x" % letter)
+    reader.take(",")
+    category = reader.hex()
+    reader.take(",")
+    properties = read_properties(reader)
     reader.take("]")
-    return {"id": {"value": node_id}, "kind": kind, "label": label, "position": {"x": x, "y": y}, "ports": ports, "properties": properties}
+    return {"name": name, "kind": LETTER_PORT[letter], "category": category, "properties": properties}
+
+
+def read_optional_text(reader: Reader):
+    """🫥️ `optional-text = "-" | "[" hex "]"`."""
+    if reader.peek() == "-":
+        reader.take("-")
+        return None
+    reader.take("[")
+    text = reader.hex()
+    reader.take("]")
+    return text
+
+
+def print_optional_text(text) -> str:
+    """🫥️ The writing direction of `read_optional_text`."""
+    return "-" if text is None else "[%s]" % hex_of(text)
+
+
+def read_node(reader: Reader) -> dict:
+    """🔵️ One `node` record — id, kind, label, x, y, width, height, ports, properties."""
+    reader.take("[")
+    texts = [reader.hex()]
+    for _ in range(6):
+        reader.take(",")
+        texts.append(reader.hex())
+    node_id, kind, label, x, y, width, height = texts
+    reader.take(",")
+    reader.take("[")
+    ports = []
+    while reader.peek() != "]":
+        ports.append(read_port(reader))
+        if reader.peek() == ",":
+            reader.take(",")
+    reader.take("]")
+    reader.take(",")
+    properties = read_properties(reader)
+    reader.take("]")
+    return {"id": {"value": node_id}, "kind": kind, "label": label, "position": point_word({"x": float(x), "y": float(y)}), "width": word(float(width)), "height": word(float(height)), "ports": ports, "properties": properties}
 
 
 def read_edge(reader: Reader) -> dict:
-    """➡️ `edge = "[" hex "," hex "," hex "," hex "," hex "]"` — id, source, target, kind, label."""
+    """➡️ `edge = "[" hex "," hex "," hex "," hex "," hex "," optional-text "," optional-text "," "[" property-list? "]" "]"` —
+    id, source, target, kind, label, source port, target port, properties. An absent port is no projection member."""
     reader.take("[")
     fields = [reader.hex()]
     for _ in range(4):
         reader.take(",")
         fields.append(reader.hex())
+    reader.take(",")
+    source_port = read_optional_text(reader)
+    reader.take(",")
+    target_port = read_optional_text(reader)
+    reader.take(",")
+    properties = read_properties(reader)
     reader.take("]")
-    return {"id": {"value": fields[0]}, "source": {"value": fields[1]}, "target": {"value": fields[2]}, "kind": fields[3], "label": fields[4]}
+    edge = {"id": {"value": fields[0]}, "source": {"value": fields[1]}, "target": {"value": fields[2]}, "kind": fields[3], "label": fields[4], "properties": properties}
+    for member, value in (("sourcePort", source_port), ("targetPort", target_port)):
+        if value is not None:
+            edge[member] = value
+    return edge
 
 
 def read_list(line: str, reader_of) -> list:
@@ -309,20 +377,23 @@ def parse_dsl(text: str) -> dict:
 def print_dsl(document: dict) -> str:
     """✍️ The writing direction of the same grammar, under the same envelope."""
     nodes = ",".join(
-        "[%s,%s,%s,%s,%s,[%s],[%s]]"
+        "[%s,%s,%s,%s,%s,%s,%s,[%s],%s]"
         % (
             hex_of(node["id"]["value"]),
             hex_of(node["kind"]),
             hex_of(node["label"]),
-            hex_of(print_number(node["position"]["x"])),
-            hex_of(print_number(node["position"]["y"])),
-            ",".join("[%s,%s]" % (hex_of(port["name"]), PORT_LETTER[port["kind"]]) for port in node["ports"]),
-            ",".join("%s:%s" % (hex_of(entry["key"]), print_value(entry["value"])) for entry in node["properties"]),
+            hex_of(print_number(number(node["position"]["x"]))),
+            hex_of(print_number(number(node["position"]["y"]))),
+            hex_of(print_number(number(node["width"]))),
+            hex_of(print_number(number(node["height"]))),
+            ",".join("[%s,%s,%s,%s]" % (hex_of(port["name"]), PORT_LETTER[port["kind"]], hex_of(port["category"]), print_properties(port["properties"])) for port in node["ports"]),
+            print_properties(node["properties"]),
         )
         for node in document["nodes"]
     )
     edges = ",".join(
-        "[%s,%s,%s,%s,%s]" % (hex_of(edge["id"]["value"]), hex_of(edge["source"]["value"]), hex_of(edge["target"]["value"]), hex_of(edge["kind"]), hex_of(edge["label"]))
+        "[%s,%s,%s,%s,%s,%s,%s,%s]"
+        % (hex_of(edge["id"]["value"]), hex_of(edge["source"]["value"]), hex_of(edge["target"]["value"]), hex_of(edge["kind"]), hex_of(edge["label"]), print_optional_text(edge.get("sourcePort")), print_optional_text(edge.get("targetPort")), print_properties(edge["properties"]))
         for edge in document["edges"]
     )
     return "%s\nschema=%s\nnodes=[%s]\nedges=[%s]" % (DSL_PREAMBLE, hex_of(document["schema"]), nodes, edges)
@@ -454,6 +525,51 @@ def unwrap_binary(data: bytes) -> bytes:
     return data[12 + token_len :]
 
 
+def read_pack_properties(data: bytes, at: int) -> tuple:
+    """🏷️ A varint count, then that many `key` string + tagged value pairs."""
+    count, at = read_varint(data, at)
+    properties = []
+    for _ in range(count):
+        key, at = read_string(data, at)
+        value, at = read_pack_value(data, at)
+        properties.append({"key": key, "value": value})
+    return properties, at
+
+
+def write_pack_properties(properties: list) -> bytes:
+    """🏷️ The writing direction of `read_pack_properties`."""
+    out = bytearray(write_varint(len(properties)))
+    for entry in properties:
+        out += write_string(entry["key"])
+        out += write_pack_value(entry["value"])
+    return bytes(out)
+
+
+def read_pack_word(data: bytes, at: int) -> tuple:
+    """🔢️ One raw little-endian binary64, kept as its exact bit pattern."""
+    return {"bits": "%016x" % struct.unpack_from("<Q", data, at)[0]}, at + 8
+
+
+def write_pack_word(geometry: dict) -> bytes:
+    """🔢️ The writing direction of `read_pack_word`."""
+    return struct.pack("<d", number(geometry))
+
+
+def read_pack_optional(data: bytes, at: int) -> tuple:
+    """🫥️ `0` (absent) or `1` + one length-prefixed string."""
+    tag = data[at]
+    if tag == 0:
+        return None, at + 1
+    if tag != 1:
+        raise AssertionError("invalid optional text tag %d" % tag)
+    return read_string(data, at + 1)
+
+
+def write_pack_optional(text) -> bytes:
+    """🫥️ The writing direction of `read_pack_optional`."""
+    return b"\x00" if text is None else b"\x01" + write_string(text)
+
+
 def parse_pack(data: bytes) -> dict:
     """📦️ Binary envelope, then `format u8`, the schema, the node records and the edge records."""
     body = unwrap_binary(data)
@@ -466,8 +582,10 @@ def parse_pack(data: bytes) -> dict:
         node_id, at = read_string(body, at)
         kind, at = read_string(body, at)
         label, at = read_string(body, at)
-        x, y = struct.unpack_from("<2d", body, at)
-        at += 16
+        x, at = read_pack_word(body, at)
+        y, at = read_pack_word(body, at)
+        width, at = read_pack_word(body, at)
+        height, at = read_pack_word(body, at)
         port_count, at = read_varint(body, at)
         ports = []
         for _ in range(port_count):
@@ -476,14 +594,11 @@ def parse_pack(data: bytes) -> dict:
             at += 1
             if ordinal >= len(PORT_ORDER):
                 raise AssertionError("unknown port ordinal %d" % ordinal)
-            ports.append({"name": name, "kind": PORT_ORDER[ordinal]})
-        property_count, at = read_varint(body, at)
-        properties = []
-        for _ in range(property_count):
-            key, at = read_string(body, at)
-            value, at = read_pack_value(body, at)
-            properties.append({"key": key, "value": value})
-        nodes.append({"id": {"value": node_id}, "kind": kind, "label": label, "position": {"x": x, "y": y}, "ports": ports, "properties": properties})
+            category, at = read_string(body, at)
+            port_properties, at = read_pack_properties(body, at)
+            ports.append({"name": name, "kind": PORT_ORDER[ordinal], "category": category, "properties": port_properties})
+        properties, at = read_pack_properties(body, at)
+        nodes.append({"id": {"value": node_id}, "kind": kind, "label": label, "position": {"x": x, "y": y}, "width": width, "height": height, "ports": ports, "properties": properties})
     edge_count, at = read_varint(body, at)
     edges = []
     for _ in range(edge_count):
@@ -491,7 +606,14 @@ def parse_pack(data: bytes) -> dict:
         for _ in range(5):
             field, at = read_string(body, at)
             fields.append(field)
-        edges.append({"id": {"value": fields[0]}, "source": {"value": fields[1]}, "target": {"value": fields[2]}, "kind": fields[3], "label": fields[4]})
+        source_port, at = read_pack_optional(body, at)
+        target_port, at = read_pack_optional(body, at)
+        properties, at = read_pack_properties(body, at)
+        edge = {"id": {"value": fields[0]}, "source": {"value": fields[1]}, "target": {"value": fields[2]}, "kind": fields[3], "label": fields[4], "properties": properties}
+        for member, value in (("sourcePort", source_port), ("targetPort", target_port)):
+            if value is not None:
+                edge[member] = value
+        edges.append(edge)
     if at != len(body):
         raise AssertionError("%d trailing byte(s) after the last edge record" % (len(body) - at))
     return {"schema": schema, "nodes": nodes, "edges": edges}
@@ -506,19 +628,22 @@ def pack_bytes(document: dict) -> bytes:
         body += write_string(node["id"]["value"])
         body += write_string(node["kind"])
         body += write_string(node["label"])
-        body += struct.pack("<2d", node["position"]["x"], node["position"]["y"])
+        for geometry in (node["position"]["x"], node["position"]["y"], node["width"], node["height"]):
+            body += write_pack_word(geometry)
         body += write_varint(len(node["ports"]))
         for port in node["ports"]:
             body += write_string(port["name"])
             body.append(PORT_ORDER.index(port["kind"]))
-        body += write_varint(len(node["properties"]))
-        for entry in node["properties"]:
-            body += write_string(entry["key"])
-            body += write_pack_value(entry["value"])
+            body += write_string(port["category"])
+            body += write_pack_properties(port["properties"])
+        body += write_pack_properties(node["properties"])
     body += write_varint(len(document["edges"]))
     for edge in document["edges"]:
         for field in (edge["id"]["value"], edge["source"]["value"], edge["target"]["value"], edge["kind"], edge["label"]):
             body += write_string(field)
+        body += write_pack_optional(edge.get("sourcePort"))
+        body += write_pack_optional(edge.get("targetPort"))
+        body += write_pack_properties(edge["properties"])
     token = PACK_TOKEN.encode("utf-8")
     return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
 
@@ -540,6 +665,14 @@ TAG_OF_KIND = {
     "remove-node-property": "RemoveNodeProperty",
     "create-edge": "CreateEdge",
     "delete-edge": "DeleteEdge",
+    "drag-nodes": "DragNodes",
+    "set-node-property": "SetNodeProperty",
+    "resize-node": "ResizeNode",
+    "rename-node": "RenameNode",
+    "set-edge-property": "SetEdgeProperty",
+    "add-edge-property": "AddEdgeProperty",
+    "remove-edge-property": "RemoveEdgeProperty",
+    "patch-snapshot": "PatchSnapshot",
 }
 
 
@@ -573,6 +706,27 @@ def slot_index(items: list, index, verb: str, what: str, inclusive: bool) -> int
     return index
 
 
+def insert_index(items: list, at) -> int:
+    """📍️ Where a created record lands: its `at` clamped to the end, or the end when `at` is absent."""
+    return len(items) if at is None else min(at, len(items))
+
+
+def property_of(owner: dict, key: str, verb: str) -> dict:
+    """🔎️ The keyed property one verb addresses on a node or an edge. A key it does not carry is a refusal, never a no-op."""
+    for entry in owner.get("properties", []):
+        if entry["key"] == key:
+            return entry
+    raise AssertionError("%s addresses property %r, which %r does not carry" % (verb, key, owner["id"]))
+
+
+def edge_at(document: dict, edge_id: dict, verb: str) -> dict:
+    """🔎️ The edge one verb addresses. An id no edge carries is a refusal, never a no-op."""
+    for edge in document["edges"]:
+        if edge["id"] == edge_id:
+            return edge
+    raise AssertionError("%s addresses edge %r, which the graph does not carry" % (verb, edge_id))
+
+
 def apply_mutation(document: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW document. `delete-node` CASCADES into every edge with
     that node as source or target, which is the behaviour the committed `removes-the-sink-node-and-
@@ -580,10 +734,13 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     no-op — a quietly skipped mutation would report as a pass."""
     result = clone(document)
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return patched_snapshot(document, args["patch"])
     if tag == "CreateNode":
         if any(node["id"] == args["id"] for node in result["nodes"]):
             raise AssertionError("CreateNode uses id %r, which the graph already carries" % args["id"])
-        result["nodes"].append({"id": clone(args["id"]), "kind": args["kind"], "label": args["label"], "position": clone(args["position"]), "ports": clone(args["ports"]), "properties": clone(args["properties"])})
+        created = {"id": clone(args["id"]), "kind": args["kind"], "label": args["label"], "position": point_word(args["position"]), "width": word(args["width"]), "height": word(args["height"]), "ports": clone(args["ports"]), "properties": clone(args["properties"])}
+        result["nodes"].insert(insert_index(result["nodes"], args.get("at")), created)
     elif tag == "DeleteNode":
         node_at(result, args["id"], tag)
         result["nodes"] = [node for node in result["nodes"] if node["id"] != args["id"]]
@@ -593,7 +750,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     elif tag == "ChangeNodeLabel":
         node_at(result, args["id"], tag)["label"] = args["new_label"]
     elif tag == "MoveNode":
-        node_at(result, args["id"], tag)["position"] = clone(args["new_position"])
+        node_at(result, args["id"], tag)["position"] = point_word(args["new_position"])
     elif tag == "AddNodePort":
         ports = node_at(result, args["node_id"], tag)["ports"]
         ports.insert(slot_index(ports, args["index"], tag, "port", True), clone(args["port"]))
@@ -604,12 +761,48 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         properties = node_at(result, args["node_id"], tag)["properties"]
         properties.insert(slot_index(properties, args["index"], tag, "property", True), clone(args["property"]))
     elif tag == "RemoveNodeProperty":
-        properties = node_at(result, args["node_id"], tag)["properties"]
-        del properties[slot_index(properties, args["index"], tag, "property", False)]
+        node = node_at(result, args["node_id"], tag)
+        node["properties"].remove(property_of(node, args["key"], tag))
+    elif tag == "DragNodes":
+        present = [node for node in result["nodes"] if node["id"] in args["targets"]]
+        if not present:
+            raise AssertionError("DragNodes addresses none of the graph's nodes: %r" % args["targets"])
+        for node in present:
+            node["position"] = point_word({"x": number(node["position"]["x"]) + args["dx"], "y": number(node["position"]["y"]) + args["dy"]})
+    elif tag == "SetNodeProperty":
+        property_of(node_at(result, args["node_id"], tag), args["key"], tag)["value"] = clone(args["value"])
+    elif tag == "ResizeNode":
+        if not all(isinstance(args[side], (int, float)) and args[side] >= 0 for side in ("width", "height")):
+            raise AssertionError("ResizeNode needs a finite non-negative size, got %r" % args)
+        node = node_at(result, args["id"], tag)
+        node["width"], node["height"] = word(args["width"]), word(args["height"])
+    elif tag == "RenameNode":
+        node = node_at(result, args["id"], tag)
+        if not args["new_id"]["value"] or any(other["id"] == args["new_id"] for other in result["nodes"]):
+            raise AssertionError("RenameNode needs a free non-empty id, got %r" % args["new_id"])
+        node["id"] = clone(args["new_id"])
+        for edge in result["edges"]:
+            for end in ("source", "target"):
+                if edge[end] == args["id"]:
+                    edge[end] = clone(args["new_id"])
+    elif tag == "SetEdgeProperty":
+        property_of(edge_at(result, args["edge_id"], tag), args["key"], tag)["value"] = clone(args["value"])
+    elif tag == "AddEdgeProperty":
+        properties = edge_at(result, args["edge_id"], tag)["properties"]
+        if any(entry["key"] == args["property"]["key"] for entry in properties):
+            raise AssertionError("AddEdgeProperty attaches key %r, which the edge already carries" % args["property"]["key"])
+        properties.insert(min(args["index"], len(properties)), clone(args["property"]))
+    elif tag == "RemoveEdgeProperty":
+        edge = edge_at(result, args["edge_id"], tag)
+        edge["properties"].remove(property_of(edge, args["key"], tag))
     elif tag == "CreateEdge":
         if any(edge["id"] == args["id"] for edge in result["edges"]):
             raise AssertionError("CreateEdge uses id %r, which the graph already carries" % args["id"])
-        result["edges"].append({"id": clone(args["id"]), "source": clone(args["source"]), "target": clone(args["target"]), "kind": args["kind"], "label": args["label"]})
+        created = {"id": clone(args["id"]), "source": clone(args["source"]), "target": clone(args["target"]), "kind": args["kind"], "label": args["label"], "properties": clone(args.get("properties", []))}
+        for member, key in (("sourcePort", "source_port"), ("targetPort", "target_port")):
+            if args.get(key) is not None:
+                created[member] = args[key]
+        result["edges"].insert(insert_index(result["edges"], args.get("at")), created)
     else:
         if not any(edge["id"] == args["id"] for edge in result["edges"]):
             raise AssertionError("DeleteEdge addresses edge %r, which the graph does not carry" % args["id"])
@@ -617,9 +810,9 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     return result
 
 
-def edge_mutation(edge: dict) -> dict:
-    """➡️ The `CreateEdge` that puts one edge back exactly as it was."""
-    return {"CreateEdge": {"id": clone(edge["id"]), "source": clone(edge["source"]), "target": clone(edge["target"]), "kind": edge["kind"], "label": edge["label"]}}
+def edge_mutation(edge: dict, at: int) -> dict:
+    """➡️ The `CreateEdge` that puts one edge back exactly as it was, at the index it held."""
+    return {"CreateEdge": {"id": clone(edge["id"]), "source": clone(edge["source"]), "target": clone(edge["target"]), "kind": edge["kind"], "label": edge["label"], "source_port": edge.get("sourcePort"), "target_port": edge.get("targetPort"), "properties": clone(edge["properties"]), "at": at}}
 
 
 def inverse_mutation(document: dict, mutation: dict) -> list:
@@ -627,19 +820,21 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     meanings — an append is undone by the matching delete, an overwrite by an overwrite with the
     value it displaced, and a cascading delete by re-creating the node AND every edge it severed."""
     tag, args = tagged(mutation)
+    if tag == "PatchSnapshot":
+        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag == "CreateNode":
         return [{"DeleteNode": {"id": clone(args["id"])}}]
     if tag == "DeleteNode":
         node = node_at(document, args["id"], tag)
-        steps = [{"CreateNode": {"id": clone(node["id"]), "kind": node["kind"], "label": node["label"], "position": clone(node["position"]), "ports": clone(node["ports"]), "properties": clone(node["properties"])}}]
-        steps.extend(edge_mutation(edge) for edge in document["edges"] if edge["source"] == args["id"] or edge["target"] == args["id"])
+        steps = [{"CreateNode": {"id": clone(node["id"]), "kind": node["kind"], "label": node["label"], "position": point_number(node["position"]), "width": number(node["width"]), "height": number(node["height"]), "ports": clone(node["ports"]), "properties": clone(node["properties"]), "at": document["nodes"].index(node)}}]
+        steps.extend(edge_mutation(edge, at) for at, edge in enumerate(document["edges"]) if edge["source"] == args["id"] or edge["target"] == args["id"])
         return steps
     if tag == "ChangeNodeKind":
         return [{"ChangeNodeKind": {"id": clone(args["id"]), "new_kind": node_at(document, args["id"], tag)["kind"]}}]
     if tag == "ChangeNodeLabel":
         return [{"ChangeNodeLabel": {"id": clone(args["id"]), "new_label": node_at(document, args["id"], tag)["label"]}}]
     if tag == "MoveNode":
-        return [{"MoveNode": {"id": clone(args["id"]), "new_position": clone(node_at(document, args["id"], tag)["position"])}}]
+        return [{"MoveNode": {"id": clone(args["id"]), "new_position": point_number(node_at(document, args["id"], tag)["position"])}}]
     if tag == "AddNodePort":
         return [{"RemoveNodePort": {"node_id": clone(args["node_id"]), "index": args["index"]}}]
     if tag == "RemoveNodePort":
@@ -647,16 +842,37 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         index = slot_index(ports, args["index"], tag, "port", False)
         return [{"AddNodePort": {"node_id": clone(args["node_id"]), "index": index, "port": clone(ports[index])}}]
     if tag == "AddNodeProperty":
-        return [{"RemoveNodeProperty": {"node_id": clone(args["node_id"]), "index": args["index"]}}]
+        return [{"RemoveNodeProperty": {"node_id": clone(args["node_id"]), "key": args["property"]["key"]}}]
     if tag == "RemoveNodeProperty":
-        properties = node_at(document, args["node_id"], tag)["properties"]
-        index = slot_index(properties, args["index"], tag, "property", False)
-        return [{"AddNodeProperty": {"node_id": clone(args["node_id"]), "index": index, "property": clone(properties[index])}}]
+        node = node_at(document, args["node_id"], tag)
+        entry = property_of(node, args["key"], tag)
+        return [{"AddNodeProperty": {"node_id": clone(args["node_id"]), "index": node["properties"].index(entry), "property": clone(entry)}}]
+    if tag == "DragNodes":
+        seen = []
+        for target in args["targets"]:
+            if target not in seen:
+                seen.append(target)
+        return [{"MoveNode": {"id": clone(node["id"]), "new_position": point_number(node["position"])}} for target in seen for node in document["nodes"] if node["id"] == target]
+    if tag == "SetNodeProperty":
+        return [{"SetNodeProperty": {"node_id": clone(args["node_id"]), "key": args["key"], "value": clone(property_of(node_at(document, args["node_id"], tag), args["key"], tag)["value"])}}]
+    if tag == "ResizeNode":
+        node = node_at(document, args["id"], tag)
+        return [{"ResizeNode": {"id": clone(args["id"]), "width": number(node["width"]), "height": number(node["height"])}}]
+    if tag == "RenameNode":
+        return [{"RenameNode": {"id": clone(args["new_id"]), "new_id": clone(args["id"])}}]
+    if tag == "SetEdgeProperty":
+        return [{"SetEdgeProperty": {"edge_id": clone(args["edge_id"]), "key": args["key"], "value": clone(property_of(edge_at(document, args["edge_id"], tag), args["key"], tag)["value"])}}]
+    if tag == "AddEdgeProperty":
+        return [{"RemoveEdgeProperty": {"edge_id": clone(args["edge_id"]), "key": args["property"]["key"]}}]
+    if tag == "RemoveEdgeProperty":
+        edge = edge_at(document, args["edge_id"], tag)
+        entry = property_of(edge, args["key"], tag)
+        return [{"AddEdgeProperty": {"edge_id": clone(args["edge_id"]), "index": edge["properties"].index(entry), "property": clone(entry)}}]
     if tag == "CreateEdge":
         return [{"DeleteEdge": {"id": clone(args["id"])}}]
-    for edge in document["edges"]:
+    for at, edge in enumerate(document["edges"]):
         if edge["id"] == args["id"]:
-            return [edge_mutation(edge)]
+            return [edge_mutation(edge, at)]
     raise AssertionError("DeleteEdge addresses edge %r, which the graph does not carry" % args["id"])
 
 
@@ -753,10 +969,9 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 def identity_round_trip(ctx: Context) -> Outcome:
     """🔁️ Both graphs, in both encodings — four files, all four reproduced byte for byte.
 
-    The committed wires graph's two files were written by the RUST codec, so this implementation
-    reproducing them is a cross-language byte agreement, not a codec agreeing with itself. The
-    capsule tower's two files were written by THIS implementation from the grammar and the protocol,
-    so the Rust codec has to reproduce THOSE — 364 ports and 366 typed properties among them.
+    All four files were written by THIS implementation from the grammar and the protocol, so the
+    Rust codec has to reproduce THEM — 364 ports and 366 typed properties among the tower's — which
+    is a cross-language byte agreement, not a codec agreeing with itself.
     """
     wires = carrier_pair(ctx, WIRES_DSL, WIRES_PACK, "the committed wires graph")
     if len(wires["document"]["nodes"]) != 2 or len(wires["document"]["edges"]) != 1:

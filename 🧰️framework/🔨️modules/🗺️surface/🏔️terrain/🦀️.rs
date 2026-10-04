@@ -19,7 +19,8 @@
 
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -176,7 +177,7 @@ struct DecodedElevationTile {
     image: semio_framework_pixels::RasterImage,
 }
 
-#[derive(Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct TerrainTileMeshJson {
@@ -270,13 +271,13 @@ fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
 //#endregion TerrainTileMesh
 
 //#region VisibleTileQuery
-#[derive(Deserialize, FromValue)]
+#[derive(Deserialize, semio_framework_value::FromValue)]
 struct CameraRecord {
     position: Option<[f64; 3]>,
     target: Option<[f64; 3]>,
 }
 
-#[derive(Serialize, ToValue)]
+#[derive(Serialize, semio_framework_value::ToValue)]
 struct VisibleTileRow {
     z: u32,
     x: u32,

@@ -119,7 +119,7 @@ fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
 
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let wire = pack::json_to_string(&pack::json!({
+    let wire = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({
         "schema": TRINITY_GRAPH_SCHEMA,
         "id": "jack-live-load",
         "vcs": {
@@ -209,15 +209,35 @@ async fn jack_live_envelope_cancel_closes_retained_pages_without_publication() {
     assert_eq!(app.artifact_generation_now(), base_generation);
 }
 
-fn node_id_at(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, index: usize) -> String {
-    app.snapshot().expect("projection").nodes()[index].id.clone()
+/// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
+async fn live_scene(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> crate::JackWorkingScene {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+    use store::{ArtifactPack, SpaceMember};
+    let snapshot = app.snapshot().expect("Jack parent projection");
+    let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("Jack content child").document_pack_bytes().await.expect("Jack content child pack");
+    let (nodes, edges) = crate::working_from_jack_content_snapshot(&SemioGraphSnapshot::decode_pack(&bytes).expect("Jack content child snapshot")).expect("Jack content child scene");
+    crate::JackWorkingScene { nodes, edges }
+}
+
+async fn node_id_at(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, index: usize) -> String {
+    live_scene(app).await.nodes[index].id.clone()
+}
+
+/// 🏷️ The live names of the nodes `ids` names, every node when `ids` is `None`, in scene order.
+async fn node_names(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, ids: Option<&[String]>) -> Vec<String> {
+    live_scene(app).await.nodes.into_iter().filter(|node| ids.is_none_or(|ids| ids.contains(&node.id))).map(|node| node.name).collect()
+}
+
+/// 🏷️ The live name of node `id`.
+async fn node_name(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, id: &str) -> String {
+    live_scene(app).await.nodes.into_iter().find(|node| node.id == id).map(|node| node.name).expect("node")
 }
 
 /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "ast" — the
 /// replacement for the deleted `TrinityJackCommand::SetSelection`.
 async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, ids: &[&str]) {
-    let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
-    let args = pack::json_to_dsl_value(&pack::json!({ "domainId": "ast", "targets": pack::to_json_string(&targets) }));
+    let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "ast", "targets": semio_framework_pack_json::to_json_string(&targets) }));
     let admitted = app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
     // 🕹️ On a mounted app the verb is admitted as a framework-reserved job and publishes later —
     // settle both so the selection is live before the next dispatch reads it.
@@ -256,18 +276,14 @@ async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     .await
     .expect("run");
     drive_query_ownership_operations(&mut app).await.expect("query completes");
-    let projection = app.snapshot().expect("projection");
-    // 🔬 `content` is now an opaque composed-child handle — `pack::to_json_string(&projection)`
-    // no longer surfaces node property data directly (ticket
-    // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); inspect through the working-scene
-    // accessor instead of the raw derived JSON serialization.
-    assert!(projection.nodes().iter().any(|node| node.properties.get("label") == Some(&crate::PropertyValue::String("ran-label".into()))));
+    // 🔬 The query's SET is ONE edit of the composed `content` child: the live member store holds the label.
+    assert!(live_scene(&app).await.nodes.iter().any(|node| node.properties.get("label") == Some(&crate::PropertyValue::String("ran-label".into()))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn node_graph_select_updates_selection_and_document_tree() {
     let mut app = new_app().await;
-    let node_id = node_id_at(&app, 0);
+    let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id]).await;
     let tree = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project semantic UI test tree");
@@ -281,7 +297,7 @@ async fn node_graph_select_updates_selection_and_document_tree() {
 
 #[semio_framework_async_macros::async_test]
 async fn nakagin_fixture_has_nodes() {
-    assert!(!default_fixture().nodes().is_empty());
+    assert!(!crate::jack_working_scene(&default_fixture()).expect("curated example scene").nodes.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -337,7 +353,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     for (index, text) in run.texts.iter().enumerate() {
         now += 40;
         app.set_tool_clock_ms(Some(now));
-        let args = dsl::DslValue::Object(vec![("text".into(), dsl::DslValue::String(text.clone())), (semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String("trinity.jack.query".into()))]);
+        let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(text.clone())), (semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String("trinity.jack.query".into()))]);
         app.handle_action("textEdit", Some(&args), &meta_of()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
         drive_query_ownership_operations(&mut app).await.unwrap_or_else(|error| panic!("keystroke {index} did not publish: {error}"));
         artifact_app_laws::drain_maintenance_pressure(&mut app.app);
@@ -345,7 +361,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     assert_eq!(jack_query(&mut app, &editor).await, run.expected, "the query window shows the open run");
     assert_eq!((app.snapshot().expect("projection").query.clone(), app.edit_transactions().len()), (before.clone(), edits), "nothing lands while the run is open");
     app.set_tool_clock_ms(Some(now + 750));
-    let commit = dsl::DslValue::Object(vec![(semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String("trinity.jack.query".into())), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), dsl::DslValue::String("idle".into()))]);
+    let commit = semio_framework_value::DslValue::Object(vec![(semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String("trinity.jack.query".into())), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
     app.handle_action("textEdit", Some(&commit), &meta_of()).await.expect("the idle commit");
     drive_query_ownership_operations(&mut app).await.expect("the run publishes");
     assert_eq!(app.snapshot().expect("projection").query, run.expected);
@@ -392,7 +408,7 @@ async fn catalogue_tree_renders() {
 #[semio_framework_async_macros::async_test]
 async fn inspection_panel_renders_the_selection_prompt() {
     let mut app = new_app().await;
-    let node_id = node_id_at(&app, 0);
+    let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id]).await;
     let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
@@ -425,25 +441,25 @@ async fn set_active_example_loads_the_example_with_its_preset_query() {
     });
     let loaded = loaded.expect("setActiveExample must request the LoadDocument effect");
     assert_eq!(loaded.query, crate::editor::jack::commands::preset_query("branch-chain"), "the example document carries its own preset query");
-    assert!(!loaded.nodes().is_empty(), "the example document carries its graph");
+    assert!(!crate::jack_working_scene(&loaded).expect("the example's content child").nodes.is_empty(), "the example document carries its graph");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_selected_node() {
     let mut app = new_app().await;
-    let node_id = node_id_at(&app, 0);
+    let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id]).await;
     let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).await.expect("delete");
     let receipt = settle(&mut app).await;
-    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "deleteSelection must publish an artifact mutation: lanes {:?}", receipt.lanes);
-    let projection = app.snapshot().expect("projection");
-    assert!(!projection.nodes().iter().any(|node| node.id == node_id));
+    assert!(result.mutations.is_empty(), "deleteSelection writes no parent leaf: {:?}", result.mutations);
+    assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child), "deleteSelection must publish one content child edit: lanes {:?}", receipt.lanes);
+    assert!(!live_scene(&app).await.nodes.iter().any(|node| node.id == node_id));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
     let mut app = new_app().await;
-    let node_id = node_id_at(&app, 0);
+    let node_id = node_id_at(&app, 0).await;
     let request = ContextMenuRequest {
         menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
         surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -489,7 +505,7 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
     let outcome: Result<(u64, String), String> = async {
         let before = app.ephemeral_snapshot().await.transient_generation;
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
-        let expected_name = document.nodes().into_iter().find(|node| node.kind == "Piece").ok_or_else(|| "query runtime fixture has no Piece".to_string())?.name;
+        let expected_name = live_scene(&app).await.nodes.into_iter().find(|node| node.kind == "Piece").ok_or_else(|| "query runtime fixture has no Piece".to_string())?.name;
         let view = query_windows();
         let editor = view.for_window_instance("editor-main").ok_or("missing editor window")?;
         let results = view.for_window_instance("results-main").ok_or("missing results window")?;
@@ -727,7 +743,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
 async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
     let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
     for query in [crate::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
-        let graph = crate::editor::jack::graph_from_snapshot_or_default(&example);
+        let graph = crate::Graph::from_snapshot(example.clone()).expect("curated example graph");
         let diagnostics = crate::core::lint(&graph, query);
         assert!(diagnostics.is_empty(), "{query} must lint clean on the curated example, got {diagnostics:?}");
         let mut graph = graph;
@@ -738,7 +754,7 @@ async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
 //#region 🩹️RailVerbLaws
 /// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.
 async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)]) -> Result<(), semio_framework_plugin::Fault> {
-    let args = pack::json_to_dsl_value(&pack::JsonValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), pack::JsonValue::String((*value).to_string()))).collect()));
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_pack_json::Value::String((*value).to_string()))).collect()));
     app.handle_action(action, Some(&args), &meta("local")).await?;
     artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.map(|_| ())
 }
@@ -748,13 +764,12 @@ async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_from_the_rail_renames_the_selection_or_the_listed_nodes() {
     let mut app = new_app().await;
-    let (first, second) = (node_id_at(&app, 0), node_id_at(&app, 1));
+    let (first, second) = (node_id_at(&app, 0).await, node_id_at(&app, 1).await);
     select_ast(&mut app, &[&first]).await;
     dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Selected")]).await.expect("an empty nodeIds patches the selection");
-    let renamed = |app: &JackTestApp, id: &str| app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == id).map(|node| node.name).expect("node");
-    assert_eq!(renamed(&app, &first), "S15 Selected");
+    assert_eq!(node_name(&app, &first).await, "S15 Selected");
     dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &format!("{first}, {second}")), ("field", "name"), ("value", "S15 Listed")]).await.expect("a comma list names both nodes");
-    assert_eq!((renamed(&app, &first), renamed(&app, &second)), ("S15 Listed".to_string(), "S15 Listed".to_string()));
+    assert_eq!((node_name(&app, &first).await, node_name(&app, &second).await), ("S15 Listed".to_string(), "S15 Listed".to_string()));
 }
 
 /// ⏪️ LAW: a rail `patchNodes` is one undoable edit of the local user, whether it renames one node or the whole
@@ -764,16 +779,18 @@ async fn patch_nodes_from_the_rail_renames_the_selection_or_the_listed_nodes() {
 async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
     for selected in [1usize, 2] {
         let mut app = new_app().await;
-        let ids: Vec<String> = (0..selected).map(|index| node_id_at(&app, index)).collect();
-        let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().filter(|node| ids.contains(&node.id)).map(|node| node.name).collect::<Vec<_>>();
-        let before = names(&app);
+        let mut ids = Vec::new();
+        for index in 0..selected {
+            ids.push(node_id_at(&app, index).await);
+        }
+        let before = node_names(&app, Some(&ids)).await;
         select_ast(&mut app, &ids.iter().map(String::as_str).collect::<Vec<_>>()).await;
         dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Undo")]).await.expect("patch the selection");
-        assert_eq!(names(&app), vec!["S15 Undo".to_string(); selected], "{selected} selected");
+        assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "{selected} selected");
         artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE).await;
-        assert_eq!(names(&app), before, "undo restores all {selected} renamed nodes");
+        assert_eq!(node_names(&app, Some(&ids)).await, before, "undo restores all {selected} renamed nodes");
         artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE).await;
-        assert_eq!(names(&app), vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
+        assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
     }
 }
 
@@ -790,17 +807,16 @@ async fn framework_verb(app: &mut JackTestApp, action: &str) {
 #[semio_framework_async_macros::async_test]
 async fn the_shells_select_all_patch_undo_redo_round_trip_restores_every_node() {
     let mut app = new_app().await;
-    let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().map(|node| node.name).collect::<Vec<_>>();
-    let before = names(&app);
+    let before = node_names(&app, None).await;
     framework_verb(&mut app, "selectAll").await;
     dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 All")]).await.expect("patch the whole selection");
-    let patched = names(&app);
+    let patched = node_names(&app, None).await;
     assert!(patched.iter().all(|name| name == "S15 All"), "every selected node renamed: {patched:?}");
     framework_verb(&mut app, "clearSelection").await;
     framework_verb(&mut app, "undo").await;
-    assert_eq!(names(&app), before, "undo restores every node");
+    assert_eq!(node_names(&app, None).await, before, "undo restores every node");
     framework_verb(&mut app, "redo").await;
-    assert_eq!(names(&app), patched, "redo renames them again");
+    assert_eq!(node_names(&app, None).await, patched, "redo renames them again");
 }
 
 /// ⏪️ LAW: after the host LOADS the curated example (envelope ingress, swapped store), the shell's `selectAll` →
@@ -812,18 +828,17 @@ async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
     let handle = admit_jack_envelope(&mut app, &jack_envelope_wire_of(example));
     assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact load acknowledgement"));
-    let names = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().map(|node| node.name).collect::<Vec<_>>();
-    let before = names(&app);
+    let before = node_names(&app, None).await;
     assert!(!before.is_empty(), "the curated example has nodes");
     framework_verb(&mut app, "selectAll").await;
     dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Loaded")]).await.expect("patch the whole selection");
-    let patched = names(&app);
+    let patched = node_names(&app, None).await;
     assert!(patched.iter().all(|name| name == "S15 Loaded"), "every selected node renamed: {patched:?}");
     framework_verb(&mut app, "clearSelection").await;
     framework_verb(&mut app, "undo").await;
-    assert_eq!(names(&app), before, "undo restores every node of the loaded example");
+    assert_eq!(node_names(&app, None).await, before, "undo restores every node of the loaded example");
     framework_verb(&mut app, "redo").await;
-    assert_eq!(names(&app), patched, "redo renames them again");
+    assert_eq!(node_names(&app, None).await, patched, "redo renames them again");
 }
 
 /// 🧹️ LAW: `clearSelection` on a graph with nothing selected settles like any other turn and leaves the program's
@@ -833,13 +848,12 @@ async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
 async fn clear_selection_on_an_empty_selection_settles_and_frees_the_lane() {
     let mut app = new_app().await;
     framework_verb(&mut app, "clearSelection").await;
-    let first = node_id_at(&app, 0);
+    let first = node_id_at(&app, 0).await;
     dispatch_rail(&mut app, "patchNodes", &[("nodeIds", &first), ("field", "name"), ("value", "S15 After Clear")]).await.expect("the lane is free after an empty clear");
-    let name = |app: &JackTestApp| app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == first).map(|node| node.name).expect("node");
-    assert_eq!(name(&app), "S15 After Clear");
+    assert_eq!(node_name(&app, &first).await, "S15 After Clear");
     framework_verb(&mut app, "clearSelection").await;
     framework_verb(&mut app, "undo").await;
-    assert_ne!(name(&app), "S15 After Clear", "undo after a clear still reaches the edit");
+    assert_ne!(node_name(&app, &first).await, "S15 After Clear", "undo after a clear still reaches the edit");
 }
 
 /// ⚖️ LAW: a `patchNodes` that cannot move the document is refused by name — an unknown id is
@@ -849,14 +863,15 @@ async fn clear_selection_on_an_empty_selection_settles_and_frees_the_lane() {
 /// accepted edit.
 #[semio_framework_async_macros::async_test]
 async fn patch_nodes_refuses_what_it_cannot_apply_and_leaves_the_document_untouched() {
-    let snapshot = default_fixture();
-    let first = snapshot.nodes()[0].id.clone();
-    let code = |result: Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
-    assert_eq!(code(commands::patch_nodes(&snapshot, &["no-such-node".into()], &[], "name", "x")), "mutation.target-missing");
-    assert_eq!(code(commands::patch_nodes(&snapshot, &[], &[], "name", "x")), "app.command.targets-required");
-    assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "kind", "x")), "app.command.invalid-args");
-    assert_eq!(code(commands::patch_nodes(&snapshot, &[first.clone()], &[], "name", "  ")), "app.command.invalid-args");
-    assert_eq!(commands::patch_nodes(&snapshot, &[], &[first], "name", "x").expect("the selection is the target").artifact_mutations.len(), 1);
+    let mut app = new_app().await;
+    let first = node_id_at(&app, 0).await;
+    let before = node_names(&app, None).await;
+    let refusal = |result: Result<(), Fault>| result.err().expect("refused").code.0;
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", "no-such-node"), ("field", "name"), ("value", "x")]).await), "mutation.target-missing");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "x")]).await), "app.command.targets-required");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "kind"), ("value", "x")]).await), "app.command.invalid-args");
+    assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "name"), ("value", "  ")]).await), "app.command.invalid-args");
+    assert_eq!(node_names(&app, None).await, before, "every refusal leaves the content child untouched");
 }
 
 /// ⚖️ LAW: the query editor's gesture verbs stay out of the palette and the Actions rail — a press there
@@ -895,7 +910,7 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
         (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),
         (Some("array"), Some("entityId"), Some("ast/node"))
     );
-    let first = default_fixture().nodes()[0].id.clone();
+    let first = crate::jack_working_scene(&default_fixture()).expect("curated example scene").nodes[0].id.clone();
     let named = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(
         create_trinity_jack_app,
         Some(&format!(r#"{{"verbs":{{"patchNodes":{{"nodeIds":["{first}"],"field":"name","value":"Agent Named"}}}}}}"#)),
@@ -913,3 +928,7 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
     assert_eq!((declared_verb_agent_divergences(&named), declared_verb_agent_divergences(&unnamed)), (Vec::<String>::new(), Vec::<String>::new()), "agent-lane divergences");
 }
 //#endregion 🤖️AgentLaneLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("trinity", super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::composed_reload_law!("trinity", super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::composed_child_history_law!("trinity", super::TrinityJackPlayApp, || semio_framework_plugin::App { definition: super::create_trinity_jack_app(), examples: Vec::new() }, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);

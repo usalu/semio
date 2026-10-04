@@ -24,7 +24,7 @@ use crate::catalogue::*;
 use crate::drawing::*;
 use crate::os_store::{create_document_envelope, ArtifactCommand, MemberStoreOwner, SnapshotRetirementStep, SpaceMember};
 use crate::registry::*;
-use semio_framework::io::resolve_ready;
+
 
 // #region ⚠️ Errors
 /// 🧯️ `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
@@ -186,14 +186,14 @@ impl std::error::Error for FlowCoreError {
     }
 }
 
-impl From<crate::os_pack::json::JsonError> for FlowCoreError {
-    fn from(error: crate::os_pack::json::JsonError) -> Self {
+impl From<semio_framework_pack_json::JsonError> for FlowCoreError {
+    fn from(error: semio_framework_pack_json::JsonError) -> Self {
         Self::Json(error.to_string())
     }
 }
 
-impl From<crate::os_dsl::ValueError> for FlowCoreError {
-    fn from(error: crate::os_dsl::ValueError) -> Self {
+impl From<semio_framework_value::ValueError> for FlowCoreError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
         Self::Json(error.to_string())
     }
 }
@@ -395,7 +395,7 @@ impl FlowHost {
         if reset_history {
             if let Some(store) = self.history_store.as_mut() {
                 let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
-                resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
+                ::semio_framework_async::poll::resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
                 store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
             }
             if let Some(stale) = self.pending_history_baseline.take() {
@@ -407,11 +407,11 @@ impl FlowHost {
     }
 
     pub fn parse_host_snapshot_json(json: &str) -> Result<FlowHostSnapshot, FlowCoreError> {
-        Ok(crate::os_pack::json::from_json_str(json)?)
+        Ok(semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?)
     }
 
     pub fn host_snapshot_json(&self) -> Result<String, FlowCoreError> {
-        Ok(crate::os_pack::json::to_json_string(&self.host_snapshot))
+        Ok(semio_framework_pack_json::to_json_string(&self.host_snapshot))
     }
 
     pub fn document(&self) -> FlowArtifact {
@@ -420,7 +420,7 @@ impl FlowHost {
 
     pub fn catalogue_json(&self) -> Result<String, FlowCoreError> {
         let sections = merge_catalogue_sections(&self.host_catalogue_json)?;
-        Ok(crate::os_pack::json::to_json_string(&sections))
+        Ok(semio_framework_pack_json::to_json_string(&sections))
     }
 
     pub fn set_host_catalogue_json(&mut self, json: &str) {
@@ -440,9 +440,9 @@ impl FlowHost {
             if part.trim().is_empty() {
                 continue;
             }
-            sections.extend(crate::os_pack::json::from_json_str::<Vec<CatalogueSection>>(part).unwrap_or_default());
+            sections.extend(semio_framework_pack_json::from_json_str::<Vec<CatalogueSection>>(part, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default());
         }
-        self.set_host_catalogue_json(&crate::os_pack::json::to_json_string(&sections));
+        self.set_host_catalogue_json(&semio_framework_pack_json::to_json_string(&sections));
         Ok(())
     }
 
@@ -467,7 +467,7 @@ impl FlowHost {
             if part.trim().is_empty() {
                 continue;
             }
-            for info in crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(part).unwrap_or_default() {
+            for info in semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(part, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() {
                 infos.insert(info.id.clone(), info);
             }
         }
@@ -488,7 +488,7 @@ impl FlowHost {
     }
 
     pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
-        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HashMap::new() } else { crate::os_pack::json::from_json_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
+        self.install_kind_infos(Arc::new(if json.trim().is_empty() { HashMap::new() } else { semio_framework_pack_json::from_json_str::<Vec<OperatorInfo>>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() }));
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the already-built id-keyed map — the ONE
@@ -553,7 +553,7 @@ impl FlowHost {
         let registry = self.operator_registry();
         let evaluator = Evaluator::new(registry.as_ref());
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("apply_eval_outputs_json probed a dispatch for {kind}"))) };
-        match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), EvalStepBudget::PROBE) {
+        match evaluator.evaluate_channels_budgeted(tree, seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, dirty, Some(channels), EvalStepBudget::PROBE,&|_|true) {
             Ok(BudgetedEval { remaining, channels, .. }) => {
                 channels.retire_cold();
                 remaining.is_empty()
@@ -866,7 +866,7 @@ impl FlowHost {
     }
 
     pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), FlowCoreError> {
-        let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(descriptor_json)?;
+        let descriptor: WidgetDescriptor = semio_framework_pack_json::from_json_str(descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let id: String = "__ghost__".into();
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         let mut layout = crate::OrderedMap::new();
@@ -890,7 +890,7 @@ impl FlowHost {
     pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, FlowCoreError> {
         self.begin_change();
         self.clear_ghost_widget();
-        let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(descriptor_json)?;
+        let descriptor: WidgetDescriptor = semio_framework_pack_json::from_json_str(descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let id = descriptor_explicit_id(&descriptor).unwrap_or_else(|| self.next_widget_id(&descriptor));
         if self.host_snapshot.widgets.iter().any(|widget| widget_id_for(widget) == id) {
             return Err(FlowCoreError::WidgetIdExists(id));
@@ -930,6 +930,16 @@ impl FlowHost {
         self.connect_ports(from_id, &from_port, to_id, &to_port)
     }
 
+    fn next_synapse_id(&mut self) -> String {
+        loop {
+            self.next_synapse_serial = self.next_synapse_serial.wrapping_add(1);
+            let id = format!("s{}", self.next_synapse_serial);
+            if self.host_snapshot.synapses.iter().all(|synapse| synapse.id != id) {
+                return id;
+            }
+        }
+    }
+
     pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, FlowCoreError> {
         self.begin_change();
         if from_id == to_id {
@@ -959,8 +969,7 @@ impl FlowHost {
             });
         }
         self.host_snapshot.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
-        self.next_synapse_serial += 1;
-        let synapse_id = format!("s{}", self.next_synapse_serial);
+        let synapse_id = self.next_synapse_id();
         self.host_snapshot.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() });
         self.rebuild_dag();
         Ok(synapse_id)
@@ -1176,8 +1185,7 @@ impl FlowHost {
             self.rebuild_dag();
             return Ok(());
         }
-        self.next_synapse_serial += 1;
-        let synapse_id = format!("s{}", self.next_synapse_serial);
+        let synapse_id = self.next_synapse_id();
         self.host_snapshot.synapses.push(SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() });
         self.rebuild_dag();
         Ok(())
@@ -1206,7 +1214,7 @@ impl FlowHost {
     /// 🧬️ Merges JSON params into a neuron widget for compact transform values.
     pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let patch: Dictionary = crate::os_pack::json::from_json_str(params_json)?;
+        let patch: Dictionary = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let merged = match self.host_snapshot.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id) {
             Some(Widget::Neuron { params, .. }) => Ok(std::mem::replace(params, params.merge(&patch))),
             Some(_) => Err(FlowCoreError::NotNeuron(widget_id.to_string())),
@@ -1222,7 +1230,7 @@ impl FlowHost {
     /// 🌳️ Recomputes widget positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { crate::os_pack::json::from_json_str(opts_json)? };
+        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(opts_json, semio_framework_pack_json::JsonMemberPolicy::Reject)? };
         let theme = self.dag.canvas_theme;
         self.dag = DagHost::from_host_snapshot_without_layout(self.build_dag_host_snapshot_v1());
         self.dag.canvas_theme = theme;
@@ -1308,7 +1316,9 @@ impl FlowHost {
     /// re-publishes the whole fixture; a plain click, a marquee, a pan and a press that grabbed nothing journal nothing
     /// and are owed no dispatch at all.
     pub fn take_graph_edits_json(&mut self) -> String {
-        dag::dag_graph_edit_rows_json(self.dag.take_graph_edits())
+        let edits = self.dag.take_graph_edits();
+        let refusal = self.dag.take_journal_refusal();
+        dag::dag_graph_edit_rows_json(&edits, refusal)
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
@@ -1328,9 +1338,9 @@ impl FlowHost {
     }
 
     pub fn preselect_widget_ids_json(&self) -> String {
-        crate::os_pack::json::to_string(&crate::os_pack::json::object([
-            ("ids".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&self.dag.preselect_widget_ids()))),
-            ("removedIds".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&self.dag.preselect_removed_widget_ids()))),
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("ids".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&self.dag.preselect_widget_ids()))),
+            ("removedIds".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&self.dag.preselect_removed_widget_ids()))),
         ]))
     }
 
@@ -1363,7 +1373,7 @@ impl FlowHost {
     }
 
     fn evaluate_internal(&mut self) {
-        self.evaluate_step(EvalStepBudget::UNBOUNDED);
+        self.evaluate_step(EvalStepBudget::UNBOUNDED,&|_|true);
     }
 
     /// ⏳️🧵️ Evaluates at most `budget.dispatches` cache-missed (dirty) nodes, yielding early once
@@ -1383,7 +1393,7 @@ impl FlowHost {
     /// [`NeuralCache`] (e.g. a generation-preview eval firing mid-chain) may have its in-progress
     /// entries swept early by that other call's completion; the next tick simply recomputes them —
     /// extra work, never a wrong result.
-    pub fn evaluate_step(&mut self, budget: EvalStepBudget) -> Vec<String> {
+    pub fn evaluate_step(&mut self, budget: EvalStepBudget,source_required:&dyn Fn(u64)->bool) -> Vec<String> {
         self.drain_displaced();
         self.pending_extension_evals.clear();
         let tree = self.build_tree();
@@ -1406,10 +1416,10 @@ impl FlowHost {
         let previous = self.current_baseline_channels();
         let budgeted = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget,source_required)
         } else {
             let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
-            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget,source_required)
         };
         tree.retire_cold();
         seeds.retire_cold();
@@ -1452,7 +1462,7 @@ impl FlowHost {
             Err(err) => {
                 self.neural_cache.sweep();
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
-                    self.last_eval_json = crate::os_pack::json::to_string(&crate::os_pack::json::object([("error".to_string(), crate::os_pack::json::Value::String(err.to_string()))]));
+                    self.last_eval_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(err.to_string()))]));
                 }
                 Vec::new()
             }
@@ -1559,7 +1569,7 @@ impl FlowHost {
         let evaluator = Evaluator::new(registry.as_ref());
         let previous = self.current_baseline_channels();
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
-        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, EvalStepBudget::PROBE) {
+        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, EvalStepBudget::PROBE,&|_|true) {
             Ok(BudgetedEval { remaining, channels, .. }) => {
                 channels.retire_cold();
                 remaining
@@ -1601,7 +1611,7 @@ impl FlowHost {
         let PropertyValue::String(json) = node.properties.get("clusterTree")? else {
             return None;
         };
-        crate::os_pack::json::from_json_str(json).ok()
+        semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
     }
 
     fn dictionary_from_property_bag(bag: &PropertyBag) -> Dictionary {
@@ -1694,7 +1704,7 @@ impl FlowHost {
 
     pub fn export_payload_json(&self, widget_id: &str) -> Result<String, FlowCoreError> {
         let payload = self.export_payloads.get(widget_id).cloned().unwrap_or_default();
-        Ok(crate::os_pack::json::to_json_string(&payload))
+        Ok(semio_framework_pack_json::to_json_string(&payload))
     }
 
     /// 📤️ Returns and clears a pending export control click from the last pointer hit.
@@ -1765,7 +1775,7 @@ impl FlowHost {
 
     /// 🎯️ Selected widget ids as JSON array (legacy — prefer {@link selection_domains_json}).
     pub fn selected_widget_ids_json(&self) -> String {
-        crate::os_pack::json::to_json_string(&self.dag.selected_node_ids())
+        semio_framework_pack_json::to_json_string(&self.dag.selected_node_ids())
     }
 
     /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `🐙️handles`).
@@ -1806,10 +1816,10 @@ impl FlowHost {
 
     /// ✅️ Same as `set_selection_json` but over a flat node-id list (the `NodeGraphScene.selection` wire shape).
     pub fn set_selection(&mut self, ids: &[String]) {
-        let json = crate::os_pack::json::to_string(&crate::os_pack::json::object([
-            ("nodes".to_string(), crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&ids.to_vec()))),
-            ("edges".to_string(), crate::os_pack::json::Value::Array(vec![])),
-            ("handles".to_string(), crate::os_pack::json::Value::Array(vec![])),
+        let json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
+            ("nodes".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&ids.to_vec()))),
+            ("edges".to_string(), semio_framework_pack_json::Value::Array(vec![])),
+            ("handles".to_string(), semio_framework_pack_json::Value::Array(vec![])),
         ]));
         self.dag.set_selection_domains_json(&json);
     }
@@ -1819,15 +1829,17 @@ impl FlowHost {
         self.dag.selection_union_bounds_screen_json()
     }
 
-    /// 📐️ Aligns or distributes the current multi-node selection.
     /// 📐️ Aligns or distributes the selection and journals what it moved as node-graph gesture records (design §13.3,
-    /// one per distinct offset), which the renderer drains ([`Self::take_graph_edits_json`]) and dispatches.
+    /// one per distinct offset), which the renderer drains ([`Self::take_graph_edits_json`]) and dispatches; an align whose
+    /// records outgrow one dispatch is refused whole and every node stays where it was.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let baseline = self.dag.node_positions();
         self.dag.align_selection(mode)?;
-        self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline);
+        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+            self.dag.restore_node_positions(&baseline);
+        }
         self.sync_from_dag();
         Ok(())
     }
@@ -1861,7 +1873,7 @@ impl FlowHost {
 
     /// 🌫️ Sets preview-off neurons from a JSON array of widget ids.
     pub fn set_preview_off_json(&mut self, json: &str) {
-        let ids: Vec<String> = crate::os_pack::json::from_json_str(json).unwrap_or_default();
+        let ids: Vec<String> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
         for widget in &mut self.host_snapshot.widgets {
             if let Widget::Neuron { id, preview, .. } = widget {
                 *preview = !ids.contains(id);
@@ -2048,7 +2060,7 @@ impl FlowHost {
 
     pub fn schemas_json(&self) -> Result<String, FlowCoreError> {
         let refs = self.operator_registry().schema_refs();
-        Ok(crate::os_pack::json::to_json_string(&refs))
+        Ok(semio_framework_pack_json::to_json_string(&refs))
     }
 
     pub fn set_variable_name(&mut self, widget_id: &str, name: &str) {
@@ -2386,8 +2398,8 @@ impl FlowHost {
                 .iter()
                 .find(|neuron| neuron.id == synapse.to && neuron.kind == OUTPUT_KIND)
                 .and_then(|neuron| neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str())).map_or_else(|| synapse.to_port.clone(), str::to_string);
-            self.next_synapse_serial += 1;
-            next_synapses.push(SynapseSpec { id: format!("s{}", self.next_synapse_serial), from: from.clone(), to: to.clone(), from_port, to_port });
+            let id = self.next_synapse_id();
+            next_synapses.push(SynapseSpec { id, from: from.clone(), to: to.clone(), from_port, to_port });
         }
         self.host_snapshot.synapses = next_synapses;
         exploded.retire_cold();
@@ -2415,7 +2427,7 @@ impl FlowHost {
             retirement.retire_cold();
             return self.history_store.as_mut();
         }
-        let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
+        let mut store = ::semio_framework_async::poll::resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
         store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
         self.history_store = Some(store);
         self.history_store.as_mut()
@@ -2433,7 +2445,7 @@ impl FlowHost {
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
+                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
             }
         }
     }
@@ -2486,15 +2498,21 @@ impl FlowHost {
     fn commit_gesture_history(&mut self) {
         if self.gesture_active {
             self.gesture_active = false;
-            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
+            let mut baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
             if !Self::content_changed(&baseline, &self.host_snapshot) {
                 baseline.retire_cold();
                 return;
             }
-            self.journal_gesture_moves(&baseline);
+            if let Err(refusal) = self.journal_gesture_moves(&baseline) {
+                baseline.camera = self.host_snapshot.camera.clone();
+                std::mem::replace(&mut self.host_snapshot, baseline).retire_cold();
+                self.rebuild_dag();
+                self.dag.carry_journal_refusal(refusal);
+                return;
+            }
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
+                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
             }
         }
     }
@@ -2503,25 +2521,15 @@ impl FlowHost {
     /// (in widget order) and their ONE offset from the gesture's baseline, one record per distinct offset (a grid snap can
     /// land off-grid starts on different offsets) — so the guest commits the drag as relative leaves, exactly the record
     /// the wgpu bounded path writes (`DagHost::plan_graph_edits`). Wires, inline sliders and port inserts are journalled
-    /// where they happen; a full bounded journal drops what it cannot take.
-    fn journal_gesture_moves(&mut self, baseline: &FlowHostSnapshot) {
-        let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
-        for widget in &self.host_snapshot.widgets {
+    /// where they happen; all move rows are admitted together or the caller restores the baseline.
+    fn journal_gesture_moves(&mut self, baseline: &FlowHostSnapshot) -> Result<(), dag::DagJournalRefusal> {
+        let displacements = self.host_snapshot.widgets.iter().filter_map(|widget| {
             let id = widget_id_for(widget);
-            let (Some(landed), Some(start)) = (self.host_snapshot.layout.get(id), baseline.layout.get(id)) else { continue };
-            let (dx, dy) = (landed.x - start.x, landed.y - start.y);
-            if (dx, dy) == (0.0, 0.0) {
-                continue;
-            }
-            match drags.iter_mut().find(|(x, y, _)| (*x, *y) == (dx, dy)) {
-                Some((_, _, ids)) => ids.push(id.to_string()),
-                None => drags.push((dx, dy, vec![id.to_string()])),
-            }
-        }
+            let (landed, start) = (self.host_snapshot.layout.get(id)?, baseline.layout.get(id)?);
+            Some((id.to_string(), landed.x - start.x, landed.y - start.y))
+        });
         let gesture_id = dag::dag_drag_gesture_id(self.interaction_revision);
-        for (dx, dy, node_ids) in drags {
-            self.dag.journal_drag(gesture_id.clone(), node_ids, dx, dy);
-        }
+        self.dag.journal_moves(&gesture_id, displacements)
     }
 
     /// ↩️ Restores the previous fixture content snapshot, keeping the current camera.
@@ -2531,7 +2539,7 @@ impl FlowHost {
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
-        if resolve_ready(store.dispatch(ArtifactCommand::Undo)).is_err() {
+        if ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Undo)).is_err() {
             return false;
         }
         let Ok(mut restored) = store.snapshot() else {
@@ -2549,7 +2557,7 @@ impl FlowHost {
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
-        if resolve_ready(store.dispatch(ArtifactCommand::Redo)).is_err() {
+        if ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Redo)).is_err() {
             return false;
         }
         let Ok(mut restored) = store.snapshot() else {
@@ -3071,7 +3079,7 @@ pub struct FlowEvalSessionState {
     neural_cache: Option<Arc<NeuralCache>>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
-    eval_json: String,
+    eval_json: Option<Arc<String>>,
     /// 🖼️ The evaluation a preview PAINTS while this one is still running: the live walk's own
     /// answer, with every node the live walk has not answered YET filled in from the last CONVERGED
     /// evaluation of the same node. Identical to [`FlowEvalSessionState::eval_json`] the moment the
@@ -3267,6 +3275,7 @@ pub enum FlowEvalPublication {
 }
 
 enum SessionCollectionOwner {
+    SourceLease(Box<dyn semio_framework_value::ErasedSnapshotRetirement>),
     Handles(BTreeSet<String>),
     Meshes(BTreeMap<String, String>),
     Pending(BTreeMap<u64, String>),
@@ -3337,7 +3346,7 @@ impl FlowEvalSession {
                 neural_cache: Some(Arc::new(NeuralCache::new())),
                 previous_snapshot: None,
                 previous_channels: None,
-                eval_json: String::new(),
+                eval_json: Some(Arc::new(String::new())),
                 painted_eval_json: String::new(),
                 converged_eval_json: String::new(),
                 status_json: "{}".into(),
@@ -3414,12 +3423,16 @@ impl FlowEvalSession {
         true
     }
 
+    /// 🔁️ Checks the existing partial-response ledger before sending a compact extension resume.
+    pub fn has_evaluation_progress(&self,node_hash:u64)->bool {self.eval_progress_by_hash.contains_key(&node_hash)}
+
     /// ⏱️ One budgeted dag walk. `turn_started_us` is when the guest turn this walk belongs to began
     /// — `None` for a walk that opens its own turn, `Some` for one running inline inside a fold's
     /// turn, which then shares that turn's single deadline (see [`flow_eval_tick_budget`]).
     pub fn tick(&mut self, host: &mut FlowHost, turn_started_us: Option<u64>) -> bool {
-        let remaining = host.evaluate_step(flow_eval_tick_budget(turn_started_us));
-        self.eval_json = host.last_eval_json.clone();
+        let remaining = host.evaluate_step(flow_eval_tick_budget(turn_started_us),&|hash|!self.has_evaluation_progress(hash));
+        let state = &mut *self.state;
+        if let Some(previous) = state.eval_json.replace(Arc::new(host.last_eval_json.clone())) { state.retiring_collections.push_back(SessionCollectionOwner::SourceLease(semio_framework_value::retirement::shared_lease_retirement(previous))); }
         self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
             self.capture_baseline_from(host);
@@ -3436,25 +3449,31 @@ impl FlowEvalSession {
     /// replaces the graph instead of painting the previous example's leftovers over the new one: a
     /// node id the document no longer carries is not a node whose answer is merely late.
     fn repaint(&mut self, host: &FlowHost, converged: bool) {
-        let painted = if converged { self.eval_json.clone() } else { merge_unanswered_eval_entries(&self.eval_json, &self.converged_eval_json, &host.host_snapshot) };
+        let painted = if converged { self.eval_json().to_owned() } else { merge_unanswered_eval_entries(self.eval_json(), &self.converged_eval_json, &host.host_snapshot) };
         let state = &mut *self.state;
         state.retirement.text(std::mem::replace(&mut state.painted_eval_json, painted));
         if converged {
-            let converged_text = state.eval_json.clone();
+            let converged_text = state.eval_json.as_ref().map_or_else(String::new, |text| text.as_str().to_owned());
             state.retirement.text(std::mem::replace(&mut state.converged_eval_json, converged_text));
         }
     }
 
     pub fn eval_json(&self) -> &str {
-        &self.eval_json
+        self.eval_json.as_ref().map_or("", |text| text.as_str())
     }
+
+    /// 🔗️ Leases this primary immutable evaluation allocation without copying its text.
+    pub fn lease_eval_json(&self)->Option<Arc<String>> {self.eval_json.as_ref().map(Arc::clone)}
+
+    /// 🔍️ Admits publication only while the current primary owner is the held source lease.
+    pub fn owns_eval_json(&self,source:&Arc<String>)->bool {self.eval_json.as_ref().is_some_and(|current|Arc::ptr_eq(current,source))}
 
     /// 🖼️ The evaluation a preview paints — see [`FlowEvalSessionState::painted_eval_json`]. This is
     /// what every publication carries; `eval_json` stays the live walk's own answer, because that is
     /// what the next walk, the pending-handle probe and every law about convergence read.
     pub fn painted_eval_json(&self) -> &str {
         if self.painted_eval_json.is_empty() {
-            return &self.eval_json;
+            return self.eval_json();
         }
         &self.painted_eval_json
     }
@@ -3483,7 +3502,7 @@ impl FlowEvalSession {
 
     pub fn set_eval_json(&mut self, eval_json: String) {
         let state = &mut *self.state;
-        state.retirement.text(std::mem::replace(&mut state.eval_json, eval_json));
+        if let Some(previous) = state.eval_json.replace(Arc::new(eval_json)) { state.retiring_collections.push_back(SessionCollectionOwner::SourceLease(semio_framework_value::retirement::shared_lease_retirement(previous))); }
         state.retirement.text(std::mem::take(&mut state.painted_eval_json));
         state.retirement.text(std::mem::take(&mut state.converged_eval_json));
         state.tick_scheduled = false;
@@ -3884,7 +3903,7 @@ impl FlowEvalSession {
     /// retire is worse than the whole-registry branch the capability already offers
     /// (`✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs`'s `tessellateCancel` handler).
     pub fn preview_cancel_invocation_request_json(window_id: &str, window_kind_id: &str) -> String {
-        format!("{{\"windowId\":{},\"windowKindId\":{}}}", crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(window_id.to_string())), crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(window_kind_id.to_string())))
+        format!("{{\"windowId\":{},\"windowKindId\":{}}}", semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::String(window_id.to_string())), semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::String(window_kind_id.to_string())))
     }
 
     /// ✅️ Folds ONE budgeted `evaluate` envelope (`{done, phase, unitsDone, unitsTotal, outputJson}`)
@@ -3896,17 +3915,17 @@ impl FlowEvalSession {
     /// that body — that is precisely what an extension built before this contract answers, and
     /// treating it as complete is the only reading that cannot lose an answer.
     pub fn resolve_preview_eval(&mut self, node_hash: u64, envelope_json: &str) -> PreviewEvalOutcome {
-        let Ok(envelope) = crate::os_pack::json::parse(envelope_json) else {
+        let Ok(envelope) = semio_framework_pack_json::parse(envelope_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             self.eval_progress_by_hash.remove(&node_hash);
             return PreviewEvalOutcome::Complete { output_json: envelope_json.to_string() };
         };
-        let Some(done) = envelope.get("done").and_then(crate::os_pack::json::Value::as_bool) else {
+        let Some(done) = envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool) else {
             self.eval_progress_by_hash.remove(&node_hash);
             return PreviewEvalOutcome::Complete { output_json: envelope_json.to_string() };
         };
-        let phase = PreviewEvalPhase::from_job_tag(envelope.get("phase").and_then(crate::os_pack::json::Value::as_str).unwrap_or("computing"));
-        let units_done = envelope.get("unitsDone").and_then(crate::os_pack::json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
-        let units_total = envelope.get("unitsTotal").and_then(crate::os_pack::json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
+        let phase = PreviewEvalPhase::from_job_tag(envelope.get("phase").and_then(semio_framework_pack_json::Value::as_str).unwrap_or("computing"));
+        let units_done = envelope.get("unitsDone").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
+        let units_total = envelope.get("unitsTotal").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.0).max(0.0) as u32;
         if !done {
             self.eval_progress_by_hash.insert(node_hash, PreviewEvalProgress { units_done, units_total, phase });
             return PreviewEvalOutcome::Working;
@@ -3915,7 +3934,7 @@ impl FlowEvalSession {
         if matches!(phase, PreviewEvalPhase::Cancelled) {
             return PreviewEvalOutcome::Cancelled;
         }
-        PreviewEvalOutcome::Complete { output_json: envelope.get("outputJson").and_then(crate::os_pack::json::Value::as_str).unwrap_or_default().to_string() }
+        PreviewEvalOutcome::Complete { output_json: envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).unwrap_or_default().to_string() }
     }
 
     /// 📈 Aggregate progress of every budgeted evaluation this session has admitted and not yet
@@ -3955,10 +3974,10 @@ impl FlowEvalSession {
         let in_flight: u32 = self.window_tick_latches.values().map(|latch| latch.in_flight).sum();
         let working = self.tick_scheduled || self.window_tick_latches.values().any(|latch| latch.armed || latch.owed || latch.unfinished || latch.in_flight > 0);
         let mut status = PreviewChainStatus { in_flight, working, ..PreviewChainStatus::default() };
-        if let Some(widgets) = crate::os_pack::json::parse(&self.status_json).ok().and_then(|value| value.as_object().cloned()) {
+        if let Some(widgets) = semio_framework_pack_json::parse(&self.status_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_object().cloned()) {
             for (_, entry) in widgets.iter() {
                 status.nodes_total = status.nodes_total.saturating_add(1);
-                if !matches!(entry.get("status").and_then(crate::os_pack::json::Value::as_str), Some("queued" | "computing")) {
+                if !matches!(entry.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("queued" | "computing")) {
                     status.nodes_done = status.nodes_done.saturating_add(1);
                 }
             }
@@ -4005,7 +4024,7 @@ impl FlowEvalSession {
         let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
             return PreviewTessellateOutcome::Unknown;
         };
-        let Ok(envelope) = crate::os_pack::json::parse(output_json) else {
+        let Ok(envelope) = semio_framework_pack_json::parse(output_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
             return PreviewTessellateOutcome::Failed;
         };
         let phase = envelope.get("phase").and_then(|value| value.as_str()).unwrap_or_default();
@@ -4013,8 +4032,8 @@ impl FlowEvalSession {
         let mut progress = PreviewTessellateProgress { units_done: uint("unitsDone"), units_total: uint("unitsTotal"), faces_done: uint("facesDone"), faces_total: uint("facesTotal"), phase: PreviewTessellatePhase::from_tag(phase), next_chunk: 0, chunks: uint("chunks") };
         match progress.phase {
             PreviewTessellatePhase::Invalid => {
-                let diagnostics = envelope.get("diagnostics").cloned().unwrap_or(crate::os_pack::json::Value::Array(Vec::new()));
-                self.preview_diagnostics_by_handle.insert(handle, crate::os_pack::json::to_string(&diagnostics));
+                let diagnostics = envelope.get("diagnostics").cloned().unwrap_or(semio_framework_pack_json::Value::Array(Vec::new()));
+                self.preview_diagnostics_by_handle.insert(handle, semio_framework_pack_json::to_string(&diagnostics));
                 self.retire_tessellate_transfer(node_hash);
                 self.tessellate_progress_by_hash.insert(node_hash, progress);
                 PreviewTessellateOutcome::Invalid
@@ -4115,6 +4134,13 @@ impl FlowEvalSession {
         }
         if let Some(owner) = state.retiring_collections.pop_front() {
             match owner {
+                SessionCollectionOwner::SourceLease(mut retirement) => {
+                    match retirement.close_step(maximum_items,maximum_bytes).expect("session primary source lease retirement") {
+                        semio_framework_value::SnapshotRetirementStep::Complete => assert!(retirement.terminal_is_empty()),
+                        semio_framework_value::SnapshotRetirementStep::Pending {released_items,released_bytes} => {state.retiring_collections.push_front(SessionCollectionOwner::SourceLease(retirement));return Step::Pending {released_items,released_bytes};},
+                        semio_framework_value::SnapshotRetirementStep::Blocked => {state.retiring_collections.push_front(SessionCollectionOwner::SourceLease(retirement));return Step::Blocked;},
+                    }
+                }
                 SessionCollectionOwner::Handles(mut values) => {
                     if let Some(value) = values.pop_first() {
                         state.retirement.text(value);
@@ -4165,8 +4191,8 @@ impl FlowEvalSession {
             state.retirement.push_snapshot(snapshot);
         } else if let Some(channels) = state.previous_channels.take() {
             state.retirement.push_channels(channels);
-        } else if state.eval_json.capacity() != 0 {
-            state.retirement.text(std::mem::take(&mut state.eval_json));
+        } else if let Some(source) = state.eval_json.take() {
+            state.retiring_collections.push_back(SessionCollectionOwner::SourceLease(semio_framework_value::retirement::shared_lease_retirement(source)));
         } else if state.status_json.capacity() != 0 {
             state.retirement.text(std::mem::take(&mut state.status_json));
         } else if let Some(cache) = state.neural_cache.take() {
@@ -4195,7 +4221,7 @@ impl FlowEvalSession {
             && self.neural_cache.is_none()
             && self.previous_snapshot.is_none()
             && self.previous_channels.is_none()
-            && self.eval_json.capacity() == 0
+            && self.eval_json.is_none()
             && self.status_json.capacity() == 0
             && self.live_geometry_handles.is_empty()
             && self.preview_mesh_pack_by_handle.is_empty()
@@ -4641,8 +4667,8 @@ pub fn unserved_flow_operator_kinds(host_snapshot: &FlowHostSnapshot, registry: 
     unserved.into_iter().collect()
 }
 
-fn node_eval_status_json(status: &NodeEvalStatus) -> crate::os_pack::json::Value {
-    crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(status))
+fn node_eval_status_json(status: &NodeEvalStatus) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(status))
 }
 
 /// 📊️ The per-node census one evaluation publishes — the ONE quantity that only ever grows inside a
@@ -4673,7 +4699,7 @@ pub fn merge_unanswered_eval_entries(live: &str, converged: &str, host_snapshot:
     if converged.is_empty() || live.is_empty() || is_global_eval_error_json(live) {
         return live.to_string();
     }
-    let (Ok(live_value), Ok(converged_value)) = (crate::os_pack::json::parse(live), crate::os_pack::json::parse(converged)) else {
+    let (Ok(live_value), Ok(converged_value)) = (semio_framework_pack_json::parse(live, semio_framework_pack_json::JsonMemberPolicy::Reject), semio_framework_pack_json::parse(converged, semio_framework_pack_json::JsonMemberPolicy::Reject)) else {
         return live.to_string();
     };
     let (Some(live_map), Some(converged_map)) = (live_value.as_object(), converged_value.as_object()) else {
@@ -4693,26 +4719,26 @@ pub fn merge_unanswered_eval_entries(live: &str, converged: &str, host_snapshot:
     if !filled {
         return live.to_string();
     }
-    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(merged))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(merged))
 }
 
 /// 🖼️ Whether one evaluation row carries NO answer at all — no output channel and no fault. The row
 /// a budgeted walk leaves behind for a node whose extension request it parked.
-fn eval_entry_is_unanswered(entry: Option<&crate::os_pack::json::Value>) -> bool {
+fn eval_entry_is_unanswered(entry: Option<&semio_framework_pack_json::Value>) -> bool {
     let Some(entry) = entry else { return true };
     if entry.get("error").is_some() {
         return false;
     }
-    entry.get("out").and_then(crate::os_pack::json::Value::as_object).is_none_or(|out| out.iter().next().is_none())
+    entry.get("out").and_then(semio_framework_pack_json::Value::as_object).is_none_or(|out| out.iter().next().is_none())
 }
 
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
-    let eval = crate::os_pack::json::parse(&host.last_eval_json).unwrap_or_else(|_| crate::os_pack::json::Value::Object(crate::os_pack::json::Object::new()));
+    let eval = semio_framework_pack_json::parse(&host.last_eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
     let tree = host.build_tree_for_status();
     let seeds = host.build_seeds_for_status();
     let wave: BTreeSet<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     let active = remaining.first().map(String::as_str);
-    let mut widgets = crate::os_pack::json::Object::new();
+    let mut widgets = semio_framework_pack_json::Object::new();
     for widget in &host.host_snapshot.widgets {
         let id = widget_id_for(widget);
         if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
@@ -4720,7 +4746,7 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
             continue;
         }
         if let Some(entry) = eval.get(id) {
-            if let Some(message) = entry.get("error").and_then(crate::os_pack::json::Value::as_str) {
+            if let Some(message) = entry.get("error").and_then(semio_framework_pack_json::Value::as_str) {
                 widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Error { message: message.to_string() }));
                 continue;
             }
@@ -4742,7 +4768,7 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     }
     tree.retire_cold();
     seeds.retire_cold();
-    crate::os_pack::json::to_string(&crate::os_pack::json::Value::Object(widgets))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(widgets))
 }
 // #endregion 🔖️EvalSession
 

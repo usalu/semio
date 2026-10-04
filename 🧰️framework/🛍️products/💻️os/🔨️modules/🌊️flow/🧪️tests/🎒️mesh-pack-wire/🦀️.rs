@@ -27,8 +27,8 @@ fn golden_mesh() -> semio_framework::MeshData {
     }
 }
 
-fn fixture() -> semio_framework_os_flow::os_pack::json::Value {
-    semio_framework_os_flow::os_pack::json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json")).expect("mesh pack fixture parses")
+fn fixture() -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-body-v1.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh pack fixture parses")
 }
 // #endregion 🧰️Fixtures
 
@@ -47,10 +47,10 @@ fn mesh_pack_round_trips_every_array_exactly() {
 #[test]
 fn mesh_pack_matches_the_shared_cross_language_vector() {
     let fixture = fixture();
-    let expected = fixture.get("packBodyBase64").and_then(semio_framework_os_flow::os_pack::json::Value::as_str).expect("packBodyBase64");
+    let expected = fixture.get("packBodyBase64").and_then(semio_framework_pack_json::Value::as_str).expect("packBodyBase64");
     let body = encode_mesh_pack(&golden_mesh()).expect("encode");
     assert_eq!(encode_base64(&body), expected, "the mesh pack wire vector drifted from the shared fixture");
-    assert_eq!(body.len() as u64, fixture.get("packBodyBytes").and_then(semio_framework_os_flow::os_pack::json::Value::as_u64).expect("packBodyBytes"));
+    assert_eq!(body.len() as u64, fixture.get("packBodyBytes").and_then(semio_framework_pack_json::Value::as_u64).expect("packBodyBytes"));
     assert_eq!(decode_mesh_pack(&decode_base64(expected).expect("base64")).expect("decode"), golden_mesh());
 }
 
@@ -59,11 +59,11 @@ fn mesh_pack_matches_the_shared_cross_language_vector() {
 #[test]
 fn mesh_pack_is_smaller_than_the_json_it_replaces() {
     let mesh = golden_mesh();
-    let json_bytes = semio_framework_os_flow::os_pack::json::to_json_string(&mesh).len();
+    let json_bytes = semio_framework_pack_json::to_json_string(&mesh).len();
     let pack_bytes = encode_mesh_pack(&mesh).expect("encode").len();
     eprintln!("mesh wire: json={json_bytes} B, pack={pack_bytes} B, base64={} B", encode_base64(&encode_mesh_pack(&mesh).expect("encode")).len());
     assert!(pack_bytes < json_bytes, "pack body {pack_bytes} B must beat JSON {json_bytes} B");
-    assert_eq!(json_bytes as u64, fixture().get("jsonBytes").and_then(semio_framework_os_flow::os_pack::json::Value::as_u64).expect("jsonBytes"));
+    assert_eq!(json_bytes as u64, fixture().get("jsonBytes").and_then(semio_framework_pack_json::Value::as_u64).expect("jsonBytes"));
 }
 
 /// ⚖️ LAW: a mesh body is chunked into intake-sized pieces, and rejoining them reproduces the
@@ -90,3 +90,38 @@ fn an_oversized_body_is_split_into_several_chunks() {
     assert_eq!(decode_mesh_pack(&decode_base64(&chunks.concat()).expect("base64")).expect("decode"), mesh);
 }
 // #endregion 🎒️WireLaws
+
+#[test]
+fn retained_mesh_pack_preserves_indexed_metadata_and_cancels_bounded_encoding() {
+    let fixture=semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-attributes.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mesh=semio_framework::MeshData::from(&fixture["mesh"]);
+    assert_eq!(mesh.attributes["normal"].values.len(),1);
+    let mut job=MeshPackEncodingJob::new(mesh.clone(),64000000).unwrap();let mut steps=0;
+    let body=loop {steps+=1;if let Some(body)=job.step(1).unwrap() {break body;}assert!(steps<100000);};
+    assert!(steps>4096);assert_eq!(decode_mesh_pack(&body).unwrap(),mesh);
+    assert_eq!(body,encode_mesh_pack(&mesh).unwrap());
+    let independent:serde_json::Value=serde_json::from_str(&fixture["mesh"].to_string()).unwrap();
+    let ours=decode_mesh_pack(&body).unwrap();assert_eq!(ours.attributes["labels"].values[0].as_object().unwrap().iter().find(|(name,_)|name=="payload").unwrap().1.as_str().unwrap(),independent["attributes"]["labels"]["values"][0]["payload"].as_str().unwrap());
+    let mut cancelled=MeshPackEncodingJob::new(mesh,64000000).unwrap();for _ in 0..100 {assert!(cancelled.step(1).unwrap().is_none());}cancelled.cancel();assert!(cancelled.step(1).is_err());
+}
+
+/// 🎯️ The same preview record preserves full analytic labels through bounded packing.
+#[test]
+fn mesh_pack_preserves_lossless_analytic_component_references() {
+    use semio_framework_value::FromValue;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let source = serde_json::json!({"positions":fixture["transfer"]["position"],"normals":fixture["transfer"]["normal"],"indices":fixture["transfer"]["index"],"faceIds":fixture["expected"]["faceIds"],"edgePositions":fixture["transfer"]["edges"],"edgeIds":fixture["expected"]["edgeIds"],"componentReferences":fixture["expected"]["componentReferences"]});
+    let source = semio_framework_pack_json::parse(&source.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mesh = semio_framework::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
+    let body = encode_mesh_pack(&mesh).unwrap();
+    assert_eq!(encode_base64(&body),fixture["meshPack"]["bodyBase64"].as_str().unwrap());
+    assert_eq!(body.len() as u64,fixture["meshPack"]["bodyBytes"].as_u64().unwrap());
+    assert_eq!(decode_mesh_pack(&body).unwrap(),mesh);
+    let mut job=MeshPackEncodingJob::new(mesh.clone(),1_000_000).unwrap();
+    let mut turns=0;
+    let retained=loop {turns+=1;if let Some(body)=job.step(1).unwrap(){break body;}assert!(turns<1000);};
+    assert_eq!(retained,body);
+    let encoded=semio_framework_pack_json::Value::from(mesh);
+    assert_eq!(encoded["componentReferences"].to_string(),semio_framework_pack_json::parse(&fixture["expected"]["componentReferences"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().to_string());
+    println!("[DEBUG] Analytic component references retained metadata field13 boundedTurns={turns}");
+}

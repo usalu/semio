@@ -10,17 +10,17 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, its composed children resolved to the scene its own `definition.steps` lists.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let document: serde_json::Value = serde_json::from_str(BEFORE).expect("before reparses");
-    let steps: Vec<FormStep> = dsl::os_pack::json::from_json_str(&document["definition"]["steps"].to_string()).expect("the committed scene decodes");
+    let steps: Vec<FormStep> = semio_framework_pack_json::from_json_str(&document["definition"]["steps"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed scene decodes");
     replace_forms_steps(&mut snapshot, steps);
     snapshot
 }
@@ -29,7 +29,7 @@ fn before() -> FormsSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER), ("mutation", MUTATION)] {
-        let reencoded = if label == "mutation" { dsl::os_pack::json::to_json_string(&mutation()) } else { dsl::os_pack::json::to_json_string(&dsl::os_pack::json::from_json_str::<FormsSnapshot>(text).expect("snapshot decodes")) };
+        let reencoded = if label == "mutation" { semio_framework_pack_json::to_json_string(&mutation()) } else { semio_framework_pack_json::to_json_string(&semio_framework_pack_json::from_json_str::<FormsSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")) };
         let reencoded: serde_json::Value = serde_json::from_str(&reencoded).expect("re-encodes");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("reparses"), "change-block-field/rejects-a-field-of-a-question-the-scene-does-not-hold: committed {label} JSON is not canonical");
     }
@@ -55,7 +55,7 @@ async fn declared_outcome_holds() {
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     let declared = outcome.get("code").or_else(|| outcome["messages"][0].get("code")).and_then(serde_json::Value::as_str);
     assert_eq!(declared, Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
-    assert_eq!((messages[0].code.0.as_str(), messages[0].level), ("mutation.target-missing", protocol::Severity::Error));
+    assert_eq!((messages[0].code.0.as_str(), messages[0].level), ("mutation.target-missing", semio_framework_diagnostic::Severity::Error));
     let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).map(|path| path.iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect()).unwrap_or_default();
     assert_eq!(declared_path, messages[0].target, "the declared path must match the emitted target");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
@@ -66,7 +66,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
-    let inverse = inverse_form_mutation(&base, &mutation());
+    let inverse = inverse_form_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 0, "change-block-field/rejects-a-field-of-a-question-the-scene-does-not-hold: {inverse:?}");
     let mut snapshot = apply_form_edit_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {

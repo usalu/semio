@@ -1,9 +1,4 @@
-# 🔺️ Rewriting's document delta delegates keyed changes to Replication.
+# 🔺️ Sparse replacements own the complete typed graph and rule.
+# import Lhs, Rhs, JackSnapshot from "../🔗️.graphql"
 # import MapDelta from "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔗️.graphql"
-type RewritingDiff {
-  beforeFixtureJson: String @state(class: ARTIFACT)
-  lhsJson: String @state(class: ARTIFACT)
-  rhsJson: String @state(class: ARTIFACT)
-  parameterBindings: MapDelta @state(class: ARTIFACT)
-  ruleLayout: MapDelta @state(class: ARTIFACT)
-}
+type RewritingDiff { workingGraph: JackSnapshot @state(class: ARTIFACT), lhs: Lhs @state(class: ARTIFACT), rhs: Rhs @state(class: ARTIFACT), parameterBindings: MapDelta @state(class: ARTIFACT), ruleLayout: MapDelta @state(class: ARTIFACT) }

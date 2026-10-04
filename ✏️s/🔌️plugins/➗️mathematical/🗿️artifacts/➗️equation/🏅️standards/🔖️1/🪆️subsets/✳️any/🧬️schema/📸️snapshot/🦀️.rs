@@ -2,15 +2,14 @@
 
 use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted equation document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
-/// (`equation→C:text,table,value`): the inline `graph`/`geometry` fields are replaced by three
-/// fixed composed CHILD slots — this plugin no longer defines its own text/table/value content
-/// models, it composes stdio's `text`/`table`/`value` subsets instead. `#[child(...)]` drives
-/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
+/// 📸️ Persisted equation document snapshot (model (a), `📓️s3-math-report.md` §1, design §20.15): `graph` and `geometry` are
+/// the parent-owned authoritative state every leaf reads and writes; `notation`/`results`/`computed` are content-addressed
+/// handles of the composed `s.stdio.semio` text/table/value children DERIVED from that state (`crate::equation_children`),
+/// re-minted with it and never edited. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission.
 ///
 /// 🚚 `equation` (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave
 /// M3a) is a FOURTH, plain (non-`#[child]`) persistent field, deliberately NOT routed through the
@@ -22,6 +21,10 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.mathematical.equation")]
 pub struct EquationSnapshot {
+    #[state(artifact)]
+    pub graph: EquationGraph,
+    #[state(artifact)]
+    pub geometry: EquationGeometry,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub notation: EquationNotationChild,
@@ -36,7 +39,7 @@ pub struct EquationSnapshot {
 }
 
 /// 📦️ Foreign-carrier projection of the complete authored equation document. Child handles
-/// are persistence references, not equation content, so exports use this projection instead.
+/// are derived addresses, not equation content, so exports use this projection instead.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
 pub struct EquationFixture {
@@ -45,16 +48,14 @@ pub struct EquationFixture {
     pub equation: EquationExprSnapshot,
 }
 
-// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
-// (carries a `local_owner: Option<Arc<dyn Any>>` field and a `#[serde(bound = "")]` generic
-// shape `#[derive(ToValue, FromValue)]` cannot route through; see `semio-framework-value-derive`'s
-// fan-out playbook trap #3). Bridged per composed field through the PRE-EXISTING
-// `to_dsl_value`/`from_dsl_value` serde bridge (`ArtifactChild<S>` already implements
-// `Serialize`/`Deserialize` as a framework type — framework is exempt from the ban); `equation`
-// goes through `ToValue`/`FromValue` directly like every other field.
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`, a generic framework handle
+// `#[derive(ToValue, FromValue)]` cannot route through (see `semio-framework-value-derive`'s fan-out playbook trap #3); every
+// other field goes through `ToValue`/`FromValue` directly.
 impl ToValue for EquationSnapshot {
     fn to_value(&self) -> DslValue {
         DslValue::object([
+            ("graph".to_string(), self.graph.to_value()),
+            ("geometry".to_string(), self.geometry.to_value()),
             ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
             ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
             ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
@@ -67,6 +68,8 @@ impl FromValue for EquationSnapshot {
         let entries = DslValue::into_object(value)?;
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
+            graph: EquationGraph::from_value(field("graph"))?,
+            geometry: EquationGeometry::from_value(field("geometry"))?,
             notation: semio_framework_value::FromValue::from_value(field("notation"))?,
             results: semio_framework_value::FromValue::from_value(field("results"))?,
             computed: semio_framework_value::FromValue::from_value(field("computed"))?,
@@ -284,14 +287,14 @@ pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <EquationSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <EquationSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <EquationSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = pack::json::object([
-        ("parsed".to_string(), pack::json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), pack::json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), pack::json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), pack::json::Value::String(canonical)),
-        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again)),
+    let report = semio_framework_pack_json::object([
+        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), semio_framework_pack_json::Value::String(canonical)),
+        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::String(canonical_again)),
     ]);
-    Ok(pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
 

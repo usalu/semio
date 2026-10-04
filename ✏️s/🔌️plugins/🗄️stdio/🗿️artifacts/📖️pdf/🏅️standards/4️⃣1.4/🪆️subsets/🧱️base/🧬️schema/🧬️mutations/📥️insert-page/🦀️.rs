@@ -25,8 +25,8 @@ struct PagePayload {
     text: String,
 }
 
-fn deserialize_page(value: dsl::DslValue) -> Result<PageDoc, dsl::ValueError> {
-    let PagePayload { width, height, text } = dsl::FromValue::from_value(value)?;
+fn deserialize_page(value: semio_framework_value::DslValue) -> Result<PageDoc, semio_framework_value::ValueError> {
+    let PagePayload { width, height, text } = semio_framework_value::FromValue::from_value(value)?;
     Ok(PageDoc { width, height, text })
 }
 //#endregion 🔖️Payload
@@ -48,12 +48,15 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index: self.index, page: self.page.clone() }], ..Default::default() }) })
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if !self.valid(base) {
             return Vec::new();
         }
         vec![PdfMutation::RemovePage(super::RemovePage { index: self.index })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert page", "Seite einfügen")

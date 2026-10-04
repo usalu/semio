@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.draw.scene.admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["captured", "live", "visual", "preparing", "failed"],
+  "properties": {
+    "captured": {"$ref": "semio.draw.scene.identity"},
+    "live": {"anyOf": [{"$ref": "semio.draw.scene.identity"}, {"type": "null"}]},
+    "visual": {"anyOf": [{"$ref": "semio.draw.scene.identity"}, {"type": "null"}]},
+    "preparing": {"type": "boolean"},
+    "failed": {"type": "boolean"}
+  },
+  "definitions": {
+    "status": {"type": "string", "enum": ["ready", "pending", "stale", "failed", "unavailable"]}
+  }
+}

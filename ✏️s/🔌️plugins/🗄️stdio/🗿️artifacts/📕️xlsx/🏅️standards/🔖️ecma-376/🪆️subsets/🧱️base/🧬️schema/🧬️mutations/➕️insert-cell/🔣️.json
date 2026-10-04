@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/➕️insert-cell",
+  "semanticKind": "insert-cell",
+  "displayName": "Insert Cell",
+  "emoji": "➕",
+  "aggregateVariant": "InsertCell",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema"]
+}

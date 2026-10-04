@@ -26,9 +26,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DragFrames {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_drag_frames(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        layout_frame_selection_inverse(base, &self.page_id, diff_drag_frames(self, base))
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        layout_frame_selection_inverse(base, &self.page_id, diff_drag_frames(self, base))?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (layout_label_number(self.dx), layout_label_number(self.dy));
         let (en, de) = layout_label_frames(self.targets.len());

@@ -1,5 +1,5 @@
 /** 💬️ Canonical BCF topic and viewpoint domain. */
-import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export interface BcfPoint3{readonly x:Binary64;readonly y:Binary64;readonly z:Binary64}
 export type BcfCamera=Readonly<{kind:"perspective";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;fieldOfView:Binary64}>|Readonly<{kind:"orthogonal";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;viewToWorldScale:Binary64}>;
 export interface BcfVisibility{readonly defaultVisibility:boolean;readonly exceptions:readonly string[]}
@@ -18,9 +18,9 @@ const octets=(value:unknown):number[]=>array(value,byte=>{if(typeof byte!=="numb
 const optional=<T>(value:unknown,parse:(value:unknown)=>T):T|null=>value===null||value===undefined?null:parse(value);
 type CameraParser=(value:unknown)=>BcfCamera;
 /** 📐️ Validates all three exact binary64 point words. */
-export function parseBcfPoint3(value:unknown):BcfPoint3{const row=object(value);return{x:parseBinary64(row.x),y:parseBinary64(row.y),z:parseBinary64(row.z)}}
+export function parseBcfPoint3(value:unknown):BcfPoint3{const row=object(value);return{x:parseBinary64Transport(row.x),y:parseBinary64Transport(row.y),z:parseBinary64Transport(row.z)}}
 /** 📷️ Validates the explicit camera choice and its complete scalar domain. */
-export function parseBcfCamera(value:unknown):BcfCamera{const row=object(value);const common={viewPoint:parseBcfPoint3(row.viewPoint),direction:parseBcfPoint3(row.direction),upVector:parseBcfPoint3(row.upVector)};if(row.kind==="perspective")return{kind:"perspective",...common,fieldOfView:parseBinary64(row.fieldOfView)};if(row.kind==="orthogonal")return{kind:"orthogonal",...common,viewToWorldScale:parseBinary64(row.viewToWorldScale)};throw Error("BCF camera kind is unknown")}
+export function parseBcfCamera(value:unknown):BcfCamera{const row=object(value);const common={viewPoint:parseBcfPoint3(row.viewPoint),direction:parseBcfPoint3(row.direction),upVector:parseBcfPoint3(row.upVector)};if(row.kind==="perspective")return{kind:"perspective",...common,fieldOfView:parseBinary64Transport(row.fieldOfView)};if(row.kind==="orthogonal")return{kind:"orthogonal",...common,viewToWorldScale:parseBinary64Transport(row.viewToWorldScale)};throw Error("BCF camera kind is unknown")}
 /** 👁️ Validates visibility and ordered component exceptions. */
 export function parseBcfVisibility(value:unknown):BcfVisibility{const row=object(value);return{defaultVisibility:flag(row.defaultVisibility),exceptions:array(row.exceptions??[],text)}}
 /** 🎨️ Validates an ordered coloring group without imposing wire color syntax. */

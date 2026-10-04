@@ -46,7 +46,7 @@ fn request_bytes(cancellation_id: &str) -> Vec<u8> {
         canonical_payload: vec![9, 8, 7],
         dependencies: Vec::new(),
     };
-    protocol::json::to_json_string(&request).into_bytes()
+    semio_framework_pack_json::to_json_string(&request).into_bytes()
 }
 
 /// 💡️ Registers a real native inference service (not mocked away) and drives `semio.infer`
@@ -64,19 +64,19 @@ async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service
             assert_eq!(inference_schema, TEST_METADATA.inference_schema);
         }
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 1 must be Running(Some(identity)), not fail before ever calling the registry: {} {}", fault.code.0, fault.message);
         }
         _ => panic!("slice 1 must be Running(Some(identity))"),
     }
     match step_job(200, FULL_GRANT).await {
         JobStep::Done(bytes) => {
-            let result: crate::app::WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8")).expect("slice 2 result decodes");
+            let result: crate::app::WireArtifactInferenceResult = semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("slice 2 result decodes");
             assert_eq!(result.canonical_payload, vec![9, 8, 7]);
             assert!(result.complete);
         }
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 2 must dispatch to the registered service, not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Running(_) => panic!("slice 2 must finish Done, the native inference call is atomic"),
@@ -97,7 +97,7 @@ async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let baseline = match step_job(201, FULL_GRANT).await {
         JobStep::Done(bytes) => bytes,
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("uninterrupted run must finish Done within 2 state actions, not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Running(_) => panic!("uninterrupted run must finish Done within 2 state actions"),
@@ -116,7 +116,7 @@ async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
         JobStep::Done(bytes) => bytes,
         JobStep::Running(_) => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call (only the execute tick remains)"),
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("restored run must not fail: {} {}", fault.code.0, fault.message);
         }
     };
@@ -128,7 +128,7 @@ async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
     start_job(203, JOB_KIND_INFER, b"not json").await;
     match step_job(203, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.infer.decode");
         }
         _ => panic!("garbage infer input must fail on slice 1, before ever reaching the registry"),

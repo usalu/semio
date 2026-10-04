@@ -32,7 +32,7 @@ fn sample_ply() -> PlySnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_builds_a_real_indexed_mesh_with_colors() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&sample_ply())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&sample_ply())).expect("deserialize");
     let prim = &semio.meshes[0].primitives[0];
     assert_eq!(prim.topology, SemioTopology::Triangles);
     assert_eq!(prim.positions.len(), 4, "vertex pool stays 4 entries -- a real shared index space");
@@ -46,7 +46,7 @@ async fn deserialize_builds_a_real_indexed_mesh_with_colors() {
 async fn no_face_element_yields_a_points_primitive() {
     let mut ply = sample_ply();
     ply.elements.retain(|e| e.name != "face");
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&ply)).expect("deserialize");
     let prim = &semio.meshes[0].primitives[0];
     assert_eq!(prim.topology, SemioTopology::Points);
     assert!(prim.indices.is_empty());

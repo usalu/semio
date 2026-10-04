@@ -34,10 +34,10 @@ export function sessionLaws() {
   }
   const fixture = JSON.parse(read("🧫️fixtures/🏷️ownership/🔣️.json"));
   for (const group of fixture.groups) {
-    const source = read(`🧪️tests/${group.directory}/🦀️.rs`);
+    const source = read(group.source);
     assert.deepEqual([...source.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match => match[1]), group.laws);
   }
   assert(!/static (KERNEL|MESH_CACHE|TESSELLATION_JOBS)|OnceLock/.test(read("🦀️.rs")));
   console.log(`Semio geometry session: ${fixture.groups.reduce((sum: number, group: any) => sum + group.laws.length, 0)} exact native laws;4 portable contracts`);
-  return fixture.groups.map((group: any) => ({ package: fixture.package, target: { kind:"test" as const, name:group.target }, laws:group.laws }));
+  return fixture.groups.map((group: any) => ({ package: fixture.package, target: group.target, laws:group.laws }));
 }

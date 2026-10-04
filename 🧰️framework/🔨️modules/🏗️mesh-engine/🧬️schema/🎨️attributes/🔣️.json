@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:mesh:attributes:corpus",
+  "title": "Portable Mesh Attribute Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh",
+    "expected",
+    "invalidCases",
+    "remapping",
+    "normalTransform",
+    "indexedMesh",
+    "indexedExpected",
+    "orientation",
+    "expandedAttributeJobs",
+    "filledAttributeJob",
+    "deletedAttributeJob",
+    "decimatedAttributeJob",
+    "beveledAttributeJob"
+  ],
+  "properties": {
+    "mesh": {
+      "type": "object"
+    },
+    "expected": {
+      "type": "object"
+    },
+    "invalidCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object"
+      }
+    },
+    "remapping": {
+      "type": "object"
+    },
+    "normalTransform": {
+      "type": "object"
+    },
+    "indexedMesh": {
+      "type": "object"
+    },
+    "indexedExpected": {
+      "type": "object"
+    },
+    "orientation": {
+      "type": "object"
+    },
+    "expandedAttributeJobs": {
+      "type": "object"
+    },
+    "filledAttributeJob": {
+      "type": "object"
+    },
+    "deletedAttributeJob": {
+      "type": "object"
+    },
+    "decimatedAttributeJob": {
+      "type": "object"
+    },
+    "beveledAttributeJob": {
+      "type": "object"
+    }
+  }
+}

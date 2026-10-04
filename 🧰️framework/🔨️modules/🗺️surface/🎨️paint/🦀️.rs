@@ -21,20 +21,21 @@ pub use canvas::camera::Camera;
 use canvas::camera::Viewport;
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::Deserialize;
 use std::collections::HashMap;
 
 #[path = "✍️gesture/🦀️.rs"]
 mod gesture;
-pub use gesture::{PaintStrokeCommand,PaintTarget};
+pub use gesture::{PaintEditCommand,PaintTarget,RASTER_STROKE_STREAM_BATCH};
 
 #[path = "🧩️compositing/🦀️.rs"]
 mod compositing;
 use semio_framework_pixels::compositing::layers::{RasterStackLayer,RasterStackContent};
 
 // #region 🔖️Document
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, semio_framework_value::FromValue)]
 #[serde(tag = "kind")]
 #[value(tag = "kind")]
 enum LayerNodeJson {
@@ -111,12 +112,12 @@ fn default_opacity() -> f32 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct TransformJson {x:f64,y:f64,a:f64,b:f64,c:f64,d:f64}
 
-#[derive(Clone, Debug, PartialEq, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct MaskJson {
@@ -139,7 +140,7 @@ struct MaskJson {
 
 fn default_transform()->TransformJson {TransformJson {x:0.0,y:0.0,a:1.0,b:0.0,c:0.0,d:1.0}}
 
-#[derive(Clone, Debug, Default, Deserialize, FromValue)]
+#[derive(Clone, Debug, Default, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct AdjustmentParamsJson {
@@ -147,7 +148,7 @@ struct AdjustmentParamsJson {
     contrast: Option<f32>,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct DocumentJson {
@@ -384,7 +385,7 @@ pub struct RasterHost {
     /// [`RasterHost::sync_interaction`].
     selected_ids: Vec<String>,
     paint_gesture: Option<gesture::PaintGesture>,
-    paint_edit: Option<PaintStrokeCommand>,
+    paint_edit: Option<PaintEditCommand>,
     /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     panning: bool,
     brush_color: [u8; 4],
@@ -491,8 +492,12 @@ impl RasterHost {
             self.pan_last = Some(Point::new(sx, sy));
             return;
         }
-        if button == 0 && matches!(self.active_utility.as_str(), "paintBrush" | "paintEraser") && self.paint_edit.is_none() {
-            self.paint_gesture = gesture::PaintGesture::begin(self, self.screen_to_world(sx, sy));
+        if button == 0 && self.paint_edit.is_none() {
+            match self.active_utility.as_str() {
+                "paintBrush" | "paintEraser" => self.paint_gesture = gesture::PaintGesture::begin(self, self.screen_to_world(sx, sy), self.active_utility == "paintEraser"),
+                "paintBucket" => self.paint_edit = gesture::PaintGesture::click(self, self.screen_to_world(sx, sy)),
+                _ => {}
+            }
         }
     }
 
@@ -508,7 +513,10 @@ impl RasterHost {
             return;
         }
         let world = self.screen_to_world(sx, sy);
-        if let Some(gesture) = self.paint_gesture.as_mut() { gesture.push(world); }
+        if let Some(gesture) = self.paint_gesture.as_mut() {
+            gesture.push(world);
+            if self.paint_edit.is_none() { self.paint_edit = gesture.stream(); }
+        }
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
@@ -516,18 +524,31 @@ impl RasterHost {
         self.pan_last = None;
         if let Some(mut gesture) = self.paint_gesture.take() {
             gesture.push(self.screen_to_world(sx, sy));
-            self.paint_edit = gesture.finish(self.active_utility == "paintEraser");
+            self.paint_edit = match (self.paint_edit.take(), gesture.finish()) {
+                (Some(pending), Some(mut release)) if pending.phase == Some("stream") && pending.gesture == release.gesture => {
+                    release.points.splice(0..0, pending.points);
+                    Some(release)
+                }
+                (pending, release) => release.or(pending),
+            };
         }
     }
 
     pub fn pointer_cancel_screen(&mut self) {
         self.panning = false;
         self.pan_last = None;
-        self.paint_gesture = None;
+        self.abandon_paint_gesture();
     }
 
-    pub fn paint_edit(&self) -> Option<&PaintStrokeCommand> { self.paint_edit.as_ref() }
-    pub fn take_paint_edit(&mut self) -> Option<PaintStrokeCommand> { self.paint_edit.take() }
+    /// 🧯️ Drops the gesture in flight; one that already streamed leaves the abort of its press to publish.
+    fn abandon_paint_gesture(&mut self) {
+        if let Some(abort) = self.paint_gesture.take().and_then(gesture::PaintGesture::abandon) {
+            self.paint_edit.get_or_insert(abort);
+        }
+    }
+
+    pub fn paint_edit(&self) -> Option<&PaintEditCommand> { self.paint_edit.as_ref() }
+    pub fn take_paint_edit(&mut self) -> Option<PaintEditCommand> { self.paint_edit.take() }
     pub fn set_paint_target(&mut self,target:PaintTarget){if self.paint_target!=target{self.paint_target=target;self.invalidate_paint_gesture();}}
     pub fn set_mask_value(&mut self,value:u8){self.mask_value=value;}
     pub fn set_brush_color(&mut self, color: [u8; 4]) { self.brush_color = color; }
@@ -544,7 +565,7 @@ impl RasterHost {
     }
 
     fn invalidate_paint_gesture(&mut self){
-        if self.paint_gesture.as_ref().is_some_and(|gesture|!gesture.matches(self)){self.paint_gesture=None;}
+        if self.paint_gesture.as_ref().is_some_and(|gesture|!gesture.matches(self)){self.abandon_paint_gesture();}
     }
 
     fn refresh_image_extents(&mut self){
@@ -589,7 +610,7 @@ impl RasterHost {
     }
 
     pub fn set_active_utility(&mut self, utility: &str) {
-        if self.active_utility!=utility {self.paint_gesture=None;}
+        if self.active_utility!=utility {self.abandon_paint_gesture();}
         self.active_utility = utility.to_string();
     }
 
@@ -737,7 +758,7 @@ impl ScreenRect {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[derive(serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct PickTargetJson {
@@ -746,26 +767,26 @@ struct PickTargetJson {
     generality: u8,
 }
 
-#[derive(serde::Deserialize, FromValue)]
+#[derive(serde::Deserialize, semio_framework_value::FromValue)]
 struct ScreenPointIn {
     x: f64,
     y: f64,
 }
 
-#[derive(serde::Deserialize, FromValue)]
+#[derive(serde::Deserialize, semio_framework_value::FromValue)]
 struct MarqueeQueryIn {
     points: Vec<ScreenPointIn>,
     crossing: bool,
 }
 
-#[derive(serde::Deserialize, FromValue)]
+#[derive(serde::Deserialize, semio_framework_value::FromValue)]
 struct CameraJsonIn {
     x: f64,
     y: f64,
     zoom: f64,
 }
 
-#[derive(serde::Deserialize, FromValue)]
+#[derive(serde::Deserialize, semio_framework_value::FromValue)]
 struct ViewportJsonIn {
     width: f64,
     height: f64,
@@ -964,7 +985,7 @@ pub struct RasterHostRetirement {
     hovered_id: Option<String>,
     selected_ids: Vec<String>,
     paint_gesture: Option<gesture::PaintGesture>,
-    paint_edit: Option<PaintStrokeCommand>,
+    paint_edit: Option<PaintEditCommand>,
     released: bool,
 }
 

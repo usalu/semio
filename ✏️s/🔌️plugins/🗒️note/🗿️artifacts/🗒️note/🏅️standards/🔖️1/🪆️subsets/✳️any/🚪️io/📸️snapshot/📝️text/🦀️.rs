@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.note` DSL text into a `NoteSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<NoteSnapshot, semio_framework_diagnostic::TextError> {
     <NoteSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

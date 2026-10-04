@@ -56,8 +56,9 @@ describe("node-graph edit rows", () => {
     expect(reactGraph).not.toContain("session.addWidget(");
     const wgpu = readFileSync(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
     expect(wgpu).not.toContain("setHostSnapshot");
-    for (const operation of ["connect", "disconnect", "move", "setSlider", "insertPort"]) expect(wgpu).toContain(`builder.string(Some("operation"), "${operation}")`);
+    expect(wgpu).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
+    expect(wgpu).not.toContain('builder.string(Some("operation")');
     const dag = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"), "utf8");
-    for (const operation of ["connect", "disconnect", "move", "setSlider", "insertPort"]) expect(dag).toContain(`row("${operation}", vec![`);
+    for (const operation of ["connect", "disconnect", "move", "setSlider", "insertPort"]) expect(dag).toContain(`sink.text("operation", "${operation}")?`);
   });
 });

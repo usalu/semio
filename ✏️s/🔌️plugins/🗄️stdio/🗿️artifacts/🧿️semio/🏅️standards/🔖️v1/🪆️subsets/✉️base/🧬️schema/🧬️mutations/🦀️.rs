@@ -107,6 +107,8 @@ pub mod apply_video;
 /// the catalog, the production `DESCRIPTORS`, and the JSON wire tag `applyBrep` the published
 /// `🔣️.json` declares.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -120,6 +122,7 @@ pub enum SemioMutation {
     /// 🧨 Full-snapshot replace — the only way to change SUBSET KIND (there is no sparse
     /// representation for "this artifact used to be a video, now it's a flow").
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     ApplyBrep(apply_brep::ApplyBrep),
     ApplyMesh(apply_mesh::ApplyMesh),
     ApplyModel(apply_model::ApplyModel),
@@ -145,7 +148,7 @@ pub enum SemioMutation {
 /// exhaustive test case measures itself against. Each wrapper is `apply-<arm>`, the arm being the
 /// subset tag the envelope routes on; `kinds_match_the_enum_and_the_catalog` pins the list with a
 /// WILDCARD-FREE match, so a nineteenth subset cannot be added without extending both it and `KINDS`.
-pub const KINDS: &[&str] = &["set-snapshot", "apply-brep", "apply-mesh", "apply-model", "apply-value", "apply-document", "apply-cad", "apply-drawing", "apply-image", "apply-video", "apply-audio", "apply-animation", "apply-presentation", "apply-flow", "apply-text", "apply-table", "apply-graph", "apply-object", "apply-kit"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "apply-brep", "apply-mesh", "apply-model", "apply-value", "apply-document", "apply-cad", "apply-drawing", "apply-image", "apply-video", "apply-audio", "apply-animation", "apply-presentation", "apply-flow", "apply-text", "apply-table", "apply-graph", "apply-object", "apply-kit"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
@@ -162,8 +165,11 @@ pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutati
 /// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
 /// `✉️mutate-semio-base`'s `inverse-*` scenarios.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> Vec<SemioMutation> {
-    <SemioMutation as Mutation<SemioSnapshot>>::inverse(mutation, base)
+pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioMutation as Mutation<SemioSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 🚦️ The messages in `outcome` that genuinely REFUSE the mutation — `Error` and `Fatal` only,
@@ -180,7 +186,7 @@ pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) ->
 /// of them can name this crate's private `protocol` extern-crate alias to ask it directly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_mutation_refusals<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
-    outcome.messages().iter().filter(|message| message.level >= protocol::Severity::Error).map(|message| format!("{:?} {:?}: {}", message.level, message.code, message.message)).collect()
+    outcome.messages().iter().filter(|message| message.level >= semio_framework_diagnostic::Severity::Error).map(|message| format!("{:?} {:?}: {}", message.level, message.code, message.message)).collect()
 }
 
 /// 🚦️ The FAULT CODES of the refusing messages in `outcome`, in order — the same `Error`/`Fatal`
@@ -190,7 +196,7 @@ pub fn semio_mutation_refusals<D>(outcome: &protocol::MutationOutcome<D>) -> Vec
 /// because `protocol` is a private extern-crate alias of this crate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
-    outcome.messages().iter().filter(|message| message.level >= protocol::Severity::Error).map(|message| message.code.0.clone()).collect()
+    outcome.messages().iter().filter(|message| message.level >= semio_framework_diagnostic::Severity::Error).map(|message| message.code.0.clone()).collect()
 }
 
 /// 🏷️ Free-function face of the envelope's own subset discriminator — the tag `KINDS` spells for
@@ -207,13 +213,13 @@ pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
 /// publishes. See <🔣️.json>.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_mutation_json(mutation: &SemioMutation) -> String {
-    pack::to_json_string(mutation)
+    semio_framework_pack_json::to_json_string(mutation)
 }
 
 /// 📥️ The inverse of [`encode_semio_mutation_json`], through `SemioMutation`'s own `FromValue`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_mutation_json(text: &str) -> Result<SemioMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Mutation
 
@@ -223,6 +229,7 @@ pub(crate) fn agg_diff(this: &SemioMutation, base: &SemioSnapshot) -> protocol::
     use SemioSubsetSnapshot as S;
     match (this, &base.subset) {
         (SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }), _) => protocol::MutationOutcome::new(SemioDiff::Replace(Box::new(snapshot.clone()))),
+        (SemioMutation::PatchSnapshot(patch), _) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioSnapshot, SemioMutation>>::diff(patch, base),
         (SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(mutation, b).map(SemioDiff::Brep),
         (SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(mutation, b).map(SemioDiff::Mesh),
         (SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, b).map(SemioDiff::Model),
@@ -248,67 +255,71 @@ pub(crate) fn agg_diff(this: &SemioMutation, base: &SemioSnapshot) -> protocol::
 /// ↩️ `Vec::new()` on a kind mismatch — same convention every migrated subset's `agg_inverse` uses
 /// where there is nothing to restore.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Vec<SemioMutation> {
+pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Result<Vec<SemioMutation>, semio_framework_value::ValueError> {
+    Ok({
     use SemioSubsetSnapshot as S;
     match (this, &base.subset) {
         (SemioMutation::SetSnapshot(_), _) => vec![SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        (SemioMutation::PatchSnapshot(patch), _) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioSnapshot, SemioMutation>>::inverse(patch, base)?,
         (SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }), S::Brep(b)) => {
-            <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: inner })).collect()
+            <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: inner })).collect()
         }
         (SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }), S::Mesh(b)) => {
-            <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: inner })).collect()
+            <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: inner })).collect()
         }
         (SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }), S::Model(b)) => {
-            <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: inner })).collect()
+            <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: inner })).collect()
         }
         (SemioMutation::ApplyValue(apply_value::ApplyValue { mutation }), S::Value(b)) => {
-            <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: inner })).collect()
+            <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: inner })).collect()
         }
         (SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation }), S::Document(b)) => {
-            <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: inner })).collect()
+            <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: inner })).collect()
         }
         (SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation }), S::Cad(b)) => {
-            <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: inner })).collect()
+            <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: inner })).collect()
         }
         (SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation }), S::Drawing(b)) => {
-            <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: inner })).collect()
+            <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: inner })).collect()
         }
         (SemioMutation::ApplyImage(apply_image::ApplyImage { mutation }), S::Image(b)) => {
-            <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: inner })).collect()
+            <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: inner })).collect()
         }
         (SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation }), S::Video(b)) => {
-            <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: inner })).collect()
+            <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: inner })).collect()
         }
         (SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation }), S::Audio(b)) => {
-            <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: inner })).collect()
+            <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: inner })).collect()
         }
         (SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation }), S::Animation(b)) => {
-            <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: inner })).collect()
+            <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: inner })).collect()
         }
         (SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation }), S::Presentation(b)) => {
-            <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: inner })).collect()
+            <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: inner })).collect()
         }
         (SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation }), S::Flow(b)) => {
-            <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: inner })).collect()
+            <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: inner })).collect()
         }
         (SemioMutation::ApplyText(apply_text::ApplyText { mutation }), S::Text(b)) => {
-            <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyText(apply_text::ApplyText { mutation: inner })).collect()
+            <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyText(apply_text::ApplyText { mutation: inner })).collect()
         }
         (SemioMutation::ApplyTable(apply_table::ApplyTable { mutation }), S::Table(b)) => {
-            <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: inner })).collect()
+            <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: inner })).collect()
         }
         (SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation }), S::Graph(b)) => {
-            <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: inner })).collect()
+            <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: inner })).collect()
         }
         (SemioMutation::ApplyObject(apply_object::ApplyObject { mutation }), S::Object(b)) => {
-            <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: inner })).collect()
+            <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: inner })).collect()
         }
         (SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation }), S::Kit(b)) => {
-            <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(mutation, b).into_iter().map(|inner| SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: inner })).collect()
+            <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(mutation, b)?.into_iter().map(|inner| SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: inner })).collect()
         }
         // 🛡️ Same kind-mismatch fallback as `agg_diff` above; nothing to restore.
         _ => Vec::new(),
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -323,6 +334,7 @@ pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Vec<Sem
 fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
     match m {
         SemioMutation::SetSnapshot(_) => "setSnapshot",
+        SemioMutation::PatchSnapshot(_) => "patchSnapshot",
         SemioMutation::ApplyBrep(_) => "brep",
         SemioMutation::ApplyMesh(_) => "mesh",
         SemioMutation::ApplyModel(_) => "model",
@@ -350,6 +362,7 @@ fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
 fn mutation_tag(m: &SemioMutation) -> u8 {
     match m {
         SemioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioMutation::ApplyBrep(_) => TAG_APPLY_BREP,
         SemioMutation::ApplyMesh(_) => TAG_APPLY_MESH,
         SemioMutation::ApplyModel(_) => TAG_APPLY_MODEL,
@@ -397,6 +410,7 @@ fn print_semio_mutation(m: &SemioMutation) -> String {
     let tag = subset_mutation_tag(m);
     match m {
         SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("{tag}:{}", enc_hex_snapshot(snapshot)),
+        SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => format!("{tag}:{}", semio_s_artifact_stdio_contract::editing::snapshot_patch_hex(patch)),
         SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => format!("{tag}:{}", mutation.print_op()),
         SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => format!("{tag}:{}", mutation.print_op()),
         SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => format!("{tag}:{}", mutation.print_op()),
@@ -423,6 +437,7 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
     match tag {
         "setSnapshot" => Ok(SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_hex_snapshot(rest)? })),
+        "patchSnapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(rest).map(|patch| SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "brep" => Ok(SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())? })),
         "mesh" => Ok(SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())? })),
         "model" => Ok(SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())? })),
@@ -446,8 +461,8 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
 }
 
 impl OpText for SemioMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_semio_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
         print_semio_mutation(self)
@@ -458,6 +473,7 @@ impl OpText for SemioMutation {
 /// 🏷️ Op tags of `SemioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_APPLY_BREP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-brep");
 const TAG_APPLY_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-mesh");
 const TAG_APPLY_MODEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-model");
@@ -489,6 +505,7 @@ impl OpBinary for SemioMutation {
         let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
         let payload: Vec<u8> = match self {
             SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot),
+            SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => patch.encode_op()?,
             SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => mutation.encode_op()?,
             SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => mutation.encode_op()?,
             SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => mutation.encode_op()?,
@@ -525,6 +542,7 @@ impl OpBinary for SemioMutation {
         let payload = &bytes[2..];
         Ok(match tag {
             TAG_SET_SNAPSHOT => SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? }),
+            TAG_PATCH_SNAPSHOT => SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as OpBinary>::decode_op(payload)? }),
             TAG_APPLY_BREP => SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::decode_op(payload)? }),
             TAG_APPLY_MESH => SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::decode_op(payload)? }),
             TAG_APPLY_MODEL => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::decode_op(payload)? }),
@@ -559,6 +577,7 @@ impl OpBinary for SemioMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
         SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioSnapshot::default() }),
+        SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(crate::standards::v1::subsets::brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
         SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(crate::standards::v1::subsets::mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),
         SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::SetSnapshot(crate::standards::v1::subsets::model::schema::mutations::set_snapshot::SetSnapshot { snapshot: Default::default() }) }),

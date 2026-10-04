@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         #[dsl(coord)]

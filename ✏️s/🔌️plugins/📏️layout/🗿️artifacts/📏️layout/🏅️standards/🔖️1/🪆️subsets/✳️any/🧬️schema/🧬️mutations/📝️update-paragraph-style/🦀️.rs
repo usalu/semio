@@ -27,9 +27,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateParagraphStyle {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_paragraph_style(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_update_paragraph_style(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_update_paragraph_style(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
     }
@@ -50,7 +53,7 @@ pub fn diff_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Layout
         return protocol::MutationOutcome::fatal("mutation.invariant", "A paragraph style needs a name, a font family, a positive size and leading, a finite tracking, a non-zero weight, and alignment left, center, right, or justify.", std::iter::empty::<String>());
     }
     if style.name == payload.name && style.font_family == payload.font_family && style.font_size == payload.font_size && style.font_weight == payload.font_weight && style.leading == payload.leading && style.tracking == payload.tracking && style.alignment == payload.alignment {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Paragraph style is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Paragraph style is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
         paragraph_styles: Some(LayoutParagraphStylesDelta {
@@ -72,7 +75,8 @@ pub fn diff_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Layout
     })
 }
 
-pub fn inverse_update_paragraph_style(payload: &UpdateParagraphStyle, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_paragraph_style(payload: &UpdateParagraphStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(style) = base.paragraph_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::UpdateParagraphStyle(UpdateParagraphStyle {
         id: style.id.clone(),
@@ -84,6 +88,8 @@ pub fn inverse_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Lay
         tracking: style.tracking,
         alignment: style.alignment.clone(),
     })]
+
+    })())
 }
 
 #[cfg(test)]

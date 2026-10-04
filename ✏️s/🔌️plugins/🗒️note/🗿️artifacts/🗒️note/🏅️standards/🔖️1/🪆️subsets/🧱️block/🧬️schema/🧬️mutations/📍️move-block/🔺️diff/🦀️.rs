@@ -15,7 +15,7 @@ pub fn diff(payload: &MoveBlock, base: &NoteSnapshot) -> protocol::MutationOutco
     }
     let (x, y, ..) = crate::schema::block_bounds(block);
     if x == payload.new_x && y == payload.new_y {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" is already at ({}, {}).", payload.id, payload.new_x, payload.new_y));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" is already at ({}, {}).", payload.id, payload.new_x, payload.new_y));
     }
     let mut updated = block.clone();
     match &mut updated {

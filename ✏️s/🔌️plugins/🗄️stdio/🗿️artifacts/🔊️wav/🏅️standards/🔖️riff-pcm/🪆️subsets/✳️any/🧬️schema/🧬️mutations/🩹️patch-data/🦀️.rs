@@ -71,7 +71,8 @@ pub(crate) fn diff(payload: &PatchData, base: &WavSnapshot) -> protocol::Mutatio
     }
 }
 
-pub(crate) fn inverse(payload: &PatchData, base: &WavSnapshot) -> Vec<WavMutation> {
+pub(crate) fn inverse(payload: &PatchData, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Ok(index) = usize::try_from(payload.index) else { return Vec::new() };
     if let Some(move_to) = payload.move_to {
         if apply(&base.data, payload).is_err() { return Vec::new(); }
@@ -81,6 +82,8 @@ pub(crate) fn inverse(payload: &PatchData, base: &WavSnapshot) -> Vec<WavMutatio
     let Some(end) = index.checked_add(remove_count) else { return Vec::new() };
     if end > len(&base.data) || apply(&base.data, payload).is_err() { return Vec::new(); }
     vec![WavMutation::PatchData(PatchData { index: payload.index, remove_count: len(&payload.data) as u64, data: slice(&base.data, index, end), move_to: None })]
+
+    })())
 }
 
 impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
@@ -89,9 +92,12 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
     fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
         diff(self, base)
     }
-    fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
-        inverse(self, base)
-    }
+    fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
     }

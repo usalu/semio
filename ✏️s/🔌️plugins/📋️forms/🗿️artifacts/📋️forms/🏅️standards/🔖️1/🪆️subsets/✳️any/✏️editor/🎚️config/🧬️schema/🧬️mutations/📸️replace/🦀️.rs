@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "replace-config")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceConfig {
@@ -15,9 +15,12 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for ReplaceConfig 
     fn diff(&self, _base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+    fn inverse(&self, base: &FormsConfig) -> Result<Vec<FormsConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }

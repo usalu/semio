@@ -18,7 +18,7 @@ fn sample_semio() -> SemioImageSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_byte_round_trip_through_jpg_codec() {
     let semio = sample_semio();
-    let jpg = semio_framework_plugin::resolve_ready(SemioImageToJpg::serialize(&semio)).expect("serialize");
+    let jpg = ::semio_framework_async::poll::resolve_ready(SemioImageToJpg::serialize(&semio)).expect("serialize");
     assert_eq!(jpg.width, 2);
     assert_eq!(jpg.height, 1);
     assert_eq!(jpg.other_segments.len(), 1);

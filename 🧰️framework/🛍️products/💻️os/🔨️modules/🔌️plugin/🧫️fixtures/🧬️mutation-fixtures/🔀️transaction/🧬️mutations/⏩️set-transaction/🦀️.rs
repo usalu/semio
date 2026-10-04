@@ -12,13 +12,13 @@ impl SetTransactionCountWithoutPreflight {
     const TAG: u8 = 0x63;
 }
 impl OpText for SetTransactionCountWithoutPreflight {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(Self {
             value: line
                 .strip_prefix("set-transaction-count-without-preflight ")
-                .ok_or_else(|| store::TextError::new("expected set-transaction-count-without-preflight", store::TextSpan::at(1, 1)))?
+                .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-transaction-count-without-preflight", semio_framework_diagnostic::TextSpan::at(1, 1)))?
                 .parse()
-                .map_err(|_| store::TextError::new("transaction count must be i32", store::TextSpan::at(1, 1)))?,
+                .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "transaction count must be i32", semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         })
     }
     fn print_op(&self) -> String {
@@ -43,11 +43,11 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }
-    fn inverse(&self, base: &TxnSnapshot) -> Vec<TxnMutation> {
-        vec![SetTransactionCount { value: base.count }.into()]
+    fn inverse(&self, base: &TxnSnapshot) -> Result<Vec<TxnMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![SetTransactionCount { value: base.count }.into()])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
     }
     fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
         panic!("no-foreign mutations must bypass foreign-step preflight")

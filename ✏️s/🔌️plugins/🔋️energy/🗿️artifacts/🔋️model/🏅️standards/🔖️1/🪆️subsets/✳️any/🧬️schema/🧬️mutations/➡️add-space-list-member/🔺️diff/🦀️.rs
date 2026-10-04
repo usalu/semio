@@ -16,7 +16,7 @@ pub fn diff(payload: &super::AddSpaceListMember, base: &EnergyModelSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of Space list {}'s {} members.", payload.index, payload.id.0, existing.space_ids.len()), [payload.id.0.to_string()]);
     }
     if existing.space_ids.contains(&payload.space_id) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Space {} already belongs to Space list {}.", payload.space_id.0, payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Space {} already belongs to Space list {}.", payload.space_id.0, payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.space_lists.iter_mut().find(|item| item.id == payload.id) {

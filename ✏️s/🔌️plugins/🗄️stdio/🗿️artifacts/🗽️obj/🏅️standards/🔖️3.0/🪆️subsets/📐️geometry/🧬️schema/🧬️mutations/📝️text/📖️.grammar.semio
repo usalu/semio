@@ -3,7 +3,22 @@ grammar stdio.obj.mutations
 start op
 comment none
 
-op = set-snapshot | insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
+op = set-snapshot | patch-snapshot | insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
+patch-snapshot = "patch-snapshot" "patch" "{" "{" patch-fields "}" "}"
+patch-fields = patch-set | patch-insert | patch-remove | patch-move | patch-rename | patch-splice
+patch-set = "operation" "=" "set" "path" "=" TEXT "value" "=" patch-value
+patch-insert = {"index" "=" U64}? "operation" "=" "insert" "path" "=" TEXT "value" "=" patch-value
+patch-remove = "operation" "=" "remove" "path" "=" TEXT
+patch-move = "from" "=" TEXT {"index" "=" U64}? "operation" "=" "move" "path" "=" TEXT
+patch-rename = "key" "=" TEXT "operation" "=" "rename" "path" "=" TEXT
+patch-splice = {"continued" "=" BOOL}? "offset" "=" U64 "operation" "=" "splice" "path" "=" TEXT "remove" "=" U64 "value" "=" patch-value
+patch-value = TEXT | BOOL | "null" | patch-number | patch-bytes | patch-array | patch-object
+patch-number = INT | FLOAT | IDENT | "-" IDENT
+patch-bytes = "bytes64" "(" TEXT ")"
+patch-array = "[" {patch-value}* "]"
+patch-object = "{" {patch-member}* "}"
+patch-member = patch-key "=" patch-value
+patch-key = IDENT | TEXT
 set-snapshot = "set-snapshot" "snapshot" "{" snapshot "}"
 insert-vertex = "insert-vertex" "index" "=" INT "vertex" vertex
 remove-vertex = "remove-vertex" "index" "=" INT

@@ -2,5 +2,6 @@
   "id": "fixture.controlled",
   "version": 1,
   "bodyBytes": 131072,
-  "textBody": "🧬\u0000body"
+  "textBody": "🧬\u0000body",
+  "retained": { "budgets": [1, 8, 256], "textRepeats": 128, "retirementBytes": 3, "sourceReleases": 1 }
 }

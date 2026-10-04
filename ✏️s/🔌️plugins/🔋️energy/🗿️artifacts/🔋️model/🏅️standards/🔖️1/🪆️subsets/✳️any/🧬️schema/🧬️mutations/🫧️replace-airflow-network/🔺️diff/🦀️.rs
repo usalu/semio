@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ReplaceAirflowNetwork, base: &EnergyModelSnapshot) 
         link_ids: payload.link_ids.clone(),
     });
     if base.model.airflow_network == network {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The airflow network already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The airflow network already has this value.");
     }
     let mut model = base.model.clone();
     model.airflow_network = network;

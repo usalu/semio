@@ -2,17 +2,9 @@
   "mutation": "patch-snapshot",
   "payload": {
     "patch": {
-      "edits": [
-        {
-          "path": [
-            "jfifXDensity"
-          ],
-          "edit": {
-            "operation": "set",
-            "value": 300
-          }
-        }
-      ]
+      "operation": "set",
+      "path": "/jfifXDensity",
+      "value": 300
     }
   }
 }

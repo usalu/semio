@@ -50,22 +50,22 @@ VECTOR_ROOTS = {
     "change-site-time-zone-refuses": "shared://🧬️mutations/🕰️change-site-time-zone/⛔️refuses",
     "change-site-north-axis-sets": "shared://🧬️mutations/🔝️change-site-north-axis/✅️sets",
     "change-site-north-axis-same": "shared://🧬️mutations/🔝️change-site-north-axis/🟰️same",
-    "change-ground-temperature-building-surface-sets": "shared://🧬️mutations/🌡️change-ground-temperature/✅️sets",
-    "change-ground-temperature-building-surface-refuses": "shared://🧬️mutations/🌡️change-ground-temperature/⛔️refuses",
-    "change-ground-temperature-shallow-sets": "shared://🧬️mutations/🌱️change-ground-temperature/✅️sets",
-    "change-ground-temperature-shallow-refuses": "shared://🧬️mutations/🌱️change-ground-temperature/⛔️refuses",
-    "change-ground-temperature-deep-sets": "shared://🧬️mutations/⛏️change-ground-temperature/✅️sets",
-    "change-ground-temperature-deep-refuses": "shared://🧬️mutations/⛏️change-ground-temperature/⛔️refuses",
-    "change-run-period-start-month-sets": "shared://🧬️mutations/🛫️change-run-period-start/✅️sets",
-    "change-run-period-start-month-refuses": "shared://🧬️mutations/🛫️change-run-period-start/⛔️refuses",
-    "change-run-period-start-day-sets": "shared://🧬️mutations/▶️change-run-period-start/✅️sets",
-    "change-run-period-start-day-refuses": "shared://🧬️mutations/▶️change-run-period-start/⛔️refuses",
-    "change-run-period-end-month-sets": "shared://🧬️mutations/🛬️change-run-period-end/✅️sets",
-    "change-run-period-end-month-refuses": "shared://🧬️mutations/🛬️change-run-period-end/⛔️refuses",
-    "change-run-period-end-day-sets": "shared://🧬️mutations/⏹️change-run-period-end/✅️sets",
-    "change-run-period-end-day-refuses": "shared://🧬️mutations/⏹️change-run-period-end/⛔️refuses",
-    "change-run-period-year-sets": "shared://🧬️mutations/📅️change-run-period-year/✅️sets",
-    "change-run-period-year-refuses": "shared://🧬️mutations/📅️change-run-period-year/⛔️refuses",
+    "change-ground-building-sets": "shared://🧬️mutations/🌡️change-ground-building/✅️sets",
+    "change-ground-building-refuses": "shared://🧬️mutations/🌡️change-ground-building/⛔️refuses",
+    "change-ground-shallow-sets": "shared://🧬️mutations/🌱️change-ground-shallow/✅️sets",
+    "change-ground-shallow-refuses": "shared://🧬️mutations/🌱️change-ground-shallow/⛔️refuses",
+    "change-ground-deep-sets": "shared://🧬️mutations/⛏️change-ground-deep/✅️sets",
+    "change-ground-deep-refuses": "shared://🧬️mutations/⛏️change-ground-deep/⛔️refuses",
+    "change-run-start-month-sets": "shared://🧬️mutations/🛫️change-run-start-month/✅️sets",
+    "change-run-start-month-refuses": "shared://🧬️mutations/🛫️change-run-start-month/⛔️refuses",
+    "change-run-start-day-sets": "shared://🧬️mutations/▶️change-run-start-day/✅️sets",
+    "change-run-start-day-refuses": "shared://🧬️mutations/▶️change-run-start-day/⛔️refuses",
+    "change-run-end-month-sets": "shared://🧬️mutations/🛬️change-run-end-month/✅️sets",
+    "change-run-end-month-refuses": "shared://🧬️mutations/🛬️change-run-end-month/⛔️refuses",
+    "change-run-end-day-sets": "shared://🧬️mutations/⏹️change-run-end-day/✅️sets",
+    "change-run-end-day-refuses": "shared://🧬️mutations/⏹️change-run-end-day/⛔️refuses",
+    "change-run-year-sets": "shared://🧬️mutations/📅️change-run-year/✅️sets",
+    "change-run-year-refuses": "shared://🧬️mutations/📅️change-run-year/⛔️refuses",
     "replace-airflow-network-attaches-a-network": "shared://🧬️mutations/🫧️replace-airflow-network/✅️attaches",
     "replace-airflow-network-refuses-unpaired-nodes": "shared://🧬️mutations/🫧️replace-airflow-network/⛔️refuses",
     "add-output-variable-adds-zone-air-temp": "shared://🧬️mutations/📊️add-output-variable/✅️adds",
@@ -803,14 +803,14 @@ change_site_longitude = _site_leaf("longitude_deg", "newLongitudeDeg", lambda va
 change_site_elevation = _site_leaf("elevation_m", "newElevationM", lambda value: -300.0 <= value < 8900.0)
 change_site_time_zone = _site_leaf("time_zone_hours", "newTimeZoneHours", lambda value: -12.0 <= value <= 14.0)
 change_site_north_axis = _site_leaf("north_axis_deg", "newNorthAxisDeg", math.isfinite)
-change_ground_temperature_building_surface = _ground_leaf("building_surface_c")
-change_ground_temperature_shallow = _ground_leaf("shallow_c")
-change_ground_temperature_deep = _ground_leaf(None)
-change_run_period_start_month = _run_period_leaf("start_month", "newStartMonth", 1, 12)
-change_run_period_start_day = _run_period_leaf("start_day", "newStartDay", 1, 31)
-change_run_period_end_month = _run_period_leaf("end_month", "newEndMonth", 1, 12)
-change_run_period_end_day = _run_period_leaf("end_day", "newEndDay", 1, 31)
-change_run_period_year = _run_period_leaf("year", "newYear", 0, 65535)
+change_ground_building = _ground_leaf("building_surface_c")
+change_ground_shallow = _ground_leaf("shallow_c")
+change_ground_deep = _ground_leaf(None)
+change_run_start_month = _run_period_leaf("start_month", "newStartMonth", 1, 12)
+change_run_start_day = _run_period_leaf("start_day", "newStartDay", 1, 31)
+change_run_end_month = _run_period_leaf("end_month", "newEndMonth", 1, 12)
+change_run_end_day = _run_period_leaf("end_day", "newEndDay", 1, 31)
+change_run_year = _run_period_leaf("year", "newYear", 0, 65535)
 
 
 #: ↩️ The base value each field leaf's undo writes back, as that leaf's own payload.
@@ -820,14 +820,14 @@ FIELD_LEAVES = {
     "change-site-elevation": lambda before, payload: {"newElevationM": before["model"]["site"]["elevation_m"]},
     "change-site-time-zone": lambda before, payload: {"newTimeZoneHours": before["model"]["site"]["time_zone_hours"]},
     "change-site-north-axis": lambda before, payload: {"newNorthAxisDeg": before["model"]["site"]["north_axis_deg"]},
-    "change-ground-temperature-building-surface": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["building_surface_c"][payload["month"] - 1]},
-    "change-ground-temperature-shallow": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["shallow_c"][payload["month"] - 1]},
-    "change-ground-temperature-deep": lambda before, payload: {"newTemperatureC": before["model"]["ground_temperature"]["deep_c"]},
-    "change-run-period-start-month": lambda before, payload: {"newStartMonth": before["model"]["run_period"]["start_month"]},
-    "change-run-period-start-day": lambda before, payload: {"newStartDay": before["model"]["run_period"]["start_day"]},
-    "change-run-period-end-month": lambda before, payload: {"newEndMonth": before["model"]["run_period"]["end_month"]},
-    "change-run-period-end-day": lambda before, payload: {"newEndDay": before["model"]["run_period"]["end_day"]},
-    "change-run-period-year": lambda before, payload: {"newYear": before["model"]["run_period"]["year"]},
+    "change-ground-building": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["building_surface_c"][payload["month"] - 1]},
+    "change-ground-shallow": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["shallow_c"][payload["month"] - 1]},
+    "change-ground-deep": lambda before, payload: {"newTemperatureC": before["model"]["ground_temperature"]["deep_c"]},
+    "change-run-start-month": lambda before, payload: {"newStartMonth": before["model"]["run_period"]["start_month"]},
+    "change-run-start-day": lambda before, payload: {"newStartDay": before["model"]["run_period"]["start_day"]},
+    "change-run-end-month": lambda before, payload: {"newEndMonth": before["model"]["run_period"]["end_month"]},
+    "change-run-end-day": lambda before, payload: {"newEndDay": before["model"]["run_period"]["end_day"]},
+    "change-run-year": lambda before, payload: {"newYear": before["model"]["run_period"]["year"]},
 }
 
 
@@ -6963,14 +6963,14 @@ VOCABULARY = {
     "change-site-elevation": change_site_elevation,
     "change-site-time-zone": change_site_time_zone,
     "change-site-north-axis": change_site_north_axis,
-    "change-ground-temperature-building-surface": change_ground_temperature_building_surface,
-    "change-ground-temperature-shallow": change_ground_temperature_shallow,
-    "change-ground-temperature-deep": change_ground_temperature_deep,
-    "change-run-period-start-month": change_run_period_start_month,
-    "change-run-period-start-day": change_run_period_start_day,
-    "change-run-period-end-month": change_run_period_end_month,
-    "change-run-period-end-day": change_run_period_end_day,
-    "change-run-period-year": change_run_period_year,
+    "change-ground-building": change_ground_building,
+    "change-ground-shallow": change_ground_shallow,
+    "change-ground-deep": change_ground_deep,
+    "change-run-start-month": change_run_start_month,
+    "change-run-start-day": change_run_start_day,
+    "change-run-end-month": change_run_end_month,
+    "change-run-end-day": change_run_end_day,
+    "change-run-year": change_run_year,
     "replace-airflow-network": replace_airflow_network,
     "add-output-variable": add_output_variable,
     "remove-output-variable": remove_output_variable,

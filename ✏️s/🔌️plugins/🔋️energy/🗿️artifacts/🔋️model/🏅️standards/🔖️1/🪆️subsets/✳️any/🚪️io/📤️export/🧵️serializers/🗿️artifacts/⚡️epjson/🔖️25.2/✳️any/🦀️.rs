@@ -63,7 +63,7 @@
 use crate::air_exchange::InfiltrationMethod;
 use crate::model::{Construction, EntityId, Fenestration, GasKind, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
 use crate::EnergyModelSnapshot;
-use pack::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 
 //#region 🔖️Constants
 /// ⚡️ The EnergyPlus release whose `Energy+.schema.epJSON` this codec targets.
@@ -450,7 +450,7 @@ fn encode_schedules(model: &Model, document: &mut Object, diagnostics: &mut Vec<
             for (hour, value) in daily.hourly_values.iter().enumerate() {
                 let clamped = daily.limits.map_or(*value, |limit| value.clamp(limit.min, limit.max));
                 data.push(Value::Object(Object::from_iter([field("field", format!("Until: {:02}:00", hour + 1))])));
-                data.push(Value::Object(Object::from_iter([field("field", pack::json::format_f64(clamped))])));
+                data.push(Value::Object(Object::from_iter([field("field", semio_framework_pack_json::format_f64(clamped))])));
             }
             entry(schedule_name(daily.id), [field("schedule_type_limits_name", SCHEDULE_LIMITS_ANY), ("data".to_string(), Value::Array(data))])
         })
@@ -996,19 +996,19 @@ pub fn refusals(diagnostics: &[EpJsonDiagnostic]) -> Vec<&EpJsonDiagnostic> {
 }
 
 /// 📤️ The io-leaf entry point: this artifact's snapshot as an epJSON document tree.
-pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<Value, store::TextError> {
+pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<Value, semio_framework_diagnostic::TextError> {
     let (document, diagnostics) = encode_model_with_diagnostics(&snapshot.model);
     let refused = refusals(&diagnostics);
     if !refused.is_empty() {
         let detail = refused.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ");
-        return Err(store::TextError::new(format!("model -> epJSON: {detail}"), dsl::TextSpan::at(1, 1)));
+        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("model -> epJSON: {detail}"), semio_framework_diagnostic::TextSpan::at(1, 1)));
     }
     Ok(document)
 }
 
 /// 📤️ The io-leaf byte entry point: pretty-printed epJSON, the form EnergyPlus reads.
-pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(format!("{}\n", pack::json::to_string_pretty(&serialize(snapshot)?)).into_bytes())
+pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    Ok(format!("{}\n", semio_framework_pack_json::to_string_pretty(&serialize(snapshot)?)).into_bytes())
 }
 //#endregion 🔖️Leaf
 
@@ -1019,21 +1019,21 @@ pub fn serialize_bytes(snapshot: &EnergyModelSnapshot) -> Result<Vec<u8>, store:
 /// in as its own canonical JSON and the epJSON comes back as the exact bytes EnergyPlus is handed.
 /// Same shape and same reason as `bestest::model_json`.
 pub fn epjson_from_model_json(model_json: &str) -> Result<String, String> {
-    let model: Model = pack::json::from_json_str(model_json).map_err(|error| format!("the committed model does not decode: {error}"))?;
+    let model: Model = semio_framework_pack_json::from_json_str(model_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed model does not decode: {error}"))?;
     let (document, diagnostics) = encode_model_with_diagnostics(&model);
     let refused = refusals(&diagnostics);
     if !refused.is_empty() {
         return Err(format!("model -> epJSON refused: {}", refused.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ")));
     }
-    Ok(format!("{}\n", pack::json::to_string_pretty(&document)))
+    Ok(format!("{}\n", semio_framework_pack_json::to_string_pretty(&document)))
 }
 
 /// 🌉️ The same export's full diagnostic list as a JSON array, so a scenario can assert that a
 /// document carrying no refusals also dropped nothing quietly.
 pub fn epjson_diagnostics_json(model_json: &str) -> Result<String, String> {
-    let model: Model = pack::json::from_json_str(model_json).map_err(|error| format!("the committed model does not decode: {error}"))?;
+    let model: Model = semio_framework_pack_json::from_json_str(model_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed model does not decode: {error}"))?;
     let (_, diagnostics) = encode_model_with_diagnostics(&model);
-    Ok(pack::json::to_string(&Value::Array(diagnostics.iter().map(EpJsonDiagnostic::to_json).collect())))
+    Ok(semio_framework_pack_json::to_string(&Value::Array(diagnostics.iter().map(EpJsonDiagnostic::to_json).collect())))
 }
 //#endregion 🌉️Bridge
 

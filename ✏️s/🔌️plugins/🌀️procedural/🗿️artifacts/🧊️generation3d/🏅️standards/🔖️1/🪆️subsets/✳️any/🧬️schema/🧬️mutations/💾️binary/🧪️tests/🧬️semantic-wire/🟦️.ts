@@ -8,6 +8,7 @@ import { parseDragTransforms } from "../../../✋️drag-transforms/🦠️mutat
 import { parseMoveNodes } from "../../../🚚️move-nodes/🦠️mutation/🟦️.ts";
 import { parseRotateTransforms } from "../../../🔃️rotate-transforms/🦠️mutation/🟦️.ts";
 import { parseScaleTransforms } from "../../../📏️scale-transforms/🦠️mutation/🟦️.ts";
+import { binary64Value } from "../../../../🟦️.ts";
 
 /** 🚪️ Every gesture leaf's TypeScript twin parser, by wire keyword. */
 const PARSERS: Readonly<Record<string, (value: unknown) => unknown>> = {
@@ -38,7 +39,7 @@ export function assertGeneration3dSemanticWire(): number {
   const root = resolve(import.meta.dir, "../..");
   const read = (path: string) => JSON.parse(readFileSync(resolve(root, path), "utf8"));
   const corpus: { cases: { keyword: string; tag: number; source: string; mutation: Record<string, unknown> }[] } = read("🧫️fixtures/🧬️semantic-wire/🔣️.json");
-  const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-ui", metaSchema: { type: "object" } }).addKeyword({ keyword: "x-semio-invariant", metaSchema: { type: "array", items: { type: "object" } } });
+  const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-ui", metaSchema: { type: "object" } }).addKeyword({ keyword: "x-semio-invariant", metaSchema: { type: "array", items: { type: "object" } } }).addKeyword({ keyword: "x-semio-inverse-rows", metaSchema: { type: "object" } });
   assert(ajv.compile(read("🧬️schema/🧬️semantic-wire/🔣️.json"))(corpus));
   const tags = new Map([...readFileSync(resolve(root, "📡️.protocol.semio"), "utf8").matchAll(/^record (\S+) tag=(\d+)$/gm)].map(match => [match[1], Number(match[2])]));
   let checks = 0;
@@ -52,7 +53,11 @@ export function assertGeneration3dSemanticWire(): number {
     const parse = PARSERS[row.keyword];
     assert(parse, `${row.keyword} has a twin parser`);
     const { mutation: _tag, ...payload } = row.mutation;
-    assert.deepEqual(parse(row.mutation), payload, `${row.keyword} parses to its payload`);
+    const parsed = parse(row.mutation);
+    if (row.keyword === "move-nodes") {
+      const moved = parsed as ReturnType<typeof parseMoveNodes>;
+      assert.deepEqual({...moved,dx:binary64Value(moved.dx),dy:binary64Value(moved.dy)},payload,`${row.keyword} canonical binary64 values match the independent JSON witness`);
+    } else assert.deepEqual(parsed, payload, `${row.keyword} parses to its payload`);
     assert.throws(() => parse(hostile), TypeError, `${row.keyword} refuses a forged tag`);
     const outOfBounds = OUT_OF_BOUNDS[row.keyword];
     assert.equal(validate(outOfBounds), false, `${row.keyword}: Ajv refuses ${JSON.stringify(outOfBounds)}`);
@@ -66,6 +71,6 @@ export function assertGeneration3dSemanticWire(): number {
   assert.throws(() => parseRotateTransforms(zeroAxis), /axis-nonzero/, "the twin refuses the declared invariant");
   assert.equal(new Set(corpus.cases.map((row) => row.keyword)).size, 6);
   assert.equal(new Set(corpus.cases.map((row) => row.tag)).size, 6);
-  assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector"], "every widget-input type has a vector");
+  assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector", "numberList", "textList", "booleanList", "pointList", "vectorList"], "every widget-input type has a vector");
   return checks + 8;
 }

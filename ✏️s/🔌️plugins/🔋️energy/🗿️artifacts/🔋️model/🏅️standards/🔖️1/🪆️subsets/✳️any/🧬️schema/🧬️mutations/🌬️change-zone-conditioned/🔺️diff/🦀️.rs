@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeZoneConditioned, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if existing.conditioned == payload.new_conditioned {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone {} is already conditioned={}.", payload.id.0, payload.new_conditioned));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Zone {} is already conditioned={}.", payload.id.0, payload.new_conditioned));
     }
     let mut model = base.model.clone();
     if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {

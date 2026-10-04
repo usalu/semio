@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("An input edge may not exceed {BITMAP_MAX_EDGE}."), ["input".to_string()]);
     }
     if base.input.width == payload.width && base.input.height == payload.height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The input is already {}×{}.", payload.width, payload.height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The input is already {}×{}.", payload.width, payload.height));
     }
     let Some(buffer) = base.input.indices() else {
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);

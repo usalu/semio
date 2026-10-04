@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "keys": [
+    "version",
+    "source",
+    "unit",
+    "retainedUnitSha256",
+    "family",
+    "laws",
+    "cacheBehavior"
+  ],
+  "neutralPrefix": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+  "absent": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub"
+  ],
+  "copied": [
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
+    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

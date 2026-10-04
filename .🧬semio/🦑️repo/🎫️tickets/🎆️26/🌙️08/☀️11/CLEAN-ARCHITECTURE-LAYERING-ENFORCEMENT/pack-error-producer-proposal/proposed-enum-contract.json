@@ -1,0 +1,100 @@
+{
+  "status": "unmounted",
+  "canonicalOwner": "semio-framework-pack-error",
+  "kindOwner": "semio-framework-value",
+  "accessor": "refusal_kind",
+  "implicitKind": false,
+  "stringClassifier": false,
+  "variants": [
+    {
+      "name": "BadMagic",
+      "authority": "invalidValue",
+      "basis": "source magic admission"
+    },
+    {
+      "name": "UnsupportedVersion",
+      "authority": "unsupportedOwner",
+      "basis": "declared format provider unavailable"
+    },
+    {
+      "name": "UnknownRequiredFlags",
+      "authority": "unsupportedOwner",
+      "basis": "required format capability unavailable"
+    },
+    {
+      "name": "Truncated",
+      "authority": "invalidValue",
+      "basis": "source ends before required physical range"
+    },
+    {
+      "name": "ChecksumMismatch",
+      "authority": "invalidValue",
+      "basis": "source integrity admission"
+    },
+    {
+      "name": "ContentHashMismatch",
+      "authority": "invalidValue",
+      "basis": "source content identity admission"
+    },
+    {
+      "name": "LimitExceeded",
+      "authority": "mandatory producer kind",
+      "proposedRust": "LimitExceeded { kind: ValueRefusalKind, limit: &'static str }",
+      "basis": "actual byte, work, allocation or physical invariant branch"
+    },
+    {
+      "name": "RetainedMalformed",
+      "authority": "mandatory producer kind",
+      "proposedRust": "RetainedMalformed { kind: ValueRefusalKind, what: &'static str, offset: u64, detail: &'static str }",
+      "basis": "actual malformed input, ownership failure or retained transition; original retained allocation kind passes through"
+    },
+    {
+      "name": "Malformed",
+      "authority": "mandatory producer kind",
+      "proposedRust": "Malformed { kind: ValueRefusalKind, what: &'static str, offset: u64, detail: String }",
+      "basis": "actual source admission or owner invariant branch"
+    },
+    {
+      "name": "NonCanonical",
+      "authority": "invalidValue",
+      "basis": "source canonical encoding admission"
+    },
+    {
+      "name": "UnsupportedCodec",
+      "authority": "unsupportedOwner",
+      "basis": "declared codec provider unavailable"
+    },
+    {
+      "name": "ValueRefusal",
+      "authority": "original error.kind",
+      "basis": "unchanged original owned ValueError"
+    },
+    {
+      "name": "TextRefusal",
+      "authority": "original error.kind",
+      "basis": "unchanged original owned TextError and source span"
+    },
+    {
+      "name": "Io",
+      "authority": "original typed cause.kind",
+      "proposedRust": "Io { error: ValueError, retry: PackRetryDisposition }",
+      "basis": "actual source/transport owner supplies unchanged typed cause and explicit Never/Transient disposition; native operation/provider mappings remain a separate prerequisite"
+    },
+    {
+      "name": "RetainedAllocation",
+      "authority": "mandatory producer kind and retained allocated bytes",
+      "proposedRust": "RetainedAllocation { kind: ValueRefusalKind, allocated_bytes: usize, what: &'static str, offset: u64, detail: &'static str }",
+      "basis": "actual lower Deflate/PagedList allocation kind and byte witness are preserved before remembered-fault replay; this structure performs no allocation"
+    }
+  ],
+  "productionPrerequisites": [
+    "Resolve actual old Replication error definition and every Pack/Protocol/higher import to canonical owner without public forwarding.",
+    "Bind every actual mixed constructor and pattern explicitly; preserve all original test bodies through argument/provider transforms.",
+    "Split combined source-length and configured-work guards where their authored kinds differ.",
+    "Retain exact allocation error kind rather than deriving it from reason prose.",
+    "Retire token cancellation and invalid caller path from generic transient IO representation.",
+    "Define native/HTTP machine failure authority before converting external transport errors; no blanket prose or enum classifier.",
+    "Keep ValueRefusal/TextRefusal original causes and extend std::error::Error::source to the original typed IO cause.",
+    "Prove actual full Pack, Record/PackRecord, Snapshot/PackHash and dependent consumer cohorts; no narrow filter or inferred scope."
+  ]
+}

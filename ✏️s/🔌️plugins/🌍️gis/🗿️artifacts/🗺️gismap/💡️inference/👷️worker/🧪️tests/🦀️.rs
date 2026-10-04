@@ -186,8 +186,8 @@ fn recovery_fixture() -> serde_json::Value { serde_json::from_str(include_str!("
 
 fn recovery_value(value: &serde_json::Value) -> DslValue {
     let text=serde_json::to_string(value).unwrap();
-    let own=semio_framework_os_kernel::os_pack::json::from_json_str::<DslValue>(&text).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(&own)).unwrap(),*value);
+    let own=semio_framework_pack_json::from_json_str::<DslValue>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&own)).unwrap(),*value);
     own
 }
 
@@ -212,7 +212,7 @@ fn native_service_retains_original_request_and_cancels_only_after_recovery() {
     driver.intend(fixture["intentBeforeReceipt"].as_str().unwrap(),DslValue::Object(vec![])).unwrap();
     assert!(!driver.terminal());
     let reconcile=recovery_call(&mut driver,0,"reconcile");
-    let request:serde_json::Value=serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(&reconcile)).unwrap();
+    let request:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&reconcile)).unwrap();
     assert_eq!(request["requestId"],fixture["originalRequestId"]);
     driver.complete("reconcile",&reconcile,Ok(recovery_value(&fixture["recovered"])));
     assert!(driver.driver.status.cancel_requested);

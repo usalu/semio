@@ -1,3 +1,1 @@
-# 🧬️ change-gamma/ChangeGamma
-scalar ChangeGammaMutationValue
-input ChangeGammaMutation { gama: ChangeGammaMutationValue }
+input ChangeGammaMutation { revision: String! gama: Int }

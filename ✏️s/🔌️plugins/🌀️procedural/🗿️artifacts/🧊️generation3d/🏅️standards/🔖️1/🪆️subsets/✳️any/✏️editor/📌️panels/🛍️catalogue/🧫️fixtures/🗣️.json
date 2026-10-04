@@ -763,5 +763,10 @@
     "id": "brep",
     "en": "Brep",
     "de": "BRep"
+  },
+  {
+    "id": "brep.mesh.transform",
+    "en": "Transform Mesh",
+    "de": "Mesh transformieren"
   }
 ]

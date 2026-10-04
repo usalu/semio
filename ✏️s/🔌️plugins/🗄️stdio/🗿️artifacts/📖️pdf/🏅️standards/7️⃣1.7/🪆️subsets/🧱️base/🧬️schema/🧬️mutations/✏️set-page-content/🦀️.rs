@@ -24,10 +24,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageContent {
         MutationOutcome::new(diff::diff_set_page_content(base, self.index, &self.content))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.pages.get(self.index).map(|page| PdfMutation::SetPageContent(SetPageContent { index: self.index, content: page.content.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Inhalt von Seite {} setzen", self.index))

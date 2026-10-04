@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<StlSnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<StlSnapshot, semio_framework_diagnostic::TextError> {
     let mut stl = StlSnapshot { solid_name: "lowpoly".into(), ..Default::default() };
     for part in world_parts("stl", snapshot)? {
         for face in &part.faces {
@@ -29,6 +29,6 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<StlSnapshot, store::TextE
     Ok(stl)
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(encode_stl_ascii(&serialize(snapshot)?).into_bytes())
 }

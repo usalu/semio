@@ -1,5 +1,5 @@
 use semio_framework_schema_state::StateClass;
-use semio_framework_schema_registry::{ArtifactInferenceDescriptor, FacetLeaves, register_artifact_inference_descriptor, with_artifact_inference_catalog};
+use semio_framework_schema_registry::{artifact_inference_catalog_len, artifact_inference_descriptor_registered, ArtifactInferenceDescriptor, FacetLeaves, register_artifact_inference_descriptor, with_artifact_inference_catalog};
 
 use super::*;
 use crate::{ArtifactVersion, DictBuilder, DictReader, HybridLogicalTimestamp, MutationId, RecordHasher};
@@ -7,9 +7,9 @@ use crate::{ArtifactVersion, DictBuilder, DictReader, HybridLogicalTimestamp, Mu
 //#region 🔖️Errors
 #[test]
 fn pack_error_converts_into_protocol_error_via_from() {
-    let pack_err = crate::codec::PackError::Truncated(7);
+    let pack_err = semio_framework_pack_error::PackRefusal::Truncated(7);
     let protocol_err: ProtocolError = pack_err.clone().into();
-    assert_eq!(protocol_err, ProtocolError::Pack(pack_err));
+    assert_eq!(protocol_err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(pack_err)));
 }
 //#endregion 🔖️Errors
 
@@ -168,7 +168,7 @@ mod scalars {
         let bytes = out.into_bytes();
         assert_eq!(bytes[0], 3, "tag byte must be 3 (edit-ordinal)");
         let mut reader = ByteReader::new(&bytes);
-        let decoded = read_id(&mut reader, |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(crate::codec::PackError::Truncated(0)) }).unwrap();
+        let decoded = read_id(&mut reader, |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(semio_framework_pack_error::PackRefusal::Truncated(0)) }).unwrap();
         assert_eq!(decoded, "edit-7");
     }
 
@@ -189,7 +189,7 @@ mod scalars {
         let bytes = out.into_bytes();
         assert_eq!(bytes[0], 2, "tag byte must be 2 (prefix+uuid)");
         let mut reader = ByteReader::new(&bytes);
-        let decoded = read_id(&mut reader, |idx| if idx == 0 { Ok("actor") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
+        let decoded = read_id(&mut reader, |idx| if idx == 0 { Ok("actor") } else { Err(semio_framework_pack_error::PackRefusal::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
         assert_eq!(decoded, id);
     }
 
@@ -209,7 +209,7 @@ mod scalars {
         let bytes = out.into_bytes();
         assert_eq!(bytes[0], 1, "tag byte must be 1 (dictref)");
         let mut reader = ByteReader::new(&bytes);
-        let decoded = read_id(&mut reader, |idx| if idx == 42 { Ok("hello-world") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
+        let decoded = read_id(&mut reader, |idx| if idx == 42 { Ok("hello-world") } else { Err(semio_framework_pack_error::PackRefusal::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
         assert_eq!(decoded, "hello-world");
     }
 
@@ -382,7 +382,7 @@ fn merge_policy_default_is_normal() {
 
 #[test]
 fn merge_policy_rejects_matches_the_frozen_matrix() {
-    use crate::diagnostic::Severity;
+    use semio_framework_diagnostic::Severity;
     assert!(!MergePolicy::LaissezFaire.rejects(Severity::Info));
     assert!(!MergePolicy::LaissezFaire.rejects(Severity::Warning));
     assert!(!MergePolicy::LaissezFaire.rejects(Severity::Error));

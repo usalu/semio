@@ -2,17 +2,9 @@
   "mutation": "patch-snapshot",
   "payload": {
     "patch": {
-      "edits": [
-        {
-          "path": [
-            "gama"
-          ],
-          "edit": {
-            "operation": "set",
-            "value": 45455
-          }
-        }
-      ]
+      "operation": "set",
+      "path": "/gama",
+      "value": 45455
     }
   }
 }

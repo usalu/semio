@@ -24,3 +24,16 @@ test("testFormsResponses",testFormsResponses);
 test("testFormsSubmission",testFormsSubmission);
 test("testFormsValidation",testFormsValidation);
 test("testFormsResponseExport",testFormsResponseExport);
+
+/** 📋️ The package owner verifies its declared public runtime APIs and private-subpath refusal. */
+import{expect}from"bun:test";
+import type{FormsSnapshot,FormsDefinition,FormsResponse}from"@semio-tech/forms-js";
+export type FormsPublicDocumentContract=Readonly<{snapshot:FormsSnapshot;definition:FormsDefinition;response:FormsResponse}>;
+import{createRequire}from"node:module";
+import{resolve as resolveFormsOwner}from"node:path";
+test("Forms package exports its document and transport APIs by package name",async()=>{
+ const packageRoot=resolveFormsOwner(import.meta.dir,"../../../../../../../📦️packages/🟦️typescript"),entry=Bun.resolveSync("@semio-tech/forms-js",packageRoot),owner=await import(entry);
+ for(const name of ["parseFormsSnapshot","formsSnapshotToSqliteDatabase","formsSnapshotFromSqliteDatabase","parseFormsJsonArtifact","parseFormsJsonDefinition","parseFormsJsonResponse"])expect(typeof owner[name],name).toBe("function");
+ const require=createRequire(resolveFormsOwner(packageRoot,"package.json"));
+ expect(()=>require.resolve("@semio-tech/forms-js/private")).toThrow();
+});

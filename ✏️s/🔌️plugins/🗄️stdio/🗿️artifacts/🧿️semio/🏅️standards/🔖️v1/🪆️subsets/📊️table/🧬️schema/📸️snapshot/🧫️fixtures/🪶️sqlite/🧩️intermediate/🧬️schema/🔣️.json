@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role",
+    "snapshot",
+    "query",
+    "expectedRows"
+  ],
+  "properties": {
+    "role": {
+      "const": "codeAdmittedIntermediateOwner"
+    },
+    "snapshot": {
+      "const": {
+        "schema": "table\u0000世界",
+        "columns": [
+          {
+            "name": "same\u0000Ä",
+            "kind": "str"
+          },
+          {
+            "name": "same\u0000Ä",
+            "kind": "str"
+          }
+        ],
+        "rows": [
+          {
+            "cells": [
+              {
+                "kind": "null"
+              },
+              {
+                "kind": "bool",
+                "value": true
+              },
+              {
+                "kind": "int",
+                "lexeme": "18446744073709551616"
+              },
+              {
+                "kind": "float",
+                "lexeme": "1.234567890123456789"
+              },
+              {
+                "kind": "str",
+                "value": "NUL\u0000世界"
+              },
+              {
+                "kind": "bytes",
+                "value": [
+                  0,
+                  255
+                ]
+              },
+              {
+                "kind": "list",
+                "items": []
+              },
+              {
+                "kind": "map",
+                "entries": [
+                  {
+                    "key": "same",
+                    "value": {
+                      "kind": "null"
+                    }
+                  },
+                  {
+                    "key": "same",
+                    "value": {
+                      "kind": "bool",
+                      "value": false
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "ref",
+                "id": {
+                  "value": "external\u0000Ä"
+                }
+              }
+            ]
+          },
+          {
+            "cells": []
+          }
+        ]
+      }
+    },
+    "query": {
+      "const": "SELECT count(*) AS n FROM semio_table_cell"
+    },
+    "expectedRows": {
+      "const": [
+        {
+          "n": 9
+        }
+      ]
+    }
+  }
+}

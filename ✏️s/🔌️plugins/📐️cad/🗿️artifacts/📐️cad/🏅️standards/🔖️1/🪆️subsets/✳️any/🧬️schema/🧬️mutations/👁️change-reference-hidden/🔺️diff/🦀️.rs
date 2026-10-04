@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Reference \"{}\" does not exist.", payload.reference_id), [payload.model_definition_id.clone(), payload.reference_id.clone()]);
     };
     if existing.hidden == payload.new_hidden {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" already has hidden = {}.", payload.reference_id, payload.new_hidden));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" already has hidden = {}.", payload.reference_id, payload.new_hidden));
     }
     let patch = CadReferencePatch { hidden: Some(payload.new_hidden), ..Default::default() };
     let next = references

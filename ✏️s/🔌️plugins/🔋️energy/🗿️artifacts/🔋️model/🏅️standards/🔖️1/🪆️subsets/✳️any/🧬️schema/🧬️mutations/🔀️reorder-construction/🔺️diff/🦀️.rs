@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ReorderConstructionLayers, base: &EnergyModelSnapsh
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Construction {}'s layers can only be reordered, not exchanged.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.layer_material_ids == payload.new_layer_material_ids {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Construction {} already holds its layers in this order.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Construction {} already holds its layers in this order.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(construction) = model.constructions.iter_mut().find(|item| item.id == payload.id) {

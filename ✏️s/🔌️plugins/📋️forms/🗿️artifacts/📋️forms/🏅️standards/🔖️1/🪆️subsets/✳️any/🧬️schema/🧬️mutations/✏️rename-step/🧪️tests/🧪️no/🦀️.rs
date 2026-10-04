@@ -12,7 +12,7 @@
 //! `DefaultHasher` digest of the child content — hand-authoring such an `➡️after` would mean
 //! forging a value from `std`'s deliberately unspecified default hasher. `rename-step`'s guard
 //! returns BEFORE that call, so it mints nothing and `➡️after == ⬅️before`; the case is applied
-//! with the identity diff and one Warning, exactly as `MutationOutcome::empty().warn(..)` builds it.
+//! with the identity diff and one Warning, exactly as `MutationOutcome::empty().warning(..)` builds it.
 //!
 //! ✏️ Nothing in the seeded scene is invented: the one step it holds takes its `id` AND its `title`
 //! straight from the committed payload — that identity is precisely the collision the guard tests.
@@ -27,16 +27,16 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-step/🧪️no/🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly one
 /// step whose id and title are the committed payload's own `id`/`new_title`.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let FormMutation::RenameStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-already-carries-that-title's committed mutation must be a rename-step");
     };
@@ -61,7 +61,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_form_mutation(&base, &mutation);
+    let inverse = inverse_form_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "rename-step undoes with exactly one step whenever the id resolves, got {inverse:?}");
     let FormMutation::RenameStep(undo) = &inverse[0] else {
         panic!("rename-step's inverse must be another rename-step, got {:?}", inverse[0]);
@@ -80,18 +80,18 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: FormsSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome holds: `no-op`, carrying one Warning `mutation.no-op`. The warning is
-/// deliberately untargeted — `MutationOutcome::warn` takes no address, unlike the Error-level
+/// deliberately untargeted — `MutationOutcome::warning` takes no address, unlike the Error-level
 /// `mutation.target-missing` this same verb raises when the id does not resolve.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
@@ -103,7 +103,7 @@ async fn declared_outcome_holds() {
     assert_eq!(messages.len(), declared.len(), "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(declared[0].get("code").and_then(serde_json::Value::as_str), Some(messages[0].code.0.as_str()), "the declared code must match the emitted one");
     assert_eq!(messages[0].code.0, "mutation.no-op", "an already-current title is a no-op, not a target-missing");
-    assert_eq!(messages[0].level, protocol::Severity::Warning, "renaming a step to its current title must not escalate to Error or Fatal");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "renaming a step to its current title must not escalate to Error or Fatal");
     assert!(messages[0].target.is_empty(), "rename-step's no-op warning carries no target address");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("rename", "step", "rename-step", "RenamedStep"), "the fixture must be bound to rename-step's own descriptor");
@@ -114,7 +114,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-step/no-ops-when-the-step-already-carries-that-title: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &FormsDiff::default(), "a refused rename-step must carry the identity diff");
@@ -125,8 +125,8 @@ async fn produces_committed_diff() {
 /// eleven fields are written out as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: FormsDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed diff JSON is not canonical");
 }
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed identity diff directly to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: FormsDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-step/no-ops-when-the-step-already-carries-that-title: committed diff did not carry before to after");
 }

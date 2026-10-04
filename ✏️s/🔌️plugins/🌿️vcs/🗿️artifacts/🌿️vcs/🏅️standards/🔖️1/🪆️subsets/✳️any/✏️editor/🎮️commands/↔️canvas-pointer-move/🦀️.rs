@@ -5,13 +5,11 @@ use crate::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "canvas-pointer-move")]
 pub struct CanvasPointerMove {
-    /// 🧵️ Every pointer sample of this batch as canvas pixels, oldest first (design L4 / §2 D);
-    /// the action bridge folds a legacy `{x, y}` wire into the single `[[x, y]]`. This app keeps
-    /// no drag gesture on its canvas, so the batch is carried, not consumed.
-    #[value(default)]
+    /// 🧵️ Every pointer sample of this batch as canvas pixels, oldest first (design L4 / §2 D); required on the wire.
+    /// This app keeps no drag gesture on its canvas, so the batch is carried, not consumed.
     pub samples: Vec<[f64; 2]>,
 }
 

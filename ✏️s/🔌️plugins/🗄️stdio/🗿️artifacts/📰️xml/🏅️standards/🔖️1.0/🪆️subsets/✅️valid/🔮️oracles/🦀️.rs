@@ -34,7 +34,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️Live
 #[cfg(feature = "oracles")]
 mod live {
-    use semio_s_plugin_stdio_markup_test_oracle::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
+    use semio_s_plugin_stdio_markup_test_oracle::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, patched_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
     use semio_repo_test_host::Json;
 
     //#region 🔖️DoctypeGrammar
@@ -220,6 +220,14 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
+            "patch-snapshot" => {
+                let patched = patched_markup(doc, "stdio.xml", &member(params, "patch"))?;
+                if !matches!(verdicts(&patched)?.get("doctypeNameMatchesDocumentElement"), Some(Json::Bool(true))) {
+                    return Err("patch-snapshot: the patched document is not XML 1.0 valid — §2.8 requires the DOCTYPE Name to be the document element's name".to_string());
+                }
+                *doc = patched;
+                Ok(())
+            }
             "set-snapshot" => {
                 let replacement = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
                 let verdict = verdicts(&replacement)?;
@@ -308,7 +316,7 @@ mod live {
     /// the name would silently reorder the subset.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "set-snapshot" => Ok(base.clone()),
+            "set-snapshot" | "patch-snapshot" => Ok(base.clone()),
             "declare-doctype" => match base.doctype.as_deref().map(parse_doctype).transpose()? {
                 Some(prior) => {
                     let name = document_element_name(&mutated).ok_or("inverse declare-doctype: the document has no document element")?.to_string();

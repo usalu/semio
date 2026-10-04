@@ -77,6 +77,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
       | insert-record      | {"index": 5, "record": {"year": "2026", "month": "1", "day": "15", "hour": "99", "minute": "0", "dataSourceUncertainty": "?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9", "dryBulbTemp": "2.5", "dewPointTemp": "-1.0", "relativeHumidity": "70", "atmosphericPressure": "101100", "extraterrestrialHorizontalRadiation": "500", "extraterrestrialDirectNormalRadiation": "1200", "horizontalInfraredRadiation": "280", "globalHorizontalRadiation": "300", "directNormalRadiation": "200", "diffuseHorizontalRadiation": "100", "globalHorizontalIlluminance": "30000", "directNormalIlluminance": "25000", "diffuseHorizontalIlluminance": "5000", "zenithLuminance": "1500", "windDirection": "250", "windSpeed": "3.0", "totalSkyCover": "5", "opaqueSkyCover": "3", "visibility": "20.0", "ceilingHeight": "22000", "presentWeatherObservation": "0", "presentWeatherCodes": "999999999", "precipitableWater": "14", "aerosolOpticalDepth": "0.081", "snowDepth": "0", "daysSinceLastSnowfall": "88", "albedo": "0.2", "liquidPrecipDepth": "0", "liquidPrecipQuantity": "0"}} |
       | remove-record      | {"index": 10} |
       | set-record-field   | {"recordIndex": 3, "fieldIndex": 6, "value": "12.3"} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/3/dryBulbTemp", "value": "12.3"}} |
 
   @id-mutate
   @level-exhaustive
@@ -125,6 +126,7 @@ Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this reposito
       | set-comments1                 | {"value": "COMMENTS 1,Wave 7 mutation test comment"} |
       | set-comments2                 | {"value": "COMMENTS 2,Wave 7 mutation test comment"} |
       | set-data-periods               | {"dataPeriods": {"recordsPerHour":1,"periods":[{"name":"Data","startDayOfWeek":"Monday","startDate":" 1/ 2","endDate":" 1/ 2"}]}} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/records/3/dryBulbTemp", "value": "12.3"}} |
 
   @id-identity-round-trip
   @level-long

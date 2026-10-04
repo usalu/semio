@@ -50,7 +50,7 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
     let eval_json = session.eval_json();
     let prefix = "generation2d-preview";
     let mut layers = Vec::new();
-    if let Ok(outputs) = dsl::json::parse(eval_json) {
+    if let Ok(outputs) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         let mut handles = Vec::new();
         collect_drawing_handles_from_eval(&outputs, &mut handles);
         handles.sort();
@@ -66,15 +66,15 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
         for widget in &fixture.widgets {
             let id = crate::widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
-            layers.push(dsl::json::Value::Object(
+            layers.push(semio_framework_pack_json::Value::Object(
                 [
-                    ("id".to_string(), dsl::json::Value::from(format!("widget-{id}"))),
-                    ("kind".to_string(), dsl::json::Value::from("node")),
-                    ("name".to_string(), dsl::json::Value::from(id)),
-                    ("x".to_string(), dsl::json::Value::from(x)),
-                    ("y".to_string(), dsl::json::Value::from(y)),
-                    ("width".to_string(), dsl::json::Value::from(96.0)),
-                    ("height".to_string(), dsl::json::Value::from(48.0)),
+                    ("id".to_string(), semio_framework_pack_json::Value::from(format!("widget-{id}"))),
+                    ("kind".to_string(), semio_framework_pack_json::Value::from("node")),
+                    ("name".to_string(), semio_framework_pack_json::Value::from(id)),
+                    ("x".to_string(), semio_framework_pack_json::Value::from(x)),
+                    ("y".to_string(), semio_framework_pack_json::Value::from(y)),
+                    ("width".to_string(), semio_framework_pack_json::Value::from(96.0)),
+                    ("height".to_string(), semio_framework_pack_json::Value::from(48.0)),
                 ]
                 .into_iter()
                 .collect(),
@@ -85,7 +85,7 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
     crate::scene_surface(
         GENERATION2D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: None, camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: dsl::json::to_string(&dsl::json::Value::from(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: None, camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }
 //#endregion 🔖️Render

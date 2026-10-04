@@ -85,10 +85,138 @@ test('SQLite shared Block2d snapshot uses the same exact common word and require
  const parse=Reflect.get(two,'parseBlock2dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x7ff0000000000001n),value={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[{id:'',name:'',label:'',color:'',defaultWireKind:''}],handles:[{id:'',handleKind:'unresolved',angle:{bits:0x7ff0000000000001n},radius:{bits:0n}}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,camera2d:{x:0,y:0,zoom:1}})).toThrow();
 });
 test('SQLite shared Block3d snapshot retains the literal composed child and exact owned vortex words',()=>{
- const parse=Reflect.get(three,'parseBlock3dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x8000000000000000n),value={schema:'literal',objectKind:base.partKind,representations:base.representations,catalog:{childId:'local',target:{artifactId:'different target',artifactKind:'literal',standard:'',subset:''}},vortexKindExtra:[{id:'',name:'',label:'',color:'',defaultCableKind:''}],vortices:[{id:'',vortexKind:'unresolved',position:base.camera3d.position,direction:base.camera3d.target,radius:{bits:0x8000000000000000n},label:null}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera3d:base.camera3d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,vortices:[{...value.vortices[0],radius:1}]})).toThrow();
+ const parse=Reflect.get(three,'parseBlock3dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x8000000000000000n),value={schema:'literal',objectKind:base.partKind,representations:base.representations,catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'literal',standard:'',subset:''}}},vortexKindExtra:[{id:'',name:'',label:'',color:'',defaultCableKind:''}],vortices:[{id:'',vortexKind:'unresolved',position:base.camera3d.position,direction:base.camera3d.target,radius:{bits:0x8000000000000000n},label:null}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera3d:base.camera3d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,vortices:[{...value.vortices[0],radius:1}]})).toThrow();
 });
 
 test('SQLite Block5d authored schema and exact row refusal precede untouched domain fields',async()=>{
  const value=specimen(0n);let touched=false;Object.defineProperty(value,'meta',{get(){touched=true;throw new Error('domain touched')}});await expect(artifact.block5dSnapshotToSqliteDatabase(value,{maxRows:15})).rejects.toThrow('row limit');expect(touched).toBe(false);
  const schemaValue=specimen(0n);Object.defineProperty(schemaValue,'representations',{get(){touched=true;throw new Error('domain touched')}});await expect(artifact.block5dSnapshotToSqliteDatabase(schemaValue,{maxSchemaBytes:1})).rejects.toThrow('schema');expect(touched).toBe(false);
+});
+
+import jsonSchema from '../../../🔣️.json';
+const jsonValidate=new Ajv({strict:false}).compile(jsonSchema);
+import {fileURLToPath} from "node:url";
+const committedFixtureRoot=fileURLToPath(new URL('../../../../🧫️fixtures/🧬️mutations/',import.meta.url));
+const committedSnapshots=[...new Bun.Glob('**/📸️snapshot/**/🔣️.json').scanSync({cwd:committedFixtureRoot})].sort();
+test('SQLite Block5d committed neutral snapshot corpus remains complete',()=>{expect(committedSnapshots.length).toBe(82)});
+for(const relative of committedSnapshots)test('SQLite Block5d committed semantic snapshot '+relative,async()=>{
+ const wire=await Bun.file(committedFixtureRoot+relative).json();expect(jsonValidate(wire),JSON.stringify(jsonValidate.errors)).toBe(true);
+ const value=block5dFromJsonText(JSON.stringify(wire));expect(snapshot.parseBlock5dSnapshot(value)).toEqual(value);
+ const emitted=block5dToJsonText(value);expect(jsonValidate(JSON.parse(emitted)),JSON.stringify(jsonValidate.errors)).toBe(true);expect(block5dFromJsonText(emitted)).toEqual(value);
+ const db=await oracle(value);try{expect(db.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(db.query('PRAGMA foreign_key_check').values()).toEqual([]);expect(await artifact.block5dSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(value)}finally{db.close()}
+});
+test('SQLite Block5d declared minimal JSON defaults produce the complete canonical parent',()=>{
+ const minimal={schema:'literal',partKind:{id:'',name:'',label:''}};expect(jsonValidate(minimal)).toBe(true);const value=block5dFromJsonText(JSON.stringify(minimal));expect(snapshot.parseBlock5dSnapshot(value)).toEqual(value);expect(value.grips).toEqual([]);expect(value.camera2d.zoom.bits).toBe(0x3ff0000000000000n);expect(value.part2d.radius).toBe(null);expect(jsonValidate(JSON.parse(block5dToJsonText(value)))).toBe(true);
+});
+
+
+import {block5dFromDslText} from '../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts';
+for(const item of laws.dslWordCases)test('SQLite Block5d published Text consumer returns canonical exact word '+item.bits,()=>{
+ const source='semio block.block5d.dsl v1\nschema="literal"\npart-kind {\nid="" name="" label=""\n}\ncamera2d {\nx='+item.literal+' y=-0 zoom=1\n}\ncamera3d {\nposition=@0,0,0 target=@0,0,0 zoom=1\n}\n';
+ const parsed=block5dFromDslText(source);expect(snapshot.parseBlock5dSnapshot(parsed)).toEqual(parsed);
+ expect(parsed.camera2d.x.bits).toBe(BigInt('0x'+item.bits));
+ expect(parsed.camera2d.y.bits).toBe(0x8000000000000000n);
+});
+
+
+import {block2dFromJsonText} from '../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts';
+import {block2dToJsonText} from '../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts';
+import {block2dFromDslText} from '../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts';
+for(const item of laws.dslWordCases)test('SQLite shared Block2d published JSON/Text consumers own canonical word '+item.bits,()=>{
+ const base=specimen(BigInt('0x'+item.bits)),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[{id:'',name:'',label:'',color:'',defaultWireKind:''}],handles:[{id:'',handleKind:'unresolved',angle:base.camera2d.x,radius:base.camera2d.x}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};
+ const wire=block2dToJsonText(value);expect(JSON.parse(wire).handles[0].angle).toEqual({bits:item.bits});expect(block2dFromJsonText(wire)).toEqual(value);
+ const text='semio block.block2d.dsl v1\nschema="literal"\nnode-kind {\nid="" name="" label=""\n}\ncamera2d {\nx='+item.literal+' y=-0 zoom=1\n}\n';
+ const parsed=block2dFromDslText(text);expect(two.parseBlock2dSnapshot(parsed)).toEqual(parsed);expect(parsed.camera2d.x.bits).toBe(BigInt('0x'+item.bits));expect(parsed.camera2d.y.bits).toBe(0x8000000000000000n);
+});
+
+
+import twoJsonSchema from '../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json';
+const twoJsonValidate=new Ajv({strict:false}).compile(twoJsonSchema);
+for(const item of laws.dslWordCases)test('SQLite shared Block2d actual declared JSON schema admits exact word '+item.bits,()=>{
+ const base=specimen(BigInt('0x'+item.bits)),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[],handles:[],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};
+ expect(twoJsonValidate(JSON.parse(block2dToJsonText(value))),JSON.stringify(twoJsonValidate.errors)).toBe(true);
+});
+
+
+import threeJsonSchema from '../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json';
+test('SQLite shared Block2d schema refuses malformed words and incomplete owned kinds',()=>{
+ const base=specimen(0n),value:two.Block2dSnapshot={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[],handles:[],compatibility:[],attributes:[],authors:[],camera2d:base.camera2d,meta:base.meta};const wire=JSON.parse(block2dToJsonText(value));wire.camera2d.x={bits:'wrong'};expect(twoJsonValidate(wire)).toBe(false);wire.camera2d.x={bits:'0000000000000000'};wire.handleKinds=[{id:'only'}];expect(twoJsonValidate(wire)).toBe(false);
+});
+test('SQLite shared Block3d schema refuses malformed coordinates and incomplete owned vortices',()=>{
+ const schema={$defs:threeJsonSchema.$defs,$ref:'#/$defs/Block3dVortexTemplate'},validate=new Ajv({strict:false}).compile(schema);expect(validate({id:'only'})).toBe(false);expect(validate({id:'',vortexKind:'',position:[0,0],direction:[0,0,0],radius:0,label:null})).toBe(false);
+});
+
+
+test('SQLite shared Block2d JSON cannot invent required native handle scalars',()=>{
+ const input={schema:'literal',nodeKind:{id:'',name:'',label:''},handles:[{id:'',handleKind:''}]};expect(()=>block2dFromJsonText(JSON.stringify(input))).toThrow();
+});
+
+test('SQLite shared Block canonical text refuses lossy UTF-16 states excluded by native UTF-8 strings',()=>{
+ for(const units of laws.invalidUtf16CodeUnits){const value=specimen(0n),invalid=String.fromCharCode(...units);expect(Buffer.from(invalid,'utf8').toString('utf8')).not.toBe(invalid);value.partKind.name=invalid;expect(()=>snapshot.parseBlock5dSnapshot(value)).toThrow();expect(()=>block5dFromJsonText(JSON.stringify({schema:'literal',partKind:{id:'',name:invalid,label:''}}))).toThrow()}
+});
+
+test('SQLite shared Block3d canonical child identities preserve native UTF-8 domain without URI restrictions',()=>{
+ const base=specimen(0n),value:three.Block3dSnapshot={schema:'literal',objectKind:base.partKind,representations:[],catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'literal',standard:'',subset:''}}},vortexKindExtra:[],vortices:[],compatibility:[],attributes:[],authors:[],camera3d:base.camera3d,meta:base.meta};expect(three.parseBlock3dSnapshot(value)).toEqual(value);
+ for(const units of laws.invalidUtf16CodeUnits){value.catalog.childId=String.fromCharCode(...units);expect(()=>three.parseBlock3dSnapshot(value)).toThrow()}
+});
+
+
+import callerLedger from '../../🧫️fixtures/🪶️sqlite/💰️caller/🔣️.json';
+import callerLedgerSchema from '../../🧫️fixtures/🪶️sqlite/💰️caller/🧬️schema/🔣️.json';
+import {sqliteOperation} from '../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts';
+import {NativeDecodeControl} from '../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts';
+test('Block5d closed supplied caller ledger contract has independent exact octet backing',()=>{
+ expect(new Ajv({strict:true}).validate(callerLedgerSchema,callerLedger)).toBe(true);
+ expect(Buffer.from(callerLedger.byteBacking).length).toBe(callerLedger.exactBytes);
+ expect(new Uint8Array(callerLedger.byteBacking).byteLength).toBe(callerLedger.exactBytes);
+ expect(callerLedger.oneByteShort+1).toBe(callerLedger.exactBytes);
+ expect(callerLedger.twoCallBytes).toBe(callerLedger.exactBytes*2);
+});
+test('Block5d supplied operation exposes paid child stage with genuine byte backing',async()=>{
+ const bytes=new Uint8Array(callerLedger.byteBacking),operation=sqliteOperation({maxAllocationBytes:callerLedger.twoCallBytes});
+ const stage=Reflect.get(operation,'allocationStage');expect(typeof stage).toBe('function');
+ const run=(owner:ReturnType<typeof sqliteOperation>)=>Reflect.get(owner,'allocationStage').call(owner,(maximum:number)=>new NativeDecodeControl(maximum,()=>true),async(control:NativeDecodeControl)=>control.copyBytes(bytes));
+ expect(await run(operation)).toEqual(bytes);expect(operation.ownedBytes).toBe(callerLedger.exactBytes);
+ expect(await run(operation)).toEqual(bytes);expect(operation.ownedBytes).toBe(callerLedger.twoCallBytes);
+ await expect(run(operation)).rejects.toMatchObject({kind:'ownershipLimit'});expect(operation.ownedBytes).toBe(callerLedger.twoCallBytes);
+ for(const maximum of[0,callerLedger.oneByteShort]){const denied=sqliteOperation({maxAllocationBytes:maximum});await expect(run(denied)).rejects.toMatchObject({kind:'ownershipLimit'});expect(denied.ownedBytes).toBe(0);}
+});
+function ledgerAt(value:any,path:readonly(string|number)[]):any{return path.reduce((row,key)=>row[key],value)}
+function ledgerSet(value:any,path:readonly(string|number)[],next:unknown):void{ledgerAt(value,path.slice(0,-1))[path[path.length-1]!]=next}
+for(const raw of laws.binary64Bits)for(const path of callerLedger.optionalPaths)for(const present of[false,true])test('Block5d full word optional ordered owner '+raw+' '+JSON.stringify(path)+' '+present,async()=>{
+ const owned=specimen(BigInt('0x'+raw));
+ if(!present)ledgerSet(owned,path,null);
+ else if(ledgerAt(owned,path)===null)ledgerSet(owned,path,path[0]==='part2d'&&['radius','width','height'].includes(String(path[1]))?{bits:BigInt('0x'+raw)}:callerLedger.literal);
+ expect(snapshot.parseBlock5dSnapshot(owned)).toEqual(owned);
+ const operation=sqliteOperation(),database=await artifact.block5dSnapshotToSqliteDatabase(owned,operation);
+ expect(await artifact.block5dSnapshotFromSqliteDatabase(database,operation)).toEqual(owned);
+ const independent=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});
+ try{expect(independent.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(independent.query('PRAGMA foreign_key_check').values()).toEqual([]);expect(await artifact.block5dSnapshotFromSqliteDatabase(await importSqliteDatabase(independent.serialize()))).toEqual(owned);}finally{independent.close();}
+});
+for(const direction of['projection','reconstruction']as const)test('Block5d supplied caller exact short cumulative and interior '+direction,async()=>{
+ const value=specimen(BigInt('0x'+laws.binary64Bits[0]!));value.authors=Array.from({length:callerLedger.repeat},(_,index)=>({id:String(index),name:callerLedger.literal,email:index%2===0?null:''}));
+ const unchanged=structuredClone(value),database=await artifact.block5dSnapshotToSqliteDatabase(value),expected=direction==='projection'?database:value;
+ const run=(operation:ReturnType<typeof sqliteOperation>)=>direction==='projection'?artifact.block5dSnapshotToSqliteDatabase(value,operation):artifact.block5dSnapshotFromSqliteDatabase(database,operation);
+ const probe=sqliteOperation();expect(await run(probe)).toEqual(expected);expect(probe.ownedBytes).toBeGreaterThan(0);
+ const exact=sqliteOperation({maxAllocationBytes:probe.ownedBytes});expect(await run(exact)).toEqual(expected);expect(exact.remainingBytes()).toBe(0);await expect(run(exact)).rejects.toMatchObject({kind:'ownershipLimit'});
+ await expect(run(sqliteOperation({maxAllocationBytes:probe.ownedBytes-1}))).rejects.toMatchObject({kind:'ownershipLimit'});
+ const twice=sqliteOperation({maxAllocationBytes:probe.ownedBytes*2});expect(await run(twice)).toEqual(expected);expect(await run(twice)).toEqual(expected);expect(twice.remainingBytes()).toBe(0);await expect(run(twice)).rejects.toMatchObject({kind:'ownershipLimit'});
+ const controller=new AbortController();let interior=false;
+ const canceled=sqliteOperation({signal:controller.signal,onProgress:event=>{if(event.completed>=callerLedger.minimumInterior&&event.completed<event.total){interior=true;controller.abort()}}});
+ await expect(run(canceled)).rejects.toMatchObject({kind:callerLedger.requiredKind});expect(interior).toBe(true);
+ expect(value).toEqual(unchanged);
+});
+
+import captureContract from '../../🧫️fixtures/🪶️sqlite/🧱️capture/🔣️.json';
+import captureSchema from '../../🧫️fixtures/🪶️sqlite/🧱️capture/🧬️schema/🔣️.json';
+test('Block5d exact literal owner capture precedes mutable callbacks',async()=>{
+ const validate=new Ajv({strict:true}).compile(captureSchema);expect(validate(captureContract)).toBe(true);expect(validate({...captureContract,foreign:true})).toBe(false);expect(validate({...captureContract,ieeeWord:'0'})).toBe(false);
+ expect(Reflect.get(captureContract,'authority')).toBe('literalTopologyBeforeCallback');
+ expect(Reflect.get(captureContract,'ieeeWord')).toBe('7ff8000000000042');
+ const bytes=Buffer.from(Reflect.get(captureContract,'ieeeWord'),'hex'),bits=new DataView(bytes.buffer,bytes.byteOffset,8).getBigUint64(0);expect(bits).toBe(0x7ff8000000000042n);
+ for(const path of Reflect.get(captureContract,'extraPaths') as (string|number)[][]){const value=specimen(bits);ledgerAt(value,path).foreign=true;await expect(artifact.block5dSnapshotToSqliteDatabase(value)).rejects.toMatchObject({kind:'invalidValue'})}
+ const value=specimen(bits),expected=structuredClone(value);let projected=false;
+ const database=await artifact.block5dSnapshotToSqliteDatabase(value,{onProgress:()=>{if(!projected){projected=true;value.meta.description='mutated after borrow';value.authors.length=0}}});expect(projected).toBe(true);
+ const independent=Database.deserialize(await exportSqliteDatabase(database),{safeIntegers:true});let imported:Awaited<ReturnType<typeof importSqliteDatabase>>;try{expect(independent.query('PRAGMA integrity_check').values()).toEqual([['ok']]);expect(independent.query('PRAGMA foreign_key_check').values()).toEqual([]);imported=await importSqliteDatabase(independent.serialize());expect(await artifact.block5dSnapshotFromSqliteDatabase(imported)).toEqual(expected)}finally{independent.close()}
+ let restored=false;expect(await artifact.block5dSnapshotFromSqliteDatabase(imported!,{onProgress:()=>{if(!restored){restored=true;imported!.tables[0]!.rows[0]!.values[1]='mutated SQL cell';imported!.tables[0]!.rows.length=0;imported!.tables.length=0}}})).toEqual(expected);expect(restored).toBe(true);
 });

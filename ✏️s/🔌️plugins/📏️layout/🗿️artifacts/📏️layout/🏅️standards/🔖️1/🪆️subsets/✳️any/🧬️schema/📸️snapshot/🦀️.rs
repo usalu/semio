@@ -14,8 +14,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactLink` reference slot, both new. `#[child(...)]`/`#[link_slot(...)]` drive
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
 /// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="sqlite::retire")]
 #[dsl(extension = "layout")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {
@@ -46,8 +46,8 @@ pub struct LayoutSnapshot {
     #[value(rename = "printTarget")]
     pub print_target: Option<String>,
     #[state(artifact)]
-    #[value(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
-    pub data_fields_json: Option<String>,
+    #[value(rename = "dataFields", default, skip_serializing_if = "Option::is_none")]
+    pub data_fields: Option<crate::FormDictionary>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
@@ -74,7 +74,7 @@ pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }
@@ -88,36 +88,37 @@ impl store::ArtifactDsl for LayoutSnapshot {
     fn envelope_id() -> &'static str {
         LAYOUT_DOCUMENT_SCHEMA
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for LayoutSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -128,3 +129,12 @@ impl store::ArtifactPack for LayoutSnapshot {
 #[path = "🧪️tests/🔬️round-trip/🦀️.rs"]
 mod round_trip_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🧩️component/🦀️.rs"]
+pub mod drawing_child;
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

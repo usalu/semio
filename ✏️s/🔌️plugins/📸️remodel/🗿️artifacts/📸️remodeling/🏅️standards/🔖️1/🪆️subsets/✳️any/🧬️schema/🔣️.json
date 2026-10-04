@@ -130,22 +130,92 @@
           "type": "string"
         },
         "model": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera model",
+              "de": "Kameramodell"
+            },
+            "description": {
+              "en": "The lens model the intrinsics describe.",
+              "de": "Das Objektivmodell, das die inneren Parameter beschreiben."
+            }
+          }
         },
         "fx": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Focal length X",
+              "de": "Brennweite X"
+            },
+            "description": {
+              "en": "Horizontal focal length in pixels.",
+              "de": "Horizontale Brennweite in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "fy": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Focal length Y",
+              "de": "Brennweite Y"
+            },
+            "description": {
+              "en": "Vertical focal length in pixels.",
+              "de": "Vertikale Brennweite in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "cx": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Principal point X",
+              "de": "Hauptpunkt X"
+            },
+            "description": {
+              "en": "Horizontal principal point in pixels.",
+              "de": "Horizontaler Hauptpunkt in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "cy": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Principal point Y",
+              "de": "Hauptpunkt Y"
+            },
+            "description": {
+              "en": "Vertical principal point in pixels.",
+              "de": "Vertikaler Hauptpunkt in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "skew": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Skew",
+              "de": "Scherung"
+            },
+            "description": {
+              "en": "Axis skew of the image sensor.",
+              "de": "Achsenscherung des Bildsensors."
+            }
+          }
         },
         "distortion": {
           "type": "array",
@@ -153,6 +223,17 @@
           "maxItems": 5,
           "items": {
             "$ref": "#/$defs/Binary32Transport"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Distortion",
+              "de": "Verzeichnung"
+            },
+            "description": {
+              "en": "The five lens distortion coefficients (k1, k2, p1, p2, k3).",
+              "de": "Die fünf Verzeichnungskoeffizienten des Objektivs (k1, k2, p1, p2, k3)."
+            }
           }
         },
         "rmsReprojectionPx": {
@@ -163,7 +244,18 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Reprojection error",
+              "de": "Rückprojektionsfehler"
+            },
+            "description": {
+              "en": "Root-mean-square reprojection error of the calibration; empty when not calibrated.",
+              "de": "Mittlerer quadratischer Rückprojektionsfehler der Kalibrierung; leer, wenn nicht kalibriert."
+            }
+          }
         },
         "locked": {
           "type": "boolean"
@@ -263,28 +355,98 @@
       "required": [],
       "properties": {
         "resolution": {
-          "$ref": "#/$defs/DenseResolution"
+          "$ref": "#/$defs/DenseResolution",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Resolution",
+              "de": "Auflösung"
+            },
+            "description": {
+              "en": "How finely the dense reconstruction samples the frames.",
+              "de": "Wie fein die dichte Rekonstruktion die Bilder abtastet."
+            },
+            "options": {
+              "low": {
+                "en": "Low",
+                "de": "Niedrig"
+              },
+              "medium": {
+                "en": "Medium",
+                "de": "Mittel"
+              },
+              "high": {
+                "en": "High",
+                "de": "Hoch"
+              }
+            }
+          }
         },
         "windowRadiusPx": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Window radius",
+              "de": "Fensterradius"
+            },
+            "description": {
+              "en": "Radius of the matching window, in pixels.",
+              "de": "Radius des Vergleichsfensters, in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "minViewConsistency": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Minimum views",
+              "de": "Mindestansichten"
+            },
+            "description": {
+              "en": "How many views must agree on a depth for it to be kept.",
+              "de": "Wie viele Ansichten einer Tiefe zustimmen müssen, damit sie bleibt."
+            }
+          }
         },
         "confidenceThreshold": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Confidence threshold",
+              "de": "Konfidenzschwelle"
+            },
+            "description": {
+              "en": "The confidence below which a dense point is dropped.",
+              "de": "Die Konfidenz, unter der ein dichter Punkt verworfen wird."
+            }
+          }
         },
         "maxPoints": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Maximum points",
+              "de": "Höchstzahl Punkte"
+            },
+            "description": {
+              "en": "The most points the dense cloud keeps.",
+              "de": "Die meisten Punkte, die die dichte Wolke behält."
+            }
+          }
         }
       }
     },
@@ -313,22 +475,80 @@
       "required": [],
       "properties": {
         "detector": {
-          "$ref": "#/$defs/FeatureDetector"
+          "$ref": "#/$defs/FeatureDetector",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Detector",
+              "de": "Detektor"
+            },
+            "description": {
+              "en": "The keypoint detector.",
+              "de": "Der Merkmalsdetektor."
+            },
+            "options": {
+              "orb": {
+                "en": "ORB",
+                "de": "ORB"
+              },
+              "akaze": {
+                "en": "AKAZE",
+                "de": "AKAZE"
+              },
+              "harris": {
+                "en": "Harris",
+                "de": "Harris"
+              }
+            }
+          }
         },
         "targetCount": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Keypoints per frame",
+              "de": "Merkmale pro Bild"
+            },
+            "description": {
+              "en": "How many keypoints each frame aims for.",
+              "de": "Wie viele Merkmale jedes Bild anstrebt."
+            }
+          }
         },
         "octaves": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Octaves",
+              "de": "Oktaven"
+            },
+            "description": {
+              "en": "How many scale octaves the detector searches.",
+              "de": "Wie viele Skalenoktaven der Detektor durchsucht."
+            }
+          }
         },
         "edgeThreshold": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Edge threshold",
+              "de": "Kantenschwelle"
+            },
+            "description": {
+              "en": "Border in pixels where no keypoint is taken.",
+              "de": "Rand in Pixeln, in dem kein Merkmal genommen wird."
+            }
+          }
         }
       }
     },
@@ -349,7 +569,19 @@
           "maximum": 4294967295
         },
         "timestampMs": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Timestamp",
+              "de": "Zeitstempel"
+            },
+            "description": {
+              "en": "When the frame was taken, in milliseconds from the stream start.",
+              "de": "Wann das Bild aufgenommen wurde, in Millisekunden ab Streambeginn."
+            },
+            "unit": "ms"
+          }
         },
         "assetId": {
           "type": "string"
@@ -367,13 +599,35 @@
       ],
       "properties": {
         "streamId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Stream",
+              "de": "Stream"
+            },
+            "description": {
+              "en": "The stream the point is observed in.",
+              "de": "Der Stream, in dem der Punkt beobachtet wird."
+            }
+          }
         },
         "frameIndex": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frame",
+              "de": "Bild"
+            },
+            "description": {
+              "en": "The frame of that stream the point is observed in.",
+              "de": "Das Bild dieses Streams, in dem der Punkt beobachtet wird."
+            }
+          }
         },
         "pixel": {
           "type": "array",
@@ -381,6 +635,18 @@
           "maxItems": 2,
           "items": {
             "$ref": "#/$defs/Binary32Transport"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Pixel position",
+              "de": "Pixelposition"
+            },
+            "description": {
+              "en": "Where the point appears in the frame, in pixels.",
+              "de": "Wo der Punkt im Bild erscheint, in Pixeln."
+            },
+            "unit": "px"
           }
         }
       }
@@ -402,7 +668,19 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Origin longitude",
+              "de": "Ursprung Länge"
+            },
+            "description": {
+              "en": "Geographic longitude of the local origin; empty when not georeferenced.",
+              "de": "Geografische Länge des lokalen Ursprungs; leer ohne Georeferenz."
+            },
+            "unit": "°"
+          }
         },
         "originLat": {
           "anyOf": [
@@ -412,7 +690,19 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Origin latitude",
+              "de": "Ursprung Breite"
+            },
+            "description": {
+              "en": "Geographic latitude of the local origin; empty when not georeferenced.",
+              "de": "Geografische Breite des lokalen Ursprungs; leer ohne Georeferenz."
+            },
+            "unit": "°"
+          }
         },
         "originAlt": {
           "anyOf": [
@@ -422,22 +712,79 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Origin altitude",
+              "de": "Ursprung Höhe"
+            },
+            "description": {
+              "en": "Altitude of the local origin, in metres; empty when not georeferenced.",
+              "de": "Höhe des lokalen Ursprungs, in Metern; leer ohne Georeferenz."
+            },
+            "unit": "m"
+          }
         },
         "gsdM": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ground sampling distance",
+              "de": "Bodenauflösung"
+            },
+            "description": {
+              "en": "Ground size of one image pixel, in metres.",
+              "de": "Bodengröße eines Bildpixels, in Metern."
+            }
+          }
         },
         "dsmCellM": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Surface model cell",
+              "de": "Oberflächenmodell-Zelle"
+            },
+            "description": {
+              "en": "Cell size of the digital surface model, in metres.",
+              "de": "Zellgröße des digitalen Oberflächenmodells, in Metern."
+            }
+          }
         },
         "dtmFilterRadiusM": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Terrain filter radius",
+              "de": "Geländefilterradius"
+            },
+            "description": {
+              "en": "Radius of the filter that derives the terrain model, in metres.",
+              "de": "Radius des Filters, der das Geländemodell ableitet, in Metern."
+            }
+          }
         },
         "orthoMaxPx": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Orthophoto size",
+              "de": "Orthofoto-Größe"
+            },
+            "description": {
+              "en": "The longest side of the orthophoto, in pixels.",
+              "de": "Die längste Seite des Orthofotos, in Pixeln."
+            },
+            "unit": "px"
+          }
         }
       }
     },
@@ -485,12 +832,34 @@
           "maxItems": 3,
           "items": {
             "$ref": "#/$defs/Binary64Transport"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "World position",
+              "de": "Weltposition"
+            },
+            "description": {
+              "en": "The surveyed position of the point (x, y, z).",
+              "de": "Die vermessene Position des Punkts (x, y, z)."
+            }
           }
         },
         "observations": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GcpObservation"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Observations",
+              "de": "Beobachtungen"
+            },
+            "description": {
+              "en": "Where the point appears in the captured frames.",
+              "de": "Wo der Punkt in den aufgenommenen Bildern erscheint."
+            }
           }
         }
       }
@@ -505,22 +874,67 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frame stride",
+              "de": "Bildschritt"
+            },
+            "description": {
+              "en": "Every how many frames one is taken.",
+              "de": "Jedes wievielte Bild genommen wird."
+            }
+          }
         },
         "maxFrames": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Maximum frames",
+              "de": "Höchstzahl Bilder"
+            },
+            "description": {
+              "en": "The most frames an import takes.",
+              "de": "Die meisten Bilder, die ein Import nimmt."
+            }
+          }
         },
         "downscaleLongEdgePx": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Downscale to",
+              "de": "Verkleinern auf"
+            },
+            "description": {
+              "en": "The long edge frames are downscaled to, in pixels; 0 keeps them.",
+              "de": "Die lange Kante, auf die Bilder verkleinert werden, in Pixeln; 0 behält sie."
+            },
+            "unit": "px"
+          }
         },
         "minSharpness": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Minimum sharpness",
+              "de": "Mindestschärfe"
+            },
+            "description": {
+              "en": "A frame below this fraction of the recent median sharpness is skipped.",
+              "de": "Ein Bild unter diesem Anteil der jüngsten mittleren Schärfe wird übersprungen."
+            }
+          }
         }
       }
     },
@@ -531,28 +945,104 @@
       "required": [],
       "properties": {
         "matcher": {
-          "$ref": "#/$defs/MatcherKind"
+          "$ref": "#/$defs/MatcherKind",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Matcher",
+              "de": "Abgleich"
+            },
+            "description": {
+              "en": "How keypoints are matched between frames.",
+              "de": "Wie Merkmale zwischen Bildern abgeglichen werden."
+            },
+            "options": {
+              "brute-force": {
+                "en": "Exhaustive",
+                "de": "Vollständig"
+              },
+              "kd-tree": {
+                "en": "k-d tree",
+                "de": "k-d-Baum"
+              }
+            }
+          }
         },
         "ratioTest": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Ratio test",
+              "de": "Verhältnistest"
+            },
+            "description": {
+              "en": "A match is kept when its best distance is below this fraction of the second best.",
+              "de": "Ein Treffer bleibt, wenn sein bester Abstand unter diesem Anteil des zweitbesten liegt."
+            }
+          }
         },
         "crossCheck": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Cross check",
+              "de": "Gegenprüfung"
+            },
+            "description": {
+              "en": "Keep only matches that agree both ways.",
+              "de": "Nur Treffer behalten, die in beide Richtungen übereinstimmen."
+            }
+          }
         },
         "sequentialWindow": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Sequential window",
+              "de": "Folgefenster"
+            },
+            "description": {
+              "en": "How many following frames each frame is matched against.",
+              "de": "Mit wie vielen folgenden Bildern jedes Bild abgeglichen wird."
+            }
+          }
         },
         "maxPairsPerFrame": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Pairs per frame",
+              "de": "Paare pro Bild"
+            },
+            "description": {
+              "en": "The most frame pairs one frame takes part in.",
+              "de": "Die meisten Bildpaare, an denen ein Bild teilnimmt."
+            }
+          }
         },
         "loopClosure": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Loop closure",
+              "de": "Schleifenschluss"
+            },
+            "description": {
+              "en": "Match distant frames that see the same place again.",
+              "de": "Entfernte Bilder abgleichen, die denselben Ort wieder sehen."
+            }
+          }
         }
       }
     },
@@ -585,24 +1075,91 @@
           "type": "string"
         },
         "kind": {
-          "$ref": "#/$defs/MediaKind"
+          "$ref": "#/$defs/MediaKind",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Stream kind",
+              "de": "Streamart"
+            },
+            "description": {
+              "en": "Whether the stream is an image sequence or a video.",
+              "de": "Ob der Stream eine Bildfolge oder ein Video ist."
+            },
+            "options": {
+              "image-sequence": {
+                "en": "Image sequence",
+                "de": "Bildfolge"
+              },
+              "video": {
+                "en": "Video",
+                "de": "Video"
+              }
+            }
+          }
         },
         "cameraId": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "The calibrated camera that took the stream; empty when unassigned.",
+              "de": "Die kalibrierte Kamera, die den Stream aufgenommen hat; leer, wenn nicht zugeordnet."
+            }
+          }
         },
         "syncOffsetMs": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Sync offset",
+              "de": "Synchronversatz"
+            },
+            "description": {
+              "en": "How far the stream is shifted against the others, in milliseconds.",
+              "de": "Wie weit der Stream gegen die anderen verschoben ist, in Millisekunden."
+            },
+            "unit": "ms"
+          }
         },
         "fpsHint": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frame rate",
+              "de": "Bildrate"
+            },
+            "description": {
+              "en": "The nominal frame rate, in frames per second; 0 when unknown.",
+              "de": "Die nominelle Bildrate in Bildern pro Sekunde; 0, wenn unbekannt."
+            },
+            "unit": "fps"
+          }
         },
         "frames": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/FrameRef"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frames",
+              "de": "Bilder"
+            },
+            "description": {
+              "en": "The stream's frames in capture order.",
+              "de": "Die Bilder des Streams in Aufnahmereihenfolge."
+            }
           }
         },
         "source": {
@@ -624,43 +1181,143 @@
       "required": [],
       "properties": {
         "tsdfVoxelSizeMm": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Voxel size",
+              "de": "Voxelgröße"
+            },
+            "description": {
+              "en": "Edge of one fusion voxel, in millimetres.",
+              "de": "Kante eines Fusionsvoxels, in Millimetern."
+            }
+          }
         },
         "tsdfTruncationMm": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Truncation distance",
+              "de": "Abschneidedistanz"
+            },
+            "description": {
+              "en": "How far the signed distance is kept around a surface, in millimetres.",
+              "de": "Wie weit der vorzeichenbehaftete Abstand um eine Oberfläche gehalten wird, in Millimetern."
+            }
+          }
         },
         "decimateTargetTriangles": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Target triangles",
+              "de": "Zieldreiecke"
+            },
+            "description": {
+              "en": "How many triangles the mesh is reduced to.",
+              "de": "Auf wie viele Dreiecke das Mesh reduziert wird."
+            }
+          }
         },
         "smoothingIterations": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Smoothing passes",
+              "de": "Glättungsdurchgänge"
+            },
+            "description": {
+              "en": "How many times the mesh is smoothed.",
+              "de": "Wie oft das Mesh geglättet wird."
+            }
+          }
         },
         "textureEnabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Texture",
+              "de": "Textur"
+            },
+            "description": {
+              "en": "Whether the mesh gets a texture from the frames.",
+              "de": "Ob das Mesh eine Textur aus den Bildern erhält."
+            }
+          }
         },
         "textureSize": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Texture size",
+              "de": "Texturgröße"
+            },
+            "description": {
+              "en": "Side of the texture image, in pixels.",
+              "de": "Seite des Texturbilds, in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "guaranteeWatertight": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Watertight",
+              "de": "Wasserdicht"
+            },
+            "description": {
+              "en": "Whether the mesh is closed into a watertight solid.",
+              "de": "Ob das Mesh zu einem wasserdichten Körper geschlossen wird."
+            }
+          }
         },
         "holeFillMaxBoundaryVerts": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Hole fill limit",
+              "de": "Lochfüllgrenze"
+            },
+            "description": {
+              "en": "The largest hole boundary, in vertices, that is filled.",
+              "de": "Der größte Lochrand, in Ecken, der gefüllt wird."
+            }
+          }
         },
         "selfIntersectionCheck": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Self-intersection check",
+              "de": "Selbstschnittprüfung"
+            },
+            "description": {
+              "en": "Whether the mesh is checked for faces crossing each other.",
+              "de": "Ob das Mesh auf sich kreuzende Flächen geprüft wird."
+            }
+          }
         }
       }
     },
@@ -686,22 +1343,67 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Maximum tracks",
+              "de": "Höchstzahl Spuren"
+            },
+            "description": {
+              "en": "The most motion tracks kept.",
+              "de": "Die meisten behaltenen Bewegungsspuren."
+            }
+          }
         },
         "trackWindowPx": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Track window",
+              "de": "Spurfenster"
+            },
+            "description": {
+              "en": "Window a track is followed in, in pixels.",
+              "de": "Fenster, in dem eine Spur verfolgt wird, in Pixeln."
+            },
+            "unit": "px"
+          }
         },
         "minTrackQuality": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Minimum track quality",
+              "de": "Mindestspurqualität"
+            },
+            "description": {
+              "en": "The quality below which a track is dropped.",
+              "de": "Die Qualität, unter der eine Spur verworfen wird."
+            }
+          }
         },
         "minTrackLengthFrames": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Minimum track length",
+              "de": "Mindestspurlänge"
+            },
+            "description": {
+              "en": "How many frames a track must span.",
+              "de": "Über wie viele Bilder eine Spur reichen muss."
+            }
+          }
         }
       }
     },
@@ -990,7 +1692,18 @@
       "required": [],
       "properties": {
         "cameraId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Camera",
+              "de": "Kamera"
+            },
+            "description": {
+              "en": "The camera this pose places in the rig.",
+              "de": "Die Kamera, die diese Pose im Rig platziert."
+            }
+          }
         },
         "rotationWxyz": {
           "type": "array",
@@ -998,6 +1711,17 @@
           "maxItems": 4,
           "items": {
             "$ref": "#/$defs/Binary32Transport"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "description": {
+              "en": "Rotation of the camera in the rig as a unit quaternion (w, x, y, z).",
+              "de": "Drehung der Kamera im Rig als Einheitsquaternion (w, x, y, z)."
+            }
           }
         },
         "translationM": {
@@ -1006,6 +1730,18 @@
           "maxItems": 3,
           "items": {
             "$ref": "#/$defs/Binary32Transport"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Translation",
+              "de": "Verschiebung"
+            },
+            "description": {
+              "en": "Offset of the camera in the rig, in metres.",
+              "de": "Versatz der Kamera im Rig, in Metern."
+            },
+            "unit": "m"
           }
         }
       }
@@ -1029,28 +1765,108 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "RANSAC iterations",
+              "de": "RANSAC-Iterationen"
+            },
+            "description": {
+              "en": "How many random samples the robust estimate draws.",
+              "de": "Wie viele Zufallsstichproben die robuste Schätzung zieht."
+            }
+          }
         },
         "ransacThresholdPx": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "RANSAC threshold",
+              "de": "RANSAC-Schwelle"
+            },
+            "description": {
+              "en": "Largest error, in pixels, an inlier may have.",
+              "de": "Größter Fehler in Pixeln, den ein Inlier haben darf."
+            }
+          }
         },
         "minTrackLength": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Minimum track length",
+              "de": "Mindestspurlänge"
+            },
+            "description": {
+              "en": "How many views a point must be seen in.",
+              "de": "In wie vielen Ansichten ein Punkt gesehen werden muss."
+            }
+          }
         },
         "baMaxIterations": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Adjustment iterations",
+              "de": "Ausgleichsiterationen"
+            },
+            "description": {
+              "en": "The most bundle adjustment iterations.",
+              "de": "Die meisten Bündelausgleichsiterationen."
+            }
+          }
         },
         "robustLoss": {
-          "$ref": "#/$defs/RobustLossKind"
+          "$ref": "#/$defs/RobustLossKind",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Robust loss",
+              "de": "Robuste Verlustfunktion"
+            },
+            "description": {
+              "en": "How large errors are weighed in the adjustment.",
+              "de": "Wie große Fehler im Ausgleich gewichtet werden."
+            },
+            "options": {
+              "l2": {
+                "en": "Squared",
+                "de": "Quadratisch"
+              },
+              "huber": {
+                "en": "Huber",
+                "de": "Huber"
+              },
+              "cauchy": {
+                "en": "Cauchy",
+                "de": "Cauchy"
+              }
+            }
+          }
         },
         "huberDeltaPx": {
-          "$ref": "#/$defs/Binary32Transport"
+          "$ref": "#/$defs/Binary32Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Huber delta",
+              "de": "Huber-Delta"
+            },
+            "description": {
+              "en": "Error, in pixels, where the Huber loss turns linear.",
+              "de": "Fehler in Pixeln, ab dem der Huber-Verlust linear wird."
+            }
+          }
         }
       }
     },
@@ -1105,19 +1921,90 @@
           "type": "string"
         },
         "container": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Container",
+              "de": "Container"
+            },
+            "description": {
+              "en": "The video file's container format.",
+              "de": "Das Containerformat der Videodatei."
+            }
+          }
         },
         "codec": {
-          "$ref": "#/$defs/VideoCodec"
+          "$ref": "#/$defs/VideoCodec",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Codec",
+              "de": "Codec"
+            },
+            "description": {
+              "en": "The video file's compression codec.",
+              "de": "Der Kompressionscodec der Videodatei."
+            },
+            "options": {
+              "avc": {
+                "en": "H.264 (AVC)",
+                "de": "H.264 (AVC)"
+              },
+              "hevc": {
+                "en": "H.265 (HEVC)",
+                "de": "H.265 (HEVC)"
+              },
+              "vp9": {
+                "en": "VP9",
+                "de": "VP9"
+              },
+              "av1": {
+                "en": "AV1",
+                "de": "AV1"
+              },
+              "mjpeg": {
+                "en": "Motion JPEG",
+                "de": "Motion JPEG"
+              },
+              "unknown": {
+                "en": "Unknown",
+                "de": "Unbekannt"
+              }
+            }
+          }
         },
         "durationMs": {
-          "$ref": "#/$defs/Binary64Transport"
+          "$ref": "#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Duration",
+              "de": "Dauer"
+            },
+            "description": {
+              "en": "The video's duration, in milliseconds.",
+              "de": "Die Dauer des Videos, in Millisekunden."
+            },
+            "unit": "ms"
+          }
         },
         "frameCount": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Frame count",
+              "de": "Bildanzahl"
+            },
+            "description": {
+              "en": "How many frames the video holds.",
+              "de": "Wie viele Bilder das Video enthält."
+            }
+          }
         },
         "width": {
           "type": "integer",

@@ -49,5 +49,5 @@ export const trinityJackInferenceTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseJackInferenceText(value: unknown, at = "$"): JackInferenceText {
-  return trinityJackInferenceTextGuardObject(value, `${at}`);
+  return trinityJackInferenceTextGuardString(value, `${at}`);
 }

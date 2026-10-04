@@ -1,0 +1,141 @@
+[
+  {
+    "id": "missing",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
+  },
+  {
+    "id": "duplicate",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
+  },
+  {
+    "id": "unknown",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "surprise",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
+  },
+  {
+    "id": "encode-canceled",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "encode",
+    "accept": false,
+    "maximumBytes": 1048576,
+    "expectedKind": "canceled"
+  },
+  {
+    "id": "encode-quota",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "encode",
+    "accept": true,
+    "maximumBytes": 0,
+    "expectedKind": "ownershipLimit"
+  },
+  {
+    "id": "decode-canceled",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": false,
+    "maximumBytes": 1048576,
+    "expectedKind": "canceled"
+  },
+  {
+    "id": "decode-quota",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "canceled spoofed prose"
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 0,
+    "expectedKind": "ownershipLimit"
+  }
+]

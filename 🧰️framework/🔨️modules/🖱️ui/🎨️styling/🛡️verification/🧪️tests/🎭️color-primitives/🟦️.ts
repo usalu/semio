@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import colorString from "color-string";
+import { colorOracle as colorString } from "../⚖️color-oracle/🟦️.ts";
 import { chromium } from "playwright";
 import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";

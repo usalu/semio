@@ -15,7 +15,7 @@ mod panel_kit_tests {
     async fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
         let action = ActionId::try_v1("app", "addWidget").expect("bounded fixture");
         let item =
-            tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &dsl::os_pack::json::object([("application/x-widget".to_string(), dsl::os_pack::json::Value::String("{\"kind\":\"a\"}".to_string()))])).expect("bounded fixture");
+            tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &semio_framework_pack_json::object([("application/x-widget".to_string(), semio_framework_pack_json::Value::String("{\"kind\":\"a\"}".to_string()))])).expect("bounded fixture");
         let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
         assert_eq!(props.draggable, Some(true));
         assert!(props.drag_data.as_ref().unwrap().iter().any(|(key, value)| key.as_str() == "application/x-widget" && value.as_str() == "{\"kind\":\"a\"}"));
@@ -216,7 +216,6 @@ mod panel_kit_tests {
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),
-            config_edit_id: None,
             child_edit_ids: Vec::new(),
             transition_id: None,
             author: None,
@@ -239,7 +238,7 @@ mod panel_kit_tests {
             command_filter: HistoryCommandFilter::All,
         };
         let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &view).await.expect("a log of any length must assemble");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &view).await.expect("a log of any length must assemble");
         let commands = &panel.children[1];
         let fixed = body_nodes(&panel) - commands.children.len() - 1;
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 0 }), "the scrollbar spans the whole log");
@@ -625,7 +624,6 @@ mod panel_kit_tests {
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),
-            config_edit_id: None,
             child_edit_ids: Vec::new(),
             transition_id: None,
             author: None,
@@ -647,7 +645,7 @@ mod panel_kit_tests {
             commands: (1..=100).map(entry).collect(),
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded fixture");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded fixture");
         let commands = &panel.children[1];
         assert_eq!(commands.children.len(), (TREE_WINDOW_DEFAULT_ROWS as usize).min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport of commands, clamped by the built-children ceiling");
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 100, offset: 0 }), "the scrollbar spans the whole log");

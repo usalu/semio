@@ -52,7 +52,7 @@ async fn only_the_named_tag_is_detached() {
 async fn inverse_re_adds_the_tag_it_detached() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_vcs_mutation(&base, &mutation);
+    let inverse = inverse_vcs_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "remove-tag against a base that has the tag undoes with exactly one add-tag");
     let mut snapshot = base.clone();
     apply_vcs_mutation(&mut snapshot, &mutation).expect("forward applies");

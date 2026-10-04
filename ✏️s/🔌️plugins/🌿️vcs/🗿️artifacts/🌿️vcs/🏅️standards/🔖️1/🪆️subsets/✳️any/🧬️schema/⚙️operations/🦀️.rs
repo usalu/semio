@@ -73,8 +73,11 @@ pub fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation
 }
 
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
-pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<VcsDemoMutation> {
-    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)
+pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Result<Vec<VcsDemoMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)?
+
+    })
 }
 //#endregion 🔖️Apply
 
@@ -86,7 +89,7 @@ pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) 
 /// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
 /// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
 pub fn decode_vcs_mutation_json(text: &str) -> Result<VcsDemoMutation, String> {
-    dsl::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// ▶️ [`apply_vcs_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns
@@ -100,8 +103,11 @@ pub fn apply_vcs_mutation_reporting(snapshot: &mut VcsSnapshot, mutation: &VcsDe
 
 /// ↩️ [`inverse_vcs_mutation`]'s non-async twin — the mutation's OWN computed undo steps, which is
 /// what an `inverse-<kind>` scenario has to apply for the metamorphic law to mean anything.
-pub fn inverse_vcs_mutation_steps(mutation: &VcsDemoMutation, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
-    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, base)
+pub fn inverse_vcs_mutation_steps(mutation: &VcsDemoMutation, base: &VcsSnapshot) -> Result<Vec<VcsDemoMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
 

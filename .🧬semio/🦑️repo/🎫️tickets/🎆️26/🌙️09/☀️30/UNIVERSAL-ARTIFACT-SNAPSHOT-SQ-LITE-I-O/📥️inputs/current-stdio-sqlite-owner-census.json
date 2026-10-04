@@ -1,0 +1,364 @@
+[
+  {
+    "owner": "SemioValueSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 80,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 213
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 665
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 352
+      }
+    ]
+  },
+  {
+    "owner": "SemioModelSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 18,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 877
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 665
+      }
+    ]
+  },
+  {
+    "owner": "SemioDocumentSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 57,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 593
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      }
+    ]
+  },
+  {
+    "owner": "SemioAudioSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 10,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 411
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      }
+    ]
+  },
+  {
+    "owner": "SemioSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 11,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      }
+    ]
+  },
+  {
+    "owner": "SemioImageSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 10,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 430
+      }
+    ]
+  },
+  {
+    "owner": "SemioBrepSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 32,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 1284
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 352
+      }
+    ]
+  },
+  {
+    "owner": "SemioKitSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 15,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 665
+      }
+    ]
+  },
+  {
+    "owner": "SemioGraphSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 13,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 546
+      }
+    ]
+  },
+  {
+    "owner": "SemioVideoSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 10,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 379
+      }
+    ]
+  },
+  {
+    "owner": "SemioPresentationSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 23,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 554
+      }
+    ]
+  },
+  {
+    "owner": "SemioObjectSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 12,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 665
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 352
+      }
+    ]
+  },
+  {
+    "owner": "SemioMeshSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 27,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 352
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 621
+      }
+    ]
+  },
+  {
+    "owner": "SemioTableSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 13,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 301
+      }
+    ]
+  },
+  {
+    "owner": "SemioCadSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 28,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 603
+      }
+    ]
+  },
+  {
+    "owner": "SemioTextSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 17,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 322
+      }
+    ]
+  },
+  {
+    "owner": "SemioFlowSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 10,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 344
+      }
+    ]
+  },
+  {
+    "owner": "SemioAnimationSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 13,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 648
+      }
+    ]
+  },
+  {
+    "owner": "SemioDrawingSnapshot",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "line": 28,
+    "controlledDecode": true,
+    "controlledEncode": true,
+    "codecRoute": false,
+    "codecRoutes": [
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 347
+      },
+      {
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+        "line": 810
+      }
+    ]
+  }
+]

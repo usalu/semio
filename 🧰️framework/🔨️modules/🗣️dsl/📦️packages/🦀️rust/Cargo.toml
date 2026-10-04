@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Product-neutral lexical tokens, explicit grammar recognition, protocol walking and registered idiom interfaces."
+
+[package.metadata.semio]
+role = "framework"
+id = "dsl"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_dsl"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+
+[[test]]
+name = "lexical-public"
+path = "../../🧪️tests/🚪️public/🦀️.rs"
+
+[[test]]
+name = "carrier-record-lists"
+path = "../../🧪️tests/🧪️carrier-record-lists/🦀️.rs"

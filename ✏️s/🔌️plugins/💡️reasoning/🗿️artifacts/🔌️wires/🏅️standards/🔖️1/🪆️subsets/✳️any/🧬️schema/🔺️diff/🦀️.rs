@@ -1,23 +1,15 @@
-//! 🧬️ Wires diff schema — sparse field delta over the artifact.
-
-use dsl::DslValue;
-use framework_schema::ArtifactSchema;
+//! 🔺️ Wires diff schema — the delta of the uninhabited parent vocabulary (design §12, §20.15).
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the wires artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-/// `content` is a single always-present-slot `Option` (never absent, only ever replaced — see
-/// `📓️migration-recipe.md` §8), matching `dag`'s/`flow`'s/writer's `document`/`content` diff shape.
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.reasoning.wires")]
-pub struct WiresDiff {
-    #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::WiresArtifact>>,
-    #[state(artifact)]
-    pub wires_fixture: Option<DslValue>,
-    #[state(artifact)]
-    pub content: Option<crate::WiresContentChild>,
-    #[state(artifact)]
-    pub meta: Option<DslValue>,
+/// 🕳️ No parent leaf exists, so no delta is ever produced: the diff carries nothing and applies as the identity. Its codec
+/// surface is gone (audit F13); this facet stays only because every artifact schema descriptor names four facets.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct WiresDiff {}
+
+impl protocol::MutationDiff<crate::WiresSnapshot> for WiresDiff {
+    fn apply(&self, base: &crate::WiresSnapshot) -> protocol::MutationApplyResult<crate::WiresSnapshot> {
+        Ok(base.clone())
+    }
+    fn absorb(&mut self, _other: Self) {}
 }
 //#endregion 🔖️Diff

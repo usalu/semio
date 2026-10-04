@@ -127,3 +127,53 @@ test("compositing surfaces preserve the camera and clear reused pixels between f
     expect(pool.length).toBe(1);
   }finally {globalThis.Path2D=original;}
 });
+
+import paintCases from "../../../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🧫️fixtures/🔣️.json";
+
+test("SVG emits constant gradients as solid paint and rejects invalid authored paint",async()=>{
+  for(const entry of paintCases) {
+    const fill=entry.fill as NonNullable<DrawingSvgNode["fill"]>;
+    const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity:1,blendMode:"normal",visible:true};
+    if(entry.error) {expect(()=>drawingSceneToSvg([node],[0,0,16,16]),entry.name).toThrow();continue;}
+    const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
+    if(!constant) continue;
+    const color=fill.kind==="solid" ? fill.color : [...fill.stops].sort((a,b)=>a.offset-b.offset).at(-1)?.color??[0,0,0,0];
+    const svg=drawingSceneToSvg([node],[0,0,16,16]);
+    const doc=new DOMParser().parseFromString(svg,"image/svg+xml");
+    expect(doc.getElementsByTagName("defs").length,entry.name).toBe(0);
+    const pixel=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();
+    for(let index=0;index<pixel.length;index+=4) {
+      expect(Math.abs(pixel[index+3]!/255-color[3]!),entry.name).toBeLessThanOrEqual(2/255);
+      for(let channel=0;channel<3;channel++) expect(Math.abs(pixel[index+channel]!*pixel[index+3]!/255-color[channel]!*color[3]!*255),entry.name).toBeLessThanOrEqual(2);
+    }
+  }
+});
+
+import {paintDrawingScene} from "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+
+test("canvas and raster scene paint agree with constant SVG paint",async()=>{
+  const previous=globalThis.Path2D;
+  globalThis.Path2D=NativePath as unknown as typeof Path2D;
+  try {
+    for(const entry of paintCases) for(const opacity of [1,.35]) {
+      if(entry.error) continue;
+      const fill=entry.fill as NonNullable<DrawingSvgNode["fill"]>;
+      const constant=fill.kind==="solid"||fill.stops.length<=1||(fill.kind==="linearGradient" ? fill.x1===fill.x2&&fill.y1===fill.y2 : fill.r===0);
+      if(!constant) continue;
+      const node:DrawingSvgNode={id:entry.name,transform:[1,0,0,1,0,0],segments:[{kind:"move",to:[0,0]},{kind:"line",to:[16,0]},{kind:"line",to:[16,16]},{kind:"line",to:[0,16]},{kind:"close"}],fill,opacity,blendMode:"normal",visible:true};
+      const expected=await sharp(Buffer.from(drawingSceneToSvg([node],[0,0,16,16]))).ensureAlpha().raw().toBuffer();
+      for(const renderer of ["canvas","raster"] as const) {
+        const canvas=createCanvas(16,16),ctx=canvas.getContext("2d");
+        if(renderer==="canvas") drawSceneNode(ctx as unknown as CanvasRenderingContext2D,node,new Map());
+        else paintDrawingScene(ctx as unknown as CanvasRenderingContext2D,{width:16,height:16,nodes:[{transform:[1,0,0,1,0,0],node:{kind:"path",segments:node.segments},fill,opacity}]});
+        const actual=ctx.getImageData(0,0,16,16).data;
+        let error=0;
+        for(let at=0;at<actual.length;at+=4) {
+          error=Math.max(error,Math.abs(actual[at+3]!-expected[at+3]!));
+          for(let channel=0;channel<3;channel++) error=Math.max(error,Math.abs(actual[at+channel]!*actual[at+3]!/255-expected[at+channel]!*expected[at+3]!/255));
+        }
+        expect(error,`${renderer}: ${entry.name}, opacity ${opacity}`).toBeLessThanOrEqual(2);
+      }
+    }
+  } finally {globalThis.Path2D=previous;}
+});

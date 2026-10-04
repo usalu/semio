@@ -3,12 +3,13 @@ import type { OwnedUiPayload as OwnedUiPayloadOf, Profile, RetainedUiTypedValues
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "Builder" | "OwnedUiPayload" | "activity" | "ownPayload" | "readers" | "saturationProbe">, source: TestSource): Promise<void> {
-  const { Builder, OwnedUiPayload, activity, ownPayload, readers, saturationProbe } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "Builder" | "OwnedUiPayload" | "RetainedUiTypedCursor" | "activity" | "ownPayload" | "readers" | "saturationProbe">, source: TestSource): Promise<void> {
+  const { Builder, OwnedUiPayload, RetainedUiTypedCursor, activity, ownPayload, readers, saturationProbe } = dependencies;
 
   const { it, expect } = vitest;
       const { default: fixture } = await import("../../../🧫️fixtures/🏷️fields/🔣️.json");
   const { default: rowExtentFixture } = await import("../../../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json");
+  const { default: typedFixture } = await import("../../../🧫️fixtures/🧾️typed/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayloadOf<RetainedUiTypedValues[P]> {
     const builder = new Builder();
@@ -19,6 +20,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
     throw new Error("Private ownership fixture did not terminate");
   }
+
+  it("normalizes the native Input draft target through the retained browser cursor", () => {
+    const row = typedFixture.components.find((candidate: { wire: { draftTarget?: string } }) => candidate.wire.draftTarget);
+    expect(row).toBeDefined();
+    const cursor = new RetainedUiTypedCursor(row!.wire, "component");
+    for (let i = 0; i < 100_000; i++) {
+      const step = cursor.advance({ maxItems: 1, maxBytes: 4096 });
+      if (step.kind === "rejected") throw new Error(cursor.failure ?? "typed normalization rejected native input");
+      if (step.kind === "ready") break;
+    }
+    const owner = cursor.takeResult();
+    expect(owner?.value).toEqual(row!.expected);
+    const retirement = owner!.beginClose();
+    while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+  });
 
   it("TypedNodeFields preflights every capture before transfer under private reference saturation", () => {
     const source = prepared("node", { ...fixture.node, component: fixture.replacement });
@@ -53,6 +69,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       draggable: null,
       dragData: null,
       dimmed: null,
+      selected: null,
       window: null,
       granularity: null,
       inlineToolbar: 42,
@@ -62,8 +79,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(owner.value).toMatchObject({ type: "treeItem", inlineToolbar: 42, detail: 43 });
     const retirement = owner.beginClose();
     while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
-    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, inlineToolBar: 42, rowActions: [], target: null })).toThrow("Unknown UI field: inlineToolBar");
-    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, treeDetail: 43, rowActions: [], target: null })).toThrow("Unknown UI field: treeDetail");
+    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, inlineToolBar: 42, rowActions: [], target: null })).toThrow("Unknown UI field: inlineToolBar");
+    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, detail: null, treeDetail: 43, rowActions: [], target: null })).toThrow("Unknown UI field: treeDetail");
   });
 
 }

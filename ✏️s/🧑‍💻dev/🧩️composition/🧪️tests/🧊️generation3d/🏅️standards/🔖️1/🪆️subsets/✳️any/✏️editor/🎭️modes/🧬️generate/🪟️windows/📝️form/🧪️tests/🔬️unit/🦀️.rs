@@ -23,7 +23,7 @@ async fn first_slider_question(app: &mut Generation3dApp) -> (String, String, f6
         .find(|block| block.kind == "slider")
         .expect("the bundled fixture must expose at least one slider input to generate from");
     let question_id = question.id.clone();
-    let current = read.generation.generations[0].values.get(&question_id).and_then(dsl::DslValue::as_f64).unwrap_or_default();
+    let current = read.generation.generations[0].values.get(&question_id).and_then(semio_framework_value::DslValue::as_f64).unwrap_or_default();
     (generation_id, question_id, current)
 }
 
@@ -57,13 +57,13 @@ async fn editing_a_form_value_repatches_the_generate_preview_fixture() {
         Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
             generation_id: Some(generation_id.clone()),
             question_id: question_id.clone(),
-            value: dsl::DslValue::float(next),
+            value: semio_framework_value::DslValue::float(next),
         }),
     )
     .await;
 
     let read = snapshot(&app);
-    let stored = read.generation.generations[0].values.get(&question_id).and_then(dsl::DslValue::as_f64);
+    let stored = read.generation.generations[0].values.get(&question_id).and_then(semio_framework_value::DslValue::as_f64);
     assert_eq!(stored, Some(next), "updateGenerationValues must persist the typed number on the generation");
     let patched = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::generation_host_snapshot_for(&read.host_snapshot, &read.generation, Some(generation_id.as_str()));
     let patched_value = patched

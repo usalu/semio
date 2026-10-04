@@ -1202,7 +1202,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [new Uint8Array([1])],
-          description: "duplicate widget",
           foreign: [foreign],
         });
   
@@ -1235,7 +1234,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [new Uint8Array([1])],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome.ok).toBe(true);
@@ -1272,7 +1270,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.doc",
           localOps: [new Uint8Array([1])],
-          description: "x",
           foreign: [foreignB, foreignC],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.commit-failed" });
@@ -1292,7 +1289,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.unknown-target" });
@@ -1310,7 +1306,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.unknown-target" });
@@ -1333,7 +1328,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.unknown-mutation" });
@@ -1364,7 +1358,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.contribution-not-permitted" });
@@ -1401,7 +1394,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome.ok).toBe(true);
@@ -1427,7 +1419,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign, foreign],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.cycle" });
@@ -1496,7 +1487,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           initiatorArtifactId: "artifact-a",
           initiatorArtifactKind: "s.a.doc",
           localOps: [],
-          description: "x",
           foreign: [foreign],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.depth-exceeded" });
@@ -1516,7 +1506,6 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             initiatorArtifactId: "artifact-a",
             initiatorArtifactKind: "s.a.doc",
             localOps: [],
-            description: "x",
             foreign: [],
           });
           const expectedCode = code === "not-a-real-fault-code" ? "transaction.member-rejected" : code;
@@ -1724,7 +1713,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const { decodeAppCommand } = await import("@semio-tech/framework-os");
         const { readFile } = await import("node:fs/promises");
         const { URL: FileURL } = await import("node:url");
-        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire-v19/🔣️.json", source.url), "utf8"));
+        const fixture = JSON.parse(await readFile(new FileURL("../../../../../🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🔣️.json", source.url), "utf8"));
         const authority = { app_instance_id: fixture.handle.appInstanceId, parent_document_id: fixture.handle.parentDocumentId, operation_id: BigInt(fixture.handle.operationId), base_revision: BigInt(fixture.handle.baseRevision), generation: BigInt(fixture.handle.generation) };
         const status = { handle: authority, state: "running" as const, applied_progress: 2n, checkpoint_available: true, mime_type: "audio/mpeg", total_bytes: 3n, detail: "" };
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
@@ -1845,7 +1834,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         await handle.loadWindowConfigPack(instanceId, { window_id: "graph-b", window_kind_id: "graph", envelope_pack: [8] });
   
         expect(seenCommands).toEqual([
-          { transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
+          { transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.b#mutate", payload: [1], prepared_ops: [], origin: [], prepared_child_ops: [] } },
           { transactionCommit: { seq: 2, txn_id: "txn-1" } },
           { transactionRollback: { seq: 3, txn_id: "txn-2" } },
           { transactionUndo: { seq: 4, group_id: "grp-1" } },
@@ -1855,9 +1844,11 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         ]);
       });
   
-      it("documentPack() reflects the cache after loadAppDocumentPack() — the adapter reads the SAME live channel it just loaded through", async () => {
+      it("loads a pack+spr document through the stepped archive load — admit, polled progress, acknowledge, never `LoadDocument` — and documentPack() reads the channel it loaded through", async () => {
         const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
         const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+        const sent: string[] = [];
+        let polls = 0;
         const fakeLease = {
           handle: {
             manifest: { pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
@@ -1865,10 +1856,16 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             destroyApp: async () => {},
             takeSegmentedDownloadChunk: async () => undefined,
             enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
-              const commands = events.map((frame) => decodeAppCommand(frame));
-              const frames = commands.map((command) => {
-                if (!("LoadDocument" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
-                return encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } });
+              const frames = events.map((frame) => decodeAppCommand(frame)).map((command) => {
+                sent.push(Object.keys(command)[0]!);
+                if ("LoadDocumentArchive" in command) return encodeAppFrame({ Done: { in_reply_to: command.LoadDocumentArchive.seq } });
+                if ("PollDocumentArchiveLoad" in command) {
+                  polls += 1;
+                  const { seq, operation } = command.PollDocumentArchiveLoad;
+                  return encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: seq, status: { operation, state: polls < 3 ? "running" : "ready", completed: polls, total: 3, fault: [] } } });
+                }
+                if ("AcknowledgeDocumentArchiveLoad" in command) return encodeAppFrame({ Done: { in_reply_to: command.AcknowledgeDocumentArchiveLoad.seq } });
+                throw new Error(`unexpected command ${JSON.stringify(command)}`);
               });
               turnBroadcast.push({ instanceId, frames });
             },
@@ -1879,9 +1876,12 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         };
         const handle = await adaptPluginHandle("b-plugin", fakeLease);
         const instanceId = await handle.createApp("app-b");
-        expect(handle.documentPack(instanceId)).toBeNull();
-        await handle.loadAppDocumentPack?.(instanceId, new Uint8Array([1, 2]), new Uint8Array([3]));
+        expect([handle.documentPack(instanceId), "loadAppDocumentPack" in handle]).toEqual([null, false]);
+        const progress: (readonly [number, number])[] = [];
+        await handle.loadAppDocumentArchive?.(instanceId, { parent_pack: [1, 2], parent_spr: [3], members: [] }, undefined, (status) => progress.push([status.completed, status.total]));
         expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
+        expect(progress).toEqual([[1, 3], [2, 3], [3, 3]]);
+        expect(sent).toEqual(["LoadDocumentArchive", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"]);
       });
   
       /** 📜️ `ops` is the third half of the frame, not decoration: a reader of the live document gets the
@@ -3369,10 +3369,10 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         { tag: "typed-operation-terminal-output", val: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } },
       ]);
       pendingTurnEffects.set(instanceId, [{ tag: "notify", val: { message: "invocation" } }]);
-      push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3n, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
+      push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9n, revision: 3n, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
       for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
       expect(seen).toHaveLength(1);
-      expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3n, requestedEffects: [{ notify: { message: "done" } }] });
+      expect(seen[0]).toMatchObject({ instanceId, operation: 9n, revision: 3n, requestedEffects: [{ notify: { message: "done" } }] });
       // 🧾️ The terminal value the operation published is the completion's own carrier — a job-routed
       // verb never drains it inside a host call, so without this field it was decoded and then dropped.
       expect(seen[0]).toMatchObject({ terminalOutput: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } });

@@ -1,15 +1,118 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Edit Selected Mesh Components",
+  "title": "Edit Selected Geometry Components",
   "type": "object",
-  "required": ["operation", "amount", "cuts", "dx", "dy", "dz"],
+  "required": [
+    "operation",
+    "amount",
+    "cuts",
+    "dx",
+    "dy",
+    "dz",
+    "width",
+    "segments",
+    "mergeMode",
+    "tolerance",
+    "radius",
+    "grid",
+    "center"
+  ],
   "additionalProperties": false,
   "properties": {
-    "operation": {"enum": ["extrude", "inset", "subdivide", "flip", "deleteFaces", "moveVertices", "loopCut"]},
-    "amount": {"type": "number"},
-    "cuts": {"type": "integer", "minimum": 1, "maximum": 256},
-    "dx": {"type": "number"},
-    "dy": {"type": "number"},
-    "dz": {"type": "number"}
-  }
+    "operation": {
+      "enum": [
+        "extrude",
+        "inset",
+        "subdivide",
+        "flip",
+        "deleteFaces",
+        "moveVertices",
+        "loopCut",
+        "bevel",
+        "dissolveEdges",
+        "dissolveVertices",
+        "mergeVertices",
+        "moveProportional",
+        "snapVertices",
+        "filletEdges",
+        "chamferEdges",
+        "shell"
+      ]
+    },
+    "amount": {
+      "type": "number"
+    },
+    "cuts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "dx": {
+      "type": "number"
+    },
+    "dy": {
+      "type": "number"
+    },
+    "dz": {
+      "type": "number"
+    },
+    "width": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "segments": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    },
+    "mergeMode": {
+      "enum": [
+        "first",
+        "center",
+        "distance"
+      ]
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 0
+    },
+    "radius": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "grid": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "center": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "inset",
+              "chamferEdges",
+              "shell"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "amount": {
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  ]
 }

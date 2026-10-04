@@ -1,0 +1,113 @@
+{
+  "$schema": "s.stdio.bmp.v3.canonical-byte-authority.fixture.v1",
+  "accepted": [
+    {
+      "id": "direct-rgb24-padding-gap-trailer",
+      "file": "direct-rgb24-padding-gap-trailer.bmp",
+      "profile": "directRgb24",
+      "width": 3,
+      "height": 2,
+      "topDown": false,
+      "sourceBytes": 85
+    },
+    {
+      "id": "indexed-rgb1-duplicate-palette",
+      "file": "indexed-rgb1-duplicate-palette.bmp",
+      "profile": "indexedRgb1",
+      "width": 9,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 66
+    },
+    {
+      "id": "indexed-rgb4-duplicate-palette",
+      "file": "indexed-rgb4-duplicate-palette.bmp",
+      "profile": "indexedRgb4",
+      "width": 3,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 74
+    },
+    {
+      "id": "indexed-rgb8-duplicate-palette",
+      "file": "indexed-rgb8-duplicate-palette.bmp",
+      "profile": "indexedRgb8",
+      "width": 3,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 70
+    },
+    {
+      "id": "direct-rgb16-555",
+      "file": "direct-rgb16-555.bmp",
+      "profile": "directRgb16",
+      "width": 2,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 58
+    },
+    {
+      "id": "direct-rgb32-reserved-sample",
+      "file": "direct-rgb32-reserved-sample.bmp",
+      "profile": "directRgb32",
+      "width": 2,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 62
+    },
+    {
+      "id": "direct-bitfields16-565",
+      "file": "direct-bitfields16-565.bmp",
+      "profile": "directBitfields16",
+      "width": 2,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 70
+    },
+    {
+      "id": "direct-bitfields32",
+      "file": "direct-bitfields32.bmp",
+      "profile": "directBitfields32",
+      "width": 2,
+      "height": 1,
+      "topDown": false,
+      "sourceBytes": 74
+    },
+    {
+      "id": "direct-rgb24-top-down",
+      "file": "direct-rgb24-top-down.bmp",
+      "profile": "directRgb24",
+      "width": 2,
+      "height": 2,
+      "topDown": true,
+      "sourceBytes": 70
+    }
+  ],
+  "rejected": [
+    {
+      "id": "reject-dib-12",
+      "file": "reject-dib-12.bmp",
+      "dibHeaderSize": 12
+    },
+    {
+      "id": "reject-dib-52",
+      "file": "reject-dib-52.bmp",
+      "dibHeaderSize": 52
+    },
+    {
+      "id": "reject-dib-56",
+      "file": "reject-dib-56.bmp",
+      "dibHeaderSize": 56
+    },
+    {
+      "id": "reject-dib-108",
+      "file": "reject-dib-108.bmp",
+      "dibHeaderSize": 108
+    },
+    {
+      "id": "reject-dib-124",
+      "file": "reject-dib-124.bmp",
+      "dibHeaderSize": 124
+    }
+  ]
+}

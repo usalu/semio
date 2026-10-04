@@ -1,0 +1,8 @@
+{
+  "state": "readOnlyPrerequisite",
+  "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪆️child-frame/🦀️.rs",
+  "before": " let RichFrameMembers::Graph(member)=app.test_child_member_mut(&key).expect(\"real member\");",
+  "after": " let RichFrameMembers::Graph(member)=app.test_child_member_mut(&key).expect(\"real member\") else { panic!(\"declared full child must be the actual Graph member\") };",
+  "expected_count": 1,
+  "qualification": "Recheck live string; SemioMembers has19variants; preserve expected Graph assertion, no fallback."
+}

@@ -5,12 +5,12 @@ use crate::{ProcessStep, StepOrigin};
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
     let snapshot = Process3dSnapshot::default();
-    assert_eq!(Process3dInference::infer(&snapshot), Process3dInference::infer(&snapshot));
+    assert_eq!(Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(Process3dInference::infer(&Process3dSnapshot::default()), Process3dInference::default());
+    assert_eq!(Process3dInference::infer(&Process3dSnapshot::default()).expect("valid materialized inference fixture"), Process3dInference::default());
 }
 
 /// 🌉️ Documented gap (see file doc comment): a plain snapshot can't see its composed `steps`
@@ -18,7 +18,7 @@ async fn inference_default_law() {
 #[semio_framework_async_macros::async_test]
 async fn step_count_is_zero_pending_a_resolver() {
     let snapshot = Process3dSnapshot::default();
-    assert_eq!(Process3dInference::infer(&snapshot).step_count, 0);
+    assert_eq!(Process3dInference::infer(&snapshot).expect("valid materialized inference fixture").step_count, 0);
 }
 //#endregion 🧪️InferenceLaws
 

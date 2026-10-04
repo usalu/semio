@@ -362,7 +362,7 @@ impl Subject {
         }
     }
 
-    fn close_step(&mut self, grant: Grant) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: Grant) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         match self {
             Self::Registered { rejected, .. } => rejected.close_step(grant.maximum_items, grant.maximum_bytes),
             Self::Unadmitted(rejected) => rejected.close_step(grant.maximum_items, grant.maximum_bytes),
@@ -420,7 +420,7 @@ impl Subject {
 //#endregion 🧪️ActualWrapperHarness
 
 //#region 🧪️PageLaws
-fn actual(result: &Result<SnapshotRetirementStep, String>, record: Option<&OwnedSchemaRecordCursor>, terminal: bool) -> Expected {
+fn actual(result: &Result<SnapshotRetirementStep, semio_framework_value::ValueError>, record: Option<&OwnedSchemaRecordCursor>, terminal: bool) -> Expected {
     let (kind, released_items, released_bytes) = match result {
         Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) => ("pending".into(), *released_items, *released_bytes),
         Ok(SnapshotRetirementStep::Complete) => ("complete".into(), 0, 0),

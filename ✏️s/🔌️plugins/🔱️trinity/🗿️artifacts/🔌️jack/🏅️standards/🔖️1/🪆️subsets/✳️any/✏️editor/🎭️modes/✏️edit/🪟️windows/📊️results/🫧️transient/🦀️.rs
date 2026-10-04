@@ -9,13 +9,13 @@ impl store::ArtifactDsl for JackResultsWindowTransient {
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, rest)| rest);
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -24,18 +24,18 @@ impl store::ArtifactDsl for JackResultsWindowTransient {
 impl store::ArtifactPack for JackResultsWindowTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -72,7 +72,7 @@ impl JackResultsWindowTransientRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for JackResultsWindowTransientRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -82,7 +82,7 @@ impl store::ErasedSnapshotRetirement for JackResultsWindowTransientRetirement {
                 drop(self.children.pop());
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
-            store::SnapshotRetirementStep::Complete => Err("Jack results-window child retirement reported false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Jack results-window child retirement reported false terminal")),
             step => Ok(step),
         }
     }
@@ -132,7 +132,7 @@ fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
 /// envelope (`ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`, the same 1 MiB) for EVERY result, so no query
 /// output could ever be published. The executor already refuses results past its ceiling, so this
 /// count is bounded by it.
-fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> usize {
+fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize, semio_framework_value::ValueError> {
     let mut bytes = std::mem::size_of::<crate::ast::QueryResult>();
     for column in &result.columns {
         bytes = bytes.saturating_add(std::mem::size_of::<String>()).saturating_add(column.len());
@@ -144,7 +144,7 @@ fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> usize {
         }
     }
     if let Some(fixture) = result.graph_fixture.as_deref() {
-        let scene = crate::jack_working_scene(fixture);
+        let scene = crate::jack_working_scene(fixture)?;
         bytes = bytes.saturating_add(std::mem::size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
         for node in &scene.nodes {
             bytes = bytes.saturating_add(std::mem::size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
@@ -156,17 +156,18 @@ fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> usize {
             bytes = edge.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
         }
     }
-    bytes
+    Ok(bytes)
 }
 
 fn results_window_transient_footprint(mutation: &JackResultsWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let JackResultsWindowTransientMutation::ReplaceQueryResult(value) = mutation;
+    let result_bytes = match value.result.as_ref() { Some(result) => query_result_retained_bytes(result).map_err(semio_framework_value::ValueError::into_message)?, None => 0 };
     let retained_bytes = std::mem::size_of::<JackResultsWindowTransient>()
         .checked_add(value.execution_id.as_ref().map_or(0, String::len))
         .and_then(|bytes| bytes.checked_add(value.error.as_ref().map_or(0, String::len)))
-        .and_then(|bytes| bytes.checked_add(value.result.as_ref().map_or(0, query_result_retained_bytes)))
+        .and_then(|bytes| bytes.checked_add(result_bytes))
         .ok_or_else(|| "Jack results-window footprint overflowed".to_string())?;
-    let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
+    let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Jack results-window transient exceeds its retained publication envelope".into())
 }
 

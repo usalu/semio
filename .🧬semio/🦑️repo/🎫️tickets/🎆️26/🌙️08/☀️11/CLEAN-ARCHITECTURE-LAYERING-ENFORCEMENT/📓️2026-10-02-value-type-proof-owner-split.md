@@ -1,0 +1,26 @@
+# Canonical ValueType Law and Corpus Ownership
+
+The lower Value proof previously read Graph and OS Neural sources unconditionally, and its closed corpus mixed lower classifications with Graph property acceptance and fifteen historical specialization input records. This meant the lower registered target failed when products were physically removed.
+
+The original complete five portable laws, combined corpus/schema, three lower native laws and Graph native law are captured in the independent original portable capture Markdown and Root original-inputs.json. Current source ownership is explicit:
+
+- Value retains the complete first three portable bodies, all lower enum/package export assertions, seven types, nine classifications, all63 classification pairs, eight wire rows and thirteen refused rows. Its original three native body bytes and registration are unchanged. Accessor reads remain zero; hostile inherited/concealed/cyclic objects and the601 progress/cancel-at-five laws are unchanged.
+- Graph owns the original fourth-law Graph source/Cargo assertions and complete original fifth law, all63 property acceptance pairs, all nine exact original JSON values and the exact seven canonical type snapshots. Its independent closed schema explicitly retains each indexed pair. The existing whole manifest suite now includes these owner-specific laws. Its original native law changes only one fixture include literal and reads the Graph-owned corpus; every remaining byte is preserved.
+- Neural owns the original two source assertions about direct lower type binding and absence of product forwarding exports. Its own registered portable target executes those actual assertions.
+- Hub owns the cross-owner preservation witness and all fifteen historical ownership records. No lower or Neural test reads S sources through those historical records. Its registered preservation laws reconstruct the whole original combined fixture/schema text and original five portable law source from exact current owner slices, and require all three lower native files and the Graph native inverse to match the full original sources.
+
+## Actual Test-First Evidence
+
+The original registered lower strict TypeScript check and five portable laws still passed265 assertions before the new physically absent consumer child exposed an actual ENOENT reading OS Neural: child4pass/1fail/258assertions, parent1pass/1fail/8assertions,4.0s uncached Nx. No lower statement was suppressed or skipped to pass the projection.
+
+After the source and corpus split, the registered lower target passes strict TSC,4 laws/195 assertions, then a genuine ticket-owned copied workspace physically lacking Graph, all products, S and Hub executes the same4 lower laws/195 assertions. Parent closed admission/absence checks pass2 laws/8 assertions. Final strict admission includes the new absence test source and JSON imports, and the complete target passes3.0s uncached Nx. Copied inputs reject symlinks; the projection is removed after actual child terminal. This proves the specified portable cohort, not isolated Nx or full native deletion.
+
+The complete registered Graph manifest-contract suite passes14 laws/190 assertions,6.5s uncached Nx, including its original11 laws and new3 owner checks. Neural's initial new route was an actual Nx recursion failure because its newly authored package lacked includedScripts suppression; explicit includedScripts:[] now ensures the package scripts call Nx while only project.json invokes the owned script. Actual corrected target passes1 law/2 assertions,1.9s uncached Nx. The registered Hub preservation target passes3 laws/30 assertions,424ms uncached Nx. Authored launch seed entries26/27 provide owned artifact outputs; existing Graph and Value launch routes remain in use.
+
+## Native Epoch and Remaining Work
+
+The earlier full Value replay after decode ownership executed115/115/0skip and preserved all original113 names plus exactly two newly lower-owned control laws. That receipt predates the embedded Type fixture split and is not proof of the current native fixture epoch. Fresh Root SourceREADY captures43 current input length/SHA records, including current original19 decode inputs, Type fixtures, Graph native literal, higher duplicate retirement, owner proofs/scripts and launch seed. Native queue will run normal prepare and locked metadata, then complete unfiltered current Value, DSL, Compiler and affected unchanged UI/Renderer suites. Graph, Neural, higher snapshot native composition, whole framework/plugin/artifact deletion and the remaining whole source/direction enforcement are still required.
+
+## Current Full Native Value Terminal
+
+Fresh ordinary workspace preparation completed6.9s and complete locked metadata3.4s. Native executed the current Type-fixture full unchanged unfiltered Value target:115run/115pass/0skip,3.66scompile/0.721sruntime/8.6suncachedNx. Current actual roster equals the preceding115 exactly, all original113 plus two lower control laws retained. All58actual rustc.d owned input lengths/BLAKE3 match current Type fixture/source, and all43handoff inputs stayed stable through terminal. This closes the new lower native fixture epoch only; actual Graph native case, higher snapshot and Neural cohorts remain required.

@@ -9,18 +9,18 @@ import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 
 type Label = Readonly<{ en: string; de: string }>;
-type Case = Readonly<{ id: string; command: Readonly<{ kind: string; value: string | number }>; verb: string; description: string | null; leaves: readonly Label[]; expected: Label }>;
+type Case = Readonly<{ id: string; command: Readonly<{ kind: string; value: string | number }>; verb: string; leaves: readonly Label[]; expected: Label }>;
 type Fixture = Readonly<{ registry: readonly Readonly<{ verb: string; label: Label }>[]; cases: readonly Case[] }>;
 
 const FIXTURE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️history-label-reload";
 
-/** 🏷️ A single undescribed leaf keeps its label; else the declared verb's label, the description, the first leaf (+N). */
+/** 🏷️ A single leaf keeps its label; else the declared verb's label, else the first leaf (+N). An edit's description is never a
+ * label (design §20.6). */
 export function historyRowLabel(registry: Fixture["registry"], testCase: Case): Label {
   const [first, ...rest] = testCase.leaves;
   const verbLabel = registry.find((row) => row.verb === testCase.verb)?.label ?? null;
-  if (testCase.description === null && rest.length === 0) return first!;
+  if (rest.length === 0) return first!;
   if (verbLabel !== null) return verbLabel;
-  if (testCase.description !== null) return { en: testCase.description, de: testCase.description };
   const more = rest.length > 0 ? ` (+${rest.length})` : "";
   return { en: `${first!.en}${more}`, de: `${first!.de}${more}` };
 }

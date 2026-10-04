@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceSur
     fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Result<Vec<SemioBrepMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
     }

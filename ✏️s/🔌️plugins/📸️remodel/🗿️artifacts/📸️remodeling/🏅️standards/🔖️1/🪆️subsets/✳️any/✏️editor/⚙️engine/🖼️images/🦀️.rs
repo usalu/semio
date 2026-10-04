@@ -125,29 +125,23 @@ impl std::fmt::Display for ImageError {
 
 impl std::error::Error for ImageError {}
 
-// #region 🔖️PngViaStdio
-/// 📥️ Decodes a PNG byte stream into RGBA by calling stdio's real `png::engine::decode_png`
-/// in-process (`semio-s-plugin-remodeling` already depends on `semio-s-plugin-stdio` — same crate
-/// family, no wasm/IPC) instead of a plugin-local codec. Extraction ticket
-/// `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT`, W5a: replaces the
-/// former `png` crate (external-library) decode path — the photogrammetry pipeline only ever
-/// needs a flat RGBA raster here, not a document-level `semio/image` snapshot, so the direct
-/// same-process stdio call is the simpler of the two extraction shapes the ticket allows.
+// #region 🔖️PngCodec
+/// 📥️ Decodes a PNG byte stream into flat RGBA through the framework's bounded PNG decoder
+/// (`semio_framework_pixels::decode_png`) — the photogrammetry pipeline needs a raster, never a
+/// `s.stdio.png` document (whose snapshot keeps the encoded bytes).
 /// <https://www.w3.org/TR/png-3/>
 pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
-    let snapshot = semio_s_artifact_stdio_png::io::decode_png(bytes).map_err(ImageError::Decode)?;
-    Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
+    let image = semio_framework_pixels::decode_png(bytes).map_err(|error| ImageError::Decode(error.to_string()))?;
+    Ok(ImageRgba8 { width: image.width, height: image.height, data: image.pixels })
 }
 
-/// 📤️ Encodes an RGBA image as an 8-bit RGBA PNG byte stream via stdio's real
-/// `png::engine::encode_png` (see `decode_png` above for the extraction rationale).
+/// 📤️ Encodes an RGBA image as an 8-bit RGBA PNG byte stream through `semio_framework_pixels::encode_png`.
 pub fn encode_png(img: &ImageRgba8) -> Result<Vec<u8>, ImageError> {
     let expected_len = (img.width as usize) * (img.height as usize) * 4;
     if img.width == 0 || img.height == 0 || img.data.len() != expected_len {
         return Err(ImageError::Dimensions);
     }
-    let snapshot = semio_s_artifact_stdio_png::PngSnapshot { width: img.width, height: img.height, pixels: img.data.clone(), ..Default::default() };
-    semio_s_artifact_stdio_png::io::encode_png(&snapshot).map_err(ImageError::Encode)
+    semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: img.width, height: img.height, pixels: img.data.clone() }).map_err(|error| ImageError::Encode(error.to_string()))
 }
 
 /// 📤️ Encodes row-major 16-bit grayscale samples as a 16-bit grayscale PNG byte stream
@@ -164,7 +158,7 @@ pub fn encode_png_gray16(data: &[u16], width: u32, height: u32) -> Result<Vec<u8
     }
     semio_framework_pixels::encode_png_gray16(width, height, data).map_err(|e| ImageError::Encode(e.to_string()))
 }
-// #endregion 🔖️PngViaStdio
+// #endregion 🔖️PngCodec
 
 // #region 🔖️JpegViaStdio
 /// 📥️ Decodes a JFIF/JPEG byte stream into RGBA by calling stdio's real

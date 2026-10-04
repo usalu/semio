@@ -1,18 +1,213 @@
 {
-  "beforeFixtureJson": "{\"schema\":\"trinity.graph\",\"name\":\"pair\",\"manifestId\":\"nakagin\",\"nodes\":[{\"id\":\"a\",\"kind\":\"Piece\",\"name\":\"a\",\"x\":0.0,\"y\":0.0},{\"id\":\"b\",\"kind\":\"Piece\",\"name\":\"b\",\"x\":100.0,\"y\":40.0}],\"edges\":[]}",
-  "lhsJson": "{\"pattern\":{\"leftKind\":\"Piece\",\"leftVar\":\"a\"},\"whereClause\":\"a.tier = 0\"}",
-  "rhsJson": "{\"parameters\":[{\"default\":\"core\",\"kind\":\"string\",\"name\":\"label\"}],\"set\":[{\"prop\":\"label\",\"value\":\"$label\",\"var\":\"a\"}]}",
+  "workingGraph": {
+    "schema": "trinity.graph",
+    "name": "pair",
+    "manifest": {
+      "nodeKinds": [
+        {
+          "name": "Piece",
+          "properties": [
+            {
+              "name": "enabled",
+              "kind": "data",
+              "valueType": {
+                "kind": "boolean"
+              }
+            },
+            {
+              "name": "count",
+              "kind": "data",
+              "valueType": {
+                "kind": "integer"
+              }
+            },
+            {
+              "name": "value",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "labels",
+              "kind": "data",
+              "valueType": {
+                "kind": "list",
+                "of": {
+                  "kind": "text"
+                }
+              }
+            },
+            {
+              "name": "nested",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              }
+            },
+            {
+              "name": "derived",
+              "kind": "derived",
+              "valueType": {
+                "kind": "schema",
+                "of": "引用\u0000🧩"
+              },
+              "expr": "caption + \"引用\u0000🧩\""
+            }
+          ],
+          "portKinds": [
+            "Signal",
+            "Input"
+          ]
+        }
+      ],
+      "edgeKinds": [
+        {
+          "name": "Connection",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Signal",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "nil",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              }
+            }
+          ]
+        }
+      ],
+      "portKinds": [
+        {
+          "name": "Signal",
+          "direction": "out",
+          "properties": [
+            {
+              "name": "caption",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "count",
+              "kind": "data",
+              "valueType": {
+                "kind": "integer"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Input",
+          "direction": "in",
+          "properties": []
+        }
+      ]
+    },
+    "manifestId": "nakagin",
+    "camera": {
+      "x": {
+        "bits": "0000000000000000"
+      },
+      "y": {
+        "bits": "0000000000000000"
+      },
+      "zoom": {
+        "bits": "3ff0000000000000"
+      }
+    },
+    "content": {
+      "childId": "rewriting-pair",
+      "target": {
+        "artifactId": "rewriting-pair",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    },
+    "query": ""
+  },
+  "lhs": {
+    "pattern": {
+      "leftVar": "a",
+      "leftKind": "Piece"
+    },
+    "whereClause": "a.tier = 0"
+  },
+  "rhs": {
+    "create": [],
+    "delete": [],
+    "set": [
+      {
+        "var": "a",
+        "prop": "label",
+        "value": {
+          "kind": "string",
+          "value": "$label"
+        }
+      }
+    ],
+    "merge": [],
+    "parameters": [
+      {
+        "name": "label",
+        "kind": "string",
+        "default": {
+          "kind": "string",
+          "value": "core"
+        }
+      }
+    ]
+  },
   "parameterBindings": {
-    "label": "core"
+    "label": {
+      "kind": "string",
+      "value": "core"
+    }
   },
   "ruleLayout": {
     "lhs-match": {
-      "x": 30.0,
-      "y": 40.0
+      "x": {
+        "bits": "403e000000000000"
+      },
+      "y": {
+        "bits": "4044000000000000"
+      }
     },
     "rhs-set-0": {
-      "x": 20.0,
-      "y": 200.0
+      "x": {
+        "bits": "4034000000000000"
+      },
+      "y": {
+        "bits": "4069000000000000"
+      }
     }
   }
 }

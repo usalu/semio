@@ -23,7 +23,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_shot_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-shot-selection")]
     pub struct SetShotSelection {
         pub shot_ids: Vec<String>,
@@ -39,7 +39,7 @@ pub mod set_shot_selection {
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {}
 
@@ -53,7 +53,7 @@ pub mod world_pointer_down {
 pub mod world_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {}
 
@@ -67,7 +67,7 @@ pub mod world_pointer_move {
 pub mod set_center_model {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "center-model")]
     pub struct SetCenterModel {
         pub pressed: Option<bool>,

@@ -10,7 +10,7 @@ pub fn diff(payload: &RenameNode, base: &CadSnapshot) -> protocol::MutationOutco
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id), [payload.node_id.clone()]);
     };
     if existing.label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" is already named \"{}\".", payload.node_id, payload.new_label));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node \"{}\" is already named \"{}\".", payload.node_id, payload.new_label));
     }
     protocol::MutationOutcome::new(CadDiff {
         nodes: Some(CadNodesDelta { patched: vec![CadNodePatchEntry { id: payload.node_id.clone(), patch: CadNodePatch { label: Some(payload.new_label.clone()) } }], ..Default::default() }),

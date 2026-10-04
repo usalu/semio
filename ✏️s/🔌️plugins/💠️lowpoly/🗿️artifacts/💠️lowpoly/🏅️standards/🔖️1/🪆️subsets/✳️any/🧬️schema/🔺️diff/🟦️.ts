@@ -1,6 +1,7 @@
+import{parseLowpolyMeshState,type LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {parseBinary32,type Binary32}from"../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {
   parseLowpolyArtifact,
   parseLowpolyObject,
@@ -40,6 +41,7 @@ export interface LowpolyObjectPatch {
   transform: LowpolyTransform | null;
   mesh: ArtifactChild | null;
   meshContent?: string | null;
+  meshState?: {state:LowpolyMeshState|null}|null;
 }
 
 export interface LowpolyPaintLayersDelta {
@@ -158,6 +160,8 @@ export function parseLowpolyObjectPatch(value: unknown, at = "$"): LowpolyObject
     smoothShading: row["smoothShading"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
     transform: row["transform"] === null ? null : parseLowpolyTransform(row["transform"], `${at}.transform`),
     mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
+    meshContent:row["meshContent"]==null?null:lowpolyLowpolyDiffGuardString(row["meshContent"],`${at}.meshContent`),
+    meshState:row["meshState"]==null?null:parseLowpolyMeshStateSlot(row["meshState"],`${at}.meshState`),
   };
 }
 
@@ -192,7 +196,7 @@ export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPa
   return {
     name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
     visible: row["visible"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: row["opacity"] === null ? null : parseBinary32(row["opacity"]),
+    opacity: row["opacity"] === null ? null : parseBinary32Transport(row["opacity"]),
     blendMode: row["blendMode"] === null ? null : lowpolyLowpolyDiffGuardString(row["blendMode"], `${at}.blendMode`),
   };
 }
@@ -212,3 +216,6 @@ export function parsePixelRun(value: unknown, at = "$"): PixelRun {
     bytes: lowpolyLowpolyDiffGuardString(row["bytes"], `${at}.bytes`),
   };
 }
+
+/** 🪸️ A declared touched slot preserves clear versus present managed state. */
+function parseLowpolyMeshStateSlot(value:unknown,at:string):{state:LowpolyMeshState|null}{const row=lowpolyLowpolyDiffGuardObject(value,at);if(Object.keys(row).length!==1||!("state"in row))return lowpolyLowpolyDiffGuardReject(at,"managed mesh slot field set differs");return{state:row.state===null?null:parseLowpolyMeshState(row.state)};}

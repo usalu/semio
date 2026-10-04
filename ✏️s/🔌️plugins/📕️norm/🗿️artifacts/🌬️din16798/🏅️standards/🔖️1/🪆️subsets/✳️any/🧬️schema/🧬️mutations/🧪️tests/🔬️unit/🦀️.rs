@@ -13,7 +13,7 @@ fn apply(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Din16798Snapsh
 fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: Din16798Mutation) {
     let after = apply(&mutation, base);
     assert_ne!(&after, base, "{label} must change the snapshot");
-    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, base);
+    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = after;
     for step in &inverse {
         restored = apply(step, &restored);

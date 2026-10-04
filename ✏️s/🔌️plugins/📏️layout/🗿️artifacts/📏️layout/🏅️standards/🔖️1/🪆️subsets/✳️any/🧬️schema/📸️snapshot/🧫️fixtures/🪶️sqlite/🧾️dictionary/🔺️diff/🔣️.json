@@ -1,0 +1,1 @@
+{"schema":"layout.dictionary-change/v1","states":[{"name":"unchanged","change":null},{"name":"clear","change":{"dictionary":null}},{"name":"empty","change":{"dictionary":{"entries":[]}}},{"name":"memberNull","change":{"dictionary":{"entries":[{"questionId":"","value":{"kind":"null"}}]}}}]}

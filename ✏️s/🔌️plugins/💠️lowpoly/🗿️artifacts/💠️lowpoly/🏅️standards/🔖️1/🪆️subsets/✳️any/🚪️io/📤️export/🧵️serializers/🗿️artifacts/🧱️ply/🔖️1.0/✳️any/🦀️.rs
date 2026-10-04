@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_ply::PlySnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextError> {
+pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, semio_framework_diagnostic::TextError> {
     let mut vertex_rows = Vec::new();
     let mut face_rows = Vec::new();
     let mut max_corners = 0usize;
@@ -41,6 +41,6 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextE
     Ok(ply)
 }
 
-pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {
-    encode_ply(&serialize(snapshot)?).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+pub fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
+    encode_ply(&serialize(snapshot)?).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

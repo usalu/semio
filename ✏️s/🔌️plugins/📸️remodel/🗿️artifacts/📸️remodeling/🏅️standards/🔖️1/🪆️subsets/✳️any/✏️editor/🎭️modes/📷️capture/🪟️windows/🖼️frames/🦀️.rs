@@ -13,7 +13,7 @@ use semio_framework_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
-use pack::JsonValue;
+use semio_framework_pack_json::Value;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
@@ -58,7 +58,7 @@ const GCP_MARKER_RADIUS_PX: f64 = 6.0;
 /// track polylines are a documented gap: those live only in the reconstruction engine's in-progress
 /// runtime scratch and are never distilled into durable document state.
 fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> String {
-    let mut layers: Vec<JsonValue> = Vec::new();
+    let mut layers: Vec<Value> = Vec::new();
     let Some((stream, frame_index)) = cursored_frame(scene, cursor) else { return "[]".into() };
     let stream_id = &stream.id;
     let mut origin = (0.0_f64, 0.0_f64);
@@ -67,35 +67,35 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
             let width = f64::from(asset.width);
             let height = f64::from(asset.height);
             origin = (-width / 2.0, -height / 2.0);
-            layers.push(pack::json_object([
-                ("kind".to_string(), JsonValue::from("image")),
-                ("id".to_string(), JsonValue::from(frame.asset_id.as_str())),
-                ("name".to_string(), JsonValue::from(frame.asset_id.as_str())),
-                ("dataUrl".to_string(), JsonValue::from(format!("data:{};base64,{}", asset.mime, asset.data))),
-                ("x".to_string(), JsonValue::from(origin.0)),
-                ("y".to_string(), JsonValue::from(origin.1)),
-                ("width".to_string(), JsonValue::from(width)),
-                ("height".to_string(), JsonValue::from(height)),
+            layers.push(semio_framework_pack_json::object([
+                ("kind".to_string(), Value::from("image")),
+                ("id".to_string(), Value::from(frame.asset_id.as_str())),
+                ("name".to_string(), Value::from(frame.asset_id.as_str())),
+                ("dataUrl".to_string(), Value::from(format!("data:{};base64,{}", asset.mime, asset.data))),
+                ("x".to_string(), Value::from(origin.0)),
+                ("y".to_string(), Value::from(origin.1)),
+                ("width".to_string(), Value::from(width)),
+                ("height".to_string(), Value::from(height)),
             ]));
         }
     }
     for gcp in &scene.gcps {
         for observation in &gcp.observations {
             if &observation.stream_id == stream_id && observation.frame_index == frame_index {
-                layers.push(pack::json_object([
-                    ("kind".to_string(), JsonValue::from("circle")),
-                    ("id".to_string(), JsonValue::from(format!("gcp-observation-{}-{}", gcp.id, observation.frame_index))),
-                    ("name".to_string(), JsonValue::from(gcp.name.as_str())),
-                    ("role".to_string(), JsonValue::from("handle")),
-                    ("x".to_string(), JsonValue::from(origin.0 + f64::from(observation.pixel[0]) - GCP_MARKER_RADIUS_PX)),
-                    ("y".to_string(), JsonValue::from(origin.1 + f64::from(observation.pixel[1]) - GCP_MARKER_RADIUS_PX)),
-                    ("width".to_string(), JsonValue::from(GCP_MARKER_RADIUS_PX * 2.0)),
-                    ("height".to_string(), JsonValue::from(GCP_MARKER_RADIUS_PX * 2.0)),
+                layers.push(semio_framework_pack_json::object([
+                    ("kind".to_string(), Value::from("circle")),
+                    ("id".to_string(), Value::from(format!("gcp-observation-{}-{}", gcp.id, observation.frame_index))),
+                    ("name".to_string(), Value::from(gcp.name.as_str())),
+                    ("role".to_string(), Value::from("handle")),
+                    ("x".to_string(), Value::from(origin.0 + f64::from(observation.pixel[0]) - GCP_MARKER_RADIUS_PX)),
+                    ("y".to_string(), Value::from(origin.1 + f64::from(observation.pixel[1]) - GCP_MARKER_RADIUS_PX)),
+                    ("width".to_string(), Value::from(GCP_MARKER_RADIUS_PX * 2.0)),
+                    ("height".to_string(), Value::from(GCP_MARKER_RADIUS_PX * 2.0)),
                 ]));
             }
         }
     }
-    pack::json_to_string(&pack::json_array(layers))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(layers))
 }
 
 /// 🎯️ The stream and frame index this window shows. A cursor that names no stream at all — the shape a

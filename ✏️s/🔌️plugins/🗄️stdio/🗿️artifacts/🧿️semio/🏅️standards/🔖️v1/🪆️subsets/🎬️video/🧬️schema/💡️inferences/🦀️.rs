@@ -9,7 +9,6 @@
 
 use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_semio_video_duration;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct SemioVideoInference {
 }
 
 impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
-    fn infer(snapshot: &SemioVideoSnapshot) -> Self {
+    fn infer(snapshot: &SemioVideoSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_semio_video_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -35,7 +37,9 @@ impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
 /// defensive pattern raster's `RasterInference` documents).
 impl Default for SemioVideoInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioVideoSnapshot>>::infer(&SemioVideoSnapshot::default())
+        let snapshot = &SemioVideoSnapshot::default();
+
+        Self { duration: compute_semio_video_duration(snapshot) }
     }
 }
 
@@ -51,16 +55,6 @@ impl protocol::InferenceSpec<SemioVideoSnapshot> for SemioVideoInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a per-stream max-pts fold across already-flat `streams` is a
-/// single whole-snapshot pass) — the default `infer_cached` passthrough
-/// (`ArtifactInferrer::infer_cached`) is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::video::schema::SemioVideoBuilder {
-    type Snapshot = SemioVideoSnapshot;
-    type Inference = SemioVideoInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.video.inference`'s facet leaves into the OS-wide inference catalog

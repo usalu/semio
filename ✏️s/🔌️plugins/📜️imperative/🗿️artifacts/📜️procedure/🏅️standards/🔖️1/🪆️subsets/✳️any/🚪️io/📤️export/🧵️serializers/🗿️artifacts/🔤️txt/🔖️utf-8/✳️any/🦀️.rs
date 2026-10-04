@@ -4,6 +4,6 @@ use crate::ProcedureSnapshot;
 
 pub fn register() {}
 
-pub fn serialize_bytes(from: &ProcedureSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(from: &ProcedureSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(<ProcedureSnapshot as store::ArtifactDsl>::print_dsl(from).into_bytes())
 }

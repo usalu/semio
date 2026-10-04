@@ -78,8 +78,8 @@ async fn pump_time_travel(app: &mut FormsApp, done: impl Fn(Option<HistoryTimeTr
 fn assert_one_field_leaf(row: &HistoryEntry, id: &str, en: &str, de: &str) {
     assert_eq!(row.mutations.len(), 1, "one field edit is one leaf: {:?}", row.mutations);
     let label = &row.mutations[0].label;
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), format!("Change {en} of question \"{id}\""));
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), format!("{de} der Frage \"{id}\" ändern"));
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), format!("Change {en} of question \"{id}\""));
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), format!("{de} der Frage \"{id}\" ändern"));
 }
 //#endregion 🔖️Harness
 
@@ -118,18 +118,13 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
     let rows = edit_rows(&mut app).await;
     let target = rows.last().and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the added question's mutation");
     patch(&mut app, &id, "max", 90.0, Some(("q.max:6", false))).await;
-    eprintln!("[DEBUG] frozen law: tick settled");
     accepted(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(target))]).await;
-    eprintln!("[DEBUG] frozen law: begin accepted");
     let args = object(vec![("questionIds", DslValue::Array(vec![DslValue::String(id.clone())])), ("field", DslValue::String("max".into())), ("value", DslValue::float(80.0)), ("gesture", DslValue::String("q.max:6".into())), ("commit", DslValue::Bool(false))]);
     let Err(refused) = app.handle_action("patchQuestions", Some(&args), &meta("local")).await else { panic!("the frozen press keeps moving: its ticks are refused") };
     assert_eq!(refused.code.0.as_str(), "timeTravel.frozen");
-    eprintln!("[DEBUG] frozen law: frozen tick refused");
     accepted(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
-    eprintln!("[DEBUG] frozen law: session closed, pending typed operations {}", app.has_pending_typed_operations());
     patch(&mut app, &id, "max", 70.0, Some(("q.max:6", true))).await;
-    eprintln!("[DEBUG] frozen law: late release settled");
     assert_eq!((question(&app, &id).max, edit_rows(&mut app).await.len()), (Some(100.0), rows.len()), "the frozen press leaves zero trace, its late release stays silent");
 }
 //#endregion 🎚️ScrubLaws
@@ -191,7 +186,7 @@ async fn a_history_edit_of_a_scrubbed_value_replays_downstream_and_overwrites() 
     let strip = |question: FormQuestion| FormQuestion { id: String::new(), ..question };
     assert_eq!(strip(question(&app, &id)), strip(question(&fresh, &fresh_id)), "the edited log equals a fresh run of the edited presses");
     let rows = edit_rows(&mut app).await;
-    let minimum = rows.iter().find(|row| row.mutations.iter().any(|mutation| mutation.label.resolve(protocol::Terminology::Native, protocol::Locale::En).starts_with("Change minimum"))).expect("the minimum's row survives the overwrite");
+    let minimum = rows.iter().find(|row| row.mutations.iter().any(|mutation| mutation.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).starts_with("Change minimum"))).expect("the minimum's row survives the overwrite");
     assert_one_field_leaf(minimum, &id, "minimum", "Minimum");
 }
 //#endregion ⏪️ReplayLaws

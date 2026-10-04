@@ -9,14 +9,12 @@
 //! # The model, and why it has to be indexed
 //!
 //! An 8-bit BMP v3 is a colour TABLE plus per-pixel INDICES into it. `image::load_from_memory`
-//! resolves those to RGBA and throws both away, which is why the earlier revision of this module
-//! could not perform `insert-palette-entry`, `remove-palette-entry` or `replace-palette-entry` at all
-//! and returned the document unchanged for each. `image` does expose the indexed layer:
-//! `BmpDecoder::set_indexed_color(true)` hands back the raw index buffer instead of resolved
-//! pixels, `BmpDecoder::get_palette` hands back the table, and `BmpEncoder::encode_with_palette`
-//! writes both back as a real indexed BITMAPINFOHEADER. [`OracleDoc`] therefore carries indices and
-//! a palette for a palettized file and RGBA for a direct-colour one, and all three palette kinds
-//! are performed for real.
+//! resolves those to RGBA and throws both away, so an indexed paint could not be performed on it.
+//! `image` does expose the indexed layer: `BmpDecoder::set_indexed_color(true)` hands back the raw
+//! index buffer instead of resolved pixels, `BmpDecoder::get_palette` hands back the table, and
+//! `BmpEncoder::encode_with_palette` writes both back as a real indexed BITMAPINFOHEADER.
+//! [`OracleDoc`] therefore carries indices and a palette for a palettized file and RGBA for a
+//! direct-colour one.
 //!
 //! `get_palette` always returns 256 entries — `read_palette` zero-pads deliberately, "to prevent
 //! corrupt files from causing an out-of-bounds array access" — and the crate exposes `biClrUsed`
@@ -26,27 +24,18 @@
 //! bottom-up. Those are patched back onto the encoder's own output, in the fixed BMP v3 layout,
 //! the same way the GIF subsets patch their Logical Screen Descriptor scalars.
 //!
-//! # What a palette mutation means here, and what the fixture must therefore be
+//! # The vocabulary
 //!
-//! `BmpSnapshot::pixels` is the DECODED, palette-resolved RGBA buffer, and `palette` is an
-//! independent field: this subset's own semantics for a palette edit are "change the colour table,
-//! leave the picture alone". `encode_bmp` re-indexes on the way out and reports an `Err` — never a
-//! narrowing, never a silent fall back to 24-bit — when a pixel's colour no longer has an entry.
-//!
-//! `replace-pixel-data` follows the BITMAPINFOHEADER storage rules independently of the subject: a raster whose every
-//! colour has a table entry stays indexed (each pixel re-indexed to the first entry of its colour); one with a colour the
-//! table lacks is written as 24-bit `BI_RGB`, which has no colour table.
-//! <https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
-//!
-//! That makes a targeted palette edit representable only when the entry it addresses is referenced
-//! by no pixel, and an insertion representable only while the table stays inside the 256-entry
-//! capacity of 8 bits. The committed fixture is derived to satisfy both (see
-//! [`fixture_derivation`]); the previous fixture satisfied neither, and its feature file claimed
-//! index 0 was "a palette entry no pixel actually resolves to" when index 0 is in fact the most
-//! referenced entry in the image, covering 5 659 668 of its 5 975 040 pixels.
+//! `BmpSnapshot` is byte-authoritative (`{schema, bytes}`, the file's own octets), and its four kinds are performed here
+//! independently of the subject: `set-snapshot` installs a whole file, `patch-snapshot` is one pointer operation on the
+//! `{schema, bytes}` reading, and the two region paints write one palette index or one colour into an image-top-relative
+//! rectangle. Both paints carry the document revision they were authored against (64-bit FNV-1a over the schema text
+//! and then the octets), which this module recomputes from that definition and refuses on mismatch, as the subject does.
+//! Every inverse is the untouched original, because the vocabulary's own inverse of each kind is a whole `set-snapshot`
+//! of its base.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`KINDS`).
+//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`BmpMutation`).
 
 use semio_repo_test_host::Json;
 
@@ -77,22 +66,12 @@ mod oracles {
     fn empty_params() -> Json {
         Json::Object(Vec::new())
     }
-    fn index_of(params: &Json) -> usize {
-        num(params, "index").unwrap_or(0.0).max(0.0) as usize
-    }
-
-    /// 🎨️ One `{"b":…,"g":…,"r":…,"reserved":…}` colour-table entry, in the same member spelling
-    /// `BmpPaletteEntry` serializes to, so a feature row reads the same on both sides.
-    fn entry_of(params: &Json) -> [u8; 3] {
-        let entry = params.get("entry").cloned().unwrap_or_else(empty_params);
-        [num(&entry, "r").unwrap_or(0.0) as u8, num(&entry, "g").unwrap_or(0.0) as u8, num(&entry, "b").unwrap_or(0.0) as u8]
-    }
     //#endregion 🔖️Json
 
     //#region 🔖️Doc
     /// 🧾️ This oracle's own, independent BMP v3 document model. `content` distinguishes the two
-    /// storage forms BMP v3 actually has, rather than flattening both to RGBA and losing the one
-    /// three of the seven declared kinds operate on.
+    /// storage forms BMP v3 actually has, rather than flattening both to RGBA and losing the index
+    /// layer an indexed paint operates on.
     pub struct OracleDoc {
         pub width: u32,
         pub height: u32,
@@ -195,8 +174,7 @@ mod oracles {
 
     /// 🔮️ Re-serializes the whole document with the registered `image` writer, then restores the
     /// three BITMAPINFOHEADER facts that writer emits as constants: both pixels-per-metre fields
-    /// (hard-coded `0`) and the row order (always bottom-up). Without those patches
-    /// `change-header-fields` is accepted and silently discarded, which reports as a passing scenario.
+    /// (hard-coded `0`) and the row order (always bottom-up), so a re-encoded document keeps them.
     pub fn encode(doc: &OracleDoc) -> Result<Vec<u8>, String> {
         let mut out = Vec::new();
         let bits_per_pixel = match &doc.content {
@@ -226,106 +204,48 @@ mod oracles {
     //#endregion 🔖️Encode
 
     //#region 🔖️Apply
-    /// 🧾️ The `ChangeHeaderFieldsMutation` members `image` cannot write from a changed value: every other header
-    /// field is derived from the geometry and the storage, so a payload setting one is refused, not ignored.
-    const DERIVED_HEADER_FIELDS: [&str; 9] = ["headerSize", "width", "height", "planes", "bitsPerPixel", "compression", "imageSize", "colorsUsed", "colorsImportant"];
-
-    fn palette_mut<'a>(doc: &'a mut OracleDoc, kind: &str) -> Result<&'a mut Vec<[u8; 3]>, String> {
-        match &mut doc.content {
-            Content::Indexed { palette, .. } => Ok(palette),
-            Content::Direct { .. } => Err(format!("{kind} addresses a colour table, and this document is direct-colour — it has none")),
-        }
+    /// 🔖️ The revision a region paint must name: 64-bit FNV-1a over the `schema` text `stdio.bmp`, then the file's octets.
+    fn revision(input: &[u8]) -> String {
+        let hash = b"stdio.bmp".iter().chain(input).fold(0xcbf2_9ce4_8422_2325u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x0100_0000_01b3));
+        format!("{hash:016x}")
     }
 
-    /// 🦠️ One `match` arm per `BmpMutation` variant, reimplemented independently against
-    /// [`OracleDoc`] rather than calling into the subject's own `apply_bmp_mutation`. Out-of-range
-    /// palette indices degrade to a no-op, mirroring `BmpMutation::diff`'s own documented
-    /// behaviour rather than diverging from it without reason.
-    fn apply_kind(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
-        match kind {
-            "change-header-fields" => {
-                if let Some(field) = DERIVED_HEADER_FIELDS.iter().find(|field| params.get(field).is_some()) {
-                    return Err(format!("change-header-fields sets `{field}`, which this oracle derives from the image rather than writes"));
+    /// 🔲️ A paint payload's `{x, y, width, height}` rectangle, `y` counted from the image top; empty or out of bounds is refused.
+    fn region(doc: &OracleDoc, params: &Json) -> Result<(usize, usize, usize, usize), String> {
+        let [x, y, width, height] = ["x", "y", "width", "height"].map(|key| num(params, key).unwrap_or(0.0) as usize);
+        if width == 0 || height == 0 || x + width > doc.width as usize || y + height > doc.height as usize {
+            return Err(format!("paint region {x},{y} {width}x{height} is empty or leaves the {}x{} image", doc.width, doc.height));
+        }
+        Ok((x, y, width, height))
+    }
+
+    /// 🎨️ One region paint on the decoded model: an index into the colour table of an indexed file, or one RGBA colour
+    /// into a direct-colour file, each refused on the other storage form.
+    fn paint(doc: &mut OracleDoc, kind: &str, params: &Json) -> Result<(), String> {
+        let (x, y, width, height) = region(doc, params)?;
+        let stride = doc.width as usize;
+        match (kind, &mut doc.content) {
+            ("paint-indexed-region", Content::Indexed { indices, palette }) => {
+                let index = num(params, "paletteIndex").unwrap_or(0.0) as usize;
+                if index >= palette.len() {
+                    return Err(format!("palette index {index} is outside the {}-entry colour table", palette.len()));
                 }
-                if let Some(order) = params.get("rowOrder") {
-                    doc.top_down = matches!(order, Json::String(value) if value == "topDown");
-                }
-                if let Some(value) = num(params, "xPixelsPerMeter") {
-                    doc.x_pixels_per_meter = value as i32;
-                }
-                if let Some(value) = num(params, "yPixelsPerMeter") {
-                    doc.y_pixels_per_meter = value as i32;
-                }
-            }
-            "insert-palette-entry" => {
-                let entry = entry_of(params);
-                let at = index_of(params);
-                let palette = palette_mut(doc, kind)?;
-                let at = at.min(palette.len());
-                palette.insert(at, entry);
-            }
-            "remove-palette-entry" => {
-                let at = index_of(params);
-                let palette = palette_mut(doc, kind)?;
-                if at < palette.len() {
-                    palette.remove(at);
+                for row in y..y + height {
+                    indices[row * stride + x..row * stride + x + width].fill(index as u8);
                 }
             }
-            "replace-palette-entry" => {
-                let entry = entry_of(params);
-                let at = index_of(params);
-                let palette = palette_mut(doc, kind)?;
-                if at < palette.len() {
-                    palette[at] = entry;
-                }
-            }
-            "replace-pixel-data" => {
-                let rgba = bytes_of(params, "pixels")?;
-                if rgba.len() != doc.width as usize * doc.height as usize * 4 {
-                    return Err(format!("replace-pixel-data carries {} bytes, not the {}x{} RGBA raster", rgba.len(), doc.width, doc.height));
-                }
-                doc.content = match &doc.content {
-                    Content::Indexed { palette, .. } => {
-                        let mut first_entry = std::collections::HashMap::with_capacity(palette.len());
-                        for (index, entry) in palette.iter().enumerate() {
-                            first_entry.entry(*entry).or_insert(index as u8);
-                        }
-                        match rgba.chunks_exact(4).map(|pixel| first_entry.get(&[pixel[0], pixel[1], pixel[2]]).copied()).collect::<Option<Vec<u8>>>() {
-                            Some(indices) => Content::Indexed { indices, palette: palette.clone() },
-                            None => Content::Direct { rgba },
-                        }
+            ("paint-direct-region", Content::Direct { rgba }) => {
+                let color = ["red", "green", "blue", "alpha"].map(|key| num(params, key).unwrap_or(0.0) as u8);
+                for row in y..y + height {
+                    for column in x..x + width {
+                        let at = (row * stride + column) * 4;
+                        rgba[at..at + 4].copy_from_slice(&color);
                     }
-                    Content::Direct { .. } => Content::Direct { rgba },
-                };
+                }
             }
-            "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
-            other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
+            (kind, _) => return Err(format!("{kind} does not apply to this document's storage form")),
         }
         Ok(())
-    }
-
-    /// 📸️ A whole `BmpSnapshot` wire document as this model. A `BI_RGB` bitmap of 8 bpp or less with a colour table is
-    /// indexed — each pixel resolved to the first entry of its colour, and a colour the table lacks refused — and every
-    /// other one is direct colour; the header fields `image` derives from geometry and storage are not read.
-    fn from_snapshot(snapshot: &Json) -> Result<OracleDoc, String> {
-        let (width, height) = (num(snapshot, "width").unwrap_or(0.0) as u32, num(snapshot, "height").unwrap_or(0.0) as u32);
-        let rgba = bytes_of(snapshot, "pixels")?;
-        if rgba.len() != width as usize * height as usize * 4 {
-            return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
-        }
-        let palette: Vec<[u8; 3]> = snapshot.array("palette").iter().map(|entry| [num(entry, "r").unwrap_or(0.0) as u8, num(entry, "g").unwrap_or(0.0) as u8, num(entry, "b").unwrap_or(0.0) as u8]).collect();
-        let indexed = matches!(num(snapshot, "bitsPerPixel"), Some(bits) if bits == 1.0 || bits == 4.0 || bits == 8.0) && !palette.is_empty();
-        let content = if indexed {
-            let mut first_entry = std::collections::HashMap::with_capacity(palette.len());
-            for (index, entry) in palette.iter().enumerate() {
-                first_entry.entry(*entry).or_insert(index as u8);
-            }
-            let indices = rgba.chunks_exact(4).map(|pixel| first_entry.get(&[pixel[0], pixel[1], pixel[2]]).copied()).collect::<Option<Vec<u8>>>().ok_or("set-snapshot holds a pixel whose colour its own colour table lacks")?;
-            Content::Indexed { indices, palette }
-        } else {
-            Content::Direct { rgba }
-        };
-        Ok(OracleDoc { width, height, top_down: snapshot.str("rowOrder") == "topDown", x_pixels_per_meter: num(snapshot, "xPixelsPerMeter").unwrap_or(0.0) as i32, y_pixels_per_meter: num(snapshot, "yPixelsPerMeter").unwrap_or(0.0) as i32, content })
     }
     //#endregion 🔖️Apply
 
@@ -335,56 +255,50 @@ mod oracles {
     /// skipped reports as a passing test.
     pub fn apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let kind = spec.str("kind");
-        if kind.is_empty() {
-            return Err("mutation spec carries no `kind`".to_string());
-        }
         let params = spec.get("params").cloned().unwrap_or_else(empty_params);
-        let mut doc = decode(input)?;
-        apply_kind(&mut doc, &kind, &params)?;
-        encode(&doc)
+        match kind.as_str() {
+            "patch-snapshot" => patched_bytes(input, &params),
+            "set-snapshot" => {
+                let snapshot = params.get("snapshot").ok_or("set-snapshot carries no snapshot")?;
+                if snapshot.str("schema") != "stdio.bmp" {
+                    return Err(format!("set-snapshot installs schema {:?}, not stdio.bmp", snapshot.str("schema")));
+                }
+                encode(&decode(&bytes_of(snapshot, "bytes")?)?)
+            }
+            "paint-indexed-region" | "paint-direct-region" => {
+                if params.str("revision") != revision(input) {
+                    return Err(format!("{kind} names revision {:?}, not this document's {}", params.str("revision"), revision(input)));
+                }
+                let mut doc = decode(input)?;
+                paint(&mut doc, &kind, &params)?;
+                encode(&doc)
+            }
+            "" => Err("mutation spec carries no `kind`".to_string()),
+            other => Err(format!("mutation kind {other:?} has no oracle implementation")),
+        }
     }
 
-    /// ↩️ The `inverse-<kind>` scenarios' oracle: the reference's OWN inverse, computed by reading
-    /// the pre-mutation state out of `original_input` and applied to the forward mutation's real
-    /// output. `BmpMutation::inverse` (`../🧬️schema/🧬️mutations/🦀️.rs`) is defined, per
-    /// variant, as "restore `base`'s own value for the field this kind touches"; every arm below is
-    /// that rule reimplemented here, never that function called.
-    ///
-    /// Routing through `mutated` is what gives the law teeth: the forward result has to survive a
-    /// real independent re-parse first, so a forward mutation that emitted an undecodable BMP fails
-    /// here instead of being reported as a passing `inverse-<kind>`.
+    /// 🩹️ A `patch-snapshot` row's one pointer operation applied to the `BmpSnapshot` reading of the file (`{schema,
+    /// bytes}` — the file's own octets), via `semio_repo_test_host::law::patched_snapshot`; the patched octets are the
+    /// document, re-parsed by the reference decoder so an unreadable result fails here.
+    fn patched_bytes(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let reading = Json::Object(vec![("schema".to_string(), Json::String("stdio.bmp".to_string())), ("bytes".to_string(), Json::Array(input.iter().map(|byte| Json::Number(f64::from(*byte))).collect()))]);
+        let patched = semio_repo_test_host::law::patched_snapshot(&reading, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
+        let bytes = bytes_of(&patched, "bytes")?;
+        decode(&bytes)?;
+        Ok(bytes)
+    }
+
+    /// ↩️ The `inverse-<kind>` scenarios' oracle: every kind of this vocabulary is undone by restoring the pre-mutation
+    /// document, re-encoded by the reference writer. Routing through `mutated` first is what gives the law teeth: a
+    /// forward result the independent reader cannot re-parse fails here instead of passing as `inverse-<kind>`.
     pub fn undo_mutation(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
-        let kind = spec.str("kind");
-        if kind.is_empty() {
-            return Err("mutation spec carries no `kind`".to_string());
+        decode(mutated)?;
+        match spec.str("kind").as_str() {
+            "set-snapshot" | "patch-snapshot" | "paint-indexed-region" | "paint-direct-region" => encode(&decode(original_input)?),
+            "" => Err("mutation spec carries no `kind`".to_string()),
+            other => Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
-        let params = spec.get("params").cloned().unwrap_or_else(empty_params);
-        let original = decode(original_input)?;
-        let mut doc = decode(mutated)?;
-        match kind.as_str() {
-            "replace-pixel-data" | "set-snapshot" => doc = original,
-            "change-header-fields" => {
-                doc.top_down = original.top_down;
-                doc.x_pixels_per_meter = original.x_pixels_per_meter;
-                doc.y_pixels_per_meter = original.y_pixels_per_meter;
-            }
-            "insert-palette-entry" => {
-                let at = index_of(&params);
-                let palette = palette_mut(&mut doc, &kind)?;
-                if at < palette.len() {
-                    palette.remove(at);
-                }
-            }
-            "remove-palette-entry" | "replace-palette-entry" => {
-                let restored = match original.content {
-                    Content::Indexed { palette, .. } => palette,
-                    Content::Direct { .. } => return Err(format!("{kind} addresses a colour table, and the original document is direct-colour")),
-                };
-                *palette_mut(&mut doc, &kind)? = restored;
-            }
-            other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
-        }
-        encode(&doc)
     }
     //#endregion 🔖️Dispatch
 
@@ -394,9 +308,8 @@ mod oracles {
     /// digests rather than arrays only because the real fixture is 5 975 040 pixels and the
     /// comparison engine would otherwise be diffing ~24 million JSON numbers per scenario.
     ///
-    /// The palette is reported as its own length and digest, separately from the resolved samples:
-    /// that is what makes the three palette kinds observable at all under this subset's semantics,
-    /// where a palette edit changes the colour table and deliberately leaves the picture alone.
+    /// The palette is reported as its own length and digest, separately from the index buffer and
+    /// the resolved samples, so a table change and an index change stay distinguishable.
     pub fn project(input: &[u8]) -> Result<Json, String> {
         let doc = decode(input)?;
         let mut members = vec![
@@ -458,6 +371,13 @@ pub fn project_bmp_mutation(input: &[u8]) -> Result<Json, String> {
     oracles::project(input)
 }
 
+/// 🖼️ Independent image-rs visual meaning behind an owned test interface.
+#[cfg(feature = "oracles")]
+pub fn oracle_visual_rgba8(input: &[u8]) -> Result<(u32, u32, Vec<u8>), String> {
+    let decoded = image::load_from_memory_with_format(input, image::ImageFormat::Bmp).map_err(|error| error.to_string())?.to_rgba8();
+    Ok((decoded.width(), decoded.height(), decoded.into_raw()))
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
@@ -483,17 +403,8 @@ pub fn project_bmp_mutation(_input: &[u8]) -> Result<Json, String> {
 /// independent `png` decoder recovers that file's genuine 233-entry PLTE and its real index buffer,
 /// and the `image` reference encoder writes both back as an 8-bit indexed BITMAPINFOHEADER.
 ///
-/// The colour table is padded to 240 entries. Both halves of that number are forced by what the
-/// vocabulary has to be able to express:
-///
-/// * the 233 real colours are ALL referenced (index 0 alone covers 5 659 668 of 5 975 040 pixels),
-///   and this subset's semantics for a palette edit are "change the table, leave the picture alone"
-///   — so an edit to a referenced entry orphans a colour and `encode_bmp` reports it rather than
-///   narrowing. Seven spare entries no pixel resolves to are what make `replace-palette-entry` and
-///   `remove-palette-entry` representable at all.
-/// * a full 256-entry table — what most real 8-bpp BMP writers emit — would give that slack and
-///   then make `insert-palette-entry` unrepresentable, because 257 entries exceed what an 8-bit
-///   index can address. 240 leaves room for both.
+/// The colour table is padded from its 233 real, all-referenced colours (index 0 alone covers
+/// 5 659 668 of 5 975 040 pixels) to 240 entries, so a paint has table entries no pixel resolves to.
 ///
 /// The spare colours are a deterministic ramp chosen at derivation time from values the real
 /// palette does not already contain, and the derivation asserts that no pixel references any of
@@ -510,3 +421,73 @@ pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { ora
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
 //#endregion RoundTrip
+
+#[cfg(all(test, feature = "oracles"))]
+mod canonical_byte_authority {
+    use image::ImageDecoder;
+
+    fn accepted() -> [(&'static str, &'static [u8]); 9] {
+        [
+            ("direct-rgb24-padding-gap-trailer", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),
+            ("indexed-rgb1-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")),
+            ("indexed-rgb4-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")),
+            ("indexed-rgb8-duplicate-palette", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp")),
+            ("direct-rgb16-555", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb16-555.bmp")),
+            ("direct-rgb32-reserved-sample", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb32-reserved-sample.bmp")),
+            ("direct-bitfields16-565", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields16-565.bmp")),
+            ("direct-bitfields32", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-bitfields32.bmp")),
+            ("direct-rgb24-top-down", include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-top-down.bmp")),
+        ]
+    }
+
+    #[test]
+    fn image_decoder_reopens_every_accepted_canonical_fixture() {
+        for (id, source) in accepted() {
+            let decoder = image::codecs::bmp::BmpDecoder::new(std::io::Cursor::new(source)).unwrap_or_else(|failure| panic!("{id}: {failure}"));
+            let (width, height) = decoder.dimensions();
+            assert!(width > 0 && height > 0, "{id}: dimensions");
+            let decoded = image::load_from_memory(source).unwrap_or_else(|failure| panic!("{id}: {failure}")).to_rgba8();
+            assert_eq!(decoded.len(), width as usize * height as usize * 4, "{id}: independent RGBA projection");
+        }
+    }
+
+    #[test]
+    fn image_decoder_reopens_neutral_opaque_rgba8_conversion() {
+        let source = include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/rgba8-opaque-direct-rgb24.bmp");
+        let decoded = image::load_from_memory(source).unwrap().to_rgba8();
+        assert_eq!((decoded.width(), decoded.height()), (1, 1));
+        assert_eq!(decoded.get_pixel(0, 0).0, [10, 20, 30, 255]);
+    }
+
+    #[test]
+    fn image_decoder_preserves_eight_bit_duplicate_index_selection() {
+        let source = include_bytes!("../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb8-duplicate-palette.bmp");
+        let mut decoder = image::codecs::bmp::BmpDecoder::new(std::io::Cursor::new(source)).unwrap();
+        decoder.set_indexed_color(true);
+        let (width, height) = decoder.dimensions();
+        let mut indices = vec![0; width as usize * height as usize];
+        decoder.read_image(&mut indices).unwrap();
+        assert_eq!(indices, [2, 1, 0]);
+    }
+
+    fn fixture_bytes(source: &str) -> Vec<u8> {
+        let source: String = source.chars().filter(|character| !character.is_whitespace()).collect();
+        assert!(source.len().is_multiple_of(2));
+        (0..source.len()).step_by(2).map(|index| u8::from_str_radix(&source[index..index + 2], 16).unwrap()).collect()
+    }
+
+    #[test]
+    fn image_decoder_reopens_canonical_paint_results() {
+        let direct = fixture_bytes(include_str!("../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio"));
+        let direct = image::load_from_memory(&direct).unwrap().to_rgba8();
+        assert_eq!((direct.width(), direct.height()), (3, 2));
+        assert_eq!(direct.get_pixel(0, 0).0, [17, 34, 51, 255]);
+
+        let indexed = fixture_bytes(include_str!("../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio"));
+        let mut decoder = image::codecs::bmp::BmpDecoder::new(std::io::Cursor::new(indexed)).unwrap();
+        decoder.set_indexed_color(true);
+        let mut indices = vec![0; decoder.total_bytes() as usize];
+        decoder.read_image(&mut indices).unwrap();
+        assert_eq!(indices, [1, 1, 0]);
+    }
+}

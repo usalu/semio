@@ -100,7 +100,7 @@ macro_rules! nudge_command {
     ($module:ident,$name:ident,$verb:literal,$keyword:literal,$dx:expr,$dy:expr)=>{
         pub mod $module {
             use super::*;
-            #[derive(Clone,Debug,PartialEq,dsl::ToValue,dsl::FromValue,dsl::DslRecord)]
+            #[derive(Clone,Debug,PartialEq,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue,semio_framework_dsl_record_derive::DslRecord)]
             #[dsl(keyword=$keyword)]
             pub struct $name {}
             pub fn handle(_payload:&$name,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,session:&mut DrawingSession)->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {

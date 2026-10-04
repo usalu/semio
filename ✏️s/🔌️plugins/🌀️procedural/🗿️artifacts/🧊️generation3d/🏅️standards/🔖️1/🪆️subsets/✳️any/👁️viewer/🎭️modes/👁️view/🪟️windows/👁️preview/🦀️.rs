@@ -20,7 +20,7 @@
 //! (`policyViewerPurityBreaches` forbids a viewer file importing through `✏️editor`).
 
 use crate::viewer::generation3d::config::Generation3dViewConfig;
-use dsl::json::{Object, Value};
+use semio_framework_pack_json::{Object, Value};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::world3d_scene;
 use semio_framework_plugin::world3d_selection_json;
@@ -305,14 +305,14 @@ fn build_preview_mesh_table(
             mesh_ids.insert(mesh_id);
         }
     }
-    PreviewMeshTable { signature, meshes_json: dsl::json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
+    PreviewMeshTable { signature, meshes_json: semio_framework_pack_json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
 }
 
 pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
     if eval_json.is_empty() {
         return ViewPreviewPayload::default();
     }
-    let eval = match dsl::json::parse(eval_json) {
+    let eval = match semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(value) if value.get("error").and_then(Value::as_str).is_none() => value,
         _ => return ViewPreviewPayload::default(),
     };
@@ -359,7 +359,7 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
                 instances.push(Value::Object(instance_object));
             }
         }
-        ViewPreviewPayload { meshes_json: table.meshes_json.clone(), instances_json: dsl::json::to_string(&Value::Array(instances)), selected_ids, hovered_id }
+        ViewPreviewPayload { meshes_json: table.meshes_json.clone(), instances_json: semio_framework_pack_json::to_string(&Value::Array(instances)), selected_ids, hovered_id }
     })
 }
 
@@ -372,7 +372,7 @@ fn vec3_json(v: [f64; 3]) -> Value {
 /// A viewer never mounts a gumball, so `transformMode` stays empty and `gumballActive` false: a
 /// transform handle is a mutation affordance and a viewer emits no mutations.
 pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPreviewPayload) -> String {
-    let mut value = dsl::json::parse(&world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| Value::Object(Object::new()));
+    let mut value = semio_framework_pack_json::parse(&world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref()), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::Object(Object::new()));
     let show_edges = matches!(config.effective_show_mode(), "wireframe" | "shaded+edges");
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode", Value::String(String::new()));
@@ -381,7 +381,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
         object.insert("selectionMode", Value::String("mesh".into()));
         object.insert("granularity", Value::String("mesh".into()));
     }
-    dsl::json::to_string(&value)
+    semio_framework_pack_json::to_string(&value)
 }
 //#endregion 🔖️Geometry
 

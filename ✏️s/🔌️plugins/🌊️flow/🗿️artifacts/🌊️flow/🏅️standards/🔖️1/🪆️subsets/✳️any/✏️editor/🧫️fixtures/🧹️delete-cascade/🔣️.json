@@ -17,6 +17,6 @@
     ],
     "layout": {"cut": {"x": 12, "y": 24}}
   },
-  "expectedForwardSynapses": ["e0", "e2", "e4"],
-  "expectedInverseIndices": [1, 3]
+  "expectedLeaves": [{"kind": "remove-edge", "id": "e1"}, {"kind": "remove-edge", "id": "e3"}, {"kind": "remove-node", "id": "cut"}],
+  "expectedForwardSynapses": ["e0", "e2", "e4"]
 }

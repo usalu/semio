@@ -2,7 +2,7 @@
 
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::schema::document_to_workflow;
-use crate::DagSnapshot;
+use crate::DagScene;
 use semio_framework_artifact_infinite_dag::DagCamera;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -50,8 +50,8 @@ pub fn definition() -> WindowKindDefinition {
 /// `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `space`'s workflow window's identical gap.
-pub fn render(document: &DagSnapshot, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let (nodes, edges) = document_to_workflow(document);
+pub fn render(scene: &DagScene, camera: &DagCamera, _labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
+    let (nodes, edges) = document_to_workflow(scene);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     scene_surface(DAG_PLAY_SURFACE_MAIN, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "before",
+    "authored",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "before": {
+      "type": "string"
+    },
+    "authored": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "current",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "original",
+              "exact-authored",
+              "foreign-original",
+              "foreign-authored-requires-admission",
+              "unrelated-refused"
+            ]
+          },
+          "current": {
+            "type": "string"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

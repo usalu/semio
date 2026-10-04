@@ -52,7 +52,7 @@ async fn an_unaddressed_create_appends_at_the_root_end() {
 async fn inverse_deletes_the_layer_it_created() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-layer undoes with exactly one delete-layer");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

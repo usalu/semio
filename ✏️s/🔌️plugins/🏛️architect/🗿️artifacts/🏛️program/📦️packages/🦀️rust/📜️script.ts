@@ -65,4 +65,13 @@ if (segments[0] === "program-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+/** ⏱️ Selects the unchanged complete-domain Source law for operation timing. */
+class SnapshotSourceProfileScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if(args.length)throw Error("test-snapshot-sqlite-source-profile accepts no arguments");
+    const {runRepositoryTestCommand}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+    await runRepositoryTestCommand(process.execPath,["test",join(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"),"--test-name-pattern","Architect complete sixty-five typed bodies"],{cwd:this.repoRoot});
+  }
+}
+
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript, "test-snapshot-sqlite-source-profile":SnapshotSourceProfileScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

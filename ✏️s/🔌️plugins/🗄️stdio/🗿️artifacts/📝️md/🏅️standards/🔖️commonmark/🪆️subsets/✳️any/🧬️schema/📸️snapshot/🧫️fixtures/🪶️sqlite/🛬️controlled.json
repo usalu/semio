@@ -1,7 +1,8 @@
 {
   "depth": 600,
   "maxRows": 10,
-  "maxValueBytes": 4096,
+  "maxAllocationBytes": 4096,
+  "allocationLimitRole": "nativeOwnedBacking",
   "cancelAfter": 256,
   "schemaRepeat": 10000,
   "orderedStart": 4294967295

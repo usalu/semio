@@ -1,0 +1,9 @@
+# GIS Terrain Full Typed Imported Map Cutover
+
+Root staged one closed language-neutral intrinsic-domain fixture/schema and registered actual Source law before production changes. The first authenticated current Source attempt selected five laws, passed three and failed two with 105 expectations, Nx10.2 seconds: one real unknown importedMap owner rejection and one old AbortError assertion. Exactly two cancellation assertions were paired to current ValueError.kind canceled; unchanged five-law replay is running. The old string owner remains active.
+
+The independent Low audit is [GIS Terrain Imported Map Independent Audit](./📓️gis-terrain-imported-map-independent-audit.md). Its concrete decisions are adopted: absent versus present-empty owner, ordered complete record values for positions/routes/regions and repeated IDs, ordered root unknown members excluding three reserved keys, finite JSON boundary admits missing collections as empty but rejects null, full intrinsic durable domain independently of JSON media, and exact independently authored mesh identity. Integer bounds/canonical decimal and separate tree ownership still need actual gates. No Native numerical or feature GREEN receipt.
+
+## Authentic Current Missing-Owner Gate
+
+After pairing exactly two stale cancellation assertions to canonical ValueError.kind canceled, the unchanged registered Source selection runs five laws: four pass, one real importedMap unknown-field failure, 107 expectations, Bun463 milliseconds, Nx21.7 seconds. AJV strict closed fixture validation and all nine independent DataView word checks execute before the feature rejection. Root assigned the full schema/owner/relational/provider/consumer/fixture cutover to a High execution agent; it must address the independent audit obligations and preserve all fields, occurrence order and child identity. No Native allocation claim.

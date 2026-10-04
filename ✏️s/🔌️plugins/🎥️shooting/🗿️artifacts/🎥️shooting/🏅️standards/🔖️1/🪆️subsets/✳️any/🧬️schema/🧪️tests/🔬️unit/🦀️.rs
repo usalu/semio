@@ -44,7 +44,7 @@ async fn ellipse_shot_shape_renders_via_svg_arc_commands() {
 #[semio_framework_async_macros::async_test]
 async fn export_svg_uses_scene_render_not_title_card() {
     let snapshot = default_snapshot();
-    let document = json::from_dsl_value(&dsl::ToValue::to_value(&snapshot));
+    let document = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot));
     let (svg, _width, _height) = shooting_document_json_to_svg(&document).expect("export svg");
     let asset = active_asset(&snapshot).expect("default fixture asset");
     assert!(svg.contains(&asset.name));
@@ -82,7 +82,7 @@ async fn icon_render_request_forwards_camera_projection() {
         up: None,
         projection: Some("orthographic".into()),
     };
-    let request: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&shooting_icon_render_request_json(&snapshot, shot, asset, &camera, false)).expect("icon render request json");
-    assert_eq!(request["camera"]["projection"], dsl::os_pack::json::Value::from("orthographic"));
-    assert_eq!(request["camera"]["zoom"], dsl::os_pack::json::Value::from(18.0));
+    let request: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&shooting_icon_render_request_json(&snapshot, shot, asset, &camera, false), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("icon render request json");
+    assert_eq!(request["camera"]["projection"], semio_framework_pack_json::Value::from("orthographic"));
+    assert_eq!(request["camera"]["zoom"], semio_framework_pack_json::Value::from(18.0));
 }

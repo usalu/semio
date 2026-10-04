@@ -1,0 +1,35 @@
+{
+  "edges": {
+    "values": [
+      {
+        "id": {
+          "value": "e1"
+        },
+        "source": {
+          "value": "a"
+        },
+        "target": {
+          "value": "b"
+        },
+        "kind": "data",
+        "label": "A to B",
+        "properties": [
+          {
+            "key": "weight",
+            "value": {
+              "kind": "float",
+              "lexeme": "0.5"
+            }
+          },
+          {
+            "key": "colour",
+            "value": {
+              "kind": "str",
+              "value": "red"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

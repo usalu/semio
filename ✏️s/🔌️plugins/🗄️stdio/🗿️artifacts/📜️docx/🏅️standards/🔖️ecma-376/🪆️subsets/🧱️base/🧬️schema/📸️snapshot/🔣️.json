@@ -52,6 +52,12 @@
     "OpcPackage": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "parts",
+        "contentTypes",
+        "relationships",
+        "comment"
+      ],
       "properties": {
         "parts": {
           "type": "array",
@@ -105,7 +111,8 @@
       "additionalProperties": false,
       "required": [
         "path",
-        "contentType"
+        "contentType",
+        "bytes"
       ],
       "properties": {
         "path": {
@@ -145,22 +152,37 @@
     "OpcContentTypes": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "defaults",
+        "overrides"
+      ],
       "properties": {
         "defaults": {
           "type": "array",
           "items": {
-            "type": "array",
-            "items": [
-              {
-                "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name","contentType"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "File extension",
+                    "de": "Dateierweiterung"
+                  }
+                }
               },
-              {
-                "type": "string"
+              "contentType": {
+                "type": "string",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Content type",
+                    "de": "Inhaltstyp"
+                  }
+                }
               }
-            ],
-            "additionalItems": false,
-            "minItems": 2,
-            "maxItems": 2
+            }
           },
           "x-semio-ui": {
             "label": {
@@ -176,18 +198,29 @@
         "overrides": {
           "type": "array",
           "items": {
-            "type": "array",
-            "items": [
-              {
-                "type": "string"
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name","contentType"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Part name",
+                    "de": "Teilname"
+                  }
+                }
               },
-              {
-                "type": "string"
+              "contentType": {
+                "type": "string",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Content type",
+                    "de": "Inhaltstyp"
+                  }
+                }
               }
-            ],
-            "additionalItems": false,
-            "minItems": 2,
-            "maxItems": 2
+            }
           },
           "x-semio-ui": {
             "label": {
@@ -213,16 +246,50 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationship ID",
+              "de": "Beziehungs-ID"
+            }
+          }
         },
         "relType": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Relationship type",
+              "de": "Beziehungstyp"
+            }
+          }
         },
         "target": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Target",
+              "de": "Ziel"
+            }
+          }
         },
         "targetMode": {
-          "$ref": "#/$defs/OpcTargetMode"
+          "$ref": "#/$defs/OpcTargetMode",
+          "x-semio-ui": {
+            "label": {
+              "en": "Target mode",
+              "de": "Zielmodus"
+            },
+            "options": {
+              "internal": {
+                "en": "Internal",
+                "de": "Intern"
+              },
+              "external": {
+                "en": "External",
+                "de": "Extern"
+              }
+            }
+          }
         }
       }
     },
@@ -261,7 +328,7 @@
           }
         },
         "document": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument",
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/RetainedXmlDocument",
           "x-semio-ui": {
             "label": {
               "en": "XML document",

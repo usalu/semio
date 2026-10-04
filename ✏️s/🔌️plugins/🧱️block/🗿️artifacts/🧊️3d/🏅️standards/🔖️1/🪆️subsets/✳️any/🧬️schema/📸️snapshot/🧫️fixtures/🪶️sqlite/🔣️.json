@@ -1,0 +1,9 @@
+{
+  "dialect": "s.block.block3d@1/*",
+  "binary64Bits": ["0000000000000000", "8000000000000000", "0000000000000001", "3ff0000000000000", "7ff0000000000000", "fff0000000000000", "7ff0000000000001", "7ff8000000000042"],
+  "nativeCase": {"schema": "", "literal": "literal\u0000!@/😀", "kindId": "", "vortexKindId": "", "unresolvedVortexKind": "unresolved\u0000!@/😀"},
+  "catalogAddresses": [
+    {"childId": "", "artifactId": "", "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "kit"},
+    {"childId": "local\u0000!@/😀", "artifactId": "target\u0000!@/😀", "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "kit"}
+  ]
+}

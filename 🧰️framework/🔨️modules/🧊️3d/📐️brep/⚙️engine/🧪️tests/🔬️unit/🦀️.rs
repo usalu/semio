@@ -1,5 +1,266 @@
 use super::*;
 
+/// 🛡️ Selected solid operations refuse foreign components before altering either body.
+#[test]
+fn brep_selected_solid_operations_require_scoped_components_and_positive_parameters() {
+    use parry3d::shape::Shape;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
+    let dimensions: [f64; 3] = std::array::from_fn(|axis| fixture["box"][axis].as_f64().unwrap());
+    let oracle = parry3d::shape::Cuboid::new(parry3d::math::Vector::new(dimensions[0] as f32 / 2.0, dimensions[1] as f32 / 2.0, dimensions[2] as f32 / 2.0));
+    let volume = f64::from(oracle.mass_properties(1.0).mass());
+    assert_eq!(volume, fixture["volume"].as_f64().unwrap());
+    for row in fixture["refusals"].as_array().unwrap() {
+        let mut kernel = Brep::new();
+        let source = kernel.box_prim_sync(dimensions[0], dimensions[1], dimensions[2]).unwrap();
+        let foreign = kernel.box_prim_sync(dimensions[0], dimensions[1], dimensions[2]).unwrap();
+        let topology = kernel.deconstruct_sync(&source).unwrap();
+        let foreign_topology = kernel.deconstruct_sync(&foreign).unwrap();
+        let operation = row["operation"].as_str().unwrap();
+        let is_face = operation == "shell";
+        let selected: Vec<_> = row["selection"].as_array().unwrap().iter().flat_map(|selection| if selection.as_str() == Some("allCurrent") { if is_face { topology.faces.clone() } else { topology.edges.clone() } } else { vec![match selection.as_str().unwrap() {
+            "current" => if is_face { topology.faces[0].clone() } else { topology.edges[0].clone() },
+            "foreign" => if is_face { foreign_topology.faces[0].clone() } else { foreign_topology.edges[0].clone() },
+            "wrongDomain" => if is_face { topology.edges[0].clone() } else { topology.faces[0].clone() },
+            "unknown" => GeometryHandle("0".repeat(64)),
+            _ => panic!("unknown selection case"),
+        }] }).collect();
+        let parameter = match row["parameter"].as_str().unwrap() { "positive" => 0.1, "zero" => 0.0, "negative" => -0.1, "nan" => f64::NAN, "infinity" => f64::INFINITY, _ => panic!("unknown parameter case") };
+        let counts = [kernel.body.vertices.len(), kernel.body.edges.len(), kernel.body.faces.len(), kernel.body.solids.len(), kernel.live.len()];
+        let result = match operation { "filletEdges" => kernel.fillet_edges_sync(&source, &selected, parameter), "chamferEdges" => kernel.chamfer_edges_sync(&source, &selected, parameter), "shell" => kernel.shell_sync(&source, parameter, &selected), _ => panic!("unknown operation") };
+        let error = result.expect_err(&format!("must refuse {row}"));
+        match row["error"].as_str().unwrap() { "invalidInput" => assert!(matches!(error, BrepError::InvalidInput(_)), "{row}: {error}"), "missingHandle" => assert!(matches!(error, BrepError::MissingHandle(_)), "{row}: {error}"), _ => panic!("unknown error case") }
+        assert_eq!(counts, [kernel.body.vertices.len(), kernel.body.edges.len(), kernel.body.faces.len(), kernel.body.solids.len(), kernel.live.len()], "{row}: refusal must precede mutation");
+        assert_eq!(kernel.deconstruct_sync(&source).unwrap(), topology);
+        assert_eq!(kernel.deconstruct_sync(&foreign).unwrap(), foreign_topology);
+        assert_eq!(kernel.volume_sync(&source).unwrap(), volume);
+        assert_eq!(kernel.volume_sync(&foreign).unwrap(), volume);
+    }
+    println!("[DEBUG] selectedSolidScope refusals={} mutationFree=true independentParryVolume={volume}", fixture["refusals"].as_array().unwrap().len());
+}
+
+/// 🧮️ Selected features preserve their source and match independent primitive mass properties.
+#[test]
+fn brep_selected_solid_operations_match_independent_physical_volumes() {
+    use parry3d::shape::Shape;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️selected-solid-scope/🔣️.json")).unwrap();
+    let dimensions: [f64; 3] = std::array::from_fn(|axis| fixture["box"][axis].as_f64().unwrap());
+    let cuboid_volume = |dimensions: [f64; 3]| f64::from(parry3d::shape::Cuboid::new(parry3d::math::Vector::new(dimensions[0] as f32 / 2.0, dimensions[1] as f32 / 2.0, dimensions[2] as f32 / 2.0)).mass_properties(1.0).mass());
+    let source_volume = cuboid_volume(dimensions);
+    let edge_length = f64::from(parry3d::shape::Segment::new(parry3d::math::Point::origin(), parry3d::math::Point::new(dimensions[0] as f32, 0.0, 0.0)).length());
+    for row in fixture["successes"].as_array().unwrap() {
+        println!("[DEBUG] selectedSolidPhysical begin={row}");
+        let mut kernel = Brep::new();
+        let source = kernel.box_prim_sync(dimensions[0], dimensions[1], dimensions[2]).unwrap();
+        let topology = kernel.deconstruct_sync(&source).unwrap();
+        let size = row["size"].as_f64().unwrap();
+        let selection = row["selection"].as_str().unwrap();
+        let index = row["index"].as_u64().unwrap() as usize;
+        let expected = match row["operation"].as_str().unwrap() {
+            "filletEdges" => source_volume - cuboid_volume([size, size, edge_length]) + f64::from(parry3d::shape::Cylinder::new(edge_length as f32 / 2.0, size as f32).mass_properties(1.0).mass()) / 4.0,
+            "chamferEdges" => source_volume - cuboid_volume([size, size, edge_length]) / 2.0,
+            "shell" => source_volume - cuboid_volume(std::array::from_fn(|axis| dimensions[axis] - if selection == "singleFace" && axis == 2 - index / 2 { size } else { 2.0 * size })),
+            _ => panic!("unknown operation"),
+        };
+        assert!((expected - row["volume"].as_f64().unwrap()).abs() < 1e-6, "{row}: independent Parry volume {expected}");
+        let output = match row["operation"].as_str().unwrap() {
+            "filletEdges" => kernel.fillet_edges_sync(&source, std::slice::from_ref(&topology.edges[index]), size),
+            "chamferEdges" => kernel.chamfer_edges_sync(&source, std::slice::from_ref(&topology.edges[index]), size),
+            "shell" => kernel.shell_sync(&source, size, if selection == "closed" { &[] } else { std::slice::from_ref(&topology.faces[index]) }),
+            _ => panic!("unknown operation"),
+        }.unwrap_or_else(|error| panic!("{row}: {error}"));
+        assert_ne!(source, output);
+        assert_eq!(kernel.kind_sync(&output).unwrap(), GeometryKind::Solid);
+        kernel.validate_gate_sync(&output).unwrap_or_else(|issues| panic!("{row}: {issues:?}"));
+        kernel.validate_gate_sync(&source).unwrap_or_else(|issues| panic!("{row}: source {issues:?}"));
+        assert_eq!(kernel.deconstruct_sync(&source).unwrap(), topology);
+        assert_eq!(kernel.volume_sync(&source).unwrap(), source_volume);
+        let actual = kernel.volume_sync(&output).unwrap();
+        assert!((actual - expected).abs() < 1e-6, "{row}: actual {actual}, oracle {expected}");
+        println!("[DEBUG] selectedSolidPhysical complete={row} volume={actual}");
+    }
+    println!("[DEBUG] selectedSolidPhysical operations=filletEdges,chamferEdges,shell cases=9 unchangedSource=true validClosedTopology=true independentParry=true");
+}
+
+/// 🎯️ Analytic preview picks retain full labels independently of numeric renderer indices.
+#[test]
+fn brep_preview_component_picks_preserve_lossless_face_and_edge_labels() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let source = semio_framework_pack_json::parse(&fixture["transfer"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
+    let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
+    assert_eq!(serde_json::json!(mesh.face_ids), fixture["expected"]["faceIds"]);
+    assert_eq!(serde_json::json!(mesh.edge_ids), fixture["expected"]["edgeIds"]);
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::Value::from(mesh.clone()).to_string()).unwrap();
+    assert_eq!(encoded["componentReferences"], fixture["expected"]["componentReferences"]);
+    let area: f32 = mesh.indices.chunks_exact(3).map(|indices| {
+        let points = [indices[0], indices[1], indices[2]].map(|index| { let offset=index as usize*3; parry3d::math::Point::new(mesh.positions[offset],mesh.positions[offset+1],mesh.positions[offset+2]) });
+        parry3d::shape::Triangle::new(points[0],points[1],points[2]).area()
+    }).sum();
+    assert_eq!(area as f64, fixture["expected"]["area"].as_f64().unwrap());
+    println!("[DEBUG] BRep analytic pick domains=2 losslessLabels=4 independentParryArea={area}");
+}
+
+/// 🪢️ Analytic wire edges keep resolvable labels and independent segment lengths.
+#[test]
+fn brep_preview_component_wire_edges_keep_resolvable_labels() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let row=&fixture["wire"];
+    let mut kernel=Brep::new();
+    let wire=kernel.rectangle_wire_sync(row["width"].as_f64().unwrap(),row["height"].as_f64().unwrap()).unwrap();
+    let transfer=kernel.tessellate_sync(&wire,0.1).unwrap();
+    assert_eq!(transfer.edge_groups.len(),row["edgeCount"].as_u64().unwrap() as usize);
+    let mesh=mesh_data_from_mesh_transfer(&transfer).unwrap();
+    let labels=mesh.component_references.get("edge").unwrap();
+    assert_eq!(labels.len(),transfer.edge_groups.len());
+    assert_eq!(mesh.edge_ids.len(),mesh.edge_positions.len()/6);
+    for label in labels {let label=PersistentLabel(label.parse().unwrap());let handle=kernel.handle_for_label(label).expect("wire edge label resolves in the same kernel family");assert_eq!(kernel.kind_sync(&handle).unwrap(),GeometryKind::Edge);assert_eq!(kernel.label_of(&handle),Some(label));}
+    let perimeter:f32=mesh.edge_positions.chunks_exact(6).map(|points|parry3d::shape::Segment::new(parry3d::math::Point::new(points[0],points[1],points[2]),parry3d::math::Point::new(points[3],points[4],points[5])).length()).sum();
+    assert_eq!(perimeter as f64,row["perimeter"].as_f64().unwrap());
+    println!("[DEBUG] Analytic wire pick references={} independentParryPerimeter={perimeter}",labels.len());
+}
+
+/// 🧩️ Every shape kind exposes only its own stable topology through the same kernel family.
+#[test]
+fn brep_deconstruction_covers_every_topological_shape_kind() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let mut kernel=Brep::new();
+    let width=fixture["wire"]["width"].as_f64().unwrap();let height=fixture["wire"]["height"].as_f64().unwrap();
+    let wire=kernel.rectangle_wire_sync(width,height).unwrap();let face=kernel.face_from_wire_sync(&wire).unwrap();
+    let solid=kernel.box_prim_sync(width,height,1.0).unwrap();let components=kernel.deconstruct_sync(&solid).unwrap();
+    let second=kernel.box_prim_sync(width,height,1.0).unwrap();let compound=kernel.compound_sync(&[solid.clone(),second]).unwrap();let shared=kernel.compound_sync(&[solid.clone(),solid.clone()]).unwrap();
+    let vertex=kernel.vertex_sync([0.0,0.0,0.0]).unwrap();let curve=kernel.line_curve_sync([0.0,0.0,0.0],[width,0.0,0.0]).unwrap();let surface=kernel.plane_surface_sync([0.0,0.0,0.0],[0.0,0.0,1.0]).unwrap();
+    for row in fixture["deconstruction"].as_array().unwrap() {
+        let kind=row["kind"].as_str().unwrap();let shape=match kind {"wire"=>&wire,"face"=>&face,"edge"=>&components.edges[0],"vertex"=>&vertex,"shell"=>&components.shells[0],"solid"=>&solid,"compound"=>&compound,"shared-compound"=>&shared,"curve"=>&curve,"surface"=>&surface,_=>panic!("unknown fixture shape")};
+        let topology=kernel.deconstruct_sync(shape).unwrap_or_else(|error|panic!("{kind}: {error}"));let repeated=kernel.deconstruct_sync(shape).unwrap();
+        let counts=[topology.vertices.len(),topology.edges.len(),topology.faces.len(),topology.shells.len()];assert_eq!(serde_json::json!(counts),row["counts"],"{kind}");
+        for(handles,again,expected)in [(&topology.vertices,&repeated.vertices,GeometryKind::Vertex),(&topology.edges,&repeated.edges,GeometryKind::Edge),(&topology.faces,&repeated.faces,GeometryKind::Face),(&topology.shells,&repeated.shells,GeometryKind::Shell)] {
+            assert_eq!(handles,again,"{kind} stable handles");let mut labels=std::collections::BTreeSet::new();
+            for handle in handles {assert_eq!(kernel.kind_sync(handle).unwrap(),expected);let label=kernel.label_of(handle).unwrap();assert!(labels.insert(label));assert_eq!(kernel.handle_for_label(label).as_ref(),Some(handle));}
+        }
+        if kind=="wire" {let mut length=0.0;for handle in &topology.edges {let id=kernel.edge_id(handle).unwrap();let edge=kernel.body.edges.get(id).unwrap();let a=kernel.body.vertices.get(edge.v0).unwrap().position;let b=kernel.body.vertices.get(edge.v1).unwrap().position;let oracle=parry3d::shape::Segment::new(parry3d::math::Point::new(a.x as f32,a.y as f32,a.z as f32),parry3d::math::Point::new(b.x as f32,b.y as f32,b.z as f32)).length();assert!((kernel.length_sync(handle).unwrap()-f64::from(oracle)).abs()<1e-6);length+=f64::from(oracle);}assert_eq!(length,fixture["wire"]["perimeter"].as_f64().unwrap());}
+    }
+    println!("[DEBUG] BRep deconstruction shapeKinds=10 stableLabels=true sharedTopologyDeduplicated=true independentParryPerimeter=true");
+}
+
+/// 📏️ Neutral profile and compound fixtures exercise the existing measurement owner.
+fn verify_topology_measurement(metric: &str) {
+    use parry3d::shape::Shape;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let mut kernel = Brep::new();
+    let width = fixture["wire"]["width"].as_f64().unwrap();
+    let height = fixture["wire"]["height"].as_f64().unwrap();
+    let wire = kernel.rectangle_wire_sync(width, height).unwrap();
+    let face = kernel.face_from_wire_sync(&wire).unwrap();
+    let solid = kernel.box_prim_sync(width, height, 1.0).unwrap();
+    let components = kernel.deconstruct_sync(&solid).unwrap();
+    let second = kernel.box_prim_sync(width, height, 1.0).unwrap();
+    let compound = kernel.compound_sync(&[solid.clone(), second]).unwrap();
+    let shared = kernel.compound_sync(&[solid.clone(), solid.clone()]).unwrap();
+    let vertex = kernel.vertex_sync([0.0, 0.0, 0.0]).unwrap();
+    let curve = kernel.line_curve_sync([0.0, 0.0, 0.0], [width, 0.0, 0.0]).unwrap();
+    let surface = kernel.plane_surface_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0]).unwrap();
+    let circle = kernel.circle_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], fixture["measurements"]["circleRadius"].as_f64().unwrap()).unwrap();
+    let shapes = std::collections::BTreeMap::from([("wire", wire), ("face", face), ("shell", components.shells[0].clone()), ("solid", solid), ("compound", compound), ("shared-compound", shared), ("vertex", vertex), ("curve", curve), ("surface", surface), ("circle", circle)]);
+    let oracle = parry3d::shape::Cuboid::new(parry3d::math::Vector::new(width as f32 / 2.0, height as f32 / 2.0, 0.5));
+    assert_eq!(f64::from(oracle.mass_properties(1.0).mass()), fixture["measurements"]["volume"][0]["value"].as_f64().unwrap());
+    let a = parry3d::math::Point::new(0.0, 0.0, 0.0);
+    let b = parry3d::math::Point::new(width as f32, 0.0, 0.0);
+    let c = parry3d::math::Point::new(width as f32, height as f32, 0.0);
+    let d = parry3d::math::Point::new(0.0, height as f32, 0.0);
+    let area = f64::from(parry3d::shape::Triangle::new(a, b, c).area() + parry3d::shape::Triangle::new(a, c, d).area());
+    assert_eq!(area, fixture["measurements"]["area"][0]["value"].as_f64().unwrap());
+    let perimeter = [(a, b), (b, c), (c, d), (d, a)].into_iter().map(|(a, b)| f64::from(parry3d::shape::Segment::new(a, b).length())).sum::<f64>();
+    assert_eq!(perimeter, fixture["measurements"]["length"][0]["value"].as_f64().unwrap());
+    for row in fixture["measurements"][metric].as_array().unwrap() {
+        let kind = row["kind"].as_str().unwrap();
+        let shape = &shapes[kind];
+        let value = match metric { "length" => kernel.length_sync(shape), "area" => kernel.area_sync(shape), "volume" => kernel.volume_sync(shape), _ => unreachable!() }.unwrap_or_else(|error| panic!("{metric} {kind}: {error}"));
+        assert!((value - row["value"].as_f64().unwrap()).abs() < 1e-6, "{metric} {kind}: {value}");
+    }
+    if metric == "length" { for kind in fixture["measurements"]["lengthRefusals"].as_array().unwrap() { assert!(kernel.length_sync(&shapes[kind.as_str().unwrap()]).is_err()); } }
+    println!("[DEBUG] BRep measurement={metric} cases={} independentParry=true sharedTopologyDeduplicated=true", fixture["measurements"][metric].as_array().unwrap().len());
+}
+
+#[test]
+fn brep_length_measures_profiles_and_topological_boundaries() { verify_topology_measurement("length"); }
+
+#[test]
+fn brep_area_measures_compound_surface_topology() { verify_topology_measurement("area"); }
+
+#[test]
+fn brep_volume_measures_compound_solid_topology() { verify_topology_measurement("volume"); }
+
+/// 🧭️ Neutral topology closest points agree with independent Parry segment, triangle, and box projections.
+#[test]
+fn brep_closest_point_supports_profiles_and_compounds() {
+    use parry3d::query::PointQuery;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let width = fixture["wire"]["width"].as_f64().unwrap();
+    let height = fixture["wire"]["height"].as_f64().unwrap();
+    let query = std::array::from_fn(|axis| fixture["closestPoint"]["query"][axis].as_f64().unwrap());
+    let point = parry3d::math::Point::new(query[0] as f32, query[1] as f32, query[2] as f32);
+    let a = parry3d::math::Point::new(0.0, 0.0, 0.0);
+    let b = parry3d::math::Point::new(width as f32, 0.0, 0.0);
+    let c = parry3d::math::Point::new(width as f32, height as f32, 0.0);
+    let edge = parry3d::shape::Segment::new(a, b).project_local_point(&point, false).point;
+    let face = parry3d::shape::Triangle::new(a, b, c).project_local_point(&point, false).point;
+    let solid = parry3d::shape::Cuboid::new(parry3d::math::Vector::new(width as f32 / 2.0, height as f32 / 2.0, 0.5)).project_point(&parry3d::math::Isometry::translation(width as f32 / 2.0, height as f32 / 2.0, 0.5), &point, false).point;
+    for row in fixture["closestPoint"]["cases"].as_array().unwrap() {
+        let expected = match row["kind"].as_str().unwrap() { "vertex" => a, "edge" | "wire" => edge, "face" => face, _ => solid };
+        for axis in 0..3 { assert!((f64::from(expected[axis]) - row["point"][axis].as_f64().unwrap()).abs() < 1e-6); }
+        assert!((f64::from((point - expected).norm()) - row["distance"].as_f64().unwrap()).abs() < 1e-6);
+    }
+    let mut kernel = Brep::new();
+    let wire = kernel.rectangle_wire_sync(width, height).unwrap();
+    let face = kernel.face_from_wire_sync(&wire).unwrap();
+    let edge = kernel.deconstruct_sync(&wire).unwrap().edges[0].clone();
+    let solid = kernel.box_prim_sync(width, height, 1.0).unwrap();
+    let shell = kernel.deconstruct_sync(&solid).unwrap().shells[0].clone();
+    let second = kernel.box_prim_sync(width, height, 1.0).unwrap();
+    let compound = kernel.compound_sync(&[solid.clone(), second]).unwrap();
+    let shared = kernel.compound_sync(&[solid.clone(), solid.clone()]).unwrap();
+    let vertex = kernel.vertex_sync([0.0, 0.0, 0.0]).unwrap();
+    let shapes = std::collections::BTreeMap::from([("vertex", vertex), ("edge", edge), ("wire", wire), ("face", face), ("shell", shell), ("solid", solid), ("compound", compound), ("shared-compound", shared)]);
+    for row in fixture["closestPoint"]["cases"].as_array().unwrap() {
+        let kind = row["kind"].as_str().unwrap();
+        let closest = kernel.closest_point_sync(&shapes[kind], query).unwrap_or_else(|error| panic!("closest {kind}: {error}"));
+        for axis in 0..3 { assert!((closest.point[axis] - row["point"][axis].as_f64().unwrap()).abs() < 1e-6, "{kind} axis{axis}"); }
+        assert!((closest.distance - row["distance"].as_f64().unwrap()).abs() < 1e-6, "{kind}");
+    }
+    eprintln!("[DEBUG] BRep closest-point shapeKinds=8 independentParry=true");
+}
+
+#[test]
+fn brep_closest_point_honors_curved_face_trims() {
+    use parry3d::query::PointQuery;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    let fixture = &fixture["curvedClosestPoint"];
+    let radius = fixture["radius"].as_f64().unwrap();
+    let height = fixture["height"].as_f64().unwrap();
+    let oracle = parry3d::shape::Cylinder::new(height as f32 / 2.0, radius as f32);
+    for row in fixture["cases"].as_array().unwrap() {
+        let query = parry3d::math::Point::new(row["query"][0].as_f64().unwrap() as f32, (row["query"][2].as_f64().unwrap() - height / 2.0) as f32, row["query"][1].as_f64().unwrap() as f32);
+        let projected = oracle.project_local_point(&query, false).point;
+        let projected = [f64::from(projected.x), f64::from(projected.z), f64::from(projected.y) + height / 2.0];
+        for axis in 0..3 { assert!((projected[axis] - row["point"][axis].as_f64().unwrap()).abs() < 1e-6); }
+    }
+    let mut kernel = Brep::new();
+    let solid = kernel.cylinder_prim_sync(radius, height).unwrap();
+    let face = kernel.deconstruct_sync(&solid).unwrap().faces.into_iter().find(|handle| {
+        let Entity::Face(id) = kernel.entity(handle).unwrap() else { return false };
+        matches!(kernel.body.surfaces.get(kernel.body.faces.get(*id).unwrap().surface), Some(Surface::Cylinder { .. }))
+    }).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let query = std::array::from_fn(|axis| row["query"][axis].as_f64().unwrap());
+        for shape in [&face, &solid] {
+            let closest = kernel.closest_point_sync(shape, query).unwrap();
+            for axis in 0..3 { assert!((closest.point[axis] - row["point"][axis].as_f64().unwrap()).abs() < 1e-6, "query{query:?} axis{axis}: {:?}", closest.point); }
+            assert!((closest.distance - row["distance"].as_f64().unwrap()).abs() < 1e-6);
+        }
+    }
+    eprintln!("[DEBUG] BRep curved closest-point trim cases=3 faceAndSolid=true independentParry=true");
+}
+
 #[test]
 fn brep_error_contract_is_owned_and_stable() {
     let errors = [(BrepError::InvalidInput("mesh".into()), "invalid input: mesh"), (BrepError::MissingHandle("a1".into()), "missing handle: a1"), (BrepError::Operation("split".into()), "operation failed: split")];
@@ -32,7 +293,7 @@ async fn wire_tessellate_preserves_edge_positions() {
     let mut k = Brep::new();
     let wire = k.rectangle_wire(2.0, 1.5).expect("wire");
     let transfer = k.tessellate_sync(&wire, 0.1).expect("tessellate");
-    let data = mesh_data_from_mesh_transfer(&transfer);
+    let data = mesh_data_from_mesh_transfer(&transfer).unwrap();
     assert!(data.edge_positions.len() >= 24, "edge_positions {}", data.edge_positions.len());
     assert!(data.indices.is_empty());
 }
@@ -570,3 +831,69 @@ fn every_degenerate_affine_transform_is_refused() {
     assert!(failures.is_empty(), "{failures:#?}");
 }
 // #endregion 🔁️AffineTransforms
+
+/// 🛂️ Analytic reference tables cannot claim geometry without matching picking buffers.
+#[test]
+fn brep_preview_component_reference_tables_refuse_missing_picking_buffers() {
+    use protocol::value::FromValue;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    for row in fixture["referenceRefusals"].as_array().unwrap() {
+        let input=serde_json::json!({"componentReferences":row["references"]});
+        let input=semio_framework_pack_json::parse(&input.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert!(semio_framework_mesh_engine::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&input)).is_err(),"{}",row["id"]);
+    }
+    println!("[DEBUG] Analytic reference-table refusals=6 owned first-party value boundary");
+}
+
+/// 🚧️ Malformed analytic ranges are refused before allocating picking buffers.
+#[test]
+fn brep_preview_component_ranges_refuse_incomplete_or_overlapping_groups() {
+    use protocol::value::FromValue;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
+    for row in fixture["refusals"].as_array().unwrap() {
+        let mut source=fixture["transfer"].clone();
+        source[format!("{}_groups",row["domain"].as_str().unwrap())][row["row"].as_u64().unwrap() as usize][row["field"].as_str().unwrap()]=row["value"].clone();
+        let source=semio_framework_pack_json::parse(&source.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        if let Ok(transfer)=MeshTransfer::from_value(semio_framework_pack_json::to_dsl_value(&source)) {assert!(mesh_data_from_mesh_transfer(&transfer).is_err());}
+    }
+    println!("[DEBUG] Analytic group range refusals=6 before pick buffer publication");
+}
+
+/// 🎯️ Only original topology vertices are selectable in analytic preview meshes.
+#[test]
+fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
+    let absent = fixture["unselectable"].as_u64().unwrap() as u32;
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut kernel = Brep::new();
+        let dimensions = row["dimensions"].as_array().unwrap();
+        let shape = match row["kind"].as_str().unwrap() {
+            "box" => kernel.box_prim_sync(dimensions[0].as_f64().unwrap(), dimensions[1].as_f64().unwrap(), dimensions[2].as_f64().unwrap()).unwrap(),
+            "wire" => kernel.rectangle_wire_sync(dimensions[0].as_f64().unwrap(), dimensions[1].as_f64().unwrap()).unwrap(),
+            _ => unreachable!(),
+        };
+        let topology = kernel.deconstruct_sync(&shape).unwrap();
+        let transfer = kernel.tessellate_sync(&shape, 0.1).unwrap();
+        let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
+        let labels = mesh.component_references.get("vertex").expect("original topology vertex references");
+        assert_eq!(labels.len(), topology.vertices.len());
+        assert_eq!(labels.len(), row["points"].as_array().unwrap().len());
+        assert_eq!(mesh.vertex_ids.len(), mesh.positions.len() / 3);
+        for index in &mesh.indices { assert_eq!(mesh.vertex_ids[*index as usize], absent, "surface samples are not topology vertex targets"); }
+        let expected: Vec<parry3d::math::Point<f32>> = row["points"].as_array().unwrap().iter().map(|point| parry3d::math::Point::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32)).collect();
+        let mut seen = std::collections::BTreeSet::new();
+        for (index, group) in mesh.vertex_ids.iter().enumerate().filter(|(_, group)| **group != absent) {
+            let label = PersistentLabel(labels[*group as usize].parse::<u64>().unwrap());
+            assert!(seen.insert(label));
+            let handle = kernel.handle_for_label(label).unwrap();
+            assert_eq!(kernel.kind_sync(&handle).unwrap(), GeometryKind::Vertex);
+            assert!(topology.vertices.contains(&handle));
+            let point = parry3d::math::Point::new(mesh.positions[index * 3], mesh.positions[index * 3 + 1], mesh.positions[index * 3 + 2]);
+            assert!(expected.iter().any(|candidate| (point - candidate).norm() < 1e-6));
+            let current = kernel.closest_point_sync(&handle, [0.0; 3]).unwrap().point;
+            assert!((point - parry3d::math::Point::new(current[0] as f32, current[1] as f32, current[2] as f32)).norm() < 1e-6);
+        }
+        assert_eq!(seen.len(), labels.len());
+        println!("[DEBUG] originalVertexPreview kind={} topologyVertices={} independentParry=true surfaceSamplesExcluded=true", row["kind"], labels.len());
+    }
+}

@@ -11,7 +11,7 @@ pub fn diff(payload: &super::UpdateDenseParams, base: &RemodelingSnapshot) -> pr
         return protocol::MutationOutcome::fatal("mutation.invariant", "Dense params have a non-finite confidence threshold.".to_string(), [base.id.clone()]);
     }
     if payload.params == base.params.dense {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Dense params are already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Dense params are already up to date.".to_string());
     }
     let mut params = base.params.clone();
     params.dense = payload.params.clone();

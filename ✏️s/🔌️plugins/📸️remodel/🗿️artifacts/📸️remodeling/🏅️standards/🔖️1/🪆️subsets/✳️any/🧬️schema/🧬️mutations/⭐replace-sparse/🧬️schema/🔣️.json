@@ -32,7 +32,8 @@
           "de": "Gepackte dünne Punktwolke aus der Bündelblockausgleichung; leer entfernt sie."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     }
   }

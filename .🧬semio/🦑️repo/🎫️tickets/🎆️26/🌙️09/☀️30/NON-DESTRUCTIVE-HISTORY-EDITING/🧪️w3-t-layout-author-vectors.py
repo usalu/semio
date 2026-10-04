@@ -33,7 +33,7 @@ APPLY = "--apply" in sys.argv
 LEAVES = {"drag-frames": ("✋️", "DragFrames"), "rotate-frames": ("🔃️", "RotateFrames"), "scale-frames": ("🗜️", "ScaleFrames")}
 PAGE_PATCH_KEYS = ["name", "width", "height", "margin_top", "margin_right", "margin_bottom", "margin_left", "columns_count", "columns_gutter", "frame_added", "frame_removed", "frames_patched", "frame_layer", "frame_order", "guides", "layer_added", "layer_patched", "layer_removed", "overrides", "parent_page_id"]
 FRAME_PATCH_KEYS = ["x", "y", "width", "height", "rotation", "fill", "stroke", "wrap_mode", "columns", "locked", "visible", "inset_height", "inset_width", "inset_x", "inset_y", "story_id", "thread_next"]
-DIFF_KEYS = ["artifact", "schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFieldsJson", "backgroundDrawing", "referencedModel"]
+DIFF_KEYS = ["artifact", "schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "backgroundDrawing", "referencedModel", "dataFields"]
 written = []
 
 
@@ -208,13 +208,13 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/{leaf}/{folder}/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {{
-    dsl::os_pack::from_json_str(BEFORE).expect("{kind}/{slug}: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("{kind}/{slug}: before snapshot decodes")
 }}
 fn expected_after() -> LayoutSnapshot {{
-    dsl::os_pack::from_json_str(AFTER).expect("{kind}/{slug}: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("{kind}/{slug}: after snapshot decodes")
 }}
 fn mutation() -> LayoutMutation {{
-    dsl::os_pack::from_json_str(MUTATION).expect("{kind}/{slug}: mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("{kind}/{slug}: mutation decodes")
 }}
 fn outcome() -> serde_json::Value {{
     serde_json::from_str(OUTCOME).expect("{kind}/{slug}: outcome decodes")
@@ -225,17 +225,17 @@ fn applied() -> LayoutSnapshot {{
 }}
 
 /// 🗣️ `(level, code, target)` of every message `{kind}` raises on the committed base.
-fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
+fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {{
     mutation().diff(&before()).messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }}
 
 /// 📜️ `(level, code, target)` of every message the committed outcome declares.
-fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
+fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {{
     let level = |text: &str| match text {{
-        "info" => protocol::Severity::Info,
-        "warning" => protocol::Severity::Warning,
-        "error" => protocol::Severity::Error,
-        "fatal" => protocol::Severity::Fatal,
+        "info" => semio_framework_diagnostic::Severity::Info,
+        "warning" => semio_framework_diagnostic::Severity::Warning,
+        "error" => semio_framework_diagnostic::Severity::Error,
+        "fatal" => semio_framework_diagnostic::Severity::Fatal,
         other => panic!("{kind}/{slug}: unknown message level {{other:?}}"),
     }};
     let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
@@ -253,11 +253,11 @@ fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
 #[test]
 fn committed_json_is_canonical() {{
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {{
-        let decoded: LayoutSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "{kind}/{slug}: committed {{label}} JSON is not canonical");
     }}
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(MUTATION).expect("mutation reparses"), "{kind}/{slug}: committed mutation JSON is not canonical");
 }}
 
@@ -279,15 +279,15 @@ RUST_MOVING = '''
 /// order, and which bounds fields of each.
 #[test]
 fn produces_committed_diff() {{
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
     assert_eq!(produced, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff decodes"), "{kind}/{slug}: produced diff differs from the committed 🔺️diff/🔣️.json");
 }}
 
 /// 🩹 The committed diff decodes to `LayoutDiff`, re-encodes byte for byte, and carries `before` to `after` on its own.
 #[test]
 fn committed_diff_is_canonical_and_complete() {{
-    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff reparses"), "{kind}/{slug}: committed diff JSON is not canonical");
     assert_eq!(decoded.apply(&before()).expect("committed diff applies"), expected_after(), "{kind}/{slug}: committed diff did not carry before to after");
 }}
@@ -299,7 +299,7 @@ RUST_APPLIED = '''
 #[test]
 fn inverse_restores_before() {{
     let base = before();
-    let inverse = mutation().inverse(&base);
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "{kind}/{slug}: a moving vector must have something to undo");
     let mut snapshot = applied();
     assert_ne!(snapshot, base, "{kind}/{slug}: an applied vector must move a frame");
@@ -315,7 +315,7 @@ RUST_UNMOVED = '''
 #[test]
 fn moves_nothing_and_has_nothing_to_undo() {{
     assert_eq!(expected_after(), before(), "{kind}/{slug}: a vector that moves nothing commits two equal snapshots");
-    assert!(mutation().inverse(&before()).is_empty(), "{kind}/{slug}: nothing moved, so nothing is undone");{absent_check}
+    assert!(mutation().inverse(&before()).expect("valid retained mutation inverse fixture").is_empty(), "{kind}/{slug}: nothing moved, so nothing is undone");{absent_check}
 }}
 '''
 

@@ -4,40 +4,68 @@
   "title": "En1995Diff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "En1995Artifact",
-      "type": "object",
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/artifact.json"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "annex": {
-      "type": "string",
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/properties/annex"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "members": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "object"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/properties/members"
+            }
           }
+        },
+        {
+          "type": "null"
         }
-      }
+      ],
+      "x-semio-state": "artifact"
     },
     "connections": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "object"
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/properties/connections"
+            }
           }
+        },
+        {
+          "type": "null"
         }
-      }
+      ],
+      "x-semio-state": "artifact"
     }
   }
 }

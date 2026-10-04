@@ -85,9 +85,13 @@ function loadDependencyDirectionPolicy(input, options = {}) {
     if (state(owner) === "directory") readText(join(owner, "package.json"));
   }
   const excluded = Object.values(taxonomy.pathExclusions).map(row => row.path.replace(/\/$/u, ""));
+  const packageNames = new Map();
   const workspacePackages = membership.packages.filter(owner => !excluded.some(prefix => owner === prefix || owner.startsWith(prefix + "/"))).map(owner => {
     const row = document(owner + "/package.json");
     if (typeof row.name !== "string" || !row.name) throw Error(`Workspace owner requires an authored package name: ${owner}`);
+    const previous = packageNames.get(row.name);
+    if (previous !== undefined && previous !== owner) throw Error("Dependency policy package name has distinct owners: "+row.name+" ("+previous+", "+owner+")");
+    packageNames.set(row.name,owner);
     const exports = row.exports && typeof row.exports === "object" && !Array.isArray(row.exports) && Object.keys(row.exports).some(key => key.startsWith(".")) ? Object.keys(row.exports).filter(key => row.exports[key] !== null) : ["."];
     return { owner, name: row.name, exports, ...(row.semio?.dependencyRole ? { dependencyRole: row.semio.dependencyRole } : {}) };
   });

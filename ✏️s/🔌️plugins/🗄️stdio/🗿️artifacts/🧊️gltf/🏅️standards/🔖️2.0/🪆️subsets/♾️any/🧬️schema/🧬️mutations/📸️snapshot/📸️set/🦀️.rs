@@ -16,9 +16,12 @@ impl protocol::MutationKind<GltfSnapshot, GltfMutation> for SetSnapshot {
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<<GltfMutation as Mutation<GltfSnapshot>>::Diff> {
         protocol::MutationOutcome::new(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(base, &self.snapshot))
     }
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<GltfMutation> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<GltfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![GltfMutation::SetSnapshot(Self { snapshot: Box::new(base.clone()) })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }

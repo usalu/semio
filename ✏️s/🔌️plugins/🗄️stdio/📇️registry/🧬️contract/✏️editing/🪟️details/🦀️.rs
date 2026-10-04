@@ -1,9 +1,11 @@
 //! 🪟️ Bounded, localized typed snapshot details shared by stdio artifact editors.
 
 use super::{snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID};
-use crate::kernel::{ArtifactDsl, DslValue, Number, ToValue, ValueShape};
+use crate::kernel::ArtifactDsl;
+use semio_framework_value::{DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_framework_plugin::tree_window_indexed_item;
 use semio_framework_plugin::tree_window_indexed_section;
 use semio_framework_plugin::ActionId;
 use semio_framework_plugin::Buildable;
@@ -11,8 +13,6 @@ use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
 use semio_framework_plugin::HasChildren;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;
@@ -28,6 +28,9 @@ use semio_framework_plugin::WindowLayoutRoot;
 use semio_framework_plugin::WindowLayoutStackNode;
 use semio_framework_plugin::WindowLayoutWindowNode;
 use semio_framework_ui_contract as ui_contract;
+use semio_framework_ui_contract::HasStackLayout;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -740,14 +743,14 @@ fn template_validation_schema(root: &DslValue, schema: &DslValue) -> Option<DslV
 fn template_candidate_is_authoritatively_valid(root: &DslValue, schema: &DslValue, value: &DslValue) -> bool {
     static CACHE: OnceLock<Mutex<HashMap<String, semio_framework_schema::OwnedJsonSchemaValidator>>> = OnceLock::new();
     let Some(schema) = template_validation_schema(root, schema) else { return false };
-    let schema = crate::pack::json::to_string(&crate::pack::json::from_dsl_value(&schema));
+    let schema = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&schema));
     let validator = CACHE.get_or_init(|| Mutex::new(HashMap::new())).lock().ok().and_then(|cache| cache.get(&schema).cloned()).or_else(|| {
         let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&schema).ok()?;
         CACHE.get_or_init(|| Mutex::new(HashMap::new())).lock().ok()?.insert(schema.clone(), validator.clone());
         Some(validator)
     });
     let Some(validator) = validator else { return false };
-    let value = crate::pack::json::to_string(&crate::pack::json::from_dsl_value(value));
+    let value = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(value));
     validator.is_valid_json(&value)
 }
 
@@ -943,8 +946,8 @@ fn snapshot_schema(schema_id: &str) -> Option<Arc<DslValue>> {
         let source = registry.get(&base_id)?.snapshot.json_schema;
         Some((source, registry.iter().map(|descriptor| descriptor.snapshot.json_schema).collect::<Vec<_>>()))
     })?;
-    let root = crate::pack::json::from_json_str(source).ok()?;
-    let documents = documents.into_iter().filter_map(|source| crate::pack::json::from_json_str(source).ok()).collect();
+    let root = semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+    let documents = documents.into_iter().filter_map(|source| semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).collect();
     let schema = Arc::new(bundle_snapshot_schema(root, documents));
     CACHE.get_or_init(|| Mutex::new(HashMap::new())).lock().ok()?.insert(base_id, schema.clone());
     Some(schema)
@@ -982,7 +985,10 @@ impl<'a, S: ArtifactDsl + ToValue> DslSnapshotDetailsProvider<'a, S> {
     }
 
     pub fn from_value_and_schema(value: DslValue, schema: &str) -> Self {
-        Self { value: DslSnapshotDetailsValue::Materialized(value), schema: crate::pack::json::from_json_str(schema).ok().map(|schema| Arc::new(bundle_snapshot_schema(schema, Vec::new()))) }
+        Self {
+            value: DslSnapshotDetailsValue::Materialized(value),
+            schema: semio_framework_pack_json::from_json_str(schema, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|schema| Arc::new(bundle_snapshot_schema(schema, Vec::new()))),
+        }
     }
 
     fn path(path: &[SnapshotDetailPathSegment]) -> Vec<String> {
@@ -994,7 +1000,7 @@ impl<'a, S: ArtifactDsl + ToValue> DslSnapshotDetailsProvider<'a, S> {
             .collect()
     }
 
-    fn with_path<R>(&self, path: &[SnapshotDetailPathSegment], read: impl FnOnce(&dyn ToValue, &[&str]) -> Result<R, crate::kernel::ValueError>) -> Option<R> {
+    fn with_path<R>(&self, path: &[SnapshotDetailPathSegment], read: impl FnOnce(&dyn ToValue, &[&str]) -> Result<R, semio_framework_value::ValueError>) -> Option<R> {
         let path = Self::path(path);
         let path = path.iter().map(String::as_str).collect::<Vec<_>>();
         match &self.value {
@@ -1298,6 +1304,11 @@ struct Labels {
     applying: &'static str,
     cancel: &'static str,
     failed: &'static str,
+    syntax_error: &'static str,
+    validation_error: &'static str,
+    path: &'static str,
+    line: &'static str,
+    column: &'static str,
     add: &'static str,
     add_text: &'static str,
     add_number: &'static str,
@@ -1329,6 +1340,11 @@ fn labels(locale: Locale) -> Labels {
             applying: "Entwurf wird vorbereitet",
             cancel: "Abbrechen",
             failed: "Entwurf konnte nicht angewendet werden",
+            syntax_error: "Der Quelltext enthält ungültige Syntax.",
+            validation_error: "Der Entwurf entspricht nicht dem Dokumentformat.",
+            path: "Pfad",
+            line: "Zeile",
+            column: "Spalte",
             add: "Hinzufügen",
             add_text: "Text hinzufügen",
             add_number: "Zahl hinzufügen",
@@ -1358,6 +1374,11 @@ fn labels(locale: Locale) -> Labels {
             applying: "Preparing draft",
             cancel: "Cancel",
             failed: "The draft could not be applied",
+            syntax_error: "The source contains invalid syntax.",
+            validation_error: "The draft does not match the document format.",
+            path: "Path",
+            line: "Line",
+            column: "Column",
             add: "Add",
             add_text: "Add text",
             add_number: "Add number",
@@ -1533,9 +1554,19 @@ fn read_only_value(id: &str, value: SnapshotDetailValue) -> UiAssemblyResult<Bui
     readonly_long_text(id, value)
 }
 
-fn set_input(id: &str, path: &str, kind: ui::InputKind, value: &str, title: &str, controller_id: &str, json_encoded: bool) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui::input(kind).value(text(value)?).commit(text("blur")?).try_label(title).map_err(|_| error("ui.snapshot-details.input-label"))?.try_id(id).map_err(|_| error("ui.snapshot-details.input-id"))?;
+fn input_draft_target(controller_id: &str, action_id: &str, address: &str) -> Option<UiText> {
+    UiText::try_from_str(&format!("stdio-input.v1/{}/{}/{}/{}/{}/{}", controller_id.len(), controller_id, action_id.len(), action_id, address.len(), address))
+}
+
+fn set_input(id: &str, path: &str, kind: ui::InputKind, value: &str, title: &str, labels: Labels, controller_id: &str, json_encoded: bool, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     let args = if json_encoded { json_encoded_path_args(path)? } else { path_args(path)? };
+    let Some(draft_target) = input_draft_target(controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, path) else {
+        return action_text_draft(id, value.into(), json_encoded.then(|| "json".into()), SET_SNAPSHOT_VALUE_ACTION_ID, Some(args), labels, publication_revision);
+    };
+    let mut builder = ui::input(kind).value(text(value)?).commit(text("blur")?).draft_target(draft_target).try_label(title).map_err(|_| error("ui.snapshot-details.input-label"))?.try_id(id).map_err(|_| error("ui.snapshot-details.input-id"))?;
+    if let Some(publication_revision) = publication_revision {
+        builder = builder.publication_revision(publication_revision);
+    }
     bind(builder, ui::Trigger::Commit, controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, args)?.try_build().map_err(|_| error("ui.snapshot-details.input"))
 }
 
@@ -1544,16 +1575,17 @@ fn readonly_long_text(id: &str, value: String) -> UiAssemblyResult<BuiltNode> {
     ui::column().try_id(id).map_err(|_| error("ui.snapshot-details.long-value-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.long-value"))?.try_build().map_err(|_| error("ui.snapshot-details.long-value"))
 }
 
-fn text_draft(id: &str, value: String, path: Option<&str>, labels: Labels) -> UiAssemblyResult<BuiltNode> {
+fn text_draft(id: &str, value: String, path: Option<&str>, labels: Labels, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     let language = path.is_none().then(|| "json".to_string());
     let (action_id, arguments) = match path {
         Some(path) => (SET_SNAPSHOT_VALUE_ACTION_ID, Some(path_args(path)?)),
         None => (REPLACE_SNAPSHOT_SOURCE_ACTION_ID, None),
     };
-    action_text_draft(id, value, language, action_id, arguments, labels)
+    action_text_draft(id, value, language, action_id, arguments, labels, publication_revision)
 }
 
-fn action_text_draft(id: &str, value: String, language: Option<String>, action_id: &str, arguments: Option<UiValue>, labels: Labels) -> UiAssemblyResult<BuiltNode> {
+fn action_text_draft(id: &str, value: String, language: Option<String>, action_id: &str, arguments: Option<UiValue>, labels: Labels, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
+    let publication_revision = publication_revision.ok_or_else(|| error("ui.text-draft.publication-revision"))?;
     let surface = TextWindowKit::render_draft(&TextDraftView {
         surface_id: id.into(),
         text: value,
@@ -1561,36 +1593,52 @@ fn action_text_draft(id: &str, value: String, language: Option<String>, action_i
         action_id: action_id.into(),
         argument: "value".into(),
         arguments,
+        publication_revision,
         apply_label: labels.apply.into(),
         discard_label: labels.discard.into(),
         conflict_label: labels.conflict.into(),
         applying_label: labels.applying.into(),
         cancel_label: labels.cancel.into(),
         failed_label: labels.failed.into(),
+        syntax_error_label: labels.syntax_error.into(),
+        validation_error_label: labels.validation_error.into(),
+        path_label: labels.path.into(),
+        line_label: labels.line.into(),
+        column_label: labels.column.into(),
     })?;
-    ui::column().try_id(id).map_err(|_| error("ui.snapshot-details.draft-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.draft"))?.try_build().map_err(|_| error("ui.snapshot-details.draft"))
+    ui::column().grow(true).try_id(id).map_err(|_| error("ui.snapshot-details.draft-id"))?.try_child(surface).map_err(|_| error("ui.snapshot-details.draft"))?.try_build().map_err(|_| error("ui.snapshot-details.draft"))
 }
 
-fn template_control(id: &str, title: &str, path: &str, template: DslValue, insert: bool, labels: Labels, controller_id: &str) -> UiAssemblyResult<BuiltNode> {
+fn template_control(id: &str, title: &str, path: &str, template: DslValue, insert: bool, labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     let action_id = if insert { INSERT_SNAPSHOT_VALUE_ACTION_ID } else { SET_SNAPSHOT_VALUE_ACTION_ID };
     let source = super::snapshot_edit_source(&template);
     if let Some(source) = UiText::try_from_str(&source) {
         return button(id, title, "plus", controller_id, action_id, ui_args([pointer_argument(path, "path", "pathChunks")?, ("value", UiValue::Text(source)), ("valueEncoding", ui_text_value("json")?)])?);
     }
-    action_text_draft(id, source, Some("json".into()), action_id, Some(json_encoded_path_args(path)?), labels)
+    action_text_draft(id, source, Some("json".into()), action_id, Some(json_encoded_path_args(path)?), labels, publication_revision)
 }
 
-fn variant_control(id: &str, title: &str, path: &str, template: DslValue, labels: Labels, controller_id: &str) -> UiAssemblyResult<BuiltNode> {
+fn variant_control(id: &str, title: &str, path: &str, template: DslValue, labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     let source = super::snapshot_edit_source(&template);
     if let Some(source) = UiText::try_from_str(&source) {
         return button(id, title, "replace", controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, ui_args([pointer_argument(path, "path", "pathChunks")?, ("value", UiValue::Text(source)), ("valueEncoding", ui_text_value("json")?)])?);
     }
-    action_text_draft(id, source, None, SET_SNAPSHOT_VALUE_ACTION_ID, Some(json_encoded_path_args(path)?), labels)
+    action_text_draft(id, source, None, SET_SNAPSHOT_VALUE_ACTION_ID, Some(json_encoded_path_args(path)?), labels, publication_revision)
 }
 
 /// 📝️ Renders an artifact's natural file source beside its structured canvas, with an explicit
 /// localized Apply/Discard draft routed through the artifact-owned whole-document action.
-pub fn render_file_source_editor(surface_id: &str, source: String, language: &str, action_id: &str, root_node_id: &str, revision: &str, locale: Locale, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+pub fn render_file_source_editor(
+    surface_id: &str,
+    source: String,
+    language: &str,
+    action_id: &str,
+    root_node_id: &str,
+    revision: &str,
+    publication_revision: ui_contract::UiPublicationRevision,
+    locale: Locale,
+    body: BuiltNode,
+) -> UiAssemblyResult<BuiltNode> {
     let labels = labels(locale);
     let source = TextWindowKit::render_draft(&TextDraftView {
         surface_id: surface_id.into(),
@@ -1599,17 +1647,23 @@ pub fn render_file_source_editor(surface_id: &str, source: String, language: &st
         action_id: action_id.into(),
         argument: "value".into(),
         arguments: Some(ui_args([("nodeId", ui_text_value(root_node_id)?), ("revision", ui_text_value(revision)?)])?),
+        publication_revision,
         apply_label: labels.apply.into(),
         discard_label: labels.discard.into(),
         conflict_label: labels.conflict.into(),
         applying_label: labels.applying.into(),
         cancel_label: labels.cancel.into(),
         failed_label: labels.failed.into(),
+        syntax_error_label: labels.syntax_error.into(),
+        validation_error_label: labels.validation_error.into(),
+        path_label: labels.path.into(),
+        line_label: labels.line.into(),
+        column_label: labels.column.into(),
     })?;
     ui::column().try_id(format!("{surface_id}-layout")).map_err(|_| error("ui.file-source.layout-id"))?.try_children(vec![source, body]).map_err(|_| error("ui.file-source.layout-children"))?.try_build().map_err(|_| error("ui.file-source.layout"))
 }
 
-fn enum_control(id: &str, path: &str, current: &SnapshotDetailValue, values: &[DslValue], labels: Labels, controller_id: &str) -> UiAssemblyResult<BuiltNode> {
+fn enum_control(id: &str, path: &str, current: &SnapshotDetailValue, values: &[DslValue], labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     if values.len() <= ui_contract::UI_VALUE_MAX_ITEMS {
         if let SnapshotDetailValue::String(current) = current {
             if UiText::try_from_str(current).is_some() && values.iter().all(|value| matches!(value, DslValue::String(value) if UiText::try_from_str(value).is_some())) {
@@ -1624,14 +1678,24 @@ fn enum_control(id: &str, path: &str, current: &SnapshotDetailValue, values: &[D
     }
     let controls = values.iter().enumerate().map(|(index, value)| {
         let source = super::snapshot_edit_source(value);
-        template_control(&format!("{id}-enum-{index}"), &format!("{} {source}", labels.choose), path, value.clone(), false, labels, controller_id)
+        template_control(&format!("{id}-enum-{index}"), &format!("{} {source}", labels.choose), path, value.clone(), false, labels, controller_id, publication_revision)
     });
     control_group(&format!("{id}-enum"), controls)
 }
 
-fn scalar_control(id: &str, path: &str, value: SnapshotDetailValue, template: Option<DslValue>, enum_values: &[DslValue], allows_untyped_creation: bool, labels: Labels, controller_id: &str) -> UiAssemblyResult<BuiltNode> {
+fn scalar_control(
+    id: &str,
+    path: &str,
+    value: SnapshotDetailValue,
+    template: Option<DslValue>,
+    enum_values: &[DslValue],
+    allows_untyped_creation: bool,
+    labels: Labels,
+    controller_id: &str,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
+) -> UiAssemblyResult<BuiltNode> {
     if !enum_values.is_empty() {
-        return enum_control(id, path, &value, enum_values, labels, controller_id);
+        return enum_control(id, path, &value, enum_values, labels, controller_id, publication_revision);
     }
     match value {
         SnapshotDetailValue::Bool(value) => {
@@ -1640,15 +1704,15 @@ fn scalar_control(id: &str, path: &str, value: SnapshotDetailValue, template: Op
         }
         SnapshotDetailValue::Number(value) => {
             let value = super::snapshot_edit_source(&DslValue::Number(value));
-            set_input(&format!("{id}-number"), path, ui::InputKind::Text, &value, labels.value, controller_id, true)
+            set_input(&format!("{id}-number"), path, ui::InputKind::Text, &value, labels.value, labels, controller_id, true, publication_revision)
         }
-        SnapshotDetailValue::String(value) if UiText::try_from_str(&value).is_some() => set_input(&format!("{id}-text"), path, ui::InputKind::Text, &value, labels.value, controller_id, false),
-        SnapshotDetailValue::String(value) => text_draft(&format!("{id}-draft"), value, Some(path), labels),
+        SnapshotDetailValue::String(value) if UiText::try_from_str(&value).is_some() => set_input(&format!("{id}-text"), path, ui::InputKind::Text, &value, labels.value, labels, controller_id, false, publication_revision),
+        SnapshotDetailValue::String(value) => text_draft(&format!("{id}-draft"), value, Some(path), labels, publication_revision),
         SnapshotDetailValue::Null => {
             let candidates = [(labels.add_text, "\"\""), (labels.add_number, "0"), (labels.add_true, "true"), (labels.add_false, "false"), (labels.add_object, "{}"), (labels.add_list, "[]")];
             let mut controls = Vec::new();
             if let Some(template) = template.filter(|template| !matches!(template, DslValue::Null)) {
-                controls.push(template_control(&format!("{id}-null-template"), labels.create, path, template, false, labels, controller_id)?);
+                controls.push(template_control(&format!("{id}-null-template"), labels.create, path, template, false, labels, controller_id, publication_revision)?);
             }
             if allows_untyped_creation {
                 for (index, (title, value)) in candidates.into_iter().enumerate() {
@@ -1662,11 +1726,22 @@ fn scalar_control(id: &str, path: &str, value: SnapshotDetailValue, template: Op
     }
 }
 
-fn rename_control(id: &str, path: &str, key: &str, labels: Labels, controller_id: &str) -> UiAssemblyResult<BuiltNode> {
-    if UiText::try_from_str(key).is_none() {
-        return action_text_draft(&format!("{id}-key-draft"), key.into(), None, RENAME_SNAPSHOT_KEY_ACTION_ID, Some(path_args(path)?), labels);
+fn rename_control(id: &str, path: &str, key: &str, labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
+    let draft_target = input_draft_target(controller_id, RENAME_SNAPSHOT_KEY_ACTION_ID, path);
+    if UiText::try_from_str(key).is_none() || draft_target.is_none() {
+        return action_text_draft(&format!("{id}-key-draft"), key.into(), None, RENAME_SNAPSHOT_KEY_ACTION_ID, Some(path_args(path)?), labels, publication_revision);
     }
-    let builder = ui::input(ui::InputKind::Text).value(text(key)?).commit(text("blur")?).try_label(labels.key).map_err(|_| error("ui.snapshot-details.key-label"))?.try_id(format!("{id}-key")).map_err(|_| error("ui.snapshot-details.key-id"))?;
+    let mut builder = ui::input(ui::InputKind::Text)
+        .value(text(key)?)
+        .commit(text("blur")?)
+        .draft_target(draft_target.expect("checked bounded semantic target"))
+        .try_label(labels.key)
+        .map_err(|_| error("ui.snapshot-details.key-label"))?
+        .try_id(format!("{id}-key"))
+        .map_err(|_| error("ui.snapshot-details.key-id"))?;
+    if let Some(publication_revision) = publication_revision {
+        builder = builder.publication_revision(publication_revision);
+    }
     bind(builder, ui::Trigger::Commit, controller_id, RENAME_SNAPSHOT_KEY_ACTION_ID, path_args(path)?)?.try_build().map_err(|_| error("ui.snapshot-details.key"))
 }
 
@@ -1678,7 +1753,16 @@ fn collection_insert_path<P: SnapshotDetailsProvider + ?Sized>(provider: &P, pat
     provider.collection_insertion_key(path).map(|key| format!("{base}/{}", key.replace('~', "~0").replace('/', "~1")))
 }
 
-fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(provider: &P, path: &[SnapshotDetailPathSegment], value: &SnapshotDetailValue, id: &str, labels: Labels, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(
+    provider: &P,
+    path: &[SnapshotDetailPathSegment],
+    value: &SnapshotDetailValue,
+    id: &str,
+    labels: Labels,
+    controller_id: &str,
+    windows: &TreeWindows<'_>,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
+) -> UiAssemblyResult<BuiltNode> {
     let insert_path = collection_insert_path(provider, path, value);
     let candidates = [(labels.add_text, "\"\""), (labels.add_number, "0"), (labels.add_true, "true"), (labels.add_false, "false"), (labels.add_object, "{}"), (labels.add_list, "[]"), (labels.add_null, "null")];
     let mut builder = ui::column().try_id(format!("{id}-collection-controls")).map_err(|_| error("ui.snapshot-details.collection-controls-id"))?;
@@ -1688,14 +1772,14 @@ fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(provider: &P, path: 
         let variants = tree_window_indexed_section(windows, &variants_id, label(labels.switch_to)?, true, variant_count, |index| {
             let variant = provider.variant(path, labels.locale, index).ok_or_else(|| error("ui.snapshot-details.variant"))?;
             let title = format!("{} {}", labels.switch_to, variant.label);
-            variant_control(&format!("{id}-variant-{index}"), &title, &pointer(path), variant.value, labels, controller_id)
+            variant_control(&format!("{id}-variant-{index}"), &title, &pointer(path), variant.value, labels, controller_id, publication_revision)
         })?;
         builder = builder.try_child(variants).map_err(|_| error("ui.snapshot-details.variant-controls"))?;
     }
     let mut controls = Vec::new();
     if provider.allows_collection_insert(path) {
         if let (Some(insert_path), Some(template)) = (insert_path.as_deref().filter(|path| path_is_bindable(path)), provider.creation_template(path, true)) {
-            controls.push(template_control(&format!("{id}-add-template"), labels.create, insert_path, template, true, labels, controller_id)?);
+            controls.push(template_control(&format!("{id}-add-template"), labels.create, insert_path, template, true, labels, controller_id, publication_revision)?);
         }
         let property_count = provider.missing_property_count(path);
         if property_count > 0 {
@@ -1706,11 +1790,11 @@ fn collection_controls<P: SnapshotDetailsProvider + ?Sized>(provider: &P, path: 
                 property.push(SnapshotDetailPathSegment::Key(key.clone()));
                 let property_path = pointer(&property);
                 if !path_is_bindable(&property_path) {
-                    return text_draft(&format!("{id}-add-property-source-{index}"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-property-without-source"))?, None, labels);
+                    return text_draft(&format!("{id}-add-property-source-{index}"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-property-without-source"))?, None, labels, publication_revision);
                 }
                 let property_label = provider.presentation(&property, labels.locale).map_or_else(|| key.clone(), |presentation| presentation.label);
                 let title = format!("{} {property_label}", labels.add);
-                template_control(&format!("{id}-add-property-{index}"), &title, &property_path, template, true, labels, controller_id)
+                template_control(&format!("{id}-add-property-{index}"), &title, &property_path, template, true, labels, controller_id, publication_revision)
             })?;
             builder = builder.try_child(properties).map_err(|_| error("ui.snapshot-details.missing-property-controls"))?;
         }
@@ -1739,15 +1823,16 @@ fn item_controls(
     capabilities: SnapshotDetailItemCapabilities,
     labels: Labels,
     controller_id: &str,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
 ) -> UiAssemblyResult<BuiltNode> {
     let mut controls = Vec::new();
     if capabilities.rename {
         let key = key.ok_or_else(|| error("ui.snapshot-details.rename-without-key"))?;
-        controls.push(rename_control(id, path, key, labels, controller_id));
+        controls.push(rename_control(id, path, key, labels, controller_id, publication_revision));
     }
     if capabilities.edit {
         if let Some(value) = value {
-            controls.push(scalar_control(id, path, value, template, enum_values, allows_untyped_creation, labels, controller_id));
+            controls.push(scalar_control(id, path, value, template, enum_values, allows_untyped_creation, labels, controller_id, publication_revision));
         }
     }
     if capabilities.reorder {
@@ -1789,6 +1874,7 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     labels: Labels,
     controller_id: &str,
     windows: &TreeWindows<'_>,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
 ) -> UiAssemblyResult<BuiltNode> {
     let value = provider.value(path).ok_or_else(|| error("ui.snapshot-details.value-missing"))?;
     let id = if path.is_empty() { ROOT_PATH_ID.to_string() } else { path_id(path) };
@@ -1800,9 +1886,9 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     let allows_untyped_creation = provider.allows_untyped_creation(path);
     let capabilities = provider.item_capabilities(path);
     let controls = if path_is_bindable(&path_pointer) {
-        item_controls(&id, &path_pointer, key, array_index, scalar, template, &enum_values, allows_untyped_creation, capabilities, labels, controller_id)?
+        item_controls(&id, &path_pointer, key, array_index, scalar, template, &enum_values, allows_untyped_creation, capabilities, labels, controller_id, publication_revision)?
     } else {
-        text_draft(&format!("{id}-source-fallback"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-path-without-source"))?, None, labels)?
+        text_draft(&format!("{id}-source-fallback"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-path-without-source"))?, None, labels, publication_revision)?
     };
     let presentation = provider.presentation(path, labels.locale);
     let title = presentation.as_ref().map_or(title, |presentation| presentation.label.as_str());
@@ -1812,13 +1898,11 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     }
     if is_collection {
         if path_is_bindable(&path_pointer) {
-            builder = builder.try_child(collection_controls(provider, path, &value, &id, labels, controller_id, windows)?).map_err(|_| error("ui.snapshot-details.collection-controls"))?;
+            builder = builder.try_child(collection_controls(provider, path, &value, &id, labels, controller_id, windows, publication_revision)?).map_err(|_| error("ui.snapshot-details.collection-controls"))?;
         }
         let count = provider.child_count(path);
         let children_id = format!("{id}-children");
-        let children_label = if labels.locale == Locale::De { "Einträge" } else { "Items" };
-        let children = tree_window_indexed_section(windows, &children_id, label(children_label)?, false, count, |index| detail_child(provider, path, &value, index, count, labels, controller_id, windows))?;
-        builder = builder.try_child(children).map_err(|_| error("ui.snapshot-details.item-children"))?;
+        return tree_window_indexed_item(windows, builder, &children_id, true, count, |index| detail_child(provider, path, &value, index, count, labels, controller_id, windows, publication_revision));
     }
     builder.try_build().map_err(|_| error("ui.snapshot-details.item"))
 }
@@ -1832,6 +1916,7 @@ fn detail_child<P: SnapshotDetailsProvider + ?Sized>(
     labels: Labels,
     controller_id: &str,
     windows: &TreeWindows<'_>,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
 ) -> UiAssemblyResult<BuiltNode> {
     let (segment, title, key, array_index) = if matches!(value, SnapshotDetailValue::Object) {
         let key = provider.object_key(path, index).ok_or_else(|| error("ui.snapshot-details.object-key"))?;
@@ -1841,11 +1926,11 @@ fn detail_child<P: SnapshotDetailsProvider + ?Sized>(
     };
     let mut child_path = path.to_vec();
     child_path.push(segment);
-    detail_node(provider, &child_path, &title, key.as_deref(), array_index, labels, controller_id, windows)
+    detail_node(provider, &child_path, &title, key.as_deref(), array_index, labels, controller_id, windows, publication_revision)
 }
 
-fn source_row(source: String, labels: Labels) -> UiAssemblyResult<BuiltNode> {
-    let controls = text_draft("stdio-snapshot-details-source-draft", source, None, labels)?;
+fn source_row(source: String, labels: Labels, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
+    let controls = text_draft("stdio-snapshot-details-source-draft", source, None, labels, publication_revision)?;
     ui_contract::tree_item(label(labels.source)?)
         .try_id(SOURCE_ROW_ID)
         .map_err(|_| error("ui.snapshot-details.source-id"))?
@@ -1880,13 +1965,19 @@ pub fn snapshot_details_split_layout(main_window_kind_id: &str, main_title: &str
     WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(0.68, main_window_kind_id, main_title), stack(0.32, SNAPSHOT_DETAILS_WINDOW_KIND_ID, "Details")] }) }
 }
 
-pub fn render_snapshot_details_provider<P: SnapshotDetailsProvider + ?Sized>(provider: &P, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+fn render_snapshot_details_provider_at_revision<P: SnapshotDetailsProvider + ?Sized>(
+    provider: &P,
+    locale: Locale,
+    controller_id: &str,
+    windows: &TreeWindows<'_>,
+    publication_revision: Option<ui_contract::UiPublicationRevision>,
+) -> UiAssemblyResult<BuiltNode> {
     let labels = labels(locale);
     let mut builder = ui_contract::tree().try_id(ROOT_ID).map_err(|_| error("ui.snapshot-details.root-id"))?;
     if provider.has_source() {
         let source = semio_framework_plugin::tree_window_section(windows, SOURCE_ID, label(labels.source)?, false, &[()], |_| {
             let source = provider.source().ok_or_else(|| error("ui.snapshot-details.source-unavailable"))?;
-            source_row(source, labels)
+            source_row(source, labels, publication_revision)
         })?;
         builder = builder.try_child(source).map_err(|_| error("ui.snapshot-details.source-section"))?;
     }
@@ -1898,7 +1989,7 @@ pub fn render_snapshot_details_provider<P: SnapshotDetailsProvider + ?Sized>(pro
         let count = provider.child_count(&[]);
         tree_window_indexed_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, count + usize::from(controls), |index| {
             if controls && index == 0 {
-                let controls = collection_controls(provider, &[], &value, ROOT_PATH_ID, labels, controller_id, windows)?;
+                let controls = collection_controls(provider, &[], &value, ROOT_PATH_ID, labels, controller_id, windows, publication_revision)?;
                 return ui_contract::tree_item(label(labels.details)?)
                     .default_open(true)
                     .try_id(ROOT_PATH_ID)
@@ -1908,16 +1999,38 @@ pub fn render_snapshot_details_provider<P: SnapshotDetailsProvider + ?Sized>(pro
                     .try_build()
                     .map_err(|_| error("ui.snapshot-details.root-controls"));
             }
-            detail_child(provider, &[], &value, index - usize::from(controls), count, labels, controller_id, windows)
+            detail_child(provider, &[], &value, index - usize::from(controls), count, labels, controller_id, windows, publication_revision)
         })?
     } else {
-        semio_framework_plugin::tree_window_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows))?
+        semio_framework_plugin::tree_window_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, &[()], |_| detail_node(provider, &[], labels.details, None, None, labels, controller_id, windows, publication_revision))?
     };
     builder.try_child(fields).map_err(|_| error("ui.snapshot-details.fields"))?.try_build().map_err(|_| error("ui.snapshot-details.root"))
 }
 
-pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(snapshot: &S, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    render_snapshot_details_provider(&DslSnapshotDetailsProvider::new_with_schema_hint(snapshot, Some(controller_id)), locale, controller_id, windows)
+pub fn render_snapshot_details_provider_revisioned<P: SnapshotDetailsProvider + ?Sized>(
+    provider: &P,
+    publication_revision: ui_contract::UiPublicationRevision,
+    locale: Locale,
+    controller_id: &str,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    render_snapshot_details_provider_at_revision(provider, locale, controller_id, windows, Some(publication_revision))
+}
+
+pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(doc: &semio_framework_plugin::ArtifactView<'_, S>, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let publication_revision = crate::window_kit_artifact_publication_revision(doc)?;
+    render_snapshot_details_provider_at_revision(&DslSnapshotDetailsProvider::new_with_schema_hint(doc.snapshot, Some(controller_id)), locale, controller_id, windows, Some(publication_revision))
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! snapshot_details_document_store_owners {
+    () => {
+        semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>()
+    };
+    ($owners:path) => {
+        $owners()
+    };
 }
 
 #[macro_export]
@@ -1927,6 +2040,7 @@ macro_rules! snapshot_details_editor_support {
         controller: $controller:literal,
         artifact_schema: $artifact_schema:literal,
         preparation: $preparation:literal
+        $(, document_store_owners: $document_store_owners:path)?
         $(, bounded_native: $bounded_native:tt)?
         $(, native: {
             factory_name: $native_factory_name:literal,
@@ -1990,7 +2104,7 @@ macro_rules! snapshot_details_editor_support {
         }
 
         fn build_document_store_owners() -> Option<semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+            Some($crate::snapshot_details_document_store_owners!($($document_store_owners)?))
         }
 
         fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

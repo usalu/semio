@@ -11,7 +11,7 @@ describe("caller-owned asset dispatch", () => {
     const admit = new Ajv({ strict: true }).compile(schema);
     for (const row of corpus.declarations) {
       expect(admit(row.value), row.id).toBe(row.accepted);
-      if (row.accepted) expect(parseAssetDeliveryDeclarationV1(row.value), row.id).toEqual(row.value);
+      if (row.accepted) expect<unknown>(parseAssetDeliveryDeclarationV1(row.value), row.id).toEqual(row.value);
       else expect(() => parseAssetDeliveryDeclarationV1(row.value), row.id).toThrow();
     }
   });

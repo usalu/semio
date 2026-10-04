@@ -1,9 +1,0 @@
-{
-  "mutation": "moveNodes",
-  "ids": [
-    "node-a",
-    "node-b"
-  ],
-  "dx": 40.0,
-  "dy": -12.5
-}

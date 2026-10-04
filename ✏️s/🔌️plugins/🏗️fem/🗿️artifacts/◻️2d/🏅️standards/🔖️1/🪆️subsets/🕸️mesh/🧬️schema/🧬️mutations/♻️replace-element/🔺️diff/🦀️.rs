@@ -21,7 +21,7 @@ pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshot) -> protocol::Mutatio
         return rejection;
     }
     if existing == payload.new_element.as_ref() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Element \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Element \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { elements: Some(Fem2dElementsDelta { patched: vec![Fem2dElementsPatchEntry { id: payload.id.clone(), item: (*payload.new_element).clone() }], ..Default::default() }), ..Default::default() })
 }

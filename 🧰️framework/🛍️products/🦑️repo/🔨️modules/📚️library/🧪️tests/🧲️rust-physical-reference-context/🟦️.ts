@@ -3,11 +3,11 @@ import { expect, test } from "bun:test";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, readlinkSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
 import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import * as rustDiscovery from "../../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph } from "../../🔍️discovery/🟦️.ts";
 import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
@@ -16,7 +16,12 @@ import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts
 
 //#region Authority
 const root = resolve(import.meta.dir, "../../../../../../..");
-const runRoot = realpathSync(tmpdir());
+const rustSyntaxPath = join(root, "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts");
+const rustSyntax = ts.createSourceFile(rustSyntaxPath, readFileSync(rustSyntaxPath, "utf8"), ts.ScriptTarget.Latest, true);
+const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+mkdirSync(output, { recursive: true });
+const runRoot = resolve(output);
 const vectorPath = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧲️rust-physical-reference-context/🔣️.json");
 const golden = JSON.parse(readFileSync(vectorPath, "utf8"));
 const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
@@ -104,7 +109,7 @@ test("string collection joins require exact standard receiver provenance", () =>
 test("literal predicates keep identifier tokens reachable under strict TypeScript narrowing", () => {
   const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-  const types = source.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && ["RustTokenKind", "RustToken"].includes(node.name.text)).map((node) => node.getText(source)).join("\n");
+  const types = rustSyntax.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && ["RustTokenKind", "RustToken"].includes(node.name.text)).map((node) => node.getText(rustSyntax).replace(/^export /u, "")).join("\n");
   for (const name of golden.tokenNarrowing.functions) {
     const owner = source.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name)!;
     const declarations: ts.VariableDeclaration[] = [];
@@ -155,6 +160,20 @@ test("implicit format captures cannot widen the single-use manifest path law", (
   expect(inspectRustManifestPathReferences(row.source)).toEqual([]);
 });
 
+test("source participation retains origins without granting unresolved namespace authority", () => {
+  const rows = golden.manifestCandidates.cases.map((row: { id: string; source: string; participation: unknown }) => ({ id: row.id, source: row.source, participation: row.participation }));
+  const schema = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧲️rust-physical-reference-context/🧬️source-participation/🔣️.json"), "utf8"));
+  const admit = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  expect(validateJsonSchemaSubset(schema, rows)).toEqual([]);
+  expect(admit(rows), JSON.stringify(admit.errors)).toBe(true);
+  expect(admit(rows.map((row: { id: string; source: string; participation: unknown }) => ({ ...row, foreignOwner: true })))).toBe(false);
+  expect(validateJsonSchemaSubset(schema, rows.map((row: { id: string; source: string; participation: unknown }) => ({ ...row, foreignOwner: true }))).length).toBeGreaterThan(0);
+  expect(admit(rows.map((row: { id: string; source: string; participation: unknown }) => ({ ...row, participation: { state: "denied" } })))).toBe(false);
+  expect(validateJsonSchemaSubset(schema, rows.map((row: { id: string; source: string; participation: unknown }) => ({ ...row, participation: { state: "denied" } }))).length).toBeGreaterThan(0);
+  expect(rows.filter((row: { participation: { state: string } }) => row.participation.state === "admitted")).toHaveLength(43);
+  expect(rows.filter((row: { participation: { state: string } }) => row.participation.state === "denied").map((row: { id: string }) => row.id)).toEqual(["no-implicit-prelude", "no-standard-prelude"]);
+});
+
 test("finite manifest candidates prove complete correlated targets without editable loop authority", () => {
   const contract = golden.manifestCandidates;
   expect(contract.contract).toBe("rust-finite-manifest-path-candidates-v1");
@@ -176,8 +195,13 @@ test("finite manifest candidates prove complete correlated targets without edita
     for (const candidate of candidates) expect<string>(row.source.slice(candidate.start, candidate.end), row.id).toBe(candidate.value);
     const files: Record<string, string> = { [contract.manifestPath]: '[package]\nname="candidate"\n[lib]\npath="lib.rs"\n', [contract.consumerPath]: row.source };
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { strictManifests: true });
-    const manifests = [...new Set((graph.contexts.get(contract.consumerPath) ?? []).map((context) => context.manifestPath).filter(Boolean))];
+    const origins = graph.participations.filter((origin) => origin.target.kind === "source" && origin.target.path === contract.consumerPath && "context" in origin && origin.context.crateRoot === contract.consumerPath && origin.context.modulePath.length === 0);
+    expect(origins).toHaveLength(1);
+    expect(origins.map((origin) => origin.state === "denied" ? { state: origin.state, reason: origin.reason } : { state: origin.state })).toEqual([row.participation]);
+    const manifests = [...new Set(origins.flatMap((origin) => "context" in origin && origin.context.manifestPath ? [origin.context.manifestPath] : []))];
     expect(manifests).toEqual([contract.manifestPath]);
+    const admitted = (graph.contexts.get(contract.consumerPath) ?? []).filter((context) => context.crateRoot === contract.consumerPath && context.modulePath.length === 0);
+    expect(admitted).toHaveLength(row.participation.state === "admitted" ? 1 : 0);
     const targets = [...new Set(candidates.flatMap((candidate) => candidate.targets.map((parts) => oraclePathJoin("pkg", ...parts))))].sort();
     expect(targets, row.id).toEqual(row.physicalTargets);
     const relevance = candidates.length === 0 ? "unproven" : targets.some((target) => target === contract.affectedRoot || target.startsWith(contract.affectedRoot + "/")) ? "intersects" : "disjoint";
@@ -380,9 +404,9 @@ test("rustc independently confirms delimiter strings and actual custom or standa
 test("finite candidate helper compiles independently under strict TypeScript", () => {
   const input = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), source = ts.createSourceFile(input, readFileSync(input, "utf8"), ts.ScriptTarget.Latest, true);
   const names = new Set(["RustTokenKind", "RustToken", "RustManifestPathCandidate", "inspectRustManifestPathCandidates"]);
-  const declarations = source.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name && names.has(node.name.text));
+  const declarations = [...rustSyntax.statements, ...source.statements].filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name && names.has(node.name.text));
   expect(declarations).toHaveLength(4);
-  const text = declarations.map((node) => node.getText(source)).join("\n") + '\ndeclare function rustTokens(source: string): RustToken[]; declare function rustTokenPairs(tokens: readonly RustToken[]): Map<number, number>; declare function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, delimiter: string): [number, number][]; declare function rustFindTopLevel(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, values: ReadonlySet<string>): number; declare function rustRepoRootAncestorWalkHelperNames(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): ReadonlySet<string>;\n';
+  const text = declarations.map((node) => node.getText(node.getSourceFile())).join("\n") + '\ndeclare function rustTokens(source: string): RustToken[]; declare function rustTokenPairs(tokens: readonly RustToken[]): Map<number, number>; declare function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, delimiter: string): [number, number][]; declare function rustFindTopLevel(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, values: ReadonlySet<string>): number; declare function rustRepoRootAncestorWalkHelperNames(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): ReadonlySet<string>;\n';
   const virtualPath = join(runRoot, "📓️energy-rust-reference-diagnostics/🧭️manifest-pathbuf/🟦️typescript.ts"), options: ts.CompilerOptions = { strict: true, noEmit: true, types: [], target: ts.ScriptTarget.ES2022, skipLibCheck: true }, host = ts.createCompilerHost(options), original = host.getSourceFile.bind(host);
   host.getSourceFile = (path, language, onError, create) => path === virtualPath ? ts.createSourceFile(path, text, language, true) : original(path, language, onError, create);
   expect(ts.getPreEmitDiagnostics(ts.createProgram([virtualPath], options, host)).map((diagnostic) => ({ code: diagnostic.code, message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n") }))).toEqual([]);

@@ -115,16 +115,18 @@
         "currentCheckpointId": { "type": "string" },
         "commandFilter": { "type": "string" },
         "timeTravel": { "$ref": "#/definitions/HistoryTimeTravel" },
-        "remoteReplay": { "$ref": "#/definitions/HistoryRemoteReplay" }
+        "reprojection": { "$ref": "#/definitions/HistoryReprojection" },
+        "editCount": { "$ref": "#/definitions/U32" }
       }
     },
-    "HistoryRemoteReplay": {
+    "HistoryReprojection": {
       "type": "object",
       "additionalProperties": false,
       "required": ["done", "total"],
       "properties": {
         "done": { "$ref": "#/definitions/U32" },
         "total": { "$ref": "#/definitions/U32" },
+        "kind": { "enum": ["remote", "step", "load"] },
         "paused": { "type": "boolean" },
         "fault": { "type": "string", "minLength": 1 }
       }

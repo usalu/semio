@@ -314,3 +314,371 @@ Executor S3-INFRA (coordinator `⚪b7db773a…`), started 10:54. Scratch: `🗑�
   It parses at token level, so it needs no artifact specs. It goes green once process3d is regenerated (the only remaining `.dsl.semio` offender: 2 carriers, 49 bare lists).
 - **Kernel compile with the derive-hygiene change:** `cargo check -p semio-framework-os-kernel --lib` → **exit 0, 42 warnings, 8 m 35 s** (12:42–12:50, `check-kernel-derive-3.txt`). This was after the 12:40 peer repair of `🧬️schema/📇️registry`. Every kernel-internal `DslRecord`/`DslEnum`/`DslOps` expansion compiles with reserved locals.
 - **Running:** `cargo test -p semio-framework-os-kernel --lib -- hygienic_ carrier_record` (private target `target-nde-s3-infra`), `test-kernel-dsl-laws-1.txt`.
+
+### S3-10. Resume after usage cut (~13:05) and machine reboot (~17:00) — convergence checks (18:39–19:04)
+
+- **My in-flight work was complete on disk:** the carrier law, the hygiene law + fixture and both test registrations. All 12 `field_local` derive sites survived later peer edits of `🗣️dsl/✨️derive/🦀️.rs` (16:24). The 12:51 `cargo test` of the dsl laws died in the reboot and is still owed.
+- **Schema split (CLEAN-ARCHITECTURE-LAYERING peer):**
+  - Converged by the peer, so no takeover was needed: the derive now emits `::semio_framework_os_kernel::StateClass` (`:2202`), and 110 Cargo manifests name `semio-framework-schema-state`.
+  - `cargo check -p semio-framework --lib` → **exit 0, 5 warnings** (18:46–18:47, `check-framework-1.txt`).
+  - `cargo check -p semio-framework-artifact-infinite-dag --lib` → **exit 0** (`check-dag-1.txt`).
+- **deps-cargo lockfiles:** the 4 workspaces `discoverCargoWorkspaces` yields (`✏️s`, `🌎️hub`, `🎓️teaching`, root) all pass `cargo metadata --locked --offline` and `cargo fetch --locked --offline` (exit 0 ×4 each), which is exactly the `deps-cargo` operation, run offline. The 13:10 `🎓️teaching/Cargo.lock` failure had already been resolved by a lock rewrite at 13:18. No edit by me.
+- **Locale re-export privatization** (auto-commit `202c4b7b5b1`, kernel `🦀️.rs:209` `use semio_framework_ui_locale::{…}`): a multi-line-aware scan finds **0** consumers outside `OS/🔌️plugin/**` that import `LocalizedLabel/Locale/Terminology/AppLabels/Label/LabelText` through `semio_framework_os_kernel`. The plugin crate's tests belong to S3-W2A.
+- **New red, from an active peer and not mine (19:02):** `cargo check --manifest-path ✏️s/Cargo.toml --workspace --lib --keep-going` → exit 101 (`check-s-workspace-2.txt`), with 12 kernel errors:
+  - `semio_framework_dsl` is unresolved in `🗣️dsl/🦀️.rs:15-16` and `🗣️dsl/📖️grammar/🦀️.rs:2-3` (files written 19:02:39). No Cargo.toml defines that crate yet; it is a DSL-extraction in flight.
+  - `🧠️lsp` imports `GrammarFile/LanguageSpec/…` from `crate::os_dsl`.
+  - store `Vec<FieldValue>` vs `&[FieldValue]` (E0308) at `🏪️store/🦀️.rs:12182/13688/23452` and `🧩️composition/🗄️durable-group/🦀️.rs:149/166` (store written 18:57).
+  - The pack `🎒️pack/🔤️json/🦀️.rs` E0282, the coordinator's item, was written 19:01:20, the same wave.
+
+  Coordinator informed 19:04. I wait; I take over only after ≥ 30 min of quiet.
+
+### S3-11. I-2 guard made permanent + taxonomy of my new directories (19:05–19:07)
+
+- **Law `📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts`:** imports the repository library and takes every export whose constructor is `AsyncFunction` (`runVitest`, `runRepositoryCargoTests`, `runRepositoryTestCommand`, …). It TS-parses every `📜️script.ts` (`git ls-files`) and fails on any imported-runner call that is not awaited, returned, voided, bound or passed on. A detector self-test proves a bare call is flagged and awaited/returned/voided/arrow forms are admitted. `bun test ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts` → **2 pass / 0 fail** (`script-async-test-1.txt`). This closes the audit's "syntax-only parse is the only guard" point of I-2.
+- **`bun ./📜️script.ts verify taxonomy report --scope <dir>`** on each new directory → **clean=true errors=0 warnings=0** ×5: `🔁️rebuild/🧬️schema`, `🧪️script-async-runners`, `🗣️dsl/🧪️tests/🧪️carrier-record-lists`, `🗣️dsl/🧪️tests/🧪️hygienic-bindings`, `🗣️dsl/🧫️fixtures/🧫️hygienic-bindings` (`taxonomy-report-new-{1..5}.txt`).
+
+### S3-12. Sole tree watcher (coordinator 19:2x): gated `-p semio-framework-os-kernel -p semio-framework-plugin --lib --keep-going` every ~15 min
+
+| time | kernel + plugin | `✏️s --workspace --lib` | peer activity |
+|---|---|---|---|
+| 19:27 | red: 277 errors (`📡️spr/🧵️channel` `crate::Fault/FaultOrigin/FaultCode` gone from the crate root; the DSL-extraction wave) | not run (kernel red) | last write 19:27 |
+| 19:43 | red: 274 errors (channel 253, store 9, vcs 7, command 3, io 1, history 1) | not run | last write 19:42 (value/replication Cargo.toml) |
+
+The peer (`semio_framework_dsl` crate created 16:28/19:05; sweep codemods at 19:08 and 19:16) also adapted my carrier law's imports to `semio_framework_dsl::{lex,Limits,TokenKind}` (19:08), which is fine. I take over only after ≥ 30 min of quiet.
+
+### S3-13. Resume 2026-10-03 05:49 (cut at ~21:00): sweep question, N13 native law, ValueError sweep on hold
+
+- **Did an external sweep kill the detached ticket processes overnight?** No evidence that it did. Uptime is 12:49 h (booted ~17:00 on 10-02, no overnight reboot).
+  - The disk-guard log stops at 20:56 and resumes at 05:45, so the guards died between 20:56 and 21:01, the same minute the sessions were cut by the usage limit.
+  - Free disk at 20:56 was 37 GiB (96 % used), which is the documented trigger for the external sweep (`memory: project-external-sweep-breaks-nx-tooling`). But none of that sweep's fingerprints are present: this ticket's `🗑️generated` (148 entries, including all of `s3-infra/`) and the SQ-LITE ticket's `🗑️generated` are intact, the dev runtime `dist` (09-23) is intact, and `.nx/installation/node_modules/nx` is present.
+  - Conclusion: the guards died with their launching session, not from a sweep. Today's guards run in their own session (ppid 1, own pgid, started 05:45 via `🚀️detach.py`).
+  - Risk stays open: the disk-guard pruned 32 → 55 GiB at 05:45, but the sweep threshold (~42 GiB free) is close; keep > 100 GiB free.
+- **N13 native law moved to the lexer's own crate** (the peer extracted `semio-framework-dsl`; a crate this small compiles in minutes, not the kernel's 9):
+  - The law is `🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧪️carrier-record-lists/🦀️.rs`, registered as `[[test]] carrier-record-lists` in its `Cargo.toml`.
+  - Carriers: every `*.dsl.semio` plus every `include_str!` `.semio` target whose first line is a `semio <kind>.<dsl|cmd|op> v<N>` header, so 305 carriers. Raw-format `.dsl.semio` files (html, txt, hex) carry no header and are excluded.
+  - It lexes with the shared lexer in forgiving mode, because handcrafted format grammars (STEP Part 21 under `stdio.ifc.dsl`) use their own lexical options, and fails on `LBracket Ident Equals`. A header-recognition self-test covers the selection rule.
+  - I removed my superseded kernel-module copy (file + `🗣️dsl/🦀️.rs` registration).
+  - `cargo test -p semio-framework-dsl --test carrier-record-lists` (private target) → header test **ok**; carrier test **FAILED with exactly the expected 49 bare lists, all in the 2 process3d carriers** (`test-carrier-law-3.txt`). It goes green when process3d is regenerated.
+- **process3d regeneration:** `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-process-process3d --lib -- --ignored --exact …regenerate_example_fixtures` (06:05) → blocked, because the kernel is red from the io peer: 2× E0117 at `🏪️store/♻️retirement/🦀️.rs:4-5`, as `os_io::ArtifactDialect`/`ArtifactRef` moved out of the kernel; `🚪️io` written at 05:33–05:46. Owed. After it, copy `timber` → `🖼️assets/🎬️demo`, `concrete-forest` → `🖼️assets/🌲️concrete-forest`, and `plate` → inline `PROCESS_3D_PLATE_EXAMPLE_TEXT`.
+- **ValueError sweep (16 red `✏️s` crates, coordinator 06:00):** ON HOLD, because the family is active (`🌱️value/⚠️refusal` 05:09, store codec 05:16, `🚪️io/🦀️.rs` 05:33, `🪶️sqlite-snapshot` 05:36, `🧬️schema` 05:46).
+  - Direction, read from the peer's own migrated files (`📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs`, 04:58) and its rule (`UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/current-sqlite-typed-cutover-readback.md` §"Minimal Prerequisite Consumer Repair"): the `ArtifactSqliteSnapshot` trait keeps its `String` terminals. Helpers return `Result<_, ValueError>`, and terminals map explicitly with `.map_err(ValueError::into_message)` (or an inner closure mapped once). No `From<ValueError> for String`. At `IoError` terminals the refusal kind is preserved.
+  - "These files are generated": not confirmed. I searched every tracked `*.ts`/`*.py`/`*.mjs` and the peer ticket for a writer of `…/🪶️sqlite/🦀️.rs` and found none. The files declare themselves handwritten (`//! 🌦️ Handwritten EPW …`).
+- **Peer watch:** `♾️infinite/🌍️world` test failures (S3-SPATIAL) point to the multi-UV/tangent `Mesh3dField` 9→14 peer (`🖱️ui/🎬️scene/📐️math` 05:41, wgpu 05:43–05:44, `🎬️scenes` 06:04, still active). Reported 06:08.
+
+### S3-14. 06:30–06:37: routing red #3, workflow `ValueError` conversion
+
+- **Watch 06:26–06:30:** `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib --keep-going` → **exit 0** (`watch-kernel-plugin-3.txt`).
+- **Root routing broken a third time:** trinity-rewriting (21:02) and dag (21:11) added `["test-snapshot-sqlite"]` and the duplicate `native|source` rows. I renamed them (`rename-sqlite-commands-2.ts`, same guards as S3-2) to `["verify","<trinity-rewriting|dag>-test-snapshot-sqlite[-native|-source]"]`. Scan: 85 routes / 0 invalid / 0 duplicate. `bun test ./…/🧪️tests/🧱️owned-script-routes/🟦️.ts` → **4 pass / 0 fail**, 278 expects (`owned-routes-test-2.txt`). Coordinator informed 06:33.
+- **Workflow root** `🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs` (quiet since 02:10): `workflow-valueerror.py`, one atomic write, scoped to the controlled helper block plus the 12 `DslField` impl lines, with a residual assertion.
+  - All `Result<_,String>` → `Result<_,dsl::ValueError>`; the 20 `.map_err(|error|error.into_message())` calls removed (the controls already return `ValueError`).
+  - `Err("…".into())` → `Err(workflow_invalid("…"))`, a new local fn wrapping `ValueError::new(ValueRefusalKind::InvalidValue, …)`. This is the value peer's own construction, e.g. `♾️infinite/🌍️world`.
+  - The ordinary-lane `*_from_ordinal -> Result<_,String>` are mapped with `.map_err(workflow_invalid)` only inside the controlled lane.
+  - **Proof blocked:** `cargo check --manifest-path ✏️s/Cargo.toml -p semio-framework-artifact-workflow-workflow --lib` (06:34–06:36) → the kernel is red again, 52 errors from the active io peer (`🚪️io/🦀️.rs` E0560 ×20, E0277 ×8, E0308 ×7, E0609; store E0277 ×11) (`check-workflow-1.txt`). The workflow `🪶️sqlite` file (206 errors) waits on the io family, per the coordinator.
+
+### S3-15. 10:42–11:20: workflow green, browser profiles, non-stdio residue sweep, N13 closed
+
+- **Workflow** (`semio-framework-artifact-workflow-workflow`):
+  - The root file was consistent: my 06:34 write was complete, another writer touched it at 09:05, and it has 0 `into_message` and 0 `String` controlled terminals.
+  - The remaining 213 errors were all in the hand-written `🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs`, quiet since 10-02 19:48. I converted it in one atomic write (`workflow-sqlite-valueerror.py`), following the peer's pattern from process3d `🛂️capability` and space-history:
+    - 38 `String` terminals → `ValueError`;
+    - 19 `Err` and 7 `ok_or` → `super::workflow_invalid`, with `WorkLimit`/`OwnershipLimit` at the 4 count sites;
+    - 7 `*_from_ordinal` mapped at the call site;
+    - native closures bridged with `positioned` (`TextError::from_value_error`); no blanket `From`.
+  - `cargo check --manifest-path ✏️s/Cargo.toml -p semio-framework-artifact-workflow-workflow --lib` → **exit 0** (10:56–10:58, `check-workflow-3.txt`).
+- **Browser profiles (activation blocker #3):**
+  - 8 imports declared in the taxonomy wgpu `sourceModulePaths`, byte-ordered, Edit tool:
+    - locale peer: `🖱️ui/🌐️locale`, `🖱️ui/🎚️axes/🔣️.json`;
+    - ValueError peer: `🚪️io/🧬️schema/⚠️refusal`, `🌱️value/⚠️refusal` and its `🔁️codec`, `⚠️diagnostic/{🎛️controlled,🚧️text-error}`, `🌱️value/🧬️schema/🔣️.json`.
+  - 6 frame-worker-only modules added to `frameWorkerSources`.
+  - Walk: 162 / 162 / **0 undeclared** (`walk-4.txt`); taxonomy validate: 0 problems; ownership law: 0 uncovered.
+  - `nx run @semio-tech/framework-renderer-wgpu:generate-browser-boot --excludeTaskDependencies` and `…:generate-frame-worker` → **exit 0** both (10:59–11:03).
+- **Non-stdio residue (coordinator `tree-check-s2.txt`):** 6 crates, each file quiet ≥ 30 min, then one atomic, count-asserted write (`space-sqlite-valueerror.py`, `block-sqlite-valueerror.py` and inline scripts):
+  - **wfc engine:** `semio_framework_pack_json::{to_json_string, from_json_str(…, JsonMemberPolicy::Reject)}` plus the dependency.
+  - **cad aec ×2:** `{self as json, …}`.
+  - **norm contract:** `semio-framework-diagnostic` + `semio-framework-schema-registry` dependencies; `diagnostic::Limits`; `pack_json` ×7; `schema_registry::{AppSchemaDescriptor,FacetLeaves}`; `ui_locale::Locale`.
+  - **space sqlite** and **block-2d sqlite:** workflow pattern.
+  - **block io:** `IoError::from_value_error` ×8; `io::json` made `pub(crate)`.
+  - Gated `cargo check --manifest-path ✏️s/Cargo.toml -p <6 crates> --lib --keep-going` → **exit 0**. Each crate shows a `Checking` line plus warnings; wfc engine was checked in the 11:06 run (`check-sweep-1.txt`, `check-wfc-cad-1.txt`).
+  - `✏️s/Cargo.lock` gained +17 workspace-member lines, and `cargo metadata --locked --offline` passes.
+- **N13 closed:**
+  - process3d regenerated by its own `regenerate_example_fixtures` (`--ignored --exact`, exit 0, 10:53). The outputs are braced; the only other difference from the old carriers is the current canonical child-target form (`target=artifact-id=… artifact-kind=… standard=… subset=…` instead of the compact string).
+  - Installed as `🖼️assets/🎬️demo` (timber), `🖼️assets/🌲️concrete-forest` and the inline `PROCESS_3D_PLATE_EXAMPLE_TEXT`.
+  - Census: 1 carrier / 2 hits left, both inside `#` comments of the binary diff `📖️.grammar.semio`; that is not a DSL carrier.
+  - **Native law `cargo test -p semio-framework-dsl --test carrier-record-lists` → 2 passed / 0 failed** (11:16, `test-carrier-law-4.txt`, 305 headed carriers).
+  - process3d's own example tests could not run: `cargo test … -p semio-s-artifact-process-process3d --lib -- example` fails to compile on 1 unrelated error, `✏️editor/🦀️.rs:312` E0061 (a function now takes 2 arguments; peer API change).
+- **Now (11:19):** `cargo check -p semio-framework-plugin -p semio-framework --lib --tests` is blocked by the kernel, red from an active store peer (`🏪️store/🦀️.rs:22062` E0061/E0308, file written 11:19:40). Waiting before the plugin-test fixture sweep.
+
+## Session 4 — 2026-10-04
+
+Executor S4-INFRA (coordinator `⚪487b04ad…`), started 01:42. Scratch: `🗑️generated/s4-infra/`. Mission: make the puzzle 2d activation closure (React :6012 + wgpu :6112) compile; the coordinator owns the activation.
+
+### S4-1. Closure facts (01:42–01:55)
+
+- **Puzzle 2d is not green, it is masked.** `semio-s-artifact-puzzle-2d` and `-5d` both depend on `-3d`, so the coordinator's `--keep-going` run (`coord/s4-s.txt`) never compiled them. Both still declare `Result<_, String>` against the store trait, which now returns `ValueError` (`🏪️store/🦀️.rs:11157`, 00:30). The 00:32:31 peer sweep only renamed `dsl::NativeDecodeControl` → `semio_framework_value::NativeDecodeControl` in the 2d/3d/5d sqlite files.
+- The same masking applies to other `String` holdouts (note, raster, lowpoly, remodel, architect, shooting, animate, gismap, sourcing, vcs sqlite files): they sit behind red stdio crates.
+- Activation tree (`nx show project`, `nx-*.json`): `prepare-puzzle2d-{react,wgpu}-dev` → `@semio-tech/puzzle-plugin:wasm` (wasm-pack web, `--no-default-features`, wasm32-unknown-unknown), `:materialize-dev` → `:component-dev` (wasm32-wasip2 component), `@semio-tech/framework-renderer-wgpu:wasm` (+ `workspace:deps-cargo`), `generate-{browser-boot,frame-worker,renderer-boot}`, `plugin-registry:generate`/`session-puzzle2d`, `framework-plugin-web:support-dev`, `os-infinite:fonts`.
+- `cargo tree --manifest-path 🌎️hub/Cargo.toml -p semio-hub-puzzle --target wasm32-wasip2` → 75 first-party crates (`tree-hub-puzzle-wasip2.txt`), among them the stdio crates dwg, dxf, gltf, json, las, obj, pdf, ply, png, semio, stl, svg, txt, xml, zip, binary, contract, deflate.
+
+### S4-2. Puzzle 2d/3d/5d `ValueError` completion (01:55–02:30)
+
+All the edited files had been quiet for at least 30 minutes; the newest was the 00:32:31 peer sweep. Each edit is one count-asserted write. The scripts are in `🗑️generated/s4-infra/`.
+
+- **SQLite owners (block-5d pattern):** `puzzle{3d,2d,5d}-sqlite-valueerror.py`.
+  - Every `Result<_, String>` became `ValueError` (3d: 41, 2d: 30, 5d: 41).
+  - Plain refusals use local `invalid(…)` (`InvalidValue`).
+  - Count overflows use `WorkLimit`. Schema/byte bounds use `OwnershipLimit`. The relationship `try_reserve` uses `AllocationFailed`.
+  - `validate_sqlite_database_schema(…)?` no longer has a `map_err`.
+  - Native record closures use `.map_err(positioned)` (`TextError::from_value_error`, which keeps the refusal kind). It replaces 9 + 1 + 1 hand-built `TextError::new(InvalidValue, message.to_string())` calls that collapsed every kind into `InvalidValue`.
+  - `validate_sqlite_snapshot_subset` maps checkpoints with `IoError::from_value_error`.
+- **Crate roots:**
+  - `Puzzle3dScale` and `Puzzle5dScale` `DslField` controlled methods now return `ValueError`.
+  - The 3d `FromValue::from_value_controlled` drops `.map_err(ValueError::new)`: `charge` already returns `ValueError`, and `new` now takes two arguments.
+- **Private kernel paths:** `protocol::ValueError` → `semio_framework_value::ValueError` in the 2d/3d/5d `💡️inferences`. `dsl::DslValue` → `semio_framework_value::DslValue` in the 3d geometry unit test.
+- **Generated registries:** the generator (`🕸️graph/🛂️manifest/📽️projection/🟦️.ts`, 10-03 01:21) already emits `semio_framework_value::…`. The outputs were stale. I regenerated them with each artifact's own `bun ./📜️script.ts graph-generate` (3d, 5d, 2d).
+  - 2d's generate had been failing since 10-01. The no-follow admission walker refuses the bun workspace symlink `◻️2d/📦️packages/🟦️typescript/node_modules/@semio-tech/framework-renderer-react`.
+  - Fix (schema-first): that `node_modules` path is declared in the 2d `🛂️manifest/📇️outputs.json` `policy.excludedInputPaths`. The 2d `nakagin` and `puzzle2d-default` registries are now current.
+- **`json!` macro:** a 10-02 22:12/22:53 peer sweep replaced `use dsl::json;` with a blank line in 8 3d/5d editor files and removed it from the 3d `editor/🦀️.rs` and `📌️panels/🛍️catalogue`. The fix is `use semio_framework_pack_json::json;` (the `#[macro_export]` owner). 2d uses `serde_json::json` and is unaffected.
+- **`ErasedSnapshotRetirement`/preparation `close_step`:** 7 impls (2d ×2, 3d ×2 + presence, 5d ×2) now return `ValueError`. The base-root refusal is `InvariantViolated`, matching flow and process3d.
+- Gated check 1 (features `component-app-assembly` on all three; `check-puzzle-1.txt`): all 18 stdio dependencies plus stdio-semio are green; puzzle-3d had 22 errors (json ×18, close_step ×3).
+
+### S4-3. Ownership split and the step-4 sources (02:30–02:40)
+
+- **Coordinator split (02:3x):** S4-PUZZLE owns `🧩️puzzle/…/✏️editor/**`; I keep the sqlite owners, crate roots, inferences and the generated registries. My earlier editor edits (json imports ×10 files, close_step ×7, the 3d geometry unit test) were listed to `main` and relayed with "verify, do not re-apply". I make no more editor edits in the puzzle tree. norm-contract was dropped from my sweep; S4-NORM owns it.
+- **Step-4 sources, WRITTEN, compile pending.** All files were quiet ≥ 30 min, except xlsx/docx/pptx (edited 01:41–02:02, active, skipped).
+  - `space-space`:
+    - `⚙️operations` `dsl::ToValue` ×8 → `semio_framework_value::ToValue`.
+    - sqlite `protocol::native_decoding` → `semio_framework_value::native_decoding`.
+  - `stdio-bmp`: `dsl::DslRecord` → `semio_framework_dsl_record_derive::DslRecord`. `dsl::FromValue`, `dsl::DslValue` and `dsl::Number` → `semio_framework_value::…`. Files: 2 mutation leaves, 2 binary codecs, the paint-region command, the unit test, and one doc line in `🚪️io`.
+  - `stdio-tiff`:
+    - the same derive/value renames;
+    - Cargo.toml gains `semio-framework-dsl-record` + `-derive`, the norm-contract cause, missing from the peer's 01:01 list of 15.
+  - `wfc-bitmap`:
+    - sqlite owner (`wfc-bitmap-sqlite-valueerror.py`, 10 terminals; the subset validator maps through `IoError::from_value_error`);
+    - text native codec (2 terminals, a local `positioned`, 10 kind-collapsing `TextError::new` → `positioned`);
+    - binary `close_step` → `ValueError`;
+    - `dsl::json` → `semio_framework_pack_json` with `JsonMemberPolicy::Reject` in mutations, the json import/export leaves and 3 editor config/transient files;
+    - io leaves: `IoError { message }` → `IoError::from_value_error`. The json leaf returns `ValueError`; the txt leaf returns `TextError` and its kind is kept at the IoError terminal.
+  - Not touched: the wfc-bitmap mutation test fixtures (`🧪️tests/**`, 11 `dsl::` paths each), which are out of `--lib` scope.
+
+### S4-4. Closure checks (02:22–03:11)
+
+- **Featured native check #2** (`check-puzzle-2.txt`, 02:33–02:44; the kernel was rebuilt from a peer edit):
+  - puzzle-3d: **2 errors**, both in `✏️editor` (`ToolRunDefinition.member`). The tool-run peer re-added the field at 02:37:14, after the check had compiled tool-run.
+  - The sqlite owners, roots, inferences and generated registries are clean.
+- **wasm32-wasip2 #1** (`cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-puzzle --lib --target wasm32-wasip2 --keep-going`, `check-wasip2-1.txt`, 02:46–03:01):
+  - **puzzle-3d GREEN** (wasip2, assembly features via the hub). All 18 stdio dependencies are green.
+  - 2d: 40 errors. 5d: 14 errors (now unmasked).
+  - Non-editor share fixed by me (13 files):
+    - `TextError::new` now takes `(kind, message, span)`; 8 io serializers/deserializers (2d svg/dxf/pdf/png/dwg, 5d zip ×2/png) gained `ValueRefusalKind::InvalidValue`;
+    - `dsl::json::{from_dsl_value,to_dsl_value,to_json_string}` → `semio_framework_pack_json::…` in the 2d json leaves, 👁️viewer board and 2 📚️examples.
+  - The editor share went to S4-PUZZLE via `main`.
+  - Residue outside activation: 100 puzzle `🧪️tests/**` files still use `dsl::json`/`dsl::…` (test-only).
+- **wasm32-wasip2 #2** (`check-wasip2-2.txt`, 03:07–03:11): blocked by the shared plugin crate.
+  - Error: `🔌️plugin/⏪️time-travel/🦀️.rs:3901:27` E0277 `Label: From<&String>` (file written 03:02:58, an active peer).
+  - Reported to `main`. The wgpu renderer closure also depends on `semio-framework-plugin` (`cargo tree … --target wasm32-unknown-unknown`).
+
+### S4-5. Frame-worker / wgpu generation inputs (03:12–03:25)
+
+- **Static import walk** (`s3-infra/wgpu-browser-walk.ts`):
+  - 3 entries, 162 declared, 162 reached, **0 undeclared**, 0 missing (`walk-s4-1.txt`).
+  - The 2 unbound bare specifiers are pre-existing kernel `node:path` / `node:url`.
+- **nx input law** (`s3-infra/frame-worker-input-law.ts`): **0 uncovered**.
+- **Committed `testWgpuGeneratorOwnership`** (`⚡️caching/🧪️tests/🧬️generator-ownership`, full package render): it was red and is now **passed** (`wgpu-ownership-law-s4-3.txt`). Two latent faults, hidden earlier by the S3 catalog-parse red, are fixed:
+  1. `🧊️wgpu/📽️projection/🟦️.ts:101` compared `package.json` `exports["."]` with `"." + nodeLibrary` (`.📚️library/🟦️.ts`) and so drifted always. It now uses `"./" + nodeLibrary`.
+  2. "browser module authority includes unread inputs: `⚠️diagnostic/🚧️text-error/🟦️.ts`". The only closure importer (`🚪️io/🧬️schema/⚠️refusal/🟦️.ts`) uses `TextError` as a type, so the bundler never loads it.
+     - Fix: that import is now `import type`.
+     - The path is removed from the taxonomy wgpu `sourceModulePaths` (Edit tool, unique 3-line anchor) and from the wgpu `📋️project.json` `frameWorkerSources`. S3-15 had declared it.
+     - Re-run: walk 161/161/0 (`walk-s4-2.txt`), input law 0 uncovered, ownership law passed in 6 s.
+  - Activation was never blocked by these: producer-scoped `generate-frame-worker` passes `entryIds`, which skips the unread check, and never parses the package catalog.
+- The renderer-wgpu wasm32 compile depends on `semio-framework-plugin`, so it waits for KERNEL GREEN and the plugin `⏪️time-travel:3901` fix (S4-RUNTIME).
+
+### S4-6. Activation s4-1 diagnosis and the repo-wide sqlite ABI sweep (03:53–04:17, cut ~04:15; resumed 06:45)
+
+- **Activation s4-1** (03:52) failed at `@semio-tech/plugin-registry:generate`: "Invalid registry descriptor: /executionProtocol/appChannelVersion must equal its const".
+  - Cause: the 02:53:48 channel bump 20 → 21 (registry schema `const: 21`, `💻️os/🟦️.ts:3727`). All 34 committed `🌎️hub/🧩️compositions/*/🔣️.json` still say 20.
+  - Reported to `main` at 04:00. This led to rule 41: a describe wave, which needs every composition green for wasip2.
+- **Rule 41(c): S4-INFRA owns the sqlite-snapshot ABI migration.**
+  - Script: `🧪️s4-infra-sqlite-abi.py` (ticket root, idempotent; dry run by default, `--apply`, `--own=` for my own recent files, 30-minute skip). It extends S4-TOOLS-A's `migrate_sqlite` stage:
+    - balanced `Result<_, String>` → `ValueError`;
+    - literal refusals → `invalid(..)`; overflow literals → `WorkLimit`; "allocation failed" → `AllocationFailed`;
+    - `validate_sqlite_database_schema` and `SqliteDatabase::from_schema` keep their typed refusals (their `map_err` is dropped);
+    - the `IoError::from(e.into_message())` bridge is dropped;
+    - inside every `IoResult` fn, `?` maps through `IoError::from_value_error`, and literal `Err` become typed causes;
+    - kind-collapsing `TextError::new(InvalidValue, m.to_string(), ..)` closures and `__dsl_{from,to}_record_controlled` → `.map_err(positioned)`;
+    - 2-argument `TextError::new` gains `InvalidValue`;
+    - the `invalid`/`positioned` helpers and the `ValueError` import are inserted after the head `use` block.
+  - Targets: the census `sqlite-owners.txt` (145 `impl ArtifactSqliteSnapshot` files) gave 23 owners still on `String`:
+    - writer; wfc 2d, grid2d, 3d, grid3d; flow; gismap; vcs; animate; demonstrator playground; architect; imperative procedure; remodel; energy model; block 3d; space home; sourcing curation;
+    - stdio `🚦️sqlite/🪶️copy` for binary, csv, tsv, deflate and bmp;
+    - mcp workspace.
+  - Plus the 7 files handed over by S4-TOOLS-A, which keeps their non-sqlite fallout: shooting, lowpoly, note + `🔢️number`, fem 2d, fem 3d, `🏗️fem/🧩️sqlite`.
+  - Applied at 04:16 (preview `sqlite-abi-preview.diff`). Re-verified after the resume: **0 pending / 30 already clean**.
+- The 04:17–04:33 full `✏️s` check (`s-check-1.txt`, 1189 errors, 20+ red crates) predates the cut and the 3520-unit prune. A fresh run is next.
+
+### S4-7. Half-state repair and second sweep wave (06:45–07:07)
+
+- **Coordinator relays:**
+  - writer's sqlite moved to S4-TEXT; I skip writer. My 04:16 sweep converted its root, but `🛂️native` was still `String`.
+  - The raster sqlite owner is S4-STROKES' (`🧪️s4-strokes-raster-*.py`); not re-applied.
+  - din18599 and en1999 are being edited by S4-NORM (din18599 touched 06:47); skipped.
+  - stdio TEST files belong to S4-STDIO.
+- **Half-state census:** for every converted root, I looked for submodules and delegated codecs still on `String`. Each was fixed with the script (now 39 targets, all idempotent-clean), except where noted below.
+  - energy `🪶️sqlite/{🗓️schedules,🏘️envelope,⚙️systems}`: these use `use super::*`; the header is inherited from the parent root, which the script now detects.
+  - energy `📸️snapshot/🛬️native`: its local `error(impl Into<String>) -> TextError` becomes the `ValueError` positioner (`TextError::from_value_error`) when it has no string call sites.
+  - gismap `📸️snapshot/📦️pack`: decode/encode_sqlite_native and the `Octets` DslField controlled methods.
+  - wfc 2d/grid2d/3d/grid3d `🛬️native` (the root delegated to them): `🧪️s4-infra-wfc-native-abi.py`.
+    - The `error` helper becomes the ValueError positioner.
+    - Controlled codec calls drop `invalid(e.to_string())`.
+    - The `direction_from_token` `TextError` becomes `ValueError::new(e.kind, e.message)`.
+  - iso16757 `📸️snapshot/🛫️native` (`admit_rows`): converted. The root's closure now uses `.map_err(positioned)` instead of 2-argument `TextError::new(error, ..)`.
+  - wires `protocol::native_decoding` → `semio_framework_value::native_decoding`.
+  - playbook `validate_sqlite_snapshot_subset` (IoResult `?`, `Err(invalid(..).into())`): converted.
+  - flow: the `ValueError::into_message` bridges ×5 are dropped.
+  - process3d `🪶️sqlite/🪆️native-fields`: `dsl::{DslField,NativeSchemaControl,Shape,DslVariants,FieldValue,native_encoding,__rt}` → `semio_framework_dsl_record::…`; `dsl::Native{En,De}codeControl` → `semio_framework_value::…`.
+  - curation: the root's `String` `validate()` ×5 call sites are mapped `.map_err(invalid)`. This was a manual edit: `validate` belongs to the curation schema, not to the sqlite file.
+- **New script rules:**
+  - `(Ok|Err)::<_, String>` turbofish;
+  - `.ok_or_else(|| "lit".into())` and `.ok_or_else(|| format!(..))`;
+  - the `Self::__dsl_from_record_controlled` function-path argument becomes a closure plus `positioned` (demonstrator playground, space home, fem 2d/3d, note);
+  - `.map_err(ValueError::into_message)` removal;
+  - IoResult `Err(invalid(..).into())`.
+- Fresh full `✏️s` check (`s-check-2.txt`) started at 06:45. After the 3520-unit prune it is waiting on build-dir locks held by peers' plugin/kernel rebuilds.
+
+### S4-8. The 07:16 peer store change and the stdio priority reds (07:40–08:15)
+
+- **Check plumbing:**
+  - The deadlock breaker killed my gated full `✏️s --workspace` check twice (07:12 and 07:38, flock-idle behind the post-prune peer rebuilds). I switched to targeted `-p` checks, which `main` agreed to.
+  - Rule 42 gate: ≤ 8 cargo and < 14 rustc. Rule 43: checks only, no test builds.
+  - zsh does not word-split `$P`; use `${=P}`.
+- **Peer store API change, 07:16:01, 102 files:**
+  - In `🏪️store/📦️codec/🪶️snapshot-capability/{🛬️native-decoding,🛫️native-encoding}`, the `construct` closures of `{de,en}code_sqlite_snapshot_record_native` now return `ValueError` instead of `TextError`.
+  - The same peer sweep removed every `.map_err(positioned)` from native closures.
+  - I removed the two now-wrong rules (`__dsl_*_controlled` → `positioned`, kind-collapsing `TextError::new` → `positioned`) from `🧪️s4-infra-sqlite-abi.py`. A re-run is 0 pending / 41 clean, so the peer's versions are consistent with the remaining rules.
+- **Priority reds (relayed by `main` from S4-PUZZLE / S4-STORE):**
+  - stl `📸️snapshot/📦️pack`: the `ValueError` import was missing after the 07:16 sweep.
+  - ply `📦️pack`: `record_controlled` and `reconstruct_record_controlled` → `ValueError`, TextError wrappers dropped. This fixed `🪶️sqlite:111,112`.
+  - step `🚦️native::parse_text` (returns `TextError`): the spec `decode`, `binding::frame` and `reconstruct` results map `positioned`.
+  - Gated `-p stdio-stl -p stdio-ply -p stdio-step -p puzzle-3d --features puzzle-3d/component-app-assembly --lib` (`check-priority-1.txt`): **stl, ply, step green** (warnings only).
+  - puzzle-3d hit a disk-guard prune race (`invoked.timestamp: No such file`; 08:08 prune of 1665 units at 4.8 GiB free). It is being re-run with the 21 stdio crates of the 07:16 sweep (`check-stdio-0716-1.txt`).
+
+### S4-9. stdio 07:16 batch green, composition census #1 (08:15–08:56; cut ~08:55, resumed 11:35)
+
+- **wav** sqlite: the admit closure's `.map_err(text_error)` and the helper are gone (the closure returns `ValueError` since 07:16).
+- **ifc 4 / 2x3** `🚦️native::parse_text`: `positioned`, same as step.
+- Check (`check-stdio-0716-{1,2}.txt`): all 21 stdio crates of the 07:16 sweep plus stl/ply/step are **green**. puzzle-3d `--features component-app-assembly --lib` is **green**.
+- **Census #1** (`cargo check --manifest-path 🌎️hub/Cargo.toml -p <34 hubs> --target wasm32-wasip2 --lib --keep-going`, `census-1.txt`, 08:44–08:56): exit 101, **28 red crates**, with error counts:
+
+  | Crate | Errors | Owner |
+  |---|---|---|
+  | framework-os (os-host) | 3 | STORE |
+  | hub-stdio | 1 | STDIO |
+  | wfc 2d 27 / 3d 18 / grid2d 29 / grid3d 16 / bitmap 1 | — | STROKES |
+  | norm en1997 1 / en1998 1 / iso16757 29 / vdi3805 21 | — | NORM |
+  | gismap 48, generation2d 5, generation3d 10, playbook 55, energy 28 | — | TOOLS-B |
+  | puzzle-2d | 4 | PUZZLE |
+  | mathematical-equation 45, reasoning-wires 6 | — | WIRES-MATH |
+  | flow | 69 | FLOWCAD |
+  | sequence 1, imperative-procedure 45 | — | GRAPHS |
+  | vcs | 16 | TEXT |
+  | **sourcing-curation** | **71** | **S4-INFRA** (unowned) |
+  | **animate-presentation** | **23** | **S4-INFRA** (unowned) |
+  | **architect-program** | **61** | **S4-INFRA** (unowned) |
+  | **demonstrator-playground** | **9** | **S4-INFRA** (unowned) |
+  | **block-2d** | **1** | **S4-INFRA** (unowned) |
+
+  Routing per `main` (11:35).
+- **New top priority (11:35):** design §21.4, registry generation degrades per plugin. Next section.
+
+### S4-10. Design §21.4: registry generation degrades per plugin; release gates stay strict (11:40–12:20) — LANDED
+
+- **`📇️registry/🧬️schema/🟦️.ts`:**
+  - `REGISTRY_HOST_APP_CHANNEL_VERSION` is read from the descriptor contract's `executionProtocol.appChannelVersion` const (21).
+  - `decodeRegistryDescriptorV1` throws `StaleChannelDescriptorError {descriptorChannel, hostChannel}` before schema validation when the channel differs.
+- **`🔎️discovery/🟦️.ts`:**
+  - `generatePluginRegistryReport(repoRoot, {…, staleChannel})` returns `{entries, diagnostics}`.
+  - Default `refuse`: all stale descriptors are collected, then one aggregated error is thrown (`stale-channel descriptors refused (host app channel 21): <id> (<crate>), …`).
+  - `exclude`: withholds each stale plugin (`stale-channel`) and, transitively, every plugin whose `dependsOn` names a withheld one (`stale-channel-dependency`).
+  - `generatePluginRegistry` = strict `.entries`, so every other caller stays strict: dev verification and capability-policy tests, catalog-verification, `resolveRegistryPluginIdsForFilter`.
+  - New: `RegistryChannelDiagnosticV1`, `REGISTRY_DIAGNOSTICS_FILE = "🩺️diagnostics.json"`, `parseRegistryChannelDiagnosticsV1` (closed shapes).
+- **`🎮️playground/🔎️discovery`:** `generateWithheldPlaygroundRegistry` gives source-only rows (no examples) of withheld plugins.
+- **`📽️projection`:**
+  - `renderCatalogFiles(repoRoot, view, staleChannel = "refuse")` also returns `diagnostics` and `launchPlaygrounds`.
+  - The generated catalog gains `🩺️diagnostics.json`.
+  - `generate`, `preview-generated` and `check-generated` use `exclude`. `generate` prints a console summary of withheld plugins.
+  - `.vscode/launch.json` is rendered from `launchPlaygrounds`. `generateLaunchJson` throws for any curated variant without a playground, and launch rows are the path to re-describing.
+  - `check` stays strict.
+- **`🔁️rebuild::stagedConvergence` (verify-staged):** every withheld plugin is a refused row (`committed=<code>`, `ok:false`).
+- **Trusted catalog:** `validateCatalogExecutionProtocol` was already strict; unchanged.
+- **Law** (in `🔎️discovery/🧪️tests/🟦️.ts`, run by `test-component-owners`): `SEMIO_TEST_ARTIFACT_DIR=… bun test ./🔎️discovery/🧪️tests/🟦️.ts` → **5 pass / 0 fail**, 78 expects (`registry-law-1.txt`).
+  - Fixture registry: fresh, stale(20), and dependent(depends-on stale).
+  - `exclude` offers only fresh, with exact diagnostics; the diagnostics file round-trips.
+  - Strict `generatePluginRegistry` and `refuse` both throw, naming the plugins. An undeclared diagnostics shape is refused.
+- **Other checks:**
+  - `test-playground-default-contract` → 16 vectors pass.
+  - `tsc --noEmit --strict` over the 5 changed modules + the test: 0 errors in changed code. 3 errors predate this change, at test lines 25/51/61 (branded `InstallationDirectoryV1`, `role` literal).
+- **Real-repo dry render** (in memory, no writes; `registry-degrade-dry.ts`, `registry-degrade-dry-1.txt`):
+  - All **69** committed descriptors are at channel 20 (puzzle included), so `exclude` gives 0 entries / 69 diagnostics. Strict refuses with the full list.
+  - Degraded launch render vs committed `.vscode/launch.json`: all **448 dev rows byte-identical**.
+  - The remaining ~1200 differing lines come from peer hand-edits of gate/test rows that are not in the seed. The next coordinator `generate` would drop them unless they are seeded.
+- **Coordinator actions:** re-describe puzzle (`materialize-dev` / describe) so it is offered at channel 21, then `plugin-registry:generate` + activation. Decide on the hand-added launch rows before regenerating.
+
+### S4-11. Launch seed reconciliation (12:05–12:23) — DONE
+
+- **Analysis** (`launch-reconcile-analyze.ts`, read-only): in-memory `generateLaunchJson(renderCatalogFiles(…, "exclude").launchPlaygrounds)` vs committed `.vscode/launch.json`, compared row by row by name.
+  - Before: committed-only 12, render-only 4, differing 281 (order only).
+- **Seed edits** (Edit tool, unique anchors, re-read before each edit):
+  - 10 `⚖️…🎒️pack🦀️` gate rows (CLEAN-ARCHITECTURE `sole-pack-error-inputs`) at the top of `configurations`, as one-line rows in the seed's own style. This includes `capture-current-utf8-cuts`, which a peer added at 12:14, and the peer's later `rebase-current-known-cuts 7` argument.
+  - `🧪️test🌱️value🔗️borrowed-key-index🦀️native` and `…♻️intrinsic-retirement🦀️native` between the `🎒️pack💰️storage` source and native rows (9_gates 900.0583558 / 900.058356).
+- **Final proof** (`launch-4/`, committed launch.json as of 12:21): render = committed plus exactly:
+  - **added:** `multi-scope-verification` (seed) and `⚖️verify-layout-frame-selection🗿️artifacts📏️layout🦀️` (auto row for a declared target);
+  - **removed:** `⚖️test-subject🦑️repo🔨️modules🧪️test` (auto row now covered by the curated seed row `⚖️gate♻️rewriting🪆️scenario46🦀️subject`);
+  - **reflow:** 34 auto 4_gate rows each shift `order` by +0.0001, and 2 project picker inputs gain options;
+  - dev rows (448) and compounds are identical.
+- **Coordinator actions:**
+  - `plugin-registry:generate` writes `.vscode/launch.json`.
+  - The CLEAN-ARCHITECTURE peer keeps hand-editing `launch.json`; tell it to edit the seed.
+
+### S4-12. Unowned census reds, source only (12:25–12:40; rule 44 cargo freeze, so checks are OWED)
+
+- **Static fallout census** (`🗑️generated/s4-infra/fallout-census.py`):
+  - The patterns it looks for: `dsl::json`, kernel value paths, `close_step … String`, `_controlled … String`, 2-argument `TextError::new`, `IoError { message }`.
+  - animate-presentation, architect-program and demonstrator-playground were edited 10:44–11:14 by someone after census #1; they show no remaining pattern hits. The only architect leftover is a doc line.
+  - Their census-1 errors (`MediaPayload::Intrinsic`, close_step, `dsl::json`, zip `TextError`) look fixed on disk. **Check owed.**
+- **New script `🧪️s4-infra-close-step-abi.py`** (ticket root, idempotent):
+  - Converts `ErasedSnapshotRetirement` / `ArtifactStoreOneItemPreparation` `close_step -> Result<_, String>` to `ValueError`.
+  - Literal refusals become `InvariantViolated`.
+  - Applied to block 2d, 3d and 5d `✏️editor`; 3d and 5d were masked behind 2d. Also applied to space `🫀️core` (`SpaceOneItemPreparation`), space home `✏️editor/{🎚️config,👥️presence,🫧️transient}`, and curation `✏️editor` + `👥️presence`.
+  - No `?` or non-literal errors remain in those bodies.
+- **sourcing-curation:**
+  - Cargo.toml gains `semio-framework-pack-json`.
+  - 13 files run through S4-TOOLS-A's `migrate` (`curation-migrate.py`): `dsl::json` → `semio_framework_pack_json` with `JsonMemberPolicy::Reject`, `IoError { message }` → `from_value_error`.
+  - Kernel value paths (`DslValue` ×26, `ToValue` ×3, `protocol::Number` ×3, …) → `semio_framework_value::…`.
+  - `ui::UiLabel` → `semio_framework_plugin::UiLabel`; the prelude no longer re-exports it.
+  - presence `Fault::from(ValueError)` → `Fault::new(Framework, kind, message)`, the cad pattern.
+  - The static census is now clean.
+- **Remaining `close_step … String` impls in other WPs' crates** (routed, not touched):
+  - gismap `✏️editor` + `🧬️mutations/💾️binary`, gisterrain `✏️editor`, energy `✏️editor` → TOOLS-B;
+  - wfc grid2d/grid3d `📸️snapshot/💾️binary`, wfc bitmap `✏️editor` → STROKES;
+  - process3d `🧬️mutations/💾️binary` → owner of process.
+  - `🔐️authority/📖️inputs` is a different trait (`LocalInteractionInputReads`) and is legitimate.
+- **Owed once CARGO OPEN:** `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-sourcing -p semio-hub-animate -p semio-hub-architect -p semio-hub-demonstrator -p semio-hub-block -p semio-hub-space --target wasm32-wasip2 --lib --keep-going`.
+
+### S4-13. Status at 12:45 and hand-over
+
+- **Done this session:**
+  - puzzle 3d/2d/5d sqlite owners, roots, inferences and registries (S4-2);
+  - stdio priority reds and the 07:16 batch (S4-8, S4-9);
+  - frame-worker inputs and the ownership law (S4-5);
+  - activation s4-1 diagnosis (S4-6);
+  - repo-wide sqlite ABI sweep, 41 files (S4-6, S4-7);
+  - composition census #1 (S4-9);
+  - **§21.4 registry degrade, LANDED** (S4-10);
+  - **launch seed reconciled** (S4-11);
+  - unowned census reds fixed in source (S4-12).
+- **Owed (cargo freeze, rule 44):**
+  - the hub wasip2 check for sourcing/animate/architect/demonstrator/block/space (command in S4-12);
+  - a second census after the owners report.
+- **Not started (LOW priority, S4-GATES):** registry implementation-input discovery of dynamic `import()` / `createRequire`.
+  - Scoping: `registryStaticImports` (`📚️library/🔍️discovery/🟦️.ts`) keeps only `kind === "import-statement"`, so the registry `📜️script.ts`'s `registerLazy(async () => (await import(...)))` targets are reached only through the explicit `inputPatterns`.
+  - The filtered `workspace-contract` run (`-t "Draw|registryCompilerImports|registry"`) passes 4/4. I did not find the "Draw producer ×6" failure there; it needs S4-GATES' exact failing test name.
+- **Scratch:** large superseded logs were deleted (19 MB → 7.8 MB). The scripts are kept: ticket-root `🧪️s4-infra-sqlite-abi.py`, `🧪️s4-infra-wfc-native-abi.py`, `🧪️s4-infra-close-step-abi.py`; plus `🗑️generated/s4-infra/*.py|*.ts`.

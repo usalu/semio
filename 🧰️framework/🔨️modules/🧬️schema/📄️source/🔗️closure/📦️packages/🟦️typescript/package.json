@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/schema-source-closure-ts",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "bun nx run @semio-tech/schema-source-closure-ts:test"},
+  "nx": {"includedScripts": []}
+}

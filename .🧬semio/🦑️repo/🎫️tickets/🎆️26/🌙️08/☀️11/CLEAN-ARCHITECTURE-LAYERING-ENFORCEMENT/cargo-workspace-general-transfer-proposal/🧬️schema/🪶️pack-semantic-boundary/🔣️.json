@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "owner",
+          "valueConversion",
+          "retainedFields"
+        ],
+        "properties": {
+          "variant": {
+            "enum": [
+              "BadMagic",
+              "UnsupportedVersion",
+              "UnknownRequiredFlags",
+              "Truncated",
+              "ChecksumMismatch",
+              "ContentHashMismatch",
+              "LimitExceeded",
+              "RetainedMalformed",
+              "RetainedAllocation",
+              "Malformed",
+              "NonCanonical",
+              "UnsupportedCodec",
+              "ValueRefusal",
+              "TextRefusal",
+              "Io",
+              "TransportFailure",
+              "TransportAdmission"
+            ]
+          },
+          "owner": {
+            "enum": [
+              "PackRefusal",
+              "PackError"
+            ]
+          },
+          "valueConversion": {
+            "enum": [
+              "semantic",
+              "preserveTransport"
+            ]
+          },
+          "retainedFields": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

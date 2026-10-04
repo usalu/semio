@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-03T07:13:55.503Z",
+  "grammar": "root-selected web-tree-sitter Rust WASM",
+  "grammarOnly": true,
+  "macroBodiesOpaque": true,
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "before": [],
+      "after": [],
+      "introduced": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+      "before": [],
+      "after": [],
+      "introduced": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "before": [],
+      "after": [],
+      "introduced": []
+    }
+  ]
+}

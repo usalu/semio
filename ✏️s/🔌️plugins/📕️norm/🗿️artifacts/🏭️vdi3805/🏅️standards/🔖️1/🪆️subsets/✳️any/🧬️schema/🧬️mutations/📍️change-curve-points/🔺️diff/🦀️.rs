@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeCurvePoints, base: &Vdi3805Snapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Curve \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if curve.points == payload.new_points {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Curve \"{}\" already has these points.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Curve \"{}\" already has these points.", payload.id));
     }
     let mut curves = base.curves.clone();
     if let Some(curve) = curves.get_mut(&payload.id) {

@@ -5,7 +5,7 @@ export { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
 import {captureOwnedProcess} from "../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { runExactCargoLaws, exactExecutableFingerprint, type ExactCargoLawOptions, type ExactCargoLawPort, type ExactCargoLawReceipt } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { type ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
+import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
 import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";

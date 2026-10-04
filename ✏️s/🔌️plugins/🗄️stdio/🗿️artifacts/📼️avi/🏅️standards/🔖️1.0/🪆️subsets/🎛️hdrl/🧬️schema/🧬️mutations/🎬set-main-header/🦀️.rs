@@ -18,9 +18,12 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         agg_diff(&AviMutation::SetMainHeader(self.clone()), base)
     }
-    fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
-        agg_inverse(&AviMutation::SetMainHeader(self.clone()), base)
-    }
+    fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&AviMutation::SetMainHeader(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set main header", "Haupt-Header setzen")
     }

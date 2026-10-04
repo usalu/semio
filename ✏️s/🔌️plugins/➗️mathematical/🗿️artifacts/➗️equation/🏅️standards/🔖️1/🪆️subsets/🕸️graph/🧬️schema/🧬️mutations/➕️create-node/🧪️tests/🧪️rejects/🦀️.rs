@@ -4,24 +4,16 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Per contract D6 a rejected case carries
 //! `🔺️diff/🚫️.absent` and a `➡️after` byte-identical to `⬅️before`.
 //!
-//! ⚠️ Why this leaf pins a REJECTION branch: `EquationSnapshot` keeps its graph and its point
-//! cloud in three co-derived composed CHILDREN (`notation`/`results`/`computed`,
-//! `🔖️WorkingScene`), and every APPLIED equation diff re-mints all three through
-//! `equation_children_from_state`, whose `child_id` is a `DefaultHasher` digest of the child
-//! content. Hand-authoring such an `➡️after` would mean hand-forging a value from `std`'s
-//! deliberately unspecified default hasher; the rejection branch reaches no digest at all.
+//! ⚠️ Model (a) (design §20.15): the committed snapshot carries its graph and its point cloud INLINE, and the
+//! `notation`/`results`/`computed` handles are the content addresses of their derivation (`crate::equation_children`), kept
+//! exact by the fixture writer law.
 //!
-//! 🌱 `create-node` is the one equation graph verb with NO rejection on an empty scene, so —
-//! following dag's `🚫️rejects-a-duplicate-node-id` precedent — this case resolves the committed
-//! handles against a scene holding exactly the node the committed payload asks to create. Nothing
-//! here is invented: the seeded node IS the mutation JSON's own `id`/`label`/`x`/`y`. This plugin
-//! exposes no seed-by-id helper (dag's `cache_dag_content` has no twin here), so the seeding goes
-//! through `equation_children_from_state`, which mints AND caches in one call — the committed
-//! `childId`s are therefore documented placeholders for that digest.
+//! 🌱 `create-node` refuses only a colliding id, so — following dag's `🚫️rejects-a-duplicate-node-id` precedent — the committed
+//! graph already holds exactly the node the committed payload asks to create: its `id`/`label`/`x`/`y` ARE the mutation JSON's.
 
 use crate::standards::v1::subsets::graph::schema::mutations::create_node::CreateNode;
-use crate::{equation_children_from_state, equation_graph, EquationDiff, EquationGeometry, EquationGraph, EquationMutation, EquationNode, EquationSnapshot};
-use semio_framework_os_kernel::ToValue;
+use crate::{EquationDiff, EquationGraph, EquationMutation, EquationNode, EquationSnapshot};
+use semio_framework_value::ToValue;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
@@ -29,7 +21,7 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️create-node/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> EquationMutation {
-    pack::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// 🟢️ The committed payload, unwrapped — the colliding node is built from it and nothing else.
@@ -40,29 +32,18 @@ fn payload() -> CreateNode {
     payload
 }
 
-/// 🌱 The scene both committed snapshots resolve to: a graph already holding the very node the
-/// payload tries to create — the collision `mutation.duplicate-id` guards against.
+/// 🌱 The graph both committed snapshots hold: it already contains the very node the payload tries to create — the
+/// collision `mutation.duplicate-id` guards against.
 fn colliding_graph() -> EquationGraph {
     let payload = payload();
     EquationGraph { directed: true, nodes: vec![EquationNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y }], edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }
 }
 
-/// 🧩️ Swaps the committed placeholder handles for the digests this plugin mints for the colliding
-/// scene, caching it in the same call so the snapshot resolves instead of failing soft.
-fn resolved(text: &str) -> EquationSnapshot {
-    let mut snapshot: EquationSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-    let (notation, results, computed) = equation_children_from_state(&colliding_graph(), &EquationGeometry { points: Vec::new() });
-    snapshot.notation = notation;
-    snapshot.results = results;
-    snapshot.computed = computed;
-    snapshot
-}
-
 fn before() -> EquationSnapshot {
-    resolved(BEFORE)
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> EquationSnapshot {
-    resolved(AFTER)
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn produced() -> protocol::MutationOutcome<EquationDiff> {
     <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(&mutation(), &before())
@@ -72,7 +53,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 #[semio_framework_async_macros::async_test]
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
-    assert!(equation_graph(&base).nodes.iter().any(|node| node.id == payload().id), "rejects-a-duplicate-node-id's before-snapshot must resolve to a scene that already holds the payload's node id");
+    assert_eq!(base.graph, colliding_graph(), "rejects-a-duplicate-node-id's before-snapshot holds exactly the payload's node");
     let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "create-node/rejects-a-duplicate-node-id: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected create must not mint a fresh notation/results/computed triple");
@@ -88,7 +69,7 @@ async fn a_colliding_id_is_a_fatal_duplicate_id() {
     let messages = emitted.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.duplicate-id", "an id collision is reported as duplicate-id");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "duplicate-id is Fatal — no merge policy may absorb it");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Fatal, "duplicate-id is Fatal — no merge policy may absorb it");
     assert_eq!(messages[0].target, vec![payload().id.clone()], "the diagnostic addresses the colliding node id");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "node", "create-node", "CreatedNode"), "the fixture must be bound to create-node's own descriptor");
@@ -100,7 +81,7 @@ async fn a_colliding_id_is_a_fatal_duplicate_id() {
 /// delete of the requested id.
 #[semio_framework_async_macros::async_test]
 async fn an_already_present_id_leaves_nothing_to_undo() {
-    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before());
+    let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &before()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "create-node/rejects-a-duplicate-node-id: a create whose id BASE already holds must have no inverse steps, got {inverse:?}");
 }
 
@@ -109,25 +90,25 @@ async fn an_already_present_id_leaves_nothing_to_undo() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: EquationSnapshot = pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = pack::json_from_dsl_value(&decoded.to_value());
-        let original = pack::parse_json(text).expect("snapshot reparses");
-        assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
+        let decoded: EquationSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
+        assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed {label} JSON is not canonical ({reencoded:?} vs {original:?})");
     }
-    let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
-    let original = pack::parse_json(MUTATION).expect("mutation reparses");
-    assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&(mutation()).to_value());
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&reencoded, &original), "create-node/rejects-a-duplicate-node-id: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
     assert_eq!(BEFORE, AFTER, "a rejected case commits an after-snapshot byte-identical to its before-snapshot");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome = pack::parse_json(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::JsonValue::as_str), Some("rejected"), "create-node/rejects-a-duplicate-node-id declares a rejected outcome");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("rejected"), "create-node/rejects-a-duplicate-node-id declares a rejected outcome");
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
-    assert_eq!(outcome.get("code").and_then(pack::JsonValue::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome.get("path").and_then(pack::JsonValue::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(outcome.get("code").and_then(semio_framework_pack_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
+    let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_pack_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

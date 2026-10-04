@@ -49,5 +49,5 @@ export const demonstratorPlaygroundInferenceTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parsePlaygroundInferenceText(value: unknown, at = "$"): PlaygroundInferenceText {
-  return demonstratorPlaygroundInferenceTextGuardObject(value, `${at}`);
+  return demonstratorPlaygroundInferenceTextGuardString(value, at);
 }

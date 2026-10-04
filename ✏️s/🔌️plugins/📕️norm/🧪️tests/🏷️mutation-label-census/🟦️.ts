@@ -59,7 +59,7 @@ function census(): Leaf[] {
       const source = [join(root, leaf, "🦀️.rs"), join(root, leaf, "🦠️mutation", "🦀️.rs")].find((path) => existsSync(path) && readFileSync(path, "utf8").includes("fn label(&self)")), descriptor = join(root, leaf, "🔣️.json");
       if (source === undefined || !existsSync(descriptor)) continue;
       const text = readFileSync(source, "utf8");
-      const start = text.indexOf("fn label(&self) -> protocol::LocalizedLabel");
+      const start = text.search(/fn label\(&self\) -> [\w:]*LocalizedLabel/u);
       if (start < 0) continue;
       const [en, de] = nativeArguments(text, start);
       leaves.push({ family, kind: (JSON.parse(readFileSync(descriptor, "utf8")) as { semanticKind: string }).semanticKind, en: literals(en), de: literals(de), opening: { en: opening(en), de: opening(de) } });

@@ -1,21 +1,26 @@
 use super::*;
 use std::collections::HashMap;
 
-use crate::os_dsl::schema::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
 
 //#region 🔖️Fixtures
 /// 🧬️ A small 3-field record spec exercising a few different `Shape` variants
 /// (`Text`, `UInt`, `Bool`) — enough to prove the facade's wiring end to end without
 /// duplicating `pack_value`'s own exhaustive wire-tag coverage.
 fn sample_spec() -> RecordSpec {
-    RecordSpec::new(Some("sample"), RecordLayout::Lines, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "age", Shape::UInt), FieldSpec::new(3, "active", Shape::Bool)])
+    semio_framework_dsl_record::RecordSpec::new(Some("sample"), semio_framework_dsl_record::RecordLayout::Lines, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "age", Shape::UInt), FieldSpec::new(3, "active", Shape::Bool)])
 }
 
 fn sample_record() -> RecordValue {
-    let mut fields = HashMap::new();
-    fields.insert(1, FieldValue::Text("Ada Lovelace".to_string()));
-    fields.insert(2, FieldValue::UInt(42));
-    fields.insert(3, FieldValue::Bool(true));
+    let mut fields = semio_framework_dsl_record::RecordValue::default().fields;
+    fields.insert(1, semio_framework_dsl_record::FieldValue::Text("Ada Lovelace".to_string()));
+    fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(42));
+    fields.insert(3, semio_framework_dsl_record::FieldValue::Bool(true));
     RecordValue { fields }
 }
 //#endregion 🔖️Fixtures

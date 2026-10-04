@@ -98,8 +98,8 @@ pub fn layout_action(action: &str, args: Option<semio_framework_plugin::UiValue>
 }
 
 /// 🏷️ Admits display text into the bounded semantic label contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_locale::Label> {
-    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -174,13 +174,13 @@ impl LayoutInteractionSnapshot {
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
 pub fn layout_select_action_args(ids: &[String], merge: &str) -> semio_framework::DslValue {
     let targets: Vec<semio_framework::DslValue> = ids.iter().map(|id| semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
-    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": dsl::os_pack::json::to_json_string(&targets), "merge": merge, "method": "pick" })
+    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": semio_framework_pack_json::to_json_string(&targets), "merge": merge, "method": "pick" })
 }
 
 /// 🐁️ Builds `interactionHover`'s JSON args for the `"pointer"` channel — `id: None` clears hover.
 pub fn layout_hover_action_args(id: Option<&str>) -> semio_framework::DslValue {
     let targets: Vec<semio_framework::DslValue> = id.map(|id| vec![semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
-    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": dsl::os_pack::json::to_json_string(&targets) })
+    semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": semio_framework_pack_json::to_json_string(&targets) })
 }
 
 /// 🕹️ Wraps [`layout_select_action_args`] into the redispatch effect a canvas gesture's own `handle`
@@ -265,11 +265,12 @@ fn layout_context_menu_items(
     registry: &AppActionRegistry,
     doc: &LayoutSnapshot,
     labels: &LayoutLabels,
-    is_de: bool,
+    view_state: &semio_framework_plugin::ViewModel,
     surface: Option<&ContextMenuSurfaceTarget>,
     fallback_selected: &[String],
 ) -> Vec<ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, Menu};
+    use semio_framework_plugin::{selection_count_phrase, Menu, SelectionKind};
+    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
     let authoring = layout_authoring_surface(surface);
@@ -277,7 +278,7 @@ fn layout_context_menu_items(
 
     if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-document.page.")) {
         if let Some(page_id) = hit.id.strip_prefix("layout-document.page.") {
-            return Menu::of(registry).item(layout_context_menu_item("set-active-page", labels.active_page.as_str(), "file", "setActivePage", Some(semio_framework::dsl_value!({ "pageId": page_id })), false, false)).build();
+            return Menu::of(registry, view_state).item(layout_context_menu_item("set-active-page", labels.active_page.as_str(), "file", "setActivePage", Some(semio_framework::dsl_value!({ "pageId": page_id })), false, false)).build();
         }
     }
 
@@ -285,7 +286,7 @@ fn layout_context_menu_items(
         if let Some(link_id) = hit.id.strip_prefix("layout-document.link.") {
             let ids = layout_link_referencing_frame_ids(doc, link_id);
             let disabled = ids.is_empty();
-            return Menu::of(registry)
+            return Menu::of(registry, view_state)
                 .item(layout_context_menu_item(
                     "select-link-frames",
                     if is_de { "Verknüpfte Rahmen auswählen" } else { "Select linked frames" },
@@ -308,7 +309,7 @@ fn layout_context_menu_items(
                 "objectId": issue.object_id,
                 "pageId": issue.page_id,
             });
-            return Menu::of(registry).item(layout_context_menu_item("focus-preflight-issue", labels.preflight.as_str(), "alert-triangle", "focusPreflightIssue", Some(semio_framework::dsl_value!({ "issue": issue_value })), false, false)).build();
+            return Menu::of(registry, view_state).item(layout_context_menu_item("focus-preflight-issue", labels.preflight.as_str(), "alert-triangle", "focusPreflightIssue", Some(semio_framework::dsl_value!({ "issue": issue_value })), false, false)).build();
         }
     }
 
@@ -317,9 +318,9 @@ fn layout_context_menu_items(
 
     if selected.is_empty() {
         if preview {
-            return Menu::of(registry).action("selectAll").build();
+            return Menu::of(registry, view_state).action("selectAll").build();
         }
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry, view_state);
         if let Some(hit) = element_hit {
             menu = menu.item(layout_context_menu_item(
                 "select-hit",
@@ -332,15 +333,11 @@ fn layout_context_menu_items(
             ));
         }
         menu = menu.group("create", |group| layout_add_frame_items(layout_add_frame_items(layout_add_frame_items(group, labels, "rect"), labels, "text"), labels, "image"));
-        let mut items = menu.action("addPage").action("selectAll").action("paste").destructive("clearSelection").build();
-        if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
-            clear.disabled = Some(true);
-        }
-        return items;
+        return menu.action("addPage").action("selectAll").action("paste").destructive("clearSelection").disabled_because(&semio_framework_plugin::nothing_selected()).build();
     }
 
-    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Rahmen" } else { "frame" }, if is_de { "Rahmen" } else { "frames" })]);
-    let mut menu = Menu::of(registry);
+    let phrase = selection_count_phrase(view_state.locale, &[(selected.len(), SelectionKind::Frame)]).unwrap_or_default();
+    let mut menu = Menu::of(registry, view_state);
     if let Some(hit) = element_hit.filter(|hit| !selected.contains(&hit.id)) {
         menu = menu.item(layout_context_menu_item(
             "select-hit",
@@ -369,11 +366,7 @@ fn layout_context_menu_items(
             false,
         ));
     }
-    let mut items = menu.destructive("clearSelection").build();
-    if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
-        clear.disabled = None;
-    }
-    items
+    menu.destructive("clearSelection").build()
 }
 //#endregion 🔖️ContextMenu
 
@@ -457,8 +450,8 @@ mod args_bridge {
     /// accept any `Number` variant, so nothing else changes).
     fn integral(value: DslValue) -> DslValue {
         match value {
-            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
             DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
             DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
@@ -472,7 +465,7 @@ mod args_bridge {
         match value {
             DslValue::String(_) => value,
             DslValue::Null => DslValue::String(String::new()),
-            other => DslValue::String(dsl::json::to_json_string(&other)),
+            other => DslValue::String(semio_framework_pack_json::to_json_string(&other)),
         }
     }
 
@@ -523,7 +516,7 @@ mod args_bridge {
         folded
     }
 
-    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+    fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("layout action '{action}' arguments do not decode: {error}")))
     }
 
@@ -549,7 +542,7 @@ mod args_bridge {
             kind.ok_or_else(invalid)?
         } else {
             let Some(DslValue::String(raw)) = field("drag_data") else { return Err(invalid()) };
-            let value = dsl::json::from_json_str::<DslValue>(raw).map_err(|_| invalid())?;
+            let value = semio_framework_pack_json::from_json_str::<DslValue>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| invalid())?;
             let DslValue::Object(payload) = value else { return Err(invalid()) };
             let mut kind = None;
             let mut artifact_ref = None;
@@ -588,7 +581,7 @@ mod args_bridge {
             "setActivePage" => LayoutCommand::SetActivePage(decode(action, fold(args, PAGE, &[]))?),
             "focusPreflightIssue" => LayoutCommand::FocusPreflightIssue(decode(action, fold(args, &[("id", "object_id"), ("frame_id", "object_id")], &[]))?),
             "engagementInput" => LayoutCommand::EngagementInput(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
-            "canvasPointerDown" => LayoutCommand::CanvasPointerDown(decode(action, fold(args, &[("shift_key", "extend")], &[("button", DslValue::Number(dsl::Number::Int(0))), ("extend", DslValue::Bool(false))]))?),
+            "canvasPointerDown" => LayoutCommand::CanvasPointerDown(decode(action, fold(args, &[("shift_key", "extend")], &[("button", DslValue::Number(semio_framework_value::Number::Int(0))), ("extend", DslValue::Bool(false))]))?),
             "canvasPointerMove" => LayoutCommand::CanvasPointerMove(decode(action, fold(args, &[], &[("samples", DslValue::Array(Vec::new()))]))?),
             "canvasPointerUp" => LayoutCommand::CanvasPointerUp(decode(action, fold(args, &[], &[("cancelled", DslValue::Bool(false))]))?),
             "canvasDragOver" => LayoutCommand::CanvasDragOver(decode(action, catalogue_args(action, args)?)?),
@@ -658,6 +651,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id {
@@ -1076,7 +1070,7 @@ fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<L
         _ => return Ok(None),
     };
     if request.tool_id != kind.tool_id() {
-        return Err(Fault::from("layout-export-command-tool-mismatch"));
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "layout export command does not match its exact registered tool"));
     }
     let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
     // 📤️ A queue of the job's OWN, never `request.output_chunks`: the mounted operation keeps a clone
@@ -1117,26 +1111,6 @@ fn layout_window_engagement(config: &LayoutWindowConfig, transient: &LayoutWindo
     }
 }
 //#endregion 🔖️WindowEngagement
-
-//#region 🧺️ArtifactPreparation
-/// 🧺️ The Artifact lane's one-item publication authority: the bounded framework preparation, with every leaf's fold
-/// footprint declared from its inverse-row bound ([`crate::mutations::layout_mutation_inverse_rows`]). `work_items` counts
-/// staged ROWS (the forward plus every inverse row), and a frame-selection leaf restores rows per target — the
-/// point-invertible default refused every turn, scaling and multi-frame drag with `batched item candidate failed its
-/// exact fixed fold contract`.
-struct LayoutArtifactStorePreparationFactory(std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<LayoutSnapshot, LayoutMutation>>);
-
-impl store::ArtifactStoreOneItemPreparationFactory<LayoutSnapshot, LayoutMutation> for LayoutArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &LayoutMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        let admitted = self.0.preflight(mutation, description, lane)?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_item(crate::mutations::layout_mutation_inverse_rows(mutation), admitted.retained_bytes))
-    }
-
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LayoutSnapshot, LayoutMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<LayoutSnapshot, LayoutMutation>>, store::ArtifactStoreOneItemPreparationRequest<LayoutSnapshot, LayoutMutation>> {
-        self.0.begin(request)
-    }
-}
-//#endregion 🧺️ArtifactPreparation
 
 //#region 🪧️EntityLabels
 /// 🪧️ What a history-edit reference chip reads for the layout entity `id` (gap N3): a frame (`kinds` names `frame`, or
@@ -1338,9 +1312,9 @@ impl ArtifactEditor for LayoutPlayApp {
     /// document verb at dispatch (`declares the unsupported artifact publication lane`). One retained
     /// mutation is bounded by `LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES` (`CreatePage` carries a whole
     /// page with its layers; `ChangeDataFields` a `fields:in` dictionary); its fold footprint is the leaf's own
-    /// inverse-row bound ([`LayoutArtifactStorePreparationFactory`]).
+    /// schema-declared inverse rows (`ArtifactStoreOneItemFootprint::for_leaf`).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(LayoutArtifactStorePreparationFactory(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))))
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -1367,7 +1341,7 @@ impl ArtifactEditor for LayoutPlayApp {
             return layout_build_export_tool_job(request);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("layout-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "layout retained command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let work = Box::new(LayoutWindowWork::new(tool_id));
@@ -1472,17 +1446,18 @@ impl ArtifactEditor for LayoutPlayApp {
     }
 
     /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `fields:in` binds the incoming `form.dictionary`
-    /// values into `LayoutSnapshot::data_fields_json` — layout has no existing text-interpolation/
+    /// values into `LayoutSnapshot::data_fields` — layout has no existing text-interpolation/
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
-    /// named data source (see `crate::LayoutSnapshot::data_fields_json`'s doc) rather
+    /// named data source (see `crate::LayoutSnapshot::data_fields`'s doc) rather
     /// than wiring it into rendering today.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "fields:in" => {
-                let MediaPayload::Structured { json, .. } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "fields:in only accepts a Structured (JSON object) payload".into()));
-                };
-                Ok(Emit::mutations(vec![LayoutMutation::ChangeDataFields(ChangeDataFields { new_json: Some(json.clone()) })]))
+                let MediaPayload::Intrinsic {schema,value}= &media.payload else{return Err(MediaError::Payload(port.to_string(),"fields:in requires an intrinsic form dictionary".into()))};
+                if schema!="form.dictionary"{return Err(MediaError::Payload(port.to_string(),"fields:in requires the declared form.dictionary schema".into()))}
+                let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);
+                let dictionary=crate::FormDictionary::from_intrinsic_controlled(value,&mut control).map_err(|error|MediaError::Payload(port.to_string(),error.into_message()))?;
+                Ok(Emit::mutations(vec![LayoutMutation::ChangeDataFields(ChangeDataFields {new_fields:Some(dictionary)})]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1534,8 +1509,7 @@ impl ArtifactEditor for LayoutPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
-        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &[])
+        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), view_state, request.surface.as_ref(), &[])
     }
 
     fn context_menu_with_request_context(
@@ -1546,9 +1520,8 @@ impl ArtifactEditor for LayoutPlayApp {
         interaction: &InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let fallback = LayoutInteractionSnapshot::from_interaction(interaction).ids;
-        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &fallback)
+        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), view_state, request.surface.as_ref(), &fallback)
     }
 }
 //#endregion 🔖️LayoutPlayApp

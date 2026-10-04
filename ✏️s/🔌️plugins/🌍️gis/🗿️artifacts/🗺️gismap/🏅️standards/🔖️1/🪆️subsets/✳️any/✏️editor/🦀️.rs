@@ -220,7 +220,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// non-selection click that toggles layer visibility in an unbound tree).
 pub fn gis2d_layer_tree_item(
     id: impl AsRef<str>,
-    label: semio_framework_ui_locale::Label,
+    label: semio_framework_ui_contract::Label,
     description: Option<String>,
     icon_id: &str,
     action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
@@ -301,11 +301,10 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
-/// payload; reuses the exact descriptor JSON shape the ◻️2d window's renderer/`MapHost` already consume,
-/// so there is exactly one "gis map as JSON" shape in the whole app.
+/// 🎞️ Map transport carries complete first-party feature values with exact tags and order.
 pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
-    Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::schema::gis_map_descriptor_json(document) } }
+    let value=semio_framework_value::DslValue::Object([("positions",&document.positions),("routes",&document.routes),("regions",&document.regions)].into_iter().map(|(name,features)|(name.into(),semio_framework_value::DslValue::Array(features.iter().map(|feature|feature.data.clone()).collect()))).collect());
+    Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Intrinsic { schema: "2d.map".into(), value } }
 }
 //#endregion 🔖️Io
 
@@ -442,6 +441,7 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>,
+    _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Gis2dPlayApp>>, Fault> {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("gis-map-window-work-terminal"));
@@ -603,40 +603,15 @@ struct Gis2dOneItemPreparation<P, M> {
     stamp: Option<GisMapOneItemStampV1>,
 }
 
-fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
-    let retained_id = format!("gis2d-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    let (id, mutation_id, timestamp) = stamp.map_or_else(
-        || {
-            let mutation_id = protocol::MutationId(format!("{retained_id}#0"));
-            (retained_id, mutation_id, authority.next_clock())
-        },
-        |stamp| (stamp.mutation_id.0.clone(), stamp.mutation_id, stamp.timestamp),
-    );
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id,
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(mutation_id),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp,
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: authority.group_id().map(str::to_owned),
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
+/// 🛡️ The authority-minted one-item edit, carrying the Hub-derived identity when a stamped committer prepares it.
+fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
+    let mut edit = authority.next_edit(forward, inverse);
+    if let Some(stamp) = stamp {
+        edit.id = stamp.mutation_id.0.clone();
+        edit.mutation_meta[0].timestamp = stamp.timestamp;
+        edit.mutation_meta[0].mutation_id = Some(stamp.mutation_id);
     }
+    edit
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
@@ -653,11 +628,11 @@ where
         self.stamp.as_ref().map(|stamp| stamp.mutation_id.clone())
     }
 
-    fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("GIS map retained preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -702,7 +677,7 @@ where
             0 => {
                 let base = self.base.as_ref().ok_or_else(|| "GIS map retained preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "GIS map retained preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
@@ -714,7 +689,7 @@ where
                 let line_bytes = authority.line_id().map_or(0, str::len);
                 if grant.maximum_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "GIS map retained preparation lost its semantic candidate".to_string())?;
-                let edit = gis2d_one_item_edit(mutation, inverse, self.description.take(), authority, self.stamp.take());
+                let edit = gis2d_one_item_edit(mutation, inverse, authority, self.stamp.take());
                 let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -745,7 +720,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -754,7 +729,7 @@ where
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("GIS map retained preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -777,42 +752,38 @@ where
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-fn select_feature_action_args(feature_id: &str) -> dsl::DslValue {
-    let targets = dsl::os_pack::json!([{ "granularity": GIS2D_FEATURE_GRANULARITY, "id": feature_id }]).to_string();
-    dsl::DslValue::object([
-        ("domainId".to_string(), dsl::DslValue::String(GIS2D_INTERACTION_DOMAIN.to_string())),
-        ("targets".to_string(), dsl::DslValue::String(targets)),
-        ("merge".to_string(), dsl::DslValue::String("replace".to_string())),
-        ("method".to_string(), dsl::DslValue::String("pick".to_string())),
+fn select_feature_action_args(feature_id: &str) -> semio_framework_value::DslValue {
+    let targets = semio_framework_pack_json::json!([{ "granularity": GIS2D_FEATURE_GRANULARITY, "id": feature_id }]).to_string();
+    semio_framework_value::DslValue::object([
+        ("domainId".to_string(), semio_framework_value::DslValue::String(GIS2D_INTERACTION_DOMAIN.to_string())),
+        ("targets".to_string(), semio_framework_value::DslValue::String(targets)),
+        ("merge".to_string(), semio_framework_value::DslValue::String("replace".to_string())),
+        ("method".to_string(), semio_framework_value::DslValue::String("pick".to_string())),
     ])
 }
 
 /// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection — grouped
-/// disclosure via `Menu::of(registry)`; `organize_context_menu` (run automatically at the
+/// disclosure via `Menu::of(registry, view_state)`; `organize_context_menu` (run automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts the declared `.group(...)` rows into
 /// `RIBBON_PARENT_CATEGORIES` taxonomy order and inserts the pre-destructive separator itself.
 ///
 /// 🕹️ `selected_ids` is the live `"features"` domain selection when this is reached through
 /// `context_menu_with_request_context`, and empty through the interaction-less `context_menu` twin —
-/// it is what decides whether `clearSelection` renders enabled.
-async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+/// it is what decides whether `clearSelection` renders enabled or disabled with its reason.
+async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, view_state: &semio_framework_plugin::ViewModel, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let hits = surface.map_or(&[][..], |s| s.hits.as_slice());
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
-        let mut menu = Menu::of(registry)
+        let mut menu = Menu::of(registry, view_state)
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
-            .action_args("focusFeature", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone())), ("featureKind".to_string(), dsl::DslValue::String(kind.to_string()))]));
+            .action_args("focusFeature", semio_framework_value::DslValue::object([("featureId".to_string(), semio_framework_value::DslValue::String(feature.id.clone())), ("featureKind".to_string(), semio_framework_value::DslValue::String(kind.to_string()))]));
         if kind == "position" {
-            menu = menu.action_args("openSource", dsl::DslValue::object([("featureId".to_string(), dsl::DslValue::String(feature.id.clone()))]));
+            menu = menu.action_args("openSource", semio_framework_value::DslValue::object([("featureId".to_string(), semio_framework_value::DslValue::String(feature.id.clone()))]));
         }
         return menu.build();
     }
-    let mut items = Menu::of(registry).action("selectAll").action("fitWorld").destructive("clearSelection").build();
-    if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
-        clear.disabled = selected_ids.is_empty().then_some(true);
-    }
-    items
+    Menu::of(registry, view_state).action("selectAll").action("fitWorld").destructive("clearSelection").when(selected_ids.is_empty(), |menu| menu.disabled_because(&semio_framework_plugin::nothing_selected())).build()
 }
 
 impl Gis2dPlayApp {
@@ -880,7 +851,7 @@ impl ArtifactEditor for Gis2dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("gis2d-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the gis map command does not match its exact registered tool or exceeds its declared extent"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(GisMapWindowWork::new(tool_id));
@@ -980,9 +951,12 @@ impl ArtifactEditor for Gis2dPlayApp {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_gis_map_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
     /// implicit document ports.
@@ -1050,7 +1024,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Gis2dCommand` — React/wgpu still speak the
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         let args = args.map_or(Value::Null, Value::from);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
@@ -1167,10 +1141,10 @@ impl ArtifactEditor for Gis2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await })
+        ::semio_framework_async::poll::resolve_ready(async { gis2d_context_menu_items(registry, view_state, request.surface.as_ref(), &[]).await })
     }
 
     /// 🕹️ `clearSelection` is gated on the AUTHORITATIVE framework-owned `"features"` selection, not on
@@ -1181,12 +1155,12 @@ impl ArtifactEditor for Gis2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_framework_plugin::ViewModel,
         interaction: &InteractionView<'_>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let selected = Gis2dInteractionSnapshot::from_interaction(interaction).ids;
-        semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &selected).await })
+        ::semio_framework_async::poll::resolve_ready(async { gis2d_context_menu_items(registry, view_state, request.surface.as_ref(), &selected).await })
     }
 }
 //#endregion 🔖️Gis2dPlayApp

@@ -18,17 +18,17 @@ fn document_browser_actor_v1_matches_language_neutral_fixture() {
         let json = serde_json::to_string(&candidate).unwrap();
         let renderer = law["renderer"].as_str().unwrap();
         let accepted = if law["view"] == "plan" {
-            match crate::os_pack::json::from_json_str::<DocumentOpenBrowserActorV1>(&json) {
+            match semio_framework_pack_json::from_json_str::<DocumentOpenBrowserActorV1>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                 Ok(value) if value.validate(source, renderer).is_ok() => {
-                    assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&value)).unwrap(), candidate);
+                    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(), candidate);
                     true
                 }
                 _ => false,
             }
         } else {
-            match crate::os_pack::json::from_json_str::<DocumentExecutionTargetBrowserActorV1>(&json) {
+            match semio_framework_pack_json::from_json_str::<DocumentExecutionTargetBrowserActorV1>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                 Ok(value) if value.validate(source, renderer).is_ok() => {
-                    assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&value)).unwrap(), candidate);
+                    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(), candidate);
                     true
                 }
                 _ => false,
@@ -36,10 +36,10 @@ fn document_browser_actor_v1_matches_language_neutral_fixture() {
         };
         assert_eq!(accepted, law["accepted"].as_bool().unwrap(), "{}", law["id"]);
     }
-    let plan: DocumentOpenBrowserActorV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&fixture["closed"]).unwrap()).unwrap();
+    let plan: DocumentOpenBrowserActorV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["closed"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let length = fixture["byteLength"].as_u64().unwrap();
     let lease = plan.to_lease(source, "wasm", Some(length)).unwrap();
-    let encoded: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&lease)).unwrap();
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&lease)).unwrap();
     let mut expected = fixture["closed"].clone();
     expected["byteLength"] = fixture["byteLength"].clone();
     assert_eq!(encoded, expected);
@@ -54,7 +54,7 @@ fn document_browser_actor_v1_matches_language_neutral_fixture() {
         } else {
             changed[field] = serde_json::json!("different");
         }
-        let other: DocumentExecutionTargetBrowserActorV1 = crate::os_pack::json::from_json_str(&serde_json::to_string(&changed).unwrap()).unwrap();
+        let other: DocumentExecutionTargetBrowserActorV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&changed).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_ne!(lease, other, "equality omitted {field}");
     }
     assert_eq!(DocumentOpenBrowserActorV1::None.to_lease(source, "react", None), Ok(DocumentExecutionTargetBrowserActorV1::None));

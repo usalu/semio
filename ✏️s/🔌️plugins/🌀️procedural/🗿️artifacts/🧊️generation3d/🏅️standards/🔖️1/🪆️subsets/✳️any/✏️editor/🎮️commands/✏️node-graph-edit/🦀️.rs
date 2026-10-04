@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_framework_tool_machine::{node_drag_commit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
+use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -13,18 +13,18 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
 /// 🧾️ The rows of one `nodeGraphEdit` batch through the ONE shared closed decoder (`🛠️tool-machine`
-/// [`node_graph_edit_rows`], design §13.3): a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute
+/// [`node_graph_edit_rows`], design §13.3): a whole-fixture host-snapshot row, an ambient-selection delete, an absolute
 /// move, an unknown operation or any malformed row refuses the whole batch before anything is authored.
 pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
-    let operations = dsl::json::parse(&payload.operations_json).map_err(|error| Fault::from(format!("nodeGraphEdit operations are not JSON: {error}")))?;
-    node_graph_edit_rows(&dsl::DslValue::object([("operations".to_string(), dsl::json::to_dsl_value(&operations))])).map_err(Fault::from)
+    let operations = semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(format!("nodeGraphEdit operations are not JSON: {error}")))?;
+    node_graph_edit_rows(&semio_framework_value::DslValue::object([("operations".to_string(), semio_framework_pack_json::to_dsl_value(&operations))])).map_err(Fault::from)
 }
 
 /// 🧾️ The leaves one decoded batch yields:
@@ -78,13 +78,8 @@ fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEdi
         return Ok(Emit { artifact_mutations: leaves, ui_scope, ..Default::default() });
     }
     leaves.extend(generation3d_node_drag_leaves(host_snapshot, &records));
-    let authoring_seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     let gesture = records.first().map_or("nodeGraphEdit", |record| record.gesture_id.as_str());
-    Ok(match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, generation3d_gesture_clock()) {
-        Some((transaction, leaves)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
-        Some((_, leaves)) => Emit::mutations(leaves),
-        None => Emit::default(),
-    })
+    Ok(node_drag_emit(crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into())
 }
 
 /// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a widget that is no slider or the
@@ -108,12 +103,6 @@ pub(crate) fn generation3d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
             (!ids.is_empty()).then(|| move_nodes(ids, record.dx, record.dy))
         })
         .collect()
-}
-
-/// ⏰️ The host clock a generation3d tool commit runs on, so a transaction id minted at its upsert is unique per admission
-/// AND per moment.
-pub(crate) fn generation3d_gesture_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
 }
 
 /// 🐢️ What ONE slider tick actually invalidates: the graph that draws the knob, the preview that

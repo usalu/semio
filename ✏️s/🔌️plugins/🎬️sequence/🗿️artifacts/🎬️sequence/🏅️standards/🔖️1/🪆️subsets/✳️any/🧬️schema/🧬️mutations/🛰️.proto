@@ -1,24 +1,5 @@
 syntax = "proto3";
 package semio.s.sequence.sequence.mutation;
 
-import "../../../🪜️step/🧬️schema/🧬️mutations/🌱️create-step/🛰️.proto";
-import "../../../🪜️step/🧬️schema/🧬️mutations/🗑️delete-step/🛰️.proto";
-import "../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🛰️.proto";
-import "../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🛰️.proto";
-import "../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🛰️.proto";
-import "../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🛰️.proto";
-import "../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🛰️.proto";
-import "../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🛰️.proto";
-
-message SequenceMutation {
-  oneof mutation {
-    CreateStep create_step = 1;
-    DeleteStep delete_step = 2;
-    MoveStep move_step = 3;
-    EditStepParams edit_step_params = 4;
-    ChangeStepCollapsed change_step_collapsed = 5;
-    ConnectSteps connect_steps = 6;
-    DisconnectSteps disconnect_steps = 7;
-    DuplicateStep duplicate_step = 8;
-  }
-}
+// 🎬️ Empty: a sequence's content edits are child-lane leaves of its composed `content` flow child (design §20.15).
+message SequenceMutation {}

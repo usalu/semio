@@ -11,7 +11,7 @@
   "spreads": null,
   "pages": null,
   "printTarget": "cmyk-coated",
-  "dataFieldsJson": null,
   "backgroundDrawing": null,
-  "referencedModel": null
+  "referencedModel": null,
+  "dataFields": null
 }

@@ -18,13 +18,27 @@
   },
   "anchor": {
     "schema": "semio.store.owned-three-member-anchor.v1",
-    "parent": { "artifactId": "map-a", "dialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" } },
+    "parent": {
+      "artifactId": "map-a",
+      "dialect": {
+        "artifactKind": "s.gis.gismap",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
     "shape": "parent-drawing-value"
   },
   "members": {
     "parent": {
       "role": "parent",
-      "reference": { "artifactId": "map-a", "dialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" } },
+      "reference": {
+        "artifactId": "map-a",
+        "dialect": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      },
       "owner": null,
       "expectedGeneration": 7,
       "expectedRevisionHex": "0000000000000000000000000000000000000000000000000000000000000001",
@@ -32,16 +46,30 @@
       "callerRecoveryPackHex": "626f756e642d706172656e742d6372656174652d726567696f6e2d7631",
       "callerRecoveryPackSha256": "d413b0d7053b1289625f4a4ce73da5382a67411126c6d4d282f1211679cd9388",
       "callerRecoveryExpected": "reject",
-      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef88000000000000000003034a656316c84d2cd0cd2fcf4b2dd22d482c4acd2bd12a4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4dd54bcf2cd6056290a632437564a5a57949f9a57929ba185aca0c01fe58875e04038e06c50ae366606362646364624965666167115360c00f98585918d998c5d8c5b4be31ba1c623cc6f882f11ee313469792a40897078c17183f313e63bc04143ec47883711fe32d200f2895900094bd0154780e2ee75292f28b91838d8153ac950568d225c6134021975b40b9078c510f80d413c6538c7780a6479d024a5d0231925c22506c84a9bec7f80ea8f214500c452350f519b0ca7760c11360a76c6304ba12a1a6045585cb2ec608a053ee30be011bf70c48626a41930769b9c5f80a287308882f01cdbbc3380b2801e28334033d872ebd0f4813e15db704a0178e00e540f6ec83db0931c3a5240f141a20832f80fd806e28ee500139e31690fb0ceca85b40c52e255488cc089757401b4e0025f6018dbc071406497f0239a98bf103501dc8f816a877e60195de004946b880b82037835c07d2b18ff11a90069904d4099104793906e45c90eb4e31c68002e0146314289840d240bf82c2e118501ae4af1890c39e314641286870bc6104259f1b40ce11a0129093813e0419060b1c079450fac5088ad713e0503a0614be0454078b3e0cad2750353ba03a07eac547404190fc31203907c8be05760838b081e109898b27600f9d606c0239a1c425252125272aa1282a216b056342420908256d81a46b5000817c7701bffa2490fa5f8c5c62cf1927312d635cc0388d514ac44484099491a1f81ef329c67bcc13404c3060631311380634336c0263c414c659cc614c0c51df984e317e62e660333100c968681c00bafd1ce33ce6b8298c939867304f639cc17c08e8fc1340c1a029ccf39827015d758c91816119d32da6094c124c6c0931c71813b630fe03c23666964bccab98f730fd625cc3fc06a8ff1c30515c03a6ee8a1dcc9f98331e31be617ec6f480f91ae33766504adac07489b1e817d30ba639cc13807e5804f4eb042626010f032303a6738c8f98de30ff015ac4f085f118d309c6038c103ff600d3d73cc6158c49304fae00a9018102287d8e19ca78c1d4c7287686f909d054931b8c5f98c29e319f63dac7b48829a2856901d317a6178c697d4c9f983f301e6056e862967bc1e4f588f90e331f2cb43a80beadb9c204002b342ec6010332306358d5725aabb5d77ee38bd57e81cdd7e4bd45a514feff3d99cb35655e6a434dd806e9a2196c8c0a410c4070948b9b8119007d977ed60000007aa3646053504b464f4f543101000000010000008a030000000000003a000000000000001f040000000000000b5e71dd3418c335227e658c09773b84b91c35c10f132f297d66bb74a79aa1390000000000000000ebde56bf",
-      "unboundOutcomeSha256": "42ea797ad1b069f1c625484744fca99d5d0764e1e4b3d793fe45821785489caf",
+      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef88000000000000000003034a656316c84d2cd0cd2fcf4b2dd22d482c4acd2bd12a4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4dd54bcf2cd6056290a632437564a5a57949f9a57929ba185aca0c01fe58875e0403d204e606e366606362646364624965666167115360c00f98585918d998c5d839b4aa9512934bf28b94ac0c75940a322a8b33931373e2738b817c0303a0504e7e3a4844c9caa896838d819363224bb552668a9295526e62816e4162516a5e896e6a4a6689aea1920ecc24b05c7e795e6a115405502a2dbfa83cb12805686eb41244d00a2aa414aba3949957965a549c8a240913014ae69696249664e6e7f9a69624025554c305e2b13b44d900685f5262716a3cc808a03a252b73a0db4a4b32f28b105ad0dc5792999b5a5c92985ba064457c88e82895e6a5e4c717e4e764265702cd75ad00ea7402daec9f97530934b438353731af2433393e3b330f642f909f99af570c343c552f3f2f5537b324355737bfb424393f37552f3db3581788416e2b0305664e62522ad016a582a254902b15a04ead0586484a6a7172516601280c100a52a02a14a00682ed2f2c4dcd4b4ef52bcd4d4a057908e87ca0278b4a52531c4b803a8d0c8ccc740d2c750d4c430c0cac40c8300a1457997999c519b8d41882d5e464e601a32baf3427a7968be33963677080372f97141723306dc1f0fbd4f71db0f4c6ccccc5919ca2eda1e375569b91417777ea4f16662989e414119184a4f4f3fa5e27cf789f494c4c49d73c75de3335998161f2da0e1e466603bd6483a8fafac34c2fafceabbd567632dd29bbcce6ce4f93c26f9b3f64ffce8f9f9169b977cb398fce40c70e460e15094909c6f48ddfea80d6552d4e4900bac8cddf3fc410e69c10a8532ca0f47328bdc59dfb59518754ce2eedcfcbe74fd4699ab0abc4b8fd67c50381a3fc5b543fbe638779e1c879bb550077cb54bc0103323063b851b345b5e77157dfe7958aed6758bde634733dfda87e8cd7f0d5e3b9d399336f2c2abac3c2a810c40004cfd8b81998012c4efd020000007aa3646053504b464f4f54310100000001000000ce020000000000003a00000000000000630300000000000013d7b7b443d577e9b5f72b1b73e1770df68a00fc37193d22a2c9ddb2b57744e90000000000000000a78d7116",
+      "unboundOutcomeSha256": "e3c3670c397d3206b6760329629ec94893be7a2078c9c5fe2b474fd9f0d91e78",
       "postGeneration": 8,
       "postRevisionHex": "0000000000000000000000000000000000000000000000000000000000000002"
     },
     "drawing": {
       "role": "drawing",
-      "reference": { "artifactId": "gismap-drawing", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" } },
+      "reference": {
+        "artifactId": "gismap-drawing",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "drawing"
+        }
+      },
       "owner": {
-        "parent": { "artifactId": "map-a", "dialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" } },
+        "parent": {
+          "artifactId": "map-a",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
         "slot": "drawing",
         "childId": "gismap-drawing"
       },
@@ -51,16 +79,30 @@
       "callerRecoveryPackHex": "626f756e642d64726177696e672d6372656174652d6e6f64652d7631",
       "callerRecoveryPackSha256": "003a081510bfed64540bde7740bc63d6032224c9441f2a3cb116edeb86e9dad5",
       "callerRecoveryExpected": "reject",
-      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef88000000000000000003034a696316cc4d2cd0cd2fcf4b2dd24d294a2ccfcc4bd72d4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4d050aa764e6c3959619aa23ab2ecd4bca2fcd4bd1c5d055660800d679c8ad04039706e20ae36660636264636462496366e166115360c00fd8585998d89825d8c5b4be31ba1c623cc6f882f11ee313469792940897078c17183f313e63bc04143ec47883711fe32d20cfa524292101287b03a8f01c5ccea524ed1723071b03a7d84416a04997184f00855c6e01e51e30469d009a7888f11d50f11da096a85340c94b408ba2525c2250ec84a9bf07547b87f114500c4d2b50fd19b0da7740c127406340ced9c6e882aaaa04558dcb2ec608a083ee30be011bf90c4862d384a602a4e916e32ba0db0e01f125a0897718670125407c9076a027d1a5f70169a2bced9600f4c811a01cc8a67d705b21a600c33709142c20b32f803d826e2ebee001b9e51650ee19d865b780ca5d4aa810b3112eaf80369c004aec031a790f280c92fe04725417e307a03a90f12d501fcd032abd01928c70017141aebe030ea46340ddd7c06e057b072209f2750cc8b920d79d628c0185c129c628504881a481be0585c431a034c85f6095a070bc8711be6f18938036de000a1d012a04391ce84f90910fc009e114a3035a68fd620445f20970681d034a5d02aa84c52586e613e8da1d501d06f5ec23a0e029a0fc31203907c8be05760c28d89380210b89952760af9d606c02d2407b52125272a2128aa212b256302624948050ca16485207d97409e8ba0bf8d52781d4ff62e4127bc138896919e302c6698c522226224cc0fc0dc3f7984f31de639e006242f23d9b98d031a099f31883a63046cc639ec13c8d918fe11fb3964308079b8901484a43e300d0f1e718e731c74d619c04563183f9103878cf017531cf639e0474d63146a0e14c9b184f31fd6062624b8839c698b085f11f10b631b35c625ec5bc87e917e31ae6374003ce0113c8356062afd8c1fc8939e311e31be6674c0f98af317e6306a5aa0d4c97188b7e31bd609ac3bc01e88b4540df6e606212f0303032606a603ec07889e91833d0dd5f188f319d603cc008f1650fd0fdf318573026c1bcb90ae81a302880d217409a40600f5307d32dc6594ce7981f31dd610c9ac7fc817915d06b77981a98a23c5631af60fec77883690dd30de6794c6d8c5a33182d5e3159dd607e020c4e5890ad00fae41a304200fe3149e2010332306358d5725aabb5d77ee38bd57e81cdd7e4bd45a514feff3d99cb35655e6a434dd806e9a2856c8c0a410c40f0888b9b811900fb3c4b070000007aa3646053504b464f4f5431010000000100000093030000000000003a0000000000000028040000000000000c593081702dfd0d2cb6f8cfb1e2790022255ee4df5bff0deae4691463aec1ce000000000000000082957ac2",
-      "unboundOutcomeSha256": "26230a4617f8fc04eb413007efc8db54bdc713df5059c13e9fb63ed42b8d8895",
+      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef88000000000000000003034a696316cc4d2cd0cd2fcf4b2dd24d294a2ccfcc4bd72d4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4d050aa764e6c3959619aa23ab2ecd4bca2fcd4bd1c5d055660800d679c8ad0403d804f306e36660636264636462496366e166115360c00fd8585998d89825d839b4aa9512934bf28b94ac8c74940a322a8b33931373e2738b95ac0c0d0c804239f9e92011252be35a0e36064e8eb92cd54a99294a564ab98905ba294589e59979e9baa9299925ba464a3a30a3c092f9e579a945302540b9b4fca2f2c4a214a0c9d14a50512ba89852ac8e52665e596a51712ab22c4c08289b5b5a925892999fe79b5a920854520d1788c7e1186503a0954989c5a9f12033800a811e32043ab0b42423bf08a109dd912599b9a9c52589b9054a56c4078c8e52695e4a7e7c417e4e667225d060d70aa04e27a0ddfe79399540438b537313f34a3293e3b333f3401603f999f97ac540c353f5f2f35275334b527375f34b4b92f3735381c22999f970cf941902f5e72426a5022d522a284a2d482c4a558039b716183029a9c5c9459905a0a040a848812951809a0a764461696a5e72aa5f696e522ad05786403f007d5a54929ae25802d46a646064a66b60a96b601a62606005424651a058cbcccb2ccec0a5c610ac2627330f186f79a53939b55c1c2f183b8303bc79b9a4b81881e90c86dfa7beef80a53d66666ecee4147f4d2f9df367bcd919fe8b2a68b1304b4924a788882424a59fd7f73a79c6fb4c626252bae6a9f39ea9c90c0ceb2397ee616436d04b3688aaaf3fccf4f2eabcda6b6527d39db2cb6ceefc3429fcb6f943f6effcf81999967bb79c8be80c749cc1c8a1222129c1782061e563a07d558b5312804e72f3f70f3184b92714ea160b28fd024acf6bc9ed7dbe314ff3fc8fd0f3eb1a7455ae5ea95f33ed4dbfb3a88fcc56d9379b82617e98529b9d0700299764fc0103323063b851b345b5e77157dfe7958aed6758bde634733dfda87e8cd7f0d5e3b9d399336f2c2a7ac4c2a810c400049fd9b819980181570ab10000007aa3646053504b464f4f54310100000001000000d4020000000000003a0000000000000069030000000000007d245fd8ae60cc10332df96c5a6dda6545aa56b8f50f7756491caca0d0adeee500000000000000008abd1990",
+      "unboundOutcomeSha256": "91f52504f90ad61c0532bb44c8db135bc49a9035cfea465da864d55f7ab4f7aa",
       "postGeneration": 12,
       "postRevisionHex": "0000000000000000000000000000000000000000000000000000000000000004"
     },
     "value": {
       "role": "value",
-      "reference": { "artifactId": "gismap-value", "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "value" } },
+      "reference": {
+        "artifactId": "gismap-value",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value"
+        }
+      },
       "owner": {
-        "parent": { "artifactId": "map-a", "dialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" } },
+        "parent": {
+          "artifactId": "map-a",
+          "dialect": {
+            "artifactKind": "s.gis.gismap",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
         "slot": "value",
         "childId": "gismap-value"
       },
@@ -70,8 +112,8 @@
       "callerRecoveryPackHex": "626f756e642d76616c75652d696e736572742d6c6973742d6974656d2d7631",
       "callerRecoveryPackSha256": "d62b71da9abe9a506d848ce9805768860db98514771abd5b3e8c4b789a7ad7cd",
       "callerRecoveryExpected": "reject",
-      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef8800000000000000000303496563e6cf4d2cd0cd2fcf4b2dd22d4bcc294dd52e4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4d050aa764e64314ea9619aa23ab2dcd4bca2fcd4bd1c5d05366080041c1a5be04038706b40ae36660636264636462496766e165115360c00fb8585998d998a5d8c5b4be31ba1c623cc6f882f11ee313469792b40897078c17183f313e63bc04143ec47883711fe32d20cfa524292101287b03a8f01c5ccea524e31723071b03a7d87f66a04997184f00855c6e01e51e3046bd012b79c5788a31ea1450e212d092a834970814fb606aef31be63bc0354f904591b50ed19b0ba7740a127402340ced8c6e8825051822aefb28b3102e8883b8c6fc0463d039981a6014d16a4e11650e60550c50ba013ef01a5670125407c9056a0a7d0a5f7016982de744b003afe08500664cb3eb88d10138061090cc94360732f803d806e26aee000b9e11690f90ceca25b40a52e255488c108975740eb4e0025f6018dbc071406497f0239a88bf103501dc8f816a86fe60195de004946b880b82017df0107ce31a0ee6b401a641250274412e4e318907341ae3bc51803f23f30a440a1049206fa14140ac780d2207f815582c2f01e4ab8be614c02da7603287004c805391ae84790710fc0117f8ad10129947e318222f50438948e01652f0155c1e20e43e30964ad0ea88e817af01158ee0e50f814e31c20fb16d811a0a006c52224269e80bd7382b1094803ed484948c9894a288a4ac85ac19890500242695b20c919143c97802ebb805f7d1248fd2f462eb1678c939896312e609cc628256222c204ccbb307c8ff914e33de609202618b0b109f11d039a19358d710673d02c462e867d8c628f98f438d84c0c40e21a1a07802e3fc7388f396e0ae324e619cc207587808e3f03140c9ac23c8f7912d04dc718191802222630ef6362624b8839c698b085f11f10b631b35c625ec5bc87e917e31ae63740ede780e9e11a305d57ec60fec49cf188f10df333a607ccd718bf318312d106a64b8c45bf985e30cd615e00f4c022a0471730310978181819305d6304a98c03baf80be331a6138c071821feeb01a6ac798c2b1893601e5c06740a181440e933cc50461f5303a34317f31cc60bcc292b188beae630dadd635ac47c8df90df32ea6478c15cf986f0173aec531a606a624930b401f9b3d62dc02338de11ad30da0c679cc005873d178010332306358d5725aabb5d77ee38bd57e81cdd7e4bd45a514feff3d99cb35655e6a434dd806e9c2896c8c0a810c40b0858b9b81190038e7c6a70000007aa3646053504b464f4f5431010000000100000082030000000000003a000000000000001704000000000000fdc66be013cdbc58d55681a81f2f74b3866a71cbf94fc65c0fa253e586b68c850000000000000000835c16dc",
-      "unboundOutcomeSha256": "1a260fe98b2bbd04cf97db5a6522e3467dd419703a5d4d7b860c7383d57de8d2",
+      "unboundOutcomePackHex": "8953454d0d0a1a0a2600000073746f72652e756e626f756e642d6f6e652d6974656d2d6f7574636f6d652e7061636b2076318953504b0d0a1a0a010000000100000001000000ef65ef8800000000000000000303496563e6cf4d2cd0cd2fcf4b2dd22d4bcc294dd52e4ecdcdccd72b2ec92f4ad5cbcf4bd5cd2c49cdd5cd2f2d49cecf4d050aa764e64314ea9619aa23ab2dcd4bca2fcd4bd1c5d05366080041c1a5be0403d204df06e36660636264636462496766e165115360c00fb8585998d998a5d839b4aa9512934bf28b94ac8c75940a322a8b33931373e2738b95ac0c0d0c804239f9e92011252b935a0e36064e8e6e966aa5cc14252ba5dcc402ddb2c49cd254ddd494cc125d63251d984160a9fcf2bcd4228802a04c5a7e517962510ad0d46825b0981554442956472933af2cb5a8381521071300cae59696249664e6e7f9a69624021554c305e2b13a42d90068595262716a3cc804a032a037809e482c2dc9c82f426841755c49666e6a7149626e819215f181a1a3549a97921f5f909f93995c0934d6b502a8d30968b37f5e4e25d0d0e2d4dcc4bc92cce4f8eccc3c90b5407e66be5e31d0f054bdfcbc54ddcc92d45cddfcd292e4fcdc54a0704a663ed423658640dd398949a9406b940a8a520b128b5215204ead0506484a6a7172516601280810f22910050a50f3c0d61796a6e625a7fa95e626a502fd030a05a01f8b4a52531c4b801a8d0c8ccc740d2c750d4c430c0cac40c8380a144f997999c519b8d41882d5e464e601e32aaf3427a7968be31963677080372f971417233055c1f0fbd4f71db094c6ccccc99e9ca2eb7d46d39795219e7ba3380bb39444728a88484252fa797daf9367bccf2426a6a56b9e3aef999accc0a0a173623e23b3815eb241547dfd61a69757e7d55e2b3b99ee945d6673e7a749e1b7cd1fb27fe7c7cfc8b4dcbbe55c4067a0e304460e15094909c6eccd1ff481b6552d4e49003ac8cddf3fc410e69a60a84b2ca0f43328ddeea070d4ef855188a5bd9ffcfa8bafbfcd2db4f99c5b2db3b8c1502ae3bc746114cc07ab735e9c07006e61f34d0103323063b851b345b5e77157dfe7958aed6758bde634733dfda87e8cd7f0d5e3b9d399336f2c2abcc3c2a810c80004f7d9b8199801eda651840000007aa3646053504b464f4f54310100000001000000cd020000000000003a000000000000006203000000000000418ef23b303249941a9f5e2f22883de457cfa4345224287957e94a5f5a2a80a60000000000000000599a5ca8",
+      "unboundOutcomeSha256": "efb27dedf1533aa0de7fa44d9b7238ae1bffdcfe5a9399dc13a5cbe40a754e80",
       "postGeneration": 14,
       "postRevisionHex": "0000000000000000000000000000000000000000000000000000000000000006"
     }
@@ -80,17 +122,78 @@
     "maxJsonDepth": 32,
     "maxJsonItems": 65536,
     "numericCases": [
-      { "id": "u64-max", "canonical": "18446744073709551615", "kind": "uint", "expected": "admit" },
-      { "id": "i64-min", "canonical": "-9223372036854775808", "kind": "int", "expected": "admit" },
-      { "id": "finite-float", "canonical": "1.5", "kind": "float", "expected": "admit" }
+      {
+        "id": "u64-max",
+        "canonical": "18446744073709551615",
+        "kind": "uint",
+        "expected": "admit"
+      },
+      {
+        "id": "i64-min",
+        "canonical": "-9223372036854775808",
+        "kind": "int",
+        "expected": "admit"
+      },
+      {
+        "id": "finite-float",
+        "canonical": "1.5",
+        "kind": "float",
+        "expected": "admit"
+      }
     ],
     "escapedControlIdentity": "map\u0000x",
-    "escapedControlExpected": "reject"
+    "escapedControlExpected": "reject",
+    "jsonMemberCases": [
+      {
+        "id": "duplicate-equal",
+        "source": "{\"schema\":\"a\",\"schema\":\"a\"}",
+        "expected": "non-canonical",
+        "serdeCategory": "data"
+      },
+      {
+        "id": "duplicate-different",
+        "source": "{\"schema\":\"a\",\"schema\":\"b\"}",
+        "expected": "non-canonical",
+        "serdeCategory": "data"
+      },
+      {
+        "id": "malformed",
+        "source": "{\"schema\":",
+        "expected": "codec",
+        "serdeCategory": "eof"
+      }
+    ]
   },
   "publication": {
-    "commitPhases": ["staging-parent", "staging-drawing", "staging-value", "starting-journal", "journal", "publishing-parent-lease", "publishing-drawing-lease", "publishing-value-lease", "adopting-parent", "adopting-drawing", "adopting-value", "clearing-parent", "clearing-drawing", "clearing-value", "awaiting-ack", "closing-journal", "complete"],
-    "pendingRoots": [0, 0, 0],
-    "committedRoots": [7, 11, 13],
+    "commitPhases": [
+      "staging-parent",
+      "staging-drawing",
+      "staging-value",
+      "starting-journal",
+      "journal",
+      "publishing-parent-lease",
+      "publishing-drawing-lease",
+      "publishing-value-lease",
+      "adopting-parent",
+      "adopting-drawing",
+      "adopting-value",
+      "clearing-parent",
+      "clearing-drawing",
+      "clearing-value",
+      "awaiting-ack",
+      "closing-journal",
+      "complete"
+    ],
+    "pendingRoots": [
+      0,
+      0,
+      0
+    ],
+    "committedRoots": [
+      7,
+      11,
+      13
+    ],
     "cancellationResolution": "absent",
     "ambiguousJournalError": "retry",
     "acknowledgement": "required",
@@ -104,30 +207,475 @@
     }
   },
   "committedRecovery": {
-    "authority": { "consumer": "db-wal-witness", "recordEscape": false, "receiptSource": "derived", "terminalHandoff": "stores-and-ack-once" },
-    "witness": { "recordKind": "event", "transaction": "committed", "bodyRecords": 1, "transactionId": 71, "segmentIndex": 5 },
+    "authority": {
+      "consumer": "db-wal-witness",
+      "recordEscape": false,
+      "receiptSource": "derived",
+      "terminalHandoff": "stores-and-ack-once"
+    },
+    "witness": {
+      "recordKind": "event",
+      "transaction": "committed",
+      "bodyRecords": 1,
+      "transactionId": 71,
+      "segmentIndex": 5
+    },
     "journalBegins": 0,
     "cancellation": "forbidden-after-commit",
     "cases": [
-      { "id": "all-base", "frontiers": ["base", "base", "base"], "receipt": "matching", "expected": "apply" },
-      { "id": "all-post", "frontiers": ["post", "post", "post"], "receipt": "matching", "expected": "already-applied" },
-      { "id": "mixed", "frontiers": ["post", "base", "base"], "receipt": "matching", "expected": "reject" },
-      { "id": "foreign-receipt", "frontiers": ["base", "base", "base"], "receipt": "foreign", "expected": "reject" }
+      {
+        "id": "all-base",
+        "frontiers": [
+          "base",
+          "base",
+          "base"
+        ],
+        "receipt": "matching",
+        "expected": "apply"
+      },
+      {
+        "id": "all-post",
+        "frontiers": [
+          "post",
+          "post",
+          "post"
+        ],
+        "receipt": "matching",
+        "expected": "already-applied"
+      },
+      {
+        "id": "mixed",
+        "frontiers": [
+          "post",
+          "base",
+          "base"
+        ],
+        "receipt": "matching",
+        "expected": "reject"
+      },
+      {
+        "id": "foreign-receipt",
+        "frontiers": [
+          "base",
+          "base",
+          "base"
+        ],
+        "receipt": "foreign",
+        "expected": "reject"
+      }
     ]
   },
   "expected": {
     "anchorSha256": "8fa0d6568bd058b287a2969948d051c65b73028bc4065219422cc37b3aa7ec88",
-    "decisionSha256": "477e038b974677cbfeefd04d1657f977fb76d67c4e0d8b8f1b12ad3a31423e8b",
-    "unsignedJson": "{\"schema\":\"semio.store.durable-owned-three-member-decision.v1\",\"anchor\":{\"schema\":\"semio.store.owned-three-member-anchor.v1\",\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"shape\":\"parent-drawing-value\"},\"parent\":{\"role\":\"parent\",\"reference\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"owner\":null,\"expectedGeneration\":7,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],\"recoverySchema\":\"semio.store.one-item-outcome.gis-gismap-v1\",\"unboundOutcomeSha256\":\"42ea797ad1b069f1c625484744fca99d5d0764e1e4b3d793fe45821785489caf\"},\"drawing\":{\"role\":\"drawing\",\"reference\":{\"artifactId\":\"gismap-drawing\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"drawing\"}},\"owner\":{\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"slot\":\"drawing\",\"childId\":\"gismap-drawing\"},\"expectedGeneration\":11,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3],\"recoverySchema\":\"semio.store.one-item-outcome.stdio-drawing-v1\",\"unboundOutcomeSha256\":\"26230a4617f8fc04eb413007efc8db54bdc713df5059c13e9fb63ed42b8d8895\"},\"value\":{\"role\":\"value\",\"reference\":{\"artifactId\":\"gismap-value\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"value\"}},\"owner\":{\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"slot\":\"value\",\"childId\":\"gismap-value\"},\"expectedGeneration\":13,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],\"recoverySchema\":\"semio.store.one-item-outcome.stdio-value-v1\",\"unboundOutcomeSha256\":\"1a260fe98b2bbd04cf97db5a6522e3467dd419703a5d4d7b860c7383d57de8d2\"}}"
+    "decisionSha256": "2ffa7888ae819776c06b1f9a0701c521f02a950118d7a8b76ca88079562935a2",
+    "unsignedJson": "{\"schema\":\"semio.store.durable-owned-three-member-decision.v1\",\"anchor\":{\"schema\":\"semio.store.owned-three-member-anchor.v1\",\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"shape\":\"parent-drawing-value\"},\"parent\":{\"role\":\"parent\",\"reference\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"owner\":null,\"expectedGeneration\":7,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],\"recoverySchema\":\"semio.store.one-item-outcome.gis-gismap-v1\",\"unboundOutcomeSha256\":\"e3c3670c397d3206b6760329629ec94893be7a2078c9c5fe2b474fd9f0d91e78\"},\"drawing\":{\"role\":\"drawing\",\"reference\":{\"artifactId\":\"gismap-drawing\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"drawing\"}},\"owner\":{\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"slot\":\"drawing\",\"childId\":\"gismap-drawing\"},\"expectedGeneration\":11,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3],\"recoverySchema\":\"semio.store.one-item-outcome.stdio-drawing-v1\",\"unboundOutcomeSha256\":\"91f52504f90ad61c0532bb44c8db135bc49a9035cfea465da864d55f7ab4f7aa\"},\"value\":{\"role\":\"value\",\"reference\":{\"artifactId\":\"gismap-value\",\"dialect\":{\"artifactKind\":\"s.stdio.semio\",\"standard\":\"v1\",\"subset\":\"value\"}},\"owner\":{\"parent\":{\"artifactId\":\"map-a\",\"dialect\":{\"artifactKind\":\"s.gis.gismap\",\"standard\":\"1\",\"subset\":\"*\"}},\"slot\":\"value\",\"childId\":\"gismap-value\"},\"expectedGeneration\":13,\"expectedRevision\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],\"recoverySchema\":\"semio.store.one-item-outcome.stdio-value-v1\",\"unboundOutcomeSha256\":\"efb27dedf1533aa0de7fa44d9b7238ae1bffdcfe5a9399dc13a5cbe40a754e80\"}}"
   },
   "cases": [
-    { "id": "image-free-create-region-commits", "variants": ["canonical"], "codecExpected": "admit", "expected": "admit" },
-    { "id": "same-decision-replay-is-idempotent", "variants": ["canonical-twice"], "codecExpected": "admit", "expected": "recover" },
-    { "id": "forged-owned-child-rejected-before-journal", "variants": ["drawing-child-id", "drawing-dialect", "drawing-owner-slot", "drawing-owner-parent"], "codecExpected": "reject", "expected": "reject" },
-    { "id": "bound-edit-derivations-are-not-an-unsigned-preimage", "variants": ["edit-digest", "prefix-revision", "post-generation"], "codecExpected": "admit", "expected": "corrupt" },
-    { "id": "only-none-to-decision-group-binds", "variants": ["second-binding", "foreign-group", "extra-metadata", "changed-edit-id", "changed-post-snapshot"], "codecExpected": "admit", "expected": "corrupt" },
-    { "id": "tampered-outcome-or-commitment-rejected", "variants": ["recovery-byte", "recovery-digest", "anchor-hash", "decision-hash", "unknown-json-field", "duplicate-json-field", "image-member"], "codecExpected": "reject", "expected": "corrupt" },
-    { "id": "mixed-recovery-is-corrupt-not-compensated", "variants": ["parent-post-children-base", "parent-base-children-post"], "codecExpected": "admit", "expected": "corrupt" },
-    { "id": "capacity-and-base-fence", "variants": ["recovery-pack-162001", "event-pack-491521", "changed-expected-generation", "changed-expected-revision"], "codecExpected": "reject", "expected": "reject" }
-  ]
+    {
+      "id": "image-free-create-region-commits",
+      "variants": [
+        "canonical"
+      ],
+      "codecExpected": "admit",
+      "expected": "admit"
+    },
+    {
+      "id": "same-decision-replay-is-idempotent",
+      "variants": [
+        "canonical-twice"
+      ],
+      "codecExpected": "admit",
+      "expected": "recover"
+    },
+    {
+      "id": "forged-owned-child-rejected-before-journal",
+      "variants": [
+        "drawing-child-id",
+        "drawing-dialect",
+        "drawing-owner-slot",
+        "drawing-owner-parent"
+      ],
+      "codecExpected": "reject",
+      "expected": "reject"
+    },
+    {
+      "id": "bound-edit-derivations-are-not-an-unsigned-preimage",
+      "variants": [
+        "edit-digest",
+        "prefix-revision",
+        "post-generation"
+      ],
+      "codecExpected": "admit",
+      "expected": "corrupt"
+    },
+    {
+      "id": "only-none-to-decision-group-binds",
+      "variants": [
+        "second-binding",
+        "foreign-group",
+        "extra-metadata",
+        "changed-edit-id",
+        "changed-post-snapshot"
+      ],
+      "codecExpected": "admit",
+      "expected": "corrupt"
+    },
+    {
+      "id": "tampered-outcome-or-commitment-rejected",
+      "variants": [
+        "recovery-byte",
+        "recovery-digest",
+        "anchor-hash",
+        "decision-hash",
+        "unknown-json-field",
+        "duplicate-json-field",
+        "image-member"
+      ],
+      "codecExpected": "reject",
+      "expected": "corrupt"
+    },
+    {
+      "id": "mixed-recovery-is-corrupt-not-compensated",
+      "variants": [
+        "parent-post-children-base",
+        "parent-base-children-post"
+      ],
+      "codecExpected": "admit",
+      "expected": "corrupt"
+    },
+    {
+      "id": "capacity-and-base-fence",
+      "variants": [
+        "recovery-pack-162001",
+        "event-pack-491521",
+        "changed-expected-generation",
+        "changed-expected-revision"
+      ],
+      "codecExpected": "reject",
+      "expected": "reject"
+    }
+  ],
+  "recoveryOctets": {
+    "ownershipBytes": 162000,
+    "wireTag": 8,
+    "bindings": [
+      {
+        "record": "unbound",
+        "fields": [
+          "next-clock-canonical-json",
+          "edit-without-group-canonical-json",
+          "post-snapshot-pack"
+        ]
+      },
+      {
+        "record": "bound",
+        "fields": [
+          "next-clock-canonical-json",
+          "edit-canonical-json",
+          "post-snapshot-pack"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "id": "empty",
+        "octets": [],
+        "repeat": 1,
+        "length": 0,
+        "base64": "",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "id": "nul-high",
+        "octets": [
+          0,
+          255,
+          128,
+          1
+        ],
+        "repeat": 1,
+        "length": 4,
+        "base64": "AP+AAQ==",
+        "sha256": "6509423fd9da5c225d2f8619ffae394b40f9f7686fee55a38c54b1424ac65f46"
+      },
+      {
+        "id": "every-octet",
+        "octets": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155,
+          156,
+          157,
+          158,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165,
+          166,
+          167,
+          168,
+          169,
+          170,
+          171,
+          172,
+          173,
+          174,
+          175,
+          176,
+          177,
+          178,
+          179,
+          180,
+          181,
+          182,
+          183,
+          184,
+          185,
+          186,
+          187,
+          188,
+          189,
+          190,
+          191,
+          192,
+          193,
+          194,
+          195,
+          196,
+          197,
+          198,
+          199,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          209,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          223,
+          224,
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234,
+          235,
+          236,
+          237,
+          238,
+          239,
+          240,
+          241,
+          242,
+          243,
+          244,
+          245,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255
+        ],
+        "repeat": 1,
+        "length": 256,
+        "base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+        "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      {
+        "id": "page",
+        "octets": [
+          0,
+          255,
+          128,
+          1
+        ],
+        "repeat": 1024,
+        "length": 4096,
+        "base64": "AP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQD/gAEA/4ABAP+AAQ==",
+        "sha256": "4a1f040873cdda462016a0450d88c2c223157a2e84e906260b384277d7d7c11c"
+      }
+    ]
+  }
 }

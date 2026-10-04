@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFaultTargetEquipment, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Ideal loads system {} does not exist.", payload.new_target_equipment_id.0), [payload.new_target_equipment_id.0.to_string()]);
     }
     if existing.target_equipment_id == payload.new_target_equipment_id {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fault {} already carries this target_equipment_id: {}.", payload.id.0, payload.new_target_equipment_id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fault {} already carries this target_equipment_id: {}.", payload.id.0, payload.new_target_equipment_id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.faults.iter_mut().find(|item| item.id == payload.id) {

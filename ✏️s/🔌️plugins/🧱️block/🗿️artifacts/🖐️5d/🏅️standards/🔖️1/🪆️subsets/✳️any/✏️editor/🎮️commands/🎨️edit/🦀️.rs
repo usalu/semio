@@ -212,14 +212,14 @@ use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "edit")]
 pub struct Edit {
     pub text: String,
 }
 
 pub fn handle(payload: &Edit, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
-    match dsl::json::from_json_str::<Block5dSnapshot>(&payload.text) {
+    match semio_framework_pack_json::from_json_str::<Block5dSnapshot>(&payload.text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(document) if &document != doc.snapshot => Ok(Emit::mutations(replace_document_operations(doc.snapshot, &document))),
         _ => Ok(Emit::default()),
     }

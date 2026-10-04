@@ -1,4 +1,5 @@
 //! 📏️ DWG 2D constraint nodes retain tagged geometry, dependency state and optional coordinates.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::super::*;
 use super::number::Projection;
 use super::drawing::optional_words;
@@ -24,12 +25,12 @@ fn core(v:&DwgConstraintNode)->(&'static str,&DwgConstraintNodeCore){match v{
  DwgConstraintNode::FixedConstraint(v)=>("fixed",&v.node),
  DwgConstraintNode::VerticalConstraint(v)=>("vertical",&v.geometric.node)
 }}
-fn geometric(p:&mut Projection<'_,'_>,id:i64,v:&DwgGeometricConstraint)->Result<(),String>{p.insert_key("dwg_geometric_constraint",id,&[I(i64::from(v.owner_node_id)),I(i64::from(v.implied)),I(i64::from(v.active))])}
-fn geometry(p:&mut Projection<'_,'_>,id:i64,v:&DwgConstraintGeometry)->Result<(),String>{let handle=optional_words(v.geometry_dependency_handle);p.insert_key("dwg_constraint_geometry",id,&[handle[0],handle[1],I(i64::from(v.geometry_node_id))])}
-fn project_vectors(p:&mut Projection<'_,'_>,id:i64,values:&[(&str,&[f64])])->Result<(),String>{
+fn geometric(p:&mut Projection<'_,'_>,id:i64,v:&DwgGeometricConstraint)->Result<(),ValueError>{p.insert_key("dwg_geometric_constraint",id,&[I(i64::from(v.owner_node_id)),I(i64::from(v.implied)),I(i64::from(v.active))])}
+fn geometry(p:&mut Projection<'_,'_>,id:i64,v:&DwgConstraintGeometry)->Result<(),ValueError>{let handle=optional_words(v.geometry_dependency_handle);p.insert_key("dwg_constraint_geometry",id,&[handle[0],handle[1],I(i64::from(v.geometry_node_id))])}
+fn project_vectors(p:&mut Projection<'_,'_>,id:i64,values:&[(&str,&[f64])])->Result<(),ValueError>{
  let mut order=0;for(name,values)in values{for(index,v)in values.iter().enumerate(){p.insert("dwg_constraint_coordinate",&[I(id),T(name),I(order),I(ordinal(index)?),R(*v)])?;order+=1;}}Ok(())
 }
-pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGroup)->Result<(),String>{
+pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGroup)->Result<(),ValueError>{
  project_action(p,id,&v.action)?;p.insert_key("dwg_assoc_2d_constraint_group",id,&[I(i64::from(v.do_not_check_newly_added_constraints))])?;
  for(index,values)in v.work_plane.iter().enumerate(){let vector=p.insert("dwg_constraint_work_plane_vector",&[I(id),I(ordinal(index)?)])?;coords(p,"dwg_constraint_work_plane_coordinate",vector,values)?;}project_handles(p,"dwg_constraint_group_member_handle",id,&v.member_action_handles)?;
  for(index,v)in v.nodes.iter().enumerate(){
@@ -45,22 +46,22 @@ pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGro
  }
  }Ok(())
 }
-fn read_core(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNodeCore,String>{Ok(DwgConstraintNodeCore{id:signed_integer(row,4)?,connected_node_ids:r.list("dwg_constraint_connected_node_identifier",1,row.rowid,2)?.into_iter().map(|row|unsigned(row,3)).collect::<Result<_,_>>()?})}
-fn read_geometric(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgGeometricConstraint,String>{let row=r.component("dwg_geometric_constraint",id)?;Ok(DwgGeometricConstraint{node,owner_node_id:unsigned(row,1)?,implied:boolean(row,2)?,active:boolean(row,3)?})}
-fn read_geometry(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgConstraintGeometry,String>{let row=r.component("dwg_constraint_geometry",id)?;Ok(DwgConstraintGeometry{node,geometry_dependency_handle:optional_unsigned(row,1,2)?,geometry_node_id:unsigned(row,3)?})}
-fn read_node(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNode,String>{
+fn read_core(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNodeCore,ValueError>{Ok(DwgConstraintNodeCore{id:signed_integer(row,4)?,connected_node_ids:r.list("dwg_constraint_connected_node_identifier",1,row.rowid,2)?.into_iter().map(|row|unsigned(row,3)).collect::<Result<_,_>>()?})}
+fn read_geometric(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgGeometricConstraint,ValueError>{let row=r.component("dwg_geometric_constraint",id)?;Ok(DwgGeometricConstraint{node,owner_node_id:unsigned(row,1)?,implied:boolean(row,2)?,active:boolean(row,3)?})}
+fn read_geometry(r:&mut Reader<'_,'_,'_>,id:i64,node:DwgConstraintNodeCore)->Result<DwgConstraintGeometry,ValueError>{let row=r.component("dwg_constraint_geometry",id)?;Ok(DwgConstraintGeometry{node,geometry_dependency_handle:optional_unsigned(row,1,2)?,geometry_node_id:unsigned(row,3)?})}
+fn read_node(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgConstraintNode,ValueError>{
  let id=row.rowid;let kind=row.text(3)?;let node=read_core(r,row)?;let mut vectors:[Vec<f64>;5]=std::array::from_fn(|_|Vec::new());let mut prior=0;
  for row in r.list("dwg_constraint_coordinate",1,id,3)?{
- let index=match row.text(2)?{"point"=>0,"origin"=>1,"direction"=>2,"start_point"=>3,"end_point"=>4,_=>return Err("DWG constraint coordinate vector is unknown".into())};
- if index<prior||row.integer(4)?!=ordinal(vectors[index].len())?{return Err("DWG constraint coordinate vectors are out of order".into());}prior=index;vectors[index].push(row.real(5)?);
+ let index=match row.text(2)?{"point"=>0,"origin"=>1,"direction"=>2,"start_point"=>3,"end_point"=>4,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint coordinate vector is unknown"))};
+ if index<prior||row.integer(4)?!=ordinal(vectors[index].len())?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint coordinate vectors are out of order"));}prior=index;vectors[index].push(row.real(5)?);
  }
  let[point,origin,direction,start_point,end_point]=vectors;
  let allowed=match kind{"implicit_point"=>[true,false,false,false,false],"bounded_line"=>[false,true,true,true,true],"distance"=>[false,false,true,false,false],"datum_line"=>[false,true,true,false,false],_=>[false;5]};
- for(index,values)in [&point,&origin,&direction,&start_point,&end_point].into_iter().enumerate(){if !allowed[index]&&!values.is_empty(){return Err("DWG constraint coordinates have the wrong node kind".into());}}
+ for(index,values)in [&point,&origin,&direction,&start_point,&end_point].into_iter().enumerate(){if !allowed[index]&&!values.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint coordinates have the wrong node kind"));}}
  Ok(match kind{
- "implicit_point"=>{let row=r.component("dwg_constrained_implicit_point",id)?;let present=boolean(row,1)?;if !present&&!point.is_empty(){return Err("DWG absent implicit point contains coordinates".into());}DwgConstraintNode::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint{geometry:read_geometry(r,id,node)?,point:present.then_some(point),point_kind:byte(row,2)?,point_index:signed_integer(row,3)?,curve_node_id:signed_integer(row,4)?})},
+ "implicit_point"=>{let row=r.component("dwg_constrained_implicit_point",id)?;let present=boolean(row,1)?;if !present&&!point.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG absent implicit point contains coordinates"));}DwgConstraintNode::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint{geometry:read_geometry(r,id,node)?,point:present.then_some(point),point_kind:byte(row,2)?,point_index:signed_integer(row,3)?,curve_node_id:signed_integer(row,4)?})},
  "bounded_line"=>{let row=r.component("dwg_constrained_bounded_line",id)?;DwgConstraintNode::ConstrainedBoundedLine(DwgConstrainedBoundedLine{geometry:read_geometry(r,id,node)?,origin,direction,ray:boolean(row,1)?,bounded:boolean(row,2)?,start_point,end_point})},
- "distance"=>{let row=r.component("dwg_distance_constraint",id)?;let explicit=r.component("dwg_explicit_constraint",id)?;let present=boolean(row,2)?;if !present&&!direction.is_empty(){return Err("DWG absent distance direction contains coordinates".into());}DwgConstraintNode::DistanceConstraint(DwgDistanceConstraint{explicit:DwgExplicitConstraint{geometric:read_geometric(r,id,node)?,value_dependency_handle:full_unsigned(explicit,1,2)?,dimension_dependency_handle:full_unsigned(explicit,3,4)?},direction_kind:byte(row,1)?,direction:present.then_some(direction)})},
+ "distance"=>{let row=r.component("dwg_distance_constraint",id)?;let explicit=r.component("dwg_explicit_constraint",id)?;let present=boolean(row,2)?;if !present&&!direction.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG absent distance direction contains coordinates"));}DwgConstraintNode::DistanceConstraint(DwgDistanceConstraint{explicit:DwgExplicitConstraint{geometric:read_geometric(r,id,node)?,value_dependency_handle:full_unsigned(explicit,1,2)?,dimension_dependency_handle:full_unsigned(explicit,3,4)?},direction_kind:byte(row,1)?,direction:present.then_some(direction)})},
  "horizontal"|"vertical"=>{let row=r.component("dwg_axis_constraint",id)?;let v=DwgAxisConstraint{geometric:read_geometric(r,id,node)?,datum_line_index:signed_integer(row,1)?};if kind=="horizontal"{DwgConstraintNode::HorizontalConstraint(v)}else{DwgConstraintNode::VerticalConstraint(v)}},
  "datum_line"=>{r.component("dwg_constrained_datum_line",id)?;DwgConstraintNode::ConstrainedDatumLine(DwgConstrainedDatumLine{geometry:read_geometry(r,id,node)?,origin,direction})},
  "point_curve"=>DwgConstraintNode::PointCurveConstraint(read_geometric(r,id,node)?),
@@ -71,10 +72,10 @@ fn read_node(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgCons
  "equal_length"=>DwgConstraintNode::EqualLengthConstraint(read_geometric(r,id,node)?),
  "colinear"=>DwgConstraintNode::ColinearConstraint(read_geometric(r,id,node)?),
  "fixed"=>DwgConstraintNode::FixedConstraint(read_geometric(r,id,node)?),
- _=>return Err("DWG constraint node kind is unknown".into())
+ _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint node kind is unknown"))
  })
 }
-pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssoc2dConstraintGroup,String>{
+pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssoc2dConstraintGroup,ValueError>{
  let row=r.component("dwg_assoc_2d_constraint_group",id)?;
  let work_plane=r.list("dwg_constraint_work_plane_vector",1,id,2)?.into_iter().map(|row|read_coords(r,"dwg_constraint_work_plane_coordinate",row.rowid)).collect::<Result<_,_>>()?;
  let nodes=r.list("dwg_constraint_node",1,id,2)?.into_iter().map(|row|read_node(r,row)).collect::<Result<_,_>>()?;

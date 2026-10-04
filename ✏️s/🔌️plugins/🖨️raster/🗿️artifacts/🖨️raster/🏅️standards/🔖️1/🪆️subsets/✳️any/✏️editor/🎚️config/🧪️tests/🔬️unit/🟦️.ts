@@ -7,7 +7,7 @@ import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/🖌️brush-style/🔣️.json";
 
 const validate=new Ajv({strict:false,validateFormats:false}).compile(schema);
-const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels",maskValue:255,camera:{x:0,y:0,zoom:1}});
+const config=(brushColor:string,brushHardness:number)=>({brushSize:24,brushOpacity:1,brushColor,brushHardness,paintTarget:"pixels",maskValue:255,fillTolerance:24,camera:{x:0,y:0,zoom:1}});
 for(const row of fixture.cases) test(`brush style ${row.color} at hardness ${row.hardness}`,async()=>{
   const value=config(row.color,row.hardness);
   expect(validate(value)).toBe(true);
@@ -36,6 +36,15 @@ for(const row of masks.cases)test(`paint target ${row.target} at mask value ${ro
 test("paint target and mask coverage reject invalid values",()=>{
   for(const paintTarget of masks.invalidTargets){const value={...config("#2878dc",1),paintTarget};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
   for(const maskValue of [...masks.invalidValues,NaN,Infinity]){const value={...config("#2878dc",1),maskValue};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
+});
+
+import tolerances from "../../🧫️fixtures/🌊️fill-tolerance/🔣️.json";
+for(const fillTolerance of tolerances.cases)test(`bucket tolerance ${fillTolerance}`,()=>{
+  const value={...config("#2878dc",1),fillTolerance};
+  expect(validate(value)).toBe(true);expect(parseRasterConfig(value)).toEqual({...value,compositeViewport:undefined});
+});
+test("bucket tolerance rejects values outside 0..255",()=>{
+  for(const fillTolerance of [...tolerances.invalidValues,NaN,Infinity]){const value={...config("#2878dc",1),fillTolerance};expect(validate(value)).toBe(false);expect(()=>parseRasterConfig(value)).toThrow();}
 });
 
 import selections from "../../🧫️fixtures/🎯️pixel-selection/🔣️.json";

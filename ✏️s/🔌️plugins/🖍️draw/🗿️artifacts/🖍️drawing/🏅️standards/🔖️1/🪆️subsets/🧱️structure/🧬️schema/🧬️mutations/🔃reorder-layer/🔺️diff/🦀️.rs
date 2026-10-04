@@ -16,7 +16,7 @@ pub fn diff(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> 
     }
     if let Some(location) = find_drawing_layer_location(base, &payload.layer_id) {
         if location.parent_id.as_deref() == payload.parent_id.as_deref() && location.index == payload.index {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" is already at that position.", payload.layer_id));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already at that position.", payload.layer_id));
         }
     }
     protocol::MutationOutcome::new(diff_reorder_layer(&payload.layer_id, payload.parent_id.as_deref(), payload.index, layer.clone()))

@@ -152,7 +152,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let seed = seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
 
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
-    let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+    let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     manifest.package.plugin_id = descriptor.manifest.plugin_id.clone();
@@ -189,7 +189,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let requests = Arc::new(Mutex::new(Vec::new()));
     let transport = RecordingTransport {
         faults: Arc::default(),
-        responses: Arc::new(Mutex::new(VecDeque::from([HttpResponse { status: 200, body: semio_framework_os_kernel::os_pack::json::to_json_string(&manifest).into_bytes() }, HttpResponse { status: 200, body: descriptor_bytes }]))),
+        responses: Arc::new(Mutex::new(VecDeque::from([HttpResponse { status: 200, body: semio_framework_pack_json::to_json_string(&manifest).into_bytes() }, HttpResponse { status: 200, body: descriptor_bytes }]))),
         requests: requests.clone(),
     };
     let client = DirectoryClient::new(transport, "http://hub.invalid");
@@ -284,7 +284,7 @@ async fn authenticated_hub_workspace_revocation_and_stream_loss_invalidate_ready
     let (client, _) = client_for(&contract["cases"]["memberReady"]);
     let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
     binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
-    let message = semio_framework_os_kernel::os_pack::json::from_json_str::<DirectoryStreamMessage>(&contract["cases"]["memberRevoked"]["streamMessage"].to_string()).unwrap();
+    let message = semio_framework_pack_json::from_json_str::<DirectoryStreamMessage>(&contract["cases"]["memberRevoked"]["streamMessage"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(binding.observe_stream_message(&message), HubStreamObservation::Revoked);
     assert!(matches!(binding.state(), HubRemoteBindingState::Revoked));
     assert!(binding.ready_snapshot(1_000).unwrap_err().retryable);
@@ -463,7 +463,7 @@ fn a_directory_dial_refusal_names_its_cause_and_stays_retryable() {
 /// the snapshot holds for it, and the canonical descriptor bytes both name.
 fn catalog_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (DocumentExecutionTargetLeaseFieldsV1, AuthorizedDocumentView, Vec<u8>) {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
-    let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
+    let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     manifest.scope.document_id = document_id.to_string();
@@ -513,7 +513,7 @@ async fn a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_non
     snapshot.documents = HashMap::from([(first.scope.clone(), first_document), (second.scope.clone(), second_document)]);
     let binding = HubRemoteBinding::new("http://hub.invalid", first.scope.space_id.clone()).unwrap();
     binding.install_snapshot_for_test(snapshot.clone());
-    let manifest = |lease: &DocumentExecutionTargetLeaseFieldsV1| HttpResponse { status: 200, body: semio_framework_os_kernel::os_pack::json::to_json_string(lease).into_bytes() };
+    let manifest = |lease: &DocumentExecutionTargetLeaseFieldsV1| HttpResponse { status: 200, body: semio_framework_pack_json::to_json_string(lease).into_bytes() };
     let requests = Arc::new(Mutex::new(Vec::new()));
     let transport = RecordingTransport {
         faults: Arc::default(),

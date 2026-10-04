@@ -7,6 +7,7 @@ use crate::editor::gltf::modes::edit::windows::main;
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use crate::GltfMutation;
 use crate::standards::v2_0::subsets::any::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
+use crate::standards::v2_0::subsets::any::schema::mutations::patch_snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -62,11 +63,11 @@ impl protocol::OpBinary for GltfAnyEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = GLTF_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "GltfAnyEditCommand", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "GltfAnyEditCommand", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "GltfAnyEditCommand", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "GltfAnyEditCommand", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -102,7 +103,7 @@ fn gltfAnyEditor_command_id(command: &GltfAnyEditCommand) -> &'static str {
     }
 }
 
-fn gltfAnyEditor_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<GltfAnyEditCommand, Fault> {
+fn gltfAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<GltfAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| GltfAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(GltfAnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -249,7 +250,7 @@ impl ArtifactEditor for GltfAnyEditor {
 
     fn command_id(command: &Self::Command) -> &'static str { gltfAnyEditor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { gltfAnyEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { gltfAnyEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> GltfSnapshot {
         GltfSnapshot::default()
@@ -276,7 +277,7 @@ impl ArtifactEditor for GltfAnyEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.gltf@2.0/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.gltf@2.0/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -289,7 +290,7 @@ impl editing::SnapshotEditingEditor for GltfAnyEditor {
         match command { GltfAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| GltfMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| GltfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| GltfMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })))
     }
 }
 

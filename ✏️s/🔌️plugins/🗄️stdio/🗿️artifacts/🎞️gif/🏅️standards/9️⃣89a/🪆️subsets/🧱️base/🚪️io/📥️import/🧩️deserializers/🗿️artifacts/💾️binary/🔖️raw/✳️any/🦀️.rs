@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<GifSnapshot, store::PackError> {
-    let mut snap = crate::standards::v89a::engine::decode_gif(&from.bytes).map_err(store::PackError::Schema)?;
+    let mut snap = crate::standards::v89a::engine::decode_gif(&from.bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
     snap.schema = STDIO_GIF89A_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

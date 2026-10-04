@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod patch_cad_play_reference {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-cad-play-reference")]
     pub struct PatchCadPlayReference {
         pub model_definition_id: String,
@@ -31,15 +31,15 @@ pub mod patch_cad_play_reference {
     pub fn handle(payload: &PatchCadPlayReference, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let value_json = payload.value.as_deref().map(|entry| command_value_json(&payload.field, entry));
-        let delta_json = payload.delta.map(protocol::DslValue::float);
+        let delta_json = payload.delta.map(semio_framework_value::DslValue::float);
         let mutation = match payload.field.as_str() {
             "hidden" => value_json
                 .as_ref()
-                .and_then(protocol::DslValue::as_bool)
+                .and_then(semio_framework_value::DslValue::as_bool)
                 .map(|new_hidden| CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden })),
             "locked" => value_json
                 .as_ref()
-                .and_then(protocol::DslValue::as_bool)
+                .and_then(semio_framework_value::DslValue::as_bool)
                 .map(|new_locked| CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_locked })),
             "widthWorld" => {
                 let current = document.references_by_model_definition_id.get(&payload.model_definition_id).and_then(|refs| refs.iter().find(|reference| reference.id == payload.reference_id)).map_or(0.0, |reference| reference.width_world);
@@ -72,7 +72,7 @@ fn addressed_reference<'a>(document: &'a CadSnapshot, model_definition_id: &str,
 pub mod set_reference_hidden {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-reference-hidden")]
     pub struct SetReferenceHidden {
         pub model_definition_id: String,
@@ -93,7 +93,7 @@ pub mod set_reference_hidden {
 pub mod set_reference_locked {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "set-reference-locked")]
     pub struct SetReferenceLocked {
         pub model_definition_id: String,
@@ -114,7 +114,7 @@ pub mod set_reference_locked {
 pub mod set_reference_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "reference-selection")]
     pub struct SetReferenceSelection {
         pub pane: Option<String>,
@@ -151,7 +151,7 @@ pub mod set_reference_selection {
 pub mod reference_hover {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "reference-hover")]
     pub struct ReferenceHover {
         pub reference_id: Option<String>,

@@ -43,17 +43,17 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
         .await)
         .await
         .build_definition();
-    let mut app_json = pack::json_from_dsl_value(&semio_framework_value::ToValue::to_value(&definition));
+    let mut app_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&definition));
     // 🩹️ `AppDefinition`'s wire field is `breadcrumb` (`AppBuilder::document(...)` is the builder
     // METHOD name that sets it, not the serialized field name — `#[serde(rename_all =
     // "camelCase")]` leaves the single-word `breadcrumb` unchanged). Blanking `"document"` here was
     // a no-op that silently left the real `"breadcrumb": ["root-tool"]` untouched, so this test's
     // "empty breadcrumb" simulation never actually happened — masked until now by the canonical-id
     // panic this lane fixed, which never let execution reach this far before.
-    if let pack::JsonValue::Object(object) = &mut app_json {
-        object.insert("breadcrumb", pack::json!([]));
+    if let semio_framework_pack_json::Value::Object(object) = &mut app_json {
+        object.insert("breadcrumb", semio_framework_pack_json::json!([]));
     }
-    let wire = pack::json!([{ "pluginId": "root", "app": app_json }]).to_string();
+    let wire = semio_framework_pack_json::json!([{ "pluginId": "root", "app": app_json }]).to_string();
     let projection = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
     studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(crate::engine::space::commands::set_app_registrations::SetAppRegistrations { json: wire })).await.expect("handle");

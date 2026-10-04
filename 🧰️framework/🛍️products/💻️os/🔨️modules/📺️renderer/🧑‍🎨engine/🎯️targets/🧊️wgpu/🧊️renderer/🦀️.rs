@@ -1223,7 +1223,8 @@ struct GlbViewSchema {
 struct GlbPrimitiveSchema {
     position: u16,
     normal: Option<u16>,
-    uv: Option<u16>,
+    uv_sets: [Option<u16>;64],
+    tangent:Option<u16>,
     color: Option<u16>,
     indices: Option<u16>,
     material: Option<u16>,
@@ -1241,11 +1242,15 @@ struct GlbMaterialSchema {
     alpha_cutoff: f32,
     double_sided: bool,
     base_color_texture: Option<u16>,
+    additional_textures: [Option<u16>;4],
+    texture_coordinates:[u8;5],
+    normal_scale:f32,
+    occlusion_strength:f32,
 }
 
 impl Default for GlbMaterialSchema {
     fn default() -> Self {
-        Self { base_color: [1.0; 4], emissive: [0.0; 3], metalness: 1.0, roughness: 1.0, alpha_mode: 0, alpha_cutoff: 0.5, double_sided: false, base_color_texture: None }
+        Self { base_color: [1.0; 4], emissive: [0.0; 3], metalness: 1.0, roughness: 1.0, alpha_mode: 0, alpha_cutoff: 0.5, double_sided: false, base_color_texture: None, additional_textures: [None;4],texture_coordinates:[0;5],normal_scale:1.0,occlusion_strength:1.0 }
     }
 }
 
@@ -1342,7 +1347,7 @@ impl GlbNumericArray {
 
 impl Default for GlbPrimitiveSchema {
     fn default() -> Self {
-        Self { position: 0, normal: None, uv: None, color: None, indices: None, material: None, mode: 4, position_set: false }
+        Self { position: 0, normal: None, uv_sets: [None;64],tangent:None, color: None, indices: None, material: None, mode: 4, position_set: false }
     }
 }
 
@@ -1455,6 +1460,11 @@ impl GlbSchemaOutput {
             if primitive.material.is_some_and(|material| material >= self.material_len) {
                 return Err("GLB primitive referenced a missing material");
             }
+            if let Some(material)=primitive.material.and_then(|index|self.materials[usize::from(index)].as_ref()) {
+                for (role,reference) in std::iter::once(material.base_color_texture).chain(material.additional_textures).enumerate() {
+                    if reference.is_some() && primitive.uv_sets[usize::from(material.texture_coordinates[role])].is_none(){return Err("GLB texture references an absent UV set");}
+                }
+            }
             if position.component != 5126 || position.kind != 3 {
                 return Err("GLB POSITION accessor was not FLOAT VEC3");
             }
@@ -1472,10 +1482,11 @@ impl GlbSchemaOutput {
             } else {
                 output_bytes = output_bytes.checked_add(position_bytes).ok_or("GLB generated normal bytes overflowed")?;
             }
-            if let Some(uv) = primitive.uv {
+            if let Some(tangent)=primitive.tangent {let tangent=self.accessor(tangent)?;if tangent.component!=5126 || tangent.kind!=4 || tangent.count!=position.count || primitive.normal.is_none(){return Err("GLB TANGENT must be FLOAT VEC4 aligned with POSITION and NORMAL");}self.validate_accessor_span(tangent)?;output_bytes=output_bytes.checked_add(tangent.count as usize*16).ok_or("GLB tangent output bytes overflowed")?;}
+            for uv in primitive.uv_sets.into_iter().flatten() {
                 let uv = self.accessor(uv)?;
                 if !matches!(uv.component, 5126 | 5121 | 5123) || (uv.component != 5126 && !uv.normalized) || uv.kind != 2 || uv.count != position.count {
-                    return Err("GLB TEXCOORD_0 accessor did not match POSITION");
+                    return Err("GLB TEXCOORD accessor did not match POSITION");
                 }
                 self.validate_accessor_span(uv)?;
                 let uv_bytes = usize::try_from(uv.count).ok().and_then(|count| count.checked_mul(2)).and_then(|count| count.checked_mul(size_of::<f32>())).ok_or("GLB UV output bytes overflowed")?;
@@ -1514,10 +1525,10 @@ impl GlbSchemaOutput {
             }
         }
         for material in self.materials[..usize::from(self.material_len)].iter().flatten() {
-            if material.base_color.iter().chain(material.emissive.iter()).any(|value| !value.is_finite()) || !material.metalness.is_finite() || !material.roughness.is_finite() || !material.alpha_cutoff.is_finite() {
+            if material.base_color.iter().chain(material.emissive.iter()).any(|value| !value.is_finite()) || !material.metalness.is_finite() || !material.roughness.is_finite() || !material.alpha_cutoff.is_finite() || !material.normal_scale.is_finite() || !material.occlusion_strength.is_finite() || !(0.0..=1.0).contains(&material.occlusion_strength) {
                 return Err("GLB material contained a non-finite scalar");
             }
-            if material.base_color_texture.is_some_and(|texture| texture >= self.texture_len) {
+            if std::iter::once(material.base_color_texture).chain(material.additional_textures).flatten().any(|texture|texture >= self.texture_len) {
                 return Err("GLB material referenced a missing texture");
             }
         }
@@ -1599,6 +1610,7 @@ struct GlbSchemaCursor {
     attributes_depth: Option<u16>,
     pbr_depth: Option<u16>,
     base_color_texture_depth: Option<u16>,
+    material_texture_role: usize,
     output: GlbSchemaOutput,
     terminal: bool,
 }
@@ -1631,6 +1643,7 @@ impl GlbSchemaCursor {
             attributes_depth: None,
             pbr_depth: None,
             base_color_texture_depth: None,
+            material_texture_role: 0,
             output: GlbSchemaOutput::new(),
             terminal: false,
         }
@@ -1720,7 +1733,9 @@ impl GlbSchemaCursor {
                     self.current_material = Some(GlbMaterialSchema::default());
                 } else if self.section == GlbSchemaSection::Materials && self.depth == 3 && self.pending_key.as_ref().is_some_and(|key| key.equals("pbrMetallicRoughness")) {
                     self.pbr_depth = Some(next_depth);
-                } else if self.section == GlbSchemaSection::Materials && self.pbr_depth == Some(self.depth) && self.pending_key.as_ref().is_some_and(|key| key.equals("baseColorTexture")) {
+                } else if self.section == GlbSchemaSection::Materials && self.pending_key.as_ref().is_some_and(|key| key.equals("baseColorTexture") || key.equals("metallicRoughnessTexture") || key.equals("normalTexture") || key.equals("occlusionTexture") || key.equals("emissiveTexture")) {
+                    let key = self.pending_key.as_ref().unwrap();
+                    self.material_texture_role = if key.equals("baseColorTexture") {0} else if key.equals("metallicRoughnessTexture") {1} else if key.equals("normalTexture") {2} else if key.equals("occlusionTexture") {3} else {4};
                     self.base_color_texture_depth = Some(next_depth);
                 } else if self.section == GlbSchemaSection::Textures && self.depth == 2 {
                     self.current_texture = Some(GlbTextureSchema::default());
@@ -1908,8 +1923,9 @@ impl GlbSchemaCursor {
                     primitive.position_set = true;
                 } else if key.equals("NORMAL") {
                     primitive.normal = Some(index);
-                } else if key.equals("TEXCOORD_0") {
-                    primitive.uv = Some(index);
+                } else if let Some(set)=std::str::from_utf8(&key.bytes[..usize::from(key.len)]).ok().and_then(|key|key.strip_prefix("TEXCOORD_")).and_then(|set|set.parse::<usize>().ok()) {
+                    if set>=64{return Err("GLB UV set exceeded declared surface credits");}primitive.uv_sets[set] = Some(index);
+                } else if key.equals("TANGENT") { primitive.tangent=Some(index);
                 } else if key.equals("COLOR_0") {
                     primitive.color = Some(index);
                 }
@@ -1929,7 +1945,12 @@ impl GlbSchemaCursor {
             } else if self.pbr_depth == Some(self.depth) && key.equals("roughnessFactor") {
                 material.roughness = value.float()?;
             } else if self.base_color_texture_depth == Some(self.depth) && key.equals("index") {
-                material.base_color_texture = Some(u16::try_from(value.unsigned()?).map_err(|_| "GLB material texture index exceeded fixed credits")?);
+                let index = Some(u16::try_from(value.unsigned()?).map_err(|_| "GLB material texture index exceeded fixed credits")?);
+                if self.material_texture_role == 0 {material.base_color_texture=index;} else {material.additional_textures[self.material_texture_role-1]=index;}
+            } else if self.base_color_texture_depth == Some(self.depth) && key.equals("texCoord") {
+                let set=value.unsigned()?;if set>=64{return Err("GLB UV selector exceeded declared surface credits");}material.texture_coordinates[self.material_texture_role]=set as u8;
+            } else if self.base_color_texture_depth == Some(self.depth) && self.material_texture_role==2 && key.equals("scale") {material.normal_scale=value.float()?;
+            } else if self.base_color_texture_depth == Some(self.depth) && self.material_texture_role==3 && key.equals("strength") {material.occlusion_strength=value.float()?;
             } else if self.depth == 3 && key.equals("alphaCutoff") {
                 material.alpha_cutoff = value.float()?;
             }
@@ -2236,6 +2257,7 @@ struct GlbInstancePlanCursor {
     vertex_count: u32,
     index_count: u32,
     has_uvs: bool,
+    has_tangents:bool,
     has_colors: bool,
     output_bytes: usize,
 }
@@ -2244,7 +2266,7 @@ impl GlbInstancePlanCursor {
     fn new(schema: &GlbSchemaOutput) -> Self {
         let scene = schema.default_scene.or((schema.scene_len != 0).then_some(0));
         let mode = if schema.node_len == 0 { GlbPlanMode::Fallback { primitive: 0 } } else { GlbPlanMode::Roots { scene, index: 0 } };
-        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false, has_colors: false, output_bytes: 0 }
+        Self { instances: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, stack: semio_framework_async::boxed_fixed_slots(|| None), stack_len: 0, mode, vertex_count: 0, index_count: 0, has_uvs: false,has_tangents:false, has_colors: false, output_bytes: 0 }
     }
 
     fn step(&mut self, schema: &GlbSchemaOutput) -> Result<bool, &'static str> {
@@ -2351,9 +2373,10 @@ impl GlbInstancePlanCursor {
         let index_base = self.index_count;
         let vertex_count = vertex_base.checked_add(position.count).ok_or("GLB instantiated vertex count overflowed")?;
         let output_index_count = index_base.checked_add(index_count).ok_or("GLB instantiated index count overflowed")?;
-        let has_uvs = self.has_uvs || primitive_schema.uv.is_some();
+        let has_uvs = self.has_uvs || primitive_schema.uv_sets.iter().any(Option::is_some);
+        let has_tangents=self.has_tangents || primitive_schema.tangent.is_some();
         let has_colors = self.has_colors || primitive_schema.color.is_some();
-        let vertex_stride = 24usize.checked_add(if has_uvs { 8 } else { 0 }).and_then(|stride| stride.checked_add(if has_colors { 16 } else { 0 })).ok_or("GLB instantiated vertex stride overflowed")?;
+        let vertex_stride = 24usize.checked_add(if has_uvs { 40 } else { 0 }).and_then(|stride|stride.checked_add(if has_tangents{16}else{0})).and_then(|stride| stride.checked_add(if has_colors { 16 } else { 0 })).ok_or("GLB instantiated vertex stride overflowed")?;
         let vertex_bytes = usize::try_from(vertex_count).ok().and_then(|count| count.checked_mul(vertex_stride)).ok_or("GLB instantiated vertex bytes overflowed")?;
         let index_bytes = usize::try_from(output_index_count).ok().and_then(|count| count.checked_mul(4)).ok_or("GLB instantiated index bytes overflowed")?;
         let output_bytes = vertex_bytes.checked_add(index_bytes).ok_or("GLB instantiated output bytes overflowed")?;
@@ -2368,7 +2391,7 @@ impl GlbInstancePlanCursor {
         self.instance_len += 1;
         self.vertex_count = vertex_count;
         self.index_count = output_index_count;
-        self.has_uvs = has_uvs;
+        self.has_uvs = has_uvs;self.has_tangents=has_tangents;
         self.has_colors = has_colors;
         self.output_bytes = output_bytes;
         Ok(())
@@ -2569,6 +2592,7 @@ enum GlbMaterializePhase {
     Allocate,
     Positions,
     Normals,
+    Tangents,
     Uvs,
     Colors,
     Indices,
@@ -2589,7 +2613,15 @@ struct GlbMaterializeCursor {
     textures: Vec<(String, SceneRasterLease)>,
     texture_bytes: Vec<u8>,
     decoded_texture: Option<DecodedReferenceImage>,
+    texture_hash:semio_framework_hash::Sha256,
+    texture_digest:[u64;2],
+    texture_png:Option<semio_framework_pixels::png_decoding::PngDecodeJob>,
+    texture_submission:Option<semio_framework_async::Job>,
+    texture_worker:Option<Arc<Mutex<Option<Option<semio_framework_pixels::RasterImage>>>>>,
+    texture_cancelled:Arc<AtomicBool>,
     texture: u16,
+    uv_role:usize,
+    texture_role: u8,
     outline: Option<GlbOutlineAccumulator>,
     phase: GlbMaterializePhase,
     bin_start: usize,
@@ -2605,7 +2637,7 @@ struct GlbMaterializeCursor {
 impl GlbMaterializeCursor {
     fn new(schema: GlbSchemaOutput) -> Self {
         let plan = GlbInstancePlanCursor::new(&schema);
-        Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None, texture: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
+        Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None,texture_hash:Default::default(),texture_digest:[0;2],texture_png:None,texture_submission:None,texture_worker:None,texture_cancelled:Arc::new(AtomicBool::new(false)), texture: 0, uv_role:0, texture_role: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
     }
 
     fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
@@ -2645,6 +2677,8 @@ impl GlbMaterializeCursor {
                     self.advance_phase(GlbMaterializePhase::Outlines);
                     return Ok(false);
                 }
+                let required=self.schema.materials[..usize::from(self.schema.material_len)].iter().flatten().any(|material|if self.texture_role==0 {material.base_color_texture==Some(self.texture)||material.additional_textures[3]==Some(self.texture)}else {material.additional_textures[..3].contains(&Some(self.texture))});
+                if !required {self.texture_role+=1;if self.texture_role==2{self.texture_role=0;self.texture+=1;}return Ok(false)}
                 let texture = self.schema.textures.get(usize::from(self.texture)).and_then(Option::as_ref).ok_or("GLB materializer lost a texture schema")?;
                 let image = self
                     .schema
@@ -2665,10 +2699,10 @@ impl GlbMaterializeCursor {
                 }
                 let cursor = usize::try_from(self.item).map_err(|_| "GLB image cursor exceeded address credits")?;
                 if cursor == expected {
-                    self.decoded_texture = infinite_world::world::decode_reference_image_bytes(&self.texture_bytes);
-                    if self.decoded_texture.is_none() {
-                        return Err("GLB embedded texture decoder refused its image bytes");
-                    }
+                    let digest=std::mem::take(&mut self.texture_hash).finalize();self.texture_digest=[u64::from_be_bytes(digest[..8].try_into().unwrap()),u64::from_be_bytes(digest[8..16].try_into().unwrap())];
+                    let bytes=std::mem::take(&mut self.texture_bytes);
+                    if image.mime==1 {self.texture_png=Some(semio_framework_pixels::png_decoding::PngDecodeJob::new(semio_framework_pixels::png_decoding::PngDecodeInput{data:Arc::new(bytes),max_pixels:16_777_216,max_bytes:16_000_000,max_chunks:65_536}).map_err(|_|"GLB owned PNG texture decoder refused its input")?);}
+                    else {let worker=Arc::new(Mutex::new(None));let output=worker.clone();let canceled=self.texture_cancelled.clone();self.texture_submission=Some(Box::new(move||{let image=if canceled.load(Ordering::Acquire){None}else{infinite_world::world::decode_mesh_surface_image_bytes(&bytes)};*output.lock().unwrap_or_else(|poisoned|poisoned.into_inner())=Some(image);}));self.texture_worker=Some(worker);}
                     self.phase = GlbMaterializePhase::TextureDecode;
                     self.item = 0;
                     return Ok(false);
@@ -2682,17 +2716,24 @@ impl GlbMaterializeCursor {
                 for at in absolute..absolute + take {
                     self.texture_bytes.push(pages.read::<1>(owner, at)?[0]);
                 }
+                self.texture_hash.update(&self.texture_bytes[cursor..cursor+take]);
                 self.item = self.item.checked_add(u32::try_from(take).map_err(|_| "GLB image block exceeded cursor credits")?).ok_or("GLB image cursor overflowed")?;
                 Ok(false)
             }
             GlbMaterializePhase::TextureDecode => {
+                if self.decoded_texture.is_none(){
+                    if let Some(submission)=self.texture_submission.take(){if let Err(refusal)=renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance,submission){self.texture_submission=Some(refusal.into_job());}return Ok(false)}
+                    let image=if let Some(job)=self.texture_png.as_mut(){if !job.advance(4096).map_err(|_|"GLB owned PNG decode failed")?.done{return Ok(false)}self.texture_png.take().unwrap().into_result().map_err(|_|"GLB owned PNG decode failed")?}
+                    else {let worker=self.texture_worker.as_ref().ok_or("GLB texture decoder owner was lost")?;let image=worker.lock().map_err(|_|"GLB texture decoder lock failed")?.take();let Some(image)=image else{return Ok(false)};self.texture_worker=None;image.ok_or("GLB owned JPEG decode failed")?};
+                    self.decoded_texture=Some(DecodedReferenceImage{width:image.width,height:image.height,source_digest:self.texture_digest,pixels:image.pixels});return Ok(false)
+                }
                 let decoded = self.decoded_texture.take().ok_or("GLB materializer lost its decoded texture")?;
                 let descriptor = SceneRasterDescriptor {
                     width: decoded.width,
                     height: decoded.height,
                     source_digest: decoded.source_digest,
                     source_revision: 1,
-                    profile: SceneRasterProfile::MeshBaseColorSrgb,
+                    profile: if self.texture_role == 0 {SceneRasterProfile::MeshBaseColorSrgb} else {SceneRasterProfile::MeshNumericLinear},
                     mesh: None,
                 };
                 let pool = infinite_world::world::world_scene_raster_pool();
@@ -2711,7 +2752,7 @@ impl GlbMaterializeCursor {
                     }
                     SceneRasterBegin::Backpressure(_) => {
                         self.decoded_texture = Some(decoded);
-                        return Ok(false);
+                        return Err("GLB texture residency admission is full");
                     }
                     SceneRasterBegin::Refused(detail) => {
                         self.decoded_texture = Some(decoded);
@@ -2719,7 +2760,8 @@ impl GlbMaterializeCursor {
                     }
                 };
                 self.textures.push((self.texture_key(owner), lease));
-                self.texture += 1;
+                self.texture_role += 1;
+                if self.texture_role == 2 {self.texture_role = 0;self.texture += 1;}
                 self.texture_bytes.clear();
                 self.phase = GlbMaterializePhase::TextureBytes;
                 Ok(false)
@@ -2729,7 +2771,7 @@ impl GlbMaterializeCursor {
                     let outline = self.outline.as_mut().ok_or("GLB materializer lost its outline owner")?;
                     if outline.flush_step()? {
                         let edges = u32::try_from(outline.segments.len()).map_err(|_| "GLB outline output count overflowed")?;
-                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: 0, vertex_ids: 0, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } };
+                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: 0, vertex_ids: 0, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } ,surface_uvs:if self.plan.has_uvs {[self.plan.vertex_count;4]}else{[0;4]},tangents:if self.plan.has_tangents {self.plan.vertex_count}else{0},};
                         self.write = Some(mesh3d_begin(owner.generation(), owner.revision(), schema).map_err(glb_mesh_fault)?);
                         self.phase = GlbMaterializePhase::Allocate;
                     }
@@ -2777,7 +2819,7 @@ impl GlbMaterializeCursor {
             }
             GlbMaterializePhase::Normals => {
                 if self.instance == self.plan.instance_len {
-                    self.advance_phase(GlbMaterializePhase::Uvs);
+                    self.advance_phase(GlbMaterializePhase::Tangents);
                     return Ok(false);
                 }
                 let instance = self.instance()?;
@@ -2797,6 +2839,12 @@ impl GlbMaterializeCursor {
                 self.item += 1;
                 Ok(false)
             }
+            GlbMaterializePhase::Tangents=>{
+                if !self.plan.has_tangents || self.instance==self.plan.instance_len {self.advance_phase(GlbMaterializePhase::Uvs);return Ok(false);}
+                let instance=self.instance()?;if self.item==instance.vertex_count {self.next_instance();return Ok(false);}
+                let value=if let Some(accessor)=self.primitive(instance)?.tangent {let value=self.read_vec(owner,pages,accessor,self.item,4)?;if value[..3].iter().all(|value|*value==0.0) || value[3].abs()!=1.0 {return Err("GLB TANGENT requires a nonzero direction and signed handedness");}let matrix=instance.matrix;let direction=glb_normalize(std::array::from_fn(|axis|matrix[0][axis]*value[0]+matrix[1][axis]*value[1]+matrix[2][axis]*value[2]));let determinant=matrix[0][0]*(matrix[1][1]*matrix[2][2]-matrix[2][1]*matrix[1][2])-matrix[1][0]*(matrix[0][1]*matrix[2][2]-matrix[2][1]*matrix[0][2])+matrix[2][0]*(matrix[0][1]*matrix[1][2]-matrix[1][1]*matrix[0][2]);[direction[0],direction[1],direction[2],value[3]*if determinant<0.0{-1.0}else{1.0}]}else{[0.0;4]};
+                mesh3d_write_vec4(self.write_token()?,Mesh3dField::Tangents,value).map_err(glb_mesh_fault)?;self.item+=1;Ok(false)
+            }
             GlbMaterializePhase::Uvs => {
                 if self.instance == self.plan.instance_len {
                     self.advance_phase(GlbMaterializePhase::Colors);
@@ -2812,14 +2860,16 @@ impl GlbMaterializeCursor {
                     return Ok(false);
                 }
                 let primitive = self.primitive(instance)?;
-                let value = if let Some(accessor) = primitive.uv {
+                let material=primitive.material.and_then(|index|self.schema.materials[usize::from(index)].as_ref());
+                let role=self.uv_role;let set=material.map_or(0,|material|usize::from(material.texture_coordinates[role]));
+                let value = if let Some(accessor) = primitive.uv_sets[set] {
                     let value = self.read_vec(owner, pages, accessor, self.item, 2)?;
                     [value[0], value[1]]
                 } else {
                     [0.0; 2]
                 };
-                mesh3d_write_vec2(self.write_token()?, Mesh3dField::Uvs, value).map_err(glb_mesh_fault)?;
-                self.item += 1;
+                mesh3d_write_vec2(self.write_token()?, [Mesh3dField::Uvs,Mesh3dField::UvsMetallicRoughness,Mesh3dField::UvsNormal,Mesh3dField::UvsOcclusion,Mesh3dField::UvsEmissive][role], value).map_err(glb_mesh_fault)?;
+                self.uv_role+=1;if self.uv_role==5{self.uv_role=0;self.item += 1;}
                 Ok(false)
             }
             GlbMaterializePhase::Colors => {
@@ -2986,7 +3036,7 @@ impl GlbMaterializeCursor {
     }
 
     fn texture_key(&self, owner: &RendererAssetFetchOwner) -> String {
-        format!("glb:{}:texture:{}", owner.generation(), self.texture)
+        format!("glb:{}:texture:{}:{}", owner.generation(), self.texture, if self.texture_role == 0 {"srgb"} else {"linear"})
     }
 
     fn build_appearance(&mut self, owner: &RendererAssetFetchOwner) -> Result<World3dMeshAppearance, &'static str> {
@@ -2998,8 +3048,8 @@ impl GlbMaterializeCursor {
                 .material
                 .and_then(|index| self.schema.materials.get(usize::from(index)).and_then(Option::as_ref).copied())
                 .unwrap_or_default();
-            let base_color_texture = material.base_color_texture.map(|texture| format!("glb:{}:texture:{texture}", owner.generation()));
-            let texture_sampler = if let Some(texture) = material.base_color_texture {
+            let base_color_texture = material.base_color_texture.map(|texture| format!("glb:{}:texture:{texture}:srgb", owner.generation()));
+            let sampler_for = |reference:Option<u16>| -> Result<ui_wgpu::wgpu::SceneTextureSampler3d, &'static str> {Ok(if let Some(texture) = reference {
                 let texture = self.schema.textures.get(usize::from(texture)).and_then(Option::as_ref).ok_or("GLB materializer lost a texture sampler owner")?;
                 let sampler = texture.sampler.and_then(|index| self.schema.samplers.get(usize::from(index)).and_then(Option::as_ref).copied()).unwrap_or_default();
                 ui_wgpu::wgpu::SceneTextureSampler3d {
@@ -3010,7 +3060,10 @@ impl GlbMaterializeCursor {
                 }
             } else {
                 Default::default()
-            };
+            })};
+            let texture_sampler = sampler_for(material.base_color_texture)?;
+            let additional_texture_samplers = [sampler_for(material.additional_textures[0])?,sampler_for(material.additional_textures[1])?,sampler_for(material.additional_textures[2])?,sampler_for(material.additional_textures[3])?];
+            let reference = |role:usize| material.additional_textures[role].map(|texture|format!("glb:{}:texture:{texture}:{}",owner.generation(),if role==3 {"srgb"} else {"linear"}));
             primitives.push(World3dPrimitiveMaterial {
                 first_index: instance.index_base,
                 index_count: instance.index_count,
@@ -3030,7 +3083,8 @@ impl GlbMaterializeCursor {
                     preserve_vertex_color: primitive.color.is_some(),
                     base_color_texture,
                     texture_sampler,
-                },
+                    metallic_roughness_texture:reference(0),normal_texture:reference(1),occlusion_texture:reference(2),emissive_texture:reference(3),additional_texture_samplers,
+                normal_scale:[material.normal_scale,if primitive.tangent.is_some(){material.normal_scale}else{-material.normal_scale}],occlusion_strength:material.occlusion_strength,},
             });
         }
         let textures = std::mem::take(&mut self.textures);
@@ -3128,15 +3182,19 @@ impl GlbMaterializeCursor {
     }
 
     fn begin_close(&mut self) {
-        self.appearance = None;
-        self.textures.clear();
-        self.decoded_texture = None;
-        self.texture_bytes.clear();
+        self.texture_cancelled.store(true,Ordering::Release);
         self.phase = GlbMaterializePhase::Closing;
     }
 
     fn close_step(&mut self) -> bool {
         self.begin_close();
+        if self.texture_submission.take().is_some(){self.texture_worker=None;return false}
+        if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return false};let Some(image)=output.take()else{return false};self.decoded_texture=image.map(|image|DecodedReferenceImage{width:image.width,height:image.height,pixels:image.pixels,source_digest:self.texture_digest});drop(output);self.texture_worker=None;return false}
+        if let Some(mut job)=self.texture_png.take(){job.cancel();return false}
+        if let Some(image)=self.decoded_texture.as_mut(){if !image.pixels.is_empty(){image.pixels.truncate(image.pixels.len().saturating_sub(4096));return false}self.decoded_texture=None;return false}
+        if !self.texture_bytes.is_empty(){self.texture_bytes.truncate(self.texture_bytes.len().saturating_sub(4096));return false}
+        if let Some(appearance)=self.appearance.as_mut(){if !appearance.close_step(){return false}self.appearance=None;return false}
+        if self.textures.pop().is_some(){return false}
         if let Some(token) = self.write {
             match mesh3d_abort(token) {
                 Ok(()) | Err(Mesh3dFault::Closing) => {}
@@ -3189,8 +3247,13 @@ fn glb_mag_filter(value: Option<u16>) -> Result<ui_wgpu::wgpu::SceneTextureFilte
 
 fn glb_min_filter(value: Option<u16>) -> Result<ui_wgpu::wgpu::SceneTextureFilter3d, &'static str> {
     match value {
-        None | Some(9729 | 9985 | 9987) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Linear),
-        Some(9728 | 9984 | 9986) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Nearest),
+        None => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::LinearMipmapLinear),
+        Some(9729) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Linear),
+        Some(9985)=>Ok(ui_wgpu::wgpu::SceneTextureFilter3d::LinearMipmapNearest),
+        Some(9987)=>Ok(ui_wgpu::wgpu::SceneTextureFilter3d::LinearMipmapLinear),
+        Some(9984)=>Ok(ui_wgpu::wgpu::SceneTextureFilter3d::NearestMipmapNearest),
+        Some(9986)=>Ok(ui_wgpu::wgpu::SceneTextureFilter3d::NearestMipmapLinear),
+        Some(9728) => Ok(ui_wgpu::wgpu::SceneTextureFilter3d::Nearest),
         Some(_) => Err("GLB texture sampler used an unsupported minification filter"),
     }
 }
@@ -8200,7 +8263,8 @@ pub(crate) mod kernel_runtime {
                     &[] as &[BrokerCapabilityGrant],
                     &TURN_BUDGET,
                 )
-                .await?;
+                .await
+                .map_err(|refusal| refusal.reason)?;
             self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), artifact: artifact_digest });
             self.instances.insert(instance_id, actor);
             let open = Event::InstanceOpen {
@@ -9921,7 +9985,7 @@ pub mod scale_bench {
             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
             let ordinal = self.ordinal(&package_id);
             let budget = turn_budget_of(record);
-            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await?;
+            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await.map_err(|refusal| refusal.reason)?;
             self.budgets.insert(actor.0, budget);
             Ok(actor)
         }
@@ -18917,20 +18981,20 @@ struct NativeSocketProbeSnapshot(String);
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_store::ArtifactSqliteSnapshot for NativeSocketProbeSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🪶️sqlite/🗄️.sql");
-    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, String> {
+    fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
         control.check_rows(1)?;
         control.check_value_bytes(self.0.len())?;
-        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA).map_err(|error| error.to_string())?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
         database.table_mut("socket_probe")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(self.0.clone())] });
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
         Ok(database)
     }
-    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+    fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
         let rows = &database.table("socket_probe")?.rows;
-        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err("socket probe requires one text row".into()); }
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"socket probe requires one text row")); }
         let snapshot = Self(rows[0].text(1)?.to_string());
         control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
         Ok(snapshot)
@@ -18962,11 +19026,11 @@ impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
     }
 
     fn decode_pack_with(bytes: &[u8], _options: &store::os_store::PackDecodeOptions) -> Result<Self, store::os_store::PackError> {
-        String::from_utf8(bytes.to_vec()).map(Self).map_err(|error| store::os_store::PackError::Schema(error.to_string()))
+        String::from_utf8(bytes.to_vec()).map(Self).map_err(|error| store::os_store::PackError::from(semio_framework_value::ValueError::from(error)))
     }
 
-    fn record_spec() -> Option<store::os_dsl::RecordSpec> {
-        Some(store::os_dsl::RecordSpec::new(Some("native-socket-probe"), store::os_dsl::RecordLayout::Inline, vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)]))
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        Some(semio_framework_dsl_record::RecordSpec::new(Some("native-socket-probe"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "value", semio_framework_dsl_record::Shape::Value)]))
     }
 }
 
@@ -18979,18 +19043,18 @@ impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
 /// the process with `fatal runtime error: stack overflow` the first time a probe document is
 /// committed — no stack size survives it. See `📓️fable-mcp-artifact-quick-recursion.md`.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::ToValue for NativeSocketProbeSnapshot {
-    fn to_value(&self) -> store::DslValue {
-        store::DslValue::String(self.0.clone())
+impl semio_framework_value::ToValue for NativeSocketProbeSnapshot {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::FromValue for NativeSocketProbeSnapshot {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+impl semio_framework_value::FromValue for NativeSocketProbeSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            store::DslValue::String(text) => Ok(Self(text)),
-            other => Err(store::ValueError::new(format!("expected a string, found {other:?}"))),
+            semio_framework_value::DslValue::String(text) => Ok(Self(text)),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -19013,18 +19077,18 @@ impl store::os_spr::command::MutationDiff<NativeSocketProbeSnapshot> for NativeS
 /// 🌉️ Hand-written — same transparent-newtype shape, and the same no-`to_dsl_value` recursion rule,
 /// as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::ToValue for NativeSocketProbeDiff {
-    fn to_value(&self) -> store::DslValue {
-        store::DslValue::String(self.0.clone())
+impl semio_framework_value::ToValue for NativeSocketProbeDiff {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(self.0.clone())
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::FromValue for NativeSocketProbeDiff {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+impl semio_framework_value::FromValue for NativeSocketProbeDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            store::DslValue::String(text) => Ok(Self(text)),
-            other => Err(store::ValueError::new(format!("expected a string, found {other:?}"))),
+            semio_framework_value::DslValue::String(text) => Ok(Self(text)),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -19067,9 +19131,12 @@ impl store::os_spr::command::Mutation<NativeSocketProbeSnapshot> for NativeSocke
         store::os_spr::command::MutationOutcome::new(NativeSocketProbeDiff(value.clone()))
     }
 
-    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &NativeSocketProbeSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self::Set(base.0.clone())]
-    }
+    
+    })())
+}
 }
 
 /// 🌉️ Hand-written — externally tagged as `{"Set": "<payload>"}`, byte-identical to what
@@ -19077,23 +19144,23 @@ impl store::os_spr::command::Mutation<NativeSocketProbeSnapshot> for NativeSocke
 /// the one descriptor's own `aggregate_variant` rather than a second copy of the string. Same
 /// no-`to_dsl_value` recursion rule as [`NativeSocketProbeSnapshot`]'s impl above.
 #[cfg(not(target_arch = "wasm32"))]
-impl store::ToValue for NativeSocketProbeMutation {
-    fn to_value(&self) -> store::DslValue {
+impl semio_framework_value::ToValue for NativeSocketProbeMutation {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let Self::Set(value) = self;
-        store::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), store::DslValue::String(value.clone()))])
+        semio_framework_value::DslValue::object([(NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant.to_string(), semio_framework_value::DslValue::String(value.clone()))])
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::FromValue for NativeSocketProbeMutation {
-    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
-        let store::DslValue::Object(entries) = value else {
-            return Err(store::ValueError::new(format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
+impl semio_framework_value::FromValue for NativeSocketProbeMutation {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(entries) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a one-key `{}` object, found {value:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant)));
         };
-        match <[(String, store::DslValue); 1]>::try_from(entries) {
-            Ok([(key, store::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
-            Ok([(key, payload)]) => Err(store::ValueError::new(format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
-            Err(entries) => Err(store::ValueError::new(format!("expected exactly one variant key, found {}", entries.len()))),
+        match <[(String, semio_framework_value::DslValue); 1]>::try_from(entries) {
+            Ok([(key, semio_framework_value::DslValue::String(text))]) if key == NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant => Ok(Self::Set(text)),
+            Ok([(key, payload)]) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected variant `{}` with a string payload, found `{key}` with {payload:?}", NATIVE_SOCKET_PROBE_MUTATION_DESCRIPTOR.aggregate_variant))),
+            Err(entries) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly one variant key, found {}", entries.len()))),
         }
     }
 }

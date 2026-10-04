@@ -8,12 +8,12 @@
 //! every navbar pick was answered `undeclared-action` and the picked example never reached the canvas.
 
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use crate::op::DagMutation;
+use crate::DagMutation;
 use crate::DagSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,

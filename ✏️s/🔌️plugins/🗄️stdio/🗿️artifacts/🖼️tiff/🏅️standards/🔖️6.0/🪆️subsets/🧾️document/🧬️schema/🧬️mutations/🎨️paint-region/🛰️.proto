@@ -1,0 +1,15 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+
+message PaintRegionMutation {
+  string revision = 1;
+  uint64 ifd_index = 2;
+  uint32 x = 3;
+  uint32 y = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+  uint32 red = 7;
+  uint32 green = 8;
+  uint32 blue = 9;
+  uint32 alpha = 10;
+}

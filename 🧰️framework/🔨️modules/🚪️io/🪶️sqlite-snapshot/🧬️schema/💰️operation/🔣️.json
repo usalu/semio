@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Owned SQLite Operation Grant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sql",
+    "table",
+    "labelUnit",
+    "repeats",
+    "codeUnits",
+    "utf8Bytes",
+    "measurePhase",
+    "decodePhase",
+    "measureFrontier",
+    "decodeFrontier",
+    "payload",
+    "tightBytes",
+    "permissiveBytes",
+    "retainedDebt",
+    "refusal",
+    "routes",
+    "allocationRequests"
+  ],
+  "properties": {
+    "sql": {
+      "const": "CREATE TABLE authored_scalar (id INTEGER PRIMARY KEY, label TEXT NOT NULL, payload BLOB NOT NULL)"
+    },
+    "table": {
+      "const": "authored_scalar"
+    },
+    "labelUnit": {
+      "const": "世界😀\u0000"
+    },
+    "repeats": {
+      "const": 20000
+    },
+    "codeUnits": {
+      "const": 100000
+    },
+    "utf8Bytes": {
+      "const": 220000
+    },
+    "measurePhase": {
+      "const": "measureValues"
+    },
+    "decodePhase": {
+      "const": "decodeValues"
+    },
+    "measureFrontier": {
+      "const": 16384
+    },
+    "decodeFrontier": {
+      "const": 65536
+    },
+    "payload": {
+      "const": [
+        0,
+        255,
+        65,
+        0
+      ]
+    },
+    "tightBytes": {
+      "const": 0
+    },
+    "permissiveBytes": {
+      "const": 1048576
+    },
+    "retainedDebt": {
+      "const": 7
+    },
+    "refusal": {
+      "const": "ownershipLimit"
+    },
+    "routes": {
+      "const": [
+        "artifactProjection",
+        "physicalExport",
+        "physicalImport"
+      ]
+    },
+    "allocationRequests": {
+      "const": [
+        4,
+        4
+      ]
+    }
+  }
+}

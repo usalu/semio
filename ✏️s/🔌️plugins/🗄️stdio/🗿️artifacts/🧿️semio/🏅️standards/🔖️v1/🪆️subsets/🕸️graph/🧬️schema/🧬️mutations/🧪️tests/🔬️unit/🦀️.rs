@@ -8,10 +8,10 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 fn fixture() -> SemioGraphSnapshot {
     SemioGraphSnapshot {
         nodes: vec![
-            SemioGraphNode { id: GraphNodeId::new("n1"), kind: "source".into(), label: "Source".into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }], properties: vec![] },
-            SemioGraphNode { id: GraphNodeId::new("n2"), kind: "sink".into(), label: "Sink".into(), position: SemioPoint2 { x: 10.0, y: 10.0 }, ports: vec![], properties: vec![] },
+            SemioGraphNode { id: GraphNodeId::new("n1"), kind: "source".into(), label: "Source".into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, width: 0.0, height: 0.0, ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out, category: String::new(), properties: Vec::new() }], properties: vec![] },
+            SemioGraphNode { id: GraphNodeId::new("n2"), kind: "sink".into(), label: "Sink".into(), position: SemioPoint2 { x: 10.0, y: 10.0 }, width: 0.0, height: 0.0, ports: vec![], properties: vec![] },
         ],
-        edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }],
+        edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(), source_port: None, target_port: None, properties: Vec::new() }],
         ..Default::default()
     }
 }
@@ -32,7 +32,7 @@ fn sorted_by_id(mut s: SemioGraphSnapshot) -> SemioGraphSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     // stale pre-operation `base` — a whole-list-replace diff shape reconstructs the entire
@@ -48,34 +48,60 @@ fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> Semi
 #[semio_framework_async_macros::async_test]
 async fn create_delete_node_round_trips() {
     let base = fixture();
-    let new_node = SemioGraphNode { id: GraphNodeId::new("n3"), kind: "extra".into(), label: "Extra".into(), position: SemioPoint2 { x: 5.0, y: 5.0 }, ports: vec![], properties: vec![] };
+    let new_node = SemioGraphNode { id: GraphNodeId::new("n3"), kind: "extra".into(), label: "Extra".into(), position: SemioPoint2 { x: 5.0, y: 5.0 }, width: 0.0, height: 0.0, ports: vec![], properties: vec![] };
 
     let create = SemioGraphMutation::CreateNode(create_node::CreateNode {
         id: new_node.id.clone(),
         kind: new_node.kind.clone(),
         label: new_node.label.clone(),
-        position: new_node.position.clone(),
+        position: new_node.position.clone(), width: new_node.width, height: new_node.height,
         ports: new_node.ports.clone(),
         properties: new_node.properties.clone(),
+        at: None,
     });
     let after_create = round_trip(&base, &create);
     assert_eq!(after_create.nodes.len(), base.nodes.len() + 1);
     assert_eq!(after_create.nodes.last().unwrap(), &new_node);
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: new_node.id.clone() })]);
 
     let delete = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("n1") });
     let after_delete = round_trip(&base, &delete);
     assert_eq!(after_delete.nodes.len(), base.nodes.len() - 1);
     assert!(after_delete.edges.is_empty(), "delete-node must cascade-remove every severed edge");
+    let mut restored = after_delete;
+    for back in delete.inverse(&base).expect("delete-node inverse") {
+        restored = back.diff(&restored).diff().apply(&restored).expect("the restore applies");
+    }
+    assert_eq!(restored, base, "deleting the FIRST node and undoing it restores the exact sequence, not only the set");
+}
+
+/// ⚖️ LAW: deleting a node from the MIDDLE of the sets (with edges before and after its own) and undoing it restores the
+/// byte-identical pack and therefore the identical content address — content-addressed graph children (trinity, dag) keep
+/// their child id across delete → undo, and a time-travel fold over the undo equals the fold before it.
+#[semio_framework_async_macros::async_test]
+async fn delete_then_undo_restores_byte_identical_snapshot_bytes() {
+    use store::ArtifactPack;
+    let node = |id: &str, x: f64| SemioGraphNode { id: GraphNodeId::new(id), kind: "k".into(), label: id.to_uppercase(), position: SemioPoint2 { x, y: -x }, width: 2.0, height: 1.0, ports: vec![], properties: vec![SemioValueEntry { key: "w".into(), value: SemioValue::Int { lexeme: "3".into() } }] };
+    let edge = |id: &str, source: &str, target: &str| SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flow".into(), label: String::new(), source_port: Some("out".into()), target_port: None, properties: Vec::new() };
+    let base = SemioGraphSnapshot { nodes: vec![node("a", 0.0), node("b", 1.5), node("c", 3.0)], edges: vec![edge("e1", "a", "c"), edge("e2", "a", "b"), edge("e3", "c", "a"), edge("e4", "b", "c")], ..Default::default() };
+    for (mutation, label) in [(SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("b") }), "delete-node b"), (SemioGraphMutation::DeleteEdge(delete_edge::DeleteEdge { id: GraphEdgeId::new("e2") }), "delete-edge e2")] {
+        let mut current = mutation.diff(&base).diff().apply(&base).expect("the delete applies");
+        for back in mutation.inverse(&base).expect("delete inverse") {
+            current = back.diff(&current).diff().apply(&current).expect("the undo applies");
+        }
+        let (before, after) = (SemioGraphSnapshot::encode_pack(&base), SemioGraphSnapshot::encode_pack(&current));
+        assert_eq!(after, before, "{label}: undo must restore byte-identical pack bytes");
+        assert_eq!(store::content_id("graph", &after), store::content_id("graph", &before), "{label}: undo must keep the content address");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("absent") });
-    assert!(delete.inverse(&base).is_empty(), "deleting an absent node has nothing to undo");
+    assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent node has nothing to undo");
     assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
 }
 
@@ -83,7 +109,7 @@ async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
 async fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
     let base = fixture();
     let delete = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("n1") });
-    let undo = delete.inverse(&base);
+    let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 2, "inverse must restore the node AND every severed edge");
     assert_eq!(
         undo[0],
@@ -91,12 +117,13 @@ async fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
             id: GraphNodeId::new("n1"),
             kind: "source".into(),
             label: "Source".into(),
-            position: SemioPoint2 { x: 0.0, y: 0.0 },
-            ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
-            properties: vec![]
+            position: SemioPoint2 { x: 0.0, y: 0.0 }, width: 0.0, height: 0.0,
+            ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out, category: String::new(), properties: Vec::new() }],
+            properties: vec![],
+            at: Some(0),
         })
     );
-    assert_eq!(undo[1], SemioGraphMutation::CreateEdge(create_edge::CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }));
+    assert_eq!(undo[1], SemioGraphMutation::CreateEdge(create_edge::CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(), source_port: None, target_port: None, properties: Vec::new(), at: Some(0) }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -116,19 +143,19 @@ async fn change_node_kind_and_label_and_move_node_round_trip() {
     assert_eq!(after.nodes[0].position, SemioPoint2 { x: 99.0, y: -1.0 });
 
     let missing = SemioGraphMutation::ChangeNodeKind(change_node_kind::ChangeNodeKind { id: GraphNodeId::new("absent"), new_kind: "x".into() });
-    assert!(missing.inverse(&base).is_empty());
+    assert!(missing.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_remove_node_port_round_trips() {
     let base = fixture();
-    let port = SemioGraphPort { name: "extra".into(), kind: SemioGraphPortKind::InOut };
+    let port = SemioGraphPort { name: "extra".into(), kind: SemioGraphPortKind::InOut, category: String::new(), properties: Vec::new() };
 
     let add = SemioGraphMutation::AddNodePort(add_node_port::AddNodePort { node_id: GraphNodeId::new("n2"), index: 0, port: port.clone() });
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.nodes[1].ports, vec![port.clone()]);
 
-    let undo = add.inverse(&base);
+    let undo = add.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioGraphMutation::RemoveNodePort(remove_node_port::RemoveNodePort { node_id: GraphNodeId::new("n2"), index: 0 })]);
 
     let remove = SemioGraphMutation::RemoveNodePort(remove_node_port::RemoveNodePort { node_id: GraphNodeId::new("n1"), index: 0 });
@@ -145,24 +172,24 @@ async fn add_remove_node_property_round_trips() {
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.nodes[0].properties, vec![property.clone()]);
 
-    let undo = add.inverse(&base);
-    assert_eq!(undo, vec![SemioGraphMutation::RemoveNodeProperty(remove_node_property::RemoveNodeProperty { node_id: GraphNodeId::new("n1"), index: 0 })]);
+    let undo = add.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo, vec![SemioGraphMutation::RemoveNodeProperty(remove_node_property::RemoveNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into() })]);
 
-    let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), index: 0 });
-    assert!(remove.inverse(&base).is_empty());
+    let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), key: "weight".into() });
+    assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_edge_round_trips() {
     let base = fixture();
-    let new_edge = SemioGraphEdge { id: GraphEdgeId::new("e2"), source: GraphNodeId::new("n2"), target: GraphNodeId::new("n1"), kind: "back".into(), label: "Return".into() };
+    let new_edge = SemioGraphEdge { id: GraphEdgeId::new("e2"), source: GraphNodeId::new("n2"), target: GraphNodeId::new("n1"), kind: "back".into(), label: "Return".into(), source_port: None, target_port: None, properties: Vec::new() };
 
-    let create = SemioGraphMutation::CreateEdge(create_edge::CreateEdge { id: new_edge.id.clone(), source: new_edge.source.clone(), target: new_edge.target.clone(), kind: new_edge.kind.clone(), label: new_edge.label.clone() });
+    let create = SemioGraphMutation::CreateEdge(create_edge::CreateEdge { id: new_edge.id.clone(), source: new_edge.source.clone(), target: new_edge.target.clone(), kind: new_edge.kind.clone(), label: new_edge.label.clone(), source_port: new_edge.source_port.clone(), target_port: new_edge.target_port.clone(), properties: new_edge.properties.clone(), at: None });
     let after_create = round_trip(&base, &create);
     assert_eq!(after_create.edges.last().unwrap(), &new_edge);
 
-    let undo = create.inverse(&base);
+    let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioGraphMutation::DeleteEdge(delete_edge::DeleteEdge { id: new_edge.id.clone() })]);
 
     let delete = SemioGraphMutation::DeleteEdge(delete_edge::DeleteEdge { id: GraphEdgeId::new("e1") });
@@ -173,7 +200,7 @@ async fn create_delete_edge_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(SemioGraphMutation::kinds().len(), 12);
+    assert_eq!(SemioGraphMutation::kinds().len(), KINDS.len());
     let mutation = SemioGraphMutation::DeleteNode(delete_node::DeleteNode { id: GraphNodeId::new("n1") });
     assert_eq!(mutation.semantics().kind, "delete-node");
     assert_eq!(mutation.semantics().record, "DeletedNode");

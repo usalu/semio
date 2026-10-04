@@ -21,7 +21,7 @@ fn record(gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> NodeDragRecord 
 //#region 🛠️Tool
 #[test]
 fn a_release_is_one_transaction_of_one_relative_leaf_in_document_units() {
-    let (transaction, leaves) = wfc2d_drag_tool_commit("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["room-a", "corridor"], 280.0, -70.0)], 140.0).expect("the release commits");
+    let (transaction, leaves) = wfc2d_drag_tool("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["room-a", "corridor"], 280.0, -70.0)], 140.0).committed().expect("the release commits");
     assert!(transaction.id.starts_with("tx-"), "{transaction:?}");
     assert_eq!(transaction.tool, "s.wfc.wfc2d@1/*#editor#nodeGraphEdit");
     assert_eq!(leaves, vec![drag_slots(vec!["room-a".into(), "corridor".into()], 2.0, -0.5)]);
@@ -29,15 +29,15 @@ fn a_release_is_one_transaction_of_one_relative_leaf_in_document_units() {
 
 #[test]
 fn a_release_that_moves_nothing_leaves_zero_trace() {
-    assert!(wfc2d_drag_tool_commit("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 0.0, 0.0)], 140.0).is_none(), "a zero offset");
-    assert!(wfc2d_drag_tool_commit("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["ghost"], 140.0, 0.0)], 140.0).is_none(), "no slot of this document");
-    assert!(wfc2d_drag_tool_commit("nodeGraphEdit", "seed", &base(), Vec::new(), &[], 140.0).is_none(), "no record");
+    assert!(wfc2d_drag_tool("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 0.0, 0.0)], 140.0).committed().is_none(), "a zero offset");
+    assert!(wfc2d_drag_tool("nodeGraphEdit", "seed", &base(), Vec::new(), &[record("node-drag:1", &["ghost"], 140.0, 0.0)], 140.0).committed().is_none(), "no slot of this document");
+    assert!(wfc2d_drag_tool("nodeGraphEdit", "seed", &base(), Vec::new(), &[], 140.0).committed().is_none(), "no record");
 }
 
 #[test]
 fn two_releases_are_two_transactions() {
-    let (first, _) = wfc2d_drag_tool_commit("nodeGraphEdit", "seed-one", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0).expect("first");
-    let (second, _) = wfc2d_drag_tool_commit("nodeGraphEdit", "seed-two", &base(), Vec::new(), &[record("node-drag:2", &["room-a"], 140.0, 0.0)], 140.0).expect("second");
+    let (first, _) = wfc2d_drag_tool("nodeGraphEdit", "seed-one", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0).committed().expect("first");
+    let (second, _) = wfc2d_drag_tool("nodeGraphEdit", "seed-two", &base(), Vec::new(), &[record("node-drag:2", &["room-a"], 140.0, 0.0)], 140.0).committed().expect("second");
     assert_ne!(first.id, second.id);
 }
 
@@ -45,16 +45,14 @@ fn two_releases_are_two_transactions() {
 fn a_wire_drawn_by_the_same_gesture_rides_the_same_transaction() {
     let edge = crate::schema::snapshot::Wfc2dSlotEdge { id: "room-a-room-b".into(), from_slot_id: "room-a".into(), to_slot_id: "room-b".into(), relation: "adjacent".into() };
     let wire = crate::mutations::connect_slots(edge);
-    let (_, leaves) = wfc2d_drag_tool_commit("nodeGraphEdit", "seed", &base(), vec![wire.clone()], &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0).expect("the release commits");
+    let (_, leaves) = wfc2d_drag_tool("nodeGraphEdit", "seed", &base(), vec![wire.clone()], &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0).committed().expect("the release commits");
     assert_eq!(leaves.len(), 2);
     assert_eq!(leaves[0], wire, "the wire first, then the drag");
 }
 
 #[test]
 fn a_seedless_view_publishes_the_leaves_plainly() {
-    let emit = wfc2d_drag_tool_emit("nodeGraphEdit", "", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0);
-    assert!(emit.transaction.is_none());
-    assert_eq!(emit.artifact_mutations.len(), 1);
+    assert!(matches!(wfc2d_drag_tool("nodeGraphEdit", "", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 140.0, 0.0)], 140.0), NodeDragEmit::Plain(leaves) if leaves.len() == 1));
 }
 
 #[test]
@@ -123,7 +121,7 @@ fn settle(app: &mut Wfc2dApp, result: Result<InvocationResult, semio_framework_p
 
 fn drag(app: &mut Wfc2dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
     let row = record(gesture, node_ids, dx * WFC_2D_GRAPH_VIEW_SCALE, dy * WFC_2D_GRAPH_VIEW_SCALE).to_row();
-    let command = Wfc2dEditorCommand::NodeGraphEdit { operations_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![row])) };
+    let command = Wfc2dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
     let result = block_on(app.dispatch_typed(command, &graph_meta()));
     settle(app, result)
 }

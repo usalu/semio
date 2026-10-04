@@ -24,9 +24,12 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
         MutationOutcome::new(IdentitySetting(None))
     }
 
-    fn inverse(&self, base: &IdentitySetting) -> Vec<IdentityConfigMutation> {
+    fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.0.clone().map(sign_in).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Sign out", "Abmelden")

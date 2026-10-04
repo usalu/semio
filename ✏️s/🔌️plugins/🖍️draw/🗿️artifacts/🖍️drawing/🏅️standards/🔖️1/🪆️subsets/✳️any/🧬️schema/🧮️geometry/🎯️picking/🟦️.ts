@@ -1,5 +1,5 @@
 /** 🎯️ Resumable contour winding and stroke proximity in world coordinates. */
-import type {PathSegment} from "../../🟦️.ts";
+import type {PathGeometrySegment} from "../../🟦️.ts";
 import {arcGeometry,type Point,type Matrix} from "../🟦️.ts";
 type Piece={kind:"curve";points:[Point,Point,Point,Point];depth:number}|{kind:"arc";center:Point;u:Point;v:Point;start:number;sweep:number;depth:number};
 function distance(p:Point,a:Point,b:Point):number {
@@ -28,10 +28,10 @@ export class PathHitCursor {
   }
   failed():boolean{return this.invalid;}
   contains(fill:boolean,stroke:boolean,evenOdd=false):boolean{return this.finished&&!this.invalid&&((fill&&(this.boundary||(evenOdd?this.winding%2!==0:this.winding!==0)))||(stroke&&this.stroke));}
-  step(segments:readonly PathSegment[]):boolean {
+  step(segments:readonly PathGeometrySegment[]):boolean {
     return this.stepWith(index=>segments[index]);
   }
-  stepWith(segmentAt:(index:number)=>PathSegment|undefined):boolean {
+  stepWith(segmentAt:(index:number)=>PathGeometrySegment|undefined):boolean {
     if(this.finished)return true;
     if(this.invalid){this.finished=true;return true;}
     const piece=this.work.pop();

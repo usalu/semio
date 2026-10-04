@@ -17,11 +17,11 @@ fn dsl_pack_equivalence_example_fixture() {
 #[test]
 fn dsl_pack_equivalence_with_generation_state() {
     let mut projection = Generation3dSnapshot::default();
-    let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = std::collections::HashMap::new();
+    let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
     // 🌱️ Fractional (not whole-number) so `semio_framework_value::FromValue::from_value`'s int-normalization of whole
     // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
     // round trip spuriously unequal.
-    values.insert("count".into(), dsl::DslValue::float(3.5));
+    values.insert("count".into(), semio_framework_value::DslValue::float(3.5));
     projection.generation = semio_framework_artifact_playbook_playbook::GenerationPlayState {
         generations: vec![semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values }],
         selected_generation_id: Some("generation-1".into()),
@@ -40,7 +40,7 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
         Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
         Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
         Widget::OutputAction { id: "action".into(), action: "export".into() },
-        Widget::OutputExport { id: "export".into(), format: "svg".into() },
+        Widget::OutputExport { id: "export".into(), format: "gltf".into() },
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.host_snapshot.synapses = vec![];

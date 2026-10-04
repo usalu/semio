@@ -10,7 +10,6 @@
 
 use crate::StepSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_step_bounds;
 //#region 🔖️Inference
@@ -25,8 +24,11 @@ pub struct StepInference {
 }
 
 impl protocol::Inference<StepSnapshot> for StepInference {
-    fn infer(snapshot: &StepSnapshot) -> Self {
+    fn infer(snapshot: &StepSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_step_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +36,9 @@ impl protocol::Inference<StepSnapshot> for StepInference {
 /// `StepSnapshot::default()`'s `entities` ever stops being empty.
 impl Default for StepInference {
     fn default() -> Self {
-        <Self as protocol::Inference<StepSnapshot>>::infer(&StepSnapshot::default())
+        let snapshot = &StepSnapshot::default();
+
+        Self { bounds: compute_step_bounds(snapshot) }
     }
 }
 
@@ -50,17 +54,6 @@ impl protocol::InferenceSpec<StepSnapshot> for StepInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every `CARTESIAN_POINT`
-/// entity in `entities`, already O(n) in total entity count with no honest per-entity incremental
-/// decomposition (a merkle dep-chain over this flat entity list costs more than the fold it would
-/// cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v_ap214::subsets::base::schema::StepBuilder {
-    type Snapshot = StepSnapshot;
-    type Inference = StepInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.step.inference`'s facet leaves into the OS-wide inference catalog —

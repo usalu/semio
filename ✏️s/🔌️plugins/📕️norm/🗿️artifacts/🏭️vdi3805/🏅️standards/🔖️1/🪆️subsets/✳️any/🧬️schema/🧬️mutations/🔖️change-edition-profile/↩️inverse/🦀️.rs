@@ -6,10 +6,13 @@ use crate::mutations::remove_edition_profile;
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.edition_profile.get(&payload.sheet) {
         Some(old_choice) => vec![Vdi3805Mutation::ChangeEditionProfile(ChangeEditionProfile { sheet: payload.sheet.clone(), new_choice: *old_choice })],
         None => vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: payload.sheet.clone() })],
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

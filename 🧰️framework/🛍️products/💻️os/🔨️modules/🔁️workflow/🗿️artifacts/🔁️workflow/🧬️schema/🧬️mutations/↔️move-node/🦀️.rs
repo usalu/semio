@@ -2,7 +2,7 @@ use super::super::{WorkflowDiff, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-node")]
@@ -20,9 +20,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNode {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::MoveNode { node_id: self.node_id.clone(), x: self.x, y: self.y })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.graph.nodes.iter().find(|node| node.id == self.node_id).map(|node| vec![WorkflowMutation::MoveNode(MoveNode { node_id: self.node_id.clone(), x: node.x, y: node.y })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} verschieben", self.node_id))
     }

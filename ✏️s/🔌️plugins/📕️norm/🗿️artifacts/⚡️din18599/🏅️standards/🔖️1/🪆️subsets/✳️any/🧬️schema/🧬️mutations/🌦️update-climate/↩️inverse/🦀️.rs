@@ -6,7 +6,7 @@ use crate::mutations::Din18599Mutation;
 use crate::Din18599Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateClimate, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-    vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: crate::din18599_climate(base) })]
+pub fn inverse(_payload: &UpdateClimate, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    Ok(vec![Din18599Mutation::UpdateClimate(UpdateClimate { new_climate: base.climate.clone() })])
 }
 //#endregion 🔖️Inverse

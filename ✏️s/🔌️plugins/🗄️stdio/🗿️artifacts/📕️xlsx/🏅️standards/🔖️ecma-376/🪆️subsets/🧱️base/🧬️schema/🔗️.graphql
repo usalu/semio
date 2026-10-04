@@ -1,8 +1,5 @@
-type XlsxEntry {
-  name: String!
-  data: [Int!]!
-}
 type XlsxArtifact {
   schema: String! @state(class: ARTIFACT)
-  entries: [XlsxEntry!]! @state(class: ARTIFACT)
+  opc: XlsxOpcPackage! @state(class: ARTIFACT)
+  xmlParts: [XlsxXmlPart!]! @state(class: ARTIFACT)
 }

@@ -1,9 +1,6 @@
 //! 📥️ Bounded hydration of an exact persisted config history into a fresh config store.
 
-use super::{
-    mutation_meta_from_history_op_meta, ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, OpBinary,
-    OpText, SnapshotRetirementStep, ToValue,
-};
+use super::{ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, OpBinary, OpText, SnapshotRetirementStep, ToValue, mutation_meta_from_history_op_meta};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -263,14 +260,15 @@ where
                     *self.active = Some(semio_framework_value::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source }));
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
-                let edit = Edit { line: source.line,
+                let edit = Edit {
+                    line: source.line,
                     id: source.id,
                     actor: source.actor,
                     forwards: Vec::new(),
                     inverse: Vec::new(),
                     mutation_meta: Vec::new(),
-                    description: source.description, verb: source.verb,
-                    coalesce_key: source.coalesce_key,
+                    description: source.description,
+                    verb: source.verb,
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at,
                     finished_at: source.finished_at,
@@ -510,7 +508,7 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         self.request_cancel();
         if self.terminal {
             return Ok(SnapshotRetirementStep::Complete);
@@ -524,19 +522,21 @@ where
                     self.active.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("config hydration nested owner reported false terminal".into()),
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => Err("config hydration nested owner exceeded close grant".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration nested owner reported false terminal")),
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes => {
+                    Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration nested owner exceeded close grant"))
+                }
                 step => Ok(step),
             };
         }
-        let owners = self.owners.as_ref().ok_or("config hydration lost its owner catalog")?;
+        let owners = self.owners.as_ref().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration lost its owner catalog"))?;
         if let Some(runtime) = self.runtime.as_mut() {
             return match runtime.close_step(owners.initial_snapshot_retirement.as_ref(), 1, maximum_bytes)? {
                 SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
                     self.runtime.take();
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                SnapshotRetirementStep::Complete => Err("config hydration runtime reported false terminal".into()),
+                SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration runtime reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -587,7 +587,7 @@ where
                 self.terminal = true;
                 Ok(SnapshotRetirementStep::Complete)
             }
-            SnapshotRetirementStep::Complete => Err("config hydration uninstalled disposer reported false terminal".into()),
+            SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "config hydration uninstalled disposer reported false terminal")),
             step => Ok(step),
         }
     }

@@ -1,0 +1,101 @@
+{
+  "at": "2026-10-03T13:37:23.675Z",
+  "authority": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/framework-import-enforcement/synthetic-neutral-enforcement-source-ready-6.json",
+  "sourceWrites": 14,
+  "after": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "expected": "e04d6791b8d1c75ae3056cc337c737dcfd233816fbe5cb6ecb6faf8749862349",
+      "actual": "e04d6791b8d1c75ae3056cc337c737dcfd233816fbe5cb6ecb6faf8749862349"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "expected": "0280f1eeb9a87dd07d62e54ec495db96a5955cf35b56fceb437ecad44e4bee34",
+      "actual": "0280f1eeb9a87dd07d62e54ec495db96a5955cf35b56fceb437ecad44e4bee34"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "expected": "794e0c0f4d354179d608458d804d820fa48ebd5b66d4b81a8789d3bd13d0e7f9",
+      "actual": "794e0c0f4d354179d608458d804d820fa48ebd5b66d4b81a8789d3bd13d0e7f9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "ff692c5c69bac67424952d616d8a4fffe309a288c4881fd33e7d63d2ad7e0ea3",
+      "actual": "ff692c5c69bac67424952d616d8a4fffe309a288c4881fd33e7d63d2ad7e0ea3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "expected": "10f053eb21ca1fbd6f1bcc7c196a91f466ae0529f2e00cf134508bce239b2f64",
+      "actual": "10f053eb21ca1fbd6f1bcc7c196a91f466ae0529f2e00cf134508bce239b2f64"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧫️fixtures/🔣️.json",
+      "expected": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02",
+      "actual": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️rust-source-direction/🔣️.json",
+      "expected": "71d0f3fdf23097edc510eca8adff559777ce27c000df932bb274c731a78b3420",
+      "actual": "71d0f3fdf23097edc510eca8adff559777ce27c000df932bb274c731a78b3420"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "expected": "45ceca558840b5602e46bdb6136d58fdefb60e401fc47647e0310580584f5526",
+      "actual": "45ceca558840b5602e46bdb6136d58fdefb60e401fc47647e0310580584f5526"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "expected": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32",
+      "actual": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "expected": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e",
+      "actual": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "expected": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156",
+      "actual": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "expected": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0",
+      "actual": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "expected": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7",
+      "actual": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "expected": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c",
+      "actual": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c"
+    }
+  ],
+  "unchangedProduction": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "expected": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612",
+      "actual": "d41f18820c6be7798a62beeb8e01e3d23cf5a7ac9a23ea885f6b857c662c7612"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "expected": "8ff23493a16d33f4d7546de08d6b8534263542b7faaef5af63114ebcd8b9bd69",
+      "actual": "8ff23493a16d33f4d7546de08d6b8534263542b7faaef5af63114ebcd8b9bd69"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "expected": "cf61f55c647cf505b27aa9641d9ec9c71ee657ae8fd9565ef2c60c0dada45eec",
+      "actual": "cf61f55c647cf505b27aa9641d9ec9c71ee657ae8fd9565ef2c60c0dada45eec"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "expected": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4",
+      "actual": "3d7227450c702b34c7b9f9cebb61f82f23907e9d4cf2f2e9c3367c6f87c4fad4"
+    }
+  ],
+  "registeredRuntime": false,
+  "native": false
+}

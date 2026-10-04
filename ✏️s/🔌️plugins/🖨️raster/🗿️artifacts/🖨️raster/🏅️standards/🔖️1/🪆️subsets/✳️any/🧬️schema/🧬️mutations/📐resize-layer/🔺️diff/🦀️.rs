@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ResizeLayer, base: &RasterSnapshot) -> protocol::Mu
             protocol::MutationOutcome::fatal("mutation.invariant", format!("Layer \"{}\" size must be positive, got {}x{}.", payload.layer_id, payload.new_width, payload.new_height), [payload.layer_id.clone()])
         }
         Some(RasterLayerNode::Pixel { width, height, .. }) if *width == Some(payload.new_width) && *height == Some(payload.new_height) => {
-            protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" is already {}x{}.", payload.layer_id, payload.new_width, payload.new_height))
+            protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" is already {}x{}.", payload.layer_id, payload.new_width, payload.new_height))
         }
         Some(RasterLayerNode::Pixel { .. }) => protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() })),
         Some(_) => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" is not a pixel layer.", payload.layer_id), [payload.layer_id.clone()]),

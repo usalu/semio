@@ -1,0 +1,27 @@
+# Playbook Publication, Run Route and Missing Native Authorities
+
+Read-only current source, 2026-10-03; no Source edits or Cargo execution.
+
+## Playbook publication resolved
+
+Framework PlaybookSpec is a composed read model, not an additional selected persisted owner. Actual publication is `🌎️hub/🧩️compositions/📖️playbook/🦀️.rs:35` declaring plugin Playbook artifact. Its actual subset `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs:58` publishes `ArtifactCodec::bare<PlaybookSnapshot,PlaybookMutation>`. Plugin root30 reexports framework PlaybookSpec; root161–164 builds that spec from the actual parent PlaybookSnapshot and typed composed SemioFlowSnapshot child. Root150–156 checks child dialect and typed read, rather than deserializing another independent persisted spec. Therefore framework PlaybookSpec must not inflate the owner denominator or be listed as a missing published SQL owner solely because it implements ArtifactDsl/Pack. This closes the previous report's explicit unresolved Playbook join.
+
+## Exact Run route and prerequisite
+
+`@semio-tech/framework-workflow-run-rs:test-snapshot-sqlite-native` takes no arguments. Actual project target executes `bun ./📜️script.ts test-snapshot-sqlite native`; script selects `runArtifactRustTests("semio-framework-artifact-workflow-run",repoRoot,["--lib","sqlite_","--no-fail-fast"])`. The actual mounted test source has eleven `sqlite_semantic_run_` laws, including complete neutral state, all binary64 words, absent/empty nullable fields, erased outputs, malformed relationships, semantic limits, interior cancellation and imperative registration. Eleven is a source candidate count, not a runtime receipt.
+
+Run SQL hook33/36/39/42/from_sqlite_database still returns String against canonical ValueError trait. Its private helpers and reconstruction closures also use String. Actual workspace count*512 and NativeDecodeControl(max_value_bytes) need producer-typed and cumulative allocation authority ports before claiming paid readiness. No compiler result is inferred.
+
+## Distinct carrier cutovers
+
+GIS Terrain actual snapshot owns `imported_features_json:String` at snapshot27, default38; Layout actual snapshot owns `data_fields_json:Option<String>` at snapshot50, default77. Actual consumer traces and asset counts are recorded in `📓️gis-terrain-layout-typed-domain-cutover-census.md`. GIS must own the full typed imported feature list and its arbitrary literal property values, preserving feature identity/order, unknown user fields, numbers and position facts; its SQL must normalize feature/property/recursive value relationships and optional distinctions. Layout must own the optional form data dictionary with explicit typed recursive literal values, preserving None versus present empty dictionary and each property's exact value; normalize dictionary/value/member/array entities alongside existing full page/story/style/grid topology. Both need authored schema definitions in Rust/TS, all constructors/edit/inference/export boundaries, complete fixtures and inverse assets cut over together. No raw JSON fallback, opaque mirror field or legacy malformed String fixture is an acceptable owner authority. Full u64 and binary64 companion words, cancellation and partial-owner retirement are requirements, not established passes.
+
+## Missing hook authority in current mounted provider files
+
+A fresh bounded readback of resolved117 concrete roots examined their selected conventional SQLite provider source. Canonical trait defaults for Native decode/encode are UnsupportedOwner; omitted authored preflight is also a substantive authority question, not proof of completed controlled behavior. The following direct selected provider implementations lack explicit Native decode/encode: IFC4any, IFC2x3base, SVG1.1base and LAS1.0header. STEP no longer appears in this missing list after Root's current mount. SVG/LAS are active authorized preparation intervals; this list is time-sensitive.
+
+Explicit encoding preflight is absent in selected provider implementations for WAV, ZIP, DOCX, PPTX, XLSX; plugin DAG, Jack, Block2d/3d/5d, Playbook, FEM2d/3d, Drawing, Puzzle3d/5d, Remodeling, Forms, Energy, Playground, Procedure, CAD, Layout, ArchitectProgram and Raster. Some encode paths run their own forecast, which does not establish the distinct preflight method's authority. These are finite next owner inspection candidates, not failed runtime cohorts. PDF1.7 previously looked missing in a stale census but fresh provider readback no longer lists it.
+
+Concrete typed prerequisite beyond Run: Forms' actual selected SQLite implementation55 retains String Native hooks60/61 and String projection helpers. It has normalized authored domain tables, but that does not establish current canonical compilation or paid controlled preflight. Rewriting remains Shared's explicitly unactivated typed owner cutover; its absence from this direct-provider scan does not confer completion.
+
+The direct-file scan does not prove all other roots have complete authorities: delegated modules, custom methods and registered I/O require hand tracing. No universal five-hook completion or Native pass total is claimed. Framework seven persisted authorities remain FlowHostSnapshot, DagSnapshot, CollectionSnapshot, SpaceSnapshot, WorkflowSnapshot, RunArtifact and SpaceHistorySnapshot; PlaybookSpec is excluded as the composed model described above.

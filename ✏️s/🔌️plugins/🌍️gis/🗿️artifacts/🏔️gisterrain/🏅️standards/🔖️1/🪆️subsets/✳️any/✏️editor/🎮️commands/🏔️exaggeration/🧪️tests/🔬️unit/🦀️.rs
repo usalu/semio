@@ -18,15 +18,15 @@ fn window_meta() -> semio_framework_plugin::ActionMeta {
     semio_framework_plugin::ActionMeta { view_state: Some(main_window_view()), ..meta("local") }
 }
 
-fn number(value: f64) -> dsl::DslValue {
-    dsl::DslValue::float(value)
+fn number(value: f64) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::float(value)
 }
 
 /// 🎚️ One dispatch of the exaggeration slider as the hosts send it: `{value, gesture, commit}`, or a host cancel
 /// `{gesture, abort}` that carries no value and is settled by the runtime itself.
-async fn slide(app: &mut Gis3dApp, args: Vec<(&str, dsl::DslValue)>) {
+async fn slide(app: &mut Gis3dApp, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let aborting = args.iter().any(|(key, _)| *key == "abort");
-    let args = dsl::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
     app.handle_action("setExaggeration", Some(&args), &window_meta()).await.expect("the slider dispatch is admitted");
     if !aborting {
         settle_registered_typed_operation(app, window_meta().instance_id).await.expect("the slider dispatch settles");
@@ -34,11 +34,11 @@ async fn slide(app: &mut Gis3dApp, args: Vec<(&str, dsl::DslValue)>) {
 }
 
 async fn tick(app: &mut Gis3dApp, gesture: &str, value: f64) {
-    slide(app, vec![("value", number(value)), ("gesture", dsl::DslValue::String(gesture.into())), ("commit", dsl::DslValue::Bool(false))]).await;
+    slide(app, vec![("value", number(value)), ("gesture", semio_framework_value::DslValue::String(gesture.into())), ("commit", semio_framework_value::DslValue::Bool(false))]).await;
 }
 
 async fn release(app: &mut Gis3dApp, gesture: &str, value: f64) {
-    slide(app, vec![("value", number(value)), ("gesture", dsl::DslValue::String(gesture.into())), ("commit", dsl::DslValue::Bool(true))]).await;
+    slide(app, vec![("value", number(value)), ("gesture", semio_framework_value::DslValue::String(gesture.into())), ("commit", semio_framework_value::DslValue::Bool(true))]).await;
 }
 
 /// 🧾️ The history rows that carry a document edit, oldest first.
@@ -89,7 +89,7 @@ async fn a_cancelled_press_leaves_zero_trace() {
     let rows_before = edit_rows(&mut app).await.len();
     let resting = render(&mut app, terrain::GIS3D_PLAY_BODY_COMPOSITE).await;
     tick(&mut app, "terrain.exaggeration:2", 4.0).await;
-    slide(&mut app, vec![("gesture", dsl::DslValue::String("terrain.exaggeration:2".into())), ("abort", dsl::DslValue::String("blur".into()))]).await;
+    slide(&mut app, vec![("gesture", semio_framework_value::DslValue::String("terrain.exaggeration:2".into())), ("abort", semio_framework_value::DslValue::String("blur".into()))]).await;
     assert_eq!(render(&mut app, terrain::GIS3D_PLAY_BODY_COMPOSITE).await, resting, "the preview is gone");
     release(&mut app, "terrain.exaggeration:2", 4.5).await;
     assert_eq!(exaggeration(&app), 1.5);
@@ -118,8 +118,8 @@ async fn two_presses_are_two_transactions() {
     close(&mut app);
 }
 
-async fn history_edit(app: &mut Gis3dApp, verb: &str, args: Vec<(&str, dsl::DslValue)>) {
-    let args = dsl::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+async fn history_edit(app: &mut Gis3dApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
+    let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
     let result = app.handle_action(verb, Some(&args), &window_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
@@ -147,14 +147,14 @@ async fn a_committed_press_edited_in_history_replays_deterministically() {
     let mut app = app().await;
     release(&mut app, "terrain.exaggeration:5", 3.0).await;
     let edited = edit_rows(&mut app).await.last().and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the press's mutation");
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(edited))]).await;
-    history_edit(&mut app, "historyEditInput", vec![("path", dsl::DslValue::String("/newExaggeration".into())), ("value", number(2.0))]).await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(edited))]).await;
+    history_edit(&mut app, "historyEditInput", vec![("path", semio_framework_value::DslValue::String("/newExaggeration".into())), ("value", number(2.0))]).await;
     history_edit(&mut app, "historyEditAccept", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
     assert_eq!(time_travel_stage(&mut app).await, Some(semio_framework::kernel::HistoryTimeTravelStage::Reviewing));
     assert_eq!(exaggeration(&app), 3.0, "reviewing never touches the committed document");
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
-    history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(exaggeration(&app), 2.0, "the overwrite folds the edited value");
     let mut fresh = app().await;

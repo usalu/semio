@@ -6,10 +6,10 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
 
-pub fn serialize(snapshot: &Wfc3dSnapshot) -> Result<TxtSnapshot, store::TextError> {
+pub fn serialize(snapshot: &Wfc3dSnapshot) -> Result<TxtSnapshot, semio_framework_diagnostic::TextError> {
     Ok(TxtSnapshot::from_body(&<Wfc3dSnapshot as store::ArtifactDsl>::print_dsl(snapshot)))
 }
 
-pub fn serialize_bytes(snapshot: &Wfc3dSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &Wfc3dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(serialize(snapshot)?.to_body().into_bytes())
 }

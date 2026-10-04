@@ -1,9 +1,0 @@
-{
-  "id": "step-3",
-  "mutation": "reorderSteps",
-  "pathRef": {
-    "owner": null,
-    "slot": null
-  },
-  "toIndex": 9
-}

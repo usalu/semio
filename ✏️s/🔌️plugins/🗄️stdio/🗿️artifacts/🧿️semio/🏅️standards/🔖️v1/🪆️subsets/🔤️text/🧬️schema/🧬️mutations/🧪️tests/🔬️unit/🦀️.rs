@@ -13,7 +13,7 @@ fn fixture() -> SemioTextSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
     let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     // stale pre-operation `base` — `text`'s whole-list-replace diff shape (📓️taxonomy.md's
@@ -39,7 +39,7 @@ async fn insert_remove_run_round_trips() {
     assert_eq!(after_insert.runs.len(), base.runs.len() + 1);
     assert_eq!(after_insert.runs[1], new_run);
 
-    let undo = insert.inverse(&base);
+    let undo = insert.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTextMutation::RemoveRun(remove_run::RemoveRun { index: 1 })]);
 
     let remove = SemioTextMutation::RemoveRun(remove_run::RemoveRun { index: 0 });
@@ -52,7 +52,7 @@ async fn insert_remove_run_round_trips() {
 async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTextMutation::RemoveRun(remove_run::RemoveRun { index: 99 });
-    assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
+    assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "removing an absent index has nothing to undo");
     assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
 }
 
@@ -70,7 +70,7 @@ async fn edit_run_and_change_run_language_round_trip() {
     assert_eq!(after.runs[0].language, "fr");
 
     let missing = SemioTextMutation::EditRun(edit_run::EditRun { index: 99, new_content: "x".into() });
-    assert!(missing.inverse(&base).is_empty(), "editing an absent index has nothing to undo");
+    assert!(missing.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "editing an absent index has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -93,7 +93,7 @@ async fn add_remove_mark_round_trips() {
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.runs[0].marks, vec![mark.clone()]);
 
-    let undo = add.inverse(&base);
+    let undo = add.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTextMutation::RemoveMark(remove_mark::RemoveMark { run_index: 0, index: 0 })]);
 
     let remove = SemioTextMutation::RemoveMark(remove_mark::RemoveMark { run_index: 1, index: 0 });
@@ -105,7 +105,7 @@ async fn add_remove_mark_round_trips() {
 async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTextMutation::RemoveMark(remove_mark::RemoveMark { run_index: 99, index: 0 });
-    assert!(remove.inverse(&base).is_empty());
+    assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 }
 

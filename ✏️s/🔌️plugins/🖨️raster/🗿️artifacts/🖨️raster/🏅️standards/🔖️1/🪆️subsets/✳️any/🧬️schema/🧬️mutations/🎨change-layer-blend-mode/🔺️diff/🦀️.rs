@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeLayerBlendMode, base: &RasterSnapshot) -> pro
         RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. } => blend_mode,
     };
     if blend_mode == &payload.new_blend_mode {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" blend mode is already \"{}\".", payload.layer_id, payload.new_blend_mode));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Layer \"{}\" blend mode is already \"{}\".", payload.layer_id, payload.new_blend_mode));
     }
     protocol::MutationOutcome::new(diff_patch_layer(&payload.layer_id, RasterLayerPatch { blend_mode: Some(payload.new_blend_mode.clone()), ..Default::default() }))
 }

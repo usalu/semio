@@ -63,6 +63,7 @@ fn inverse_spec(kind: &str) -> Json {
         "unbind-scene-root-node" => json_spec("bind-scene-root-node", json_obj(vec![("scene", json_num(0.0)), ("node", json_num(5.0)), ("position", json_num(4.0))])),
         "change-material-alpha-mode" => json_spec("change-material-alpha-mode", json_obj(vec![("material", json_num(0.0)), ("alphaMode", json_str("OPAQUE"))])),
         "change-material-double-sided" => json_spec("change-material-double-sided", json_obj(vec![("material", json_num(0.0)), ("doubleSided", Json::Bool(false))])),
+        "patch-snapshot" => json_spec("change-material-double-sided", json_obj(vec![("material", json_num(0.0)), ("doubleSided", Json::Bool(false))])),
         other => json_spec(other, json_obj(vec![])),
     }
 }

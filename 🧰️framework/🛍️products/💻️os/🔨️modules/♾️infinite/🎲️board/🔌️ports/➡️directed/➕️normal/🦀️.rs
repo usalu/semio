@@ -3155,7 +3155,7 @@ pub mod board_host {
                 }
                 BoardPropertyAuditFrame::Object { mut values, mut after, mut pending } => {
                     let next = match after.as_ref() {
-                        Some(after) => values.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        Some(after) => values.successor(after),
                         None => values.first_key_value(),
                     }
                     .map(|(key, _)| admitted_board_pointer_id(key));
@@ -3247,7 +3247,7 @@ pub mod board_host {
                     self.current = child;
                 }
                 graph::manifest::PropertyValue::Object(mut values) => {
-                    let child = values.pop_first().map(|(key, value)| {
+                    let child = values.pop_last().map(|(key, value)| {
                         drop(key);
                         value
                     });
@@ -8949,6 +8949,14 @@ pub mod board_host {
             self.defers_descriptor_sync_from_js() || matches!(&self.interaction, Interaction::SelectionPending { .. } | Interaction::Selection { .. })
         }
 
+        /// 🎛️ True while the pointer drives a lane [`Self::plan_pointer`] does not model — a gumball transform drag (the
+        /// rotate ring's `rotate` record), a target-region body drag or grip resize, or anything under the area brush. A host
+        /// routes those moves and releases through [`Self::pointer_move_screen`] / [`Self::pointer_up_screen`], exactly as
+        /// React's Board2dHost routes every pointer, and publishes the events they queue.
+        pub fn pointer_lane_is_direct(&self) -> bool {
+            self.active_utility == ActiveUtility::AreaBrush || self.region_drag.is_some() || self.transform_drag.is_some()
+        }
+
         /// 🧿️ True during area select, link gestures, node drag, the rotate-ring gesture, or camera pan so JS can defer full `syncDescriptorJson` round-trips.
         pub fn defers_descriptor_sync_from_js(&self) -> bool {
             self.transform_drag.is_some()
@@ -10052,7 +10060,7 @@ pub mod board_host {
                     NodeShape::Rectangle => (0.0, n.width.unwrap_or(0.0), n.height.unwrap_or(0.0)),
                 };
                 let node_kind = n.node_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
-                let properties = n.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
+                let properties = n.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
                 self.nodes.insert(
                     n.id.clone(),
                     NodeData {
@@ -10084,7 +10092,7 @@ pub mod board_host {
                     Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| NormalPortError::InvalidHandleColor(h.id.clone(), s.to_string()))?),
                 };
                 let icon_kind = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let properties = h.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
+                let properties = h.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
                 self.handles.insert(
                     h.id.clone(),
                     HandleData {
@@ -10109,7 +10117,7 @@ pub mod board_host {
                 let edge_kind = e.edge_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
                 let source_tip = Self::parse_catalog_tip_slot(e.source_tip.as_deref());
                 let target_tip = Self::parse_catalog_tip_slot(e.target_tip.as_deref());
-                let properties = e.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
+                let properties = e.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
                 self.edges.insert(
                     e.id.clone(),
                     EdgeData {
@@ -10157,7 +10165,7 @@ pub mod board_host {
                     .filter(|s| !s.is_empty())
                     .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                     .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
-                let properties = w.user_data.as_ref().map(|v| property_bag_from_value(&dsl::DslValue::from(v))).unwrap_or_default();
+                let properties = w.user_data.as_ref().map(|v| property_bag_from_value(&semio_framework_value::DslValue::from(v))).unwrap_or_default();
                 self.wires.insert(
                     w.id.clone(),
                     WireData {
@@ -12212,7 +12220,7 @@ pub mod board_host {
         }
 
         pub fn plan_pointer(&self, intent: BoardPointerIntent) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
-            if self.interaction_revision == u64::MAX {
+            if self.interaction_revision == u64::MAX || (matches!(intent.phase, BoardPointerPhase::Move | BoardPointerPhase::Up) && self.pointer_lane_is_direct()) {
                 return Err(BoardPointerPlanFault::Unsupported);
             }
             let screen = Point::new(intent.x, intent.y);
@@ -13165,7 +13173,7 @@ pub mod board_host {
 
         /// ⭕️ Pivot and ring radius when the rotate gumball is live: the select utility is
         /// active, the rotate flag is on, and at least one selected node exists to turn.
-        fn transform_gumball_geometry(&self) -> Option<(Point, f64)> {
+        pub fn transform_gumball_geometry(&self) -> Option<(Point, f64)> {
             if self.active_utility != ActiveUtility::Select || !self.transform_flags.rotate_enabled {
                 return None;
             }

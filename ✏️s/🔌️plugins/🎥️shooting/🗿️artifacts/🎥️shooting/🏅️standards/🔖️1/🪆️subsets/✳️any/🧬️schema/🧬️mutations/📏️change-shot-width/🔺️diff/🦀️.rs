@@ -14,7 +14,7 @@ pub fn diff(payload: &ChangeShotWidth, base: &ShootingSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shot \"{}\" width must be positive.", payload.id), [payload.id.clone()]);
     }
     if existing.width == payload.new_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" already has width {}.", payload.id, payload.new_width));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has width {}.", payload.id, payload.new_width));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { width: Some(payload.new_width), ..Default::default() } }], ..Default::default() }),

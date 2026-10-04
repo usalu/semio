@@ -4,6 +4,6 @@ use crate::FlowSnapshot;
 
 pub fn register() {}
 
-pub fn serialize_bytes(from: &FlowSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(from: &FlowSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(<FlowSnapshot as store::ArtifactDsl>::print_dsl(from).into_bytes())
 }

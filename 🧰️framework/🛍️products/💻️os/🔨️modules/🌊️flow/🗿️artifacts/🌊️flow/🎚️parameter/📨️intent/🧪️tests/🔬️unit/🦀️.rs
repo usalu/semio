@@ -4,21 +4,21 @@ use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 
 #[test]
 fn graph_parameter_intent_matches_strict_typed_schema() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
-        let payload: SetGraphParameter = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(row)).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for row in fixture.get("cases").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
+        let payload: SetGraphParameter = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(row)).unwrap();
         payload.validate().unwrap();
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&payload)), *row);
+        assert_eq!(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&payload)), *row);
     }
-    for row in fixture.get("rejected").and_then(crate::os_pack::json::Value::as_array).unwrap() {
-        assert!(<SetGraphParameter as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(row)).map_or(true, |value| value.validate().is_err()));
+    for row in fixture.get("rejected").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
+        assert!(<SetGraphParameter as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)).map_or(true, |value| value.validate().is_err()));
     }
     let row = fixture.get("longWidgetId").unwrap();
-    let widget_id = row.get("unit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(row.get("repetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
-    assert_eq!(widget_id.len(), row.get("expectedBytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
-    let payload = SetGraphParameter { widget_id, value: row.get("value").and_then(crate::os_pack::json::Value::as_f64).unwrap(), surface_id: None };
+    let widget_id = row.get("unit").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(row.get("repetitions").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
+    assert_eq!(widget_id.len(), row.get("expectedBytes").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize);
+    let payload = SetGraphParameter { widget_id, value: row.get("value").and_then(semio_framework_pack_json::Value::as_f64).unwrap(), surface_id: None };
     payload.validate().unwrap();
-    let round_tripped: SetGraphParameter = crate::os_pack::json::from_json_str(&crate::os_pack::json::to_json_string(&payload)).unwrap();
+    let round_tripped: SetGraphParameter = semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_json_string(&payload), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(round_tripped, payload);
 }
 
@@ -31,15 +31,15 @@ fn graph_parameter_intent_rejects_non_finite_before_retained_admission() {
 
 #[test]
 fn graph_parameter_intent_retirement_preserves_exact_bytes_and_worker_transfer() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let text = fixture.get("longWidgetId").unwrap();
     let law = fixture.get("retirement").unwrap();
     for maximum in [1, 4096] {
-        for pause in law.get("cancelAt").and_then(crate::os_pack::json::Value::as_array).unwrap() {
+        for pause in law.get("cancelAt").and_then(semio_framework_pack_json::Value::as_array).unwrap() {
             let payload = SetGraphParameter {
-                widget_id: text.get("unit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(text.get("repetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize),
+                widget_id: text.get("unit").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(text.get("repetitions").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize),
                 value: 4.0,
-                surface_id: Some(law.get("surfaceUnit").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(law.get("surfaceRepetitions").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize)),
+                surface_id: Some(law.get("surfaceUnit").and_then(semio_framework_pack_json::Value::as_str).unwrap().repeat(law.get("surfaceRepetitions").and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize)),
             };
             let expected = payload.widget_id.len() + payload.surface_id.as_ref().unwrap().len();
             let mut owner = payload.into_retirement();

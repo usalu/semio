@@ -38,7 +38,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
             let mut faces: Vec<[i32; 4]> = Vec::new();
             for prim in &mesh.primitives {
                 if prim.topology != SemioTopology::Triangles {
-                    return Err(store::PackError::Schema(format!("SemioMeshToDwg: primitive {:?} has topology {:?}; this codec only exports Triangles", prim.id, prim.topology)));
+                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("SemioMeshToDwg: primitive {:?} has topology {:?}; this codec only exports Triangles", prim.id, prim.topology))));
                 }
                 let base = vertices.len() as i32;
                 for p in &prim.positions {
@@ -46,12 +46,12 @@ impl ArtifactSerializer for SemioMeshToDwg {
                 }
                 let corner_indices: Vec<u32> = if !prim.indices.is_empty() {
                     if prim.indices.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToDwg: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToDwg: primitive {:?} indices length {} is not a multiple of 3", prim.id, prim.indices.len()))));
                     }
                     prim.indices.clone()
                 } else {
                     if prim.positions.len() % 3 != 0 {
-                        return Err(store::PackError::Schema(format!("SemioMeshToDwg: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len())));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("SemioMeshToDwg: non-indexed primitive {:?} has {} positions, not a multiple of 3", prim.id, prim.positions.len()))));
                     }
                     (0..prim.positions.len() as u32).collect()
                 };
@@ -66,7 +66,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
             drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces } });
         }
 
-        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(store::PackError::Schema)?;
+        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         Ok(snapshot)
     }
 }

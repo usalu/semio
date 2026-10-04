@@ -19,9 +19,12 @@ impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for SetFileSchema {
     fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
         class_diff(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })
     }
-    fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc1Mutation> {
-        class_inverse(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })
-    }
+    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc1Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        class_inverse(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", ")), &format!("FILE_SCHEMA auf [{}] setzen", self.schemas.join(",")))
     }

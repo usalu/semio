@@ -1,0 +1,292 @@
+{
+  "cases": [
+    {
+      "id": "contextBefore-invalidValue",
+      "phase": "contextBefore",
+      "kind": "invalidValue",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-canceled",
+      "phase": "contextBefore",
+      "kind": "canceled",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-ownershipLimit",
+      "phase": "contextBefore",
+      "kind": "ownershipLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-allocationFailed",
+      "phase": "contextBefore",
+      "kind": "allocationFailed",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-workLimit",
+      "phase": "contextBefore",
+      "kind": "workLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-depthLimit",
+      "phase": "contextBefore",
+      "kind": "depthLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-unsupportedOwner",
+      "phase": "contextBefore",
+      "kind": "unsupportedOwner",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextBefore-invariantViolated",
+      "phase": "contextBefore",
+      "kind": "invariantViolated",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 0,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-invalidValue",
+      "phase": "contextAfter",
+      "kind": "invalidValue",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-canceled",
+      "phase": "contextAfter",
+      "kind": "canceled",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-ownershipLimit",
+      "phase": "contextAfter",
+      "kind": "ownershipLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-allocationFailed",
+      "phase": "contextAfter",
+      "kind": "allocationFailed",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-workLimit",
+      "phase": "contextAfter",
+      "kind": "workLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-depthLimit",
+      "phase": "contextAfter",
+      "kind": "depthLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-unsupportedOwner",
+      "phase": "contextAfter",
+      "kind": "unsupportedOwner",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "contextAfter-invariantViolated",
+      "phase": "contextAfter",
+      "kind": "invariantViolated",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 16,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-invalidValue",
+      "phase": "before",
+      "kind": "invalidValue",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-canceled",
+      "phase": "before",
+      "kind": "canceled",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-ownershipLimit",
+      "phase": "before",
+      "kind": "ownershipLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-allocationFailed",
+      "phase": "before",
+      "kind": "allocationFailed",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-workLimit",
+      "phase": "before",
+      "kind": "workLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-depthLimit",
+      "phase": "before",
+      "kind": "depthLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-unsupportedOwner",
+      "phase": "before",
+      "kind": "unsupportedOwner",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "before-invariantViolated",
+      "phase": "before",
+      "kind": "invariantViolated",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 0
+    },
+    {
+      "id": "after-invalidValue",
+      "phase": "after",
+      "kind": "invalidValue",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-canceled",
+      "phase": "after",
+      "kind": "canceled",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-ownershipLimit",
+      "phase": "after",
+      "kind": "ownershipLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-allocationFailed",
+      "phase": "after",
+      "kind": "allocationFailed",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-workLimit",
+      "phase": "after",
+      "kind": "workLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-depthLimit",
+      "phase": "after",
+      "kind": "depthLimit",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-unsupportedOwner",
+      "phase": "after",
+      "kind": "unsupportedOwner",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    },
+    {
+      "id": "after-invariantViolated",
+      "phase": "after",
+      "kind": "invariantViolated",
+      "message": "same deliberately misleading permanent cancellation prose",
+      "expectedCommitted": 48,
+      "expectedContextFrees": 1,
+      "expectedErrorFrees": 1
+    }
+  ]
+}

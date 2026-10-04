@@ -1,0 +1,9 @@
+{
+  "childId": "logical-child\u0000世界",
+  "artifactId": "addressed-artifact\u0000Ä",
+  "dialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "kit"
+  }
+}

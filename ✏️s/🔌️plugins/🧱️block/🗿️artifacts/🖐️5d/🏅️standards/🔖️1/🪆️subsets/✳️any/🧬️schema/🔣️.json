@@ -6,18 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "partKind",
-    "part2d",
-    "part3d",
-    "representations",
-    "gripKinds",
-    "grips",
-    "compatibility",
-    "attributes",
-    "authors",
-    "camera2d",
-    "camera3d",
-    "meta"
+    "partKind"
   ],
   "properties": {
     "schema": {

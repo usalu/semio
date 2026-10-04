@@ -198,6 +198,175 @@ class Adapter:
 # endregion 🔖️Adapter
 
 
+# region 🩹️SnapshotPatch
+def patched_snapshot(snapshot: Any, patch: Dict[str, Any]) -> Any:
+    """🩹️ A ``patch-snapshot`` row's ONE pointer operation (``set``, ``insert`` with an optional object member
+    ``index``, ``remove``, ``move``, ``rename``, ``splice`` over array items / UTF-8 bytes of text / object members)
+    applied to a reference's OWN snapshot reading, written from RFC 6901 alone — the Python twin of the Rust host's
+    ``law::patched_snapshot``. Returns a new value; a pointer the reading lacks is an AssertionError.
+    """
+    document = json.loads(json.dumps(snapshot))
+
+    def segments(key: str) -> List[str]:
+        text = patch.get(key, "")
+        if text == "":
+            return []
+        if not text.startswith("/"):
+            raise AssertionError("patch %s %r is not an RFC 6901 pointer" % (key, text))
+        return [segment.replace("~1", "/").replace("~0", "~") for segment in text[1:].split("/")]
+
+    def node(path: List[str]) -> Any:
+        current = document
+        for segment in path:
+            if isinstance(current, dict) and segment in current:
+                current = current[segment]
+            elif isinstance(current, list) and segment.isdigit() and int(segment) < len(current):
+                current = current[int(segment)]
+            else:
+                raise AssertionError("pointer segment %r is absent" % segment)
+        return current
+
+    def take(path: List[str]) -> Any:
+        if not path:
+            raise AssertionError("a removal addresses the document root")
+        parent, key = node(path[:-1]), path[-1]
+        if isinstance(parent, dict) and key in parent:
+            return parent.pop(key)
+        if isinstance(parent, list) and key.isdigit() and int(key) < len(parent):
+            return parent.pop(int(key))
+        raise AssertionError("removal target %r is absent" % key)
+
+    def insert(path: List[str], value: Any, index: Optional[int]) -> None:
+        if not path:
+            raise AssertionError("an insertion addresses the document root")
+        parent, key = node(path[:-1]), path[-1]
+        if isinstance(parent, dict) and key not in parent:
+            items = list(parent.items())
+            position = len(items) if index is None else min(index, len(items))
+            items.insert(position, (key, value))
+            parent.clear()
+            parent.update(items)
+        elif isinstance(parent, list) and (key == "-" or (key.isdigit() and int(key) <= len(parent))):
+            parent.insert(len(parent) if key == "-" else int(key), value)
+        else:
+            raise AssertionError("insertion at %r needs an absent object member or an array index" % key)
+
+    operation = patch.get("operation")
+    if operation == "set":
+        path = segments("path")
+        if not path:
+            return json.loads(json.dumps(patch["value"]))
+        node(path)
+        parent = node(path[:-1])
+        parent[int(path[-1]) if isinstance(parent, list) else path[-1]] = patch["value"]
+    elif operation == "insert":
+        insert(segments("path"), patch["value"], patch.get("index"))
+    elif operation == "remove":
+        take(segments("path"))
+    elif operation == "move":
+        insert(segments("path"), take(segments("from")), patch.get("index"))
+    elif operation == "rename":
+        path = segments("path")
+        parent = node(path[:-1])
+        if not isinstance(parent, dict) or path[-1] not in parent or (patch["key"] != path[-1] and patch["key"] in parent):
+            raise AssertionError("rename of %r to %r does not fit its object" % (path[-1], patch["key"]))
+        items = [(patch["key"] if name == path[-1] else name, value) for name, value in parent.items()]
+        parent.clear()
+        parent.update(items)
+    elif operation == "splice":
+        path, offset, remove, value = segments("path"), patch["offset"], patch["remove"], patch["value"]
+        target = node(path)
+        if isinstance(target, list) and isinstance(value, list) and offset + remove <= len(target):
+            target[offset:offset + remove] = value
+        elif isinstance(target, dict) and isinstance(value, dict) and offset + remove <= len(target):
+            items = list(target.items())
+            items[offset:offset + remove] = list(value.items())
+            target.clear()
+            target.update(items)
+        elif isinstance(target, str) and isinstance(value, str):
+            encoded = target.encode("utf-8")
+            boundary = lambda at: at == len(encoded) or (at < len(encoded) and encoded[at] & 0xC0 != 0x80)
+            if offset + remove > len(encoded) or not boundary(offset) or not boundary(offset + remove):
+                raise AssertionError("a text splice must address UTF-8 character boundaries")
+            replaced = (encoded[:offset] + value.encode("utf-8") + encoded[offset + remove:]).decode("utf-8")
+            if not path:
+                return replaced
+            parent = node(path[:-1])
+            parent[int(path[-1]) if isinstance(parent, list) else path[-1]] = replaced
+        else:
+            raise AssertionError("splice range or value does not fit the addressed container")
+    else:
+        raise AssertionError("unknown snapshot patch operation %r" % operation)
+    return document
+
+
+def snapshot_patch_inverse(snapshot: Any, patch: Dict[str, Any]) -> Dict[str, Any]:
+    """↩️ The exact inverse of ONE ``patch`` taken against ``snapshot`` (the state it applies to), read from the patch
+    semantics alone: a set restores the prior value, an insert removes what it added, a removal re-inserts the value
+    (an object member at its former position), a move moves back, a rename renames back, a splice splices the removed
+    units back.
+    """
+    def pointer(path: List[str]) -> str:
+        return "".join("/" + segment.replace("~", "~0").replace("/", "~1") for segment in path)
+
+    def segments(text: str) -> List[str]:
+        return [] if text == "" else [segment.replace("~1", "/").replace("~0", "~") for segment in text[1:].split("/")]
+
+    def value_at(path: List[str]) -> Any:
+        current = snapshot
+        for segment in path:
+            current = current[int(segment)] if isinstance(current, list) else current[segment]
+        return current
+
+    def position(path: List[str]) -> Optional[int]:
+        parent = value_at(path[:-1])
+        return list(parent).index(path[-1]) if isinstance(parent, dict) else None
+
+    operation = patch["operation"]
+    path = segments(patch.get("path", ""))
+    if operation == "set":
+        return {"operation": "set", "path": patch["path"], "value": json.loads(json.dumps(value_at(path)))}
+    if operation == "insert":
+        parent = value_at(path[:-1])
+        landed = path[:-1] + [str(len(parent))] if isinstance(parent, list) and path[-1] == "-" else path
+        return {"operation": "remove", "path": pointer(landed)}
+    if operation == "remove":
+        inverse = {"operation": "insert", "path": patch["path"], "value": json.loads(json.dumps(value_at(path)))}
+        member = position(path)
+        return inverse if member is None else {**inverse, "index": member}
+    if operation == "move":
+        source = segments(patch["from"])
+        moved = patched_snapshot(snapshot, {"operation": "remove", "path": patch["from"]})
+        parent = path[:-1]
+        container = moved
+        for segment in parent:
+            container = container[int(segment)] if isinstance(container, list) else container[segment]
+        landed = parent + [str(len(container))] if isinstance(container, list) and path[-1] == "-" else path
+        inverse = {"operation": "move", "from": pointer(landed), "path": patch["from"]}
+        member = position(source)
+        return inverse if member is None else {**inverse, "index": member}
+    if operation == "rename":
+        return {"operation": "rename", "path": pointer(path[:-1] + [patch["key"]]), "key": path[-1]}
+    if operation == "splice":
+        target = value_at(path)
+        offset, remove = patch["offset"], patch["remove"]
+        if isinstance(target, str):
+            encoded = target.encode("utf-8")
+            removed: Any = encoded[offset:offset + remove].decode("utf-8")
+            inserted = len(patch["value"].encode("utf-8"))
+        elif isinstance(target, dict):
+            removed = dict(list(target.items())[offset:offset + remove])
+            inserted = len(patch["value"])
+        else:
+            removed = target[offset:offset + remove]
+            inserted = len(patch["value"])
+        return {"operation": "splice", "path": patch["path"], "offset": offset, "remove": inserted, "value": json.loads(json.dumps(removed))}
+    raise AssertionError("unknown snapshot patch operation %r" % operation)
+
+
+# endregion 🩹️SnapshotPatch
+
+
 # region 🔖️Runner
 def _repo_root_from(start: str) -> str:
     directory = os.path.abspath(start)

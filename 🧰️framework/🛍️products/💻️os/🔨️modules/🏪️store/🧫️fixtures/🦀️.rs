@@ -1,4 +1,4 @@
-use super::tests::{assert_fixture_descriptor, DemoDiff, DemoSnapshot, LossyDiff};
+use super::tests::{DemoDiff, DemoSnapshot, LossyDiff, assert_fixture_descriptor};
 
 #[path = "🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs"]
 pub mod demo;

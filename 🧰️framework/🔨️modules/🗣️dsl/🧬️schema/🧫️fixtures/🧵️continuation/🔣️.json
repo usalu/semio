@@ -1,0 +1,133 @@
+{
+  "schema": "semio.dsl.record.continuation/v1",
+  "textUnit": "Mesh 😀 \"\\ Label\n",
+  "textRepeats": 128,
+  "budgets": [
+    1,
+    8,
+    256
+  ],
+  "retirementBytes": 3,
+  "maximumBytes": 1000000,
+  "cancelUnits": [
+    0,
+    1,
+    32
+  ],
+  "firstStep": "progress",
+  "sourceReleases": 1,
+  "projection": {
+    "rows": 8,
+    "textRepeats": 128,
+    "sourceIdentity": "immutable",
+    "staleSource": "refuse",
+    "intrinsic": true,
+    "taggedAndWire": true,
+    "sourceCapacity": { "measureBeforeAllocation": true, "ownershipSourceMultiples": 32, "overSourceBytes": 1 }
+  },
+  "intrinsic": {
+    "keyPrefix": "shared-key-",
+    "keyRepeats": 64,
+    "textRepeats": 64,
+    "bytes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "cases": [
+      {
+        "z": [
+          false,
+          null,
+          3
+        ],
+        "a": {
+          "z": "tail",
+          "a": "Mesh 😀"
+        }
+      }
+    ]
+  },
+  "nested": {
+    "rows": 8,
+    "keyword": "widget",
+    "labelPrefix": "Mesh 😀"
+  },
+  "table": {
+    "rows": 64,
+    "labelPrefix": "Mesh 😀",
+    "columns": [
+      "id",
+      "cost",
+      "label",
+      "value"
+    ]
+  },
+  "containers": {
+    "keys": [
+      "z",
+      "a",
+      "null",
+      "Mesh 😀"
+    ],
+    "list": [
+      "first",
+      "Mesh 😀",
+      "null"
+    ],
+    "tuple": [
+      1.5,
+      2.5
+    ]
+  },
+  "wire": {
+    "from": "Mesh 😀",
+    "fromKind": "kind",
+    "fromPort": "null",
+    "to": "target",
+    "toKind": "node",
+    "toPort": "port",
+    "labelId": "edge",
+    "labelKind": "link",
+    "repeats": 128
+  },
+  "depthCases": [
+    {
+      "wraps": 31,
+      "accept": true
+    },
+    {
+      "wraps": 32,
+      "accept": false
+    }
+  ]
+}

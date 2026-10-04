@@ -49,5 +49,5 @@ export const gisGisterrainInferenceTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseGisTerrainInferenceText(value: unknown, at = "$"): GisTerrainInferenceText {
-  return gisGisterrainInferenceTextGuardObject(value, `${at}`);
+  return gisGisterrainInferenceTextGuardString(value, `${at}`);
 }

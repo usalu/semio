@@ -1,0 +1,348 @@
+{
+  "version": 1,
+  "prefixHex": "ccdd",
+  "offset": 2,
+  "primitive": "unsignedLEB128ConsumedPrefix",
+  "cases": [
+    {
+      "id": "zero",
+      "bodyHex": "00",
+      "trailingHex": "aa55",
+      "reads": 1,
+      "outcome": {
+        "valueDecimal": "0",
+        "consumed": 1
+      }
+    },
+    {
+      "id": "one",
+      "bodyHex": "01",
+      "trailingHex": "aa55",
+      "reads": 1,
+      "outcome": {
+        "valueDecimal": "1",
+        "consumed": 1
+      }
+    },
+    {
+      "id": "below-7",
+      "bodyHex": "7f",
+      "trailingHex": "aa55",
+      "reads": 1,
+      "outcome": {
+        "valueDecimal": "127",
+        "consumed": 1
+      }
+    },
+    {
+      "id": "at-7",
+      "bodyHex": "8001",
+      "trailingHex": "aa55",
+      "reads": 2,
+      "outcome": {
+        "valueDecimal": "128",
+        "consumed": 2
+      }
+    },
+    {
+      "id": "below-14",
+      "bodyHex": "ff7f",
+      "trailingHex": "aa55",
+      "reads": 2,
+      "outcome": {
+        "valueDecimal": "16383",
+        "consumed": 2
+      }
+    },
+    {
+      "id": "at-14",
+      "bodyHex": "808001",
+      "trailingHex": "aa55",
+      "reads": 3,
+      "outcome": {
+        "valueDecimal": "16384",
+        "consumed": 3
+      }
+    },
+    {
+      "id": "below-21",
+      "bodyHex": "ffff7f",
+      "trailingHex": "aa55",
+      "reads": 3,
+      "outcome": {
+        "valueDecimal": "2097151",
+        "consumed": 3
+      }
+    },
+    {
+      "id": "at-21",
+      "bodyHex": "80808001",
+      "trailingHex": "aa55",
+      "reads": 4,
+      "outcome": {
+        "valueDecimal": "2097152",
+        "consumed": 4
+      }
+    },
+    {
+      "id": "below-28",
+      "bodyHex": "ffffff7f",
+      "trailingHex": "aa55",
+      "reads": 4,
+      "outcome": {
+        "valueDecimal": "268435455",
+        "consumed": 4
+      }
+    },
+    {
+      "id": "at-28",
+      "bodyHex": "8080808001",
+      "trailingHex": "aa55",
+      "reads": 5,
+      "outcome": {
+        "valueDecimal": "268435456",
+        "consumed": 5
+      }
+    },
+    {
+      "id": "below-35",
+      "bodyHex": "ffffffff7f",
+      "trailingHex": "aa55",
+      "reads": 5,
+      "outcome": {
+        "valueDecimal": "34359738367",
+        "consumed": 5
+      }
+    },
+    {
+      "id": "at-35",
+      "bodyHex": "808080808001",
+      "trailingHex": "aa55",
+      "reads": 6,
+      "outcome": {
+        "valueDecimal": "34359738368",
+        "consumed": 6
+      }
+    },
+    {
+      "id": "below-42",
+      "bodyHex": "ffffffffff7f",
+      "trailingHex": "aa55",
+      "reads": 6,
+      "outcome": {
+        "valueDecimal": "4398046511103",
+        "consumed": 6
+      }
+    },
+    {
+      "id": "at-42",
+      "bodyHex": "80808080808001",
+      "trailingHex": "aa55",
+      "reads": 7,
+      "outcome": {
+        "valueDecimal": "4398046511104",
+        "consumed": 7
+      }
+    },
+    {
+      "id": "below-49",
+      "bodyHex": "ffffffffffff7f",
+      "trailingHex": "aa55",
+      "reads": 7,
+      "outcome": {
+        "valueDecimal": "562949953421311",
+        "consumed": 7
+      }
+    },
+    {
+      "id": "at-49",
+      "bodyHex": "8080808080808001",
+      "trailingHex": "aa55",
+      "reads": 8,
+      "outcome": {
+        "valueDecimal": "562949953421312",
+        "consumed": 8
+      }
+    },
+    {
+      "id": "below-56",
+      "bodyHex": "ffffffffffffff7f",
+      "trailingHex": "aa55",
+      "reads": 8,
+      "outcome": {
+        "valueDecimal": "72057594037927935",
+        "consumed": 8
+      }
+    },
+    {
+      "id": "at-56",
+      "bodyHex": "808080808080808001",
+      "trailingHex": "aa55",
+      "reads": 9,
+      "outcome": {
+        "valueDecimal": "72057594037927936",
+        "consumed": 9
+      }
+    },
+    {
+      "id": "below-63",
+      "bodyHex": "ffffffffffffffff7f",
+      "trailingHex": "aa55",
+      "reads": 9,
+      "outcome": {
+        "valueDecimal": "9223372036854775807",
+        "consumed": 9
+      }
+    },
+    {
+      "id": "at-63",
+      "bodyHex": "80808080808080808001",
+      "trailingHex": "aa55",
+      "reads": 10,
+      "outcome": {
+        "valueDecimal": "9223372036854775808",
+        "consumed": 10
+      }
+    },
+    {
+      "id": "maximum-u64",
+      "bodyHex": "ffffffffffffffffff01",
+      "trailingHex": "aa55",
+      "reads": 10,
+      "outcome": {
+        "valueDecimal": "18446744073709551615",
+        "consumed": 10
+      }
+    },
+    {
+      "id": "nonminimal-zero",
+      "bodyHex": "8000",
+      "trailingHex": "aa55",
+      "reads": 2,
+      "outcome": {
+        "valueDecimal": "0",
+        "consumed": 2
+      }
+    },
+    {
+      "id": "truncated-0",
+      "bodyHex": "",
+      "trailingHex": "",
+      "reads": 1,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 2
+      }
+    },
+    {
+      "id": "truncated-1",
+      "bodyHex": "ff",
+      "trailingHex": "",
+      "reads": 2,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 3
+      }
+    },
+    {
+      "id": "truncated-2",
+      "bodyHex": "ffff",
+      "trailingHex": "",
+      "reads": 3,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 4
+      }
+    },
+    {
+      "id": "truncated-3",
+      "bodyHex": "ffffff",
+      "trailingHex": "",
+      "reads": 4,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 5
+      }
+    },
+    {
+      "id": "truncated-4",
+      "bodyHex": "ffffffff",
+      "trailingHex": "",
+      "reads": 5,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 6
+      }
+    },
+    {
+      "id": "truncated-5",
+      "bodyHex": "ffffffffff",
+      "trailingHex": "",
+      "reads": 6,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 7
+      }
+    },
+    {
+      "id": "truncated-6",
+      "bodyHex": "ffffffffffff",
+      "trailingHex": "",
+      "reads": 7,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 8
+      }
+    },
+    {
+      "id": "truncated-7",
+      "bodyHex": "ffffffffffffff",
+      "trailingHex": "",
+      "reads": 8,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 9
+      }
+    },
+    {
+      "id": "truncated-8",
+      "bodyHex": "ffffffffffffffff",
+      "trailingHex": "",
+      "reads": 9,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 10
+      }
+    },
+    {
+      "id": "truncated-9",
+      "bodyHex": "ffffffffffffffffff",
+      "trailingHex": "",
+      "reads": 10,
+      "outcome": {
+        "kind": "truncated",
+        "offset": 11
+      }
+    },
+    {
+      "id": "tenth-payload-overflow",
+      "bodyHex": "ffffffffffffffffff02",
+      "trailingHex": "aa55",
+      "reads": 10,
+      "outcome": {
+        "kind": "malformed",
+        "offset": 0
+      }
+    },
+    {
+      "id": "continued-tenth-no-eleventh-read",
+      "bodyHex": "80808080808080808080",
+      "trailingHex": "07aa55",
+      "reads": 10,
+      "outcome": {
+        "kind": "malformed",
+        "offset": 2
+      }
+    }
+  ]
+}

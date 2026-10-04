@@ -22,7 +22,7 @@ pub fn diff(payload: &super::ChangeDailyScheduleLimits, base: &EnergyModelSnapsh
         _ => None,
     };
     if existing.limits == limits {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daily schedule {} already carries these limits.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Daily schedule {} already carries these limits.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.schedules.daily.iter_mut().find(|item| item.id == payload.id) {

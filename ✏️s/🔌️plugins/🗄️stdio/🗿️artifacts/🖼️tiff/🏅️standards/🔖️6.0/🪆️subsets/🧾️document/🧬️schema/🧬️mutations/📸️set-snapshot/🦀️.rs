@@ -21,9 +21,12 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for SetSnapshot {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffMutation as Mutation<TiffSnapshot>>::Diff> {
         protocol::MutationOutcome::new(<TiffDiff as DiffAlgebra<TiffSnapshot>>::between(base, &self.snapshot))
     }
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffMutation> {
+    fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![TiffMutation::SetSnapshot(Self { snapshot: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }

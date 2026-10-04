@@ -3,8 +3,8 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use dsl::os_pack::json::Value;
-use dsl::DslValue;
+use semio_framework_pack_json::Value;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -50,7 +50,7 @@ pub fn render(board: &DslValue, wires: &DslValue, window: &config::WiresCanvasWi
     let camera_y = window.camera.y;
     let zoom = window.camera.zoom;
     let layers = crate::schema::wires_canvas_layers(board, wires);
-    semio_framework_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_framework_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x, camera_y, zoom, layers_json: semio_framework_pack_json::to_string(&Value::Array(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

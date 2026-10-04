@@ -17,7 +17,7 @@
   ],
   "properties": {
     "annex": {
-      "type": "string",
+      "$ref": "#/$defs/AnnexChoice",
       "x-semio-state": "artifact"
     },
     "materials": {
@@ -233,17 +233,12 @@
           }
         },
         "support": {
-          "type": "string",
+          "$ref": "#/$defs/SupportCondition",
           "x-semio-ui": {
             "label": {
               "en": "Support conditions",
               "de": "Lagerungsbedingungen"
-            },
-            "description": {
-              "en": "simplySupported, continuous or cantilever.",
-              "de": "simplySupported (Einfeldträger), continuous (Durchlaufträger) oder cantilever (Kragarm)."
-            },
-            "widget": "text"
+            }
           }
         },
         "bucklingLengthY": {
@@ -1233,6 +1228,35 @@
         "🟦️typescript",
         "🔗️graphql",
         "🛰️protobuf"
+      ]
+    },
+    "SupportCondition": {
+      "title": "SupportCondition",
+      "type": "string",
+      "enum": [
+        "simplySupported",
+        "continuous",
+        "cantilever"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "simplySupported": {
+            "en": "Simply supported",
+            "de": "Einfeldträger"
+          },
+          "continuous": {
+            "en": "Continuous",
+            "de": "Durchlaufträger"
+          },
+          "cantilever": {
+            "en": "Cantilever",
+            "de": "Kragarm"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
       ]
     }
   }

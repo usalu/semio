@@ -285,6 +285,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
         crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group) => props.label.as_ref(),
         crate::Component::Button(props) => Some(&props.label),
+        crate::Component::TreeSection(props) => props.label.as_ref(),
         crate::Component::TreeItem(props) => Some(&props.label),
         crate::Component::Table(props) => Some(&props.label),
         crate::Component::Text(props) => Some(&props.value),

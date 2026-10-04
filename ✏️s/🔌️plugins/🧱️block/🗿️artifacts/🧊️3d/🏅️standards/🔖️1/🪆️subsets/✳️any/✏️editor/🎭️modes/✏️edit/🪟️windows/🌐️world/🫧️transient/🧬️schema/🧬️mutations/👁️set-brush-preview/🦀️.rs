@@ -3,7 +3,7 @@
 use super::{Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation};
 use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-brush-preview")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBrushPreview {
@@ -20,9 +20,12 @@ impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTrans
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Vec<Block3dWorldWindowTransientMutation> {
+    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Result<Vec<Block3dWorldWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { preview: base.brush_preview.clone() }.into()]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set World Window Brush Preview", "Pinselvorschau im Weltfenster setzen")

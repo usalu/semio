@@ -214,6 +214,21 @@ pub fn copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Resu
     transform_solid(body, solid, &Affine3::IDENTITY, rec)
 }
 
+/// 🪪️ Exact source correspondence from one detached face copy using the shared topology walk.
+pub(crate) struct FaceCopy {
+    pub faces: Vec<FaceId>,
+    pub edges: HashMap<EdgeId, EdgeId>,
+    pub vertices: HashMap<VertexId, VertexId>,
+}
+
+/// 🧩️ Copies kept faces together so adjacent faces share copied edges and vertices.
+pub(crate) fn copy_faces(body: &mut Body, faces: &[FaceId], rec: &mut OpRecorder) -> Result<FaceCopy, KernelError> {
+    for &face in faces { require_face(body, face)?; }
+    let mut ctx = CopyCtx::default();
+    let faces = faces.iter().map(|&face| copy_face(body, &mut ctx, face, &Affine3::IDENTITY, 1.0, rec)).collect();
+    Ok(FaceCopy { faces, edges: ctx.edges, vertices: ctx.vertices })
+}
+
 /// 🔁 Produces a NEW, detached face (not attached to any shell/solid) — the same deep-copy-and-
 /// transform as one face inside [`transform_solid`], usable standalone for a bare
 /// [`crate::brep::representation::topology::Face`] handle.

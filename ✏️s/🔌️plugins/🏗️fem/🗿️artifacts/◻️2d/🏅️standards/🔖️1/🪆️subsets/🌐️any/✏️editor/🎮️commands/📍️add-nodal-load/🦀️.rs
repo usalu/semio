@@ -52,7 +52,7 @@ fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "add-nodal-load")]
 pub struct AddNodalLoad {
     pub node_id: String,

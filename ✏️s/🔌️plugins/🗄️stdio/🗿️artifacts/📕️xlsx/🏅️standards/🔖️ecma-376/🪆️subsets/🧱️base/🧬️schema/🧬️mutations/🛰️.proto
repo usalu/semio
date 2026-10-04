@@ -1,6 +1,61 @@
 syntax = "proto3";
 package semio.s_stdio_xlsx.mutation;
+
+import "google/protobuf/empty.proto";
+import "s_stdio_xlsx/snapshot.proto";
+
+message XlsxCellValue {
+  message Formula { string expr = 1; optional XlsxCellValue cached = 2; }
+  oneof kind {
+    double number = 1;
+    uint64 shared_string = 2;
+    string inline_string = 3;
+    bool boolean = 4;
+    string error = 5;
+    Formula formula = 6;
+    google.protobuf.Empty empty = 7;
+  }
+}
+message XlsxCell { uint32 row = 1; uint32 col = 2; XlsxCellValue value = 3; }
+message XlsxSheet { string name = 1; repeated XlsxCell cells = 2; }
+message XlsxCellAddress {
+  string part_path = 1;
+  repeated uint64 node_path = 2;
+  string namespace_uri = 3;
+  string local_name = 4;
+  string revision = 5;
+}
+message XlsxWorksheetAddress {
+  string part_path = 1;
+  repeated uint64 node_path = 2;
+  string namespace_uri = 3;
+  string local_name = 4;
+  string revision = 5;
+}
+message XlsxCellVacancyAddress { XlsxWorksheetAddress worksheet = 1; uint32 row = 2; uint32 column = 3; }
+message SetSnapshot { semio.s_stdio_xlsx.snapshot.XlsxSnapshot snapshot = 1; }
+message PatchSnapshot { bytes patch = 1; }
+message InsertSheet { XlsxSheet sheet = 1; }
+message RemoveSheet { string name = 1; }
+message RenameSheet { string name = 1; string new_name = 2; }
+message SetCell { XlsxCellAddress address = 1; XlsxCellValue value = 2; }
+message InsertCell { XlsxCellVacancyAddress address = 1; XlsxCellValue value = 2; }
+message RemoveCell { XlsxCellAddress address = 1; }
+message InsertSharedString { string value = 1; }
+message RemoveSharedString { uint64 index = 1; }
+message SetSharedString { uint64 index = 1; string value = 2; }
 message XlsxMutation {
-  string schema = 1;
-  string bytes_wire = 2;
+  oneof mutation {
+    SetSnapshot set_snapshot = 1;
+    PatchSnapshot patch_snapshot = 2;
+    InsertSheet insert_sheet = 3;
+    RemoveSheet remove_sheet = 4;
+    RenameSheet rename_sheet = 5;
+    SetCell set_cell = 6;
+    RemoveCell remove_cell = 7;
+    InsertSharedString insert_shared_string = 8;
+    RemoveSharedString remove_shared_string = 9;
+    SetSharedString set_shared_string = 10;
+    InsertCell insert_cell = 11;
+  }
 }

@@ -5,6 +5,8 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "graph": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/graph" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "geometry": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/geometry" }, { "type": "null" }], "x-semio-state": "artifact" },
     "notation": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },
     "results": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },
     "computed": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },

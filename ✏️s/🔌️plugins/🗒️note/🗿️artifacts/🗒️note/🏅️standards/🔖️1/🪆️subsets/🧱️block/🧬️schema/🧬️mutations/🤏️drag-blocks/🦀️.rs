@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🤏 `drag-blocks` payload — offsets several blocks by the same relative amount (multi-select drag/nudge).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
@@ -30,9 +30,12 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
     fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (note_label_number(self.dx), note_label_number(self.dy));
         let (en, de) = match self.ids.len() {

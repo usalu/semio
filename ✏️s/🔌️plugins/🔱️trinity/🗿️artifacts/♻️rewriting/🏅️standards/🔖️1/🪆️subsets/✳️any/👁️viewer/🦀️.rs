@@ -57,6 +57,8 @@ fn empty_rule_state() -> RewritingSnapshot {
 }
 
 impl ArtifactViewer for TrinityRewritingViewer {
+    /// 🧩️ The same member roster the editor declares — see `TrinityRewritingPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = RewritingSnapshot;
     type Mutation = RewriteRuleMutation;
     type Config = NoConfig;
@@ -73,6 +75,10 @@ impl ArtifactViewer for TrinityRewritingViewer {
         crate::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        crate::content::genesis_working_child_pack(snapshot, slot, child_id)
+    }
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.

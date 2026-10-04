@@ -71,7 +71,7 @@ fn holds<S: Steps>(kind: &str, before: &[u8], after: &[u8], derive: impl Fn(&Pdf
     }
     let forward = states.last().expect("the chain holds the forward result").clone();
     assert_eq!(lanes(&written(&forward)), lanes(&expected), "{kind}: applying {steps:?} and writing the result does not reproduce lopdf's after-document");
-    let undone = steps.iter().zip(&states).rev().fold(forward, |current, (step, prior)| step.inverse(prior).iter().fold(current, |state, undo| applied(&state, undo)));
+    let undone = steps.iter().zip(&states).rev().fold(forward, |current, (step, prior)| step.inverse(prior).expect("valid retained mutation inverse fixture").iter().fold(current, |state, undo| applied(&state, undo)));
     assert_eq!(lanes(&written(&undone)), lanes(&base), "{kind}: the inverse of {steps:?} does not write back to lopdf's before-document");
 }
 

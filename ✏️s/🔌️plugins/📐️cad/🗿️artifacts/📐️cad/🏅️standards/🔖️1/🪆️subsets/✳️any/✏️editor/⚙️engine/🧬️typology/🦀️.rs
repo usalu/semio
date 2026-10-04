@@ -272,17 +272,17 @@ const RAW_ATTRIBUTE_DEFINITION_ASSETS: &[(&str, &str)] = &[
 
 fn parsed_model_definitions() -> &'static [ModelDefinitionManifest] {
     static ROWS: OnceLock<Vec<ModelDefinitionManifest>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_MODEL_DEFINITION_ASSETS.iter().filter_map(|raw| protocol::json::from_json_str::<ModelDefinitionManifest>(raw).ok()).collect())
+    ROWS.get_or_init(|| RAW_MODEL_DEFINITION_ASSETS.iter().filter_map(|raw| semio_framework_pack_json::from_json_str::<ModelDefinitionManifest>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).collect())
 }
 
 fn parsed_typologies() -> &'static [(&'static str, TypologySpec)] {
     static ROWS: OnceLock<Vec<(&'static str, TypologySpec)>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_TYPOLOGY_ASSETS.iter().filter_map(|(owner, raw)| protocol::json::from_json_str::<TypologySpec>(raw).ok().map(|spec| (*owner, spec))).collect())
+    ROWS.get_or_init(|| RAW_TYPOLOGY_ASSETS.iter().filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<TypologySpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
 }
 
 fn parsed_attribute_definitions() -> &'static [(&'static str, AttributeDefinitionSpec)] {
     static ROWS: OnceLock<Vec<(&'static str, AttributeDefinitionSpec)>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_ATTRIBUTE_DEFINITION_ASSETS.iter().filter_map(|(owner, raw)| protocol::json::from_json_str::<AttributeDefinitionSpec>(raw).ok().map(|spec| (*owner, spec))).collect())
+    ROWS.get_or_init(|| RAW_ATTRIBUTE_DEFINITION_ASSETS.iter().filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<AttributeDefinitionSpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
 }
 //#endregion 🔖️Assets
 

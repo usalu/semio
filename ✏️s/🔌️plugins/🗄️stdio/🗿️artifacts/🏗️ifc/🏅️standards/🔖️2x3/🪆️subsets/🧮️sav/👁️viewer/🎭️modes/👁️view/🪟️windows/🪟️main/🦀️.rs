@@ -33,15 +33,15 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &Ifc2x3Snapshot) -> usize {
-    dsl::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
+    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<pack::JsonValue> = (0..count)
+    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
         .map(|index| {
-            pack::json!({
+            semio_framework_pack_json::json!({
                 "id": format!("ifc2x3_sav-{index}"),
                 "meshId": IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -52,14 +52,14 @@ fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
             })
         })
         .collect();
-    pack::json_to_string(&pack::json_array(instances))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
 }
 
 /// 👁️ Pure `Ifc2x3Snapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &Ifc2x3Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = pack::json_to_string(&pack::json_array([pack::json!({ "id": IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND) })]));
+    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(IFC2X3_SAV_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_SAV_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_SAV_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,

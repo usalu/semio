@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_load_case, Fe
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateLoadCase, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub fn inverse(payload: &CreateLoadCase, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: payload.load_case.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -6,7 +6,7 @@ use crate::editor::semio_brep::modes::edit;
 use crate::editor::semio_brep::modes::edit::windows::main;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
-use crate::standards::v1::subsets::brep::schema::mutations::{set_snapshot, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::mutations::{patch_snapshot, set_snapshot, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
@@ -157,7 +157,7 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
         (!args.vertex_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, Fault> {
         if self.complete {
             return Err(Fault::from("stdio.semio.brep.set-vertex.work-closed"));
         }
@@ -250,7 +250,7 @@ impl ArtifactEditor for SemioBrepEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/brep#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.semio@v1/brep#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
                 .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -279,7 +279,7 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
     }
 
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioBrepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| SemioBrepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioBrepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
 }
 

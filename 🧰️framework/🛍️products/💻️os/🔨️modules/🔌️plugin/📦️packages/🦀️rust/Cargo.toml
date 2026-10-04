@@ -31,6 +31,12 @@ component-guest-async = []
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-dsl-record-derive = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+replication = { package = "semio-framework-replication", path = "../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

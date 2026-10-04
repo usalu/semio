@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeFenestrationOverhangOffset, base: &EnergyMode
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite overhang offset, got {}.", payload.id.0, payload.new_overhang_offset_m), [payload.id.0.to_string()]);
     }
     if existing.overhang_offset_m == payload.new_overhang_offset_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this overhang offset.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Fenestration {} already has this overhang offset.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {

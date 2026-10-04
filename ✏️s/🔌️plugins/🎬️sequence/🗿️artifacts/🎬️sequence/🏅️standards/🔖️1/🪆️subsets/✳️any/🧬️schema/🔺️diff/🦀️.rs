@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// structured deltas are replaced by a single-`Option<SequenceContentChild>` slot (the composed
 /// child is opaque — a parent's diff never embeds a child diff, matching writer's `document` field
 /// and flow's `content` field exactly: an always-present slot, never absent, only ever replaced).
-#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceDiff {

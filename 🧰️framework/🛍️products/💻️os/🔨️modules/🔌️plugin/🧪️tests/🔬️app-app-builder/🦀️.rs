@@ -415,6 +415,7 @@ mod app_builder_tests {
             revalidate_job: None,
             settings: ToolRunSettingsReads::default(),
             windows: Vec::new(),
+            member: None,
         };
         let plain = minimal_app("tool-without-run-app").await.tool(ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
         assert!(!declared_actions(&plain).any(|action| TOOL_RUN_ACTION_IDS.contains(&action.id.as_str())));

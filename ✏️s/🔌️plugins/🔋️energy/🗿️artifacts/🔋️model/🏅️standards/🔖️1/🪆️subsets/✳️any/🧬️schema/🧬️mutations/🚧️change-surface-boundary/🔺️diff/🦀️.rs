@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ChangeSurfaceBoundaryCondition, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", "An interzone partner must be another surface that already exists.", [payload.id.0.to_string()]);
     }
     if existing.outside_boundary_condition == boundary {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this boundary condition.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Surface {} already has this boundary condition.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {

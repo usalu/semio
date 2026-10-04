@@ -19,16 +19,19 @@ pub struct SetStoryRuns {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for SetStoryRuns {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "story-runs", kind: "set-story-runs", record: "SetStoryRuns" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_story_runs(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_story_runs(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_set_story_runs(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set style runs on story \"{}\"", self.id), &format!("Formate von Textfluss \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 
 fn run_ok(story_len: usize, content: &str, run: &TextStyleRun, base: &LayoutSnapshot) -> bool {
     run.start <= run.end
-        && run.end <= story_len
-        && content.is_char_boundary(run.start)
-        && content.is_char_boundary(run.end)
+        && run.end <= u64::try_from(story_len).expect("host string length fits u64")
+        && usize::try_from(run.start).is_ok_and(|value|content.is_char_boundary(value))
+        && usize::try_from(run.end).is_ok_and(|value|content.is_char_boundary(value))
         && run.paragraph_style_id.as_ref().map(|id| base.paragraph_styles.iter().any(|style| style.id == *id)).unwrap_or(true)
         && run.character_style_id.as_ref().map(|id| base.character_styles.iter().any(|style| style.id == *id)).unwrap_or(true)
 }
@@ -41,7 +44,7 @@ pub fn diff_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> pro
         return protocol::MutationOutcome::fatal("mutation.invariant", "A style run stays inside the story, on character boundaries, and names a style that exists.", std::iter::empty::<String>());
     }
     if story.style_runs == payload.runs {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Story style runs are already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Story style runs are already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
         stories: Some(LayoutStoriesDelta { patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: None, style_runs: Some(payload.runs.clone()) } }], ..Default::default() }),
@@ -49,9 +52,12 @@ pub fn diff_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> pro
     })
 }
 
-pub fn inverse_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs: story.style_runs.clone() })]
+
+    })())
 }
 
 #[cfg(test)]

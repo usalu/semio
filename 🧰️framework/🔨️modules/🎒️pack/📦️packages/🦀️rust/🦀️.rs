@@ -11,6 +11,15 @@
 
 // 📡️ Codec primitives, container identity and pack sources are owned by the replication module —
 // the `.spk` container and the `.spr` record stream share one codec floor.
+#[cfg(test)]
+#[path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
+extern crate self as pack;
+
 pub use protocol::codec;
 pub use protocol::codec::ids;
 pub use protocol::source;
@@ -21,9 +30,6 @@ pub use protocol::value;
 
 #[path = "../../📐️format/🦀️.rs"]
 pub mod format;
-
-#[path = "../../🔤️json/🦀️.rs"]
-pub mod json;
 
 #[path = "../../⏳️async/🦀️.rs"]
 pub mod async_;
@@ -46,3 +52,16 @@ pub use component::*;
 pub use protocol::codec::ids::*;
 pub use protocol::codec::*;
 pub use protocol::source::*;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🧭️producer-authority/🦀️.rs"]
+mod producer_authority_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/📡️codec-authority/🦀️.rs"]
+mod codec_authority_tests;
+
+pub use semio_framework_pack_error::{PackError, PackRefusal, PackRetryDisposition, PackTransportCategory, PackTransportContext, PackTransportPolicy, PackTransportProgress, PackTransportPhase, TransportAdmission, TransportContextRefusal, TransportContextRefusalCause};
+
+#[path = "../../🌱️value/🦀️.rs"]
+pub mod record;

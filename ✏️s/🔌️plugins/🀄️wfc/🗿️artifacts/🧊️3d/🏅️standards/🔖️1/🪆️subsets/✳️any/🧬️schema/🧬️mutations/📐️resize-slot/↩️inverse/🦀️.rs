@@ -3,9 +3,12 @@
 use crate::mutations::{resize_slot, Wfc3dMutation};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
-pub fn inverse(payload: &super::ResizeSlot, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
+pub fn inverse(payload: &super::ResizeSlot, base: &Wfc3dSnapshot) -> Result<Vec<Wfc3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {
         return Vec::new();
     };
     vec![resize_slot(slot.id.clone(), slot.width, slot.height, slot.depth)]
+
+    })())
 }

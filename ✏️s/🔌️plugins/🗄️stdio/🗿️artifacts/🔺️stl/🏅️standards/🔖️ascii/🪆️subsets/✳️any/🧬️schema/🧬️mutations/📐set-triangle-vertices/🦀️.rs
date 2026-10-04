@@ -20,9 +20,12 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleVertices {
     fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         agg_diff(&StlMutation::SetTriangleVertices(self.clone()), base)
     }
-    fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {
-        agg_inverse(&StlMutation::SetTriangleVertices(self.clone()), base)
-    }
+    fn inverse(&self, base: &StlSnapshot) -> Result<Vec<StlMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&StlMutation::SetTriangleVertices(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set triangle vertices", "Eckpunkte des Dreiecks setzen")
     }

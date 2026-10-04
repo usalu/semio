@@ -21,7 +21,10 @@ pub struct UpdateParentPage {
 impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateParentPage {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "parent-page", kind: "update-parent-page", record: "UpdatedParentPage" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_parent_page(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_update_parent_page(self, base) }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({ inverse_update_parent_page(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update parent page \"{}\"", self.name), &format!("Mustervorlage \"{}\" aktualisieren", self.name)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
@@ -34,14 +37,17 @@ pub fn diff_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot
         return protocol::MutationOutcome::fatal("mutation.invariant", "A parent page needs a name and a positive finite size.", std::iter::empty::<String>());
     }
     if page.name == payload.name && page.width == payload.width && page.height == payload.height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Parent page is already set to that value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Parent page is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { parent_pages: Some(LayoutParentPagesDelta { patched: vec![LayoutParentPagePatchEntry { id: payload.id.clone(), patch: ParentPagePatch { name: Some(payload.name.clone()), width: Some(payload.width), height: Some(payload.height) } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.parent_pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
     vec![LayoutMutation::UpdateParentPage(UpdateParentPage { id: page.id.clone(), name: page.name.clone(), width: page.width, height: page.height })]
+
+    })())
 }
 
 #[cfg(test)]

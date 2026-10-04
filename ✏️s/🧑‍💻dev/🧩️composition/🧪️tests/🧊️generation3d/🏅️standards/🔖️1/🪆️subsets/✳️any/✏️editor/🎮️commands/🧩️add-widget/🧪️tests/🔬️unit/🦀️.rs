@@ -25,7 +25,7 @@ async fn catalogue_descriptors_survive_action_decode_and_retained_publication() 
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = context::app().await;
     for value in fixture()["valid"].as_array().unwrap() {
-        let args: dsl::DslValue = value.clone().into();
+        let args: semio_framework_value::DslValue = value.clone().into();
         let before = context::snapshot(&app).host_snapshot.widgets.len();
         let command = semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp::command_from_action("addWidget", Some(&args)).expect("command");
         let Generation3dCommand::AddWidget(decoded) = &command else { panic!("add widget command") };
@@ -51,7 +51,7 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
     let before = context::snapshot(&app);
     let cases = fixture();
     for value in cases["invalid"].as_array().unwrap().iter().chain(cases["unsupportedOperators"].as_array().unwrap()) {
-        let args: dsl::DslValue = value.clone().into();
+        let args: semio_framework_value::DslValue = value.clone().into();
         let command = semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp::command_from_action("addWidget", Some(&args)).expect("decoded");
         let admission = app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
         let fault = match admission {

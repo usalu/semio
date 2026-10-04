@@ -13,7 +13,7 @@ pub fn diff(payload: &RenameTile, base: &PresentationSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Tile \"{}\" does not exist.", payload.id), ["tiles".to_string(), payload.id.clone()]);
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" is already named \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
     if let Some(tile) = tiles.iter_mut().find(|tile| tile.id == payload.id) {
         tile.name = payload.new_name.clone();

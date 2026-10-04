@@ -71,7 +71,7 @@ export function parsePlaygroundTopology(value: unknown, at = "$"): PlaygroundTop
   const row = demonstratorPlaygroundInferenceGuardObject(value, at);
   return {
     topoOrder: demonstratorPlaygroundInferenceGuardArray(row["topoOrder"], `${at}.topoOrder`).map((item, index) => demonstratorPlaygroundInferenceGuardString(item, `${at}.topoOrder[${index}]`)),
-    depth: demonstratorPlaygroundInferenceGuardObject(row["depth"], `${at}.depth`),
+    depth: Object.fromEntries(Object.entries(demonstratorPlaygroundInferenceGuardObject(row["depth"], `${at}.depth`)).map(([key, item]) => [key, demonstratorPlaygroundInferenceGuardInteger(item, `${at}.depth.${key}`)])),
     cycleFree: demonstratorPlaygroundInferenceGuardBoolean(row["cycleFree"], `${at}.cycleFree`),
     nodeCount: demonstratorPlaygroundInferenceGuardInteger(row["nodeCount"], `${at}.nodeCount`),
   };

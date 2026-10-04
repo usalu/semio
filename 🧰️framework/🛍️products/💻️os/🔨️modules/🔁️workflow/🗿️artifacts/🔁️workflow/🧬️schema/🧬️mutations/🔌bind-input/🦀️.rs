@@ -2,7 +2,7 @@ use super::super::{UnbindInput, WorkflowDiff, WorkflowInputBinding, WorkflowMuta
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "bind-input")]
@@ -17,12 +17,15 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindInput {
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::BindInput { binding: self.binding.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match base.input_bindings.iter().find(|entry| entry.input_id == self.binding.input_id) {
             Some(existing) => vec![WorkflowMutation::BindInput(BindInput { binding: existing.clone() })],
             None => vec![WorkflowMutation::UnbindInput(UnbindInput { input_id: self.binding.input_id.clone() })],
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Bind workflow input {}", self.binding.input_id), &format!("Arbeitsablaufeingabe {} binden", self.binding.input_id))
     }

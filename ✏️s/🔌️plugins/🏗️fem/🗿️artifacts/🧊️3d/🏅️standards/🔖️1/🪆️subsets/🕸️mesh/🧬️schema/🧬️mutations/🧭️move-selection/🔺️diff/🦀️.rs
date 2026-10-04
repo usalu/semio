@@ -42,7 +42,7 @@ pub fn diff(payload: &MoveSelection, base: &Fem3dSnapshot) -> protocol::Mutation
     let followed: Vec<(String, Option<crate::FemSolid>)> = solids.iter().map(|solid| (solid.id.clone(), payload.map_solid(solid))).collect();
     let patched_solids: Vec<Fem3dSolidsPatchEntry> = followed.iter().filter_map(|(_, mapped)| mapped.clone()).filter(|moved| base.solids.iter().any(|solid| solid.id == moved.id && solid != moved)).map(|item| Fem3dSolidsPatchEntry { id: item.id.clone(), item }).collect();
     if patched_nodes.is_empty() && patched_solids.is_empty() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The transform moves none of the {} named node(s) and solid(s).", targets.len()));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and solid(s).", targets.len()));
     }
     let outcome = protocol::MutationOutcome::new(Fem3dDiff {
         nodes: (!patched_nodes.is_empty()).then(|| Fem3dNodesDelta { patched: patched_nodes, ..Default::default() }),
@@ -59,7 +59,7 @@ pub fn diff(payload: &MoveSelection, base: &Fem3dSnapshot) -> protocol::Mutation
     if skipped.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} named node(s) and solid(s) do not exist or cannot follow the transform and were skipped.", skipped.len(), targets.len())).at(skipped)])
+        outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} named node(s) and solid(s) do not exist or cannot follow the transform and were skipped.", skipped.len(), targets.len())).at(skipped)])
     }
 }
 

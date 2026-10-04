@@ -342,3 +342,74 @@ layers/styles) keep the generic walk (`name`: "Page 1"), unknown ids the generic
 | 12:26 | renderer wgpu `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs:6485` E0596 | S3-TEXT (fixed 12:27) |
 | 12:36 | `🧬️schema/📇️registry/🦀️.rs` duplicated blocks (28 errors) | fixed 12:40 |
 | 12:47 | `🗣️dsl/✨️derive/🦀️.rs:2202` emits `::semio_framework_schema_state::StateClass` (12:24) but deriving crates lack the dependency — `🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs:48` E0433 first (`G3/wgpu-3.txt`) | dsl-derive / schema-state author |
+
+### S3.8 Resume after the usage cut + reboot (18:40)
+
+Re-read every S3 file: all edits are on disk and complete (the stroke/layer mirror edit landed 11:40 and is in the 16:19
+auto-commit — `git diff` of the Scenes file is empty; `CH/🎨️paint/🦀️.rs`, both `🧪️path-paint` tests, fixture, schema, the
+`canvas2d_paint` mount, the renderer `semio-framework-2d` dependency, `ED/🦀️.rs` `🪧️EntityLabels` + `entity_label`, the chip
+law). Nothing half-written. Cargo verification waits on the peer schema-split fix (S3-INFRA), then layout lib + wgpu canvas2d.
+- 19:00 new seam law (WRITTEN, run pending) `layout_path_records_paint_their_geometry_in_record_order` in
+  `🎞️Scenes/🧪️tests/🔬️wgpu-canvas2d/🦀️.rs` region `🖊️ScenePath`: layout-shaped records (paper + frame with fill/stroke + a
+  `kind:text` run) through `render_canvas_2d` at zoom 2 — the frame fill covers its screen centre and nothing outside, the
+  stroke colour reaches the vector paint, the glyph layer follows the paper layer, every painted layer is scissored.
+- Peer gumball edit noticed (not mine, kept): `canvas2d_gumball::paint` now takes `&Theme` (appearance roles), Scenes
+  calls updated by that peer.
+- Verification attempts after the reboot: wgpu lib test 18:49 → 236 peer errors (`🗣️Interpreter` worker-cell / ctor
+  arity, reported); layout lib test 19:01 SIGTERM (external), 19:07/19:11/19:17 → os-kernel red from the in-flight
+  `semio-framework-dsl` split (`🗣️dsl/🦀️.rs` ambiguity, `🚪️io` `dsl::Diagnostic`, `📡️spr/🧵️channel` `crate::Fault`). Waiting.
+
+### S3.9 Hand-over (19:30, waiting for the coordinator's "TREE GREEN" — no polling)
+
+| Command (19:27) | Result |
+|---|---|
+| React pkg `bun ./📜️script.ts test long Canvas2dHost` | **8 files, 107 passed** (now incl. `🧪️path-paint`) |
+| `.venv/bin/python T/🧪️s3-layout-path-paint-corpus.py --check` / `T/🧪️s2-layout-gumball-dispatch-corpus.py --check` | current (16 cases/68 probes) / current (23 cases) |
+| `.venv/bin/python T/🧪️w3-t-layout-author-vectors.py` | 17 vectors, 0 files pending |
+
+**Owed on "TREE GREEN"** (one gated command each, private `target-nde-s3-layout`):
+1. `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-layout-layout --lib` — S2 laws + the warning cleanup + the
+   new chip law `reference_chips_name_frames_by_kind_content_and_page` (last green: 595/0 on 10-01 17:43).
+2. `cargo test -p semio-framework-os-renderer-wgpu --lib -- canvas2d` — `canvas2d_paint` corpus/laws (proven 6/6 standalone),
+   the new `layout_path_records_paint_their_geometry_in_record_order` seam law, the gumball seam/corpus laws.
+3. `cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-layout` (entity_label is target-neutral).
+4. fem 2d gumball tests (`-p semio-s-artifact-fem-2d --features component-app-assembly --lib -- gumball`), blocked in S2 by
+   the fem example DSL parse (S3-SPATIAL / DSL owner).
+
+**Files touched in S3:** `CH/🎨️paint/🦀️.rs` (new), `CH/🧪️tests/🧪️path-paint/{🦀️.rs,🟦️.ts}` (new),
+`CH/🧫️fixtures/🧫️path-paint/🔣️.json` (new), `CH/🧬️schema/🔣️path-paint/🔣️.json` (new), `SC` (region `Canvas2d`),
+`🎞️Scenes/🧪️tests/🔬️wgpu-canvas2d/🦀️.rs` (region `🖊️ScenePath`), `🧊️renderer/🦀️.rs` (mount `canvas2d_paint`), renderer
+`📦️packages/🦀️rust/Cargo.toml` (`semio-framework-2d`), React vitest config (`🧪️path-paint` suite), `ED/🦀️.rs`
+(`🪧️EntityLabels` + `entity_label`), `ED/🧪️tests/🧪️transform-tool-transactions/🦀️.rs` (chip law), ticket inputs
+`🧪️s3-layout-path-paint-corpus.py` (new) and `🧪️w3-t-layout-author-vectors.py` (explicit folder slugs). Scratch:
+`G3/` (incl. the standalone `paint-proof` harness — delete with the rest of `🗑️generated` at ticket close).
+
+**Coordinator actions:** central `schema generate` (new `CH/🧬️schema/🔣️path-paint` + S2's `🔣️gumball-meta`/`🔣️gumball-dispatch`);
+layout `describe` (S1/S2 publication contracts; S3 adds no descriptor surface); launch rows for the new
+`verify layout-frame-selection` segment (target still missing in the LA `📋️project.json`) and the two Python corpus
+scripts; re-activation of layout React 6079 + wgpu 6179 (and fem 2d) after the tree is green, then a visual wgpu probe:
+Blueprint frames, guides, dashed inherited frames and text runs must now paint (they were invisible boxes at the origin).
+TAX: register `🧭️gumball` as an element member, then the overlay home move (S3.5).
+
+**Open / notes:** wgpu approximations kept honest in the `render_canvas_scene_node` docstring — group opacity per piece,
+rotated images/text keep an axis-aligned box, ≥ 1 px strokes, raster quads still composite in the separate raster pass
+(above all vector content, renderer-wide). React suites import `gl-matrix` (gumball test, S2) without a declared
+devDependency in the React package — dependency-truth follow-up.
+
+### S3.10 After "TREE GREEN (core)" 05:47 on 10-03
+
+| Command | Result |
+|---|---|
+| layout lib test 05:49 | workspace manifest load failed: a peer's `🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/Cargo.toml` was mid-rewrite (104 bytes at 05:48, whole again 05:50) |
+| layout lib test 05:51 (`G3/layout-test-8.txt`) | killed (137) by the 30-min background cap while waiting on unit locks other cargos held |
+| layout lib test 06:23 (`G3/layout-test-9.txt`) | **blocked**: `semio-framework-artifact-workflow-workflow` 222 errors — hand-written `*_controlled` value impls return `String`, the 🌱️value trait now wants `ValueError` (`🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs:325…`, `…/🪶️sqlite/🦀️.rs:10…`); reported 06:28 |
+| wgpu `-- canvas2d` 06:33 (`G3/wgpu-5.txt`) | **blocked**: os-kernel `🚪️io/🦀️.rs:2406–2548` IoError refactor in flight (`message` field gone, no `From<String>`); reported 06:36 |
+
+No error in any S3 file in any of these runs. Owed list unchanged (S3.9); waiting for the next "TREE GREEN".
+| wgpu `-- canvas2d` 06:54 (`G3/wgpu-6.txt`, the one check after a 20-min quiet wait) | **blocked**: os-kernel 12 errors from the in-flight error-type unification (`🧬️semio/🦀️.rs:4` `os_dsl::ValueRefusalKind`, `PackError::into_value_error`/`TextRefusal` missing in `🏪️store/…/🪶️sqlite`, `📦️codec/🪶️snapshot-capability`, `🚪️io/🦀️.rs:2654`, `ValueError: From<&str>`) — none in S3 files |
+
+Turn ended 06:55 to save the usage window; resume me with the next "TREE GREEN" and I run S3.9's owed list in order.
+
+## Session 4 — 2026-10-04
+
+Continued by S4-TOOLS-A (draw + note + layout + fem/lowpoly/shooting) in `📓️s4-tools-a-report.md` § Session 4.

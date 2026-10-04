@@ -1,0 +1,240 @@
+{
+  "schema": "semio.framework.os.plugin.natural-file-lifecycle/v1",
+  "formats": [
+    {
+      "appId": "s.stdio.csv@rfc4180/*#editor",
+      "formatKind": "s.stdio.csv@rfc4180",
+      "extension": ".csv",
+      "mediaType": "text/csv",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.png@1.2/*#editor",
+      "formatKind": "s.stdio.png@1.2",
+      "extension": ".png",
+      "mediaType": "image/png",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.bmp@v3/*#editor",
+      "formatKind": "s.stdio.bmp@v3",
+      "extension": ".bmp",
+      "mediaType": "image/bmp",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.wav@riff-pcm/*#editor",
+      "formatKind": "s.stdio.wav@riff-pcm",
+      "extension": ".wav",
+      "mediaType": "audio/wav",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.jpg@jfif-1.01/*#editor",
+      "formatKind": "s.stdio.jpg@jfif-1.01",
+      "extension": ".jpg",
+      "mediaType": "image/jpeg",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.jpg@jfif-1.01/baseline#editor",
+      "formatKind": "s.stdio.jpg@jfif-1.01",
+      "extension": ".jpg",
+      "mediaType": "image/jpeg",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.mp3@mpeg1-layer3/*#editor",
+      "formatKind": "s.stdio.mp3@mpeg1-layer3",
+      "extension": ".mp3",
+      "mediaType": "audio/mpeg",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.mp4@isobmff/*#editor",
+      "formatKind": "s.stdio.mp4@isobmff",
+      "extension": ".mp4",
+      "mediaType": "video/mp4",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.avi@1.0/*#editor",
+      "formatKind": "s.stdio.avi@1.0",
+      "extension": ".avi",
+      "mediaType": "video/x-msvideo",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.docx@ecma-376/base#editor",
+      "formatKind": "s.stdio.docx@ecma-376",
+      "extension": ".docx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pdf@1.7/*#editor",
+      "formatKind": "s.stdio.pdf@1.7",
+      "extension": ".pdf",
+      "mediaType": "application/pdf",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.md@commonmark/*#editor",
+      "formatKind": "s.stdio.md@commonmark",
+      "extension": ".md",
+      "mediaType": "text/markdown",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.html@5/*#editor",
+      "formatKind": "s.stdio.html@5",
+      "extension": ".html",
+      "mediaType": "text/html",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.svg@1.1/*#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.svg@1.1/basic#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.svg@1.1/tiny#editor",
+      "formatKind": "s.stdio.svg@1.1",
+      "extension": ".svg",
+      "mediaType": "image/svg+xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.tsv@iana/*#editor",
+      "formatKind": "s.stdio.tsv@iana",
+      "extension": ".tsv",
+      "mediaType": "text/tab-separated-values",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.txt@utf-8/*#editor",
+      "formatKind": "s.stdio.txt@utf-8",
+      "extension": ".txt",
+      "mediaType": "text/plain",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.xml@1.0/*#editor",
+      "formatKind": "s.stdio.xml@1.0",
+      "extension": ".xml",
+      "mediaType": "application/xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.xml@1.0/valid#editor",
+      "formatKind": "s.stdio.xml@1.0",
+      "extension": ".xml",
+      "mediaType": "application/xml",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.json@rfc8259/*#editor",
+      "formatKind": "s.stdio.json@rfc8259",
+      "extension": ".json",
+      "mediaType": "application/json",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.json@rfc8259/i-json#editor",
+      "formatKind": "s.stdio.json@rfc8259",
+      "extension": ".json",
+      "mediaType": "application/json",
+      "binary": false
+    },
+    {
+      "appId": "s.stdio.xlsx@ecma-376/*#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.xlsx@ecma-376/transitional#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.xlsx@ecma-376/strict#editor",
+      "formatKind": "s.stdio.xlsx@ecma-376",
+      "extension": ".xlsx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pptx@ecma-376/*#editor",
+      "formatKind": "s.stdio.pptx@ecma-376",
+      "extension": ".pptx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pptx@ecma-376/transitional#editor",
+      "formatKind": "s.stdio.pptx@ecma-376",
+      "extension": ".pptx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "binary": true
+    },
+    {
+      "appId": "s.stdio.pptx@ecma-376/strict#editor",
+      "formatKind": "s.stdio.pptx@ecma-376",
+      "extension": ".pptx",
+      "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "binary": true
+    }
+  ],
+  "unsupported": [
+    { "appId": "s.stdio.tiff@6.0/*#editor" }
+  ],
+  "transport": {
+    "schema": "s.stdio.binary@1",
+    "octets": [0, 1, 127, 128, 255]
+  },
+  "registeredEditor": {
+    "formatKind": "semio.testkit-surface-natural/v1",
+    "octets": [0, 0, 0, 21],
+    "expectedCount": 21,
+    "accountBytesPerTurn": 2,
+    "cancelAfterAccountedBytes": 2,
+    "oversizedOctetCount": 4097
+  },
+  "controlledEditor": {
+    "wordCount": 2048,
+    "lastWord": 21,
+    "maximumWorkUnitsPerStep": 64,
+    "expectedMinimumTurns": 128,
+    "expectedDecodedItems": 2048
+  },
+  "browserRead": {
+    "chunkBytes": 3,
+    "maximumBytes": 8,
+    "octets": [0, 1, 127, 128, 255, 42, 7],
+    "expectedProgress": [0, 3, 6, 7],
+    "cancelAfterBytes": 3
+  },
+  "lifecycle": {
+    "currentInstanceId": 7,
+    "openedInstanceId": 8,
+    "expected": {
+      "saveInstanceId": 7,
+      "preservedInstanceId": 7,
+      "openedInstanceId": 8,
+      "openedHistoryEntries": 1
+    }
+  }
+}

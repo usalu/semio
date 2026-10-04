@@ -1,0 +1,14 @@
+[
+  {"id":"empty","ownedBytes":"0","sourceBytes":"0","multiples":"0","scaffoldBytes":"0","accepted":true,"maximumBytes":"0"},
+  {"id":"exact-owned","ownedBytes":"5","sourceBytes":"5","multiples":"1","scaffoldBytes":"0","accepted":true,"maximumBytes":"5"},
+  {"id":"source-policy","ownedBytes":"5","sourceBytes":"9","multiples":"2","scaffoldBytes":"1","accepted":true,"maximumBytes":"19"},
+  {"id":"below-owned","ownedBytes":"5","sourceBytes":"4","multiples":"1","scaffoldBytes":"0","accepted":false,"maximumBytes":null},
+  {"id":"multiply-overflow","ownedBytes":"5","sourceBytes":"usizeMax","multiples":"2","scaffoldBytes":"0","accepted":false,"maximumBytes":null},
+  {"id":"add-overflow","ownedBytes":"5","sourceBytes":"usizeMax","multiples":"1","scaffoldBytes":"1","accepted":false,"maximumBytes":null},
+  {"id":"signed-ceiling","ownedBytes":"5","sourceBytes":"usizeMax","multiples":"1","scaffoldBytes":"0","accepted":false,"maximumBytes":null},
+  {"id":"exact-signed-ceiling","ownedBytes":"5","sourceBytes":"isizeMax","multiples":"1","scaffoldBytes":"0","accepted":true,"maximumBytes":"isizeMax"},
+  {"id":"combined-overflow","ownedBytes":"5","sourceBytes":"isizeMax","multiples":"2","scaffoldBytes":"2","accepted":false,"maximumBytes":null},
+  {"id":"zero-multiple","ownedBytes":"5","sourceBytes":"usizeMax","multiples":"0","scaffoldBytes":"5","accepted":true,"maximumBytes":"5"},
+  {"id":"zero-source","ownedBytes":"5","sourceBytes":"0","multiples":"usizeMax","scaffoldBytes":"5","accepted":true,"maximumBytes":"5"},
+  {"id":"same-ceiling","ownedBytes":"5","sourceBytes":"6","multiples":"2","scaffoldBytes":"1","accepted":true,"maximumBytes":"13"}
+]

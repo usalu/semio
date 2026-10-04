@@ -78,9 +78,12 @@ impl ArtifactViewer for ArchitectViewer {
         sample_plugin()
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_program_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 👁️ Structurally read-only: the sole `ArchitectViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

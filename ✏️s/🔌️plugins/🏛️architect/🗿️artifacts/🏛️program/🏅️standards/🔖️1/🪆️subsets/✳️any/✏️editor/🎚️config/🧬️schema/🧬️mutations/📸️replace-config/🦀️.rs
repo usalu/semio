@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-config")]
 #[mutation_leaf(contract = ::protocol)]
@@ -15,13 +15,16 @@ impl protocol::MutationKind<ArchitectConfig, ArchitectConfigMutation> for Replac
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
     fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
         if &self.config == base {
-            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Requested config already matches.");
+            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Requested config already matches.");
         }
         protocol::MutationOutcome::new(self.config.clone())
     }
-    fn inverse(&self, base: &ArchitectConfig) -> Vec<ArchitectConfigMutation> {
+    fn inverse(&self, base: &ArchitectConfig) -> Result<Vec<ArchitectConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ArchitectConfigMutation::ReplaceConfig(Self { config: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }

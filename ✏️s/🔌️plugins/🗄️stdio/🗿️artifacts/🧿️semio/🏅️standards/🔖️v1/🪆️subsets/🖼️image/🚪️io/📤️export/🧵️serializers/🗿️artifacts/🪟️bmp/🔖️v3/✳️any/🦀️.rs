@@ -1,20 +1,21 @@
-//! 📤️ `s.stdio.semio/v1/image` → `bmp` (v3) — `encode_bmp` always writes 24bpp BGR rows (it
-//! reads only `width`/`height`/`pixels`/`row_order`/`x_pixels_per_meter`/`y_pixels_per_meter`,
-//! confirmed in `⚙️engine::encode_bmp`; alpha is silently dropped by the codec itself, not here).
-//!
-//! Honest lossy points (documented):
-//! - Only the FIRST frame is exported (BMP is not animated).
-//! - Alpha is dropped (the underlying BMP v3/`BITMAPINFOHEADER` codec's own real behavior).
-//! - Only `xPixelsPerMeter`/`yPixelsPerMeter` metadata entries round-trip (parsed back into the
-//!   matching header fields); any other key is dropped (no other textual field exists on
-//!   `BmpSnapshot`).
+//! 📤️ Converts the first resolved Semio RGBA8 frame into an explicit bottom-up Direct RGB24 BMP
+//! v3 profile. Alpha and later frames have no representation in that target profile.
 
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_bmp::{schema::snapshot::BmpRowOrder, BmpSnapshot};
+use semio_s_artifact_stdio_bmp::{standards::v_v3::subsets::any::io::bmp_direct_rgb24_from_rgba8, BmpSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId::ANY };
+
+fn metadata_i32(from: &SemioImageSnapshot, key: &str) -> Result<i32, store::PackError> {
+    from.metadata
+        .iter()
+        .find(|entry| entry.key == key)
+        .map(|entry| entry.value.parse::<i32>().map_err(|_| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("semio/image→bmp: metadata {key} must be a signed 32-bit integer")))))
+        .transpose()
+        .map(|value| value.unwrap_or(0))
+}
 
 //#region 🔖️Serializer
 pub struct SemioImageToBmp;
@@ -26,25 +27,19 @@ impl ArtifactSerializer for SemioImageToBmp {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let frame = from.frames.first().ok_or_else(|| store::PackError::Schema("semio/image→bmp: no frames to export".into()))?;
-        if frame.rgba8.len() != (from.width as usize) * (from.height as usize) * 4 {
-            return Err(store::PackError::Schema("semio/image→bmp: frame pixel length does not match width*height*4".into()));
+        let frame = from.frames.first().ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→bmp: no frames to export")))?;
+        let expected = usize::try_from(from.width)
+            .ok()
+            .and_then(|width| usize::try_from(from.height).ok().and_then(|height| width.checked_mul(height)))
+            .and_then(|pixels| pixels.checked_mul(4))
+            .ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "semio/image→bmp: frame dimensions overflow address space")))?;
+        if frame.rgba8.len() != expected {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→bmp: frame pixel length does not match width*height*4")));
         }
-        let x_pixels_per_meter = from.metadata.iter().find(|m| m.key == "xPixelsPerMeter").and_then(|m| m.value.parse::<i32>().ok()).unwrap_or(0);
-        let y_pixels_per_meter = from.metadata.iter().find(|m| m.key == "yPixelsPerMeter").and_then(|m| m.value.parse::<i32>().ok()).unwrap_or(0);
-        Ok(BmpSnapshot {
-            schema: semio_s_artifact_stdio_bmp::STDIO_BMP_DOCUMENT_SCHEMA.into(),
-            width: from.width,
-            height: from.height,
-            row_order: BmpRowOrder::BottomUp,
-            planes: 1,
-            bits_per_pixel: 24,
-            compression: 0,
-            x_pixels_per_meter,
-            y_pixels_per_meter,
-            pixels: frame.rgba8.clone(),
-            ..BmpSnapshot::default()
-        })
+        let x_pixels_per_meter = metadata_i32(from, "xPixelsPerMeter")?;
+        let y_pixels_per_meter = metadata_i32(from, "yPixelsPerMeter")?;
+        bmp_direct_rgb24_from_rgba8(from.width, from.height, &frame.rgba8, x_pixels_per_meter, y_pixels_per_meter)
+            .map_err(|failure| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("semio/image→bmp: {failure}"))))
     }
 }
 //#endregion 🔖️Serializer

@@ -2,9 +2,7 @@
 //! the deleted artifact-tree `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
 //! an artifact is a schema + io, never an engine. `playbook_io()` returns `AppIo` and
 //! `PlaybookChapterPayload` is this app's own wire-decode shape for the `chapters:in` port — both
-//! app-owned per the region → destination map's rule 4. `default_block` (pure, no app type) stayed at
-//! `🧬️schema`; `empty_playbook_snapshot`/`flatten_playbook_blocks` were re-export-only in the old
-//! engine and now resolve straight to their real home, the artifact root (`crate`).
+//! app-owned per the region → destination map's rule 4. `default_block` (pure, no app type) stayed at `🧬️schema`.
 
 use crate::PLAYBOOK_DOCUMENT_SCHEMA;
 use semio_framework_value_derive::{FromValue, ToValue};

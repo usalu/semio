@@ -154,7 +154,7 @@ export type AgentContributions = { capabilities: Array<string>, promoted: Array<
         },
         SchemaMetadata {
             name: "AppDefinition",
-            version: 1,
+            version: 2,
             typescript: r####"export type AppDefinition = { id: string,
 /**
  * 👁️✏️ Whether this surface may mutate the artifact it is bound to — see `AppRole`.
@@ -257,7 +257,12 @@ commandGrammar: CommandGrammar,
  * `media_outputs`/`artifact_kinds` above remain the live source of truth until later waves migrate
  * onto this.
  */
-io: AppIo, };"####,
+io: AppIo,
+/**
+ * 📢️ The localized notices of the fault codes this app's guest refuses with (`ArtifactApp::fault_notices`, design
+ * §20.12), stamped at registration — what both shells show for a refused dispatch after the framework's own table.
+ */
+faultNotices: Array<FaultNoticeDefinition>, };"####,
         },
         SchemaMetadata {
             name: "AppIo",
@@ -330,6 +335,17 @@ export type ArgPresentation = { "kind": "slider" } | { "kind": "stepper" } | { "
 export type SnapSource = { "kind": "step" } | { "kind": "config", key: string, } | { "kind": "snapshot", pointer: string, };"####,
         },
         SchemaMetadata {
+            name: "OptionSource",
+            version: 1,
+            typescript: r####"/**
+ * 🗝️ Where a string choice's options come from (`x-semio-ui.optionSource`): the KEYS of the object `pointer` leads to in
+ * the document the editor previews — an RFC 6901 template whose `{field}` segments take the edited payload's top-level
+ * member: an object's key, or, on an array, the record whose own `field` equals it (`/hostSnapshot/widgets/{id}/params`).
+ * TypeScript twin: `OptionSource`.
+ */
+export type OptionSource = { "kind": "snapshot", pointer: string, };"####,
+        },
+        SchemaMetadata {
             name: "NumberScale",
             version: 1,
             typescript: r####"/**
@@ -348,12 +364,12 @@ export type ReferenceIdType = "string" | "integer";"####,
         },
         SchemaMetadata {
             name: "ArgSchema",
-            version: 2,
+            version: 3,
             typescript: r####"/**
  * 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
  * header comment for the D6 stored/derived split.
  */
-export type ArgSchema = { "kind": "string", options: Array<ActionArgOption>, minLen?: number, maxLen?: number, pattern?: string, format?: ArgFormat, } | { "kind": "number", min?: number, minExclusive?: boolean, max?: number, maxExclusive?: boolean, step?: number, integer: boolean, unit?: string, snaps?: Array<number>, snapSource?: SnapSource, softMin?: number, softMax?: number, precision?: number, displayUnit?: string, displayFactor?: number, scale?: NumberScale, } | { "kind": "boolean" } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "array", items: ArgSchema, minItems?: number, maxItems?: number, } | { "kind": "object", fields: Array<ActionArgDef>, } | { "kind": "any" };"####,
+export type ArgSchema = { "kind": "string", options: Array<ActionArgOption>, optionSource?: OptionSource, minLen?: number, maxLen?: number, pattern?: string, format?: ArgFormat, } | { "kind": "number", min?: number, minExclusive?: boolean, max?: number, maxExclusive?: boolean, step?: number, integer: boolean, unit?: string, snaps?: Array<number>, snapSource?: SnapSource, softMin?: number, softMax?: number, precision?: number, displayUnit?: string, displayFactor?: number, scale?: NumberScale, } | { "kind": "boolean" } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "array", items: ArgSchema, minItems?: number, maxItems?: number, } | { "kind": "object", fields: Array<ActionArgDef>, } | { "kind": "any" };"####,
         },
         SchemaMetadata {
             name: "ArtifactContributionDescriptor",
@@ -713,6 +729,16 @@ export type ExecutionMode = "declarative" | "linked" | "isolated" | "exclusive" 
  * regardless of what it requests — "a host can never delegate more than it holds".
  */
 export type ExtensionPointDeclaration = { id: string, publisherScope: string, allowedModes: Array<ExecutionMode>, capabilityAllowance: Array<CapabilityId>, quotaCeiling: QuotaSchema, payloadSchema: string, activation: ActivationEvent, };"####,
+        },
+        SchemaMetadata {
+            name: "FaultNoticeDefinition",
+            version: 1,
+            typescript: r####"/**
+ * 📢️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
+ * text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
+ * its English `message`.
+ */
+export type FaultNoticeDefinition = { code: string, label: unknown, };"####,
         },
         SchemaMetadata {
             name: "GranularityDefinition",
@@ -1524,7 +1550,7 @@ export type TutorialDocumentEvent = { at: bigint, kind: TutorialDocumentEventKin
  * 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
  * verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
  */
-export type TutorialDocumentEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
+export type TutorialDocumentEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
         },
         SchemaMetadata {
             name: "TutorialEasing",

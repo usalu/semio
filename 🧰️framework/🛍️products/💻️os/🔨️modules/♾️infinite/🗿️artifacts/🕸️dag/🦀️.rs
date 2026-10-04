@@ -21,3 +21,7 @@ mod host_kind_admission_tests;
 
 /// 🎬️ Canonical generic DAG example owned by the framework artifact and shared with its editors.
 pub const DAG_DEMO_TEXT: &str = include_str!("🖼️assets/🎬️demo/🗣️.dsl.semio");
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

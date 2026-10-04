@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/history-label-reload.fixture.json",
   "title": "PluginHistoryLabelReloadFixture",
-  "description": "History row labels over the authoring verb, the app's description and the leaf labels of the edit's operations: the app's declared verbs with their labels, and per command the verb it dispatches under, its description, its operations' leaf labels and the row label every replica and every reload shows in English and German.",
+  "description": "History row labels over the authoring verb and the leaf labels of the edit's operations: the app's declared verbs with their labels, and per command the verb it dispatches under, its operations' leaf labels and the row label every replica and every reload shows in English and German.",
   "type": "object",
   "additionalProperties": false,
   "required": ["$schema", "note", "registry", "cases"],
@@ -39,7 +39,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "command", "verb", "description", "leaves", "expected"],
+        "required": ["id", "command", "verb", "leaves", "expected"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "command": {
@@ -50,7 +50,6 @@
             "properties": { "kind": { "enum": ["rename", "retitle", "reset", "count", "pair"] }, "value": { "oneOf": [{ "type": "string" }, { "type": "integer" }] } }
           },
           "verb": { "$ref": "#/$defs/verb" },
-          "description": { "description": "The app's description of the edit, or null.", "oneOf": [{ "type": "string" }, { "type": "null" }] },
           "leaves": { "description": "The leaf label of each operation the command emits, in order.", "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/label" } },
           "expected": { "$ref": "#/$defs/label" }
         }

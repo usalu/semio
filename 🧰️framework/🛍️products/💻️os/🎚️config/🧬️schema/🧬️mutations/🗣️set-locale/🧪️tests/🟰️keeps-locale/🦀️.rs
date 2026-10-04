@@ -16,16 +16,16 @@ const DIFF: &str = include_str!("../../🧫️fixtures/🟰️keeps-locale/🔺�
 const OUTCOME: &str = include_str!("../../🧫️fixtures/🟰️keeps-locale/🎯️outcome/🔣️.json");
 
 fn before() -> UiPreferences {
-    dsl::os_pack::json::from_json_str(BEFORE).expect("before preferences decode")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before preferences decode")
 }
 fn expected_after() -> UiPreferences {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after preferences decode")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after preferences decode")
 }
 fn mutation() -> UiPreferencesConfigMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("set-locale mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-locale mutation decodes")
 }
-fn json_value<T: dsl::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&dsl::os_pack::json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
+fn json_value<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("canonical JSON parses in the independent serde_json oracle")
 }
 
 /// ▶️ Re-setting the locale to its current value leaves the preferences exactly as they were.
@@ -43,7 +43,7 @@ fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "set-locale/keeps-locale: this fixture declares a no-op outcome");
     let produced = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
-    assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "set-locale/keeps-locale: an unchanged preference is a warned no-op, never a refusal");
+    assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "set-locale/keeps-locale: an unchanged preference is a warned no-op, never a refusal");
     assert_eq!(produced.messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>(), vec!["mutation.no-op".to_string()], "set-locale/keeps-locale: the only diagnostic is mutation.no-op");
     assert_eq!(protocol::MutationDiff::apply(produced.diff(), &before()).expect("no-op applies"), before(), "set-locale/keeps-locale: a no-op leaves the preferences untouched");
 }
@@ -54,7 +54,7 @@ fn produces_committed_diff() {
     let outcome = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &before());
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(json_value(outcome.diff()), committed, "set-locale/keeps-locale: produced diff differs from the committed 🔺️diff");
-    let decoded: UiPreferencesDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes as UiPreferencesDiff");
+    let decoded: UiPreferencesDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes as UiPreferencesDiff");
     assert_eq!(protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies"), expected_after(), "set-locale/keeps-locale: the committed diff does not carry before to after");
 }
 
@@ -64,7 +64,7 @@ fn inverse_restores_before() {
     let base = before();
     let forward = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward set-locale applies");
-    for step in <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation(), &base) {
+    for step in <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
         let undo = <UiPreferencesConfigMutation as protocol::Mutation<UiPreferences>>::diff(&step, &snapshot);
         snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("set-locale inverse step applies");
     }
@@ -75,7 +75,7 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: UiPreferences = dsl::os_pack::json::from_json_str(text).expect("preferences decode");
+        let decoded: UiPreferences = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preferences decode");
         let original: serde_json::Value = serde_json::from_str(text).expect("preferences reparse");
         assert_eq!(json_value(&decoded), original, "set-locale/keeps-locale: committed {label} JSON is not canonical");
     }

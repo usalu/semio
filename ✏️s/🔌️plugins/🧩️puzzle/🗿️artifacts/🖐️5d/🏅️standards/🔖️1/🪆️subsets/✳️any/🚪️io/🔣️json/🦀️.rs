@@ -1,11 +1,11 @@
 //! 🖐️ Declared Puzzle5d JSON preserves literal binary64 words at each owned field.
-use dsl::DslValue;
-fn member<'a>(v:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match v{DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,v)|v)),_=>Err("Puzzle5d JSON requires an object".into())}}
+use semio_framework_value::DslValue;
+fn member<'a>(v:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match v{semio_framework_value::DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,v)|v)),_=>Err("Puzzle5d JSON requires an object".into())}}
 fn field(v:&mut DslValue,key:&str,f:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{if let Some(v)=member(v,key)?{if !matches!(v,DslValue::Null){f(v,decode)?}}Ok(())}
-fn rows(v:&mut DslValue,f:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match v{DslValue::Array(values)=>{for v in values{f(v,decode)?}Ok(())},_=>Err("Puzzle5d JSON requires an array".into())}}
+fn rows(v:&mut DslValue,f:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match v{semio_framework_value::DslValue::Array(values)=>{for v in values{f(v,decode)?}Ok(())},_=>Err("Puzzle5d JSON requires an array".into())}}
 fn word(v:&mut DslValue,decode:bool)->Result<(),String>{
- if decode{let n=match v{DslValue::Number(n)=>{let n=n.as_f64();if !n.is_finite(){return Err("Puzzle5d JSON numeric input must be finite".into())}n},DslValue::Object(entries)=>{if entries.len()!=1||entries[0].0!="bits"{return Err("Puzzle5d JSON IEEE object requires only bits".into())}let raw=entries[0].1.as_str().ok_or("Puzzle5d JSON bits require text")?;if raw.len()!=16||!raw.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err("Puzzle5d JSON bits require sixteen lowercase hexadecimal digits".into())}f64::from_bits(u64::from_str_radix(raw,16).map_err(|error|error.to_string())?)},_=>return Err("Puzzle5d JSON binary64 input differs".into())};*v=DslValue::float(n)}
- else{let n=v.as_f64().ok_or("Puzzle5d JSON native binary64 is absent")?;*v=DslValue::object([("bits".into(),DslValue::String(format!("{:016x}",n.to_bits())))])}
+ if decode{let n=match v{semio_framework_value::DslValue::Number(n)=>{let n=n.as_f64();if !n.is_finite(){return Err("Puzzle5d JSON numeric input must be finite".into())}n},semio_framework_value::DslValue::Object(entries)=>{if entries.len()!=1||entries[0].0!="bits"{return Err("Puzzle5d JSON IEEE object requires only bits".into())}let raw=entries[0].1.as_str().ok_or("Puzzle5d JSON bits require text")?;if raw.len()!=16||!raw.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err("Puzzle5d JSON bits require sixteen lowercase hexadecimal digits".into())}f64::from_bits(u64::from_str_radix(raw,16).map_err(|error|error.to_string())?)},_=>return Err("Puzzle5d JSON binary64 input differs".into())};*v=semio_framework_value::DslValue::float(n)}
+ else{let n=v.as_f64().ok_or("Puzzle5d JSON native binary64 is absent")?;*v=semio_framework_value::DslValue::object([("bits".into(),semio_framework_value::DslValue::String(format!("{:016x}",n.to_bits())))])}
  Ok(())
 }
 fn vector(v:&mut DslValue,decode:bool)->Result<(),String>{rows(v,word,decode)}

@@ -26,6 +26,13 @@ impl std::fmt::Display for PdfEngineError {
     }
 }
 impl std::error::Error for PdfEngineError {}
+/// 🧭️ Carries the engine's own unsupported/malformed/not-PDF authority into the canonical Value refusal kinds.
+impl From<PdfEngineError> for semio_framework_value::ValueError {
+    fn from(error: PdfEngineError) -> Self {
+        let kind = match &error { PdfEngineError::Unsupported(_) => semio_framework_value::ValueRefusalKind::UnsupportedOwner, PdfEngineError::NotPdf | PdfEngineError::Malformed(_) => semio_framework_value::ValueRefusalKind::InvalidValue };
+        Self::new(kind, error.to_string())
+    }
+}
 
 pub type PResult<T> = Result<T, PdfEngineError>;
 

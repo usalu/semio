@@ -3,7 +3,7 @@
 //! reimplemented here: it is reused from the shared `semio_s_artifact_stdio_zip::opc` layer and,
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
-use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
+use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, STRICT_REL_TYPE_OFFICE_DOCUMENT, W_NS};
 use crate::{
     schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart},
     DocxSnapshot,
@@ -141,13 +141,17 @@ pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
     opc.content_types.set_default("xml", "application/xml");
     opc.content_types.set_override(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE);
     opc.add_generated_relationship("", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
-    let mut xml_parts = vec![DocxXmlPart { path: MAIN_DOCUMENT_PART.into(), content_type: MAIN_DOCUMENT_CONTENT_TYPE.into(), document: document_to_xml(&document) }];
+    let mut xml_parts = vec![DocxXmlPart::try_from_document(MAIN_DOCUMENT_PART.into(), MAIN_DOCUMENT_CONTENT_TYPE.into(), document_to_xml(&document))
+        .expect("the generated main document has bounded retained XML ownership")];
     if !document.styles.is_empty() {
         opc.content_types.set_override(STYLES_PART, STYLES_CONTENT_TYPE);
-        xml_parts.push(DocxXmlPart { path: STYLES_PART.into(), content_type: STYLES_CONTENT_TYPE.into(), document: styles_to_xml(&document.styles) });
+        xml_parts.push(
+            DocxXmlPart::try_from_document(STYLES_PART.into(), STYLES_CONTENT_TYPE.into(), styles_to_xml(&document.styles))
+                .expect("the generated styles document has bounded retained XML ownership"),
+        );
         opc.add_generated_relationship(MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STYLES_REL_TARGET);
     }
-    DocxSnapshot::from_parts(opc, xml_parts)
+    DocxSnapshot::from_parts(opc, xml_parts).expect("the bounded minimal DOCX package has valid retained ownership")
 }
 
 /// 📦️ Serializes each authoritative XML part exactly once alongside non-XML OPC payloads.
@@ -155,16 +159,27 @@ pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
 pub fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, DocxError> {
     snap.validate_authority()?;
     snap.project_document()?;
-    let mut package = snap.opc.clone();
+    let materialization_bytes = snap.xml_parts.iter().try_fold(snap.opc.materialization_owned_bytes()?, |total, part| {
+        total
+            .checked_add(part.document.materialization_owned_bytes()?)
+            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "DOCX save materialization ownership overflow"))
+    })?;
+    let mut callback = |_| true;
+    let mut control = semio_framework_value::NativeEncodeControl::new(materialization_bytes, &mut callback);
+    let mut package = snap.opc.materialize_package(&mut control)?;
     let mut paths: std::collections::HashSet<String> = package.parts.iter().map(|part| part.path.clone()).collect();
-    for part in &snap.xml_parts {
+    for part in snap.xml_parts.iter() {
         if !paths.insert(part.path.clone()) {
             return Err(DocxError::Malformed(format!("duplicate OPC part authority: {}", part.path)));
         }
-        let text = xml_document_to_text_checked(&part.document).map_err(|detail| DocxError::Xml { part: part.path.clone(), detail })?;
+        let document = part.materialize_document(&mut control)?;
+        let text = xml_document_to_text_checked(&document).map_err(|detail| DocxError::Xml { part: part.path.clone(), detail })?;
         package.set_part(&part.path, &part.content_type, text.into_bytes());
     }
-    let main_path = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::main_document_path(&package)?;
+    let main_path = package
+        .resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
+        .or_else(|| package.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT))
+        .ok_or(DocxError::MissingMainDocumentRelationship)?;
     if !snap.xml_parts.iter().any(|part| part.path == main_path) {
         return Err(DocxError::MissingPart(main_path));
     }

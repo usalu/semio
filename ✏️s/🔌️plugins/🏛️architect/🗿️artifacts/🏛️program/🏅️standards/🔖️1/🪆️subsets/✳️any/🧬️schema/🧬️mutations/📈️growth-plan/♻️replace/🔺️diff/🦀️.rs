@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceGrowthPlan, base: &ProgramSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", "No growth plan exists with this id.", [payload.growth_plan.header.id.0.clone()]);
     };
     if existing == &payload.growth_plan {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This growth plan already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This growth plan already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.growth_plan).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { growth: Some(ProgramGrowthDelta { patched: vec![ProgramGrowthPatchEntry { id: payload.growth_plan.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

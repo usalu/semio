@@ -7,6 +7,7 @@
 scalar TxtMutationUInt32V1
 
 input TxtMutationInput @oneOf {
+  setSnapshot: SetSnapshotPayload
   setTrailingNewline: SetTrailingNewlinePayload
   setLineEnding: SetLineEndingPayload
   insertLine: InsertLinePayload

@@ -1,0 +1,242 @@
+{
+  "valueKinds": [
+    "ref",
+    "str",
+    "enum",
+    "int",
+    "real",
+    "list",
+    "typed",
+    "unset",
+    "derived"
+  ],
+  "unsignedWords": [
+    "0",
+    "18446744073709551615"
+  ],
+  "integerWords": [
+    "-9223372036854775808",
+    "9223372036854775807"
+  ],
+  "decimals": [
+    {
+      "negative": true,
+      "coefficient": "00125",
+      "scale": 2,
+      "exponent": 0
+    },
+    {
+      "negative": false,
+      "coefficient": "1",
+      "scale": 4294967295,
+      "exponent": -2147483648
+    },
+    {
+      "negative": true,
+      "coefficient": "000",
+      "scale": 0,
+      "exponent": 2147483647
+    }
+  ],
+  "literalText": "\u0000文🌠 Grüße",
+  "longText": {
+    "unit": "文🌠",
+    "repeat": 20000
+  },
+  "decimalOwnedExtras": [
+    {
+      "negative": false,
+      "coefficient": "",
+      "scale": 0
+    },
+    {
+      "negative": true,
+      "coefficient": "1x",
+      "scale": 3
+    }
+  ],
+  "dialects": [
+    {
+      "artifactKind": "s.stdio.step",
+      "standard": "ap214",
+      "subsets": [
+        "*",
+        "cc1",
+        "cc2",
+        "cc3",
+        "cc4",
+        "cc5",
+        "cc6"
+      ]
+    },
+    {
+      "artifactKind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subsets": [
+        "*",
+        "cv20",
+        "sav",
+        "cobie"
+      ]
+    },
+    {
+      "artifactKind": "s.stdio.ifc",
+      "standard": "4",
+      "subsets": [
+        "*"
+      ]
+    }
+  ],
+  "envelopes": [
+    "stdio.step",
+    "stdio.ifc.2x3",
+    "stdio.ifc"
+  ],
+  "controlled": {
+    "recursiveDepth": 128,
+    "wideItems": 1024,
+    "malformedValues": [
+      {
+        "kind": "str",
+        "value": 1
+      },
+      {
+        "kind": "ref",
+        "value": -1
+      },
+      {
+        "kind": "derived",
+        "value": "unexpected"
+      },
+      {
+        "kind": "list",
+        "values": {}
+      },
+      {
+        "kind": "typed",
+        "typeName": "",
+        "values": [],
+        "extra": null
+      }
+    ],
+    "malformedInstances": [
+      {
+        "id": -1,
+        "entities": []
+      },
+      {
+        "id": 0,
+        "entities": {}
+      },
+      {
+        "id": 0,
+        "entities": [
+          {
+            "typeName": "N",
+            "arguments": {}
+          }
+        ]
+      },
+      {
+        "id": 0,
+        "entities": [],
+        "extra": null
+      }
+    ],
+    "malformedDecimals": [
+      {
+        "negative": false,
+        "coefficient": "1",
+        "scale": 4294967296
+      },
+      {
+        "negative": false,
+        "coefficient": "1",
+        "scale": 0,
+        "exponent": 2147483648
+      },
+      {
+        "negative": true,
+        "coefficient": 1,
+        "scale": 0
+      },
+      {
+        "negative": true,
+        "coefficient": "1",
+        "scale": 0,
+        "extra": null
+      }
+    ],
+    "workload": {
+      "parentTotal": 2,
+      "parentBefore": 1
+    }
+  },
+  "headerCase": {
+    "fileDescription": [
+      {
+        "kind": "str",
+        "value": "\u0000文🌠"
+      },
+      {
+        "kind": "typed",
+        "typeName": "",
+        "values": []
+      }
+    ],
+    "fileName": [],
+    "fileSchema": [
+      {
+        "kind": "enum",
+        "value": "IFC2X3"
+      },
+      {
+        "kind": "enum",
+        "value": "IFC2X3"
+      }
+    ]
+  },
+  "retirementCase": {
+    "id": "0",
+    "name": "文🌠",
+    "typedName": "N\u0000",
+    "value": "Glück",
+    "maximumItems": 2,
+    "maximumBytes": 3,
+    "expectedReleasedBytes": 23
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000001",
+    "7ff0000000000001"
+  ],
+  "nativeOwned": {
+    "schema": "literal owned schema\u0000世界",
+    "surrogateOffset": 4096,
+    "nodeIndexBase": 0,
+    "typedSingleChild": 1,
+    "rootTables": [
+      "step_document",
+      "ifc_document",
+      "ifc2x3_document"
+    ],
+    "headerTables": [
+      "step_header",
+      "ifc_header",
+      "ifc2x3_header"
+    ],
+    "decimalCoefficients": [
+      "",
+      "0",
+      "-1",
+      "NaN",
+      "1.2",
+      "世界\u0000"
+    ]
+  }
+}

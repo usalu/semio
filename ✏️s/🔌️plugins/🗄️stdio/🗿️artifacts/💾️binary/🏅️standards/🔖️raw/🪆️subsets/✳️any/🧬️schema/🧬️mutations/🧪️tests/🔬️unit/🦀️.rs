@@ -25,7 +25,7 @@ async fn inverse_law() {
     for m in demo_mutation_cases() {
         let mut mutated = b.clone();
         apply_binary_mutation(&mut mutated, &m);
-        for undo in m.inverse(&b) {
+        for undo in m.inverse(&b).expect("valid retained mutation inverse fixture") {
             apply_binary_mutation(&mut mutated, &undo);
         }
         assert_eq!(mutated, b, "mutation-level inverse round-trip failed for {m:?}");
@@ -64,7 +64,7 @@ async fn absorb_law_cartesian() {
 }
 
 /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
-/// `dsl::DslOps`-derived `DslVariants`).
+/// `semio_framework_dsl_record_derive::DslEnum`-derived `DslVariants`).
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     for m in demo_mutation_cases() {

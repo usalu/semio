@@ -16,7 +16,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// sorted map, matching `dsl::ToValue`'s insertion-order contract.
 pub(crate) struct ProgramExportTable {
     pub name: &'static str,
-    pub rows: Vec<Vec<(String, dsl::DslValue)>>,
+    pub rows: Vec<Vec<(String, semio_framework_value::DslValue)>>,
 }
 
 struct ProgramIdentity<'a> {
@@ -30,29 +30,29 @@ struct ProgramIdentity<'a> {
 /// `ToValue::to_value(&self.field)` form, which would need `&&'a str`/`&&'a ArtifactChild<_>` impls
 /// that don't exist. Plain method-call syntax (`self.field.to_value()`) auto-derefs through the
 /// reference to the real impl, so a hand-written `impl` sidesteps the gap entirely.
-impl dsl::ToValue for ProgramIdentity<'_> {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::object([("schema".to_string(), self.schema.to_value()), ("knowledge".to_string(), self.knowledge.to_value()), ("benchmarks".to_string(), self.benchmarks.to_value())])
+impl semio_framework_value::ToValue for ProgramIdentity<'_> {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([("schema".to_string(), self.schema.to_value()), ("knowledge".to_string(), self.knowledge.to_value()), ("benchmarks".to_string(), self.benchmarks.to_value())])
     }
 }
 
-fn export_rows<T: dsl::ToValue>(name: &str, records: &[T]) -> Result<Vec<Vec<(String, dsl::DslValue)>>, String> {
+fn export_rows<T: semio_framework_value::ToValue>(name: &str, records: &[T]) -> Result<Vec<Vec<(String, semio_framework_value::DslValue)>>, String> {
     records
         .iter()
         .enumerate()
-        .map(|(index, record)| match dsl::ToValue::to_value(record) {
-            dsl::DslValue::Object(fields) => Ok(fields),
+        .map(|(index, record)| match semio_framework_value::ToValue::to_value(record) {
+            semio_framework_value::DslValue::Object(fields) => Ok(fields),
             _ => Err(format!("program export table {name} row {index} is not an object")),
         })
         .collect()
 }
 
 impl ProgramExportTable {
-    fn records<T: dsl::ToValue>(name: &'static str, records: &[T]) -> Result<Self, String> {
+    fn records<T: semio_framework_value::ToValue>(name: &'static str, records: &[T]) -> Result<Self, String> {
         Ok(Self { name, rows: export_rows(name, records)? })
     }
 
-    fn singleton<T: dsl::ToValue>(name: &'static str, value: &T) -> Result<Self, String> {
+    fn singleton<T: semio_framework_value::ToValue>(name: &'static str, value: &T) -> Result<Self, String> {
         Ok(Self { name, rows: export_rows(name, std::slice::from_ref(value))? })
     }
 }

@@ -17,7 +17,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
  }
 }
 fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
-fn fixture()->SequenceSnapshot{store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap()}
+fn fixture()->SequenceSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&SequenceSnapshot)->SqliteDatabase{snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn restore(database:&SqliteDatabase)->SequenceSnapshot{SequenceSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&SequenceSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
@@ -27,7 +27,7 @@ fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialec
 #[test]
 fn sqlite_snapshot_sequence_complete_parent_and_empty_reference_fields_are_exact(){
  let expected=fixture();let d=database(&expected);assert_eq!(d.tables.len(),2);assert_eq!(restore(&import_sqlite_database(&file(&expected),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);
- let empty:SequenceSnapshot=store::json::from_json_str(r#"{"schema":"","content":{"childId":"","target":{"artifactId":"","dialect":{"artifactKind":"","standard":"","subset":""}}}}"#).unwrap();
+ let empty:SequenceSnapshot=semio_framework_pack_json::from_json_str(r#"{"schema":"","content":{"childId":"","target":{"artifactId":"","dialect":{"artifactKind":"","standard":"","subset":""}}}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(restore(&database(&empty)),empty);
  let materialized=super::default_snapshot();let projected=database(&materialized);let restored=restore(&projected);assert_eq!(restored,materialized);assert!(restored.content.require_local_owner::<crate::SequenceWorkingScene>().is_err());neural_engine::ColdRetire::retire_cold(materialized);
 }
@@ -37,7 +37,7 @@ fn sqlite_snapshot_sequence_all_owned_reference_domains_survive_both_erased_dire
  let codec=crate::standards::v1::subsets::any::io::io().native.codec;let provider=codec.snapshot_sqlite.unwrap();
  for text in["","id!kind@standard/subset%","世界\0","😀"]{
   let value=serde_json::json!({"schema":text,"content":{"childId":text,"target":{"artifactId":text,"dialect":{"artifactKind":text,"standard":text,"subset":text}}}});
-  let expected:SequenceSnapshot=store::json::from_json_str(&value.to_string()).unwrap();
+  let expected:SequenceSnapshot=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
    let d=(provider.export)(&codec.schema,&dialect(),&native(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(d,database(&expected));
    let d=import_sqlite_database(&export_sqlite_database(&d,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
@@ -62,7 +62,7 @@ fn sqlite_snapshot_sequence_independent_malformed_sql_rejects_shape_parents_and_
  let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(input.sql);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
  for sql in laws()["malformedSql"].as_array().unwrap(){
   let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));
-  assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|SequenceSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");
+  assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|SequenceSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");
  }
 }
 
@@ -102,8 +102,8 @@ fn sqlite_snapshot_sequence_actual_native_declaration_exposes_relational_capabil
 #[test]
 fn sqlite_snapshot_sequence_neutral_json_retains_every_child_reference_field(){
  let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let expected=&laws["snapshot"];
- let snapshot:SequenceSnapshot=store::json::from_json_str(&expected.to_string()).unwrap();
- assert_eq!(serde_json::from_str::<serde_json::Value>(&store::json::to_json_string(&snapshot)).unwrap(),*expected);
+ let snapshot:SequenceSnapshot=semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap(),*expected);
  assert_eq!(snapshot.content.target.artifact_id,"artifact 世界\0");assert_eq!(snapshot.content.child_id,"child 世界\0; content");
 }
 
@@ -111,7 +111,7 @@ fn sqlite_snapshot_sequence_neutral_json_retains_every_child_reference_field(){
 fn sqlite_snapshot_sequence_native_child_carrier_preserves_all_owned_string_domains(){
  for text in["","id!kind@standard/subset%","世界\0","😀"]{
   let value=serde_json::json!({"schema":text,"content":{"childId":text,"target":{"artifactId":text,"dialect":{"artifactKind":text,"standard":text,"subset":text}}}});
-  let expected:SequenceSnapshot=store::json::from_json_str(&value.to_string()).unwrap();
+  let expected:SequenceSnapshot=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   let pack=store::ArtifactPack::encode_pack(&expected);
   let packed=<SequenceSnapshot as store::ArtifactPack>::decode_pack(&pack).unwrap();
   assert_eq!(packed,expected);

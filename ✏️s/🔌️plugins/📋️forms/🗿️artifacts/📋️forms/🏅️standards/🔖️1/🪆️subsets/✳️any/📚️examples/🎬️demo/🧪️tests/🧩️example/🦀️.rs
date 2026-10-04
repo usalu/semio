@@ -12,8 +12,8 @@ async fn inference_determinism_law() {
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let snapshot = crate::document_dsl::parse_dsl(text).expect("demo asset parses as a forms snapshot");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot);
-    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot));
+    let inference = crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot).expect("valid materialized inference fixture"));
 
     let expected_nodes: u32 = forms_steps(&snapshot).iter().map(|step| 1 + step.blocks.len() as u32).sum();
     assert_eq!(inference.topology.node_count, expected_nodes);
@@ -27,6 +27,6 @@ async fn inference_default_law() {
     use crate::FormsSnapshot;
     use protocol::Inference;
 
-    assert_eq!(FormsInference::infer(&FormsSnapshot::default()), FormsInference::default());
+    assert_eq!(FormsInference::infer(&FormsSnapshot::default()).expect("valid materialized inference fixture"), FormsInference::default());
 }
 //#endregion 💡️InferenceLaws

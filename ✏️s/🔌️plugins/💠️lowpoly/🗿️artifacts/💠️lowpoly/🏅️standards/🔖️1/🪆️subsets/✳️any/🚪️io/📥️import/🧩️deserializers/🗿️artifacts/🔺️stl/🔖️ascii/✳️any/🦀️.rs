@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &StlSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize(from: &StlSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let mut part = PolygonPart { name: if from.solid_name.trim().is_empty() { "STL Mesh".into() } else { from.solid_name.trim().to_string() }, ..Default::default() };
     let mut welded: std::collections::HashMap<[u32; 3], u32> = std::collections::HashMap::new();
     for triangle in &from.triangles {
@@ -33,7 +33,7 @@ pub fn deserialize(from: &StlSnapshot) -> Result<LowpolySnapshot, store::TextErr
     snapshot_from_parts("stl", vec![part])
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let binary_framed = bytes.len() >= 84 && (u32::from_le_bytes([bytes[80], bytes[81], bytes[82], bytes[83]]) as usize).checked_mul(50).and_then(|body| body.checked_add(84)) == Some(bytes.len());
     let snap = if binary_framed {
         decode_stl_binary(bytes)

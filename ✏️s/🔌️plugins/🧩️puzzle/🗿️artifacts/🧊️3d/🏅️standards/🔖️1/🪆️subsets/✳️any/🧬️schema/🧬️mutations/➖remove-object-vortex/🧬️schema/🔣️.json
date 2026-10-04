@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/remove-object-vortex/schema.json",
   "title": "RemoveObjectVortex",
+  "x-semio-inverse-rows": { "bounded": 65 },
   "type": "object",
   "additionalProperties": false,
   "required": [

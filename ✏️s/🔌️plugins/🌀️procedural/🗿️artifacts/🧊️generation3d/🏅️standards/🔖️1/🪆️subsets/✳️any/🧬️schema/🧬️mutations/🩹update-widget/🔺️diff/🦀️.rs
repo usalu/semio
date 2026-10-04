@@ -21,7 +21,8 @@ pub fn diff(payload: &UpdateWidget, base: &Generation3dSnapshot) -> protocol::Mu
         }
     }
     if base.host_snapshot.widgets[index] == payload.widget {
-        return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
+        return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
+    let synapses = SynapsesDiff { removed: Vec::new(), set: crate::standards::v1::subsets::any::schema::mutations::update_widget::variable_synapses(&base.host_snapshot.widgets[index], &payload.widget, &base.host_snapshot.synapses) };
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, &synapses, &LayoutDiff::default(), None, None))
 }

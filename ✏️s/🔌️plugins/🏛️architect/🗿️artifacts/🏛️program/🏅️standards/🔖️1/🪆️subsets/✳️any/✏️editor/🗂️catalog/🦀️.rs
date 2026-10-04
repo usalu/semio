@@ -17,7 +17,7 @@ use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
 use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::normalize_pair;
 use crate::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
-use dsl::DslValue as Value;
+use semio_framework_value::DslValue as Value;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -514,14 +514,14 @@ pub fn default_user(label: &str) -> UserProfile {
     }
 }
 
-pub fn default_from_json<T: dsl::FromValue>(register: &str, label: &str, extra: Value) -> Option<T> {
+pub fn default_from_json<T: semio_framework_value::FromValue>(register: &str, label: &str, extra: Value) -> Option<T> {
     let mut fields = match extra {
-        Value::Object(fields) => fields,
+        semio_framework_value::DslValue::Object(fields) => fields,
         _ => Vec::new(),
     };
-    fields.push(("id".to_string(), dsl::ToValue::to_value(&EntityId::new_serial(register, register))));
-    fields.push(("name".to_string(), Value::String(label.to_string())));
-    dsl::FromValue::from_value(Value::Object(fields)).ok()
+    fields.push(("id".to_string(), semio_framework_value::ToValue::to_value(&EntityId::new_serial(register, register))));
+    fields.push(("name".to_string(), semio_framework_value::DslValue::String(label.to_string())));
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::Object(fields)).ok()
 }
 
 pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
@@ -539,7 +539,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             let item: crate::Activity = default_from_json(
                 "activities",
                 label,
-                Value::object([("code".to_string(), Value::String("ACT".to_string())), ("category".to_string(), Value::String("general".to_string())), ("activityType".to_string(), Value::String("general".to_string()))]),
+                semio_framework_value::DslValue::object([("code".to_string(), semio_framework_value::DslValue::String("ACT".to_string())), ("category".to_string(), semio_framework_value::DslValue::String("general".to_string())), ("activityType".to_string(), semio_framework_value::DslValue::String("general".to_string()))]),
             )?;
             create!(CreateActivity, create_activity, activity, item)
         }
@@ -554,7 +554,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             default_from_json::<crate::Assumption>(
                 "assumptions",
                 label,
-                Value::object([("statement".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])), ("validationStatus".to_string(), Value::String("pending".to_string()))]),
+                semio_framework_value::DslValue::object([("statement".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))])), ("validationStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string()))]),
             )?
         ),
         "constraints" => {
@@ -565,11 +565,11 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 default_from_json::<crate::ConstraintRecord>(
                     "constraints",
                     label,
-                    Value::object([
-                        ("constraintType".to_string(), Value::String("general".to_string())),
-                        ("summary".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])),
-                        ("severity".to_string(), Value::String("medium".to_string())),
-                        ("complianceStatus".to_string(), Value::String("pending".to_string())),
+                    semio_framework_value::DslValue::object([
+                        ("constraintType".to_string(), semio_framework_value::DslValue::String("general".to_string())),
+                        ("summary".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))])),
+                        ("severity".to_string(), semio_framework_value::DslValue::String("medium".to_string())),
+                        ("complianceStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string())),
                     ]),
                 )?
             )
@@ -582,11 +582,11 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 default_from_json::<crate::ComplianceRecord>(
                     "compliance",
                     label,
-                    Value::object([
-                        ("standardRef".to_string(), Value::String(String::new())),
-                        ("obligation".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])),
-                        ("complianceStatus".to_string(), Value::String("pending".to_string())),
-                        ("severity".to_string(), Value::String("medium".to_string())),
+                    semio_framework_value::DslValue::object([
+                        ("standardRef".to_string(), semio_framework_value::DslValue::String(String::new())),
+                        ("obligation".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))])),
+                        ("complianceStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string())),
+                        ("severity".to_string(), semio_framework_value::DslValue::String("medium".to_string())),
                     ]),
                 )?
             )
@@ -598,10 +598,10 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             default_from_json::<crate::ApprovalRecord>(
                 "approvals",
                 label,
-                Value::object([
-                    ("approvalType".to_string(), Value::String("general".to_string())),
-                    ("subjectId".to_string(), dsl::ToValue::to_value(&EntityId::new_serial("subject", "approvalStatus"))),
-                    ("approvalStatus".to_string(), Value::String("draft".to_string())),
+                semio_framework_value::DslValue::object([
+                    ("approvalType".to_string(), semio_framework_value::DslValue::String("general".to_string())),
+                    ("subjectId".to_string(), semio_framework_value::ToValue::to_value(&EntityId::new_serial("subject", "approvalStatus"))),
+                    ("approvalStatus".to_string(), semio_framework_value::DslValue::String("draft".to_string())),
                 ]),
             )?
         ),
@@ -613,7 +613,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 default_from_json::<crate::MeetingRecord>(
                     "meetings",
                     label,
-                    Value::object([("meetingType".to_string(), Value::String("workshop".to_string())), ("quorumMet".to_string(), Value::Bool(false)), ("meetingStatus".to_string(), Value::String("draft".to_string()))]),
+                    semio_framework_value::DslValue::object([("meetingType".to_string(), semio_framework_value::DslValue::String("workshop".to_string())), ("quorumMet".to_string(), semio_framework_value::DslValue::Bool(false)), ("meetingStatus".to_string(), semio_framework_value::DslValue::String("draft".to_string()))]),
                 )?
             )
         }
@@ -624,7 +624,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             default_from_json::<AnalysisRecord>(
                 "analysis",
                 label,
-                Value::object([("kind".to_string(), Value::String("gap".to_string())), ("title".to_string(), Value::String(label.to_string())), ("outputSummary".to_string(), Value::object([("text".to_string(), Value::String(String::new()))]))]),
+                semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("gap".to_string())), ("title".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("outputSummary".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))]))]),
             )?
         ),
         "reports" => create!(
@@ -634,11 +634,11 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             default_from_json::<ReportRecord>(
                 "report",
                 label,
-                Value::object([
-                    ("kind".to_string(), Value::String("executiveSummary".to_string())),
-                    ("title".to_string(), Value::String(label.to_string())),
-                    ("approvalStatus".to_string(), Value::String("pending".to_string())),
-                    ("version".to_string(), Value::String("0".to_string())),
+                semio_framework_value::DslValue::object([
+                    ("kind".to_string(), semio_framework_value::DslValue::String("executiveSummary".to_string())),
+                    ("title".to_string(), semio_framework_value::DslValue::String(label.to_string())),
+                    ("approvalStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string())),
+                    ("version".to_string(), semio_framework_value::DslValue::String("0".to_string())),
                 ]),
             )?
         ),
@@ -650,11 +650,11 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             default_from_json::<crate::TemplateRecord>(
                 "template",
                 label,
-                Value::object([
-                    ("templateType".to_string(), Value::String("sector".to_string())),
-                    ("version".to_string(), Value::String("1".to_string())),
-                    ("approvalStatus".to_string(), Value::String("pending".to_string())),
-                    ("usageCount".to_string(), Value::uint(0)),
+                semio_framework_value::DslValue::object([
+                    ("templateType".to_string(), semio_framework_value::DslValue::String("sector".to_string())),
+                    ("version".to_string(), semio_framework_value::DslValue::String("1".to_string())),
+                    ("approvalStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string())),
+                    ("usageCount".to_string(), semio_framework_value::DslValue::uint(0)),
                 ]),
             )?
         ),
@@ -746,16 +746,16 @@ pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Op
     })
 }
 
-fn merge_json_patch<T: Clone + dsl::ToValue + dsl::FromValue>(existing: &T, patch: &Value) -> Option<T> {
-    let Value::Object(mut base) = dsl::ToValue::to_value(existing) else { return None };
-    let Value::Object(patch_fields) = patch else { return None };
+fn merge_json_patch<T: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue>(existing: &T, patch: &Value) -> Option<T> {
+    let semio_framework_value::DslValue::Object(mut base) = semio_framework_value::ToValue::to_value(existing) else { return None };
+    let semio_framework_value::DslValue::Object(patch_fields) = patch else { return None };
     for (key, entry) in patch_fields {
         match base.iter_mut().find(|(existing_key, _)| existing_key == key) {
             Some((_, existing_value)) => *existing_value = entry.clone(),
             None => base.push((key.clone(), entry.clone())),
         }
     }
-    dsl::FromValue::from_value(Value::Object(base)).ok()
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::Object(base)).ok()
 }
 
 pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: &EntityId, patch: &Value) -> Option<ProgramMutation> {

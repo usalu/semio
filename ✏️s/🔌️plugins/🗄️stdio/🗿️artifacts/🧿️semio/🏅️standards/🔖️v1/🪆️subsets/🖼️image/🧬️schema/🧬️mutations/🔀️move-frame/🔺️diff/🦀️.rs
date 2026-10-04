@@ -17,7 +17,7 @@ pub fn diff(base: &SemioImageSnapshot, from: usize, to: usize) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {to} does not exist."), [to.to_string()]);
     }
     if from == to {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Frame {from} is already at this position."));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame {from} is already at this position."));
     }
     Mutation::diff(&SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }), base)
 }

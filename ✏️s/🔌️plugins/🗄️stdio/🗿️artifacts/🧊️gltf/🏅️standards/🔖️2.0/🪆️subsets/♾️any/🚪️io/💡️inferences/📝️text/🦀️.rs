@@ -34,7 +34,7 @@ pub struct GltfInferenceLeafEnvelope {
     pub quality: String,
     pub diagnostic_ids: Vec<String>,
     pub provenance: Vec<String>,
-    pub value: dsl::DslValue,
+    pub value: semio_framework_value::DslValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -114,7 +114,7 @@ pub fn decode_gltf_inference_leaf_text(input: &str) -> Result<GltfInferenceLeafE
         return Err(GltfInferenceTextError::ChecksumMismatch { declared: checksum, actual: actual_checksum });
     }
     let payload_text = std::str::from_utf8(payload).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
-    let value: GltfInferenceLeafEnvelope = pack::from_json_str(payload_text).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
+    let value: GltfInferenceLeafEnvelope = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| GltfInferenceTextError::Json(error.to_string()))?;
     if value.id != schema {
         return Err(GltfInferenceTextError::Header { line: 1, expected: format!("schema {}", value.id), actual: format!("schema {schema}") });
     }
@@ -140,7 +140,7 @@ fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), Gl
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn canonical_json_bytes<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
+pub(crate) fn canonical_json_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
     let value = value.to_value();
     let mut output = String::new();
     write_canonical_json(&value, &mut output)?;
@@ -152,18 +152,18 @@ pub(crate) fn canonical_json_bytes<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>
 /// writing that) rather than hand-rolling escape logic a second time.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn canonical_json_string(value: &str) -> String {
-    pack::json_to_string(&pack::JsonValue::String(value.to_string()))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::String(value.to_string()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_canonical_json(value: &dsl::DslValue, output: &mut String) -> Result<(), GltfInferenceTextError> {
+fn write_canonical_json(value: &semio_framework_value::DslValue, output: &mut String) -> Result<(), GltfInferenceTextError> {
     match value {
-        dsl::DslValue::Null => output.push_str("null"),
-        dsl::DslValue::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-        dsl::DslValue::Number(value) => output.push_str(&canonical_number(value)?),
-        dsl::DslValue::String(value) => output.push_str(&canonical_json_string(value)),
-        dsl::DslValue::Bytes(_) => output.push_str(&pack::json_to_string(&pack::json_from_dsl_value(value))),
-        dsl::DslValue::Array(values) => {
+        semio_framework_value::DslValue::Null => output.push_str("null"),
+        semio_framework_value::DslValue::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
+        semio_framework_value::DslValue::Number(value) => output.push_str(&canonical_number(value)?),
+        semio_framework_value::DslValue::String(value) => output.push_str(&canonical_json_string(value)),
+        semio_framework_value::DslValue::Bytes(_) => output.push_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(value))),
+        semio_framework_value::DslValue::Array(values) => {
             output.push('[');
             for (index, value) in values.iter().enumerate() {
                 if index != 0 {
@@ -173,7 +173,7 @@ fn write_canonical_json(value: &dsl::DslValue, output: &mut String) -> Result<()
             }
             output.push(']');
         }
-        dsl::DslValue::Object(values) => {
+        semio_framework_value::DslValue::Object(values) => {
             let mut entries: Vec<_> = values.iter().collect();
             entries.sort_by(|(left, _), (right, _)| utf16_cmp(left, right));
             output.push('{');
@@ -201,7 +201,7 @@ fn utf16_cmp(left: &str, right: &str) -> Ordering {
 /// round-trips through `as_i64`/`as_u64` without ever widening through `f64` first, so a large
 /// `u64` id/count/offset can't silently misrender as `123456.0` the way a bare `f64` widen would.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn canonical_number(value: &dsl::Number) -> Result<String, GltfInferenceTextError> {
+fn canonical_number(value: &semio_framework_value::Number) -> Result<String, GltfInferenceTextError> {
     if let Some(value) = value.as_i64() {
         return Ok(value.to_string());
     }
@@ -216,7 +216,7 @@ fn canonical_number(value: &dsl::Number) -> Result<String, GltfInferenceTextErro
         return Ok("0".into());
     }
     let negative = value.is_sign_negative();
-    let raw = pack::json_to_string(&pack::JsonValue::Number(pack::JsonNumber::from(value.abs())));
+    let raw = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Number(semio_framework_pack_json::Number::from(value.abs())));
     let (coefficient, exponent) = raw.split_once('e').or_else(|| raw.split_once('E')).map_or((raw.as_str(), 0), |(coefficient, exponent)| (coefficient, exponent.parse::<i32>().unwrap_or(0)));
     let integer_digits = coefficient.find('.').unwrap_or(coefficient.len()) as i32;
     let mut digits = coefficient.bytes().filter(|byte| *byte != b'.').map(char::from).collect::<String>();

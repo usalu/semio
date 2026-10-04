@@ -46,7 +46,7 @@ fn kinds_match_the_enum() {
     ];
     assert_eq!(sample.len(), KINDS.len(), "one sample per declared kind");
     for (mutation, kind) in sample.iter().zip(KINDS) {
-        let tag = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation)).expect("serializes")["mutation"].as_str().expect("the internally-tagged variant name").to_string();
+        let tag = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(mutation))).expect("serializes")["mutation"].as_str().expect("the internally-tagged variant name").to_string();
         let kebab = kind.split('-').enumerate().map(|(index, part)| if index == 0 { part.to_string() } else { format!("{}{}", part[..1].to_uppercase(), &part[1..]) }).collect::<String>();
         assert_eq!(tag, kebab, "KINDS entry {kind} must name the variant it stands for");
     }
@@ -127,7 +127,7 @@ fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {
     ];
     for mutation in mutations {
         let mut snapshot = original.clone();
-        let undo = <JsonIJsonMutation as Mutation<JsonSnapshot>>::inverse(&mutation, &snapshot);
+        let undo = <JsonIJsonMutation as Mutation<JsonSnapshot>>::inverse(&mutation, &snapshot).expect("valid retained mutation inverse fixture");
         apply_json_i_json_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_json_i_json_mutation(&mut snapshot, step);

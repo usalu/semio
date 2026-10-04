@@ -11,7 +11,7 @@ pub(crate) mod context {
     /// `interactive-job.live-instance: typed command does not belong to the mounted live app instance`.
     pub async fn new_app() -> DagApp {
         let mut app = new_app_with_registry().await;
-        semio_framework::io::resolve_ready(app.bind_instance_id(1));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(1));
         app
     }
     
@@ -22,7 +22,17 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_dag_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("dag", DagPlayApp, dag_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("dag", DagPlayApp, dag_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("dag", DagPlayApp, dag_app_manifest_for_tests, [("addNode", r#"{"kind":"computation","x":40.0,"y":60.0}"#)]);
+
+    /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
+    pub async fn live_scene(app: &DagApp) -> crate::DagScene {
+        use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+        use store::{ArtifactPack, SpaceMember};
+        let snapshot = app.snapshot().expect("DAG parent projection");
+        let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("DAG content child").document_pack_bytes().await.expect("DAG content child pack");
+        crate::dag_scene_of_content(&SemioGraphSnapshot::decode_pack(&bytes).expect("DAG content child snapshot"))
+    }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> DagApp {
@@ -218,17 +228,13 @@ async fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
     let mut app: DagApp = new_app_with_registry().await;
-    let snapshot = app.snapshot().expect("snapshot");
-    let node_id = snapshot.nodes().first().expect("seed node").id.clone();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = DagConfig::default();
-    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let topology = DagPlayApp::interaction_topology(&doc, &cfg);
+    let scene = crate::editor::dag::unit_tests::context::live_scene(&app).await;
+    let node_id = scene.nodes.first().expect("seed node").id.clone();
+    let topology = dag_interaction_topology(&scene);
     let domain = topology.domains.get(DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain topology present");
     let registered_node = domain.ordered.iter().any(|node| node.id == node_id && node.granularity == "node");
     let registered_edges = domain.ordered.iter().filter(|node| node.granularity == "edge").count();
-    let seed_edges = snapshot.edges().len();
+    let seed_edges = scene.edges.len();
     crate::editor::dag::unit_tests::context::close(&mut app);
     assert!(registered_node, "every seed node is registered");
     assert_eq!(registered_edges, seed_edges, "every seed edge is registered");
@@ -245,7 +251,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
     use semio_framework_plugin::{ContextMenuHit, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
 
     let mut app: DagApp = new_app_with_registry().await;
-    let node_ids: Vec<String> = app.snapshot().expect("projection").nodes().iter().map(|node| node.id.clone()).collect();
+    let node_ids: Vec<String> = crate::editor::dag::unit_tests::context::live_scene(&app).await.nodes.iter().map(|node| node.id.clone()).collect();
     // 🕹️ The click-carried `request.surface.selection` drives the menu directly —
     // `dag_context_menu_items`'s own `selected` fallback param is always `&[]` now (`render`/
     // `context_menu` carry no `InteractionView`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -301,9 +307,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     use crate::editor::dag::unit_tests::context::{new_app, DagApp};
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
     use store::MemoryBackbone;
-    fn probe(app: &DagApp) -> (bool, bool) {
-        let projection = app.snapshot().expect("projection");
-        let nodes = projection.nodes();
+    async fn probe(app: &DagApp) -> (bool, bool) {
+        let nodes = crate::editor::dag::unit_tests::context::live_scene(app).await.nodes;
         (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
     }
     let mut instance_a = new_app().await;
@@ -311,7 +316,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://dag-convergence", "mem://dag-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
-    let genesis = probe(&instance_a);
+    let genesis = probe(&instance_a).await;
     let receiver = meta("actor-a").instance_id;
     instance_a.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a")).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
@@ -319,14 +324,14 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
-    assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
-    assert_eq!(probe(&instance_a), (true, true), "each instance holds both disjoint edits");
+    assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "both instances must converge on the same snapshot");
+    assert_eq!(probe(&instance_a).await, (true, true), "each instance holds both disjoint edits");
     let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
     settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone().await.expect("b folds a's checkpoint");
-    assert_eq!(probe(&instance_a), probe(&instance_b), "a replicated checkpoint keeps both instances converged");
-    assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
+    assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
+    assert_ne!(probe(&instance_a).await, genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
     close_registered_fixture_app(&mut instance_a);
@@ -345,10 +350,10 @@ async fn ingest_operations_is_idempotent_for_dag() {
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://dag-idempotent", "mem://dag-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
-    let genesis = sender.snapshot().expect("projection").nodes().len();
+    let genesis = crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len();
     sender.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local")).await.expect("apply command");
     settle_registered_typed_operation(&mut sender, meta("local").instance_id).await.expect("the add publishes");
-    assert_eq!(sender.snapshot().expect("projection").nodes().len(), genesis + 1, "the sender applied its edit");
+    assert_eq!(crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len(), genesis + 1, "the sender applied its edit");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -359,10 +364,10 @@ async fn ingest_operations_is_idempotent_for_dag() {
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = new_app().await;
     receiver.ingest_operations(&operations).await.expect("ingest once");
-    let once = receiver.snapshot().expect("projection").nodes().len();
+    let once = crate::editor::dag::unit_tests::context::live_scene(&receiver).await.nodes.len();
     assert_eq!(once, genesis + 1, "the replayed add applies");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
-    assert_eq!(receiver.snapshot().expect("projection").nodes().len(), once, "feeding the same operation twice must not double-apply");
+    assert_eq!(crate::editor::dag::unit_tests::context::live_scene(&receiver).await.nodes.len(), once, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close_registered_fixture_app(&mut sender);
     close_registered_fixture_app(&mut receiver);
@@ -414,7 +419,7 @@ fn command_from_action_resolves_every_flat_verb_and_decodes_every_structured_one
     for (verb, code, payload) in &structured {
         let error = DagPlayApp::command_from_action(verb, None).expect_err("an absent payload must not decode into an empty edit");
         assert_eq!(error.code, FaultCode::new(*code), "{verb}");
-        let command = DagPlayApp::command_from_action(verb, Some(&dsl::DslValue::from(payload))).unwrap_or_else(|error| panic!("{verb}: {error:?}"));
+        let command = DagPlayApp::command_from_action(verb, Some(&semio_framework_value::DslValue::from(payload))).unwrap_or_else(|error| panic!("{verb}: {error:?}"));
         assert_eq!(command.command_id(), *verb);
     }
     assert_eq!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None).expect_err("an undeclared verb").code, FaultCode::new("dag.unhandled-action"));

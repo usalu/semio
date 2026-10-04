@@ -23,9 +23,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageRotation {
         MutationOutcome::new(diff::diff_set_page_rotation(self.index, self.rotation as i32))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageRotation(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Drehung von Seite {} auf {} setzen", self.index, self.rotation))

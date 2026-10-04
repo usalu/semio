@@ -58,3 +58,19 @@ fn the_terrain_ring_solves() {
     assert!(!commit.contradiction);
     assert_eq!(commit.assignments.len(), 6);
 }
+
+/// 🎨️ The declared palette fixture reaches the actual PNG author and checked raster view.
+#[test]
+fn raster_preserves_clamped_palette_and_unknown_index_transparency() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎨️raster/🔣️.json")).unwrap();
+    let number = |value: &serde_json::Value| u32::try_from(value.as_u64().unwrap()).unwrap();
+    let indices: Vec<u8> = fixture["indices"].as_array().unwrap().iter().map(|v| u8::try_from(v.as_u64().unwrap()).unwrap()).collect();
+    let palette = fixture["palette"].as_array().unwrap().iter().map(|color| crate::schema::snapshot::Wfc2dColor { r: number(&color["r"]), g: number(&color["g"]), b: number(&color["b"]), a: number(&color["a"]) }).collect();
+    let media = Wfc2dTileMedia::Bitmap { width: number(&fixture["width"]), height: number(&fixture["height"]), palette, pixels: base64_codec::base64_standard_encode(indices) };
+    let url = tile_media_png_data_url(&media).expect("authored raster encodes through stdio PNG");
+    let bytes = base64_codec::base64_standard_decode(url.strip_prefix("data:image/png;base64,").unwrap()).unwrap();
+    let raster = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes).unwrap();
+    assert_eq!((raster.width, raster.height), (number(&fixture["width"]), number(&fixture["height"])));
+    let expected: Vec<u8> = fixture["rgba"].as_array().unwrap().iter().map(|v| u8::try_from(v.as_u64().unwrap()).unwrap()).collect();
+    assert_eq!(raster.pixels, expected);
+}

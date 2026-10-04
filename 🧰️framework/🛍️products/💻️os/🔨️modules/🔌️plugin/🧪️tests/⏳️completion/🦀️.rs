@@ -26,7 +26,6 @@ const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
     "increment",
     "setLabel",
     "streamLabel",
-    "commitLabel",
     "badView",
     "select",
     "navigate",
@@ -53,7 +52,6 @@ const TEST_APP_COMMAND_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract]
     ArtifactToolPublicationContract { tool_id: "increment", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "setLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "streamLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "commitLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "badView", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "select", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "navigate", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -127,7 +125,7 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         let cfg = ConfigView { snapshot: self.config.as_deref().unwrap(), window: context.window_config.as_ref() };
         let presence = context.presence_view().expect("captured worker presence authority");
         let transient = TransientView { snapshot: context.transient.as_ref(), window: context.window_transient.as_ref() };
-        let ephemeral = resolve_ready(TestApp::<RETAINED, TOOLS>::ephemeral(command, &doc, &cfg, &presence, &transient));
+        let ephemeral = ::semio_framework_async::poll::resolve_ready(TestApp::<RETAINED, TOOLS>::ephemeral(command, &doc, &cfg, &presence, &transient));
         let emit = test_app_command_emit(self);
         let completion = self.completion.as_ref().expect("exact test app command completion");
         completion.complete(emit, ephemeral).expect("one test app command completion");

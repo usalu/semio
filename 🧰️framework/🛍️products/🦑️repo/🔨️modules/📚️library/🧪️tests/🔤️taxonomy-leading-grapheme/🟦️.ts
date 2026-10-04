@@ -13,7 +13,7 @@ type Case = Readonly<{ id: string; input: string; first: string; emoji: string; 
 type ScalingCase = Readonly<{ id: string; prefix: string; suffixUnit: string; repetitions: number; emoji: string; rest: "suffix" | "whole-input" }>;
 type Vector = Readonly<{ schemaVersion: number; contractId: string; helper: string; segmenter: { locale: string; granularity: "grapheme" }; semantics: { iteratorAdvancesPerRequest: number }; rounds: number; cases: Case[]; scalingCases: ScalingCase[]; oracleDivergences: string[] }>;
 type Observation = { value: string; nextCalls: number; iteratorCalls: number };
-const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
+const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🛣️path/🟦️.ts");
 const sourceBytes = readFileSync(sourcePath), source = ts.createSourceFile(sourcePath, sourceBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const vectorBytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔤️taxonomy-leading-grapheme/🔣️.json"), "utf8"), vector: Vector = JSON.parse(vectorBytes);
 const compilers = [{ id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) }, { id: "typescript", compile: (code: string): string => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText }];
@@ -26,7 +26,7 @@ function declaration(name: string): ts.FunctionDeclaration {
 }
 
 function closure(): string {
-  return ["graphemes", "isEmojiGrapheme", vector.helper].map((name) => declaration(name).getText(source)).join("\n");
+  return ["graphemes", "isEmojiGrapheme", vector.helper].map((name) => declaration(name).getText(source).replace(/^export\s+/u, "")).join("\n");
 }
 
 /** 🔬️ Observes only the actual extracted helper's private real-Segmenter input, never a global prototype. */
@@ -112,7 +112,7 @@ test("all current schema member prefixes retain native and independent segmentat
 test("actual leading-grapheme declaration closure remains strictly typed without a replacement parser", () => {
   const constants = source.statements.filter((node): node is ts.VariableStatement => ts.isVariableStatement(node) && node.declarationList.declarations.some((row) => row.name.getText(source) === "SEGMENTER"));
   expect(constants).toHaveLength(1);
-  const code = `${constants[0]!.getText(source)}\n${closure()}\nconst result: { emoji: string; rest: string } = splitLeadingEmoji('🧪️tests'); void result;`;
+  const code = `${constants[0]!.getText(source).replace(/^export\s+/u, "")}\n${closure()}\nconst result: { emoji: string; rest: string } = splitLeadingEmoji('🧪️tests'); void result;`;
   const path = join(import.meta.dir, "🟦️declarations.ts"), options: ts.CompilerOptions = { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, skipLibCheck: true, types: [] };
   const host = ts.createCompilerHost(options), originalRead = host.readFile.bind(host), originalExists = host.fileExists.bind(host);
   host.readFile = (file) => file === path ? code : originalRead(file);

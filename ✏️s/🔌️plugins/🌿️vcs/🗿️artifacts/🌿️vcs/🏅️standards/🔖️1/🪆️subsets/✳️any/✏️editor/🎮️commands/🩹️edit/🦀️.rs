@@ -52,14 +52,14 @@ fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot
 /// window's typing run — a single buffer, so the run's net is the diff of its last text — which commits as ONE edit (design
 /// §13.2); a one-shot dispatch is one edit.
 pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
-    match dsl::json::from_json_str::<VcsSnapshot>(text) {
+    match semio_framework_pack_json::from_json_str::<VcsSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(next_projection) => Emit::mutations(vcs_demo_projection_diff_operations(current, &next_projection)),
         Err(_) => Emit::default(),
     }
 }
 
 /// 🩹️ Alias for [`text_edit::TextEdit`] — same payload shape, same handler body.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "edit")]
 pub struct Edit {
     pub text: String,

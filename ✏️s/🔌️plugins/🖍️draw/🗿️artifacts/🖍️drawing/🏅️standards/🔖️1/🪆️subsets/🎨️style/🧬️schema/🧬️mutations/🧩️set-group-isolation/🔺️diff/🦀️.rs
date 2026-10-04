@@ -6,6 +6,6 @@ pub fn diff(payload:&super::mutation::SetGroupIsolation,base:&DrawingSnapshot)->
         Some(_)=>return protocol::MutationOutcome::error("mutation.target-mismatch","Isolation applies to groups only",[payload.layer_id.clone()]),
         None=>return protocol::MutationOutcome::error("mutation.target-missing","The target group does not exist",[payload.layer_id.clone()]),
     };
-    if group.isolation==payload.isolation {return protocol::MutationOutcome::empty().warn("mutation.no-op","Group already uses this isolation setting");}
+    if group.isolation==payload.isolation {return protocol::MutationOutcome::empty().warning("mutation.no-op","Group already uses this isolation setting");}
     protocol::MutationOutcome::new(diff_set_group_isolation(&payload.layer_id,payload.isolation))
 }

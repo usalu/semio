@@ -1,390 +1,522 @@
 use super::*;
+use protocol::{Mutation, MutationDiff};
+use std::{io::Write, process::{Command, Stdio}};
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn gradient_checkerboard_rgba(w: u32, h: u32) -> Vec<u8> {
-    let mut out = Vec::with_capacity((w * h * 4) as usize);
-    for y in 0..h {
-        for x in 0..w {
-            let checker = if (x + y) % 2 == 0 { 255u8 } else { 0u8 };
-            out.extend_from_slice(&[checker, ((x * 37) % 256) as u8, ((y * 53) % 256) as u8, 255]);
+const PRECISION_16: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png");
+const INDEXED_2: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png");
+const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png");
+const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
+const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
+const CONTROLLED_PAINT: &str = include_str!("../../../../../../../🧫️fixtures/🧬️native-paint-controlled/🔣️.json");
+const STRUCTURE_CORPUS: &str = include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️audit/🔣️.json");
+
+fn hex(text: &str) -> Vec<u8> {
+    text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
+}
+
+fn fixture_png(input: &serde_json::Value) -> Vec<u8> {
+    let mut output = PNG_SIGNATURE.to_vec();
+    for (index, chunk) in input["chunks"].as_array().unwrap().iter().enumerate() {
+        write_chunk(&mut output, chunk["tag"].as_str().unwrap().as_bytes().try_into().unwrap(), &hex(chunk["dataHex"].as_str().unwrap()));
+        if input["corruptCrc"].as_u64() == Some(index as u64) {
+            *output.last_mut().unwrap() ^= 1;
         }
     }
-    out
+    output
 }
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn canonical_snapshot(w: u32, h: u32, rgba: Vec<u8>) -> PngSnapshot {
-    PngSnapshot { schema: crate::STDIO_PNG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: rgba, ..Default::default() }
+fn chunk_names(bytes: &[u8]) -> Vec<String> {
+    chunk_addresses(bytes).unwrap().iter().map(|chunk| String::from_utf8_lossy(&chunk.kind).into_owned()).collect()
 }
 
-/// 🔬 The load-bearing regression test: a non-solid image round-tripped through real
-/// encode (per-scanline filter selection) and real decode (filter reconstruction).
-/// Under the old always-filter-0 encode + no-reconstruction decode this still happened
-/// to pass trivially only for solid colors — a gradient/checkerboard is what exposes it.
-#[semio_framework_async_macros::async_test]
-async fn gradient_checkerboard_round_trip() {
-    let (w, h) = (17u32, 13u32);
-    let rgba = gradient_checkerboard_rgba(w, h);
-    let snap = canonical_snapshot(w, h, rgba.clone());
-    let encoded = encode_png(&snap).expect("encode");
-    let decoded = decode_png(&encoded).expect("decode");
-    assert_eq!(decoded.width, w);
-    assert_eq!(decoded.height, h);
-    assert_eq!(decoded.pixels, rgba, "decoded pixels must exactly match the original");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn solid_color_round_trip_still_works() {
-    let (w, h) = (4u32, 4u32);
-    let rgba: Vec<u8> = (0..w * h).flat_map(|_| [10u8, 20, 30, 255]).collect();
-    let snap = canonical_snapshot(w, h, rgba.clone());
-    let encoded = encode_png(&snap).expect("encode");
-    let decoded = decode_png(&encoded).expect("decode");
-    assert_eq!(decoded.pixels, rgba);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn crc_mismatch_is_rejected() {
-    let (w, h) = (2u32, 2u32);
-    let rgba = gradient_checkerboard_rgba(w, h);
-    let snap = canonical_snapshot(w, h, rgba);
-    let mut encoded = encode_png(&snap).expect("encode");
-    let flip_at = 8 + 4 + 4 + 6; // a few bytes into the IHDR chunk's data
-    encoded[flip_at] ^= 0xFF;
-    let err = decode_png(&encoded).unwrap_err();
-    assert!(err.contains("CRC") || err.contains("crc") || err.contains("truncated"), "unexpected error: {err}");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn sniff_rejects_non_png_bytes() {
-    let err = decode_png(b"not a png at all").unwrap_err();
-    assert!(err.contains("signature"));
-}
-
-//#region ColorTypeFixtures
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn hand_encode(width: u32, height: u32, bit_depth: u8, color_type: u8, plte: Option<&[u8]>, trns: Option<&[u8]>, raw_rows: &[u8]) -> Vec<u8> {
-    let bpp = bpp_bytes(&Ihdr { width, height, bit_depth, color_type, interlace: 0 });
-    let row_bytes = packed_row_bytes(width, color_type, bit_depth);
-    assert_eq!(raw_rows.len(), row_bytes * height as usize);
-    let mut idat = Vec::new();
-    let mut prev: Option<Vec<u8>> = None;
-    for y in 0..height as usize {
-        let row = &raw_rows[y * row_bytes..(y + 1) * row_bytes];
-        let (ft, filtered) = choose_filter(row, prev.as_deref(), bpp);
-        idat.push(ft);
-        idat.extend_from_slice(&filtered);
-        prev = Some(row.to_vec());
-    }
-    let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
-    let mut out = Vec::new();
-    out.extend_from_slice(&PNG_SIGNATURE);
-    let mut ihdr = Vec::with_capacity(13);
+fn native_fixture(width: u32, height: u32, bit_depth: u8, color_type: u8, interlace: u8, raw: &[u8], palette: Option<&[u8]>) -> Vec<u8> {
+    let mut bytes = PNG_SIGNATURE.to_vec();
+    let mut ihdr = Vec::new();
     ihdr.extend_from_slice(&width.to_be_bytes());
     ihdr.extend_from_slice(&height.to_be_bytes());
-    ihdr.extend_from_slice(&[bit_depth, color_type, 0, 0, 0]);
-    write_chunk(&mut out, b"IHDR", &ihdr);
-    if let Some(p) = plte {
-        write_chunk(&mut out, b"PLTE", p);
+    ihdr.extend_from_slice(&[bit_depth, color_type, 0, 0, interlace]);
+    write_chunk(&mut bytes, b"IHDR", &ihdr);
+    if let Some(palette) = palette { write_chunk(&mut bytes, b"PLTE", palette); }
+    write_chunk(&mut bytes, b"IDAT", &semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(raw).unwrap());
+    write_chunk(&mut bytes, b"IEND", &[]);
+    bytes
+}
+
+fn rgba16_adam7_fixture(width: u32, height: u32) -> Vec<u8> {
+    let mut raw = Vec::new();
+    for (pass, &(start_x, start_y, step_x, step_y)) in ADAM7.iter().enumerate() {
+        let (pass_width, pass_height) = adam7_pass_dims(width, height, pass);
+        for row in 0..pass_height {
+            raw.push(0);
+            for column in 0..pass_width {
+                let x = start_x + column * step_x;
+                let y = start_y + row * step_y;
+                for sample in [x as u16 * 257, y as u16 * 257, 0x1234, 0xffff] { raw.extend_from_slice(&sample.to_be_bytes()); }
+            }
+        }
     }
-    if let Some(t) = trns {
-        write_chunk(&mut out, b"tRNS", t);
+    native_fixture(width, height, 16, 6, 1, &raw, None)
+}
+
+fn uniform_native_fixture(width: u32, height: u32, bit_depth: u8, color_type: u8, interlace: bool, samples: &[u16]) -> Vec<u8> {
+    let mut raw = Vec::new();
+    let passes = if interlace { ADAM7.to_vec() } else { vec![(0, 0, 1, 1)] };
+    for (pass, &(start_x, start_y, step_x, step_y)) in passes.iter().enumerate() {
+        let (pass_width, pass_height) = if interlace { adam7_pass_dims(width, height, pass) } else { (width, height) };
+        if pass_width == 0 || pass_height == 0 { continue; }
+        for _ in 0..pass_height {
+            raw.push(0);
+            let mut row = vec![0; packed_row_bytes(pass_width, color_type, bit_depth)];
+            for pixel in 0..pass_width as usize {
+                for (channel, sample) in samples.iter().enumerate() { write_native_sample(&mut row, pixel * samples.len() + channel, bit_depth, *sample); }
+            }
+            raw.extend_from_slice(&row);
+        }
+        let _ = (start_x, start_y, step_x, step_y);
     }
-    write_chunk(&mut out, b"IDAT", &compressed);
-    write_chunk(&mut out, b"IEND", &[]);
-    out
+    let palette = (color_type == 3).then(|| (0..(1usize << bit_depth)).flat_map(|index| [index as u8, index as u8, index as u8]).collect::<Vec<_>>());
+    native_fixture(width, height, bit_depth, color_type, u8::from(interlace), &raw, palette.as_deref())
 }
 
-#[semio_framework_async_macros::async_test]
-async fn color_type_0_grayscale() {
-    // 4x1, bit depth 8: values 0, 85, 170, 255
-    let raw = vec![0u8, 85, 170, 255];
-    let bytes = hand_encode(4, 1, 8, 0, None, None, &raw);
-    let snap = decode_png(&bytes).expect("decode grayscale");
-    let expected: Vec<u8> = raw.iter().flat_map(|&g| [g, g, g, 255]).collect();
-    assert_eq!(snap.pixels, expected);
-    assert_eq!(snap.bit_depth, 8);
-    assert_eq!(snap.color_type, PngColorType::Grayscale);
-    assert!(!snap.interlace);
+fn independent_native_samples(bytes: &[u8]) -> (png::ColorType, png::BitDepth, Vec<u8>) {
+    let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
+    decoder.set_transformations(png::Transformations::IDENTITY);
+    let mut reader = decoder.read_info().unwrap();
+    let mut samples = vec![0; reader.output_buffer_size().unwrap()];
+    let frame = reader.next_frame(&mut samples).unwrap();
+    samples.truncate(frame.buffer_size());
+    (frame.color_type, frame.bit_depth, samples)
 }
 
-#[semio_framework_async_macros::async_test]
-async fn color_type_2_rgb() {
-    let raw = vec![10u8, 20, 30, 40, 50, 60]; // 2x1 RGB
-    let bytes = hand_encode(2, 1, 8, 2, None, None, &raw);
-    let snap = decode_png(&bytes).expect("decode rgb");
-    assert_eq!(snap.pixels, vec![10, 20, 30, 255, 40, 50, 60, 255]);
-    assert_eq!(snap.color_type, PngColorType::Rgb);
+fn non_idat_chunks(bytes: &[u8]) -> Vec<([u8; 4], Vec<u8>)> {
+    read_chunks(bytes).unwrap().into_iter().filter(|(kind, _)| *kind != *b"IDAT").map(|(kind, data)| (kind, data.to_vec())).collect()
 }
 
-#[semio_framework_async_macros::async_test]
-async fn color_type_3_palette_with_trns() {
-    // palette of 3 entries; tRNS makes entry 1 half-transparent, entry 2 fully so
-    let plte = [255u8, 0, 0, 0, 255, 0, 0, 0, 255]; // red, green, blue
-    let trns = [255u8, 128, 0];
-    let raw = vec![0u8, 1, 2, 0]; // 4x1 indices, bit depth 8
-    let bytes = hand_encode(4, 1, 8, 3, Some(&plte), Some(&trns), &raw);
-    let snap = decode_png(&bytes).expect("decode palette+trns");
-    assert_eq!(snap.pixels, vec![255, 0, 0, 255, 0, 255, 0, 128, 0, 0, 255, 0, 255, 0, 0, 255,]);
-    assert_eq!(snap.color_type, PngColorType::Palette);
-    assert_eq!(snap.plte.as_ref().expect("plte retained").len(), 3);
-    assert_eq!(snap.trns, Some(PngTransparency::Indexed { alpha: vec![255, 128, 0] }));
+fn fixture_cases() -> [(&'static str, &'static [u8], (u32, u32, u8, PngColorType, bool)); 5] {
+    [
+        ("precision-16bit-gray", PRECISION_16, (2, 1, 16, PngColorType::Grayscale, false)),
+        ("indexed-2bit-duplicate-palette", INDEXED_2, (4, 1, 2, PngColorType::Palette, false)),
+        ("rgba8-multi-idat-private", MULTI_IDAT, (2, 1, 8, PngColorType::Rgba, false)),
+        ("rgba8-adam7", ADAM7_RGBA8, (3, 3, 8, PngColorType::Rgba, true)),
+        ("grayscale-1bit", GRAYSCALE_1, (8, 1, 1, PngColorType::Grayscale, false)),
+    ]
 }
 
-/// 🚫 §11.3.3 forbids tRNS alongside colour types 4 and 6, and `encode_png` always writes
-/// colour type 6 — so the chunk is omitted rather than emitted into a file no conforming
-/// decoder would accept. The alpha it carried is not lost: `decode_png` already resolved it
-/// into `pixels`, which is what the re-encode carries forward.
 #[test]
-fn trns_is_not_re_emitted_alongside_the_canonical_rgba_colour_type() {
-    let plte = [255u8, 0, 0, 0, 255, 0, 0, 0, 255];
-    let trns = [255u8, 128, 0];
-    let raw = vec![0u8, 1, 2, 0];
-    let snap = decode_png(&hand_encode(4, 1, 8, 3, Some(&plte), Some(&trns), &raw)).expect("decode palette+trns");
-    assert!(snap.trns.is_some(), "the source really does carry a tRNS chunk");
-
-    let reencoded = encode_png(&snap).expect("re-encode a snapshot whose tRNS cannot be represented at colour type 6");
-    assert!(!chunk_types(&reencoded).iter().any(|kind| kind == b"tRNS"), "colour type 6 output must carry no tRNS chunk, got {:?}", chunk_types(&reencoded).iter().map(|k| String::from_utf8_lossy(k).into_owned()).collect::<Vec<_>>());
-
-    let redecoded = decode_png(&reencoded).expect("re-decode");
-    assert_eq!(redecoded.pixels, snap.pixels, "the resolved alpha survives in the raster even though the chunk does not");
-    assert_eq!(redecoded.trns, None);
+fn canonical_source_fixtures_import_and_export_byte_exactly() {
+    for (id, bytes, expected) in fixture_cases() {
+        let snapshot = decode_png(bytes).unwrap_or_else(|error| panic!("{id}: {error}"));
+        assert_eq!(snapshot.bytes, bytes, "{id}: import changed source bytes");
+        assert_eq!(encode_png(&snapshot).unwrap(), bytes, "{id}: no-op export changed source bytes");
+        let layout = png_layout(&snapshot).unwrap();
+        assert_eq!((layout.width, layout.height, layout.bit_depth, layout.color_type, layout.interlace), expected, "{id}: checked IHDR projection");
+    }
 }
 
-/// 📇️ Every chunk type in a PNG byte stream, in file order — §5.3's `length|type|data|crc`.
-fn chunk_types(bytes: &[u8]) -> Vec<[u8; 4]> {
-    let mut out = Vec::new();
-    let mut cursor = 8usize;
-    while cursor + 8 <= bytes.len() {
-        let length = u32::from_be_bytes(bytes[cursor..cursor + 4].try_into().expect("4-byte length")) as usize;
-        let kind: [u8; 4] = bytes[cursor + 4..cursor + 8].try_into().expect("4-byte type");
-        out.push(kind);
-        if &kind == b"IEND" {
+#[test]
+fn exact_projection_handles_packed_precision_palette_and_adam7() {
+    let indexed = project_png(INDEXED_2).unwrap();
+    assert_eq!(indexed.plte.as_ref().unwrap()[0], indexed.plte.as_ref().unwrap()[1], "duplicate palette identities remain distinct source indices");
+    assert_eq!(indexed.pixels, vec![255, 0, 0, 255, 255, 0, 0, 64, 0, 255, 0, 128, 0, 0, 255, 0]);
+    assert_eq!(project_png(GRAYSCALE_1).unwrap().pixels, vec![255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255, 255, 255, 255, 255, 0, 0, 0, 255]);
+    let precision = project_png(PRECISION_16).unwrap();
+    assert_eq!(precision.bit_depth, 16);
+    assert_eq!(precision.pixels.len(), 8);
+    let adam7 = project_png(ADAM7_RGBA8).unwrap();
+    assert_eq!(adam7.pixels.len(), 3 * 3 * 4);
+    assert_eq!(&adam7.pixels[..4], &[0, 0, 0, 255]);
+    assert_eq!(&adam7.pixels[32..36], &[140, 140, 140, 255]);
+}
+
+#[test]
+fn multi_idat_private_chunk_and_source_order_remain_addressable() {
+    let addresses = chunk_addresses(MULTI_IDAT).unwrap();
+    assert_eq!(addresses.iter().filter(|chunk| chunk.kind == *b"IDAT").count(), 2);
+    assert!(addresses.iter().any(|chunk| chunk.kind == *b"prIV"));
+    assert_eq!(addresses.first().unwrap().kind, *b"IHDR");
+    assert_eq!(addresses.last().unwrap().kind, *b"IEND");
+}
+
+#[test]
+fn gamma_edit_preserves_every_preexisting_chunk_payload() {
+    let snapshot = decode_png(MULTI_IDAT).unwrap();
+    let edited = set_ancillary_chunk_controlled(&snapshot, &png_revision(&snapshot), *b"gAMA", Some(&45_455u32.to_be_bytes()), &mut |_, _| true).unwrap();
+    assert_eq!(project_png(&edited.bytes).unwrap().gama, Some(45_455));
+    let before = read_chunks(&snapshot.bytes).unwrap();
+    let after = read_chunks(&edited.bytes).unwrap();
+    let retained: Vec<_> = after.iter().filter(|(kind, _)| *kind != *b"gAMA").map(|(kind, data)| (*kind, *data)).collect();
+    assert_eq!(before.iter().map(|(kind, data)| (*kind, *data)).collect::<Vec<_>>(), retained);
+}
+
+#[test]
+fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
+    let corpus: serde_json::Value = serde_json::from_str(STRUCTURE_CORPUS).unwrap();
+    let law = &corpus["gammaEdit"];
+    let snapshot = decode_png(INDEXED_2).unwrap();
+    let mutation = crate::PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation {
+        revision: png_revision(&snapshot),
+        gama: Some(law["value"].as_u64().unwrap() as u32),
+    });
+    let outcome = mutation.diff(&snapshot);
+    assert!(outcome.messages().is_empty(), "indexed gamma edit was refused: {:?}", outcome.messages());
+    let mut edited = outcome.diff().apply(&snapshot).unwrap();
+    assert_eq!(chunk_names(&edited.bytes), law["expectedChunkOrder"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>());
+    let before_chunks = read_chunks(&snapshot.bytes).unwrap();
+    let retained = read_chunks(&edited.bytes).unwrap().into_iter().filter(|(kind, _)| *kind != *b"gAMA").collect::<Vec<_>>();
+    assert_eq!(before_chunks, retained);
+    let mut oracle = Command::new("bun").args(["-e", "import {PNG} from 'pngjs';const bytes=Buffer.from(await Bun.stdin.arrayBuffer()),image=PNG.sync.read(bytes);if(Math.abs(image.gamma-0.45455)>1e-9)throw Error(`gamma ${image.gamma}`);console.log(JSON.stringify([...image.data]));"])
+        .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+    oracle.stdin.take().unwrap().write_all(&edited.bytes).unwrap();
+    let output = oracle.wait_with_output().unwrap();
+    assert!(output.status.success(), "pngjs refused edited indexed PNG: {}", String::from_utf8_lossy(&output.stderr));
+    assert_eq!(serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap(), serde_json::json!(project_png(INDEXED_2).unwrap().pixels));
+    for inverse in mutation.inverse(&snapshot).unwrap() {
+        edited = inverse.diff(&edited).diff().apply(&edited).unwrap();
+    }
+    assert_eq!(edited, snapshot, "gamma inverse must restore the exact indexed source bytes");
+    for value in law["rejectedValues"].as_array().unwrap() {
+        let invalid = crate::PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: png_revision(&snapshot), gama: Some(value.as_u64().unwrap() as u32) });
+        assert!(!invalid.diff(&snapshot).messages().is_empty(), "gAMA value {value} must be refused");
+    }
+}
+
+#[test]
+fn checked_source_refuses_neutral_structural_and_profile_violations() {
+    let corpus: serde_json::Value = serde_json::from_str(STRUCTURE_CORPUS).unwrap();
+    for case in corpus["invalidPng"].as_array().unwrap() {
+        assert!(decode_png(&fixture_png(case)).is_err(), "checked source admitted neutral case {}", case["id"]);
+    }
+    for chunk in corpus["singletonChunks"].as_array().unwrap() {
+        let case = serde_json::json!({
+            "chunks": [
+                { "tag": "IHDR", "dataHex": chunk["ihdrHex"] },
+                { "tag": chunk["tag"], "dataHex": chunk["dataHex"] },
+                { "tag": chunk["tag"], "dataHex": chunk["dataHex"] },
+                { "tag": "IDAT", "dataHex": "789c63606462fe0f0001140106" },
+                { "tag": "IEND", "dataHex": "" }
+            ]
+        });
+        assert!(decode_png(&fixture_png(&case)).is_err(), "checked source admitted duplicate modeled chunk {}", chunk["tag"]);
+    }
+}
+
+#[test]
+fn region_paint_is_exactly_profile_scoped_and_revision_guarded() {
+    let snapshot = decode_png(MULTI_IDAT).unwrap();
+    let revision = png_revision(&snapshot);
+    let retained = non_idat_chunks(&snapshot.bytes);
+    let idat_count = chunk_addresses(&snapshot.bytes).unwrap().iter().filter(|chunk| chunk.kind == *b"IDAT").count();
+    let edited = paint_rgba8_region_controlled(&snapshot, &revision, PngRegion { x: 1, y: 0, width: 1, height: 1 }, [9, 8, 7, 6], &mut |_, _| true).unwrap();
+    assert_eq!(&project_png(&edited.bytes).unwrap().pixels[4..8], &[9, 8, 7, 6]);
+    assert_eq!(non_idat_chunks(&edited.bytes), retained);
+    assert_eq!(chunk_addresses(&edited.bytes).unwrap().iter().filter(|chunk| chunk.kind == *b"IDAT").count(), idat_count);
+    assert!(paint_rgba8_region_controlled(&snapshot, "stale", PngRegion { x: 0, y: 0, width: 1, height: 1 }, [0; 4], &mut |_, _| true).unwrap_err().contains("revision"));
+    let precision = decode_png(PRECISION_16).unwrap();
+    assert!(paint_rgba8_region_controlled(&precision, &png_revision(&precision), PngRegion { x: 0, y: 0, width: 1, height: 1 }, [0; 4], &mut |_, _| true).unwrap_err().contains("8-bit non-interlaced RGBA"));
+    assert_eq!(precision.bytes, PRECISION_16);
+}
+
+#[test]
+fn native_paint_preserves_index_identity_packing_and_non_idat_bytes() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧫️fixtures/🔣️.json")).unwrap();
+    assert_eq!(fixture["cases"][0]["id"], "indexed-duplicate-identity");
+    let snapshot = decode_png(INDEXED_2).unwrap();
+    let before_non_idat = non_idat_chunks(&snapshot.bytes);
+    let before_count = chunk_addresses(&snapshot.bytes).unwrap().iter().filter(|chunk| chunk.kind == *b"IDAT").count();
+    let edited = paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::indexed(1), &mut |_, _| true).unwrap();
+    assert_eq!(png_native_pixel(&edited, 0, 0).unwrap(), vec![1]);
+    assert_eq!(non_idat_chunks(&edited.bytes), before_non_idat);
+    assert_eq!(chunk_addresses(&edited.bytes).unwrap().iter().filter(|chunk| chunk.kind == *b"IDAT").count(), before_count);
+    let (color, depth, samples) = independent_native_samples(&edited.bytes);
+    assert_eq!((color, depth), (png::ColorType::Indexed, png::BitDepth::Two));
+    assert_eq!(samples, vec![0b01_01_10_11]);
+}
+
+#[test]
+fn native_paint_preserves_packed_tail_bits_and_exact_16_bit_samples() {
+    let packed = native_fixture(5, 1, 1, 0, 0, &[0, 0b10101_101], None);
+    let packed = decode_png(&packed).unwrap();
+    let packed_edit = paint_native_region_controlled(&packed, &png_revision(&packed), PngRegion { x: 1, y: 0, width: 2, height: 1 }, PngNativePaint::grayscale(1), &mut |_, _| true).unwrap();
+    assert_eq!(png_native_pixel(&packed_edit, 1, 0).unwrap(), vec![1]);
+    assert_eq!(independent_native_samples(&packed_edit.bytes).2, vec![0b11101_101], "three unused tail bits remain exact");
+
+    let rgb16 = native_fixture(2, 1, 16, 2, 0, &[0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6], None);
+    let rgb16 = decode_png(&rgb16).unwrap();
+    let rgb16_edit = paint_native_region_controlled(&rgb16, &png_revision(&rgb16), PngRegion { x: 1, y: 0, width: 1, height: 1 }, PngNativePaint::rgb(0x1234, 0xabcd, 0x00ff), &mut |_, _| true).unwrap();
+    assert_eq!(png_native_pixel(&rgb16_edit, 1, 0).unwrap(), vec![0x1234, 0xabcd, 0x00ff]);
+    assert_eq!(&independent_native_samples(&rgb16_edit.bytes).2[6..12], &[0x12, 0x34, 0xab, 0xcd, 0x00, 0xff]);
+
+    let gray_alpha16 = native_fixture(1, 1, 16, 4, 0, &[0, 0, 1, 0, 2], None);
+    let gray_alpha16 = decode_png(&gray_alpha16).unwrap();
+    let gray_alpha16_edit = paint_native_region_controlled(&gray_alpha16, &png_revision(&gray_alpha16), PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::grayscale_alpha(0x0102, 0xfedc), &mut |_, _| true).unwrap();
+    assert_eq!(png_native_pixel(&gray_alpha16_edit, 0, 0).unwrap(), vec![0x0102, 0xfedc]);
+    assert_eq!(independent_native_samples(&gray_alpha16_edit.bytes).2, vec![0x01, 0x02, 0xfe, 0xdc]);
+}
+
+#[test]
+fn native_paint_maps_adam7_coordinates_without_precision_loss() {
+    let source = rgba16_adam7_fixture(5, 5);
+    let snapshot = decode_png(&source).unwrap();
+    let edited = paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 3, y: 4, width: 1, height: 1 }, PngNativePaint::rgba(0x0102, 0x3456, 0x789a, 0xbcde), &mut |_, _| true).unwrap();
+    assert_eq!(png_layout(&edited).unwrap().interlace, true);
+    assert_eq!(png_native_pixel(&edited, 3, 4).unwrap(), vec![0x0102, 0x3456, 0x789a, 0xbcde]);
+    let (color, depth, samples) = independent_native_samples(&edited.bytes);
+    assert_eq!((color, depth), (png::ColorType::Rgba, png::BitDepth::Sixteen));
+    let offset = (4 * 5 + 3) * 8;
+    assert_eq!(&samples[offset..offset + 8], &[0x01, 0x02, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde]);
+}
+
+#[test]
+fn native_paint_supports_every_png_sample_profile_with_and_without_adam7() {
+    let profiles: &[(u8, &[u8])] = &[(0, &[1, 2, 4, 8, 16]), (2, &[8, 16]), (3, &[1, 2, 4, 8]), (4, &[8, 16]), (6, &[8, 16])];
+    for &(color_type, depths) in profiles {
+        for &bit_depth in depths {
+            let maximum = if bit_depth == 16 { u16::MAX } else { ((1u32 << bit_depth) - 1) as u16 };
+            let source_samples = match color_type { 0 | 3 => vec![0], 2 => vec![0, 1, 2], 4 => vec![0, maximum], 6 => vec![0, 1, 2, maximum], _ => unreachable!() };
+            let paint = match color_type {
+                0 => PngNativePaint::grayscale(maximum),
+                2 => PngNativePaint::rgb(maximum, maximum.saturating_sub(1), maximum.saturating_sub(2)),
+                3 => PngNativePaint::indexed(maximum),
+                4 => PngNativePaint::grayscale_alpha(maximum, maximum.saturating_sub(1)),
+                6 => PngNativePaint::rgba(maximum, maximum.saturating_sub(1), maximum.saturating_sub(2), maximum.saturating_sub(3)),
+                _ => unreachable!(),
+            };
+            let expected = paint.samples()[..samples_per_pixel(color_type)].to_vec();
+            for interlace in [false, true] {
+                let source = uniform_native_fixture(5, 5, bit_depth, color_type, interlace, &source_samples);
+                let snapshot = decode_png(&source).unwrap_or_else(|error| panic!("profile {color_type}/{bit_depth}/{interlace}: {error}"));
+                let retained = non_idat_chunks(&source);
+                let edited = paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 3, y: 4, width: 1, height: 1 }, paint, &mut |_, _| true).unwrap();
+                assert_eq!(png_native_pixel(&edited, 3, 4).unwrap(), expected, "profile {color_type}/{bit_depth}/{interlace}");
+                assert_eq!(non_idat_chunks(&edited.bytes), retained, "profile {color_type}/{bit_depth}/{interlace}");
+                let (oracle_color, oracle_depth, _) = independent_native_samples(&edited.bytes);
+                assert_eq!(oracle_color as u8, color_type, "png crate color profile");
+                assert_eq!(oracle_depth as u8, bit_depth, "png crate sample precision");
+            }
+        }
+    }
+}
+
+#[test]
+fn native_paint_refuses_profile_range_revision_bounds_and_cancellation() {
+    let snapshot = decode_png(PRECISION_16).unwrap();
+    assert!(paint_native_region_controlled(&snapshot, "stale", PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::grayscale(1), &mut |_, _| true).unwrap_err().contains("revision"));
+    assert!(paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 2, y: 0, width: 1, height: 1 }, PngNativePaint::grayscale(1), &mut |_, _| true).unwrap_err().contains("exceeds"));
+    assert!(paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::rgb(1, 2, 3), &mut |_, _| true).unwrap_err().contains("profile"));
+    let indexed = decode_png(INDEXED_2).unwrap();
+    assert!(paint_native_region_controlled(&indexed, &png_revision(&indexed), PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::indexed(4), &mut |_, _| true).unwrap_err().contains("palette index"));
+    let mut calls = 0;
+    assert!(paint_native_region_controlled(&snapshot, &png_revision(&snapshot), PngRegion { x: 0, y: 0, width: 1, height: 1 }, PngNativePaint::grayscale(0x1234), &mut |_, _| { calls += 1; calls < 2 }).unwrap_err().contains("cancelled"));
+    assert_eq!(snapshot.bytes, PRECISION_16);
+}
+
+
+#[test]
+fn controlled_native_paint_interrupts_inside_decode_and_encode() {
+    let fixture: serde_json::Value = serde_json::from_str(CONTROLLED_PAINT).unwrap();
+    let snapshot = decode_png(MULTI_IDAT).unwrap();
+    let region = PngRegion { x: 1, y: 0, width: 1, height: 1 };
+    let paint = PngNativePaint::rgba(9, 8, 7, 6);
+    let maximum = fixture["operation"]["maximumOwnedBytes"].as_u64().unwrap() as usize;
+    let mut interrupted = PngNativePaintWorkOperation::try_new(&snapshot, &png_revision(&snapshot), region, paint, maximum).unwrap();
+    let decode_minimum = fixture["interruptionWitnesses"][0]["minimumCompleted"].as_u64().unwrap() as usize;
+    let decode_cancel = semio_framework_job::root_cancel_token();
+    for step in 0..100_000 {
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), decode_cancel.clone(), || Some(0), &mut sequence);
+        let PngNativePaintWorkStep::Yield(progress) = interrupted.advance(&snapshot, &mut context).unwrap() else { panic!("one fuel unit must yield inside retained decode") };
+        assert_eq!(progress.phase, PngNativePaintPhase::Decode);
+        if progress.completed >= decode_minimum {
+            decode_cancel.cancel_now();
+            let mut cancelled_sequence = 0;
+            let mut cancelled = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), decode_cancel.clone(), || Some(0), &mut cancelled_sequence);
+            assert!(matches!(interrupted.advance(&snapshot, &mut cancelled).unwrap(), PngNativePaintWorkStep::Cancelled));
             break;
         }
-        cursor += 12 + length;
+        assert!(step + 1 < 100_000, "retained decode cancellation witness did not complete");
     }
-    out
-}
-
-#[semio_framework_async_macros::async_test]
-async fn color_type_3_sub_byte_indices() {
-    // bit depth 2, 4 indices packed into a single byte: 0,1,2,3 -> 0b00_01_10_11 = 0x1B
-    let plte = [0u8, 0, 0, 64, 64, 64, 128, 128, 128, 255, 255, 255];
-    let raw = vec![0b00_01_10_11u8];
-    let bytes = hand_encode(4, 1, 2, 3, Some(&plte), None, &raw);
-    let snap = decode_png(&bytes).expect("decode 2-bit palette");
-    assert_eq!(snap.pixels, vec![0, 0, 0, 255, 64, 64, 64, 255, 128, 128, 128, 255, 255, 255, 255, 255,]);
-    assert_eq!(snap.bit_depth, 2);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn color_type_4_grayscale_alpha() {
-    let raw = vec![100u8, 200, 50, 10]; // 2x1: (gray,alpha) pairs
-    let bytes = hand_encode(2, 1, 8, 4, None, None, &raw);
-    let snap = decode_png(&bytes).expect("decode grayscale+alpha");
-    assert_eq!(snap.pixels, vec![100, 100, 100, 200, 50, 50, 50, 10]);
-    assert_eq!(snap.color_type, PngColorType::GrayscaleAlpha);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn color_type_6_rgba_bit_depth_16() {
-    // 1x1 pixel, 16-bit RGBA; high byte should be what survives scale_to_8
-    let raw = vec![0x12u8, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
-    let bytes = hand_encode(1, 1, 16, 6, None, None, &raw);
-    let snap = decode_png(&bytes).expect("decode 16-bit rgba");
-    assert_eq!(snap.pixels, vec![0x12, 0x56, 0x9A, 0xDE]);
-    assert_eq!(snap.bit_depth, 16);
-}
-//#endregion ColorTypeFixtures
-
-//#region AncillaryFixtures
-/// 🧪 A hand-encoded file exercising gAMA/cHRM/sRGB/pHYs/tIME/bKGD/tEXt/zTXt/iTXt plus one
-/// genuinely unknown private chunk — proves decode both TYPES every known ancillary field
-/// AND retains the unknown one verbatim, in the real relative chunk order.
-#[semio_framework_async_macros::async_test]
-async fn ancillary_chunks_round_trip_typed_and_unknown() {
-    let raw = vec![0u8, 0, 0, 255]; // 1x1 opaque black RGBA8
-    let bpp = 4usize;
-    let (ft, filtered) = choose_filter(&raw, None, bpp);
-    let mut idat_raw = vec![ft];
-    idat_raw.extend_from_slice(&filtered);
-    let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
-
-    let mut out = Vec::new();
-    out.extend_from_slice(&PNG_SIGNATURE);
-    let mut ihdr = Vec::with_capacity(13);
-    ihdr.extend_from_slice(&1u32.to_be_bytes());
-    ihdr.extend_from_slice(&1u32.to_be_bytes());
-    ihdr.extend_from_slice(&[8, 6, 0, 0, 0]);
-    write_chunk(&mut out, b"IHDR", &ihdr);
-    write_chunk(&mut out, b"gAMA", &45455u32.to_be_bytes());
-    let mut chrm = Vec::new();
-    for v in [31270u32, 32900, 64000, 33000, 30000, 60000, 15000, 6000] {
-        chrm.extend_from_slice(&v.to_be_bytes());
+    interrupted.begin_close();
+    let first = interrupted.close_step(1, 1);
+    assert!(matches!(first, semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= 1));
+    for _ in 0..100_000 {
+        if interrupted.terminal_is_empty() { break; }
+        interrupted.close_step(4_096, 1024 * 1024);
     }
-    write_chunk(&mut out, b"cHRM", &chrm);
-    write_chunk(&mut out, b"sRGB", &[0]);
-    let mut phys = Vec::new();
-    phys.extend_from_slice(&2835u32.to_be_bytes());
-    phys.extend_from_slice(&2835u32.to_be_bytes());
-    phys.push(1);
-    write_chunk(&mut out, b"pHYs", &phys);
-    let mut time = Vec::new();
-    time.extend_from_slice(&2024u16.to_be_bytes());
-    time.extend_from_slice(&[6, 15, 12, 30, 0]);
-    write_chunk(&mut out, b"tIME", &time);
-    write_chunk(&mut out, b"bKGD", &1u16.to_be_bytes().iter().chain(2u16.to_be_bytes().iter()).chain(3u16.to_be_bytes().iter()).copied().collect::<Vec<u8>>());
-    let text = b"Title\0hello".to_vec();
-    write_chunk(&mut out, b"tEXt", &text);
-    write_chunk(&mut out, b"prIV", &[9, 9, 9]); // genuinely unknown private ancillary chunk
-    write_chunk(&mut out, b"IDAT", &compressed);
-    write_chunk(&mut out, b"IEND", &[]);
+    assert!(interrupted.terminal_is_empty());
 
-    let snap = decode_png(&out).expect("decode ancillary fixture");
-    assert_eq!(snap.gama, Some(45455));
-    assert_eq!(snap.chrm.as_ref().map(|c| c.white_x), Some(31270));
-    assert_eq!(snap.srgb, Some(PngSrgbIntent::Perceptual));
-    assert_eq!(snap.phys.as_ref().map(|p| p.unit_is_meter), Some(true));
-    assert_eq!(snap.time.as_ref().map(|t| (t.year, t.month, t.day)), Some((2024, 6, 15)));
-    assert!(matches!(snap.bkgd, Some(PngBackground::Rgb { r: 1, g: 2, b: 3 })));
-    assert_eq!(snap.text_chunks.len(), 1);
-    assert_eq!(snap.text_chunks[0].keyword, "Title");
-    assert_eq!(snap.text_chunks[0].value, "hello");
-    assert_eq!(snap.unknown_chunks.len(), 1);
-    assert_eq!(&snap.unknown_chunks[0].kind, b"prIV");
-    assert_eq!(snap.unknown_chunks[0].data, vec![9, 9, 9]);
-    // Chunk order must reflect the real on-disk sequence.
-    assert_eq!(
-        snap.chunk_order,
-        vec![
-            PngChunkMarker::Ihdr,
-            PngChunkMarker::Gama,
-            PngChunkMarker::Chrm,
-            PngChunkMarker::Srgb,
-            PngChunkMarker::Phys,
-            PngChunkMarker::Time,
-            PngChunkMarker::Bkgd,
-            PngChunkMarker::Text { index: 0 },
-            PngChunkMarker::Unknown { index: 0 },
-            PngChunkMarker::Idat,
-            PngChunkMarker::Iend,
-        ]
-    );
-
-    // Re-encode must still honestly re-emit every ancillary/text/unknown chunk (pixel data
-    // canonicalizes per EncodeScopeNote, everything else round-trips).
-    let reencoded = encode_png(&snap).expect("re-encode");
-    let redecoded = decode_png(&reencoded).expect("re-decode");
-    assert_eq!(redecoded.gama, snap.gama);
-    assert_eq!(redecoded.chrm, snap.chrm);
-    assert_eq!(redecoded.srgb, snap.srgb);
-    assert_eq!(redecoded.phys, snap.phys);
-    assert_eq!(redecoded.time, snap.time);
-    assert_eq!(redecoded.bkgd, snap.bkgd);
-    assert_eq!(redecoded.text_chunks, snap.text_chunks);
-    assert_eq!(redecoded.unknown_chunks, snap.unknown_chunks);
-    assert_eq!(redecoded.pixels, snap.pixels);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn ztxt_and_itxt_round_trip() {
-    // zTXt: keyword\0 + compression-method(0).await + zlib(value)
-    let mut ztxt = b"Comment\0\0".to_vec();
-    ztxt.extend_from_slice(&semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
-    // iTXt (compressed): keyword\0 + flag(1) + method(0).await + lang\0 + translated\0 + zlib(value)
-    let mut itxt = b"Title\0".to_vec();
-    itxt.push(1);
-    itxt.push(0);
-    itxt.extend_from_slice(b"en\0");
-    itxt.extend_from_slice("Titre".as_bytes());
-    itxt.push(0);
-    itxt.extend_from_slice(&semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress("valeur".as_bytes()).unwrap());
-
-    let raw = vec![0u8, 0, 0, 255];
-    let (ft, filtered) = choose_filter(&raw, None, 4);
-    let mut idat_raw = vec![ft];
-    idat_raw.extend_from_slice(&filtered);
-    let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
-
-    let mut out = Vec::new();
-    out.extend_from_slice(&PNG_SIGNATURE);
-    let mut ihdr = Vec::with_capacity(13);
-    ihdr.extend_from_slice(&1u32.to_be_bytes());
-    ihdr.extend_from_slice(&1u32.to_be_bytes());
-    ihdr.extend_from_slice(&[8, 6, 0, 0, 0]);
-    write_chunk(&mut out, b"IHDR", &ihdr);
-    write_chunk(&mut out, b"zTXt", &ztxt);
-    write_chunk(&mut out, b"iTXt", &itxt);
-    write_chunk(&mut out, b"IDAT", &compressed);
-    write_chunk(&mut out, b"IEND", &[]);
-
-    let snap = decode_png(&out).expect("decode zTXt/iTXt fixture");
-    assert_eq!(snap.text_chunks.len(), 2);
-    assert_eq!(snap.text_chunks[0].keyword, "Comment");
-    assert_eq!(snap.text_chunks[0].value, "compressed value");
-    assert_eq!(snap.text_chunks[0].kind, PngTextKind::ZText);
-    assert!(snap.text_chunks[0].compressed);
-    assert_eq!(snap.text_chunks[1].keyword, "Title");
-    assert_eq!(snap.text_chunks[1].value, "valeur");
-    assert_eq!(snap.text_chunks[1].kind, PngTextKind::IText);
-    assert_eq!(snap.text_chunks[1].language_tag, "en");
-    assert_eq!(snap.text_chunks[1].translated_keyword, "Titre");
-}
-//#endregion AncillaryFixtures
-
-//#region Adam7Fixture
-/// 🧪 Test-only Adam7 *encoder*, used solely to build a genuinely interlaced fixture to
-/// prove `decode_png` de-interlaces correctly. Production `encode_png` intentionally
-/// always emits interlace method 0 (see 🚫️EncodeScopeNote on `encode_png`); this helper
-/// is not exposed outside tests.
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn adam7_encode_fixture(width: u32, height: u32, rgba: &[u8]) -> Vec<u8> {
-    let bpp = 4usize;
-    let mut idat = Vec::new();
-    for pass in 0..7 {
-        let (pw, ph) = adam7_pass_dims(width, height, pass);
-        if pw == 0 || ph == 0 {
-            continue;
-        }
-        let (sx, sy, stx, sty) = ADAM7[pass];
-        let mut prev: Option<Vec<u8>> = None;
-        for j in 0..ph {
-            let mut row = Vec::with_capacity(pw as usize * bpp);
-            for i in 0..pw {
-                let x = sx + i * stx;
-                let y = sy + j * sty;
-                let idx = ((y * width + x) * 4) as usize;
-                row.extend_from_slice(&rgba[idx..idx + 4]);
+    let encode_cancel = semio_framework_job::root_cancel_token();
+    let mut encode_interrupted = PngNativePaintWorkOperation::try_new(&snapshot, &png_revision(&snapshot), region, paint, maximum).unwrap();
+    for step in 0..100_000 {
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), encode_cancel.clone(), || Some(0), &mut sequence);
+        match encode_interrupted.advance(&snapshot, &mut context).unwrap() {
+            PngNativePaintWorkStep::Yield(progress) if progress.phase == PngNativePaintPhase::Encode && progress.completed >= 1 => {
+                encode_cancel.cancel_now();
+                let mut cancelled_sequence = 0;
+                let mut cancelled = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), encode_cancel.clone(), || Some(0), &mut cancelled_sequence);
+                assert!(matches!(encode_interrupted.advance(&snapshot, &mut cancelled).unwrap(), PngNativePaintWorkStep::Cancelled));
+                break;
             }
-            let (ft, filtered) = choose_filter(&row, prev.as_deref(), bpp);
-            idat.push(ft);
-            idat.extend_from_slice(&filtered);
-            prev = Some(row);
+            PngNativePaintWorkStep::Yield(_) => {}
+            PngNativePaintWorkStep::Complete => panic!("retained encode completed before its cancellation witness"),
+            PngNativePaintWorkStep::Cancelled => panic!("retained encode cancelled before the explicit signal"),
+        }
+        assert!(step + 1 < 100_000, "retained encode cancellation witness did not complete");
+    }
+    encode_interrupted.begin_close();
+    for _ in 0..100_000 {
+        if encode_interrupted.terminal_is_empty() { break; }
+        encode_interrupted.close_step(4_096, 1024 * 1024);
+    }
+    assert!(encode_interrupted.terminal_is_empty());
+
+    let mut operation = PngNativePaintWorkOperation::try_new(&snapshot, &png_revision(&snapshot), region, paint, maximum).unwrap();
+    let mut decode_yields = 0usize;
+    let mut filter_yields = 0usize;
+    let mut encode_yields = 0usize;
+    let mut assemble_yields = 0usize;
+    let mut completed = false;
+    for _ in 0..100_000 {
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        match operation.advance(&snapshot, &mut context).unwrap() {
+            PngNativePaintWorkStep::Yield(progress) => match progress.phase {
+                PngNativePaintPhase::Decode => decode_yields += 1,
+                PngNativePaintPhase::Filter => filter_yields += 1,
+                PngNativePaintPhase::Encode => encode_yields += 1,
+                PngNativePaintPhase::Assemble => assemble_yields += 1,
+                _ => {}
+            },
+            PngNativePaintWorkStep::Complete => {
+                completed = true;
+                break;
+            }
+            PngNativePaintWorkStep::Cancelled => panic!("uncancelled retained paint cancelled"),
         }
     }
-    let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
-    let mut out = Vec::new();
-    out.extend_from_slice(&PNG_SIGNATURE);
-    let mut ihdr = Vec::with_capacity(13);
-    ihdr.extend_from_slice(&width.to_be_bytes());
-    ihdr.extend_from_slice(&height.to_be_bytes());
-    ihdr.extend_from_slice(&[8, 6, 0, 0, 1]); // interlace method 1 = Adam7
-    write_chunk(&mut out, b"IHDR", &ihdr);
-    write_chunk(&mut out, b"IDAT", &compressed);
-    write_chunk(&mut out, b"IEND", &[]);
-    out
+    assert!(completed, "retained native paint exceeded its bounded test horizon");
+    assert!(decode_yields > 1, "decode must yield between physical Deflate transitions");
+    assert!(filter_yields > 1, "filtering must yield between physical sample transitions");
+    assert!(encode_yields >= fixture["interruptionWitnesses"][1]["minimumCompleted"].as_u64().unwrap() as usize, "encode must yield between physical Deflate transitions");
+    assert!(assemble_yields > 1, "IDAT assembly must yield between canonical output bytes");
+    let edited = operation.take_result().unwrap();
+    assert_eq!(png_native_pixel(&edited, 1, 0).unwrap(), vec![9, 8, 7, 6]);
+    assert_eq!(independent_native_samples(&edited.bytes).2[4..8], [9, 8, 7, 6]);
+    let before = chunk_addresses(&snapshot.bytes).unwrap();
+    let after = chunk_addresses(&edited.bytes).unwrap();
+    let first = before.iter().find(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let last = before.iter().rfind(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let edited_first = after.iter().find(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let edited_last = after.iter().rfind(|chunk| chunk.kind == *b"IDAT").unwrap();
+    assert_eq!(&edited.bytes[..edited_first.start], &snapshot.bytes[..first.start]);
+    assert_eq!(&edited.bytes[edited_last.end..], &snapshot.bytes[last.end..]);
+    assert_eq!(chunk_names(&edited.bytes), chunk_names(&snapshot.bytes));
+    operation.begin_close();
+    let first_close = operation.close_step(1, 1);
+    assert!(matches!(first_close, semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= 1));
+    for _ in 0..100_000 {
+        if operation.terminal_is_empty() { break; }
+        operation.close_step(4_096, 1024 * 1024);
+    }
+    assert!(operation.terminal_is_empty());
+    assert_eq!(snapshot.bytes, MULTI_IDAT, "interrupted work cannot alter canonical source");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn adam7_interlaced_decode_round_trip() {
-    let (w, h) = (9u32, 11u32); // deliberately not a multiple of 8, exercises partial passes
-    let rgba = gradient_checkerboard_rgba(w, h);
-    let bytes = adam7_encode_fixture(w, h, &rgba);
-    let snap = decode_png(&bytes).expect("decode adam7");
-    assert_eq!(snap.width, w);
-    assert_eq!(snap.height, h);
-    assert!(snap.interlace, "interlace flag must be decoded as true");
-    assert_eq!(snap.pixels, rgba, "adam7 de-interlace must reconstruct the exact original raster");
+#[test]
+fn controlled_native_paint_preserves_exact_idat_prefix_suffix_and_tag_order() {
+    let fixture: serde_json::Value = serde_json::from_str(CONTROLLED_PAINT).unwrap();
+    let snapshot = decode_png(MULTI_IDAT).unwrap();
+    let before = chunk_addresses(&snapshot.bytes).unwrap();
+    let first = before.iter().find(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let last = before.iter().rfind(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let maximum = fixture["operation"]["maximumOwnedBytes"].as_u64().unwrap() as usize;
+    let edited = paint_native_region_owned_controlled(
+        &snapshot,
+        &png_revision(&snapshot),
+        PngRegion { x: 1, y: 0, width: 1, height: 1 },
+        PngNativePaint::rgba(9, 8, 7, 6),
+        maximum,
+        &mut |_| true,
+    ).unwrap();
+    let after = chunk_addresses(&edited.bytes).unwrap();
+    let edited_first = after.iter().find(|chunk| chunk.kind == *b"IDAT").unwrap();
+    let edited_last = after.iter().rfind(|chunk| chunk.kind == *b"IDAT").unwrap();
+    assert_eq!(&edited.bytes[..edited_first.start], &snapshot.bytes[..first.start]);
+    assert_eq!(&edited.bytes[edited_last.end..], &snapshot.bytes[last.end..]);
+    assert_eq!(chunk_names(&edited.bytes), fixture["retention"]["chunkOrder"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>());
+    assert_eq!(after.iter().filter(|chunk| chunk.kind == *b"IDAT").count(), fixture["retention"]["idatCount"].as_u64().unwrap() as usize);
+    assert_eq!(png_native_pixel(&edited, 1, 0).unwrap(), vec![9, 8, 7, 6]);
+    assert_eq!(independent_native_samples(&edited.bytes).2[4..8], [9, 8, 7, 6]);
 }
-//#endregion Adam7Fixture
+
+#[test]
+fn controlled_native_paint_refuses_cumulative_ownership_and_forged_completed_results() {
+    use protocol::Mutation;
+    let base = decode_png(MULTI_IDAT).unwrap();
+    let revision = png_revision(&base);
+    let region = PngRegion { x: 1, y: 0, width: 1, height: 1 };
+    let paint = PngNativePaint::rgba(9, 8, 7, 6);
+    let refusal = begin_native_paint(&base, &revision, region, paint, 1, &mut |_| true).unwrap_err();
+    assert!(refusal.contains("ownership exceeds caller limit"));
+    let valid = paint_native_region_owned_controlled(
+        &base,
+        &revision,
+        region,
+        paint,
+        MAXIMUM_NATIVE_PAINT_OWNED_BYTES,
+        &mut |_| true,
+    ).unwrap();
+    let forged = set_ancillary_chunk_controlled(&valid, &png_revision(&valid), *b"prIV", Some(b"forged-private-domain"), &mut |_, _| true).unwrap();
+    let mutation = crate::PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation { revision, region, paint, result: forged });
+    let outcome = mutation.diff(&base);
+    assert!(!outcome.messages().is_empty(), "a completed result that changes bytes outside the admitted IDAT domain must be refused without replaying codecs");
+    assert_eq!(base.bytes, MULTI_IDAT);
+}
+
+#[test]
+fn native_paint_mutation_roundtrips_and_inverse_restores_exact_source() {
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    let base = decode_png(PRECISION_16).unwrap();
+    let region = PngRegion { x: 1, y: 0, width: 1, height: 1 };
+    let paint = PngNativePaint::grayscale(0x1234);
+    let result = paint_native_region_owned_controlled(&base, &png_revision(&base), region, paint, MAXIMUM_NATIVE_PAINT_OWNED_BYTES, &mut |_| true).unwrap();
+    let mutation = crate::PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation {
+        revision: png_revision(&base),
+        region,
+        paint,
+        result,
+    });
+    assert_eq!(crate::PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+    assert_eq!(crate::PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+    let edited = mutation.diff(&base).diff().apply(&base).unwrap();
+    assert_eq!(png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
+    let inverse = mutation.inverse(&base).unwrap();
+    assert_eq!(inverse[0].diff(&edited).diff().apply(&edited).unwrap(), base);
+}
+
+#[test]
+fn preview_is_explicit_derivative_and_source_stays_unchanged() {
+    use std::{io::Write,process::{Command,Stdio}};
+    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🧬️canonical-source/🔣️.json")).unwrap();
+    for (id,source,_) in fixture_cases(){
+        let row=fixtures["cases"].as_array().unwrap().iter().find(|r|r["id"]==id).unwrap();
+        let snapshot=decode_png(source).unwrap();let before=snapshot.bytes.clone();let original=project_png(source).unwrap();
+        let preview=png_preview(&snapshot).unwrap();let decoded=project_png(&preview.bytes).unwrap();
+        assert_eq!((preview.width,preview.height),(original.width,original.height));
+        assert_eq!(decode_png(&preview.bytes).unwrap().bytes,preview.bytes);assert_eq!(snapshot.bytes,before);assert_eq!(decoded.pixels,original.pixels);
+        let mut child=Command::new("bun").args(["-e","import {PNG} from 'pngjs';const bytes=Buffer.from(await Bun.stdin.arrayBuffer()),image=PNG.sync.read(bytes);let background=null;for(let at=8;at<bytes.length;){const n=bytes.readUInt32BE(at),tag=bytes.subarray(at+4,at+8).toString('ascii');if(tag==='bKGD'){if(n!==6)throw Error('RGBA background length');background=[bytes.readUInt16BE(at+8),bytes.readUInt16BE(at+10),bytes.readUInt16BE(at+12)];}at+=n+12;}console.log(JSON.stringify({pixels:[...image.data],bitDepth:image.depth,colorType:image.colorType,interlace:bytes[28],background}));"])
+            .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+        child.stdin.take().unwrap().write_all(&preview.bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
+        let measured:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(measured["pixels"],serde_json::json!(original.pixels));
+        for key in ["bitDepth","colorType","interlace","background"]{assert_eq!(measured[key],row["preview"][key],"{id}: {key}");}
+        println!("[DEBUG] PNG preview {id} preserved source bytes and matched pngjs RGBA pixels and background");
+    }
+}
+
+#[test]
+fn corrupt_crc_and_non_png_sources_are_refused() {
+    let mut bytes = MULTI_IDAT.to_vec();
+    bytes[20] ^= 0x80;
+    assert!(decode_png(&bytes).unwrap_err().contains("CRC"));
+    assert!(decode_png(b"not a png").unwrap_err().contains("signature"));
+}

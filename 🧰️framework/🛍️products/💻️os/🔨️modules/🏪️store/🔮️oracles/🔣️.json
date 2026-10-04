@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "store-tool-transaction-xstate",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "xstate",
+      "version": "5.32.5",
+      "engine": {
+        "family": "xstate",
+        "implementation": "xstate createMachine()",
+        "version": "5.32.5"
+      },
+      "capabilities": [
+        "store.tool-transaction"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://stately.ai/docs/xstate",
+      "rationale": "Judges the store's tool-transaction lifecycle in `🧪️tests/🧪️tool-transaction` (design §15): an xstate machine agrees with the store twin's refusals and open transaction on the corpus and on generated runs."
+    },
+    {
+      "id": "store-tool-transaction-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "store.tool-transaction"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "Generates runs for `🧪️tests/🧪️tool-transaction`: an abort always restores the state and persisted value of before the transaction, and a commit adds exactly one edit."
+    }
+  ],
+  "noOracleDecisions": []
+}

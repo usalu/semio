@@ -1,6 +1,7 @@
 import { posix } from "node:path";
 import { rustSourceTargetProblem, rustSourceTargets, type RustSourceInputInventory, type RustSourceInputProblem } from "../🟦️.ts";
-import { projectCargoProviderManifest, cargoProviderTomlParser, inspectRustModuleGraphFacts, rustModuleScopeProof, rustTokens, rustTokenPairs, rustIdentifierSymbol, type CargoProviderManifestProjection, type CargoProviderTomlParser, type RustModuleContext, type RustModuleGraph, type RustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { projectCargoProviderManifest, cargoProviderTomlParser, inspectRustModuleGraphFacts, rustModuleScopeProof, type CargoProviderManifestProjection, type CargoProviderTomlParser, type RustModuleContext, type RustModuleGraph, type RustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { rustTokens, rustTokenPairs, rustIdentifierSymbol } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 export type RustBindingSpan = Readonly<{ start: number; end: number }>;
 export type RustBindingProblemKind = RustSourceInputProblem | "missing-manifest" | "invalid-manifest" | "missing-workspace-authority" | "unsupported-dependency-authority" | "external-provider-unproven" | "provider-package-mismatch" | "unproven-library-identity" | "provider-source-unproven" | "unknown-extern-root" | "ambiguous-extern-root" | "local-route-unproven" | "unsupported-use-tree" | "unproven-path-namespace" | "unproven-macro-output" | "orphan-context" | "unproven-module-mount" | "unproven-attribute-output" | "unsupported-edition-namespace" | "unproven-generic-scope" | "unsupported-extern-declaration" | "unproven-source-scope";

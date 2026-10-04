@@ -12,7 +12,7 @@ pub fn diff(payload: &super::RenameMachine, base: &Process3dSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Machine \"{}\" is already named \"{}\".", payload.id, payload.new_label));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" is already named \"{}\".", payload.id, payload.new_label));
     }
     let mut machines = base.workshop.machines.clone();
     if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {

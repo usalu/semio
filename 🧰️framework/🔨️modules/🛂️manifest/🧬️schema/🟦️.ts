@@ -33,6 +33,8 @@ export interface InputUi {
   readonly softMax?: number;
   readonly snaps?: readonly number[];
   readonly snapSource?: { readonly step: true } | { readonly config: string } | { readonly snapshot: string };
+  /** 🗝️ A string choice's options: the keys found at this pointer template (`{field}` from the payload) in the previewed document. */
+  readonly optionSource?: { readonly snapshot: string };
   readonly unit?: string;
   readonly displayUnit?: string;
   readonly displayFactor?: number;
@@ -101,7 +103,7 @@ export function parseInputLabel(value: unknown): InputLabel {
 /** 🎛️ Parses an `InputUi` value. */
 export function parseInputUi(value: unknown): InputUi {
   const record = inputRecord(value, "InputUi");
-  inputOnly(record, ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"], "InputUi");
+  inputOnly(record, ["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "optionSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"], "InputUi");
   const oneOf = <T extends string>(entry: unknown, allowed: readonly T[], what: string): T => {
     if (typeof entry !== "string" || !(allowed as readonly string[]).includes(entry)) throw new Error(`${what} must be one of ${allowed.join(", ")}`);
     return entry as T;
@@ -129,6 +131,12 @@ export function parseInputUi(value: unknown): InputUi {
     else if (name === "config") ui.snapSource = { config: inputText(entry, "InputUi.snapSource.config") };
     else if (name === "snapshot" && typeof entry === "string" && (entry === "" || entry.startsWith("/"))) ui.snapSource = { snapshot: entry };
     else throw new Error("InputUi.snapSource must be {step: true}, {config: key} or {snapshot: pointer}");
+  }
+  if (record.optionSource !== undefined) {
+    const source = inputRecord(record.optionSource, "InputUi.optionSource");
+    inputOnly(source, ["snapshot"], "InputUi.optionSource");
+    if (typeof source.snapshot !== "string" || !source.snapshot.startsWith("/")) throw new Error("InputUi.optionSource must be {snapshot: pointer template}");
+    ui.optionSource = { snapshot: source.snapshot };
   }
   for (const key of ["unit", "displayUnit", "group"] as const) if (record[key] !== undefined) ui[key] = inputText(record[key], `InputUi.${key}`);
   if (record.scale !== undefined) ui.scale = oneOf(record.scale, ["linear", "log"] as const, "InputUi.scale");

@@ -24,7 +24,7 @@ use serde_json::Value;
 /// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
 /// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
 /// through `store::ArtifactStore::reset` (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -208,7 +208,7 @@ pub fn puzzle5d_selection_diff(
     let partial: Vec<protocol::MutationMessage> = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
         .into_iter()
         .filter(|(ids, _)| !ids.is_empty())
-        .map(|(ids, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
     let parts: Vec<Puzzle5dPartPatchEntry> = if identity {
         Vec::new()
@@ -225,7 +225,7 @@ pub fn puzzle5d_selection_diff(
         None => Vec::new(),
     };
     if parts.is_empty() && volumes.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
         parts: (!parts.is_empty()).then(|| Puzzle5dPartsDelta { patched: parts, ..Default::default() }),
@@ -238,7 +238,8 @@ pub fn puzzle5d_selection_diff(
 /// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose field its
 /// forward `outcome` changes — a part's board position, its world origin, orientation and scale, a target
 /// volume's origin, orientation and scale — so an undo never accumulates float error.
-pub fn puzzle5d_selection_inverse(base: &Puzzle5dSnapshot, outcome: protocol::MutationOutcome<Puzzle5dDiff>) -> Vec<Puzzle5dMutation> {
+pub fn puzzle5d_selection_inverse(base: &Puzzle5dSnapshot, outcome: protocol::MutationOutcome<Puzzle5dDiff>) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let (diff, _) = outcome.into_parts();
     let mut steps = Vec::new();
     for entry in diff.parts.iter().flat_map(|delta| &delta.patched) {
@@ -269,6 +270,8 @@ pub fn puzzle5d_selection_inverse(base: &Puzzle5dSnapshot, outcome: protocol::Mu
         }
     }
     steps
+
+    })())
 }
 
 /// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar broadcasts
@@ -473,8 +476,11 @@ pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puz
     Ok(())
 }
 
-pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🔖️ValueBridge
@@ -508,10 +514,10 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
     // `serde_json::from_value`/`to_value` on `Puzzle5dKindCatalogs`/`Puzzle5dKindCatalogsExtra` —
     // both only derive `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's
     // own boundary type) is untouched.
-    let catalogs: crate::Puzzle5dKindCatalogs = dsl::FromValue::from_value(dsl::DslValue::from(&catalogs_value)).unwrap_or_default();
+    let catalogs: crate::Puzzle5dKindCatalogs = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&catalogs_value)).unwrap_or_default();
     let (handle, extra) = crate::split_and_seed_kind_catalogs(Some(catalogs));
-    object.insert("kindCatalogs".into(), Value::from(&dsl::ToValue::to_value(&handle)));
-    object.insert("kindCatalogsExtra".into(), Value::from(&dsl::ToValue::to_value(&extra)));
+    object.insert("kindCatalogs".into(), Value::from(&semio_framework_value::ToValue::to_value(&handle)));
+    object.insert("kindCatalogsExtra".into(), Value::from(&semio_framework_value::ToValue::to_value(&extra)));
     value
 }
 
@@ -523,9 +529,9 @@ impl MutationDiff<Value> for Puzzle5dDiff {
         // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
         // boundary type) and `normalize_kind_catalogs_for_snapshot_value` are untouched — this
         // call did not route through that helper before this change either, preserved as-is.
-        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
+        let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        Ok(Value::from(dsl::ToValue::to_value(&next)))
+        Ok(Value::from(semio_framework_value::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
@@ -551,11 +557,11 @@ impl Mutation<Value> for Puzzle5dMutation {
         Mutation::<Puzzle5dSnapshot>::input_schema(self)
     }
 
-    fn payload_value(&self) -> dsl::DslValue {
+    fn payload_value(&self) -> semio_framework_value::DslValue {
         Mutation::<Puzzle5dSnapshot>::payload_value(self)
     }
 
-    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Mutation::<Puzzle5dSnapshot>::with_payload_value(self, value)
     }
 
@@ -563,19 +569,26 @@ impl Mutation<Value> for Puzzle5dMutation {
         <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)
     }
 
+    fn inverse_rows(&self) -> usize {
+        Mutation::<Puzzle5dSnapshot>::inverse_rows(self)
+    }
+
     fn diff(&self, projection: &Value) -> protocol::MutationOutcome<Puzzle5dDiff> {
-        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
+        let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::diff(self, &base)
     }
 
-    fn inverse(&self, projection: &Value) -> Vec<Self> {
-        let base: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
-        Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
-    }
+    fn inverse(&self, projection: &Value) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok({
+        let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(projection))).unwrap_or_default();
+        Mutation::<Puzzle5dSnapshot>::inverse(self, &base)?
+    
+    })
+}
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
-    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Self as Mutation<Puzzle5dSnapshot>>::from_payload_value(kind, value)
     }
     fn conflict_target(&self) -> Vec<String> {
@@ -587,8 +600,8 @@ impl Mutation<Value> for Puzzle5dMutation {
 /// bare document JSON the play app mutates), by round-tripping through the typed
 /// `Puzzle5dSnapshot` and delegating to [`puzzle5d_snapshot_mutations`].
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
-    let before_snapshot: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(before))).unwrap_or_default();
-    let after_snapshot: Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(after))).unwrap_or_default();
+    let before_snapshot: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(before))).unwrap_or_default();
+    let after_snapshot: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(after))).unwrap_or_default();
     if before_snapshot == after_snapshot {
         return Vec::new();
     }
@@ -619,7 +632,7 @@ pub struct Puzzle5dPlaySnapshot {
 impl Puzzle5dPlaySnapshot {
     /// 🎯️ Builds the typed authority once from a legacy projection and retains that projection.
     pub fn new(value: Value) -> Self {
-        let typed = dsl::FromValue::from_value(dsl::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(&value))).unwrap_or_default();
+        let typed = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&normalize_kind_catalogs_for_snapshot_value(&value))).unwrap_or_default();
         let projected = std::sync::OnceLock::new();
         let _ = projected.set(std::sync::Arc::new(value));
         Self { typed: std::sync::Arc::new(typed), value: projected }
@@ -632,7 +645,7 @@ impl Puzzle5dPlaySnapshot {
 
     /// 👁️ The legacy play projection, materialized at most once per immutable snapshot.
     pub fn value(&self) -> &Value {
-        self.value.get_or_init(|| std::sync::Arc::new(Value::from(dsl::ToValue::to_value(self.typed.as_ref())))).as_ref()
+        self.value.get_or_init(|| std::sync::Arc::new(Value::from(semio_framework_value::ToValue::to_value(self.typed.as_ref())))).as_ref()
     }
 
     /// 🧬️ The typed authority, without materializing the legacy projection.
@@ -665,22 +678,22 @@ impl PartialEq for Puzzle5dPlaySnapshot {
 /// 🩹️ Hand-written: `ArtifactEditor::Snapshot` needs `ToValue + FromValue`, and this struct's typed/lazy
 /// split has no field-wise derive shape, so both bridge through the `Value` projection `value()`/`new()`
 /// maintain.
-impl dsl::ToValue for Puzzle5dPlaySnapshot {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(self.typed())
+impl semio_framework_value::ToValue for Puzzle5dPlaySnapshot {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(self.typed())
     }
 }
 
-impl dsl::FromValue for Puzzle5dPlaySnapshot {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        <Puzzle5dSnapshot as dsl::FromValue>::from_value(value).map(Self::from_typed)
+impl semio_framework_value::FromValue for Puzzle5dPlaySnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        <Puzzle5dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed)
     }
 }
 
 impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
     }
 
@@ -707,7 +720,7 @@ impl store::ArtifactPack for Puzzle5dPlaySnapshot {
         <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
     }
 
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <Puzzle5dSnapshot as store::ArtifactPack>::record_spec()
     }
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
@@ -738,11 +751,11 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
         Mutation::<Puzzle5dSnapshot>::input_schema(self)
     }
 
-    fn payload_value(&self) -> dsl::DslValue {
+    fn payload_value(&self) -> semio_framework_value::DslValue {
         Mutation::<Puzzle5dSnapshot>::payload_value(self)
     }
 
-    fn with_payload_value(&self, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Mutation::<Puzzle5dSnapshot>::with_payload_value(self, value)
     }
 
@@ -750,17 +763,24 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
         <Self as Mutation<Puzzle5dSnapshot>>::descriptor(self)
     }
 
+    fn inverse_rows(&self) -> usize {
+        Mutation::<Puzzle5dSnapshot>::inverse_rows(self)
+    }
+
     fn diff(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         Mutation::<Puzzle5dSnapshot>::diff(self, projection.typed())
     }
 
-    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
-        Mutation::<Puzzle5dSnapshot>::inverse(self, projection.typed())
-    }
+    fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        Mutation::<Puzzle5dSnapshot>::inverse(self, projection.typed())?
+    
+    })
+}
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
-    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Self as Mutation<Puzzle5dSnapshot>>::from_payload_value(kind, value)
     }
     fn conflict_target(&self) -> Vec<String> {

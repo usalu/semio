@@ -11,7 +11,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "create-space")]
 pub struct CreateSpace {
     pub name: String,
@@ -27,7 +27,7 @@ pub fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cf
     }
     let kind = if payload.kind.trim().is_empty() { "atelier".to_string() } else { payload.kind.clone() };
     let visibility = if payload.visibility.trim().is_empty() { "private".to_string() } else { payload.visibility.clone() };
-    let args = Some(pack::json_to_dsl_value(&pack::json!({ "name": payload.name.clone(), "spaceKind": kind, "visibility": visibility })));
+    let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": payload.name.clone(), "spaceKind": kind, "visibility": visibility })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
 }
 //#endregion 🔖️Handle

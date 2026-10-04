@@ -7,7 +7,6 @@
 use crate::HtmlSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an html snapshot. One field per named inference under
@@ -21,8 +20,11 @@ pub struct HtmlInference {
 }
 
 impl Inference<HtmlSnapshot> for HtmlInference {
-    fn infer(snapshot: &HtmlSnapshot) -> Self {
+    fn infer(snapshot: &HtmlSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: HtmlOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl Inference<HtmlSnapshot> for HtmlInference {
 /// snapshot" makes the two definitionally equal.
 impl Default for HtmlInference {
     fn default() -> Self {
-        Self::infer(&HtmlSnapshot::default())
+        let snapshot = &HtmlSnapshot::default();
+
+        Self { outline: HtmlOutline::compute(snapshot) }
     }
 }
 
@@ -48,13 +52,6 @@ impl protocol::InferenceSpec<HtmlSnapshot> for HtmlInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v5::subsets::any::schema::HtmlBuilder {
-    type Snapshot = HtmlSnapshot;
-    type Inference = HtmlInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —

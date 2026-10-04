@@ -1,7 +1,7 @@
 //! 🖱️ Sets the wires drag target and pointer coordinates.
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-drag")]
 #[mutation_leaf(contract = ::protocol)]
@@ -26,9 +26,12 @@ impl protocol::MutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> 
         next.drag_zoom = self.zoom;
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &WiresCanvasTransient) -> Vec<WiresCanvasTransientMutation> {
+    fn inverse(&self, base: &WiresCanvasTransient) -> Result<Vec<WiresCanvasTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![WiresCanvasTransientMutation::SetDrag(Self { node_id: base.drag_node_id.clone(), start_x: base.drag_start_x, start_y: base.drag_start_y, last_x: base.drag_last_x, last_y: base.drag_last_y, zoom: base.drag_zoom })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Drag", "Ziehvorgang setzen")
     }

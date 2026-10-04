@@ -3,5 +3,5 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutations/text.json",
   "title": "BmpMutationText",
   "type": "string",
-  "pattern": "^(?:change-header-fields|insert-palette-entry|remove-palette-entry|replace-palette-entry|replace-pixel-data)(?: |$)"
+  "pattern": "^(?:set-snapshot|patch-snapshot|paint-indexed-region|paint-direct-region)(?: |$)"
 }

@@ -25,21 +25,21 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
     let session = &mut owned_session;
     {
         let ids = ["extrude@meshOut#0.face.0".into()];
-        assert!(validate_cached_components(&snapshot.host_snapshot, session, &ids).is_err());
+        assert!(validate_cached_components(&snapshot.host_snapshot, session, &ids, None).is_err());
         semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host_session(&snapshot.host_snapshot, session, |host, session| {
             host.evaluate().unwrap();
             session.capture_baseline_from(host);
         });
-        validate_cached_components(&snapshot.host_snapshot, session, &ids).unwrap();
+        validate_cached_components(&snapshot.host_snapshot, session, &ids, None).unwrap();
         for mode in ["face", "edge", "vertex"] {
-            assert!(validate_cached_components(&snapshot.host_snapshot, session, &[format!("extrude@meshOut#0.{mode}.999999")]).is_err());
+            assert!(validate_cached_components(&snapshot.host_snapshot, session, &[format!("extrude@meshOut#0.{mode}.999999")], None).is_err());
         }
         semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host_session(&snapshot.host_snapshot, session, |host, session| {
             let (id, _, _) = semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::ensure_component_node(host, &ids, "translate").unwrap();
-            validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")]).unwrap();
+            validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).unwrap();
             host.set_neuron_params("extrude", r#"{"distance":{"$schema":"number","value":0.7}}"#).unwrap();
-            assert!(validate_cached_components(&host.host_snapshot, session, &ids).is_err());
-            assert!(validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")]).is_err());
+            assert!(validate_cached_components(&host.host_snapshot, session, &ids, None).is_err());
+            assert!(validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).is_err());
         });
     }
     crate::flow_operators::retire_flow_eval_session(owned_session);
@@ -48,11 +48,11 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
 
 #[test]
 fn mesh_component_pivot_uses_unique_topology_vertices() {
-    let fixture = dsl::json::parse(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🧭️component-transform/🔣️.json")).unwrap();
-    let mesh = dsl::json::to_string(fixture.get("mesh").unwrap());
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🧭️component-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mesh = semio_framework_pack_json::to_string(fixture.get("mesh").unwrap());
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let transform = case.get("transform").unwrap();
-        if transform.get("pivot").and_then(dsl::json::Value::as_str) != Some("selection") { continue; }
+        if transform.get("pivot").and_then(semio_framework_pack_json::Value::as_str) != Some("selection") { continue; }
         let ids = transform.get("selection").unwrap().as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect::<Vec<_>>();
         let pivot = component_pivot(&mesh, transform.get("mode").unwrap().as_str().unwrap(), &ids).unwrap();
         for axis in 0..3 { assert!((pivot[axis] - case.get("pivot").unwrap().as_array().unwrap()[axis].as_f64().unwrap()).abs() < 1e-7); }
@@ -110,10 +110,10 @@ fn mesh_component_targets_match_shared_contract() {
 #[test]
 fn mesh_component_projection_preserves_instance_and_filters_hidden_targets() {
     let selection = ComponentSelection { granularity: "face".into(), selected: vec!["box@meshOut#0.face.2".into(), "gone@meshOut#0.face.3".into()], hovered: Some("box@meshOut#0.face.1".into()) };
-    let instances = dsl::json::parse(r#"[{"id":"box@meshOut#0"}]"#).unwrap();
-    let mut value = dsl::json::Object::new();
-    selection.project(&instances, &mut value);
-    let json: serde_json::Value = serde_json::from_str(&dsl::json::to_string(&dsl::json::Value::Object(value))).unwrap();
+    let instances = semio_framework_pack_json::parse(r#"[{"id":"box@meshOut#0"}]"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut value = semio_framework_pack_json::Object::new();
+    selection.project(&instances, &semio_framework_pack_json::Value::Null, &mut value);
+    let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(value))).unwrap();
     assert_eq!(json["selectionMode"], "face");
     assert_eq!(json["activeObjectId"], "box@meshOut#0");
     assert_eq!(json["componentIds"], serde_json::json!([2]));

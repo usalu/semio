@@ -74,8 +74,8 @@ pub fn register() {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec));
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_diff_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -88,55 +88,55 @@ pub fn register_schema_specs() {}
 /// the sibling `stdio.csv`/`stdio.json` P2 pilots.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt",
         extension: Some("txt"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.txt"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.txt"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.txt.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.txt.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.txt.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.txt.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.spr"),
     });
 }
 

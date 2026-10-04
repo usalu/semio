@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/canonical-addressed-edit-fixture.json",
+  "title": "PptxCanonicalAddressedEditFixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": { "const": "semio.stdio.pptx.canonical-addressed-edit.v1" },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/definitions/case" }
+    }
+  },
+  "definitions": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "dialect", "presentationPath", "presentationXml", "relationships", "slides", "edits"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "dialect": { "enum": ["transitional", "strict"] },
+        "presentationPath": { "$ref": "#/definitions/path" },
+        "presentationXml": { "type": "string", "minLength": 1 },
+        "relationships": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "type", "target", "resolvedPath"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "type": "string", "format": "uri" },
+              "target": { "type": "string", "minLength": 1 },
+              "resolvedPath": { "$ref": "#/definitions/path" }
+            }
+          }
+        },
+        "slides": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "contentType", "xml", "shapeIds"],
+            "properties": {
+              "path": { "$ref": "#/definitions/path" },
+              "contentType": { "type": "string", "minLength": 1 },
+              "xml": { "type": "string", "minLength": 1 },
+              "shapeIds": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[0-9]+$" } }
+            }
+          }
+        },
+        "edits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "position", "moveSlide"],
+          "properties": {
+            "text": { "$ref": "#/definitions/shapeEdit" },
+            "position": { "$ref": "#/definitions/positionEdit" },
+            "moveSlide": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["relationshipId", "destinationIndex"],
+              "properties": {
+                "relationshipId": { "type": "string", "minLength": 1 },
+                "destinationIndex": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "shapeEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slidePath", "shapeId", "from", "to", "preserve"],
+      "properties": {
+        "slidePath": { "$ref": "#/definitions/path" },
+        "shapeId": { "type": "string", "pattern": "^[0-9]+$" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "preserve": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "positionEdit": {
+      "allOf": [
+        { "$ref": "#/definitions/shapeEdit" },
+        {
+          "type": "object",
+          "required": ["fromPosition", "toPosition"],
+          "properties": {
+            "fromPosition": { "$ref": "#/definitions/position" },
+            "toPosition": { "$ref": "#/definitions/position" }
+          }
+        }
+      ]
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "cx", "cy"],
+      "properties": {
+        "x": { "$ref": "#/definitions/decimal" },
+        "y": { "$ref": "#/definitions/decimal" },
+        "cx": { "$ref": "#/definitions/decimal" },
+        "cy": { "$ref": "#/definitions/decimal" }
+      }
+    },
+    "decimal": { "type": "string", "pattern": "^-?[0-9]+$" },
+    "path": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$" }
+  }
+}

@@ -15,7 +15,7 @@
     "qc": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/QcReport"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/QcReportSnapshot"
         },
         {
           "type": "null"
@@ -32,7 +32,8 @@
           "de": "Qualitätskennzahlen des letzten Laufs; leer entfernt sie."
         },
         "group": "result",
-        "order": 10
+        "order": 10,
+        "widget": "hidden"
       }
     }
   }

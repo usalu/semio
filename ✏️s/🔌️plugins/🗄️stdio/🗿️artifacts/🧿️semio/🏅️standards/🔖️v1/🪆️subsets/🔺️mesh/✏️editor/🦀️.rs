@@ -4,7 +4,7 @@
 
 use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
-use crate::standards::v1::subsets::mesh::schema::mutations::{set_snapshot, SemioMeshMutation};
+use crate::standards::v1::subsets::mesh::schema::mutations::{patch_snapshot, set_snapshot, SemioMeshMutation};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
@@ -164,7 +164,7 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
         (!args.mesh_id.is_empty() && !args.primitive_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {
         if self.complete {
             return Err(Fault::from("stdio.semio.mesh.set-vertex.work-closed"));
         }
@@ -289,7 +289,7 @@ impl ArtifactEditor for SemioMeshEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc.snapshot, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.semio@v1/mesh#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
                 .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -321,7 +321,7 @@ impl editing::SnapshotEditingEditor for SemioMeshEditor {
     }
 
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioMeshMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        editing::snapshot_edit_patch(event, snapshot, |patch| SemioMeshMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioMeshMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
     }
 }
 

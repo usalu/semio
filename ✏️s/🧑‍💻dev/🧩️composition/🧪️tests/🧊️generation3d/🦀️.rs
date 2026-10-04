@@ -45,16 +45,16 @@ impl std::fmt::Debug for SnapshotRead {
 /// 🧭️ One coordinate-literal parameter (`{x, y, z}`) of a graph operator, or `default` when the operator or the
 /// parameter is absent — what a gumball law reads off the transform operator its gesture composed into.
 pub(crate) fn gumball_param_vector(snapshot: &FlowHostSnapshot, id: &str, key: &str, default: [f64; 3]) -> [f64; 3] {
-    let widget = snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(dsl::ToValue::to_value);
+    let widget = snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(semio_framework_value::ToValue::to_value);
     let literal = widget.as_ref().and_then(|widget| widget.get("params")).and_then(|params| params.get(key));
-    std::array::from_fn(|axis| literal.and_then(|value| value.get(["x", "y", "z"][axis])).and_then(dsl::DslValue::as_f64).unwrap_or(default[axis]))
+    std::array::from_fn(|axis| literal.and_then(|value| value.get(["x", "y", "z"][axis])).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(default[axis]))
 }
 
 /// 🔢️ One number-literal parameter (`{value}`) of a graph operator, or `default` when the operator or the parameter is
 /// absent.
 pub(crate) fn gumball_param_number(snapshot: &FlowHostSnapshot, id: &str, key: &str, default: f64) -> f64 {
-    let widget = snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(dsl::ToValue::to_value);
-    widget.as_ref().and_then(|widget| widget.get("params")).and_then(|params| params.get(key)).and_then(|literal| literal.get("value")).and_then(dsl::DslValue::as_f64).unwrap_or(default)
+    let widget = snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(semio_framework_value::ToValue::to_value);
+    widget.as_ref().and_then(|widget| widget.get("params")).and_then(|params| params.get(key)).and_then(|literal| literal.get("value")).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(default)
 }
 
 #[path = "🧪️tests/🔒️serial-lock-discipline/🦀️.rs"]

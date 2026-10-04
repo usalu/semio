@@ -6,7 +6,6 @@
 
 use crate::MdSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an md snapshot. One field per named inference under
@@ -20,8 +19,11 @@ pub struct MdInference {
 }
 
 impl protocol::Inference<MdSnapshot> for MdInference {
-    fn infer(snapshot: &MdSnapshot) -> Self {
+    fn infer(snapshot: &MdSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: MdOutline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -37,13 +39,6 @@ impl protocol::InferenceSpec<MdSnapshot> for MdInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v_commonmark::subsets::any::schema::MdBuilder {
-    type Snapshot = MdSnapshot;
-    type Inference = MdInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.md.inference`'s facet leaves into the OS-wide inference catalog — call

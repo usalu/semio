@@ -211,7 +211,6 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         vec![AppCommand::TransactionPrepare {
             txn_id: "w3-txn-1".to_string(),
             ops: PreparedOps::default(),
-            label: "w3 probe".to_string(),
             origin: crate::actions::MutationOrigin::Agent { principal: "agent:mutation-test".to_string(), invocation_id: "inv-1".to_string() },
         }],
     );
@@ -449,7 +448,6 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
             vec![AppCommand::TransactionPrepare {
                 txn_id: txn.clone(),
                 ops: PreparedOps { document: ops.document.clone(), config: Vec::new(), draft: Vec::new(), children: ops.children.clone() },
-                label: "wr4 two-phase probe".to_string(),
                 origin: crate::actions::MutationOrigin::Agent { principal: "agent:two-phase-test".to_string(), invocation_id: "wr4-inv-1".to_string() },
             }],
         )
@@ -485,3 +483,100 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     assert_eq!(settled, after_abandon, "A PREPARED HANDLE THAT IS NEVER INVOKED LEFT AN EFFECT: the document moved from {settled} to {after_abandon}");
 }
 //#endregion 🔖️TwoPhaseTypedCommand
+
+//#region 🔖️SteppedDocumentLoad
+/// 📏️ Committed transactions behind the long-history document the stepped-load law loads: enough that the guest folds it over
+/// several polls rather than inside the first one.
+const LONG_HISTORY_TRANSACTIONS: usize = 240;
+
+/// 🧾️ The `loading-document` fractions one load reported to its scope, in order.
+fn loading_fractions(reports: &Mutex<Vec<(ActivationPhase, f64)>>) -> Vec<f64> {
+    reports.lock().expect("reports").iter().filter(|(phase, _)| *phase == ActivationPhase::LoadingDocument).map(|(_, fraction)| *fraction).collect()
+}
+
+/// 🗃️ LAW (S3-LOAD, `📓️api-stepped-document-load.md` §6.4): every whole-document load this gateway sends is the stepped
+/// archive load. Against `🗒️note`'s real compiled guest, a document with a long history loads into a fresh instance through
+/// polls whose `completed / total` reach the activation scope as monotonic `loading-document` progress, and the loaded head
+/// is the source head. A cancel at the first polled status leaves the instance's previous document with zero trace and
+/// releases the operation: the next load of the same instance is admitted and reaches the source head.
+///
+/// Skipped with a clear message when `note.wasm` is not built — never a fabricated pass.
+#[test]
+fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previous_document() {
+    let Ok(repo_root) = find_repo_root() else {
+        eprintln!("skipped: repo root not found from this test binary's CARGO_MANIFEST_DIR");
+        return;
+    };
+    let Ok(registry) = load_plugin_registry(&repo_root) else {
+        eprintln!("skipped: plugin registry not generated");
+        return;
+    };
+    let Ok(entry) = find_plugin_entry(&registry, "note") else {
+        eprintln!("skipped: `note` not in the plugin registry");
+        return;
+    };
+    if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
+        eprintln!("skipped: note.wasm is not built");
+        return;
+    }
+    let Some(capability_id) = note_mutation_capability_id() else {
+        eprintln!("skipped: the compiled catalog publishes no `note.….addBlock` capability");
+        return;
+    };
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:stepped-load-law".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
+    let started = std::time::Instant::now();
+    for index in 0..LONG_HISTORY_TRANSACTIONS {
+        let input = serde_json::json!({ "kind": "text", "x": 40 + index, "y": 40 + index });
+        let ops = match channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input }]).expect("the guest previews addBlock").into_iter().next() {
+            Some(AppFrame::Emit { ops, .. }) => ops,
+            other => panic!("PureCommand must answer Emit, received {other:?}"),
+        };
+        let txn = format!("stepped-load-{index}");
+        let origin = crate::actions::MutationOrigin::Agent { principal: "agent:stepped-load-law".to_string(), invocation_id: txn.clone() };
+        channel.exchange(0, vec![AppCommand::TransactionPrepare { txn_id: txn.clone(), ops: PreparedOps { document: ops.document, config: Vec::new(), draft: Vec::new(), children: ops.children }, origin }]).expect("the guest stages");
+        channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: txn }]).expect("the guest commits");
+    }
+    println!("[S3-LOAD] {LONG_HISTORY_TRANSACTIONS} transactions committed in {:?}", started.elapsed());
+    let (pack, spr) = match channel.exchange(0, vec![AppCommand::ReadArtifact]).expect("the long document reads back").into_iter().next() {
+        Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
+        other => panic!("ReadArtifact must answer Artifact, received {other:?}"),
+    };
+    let source_head = history_stamp(&mut channel, 0);
+    assert_eq!(source_head, format!("{LONG_HISTORY_TRANSACTIONS}@transaction:stepped-load-{}", LONG_HISTORY_TRANSACTIONS - 1), "the source document carries the long history");
+
+    let reports = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&reports);
+    let scope = ActivationScope::new(semio_framework_async::CancelToken::root_now(), move |phase, fraction| observer.lock().expect("reports").push((phase, fraction)));
+    let loading = std::time::Instant::now();
+    channel.load_session_document(1, "stepped-load-law", &pack, &spr, &scope).expect("the long document loads through the stepped archive load");
+    let fractions = loading_fractions(&reports);
+    println!("[S3-LOAD] loaded in {:?} over {} polled statuses: {fractions:?}", loading.elapsed(), fractions.len());
+    assert!(fractions.len() >= 2 && fractions[0] < 1.0, "a long history folds over several polls, not inside the first one: {fractions:?}");
+    assert!(fractions.windows(2).all(|pair| pair[0] <= pair[1]) && fractions.last() == Some(&1.0), "load progress is monotonic and ends complete: {fractions:?}");
+    assert_eq!(history_stamp(&mut channel, 1), source_head, "the loaded head is the source head");
+
+    let previous = document_witness(&mut channel, 2);
+    assert_eq!(history_stamp(&mut channel, 2), "0@", "the instance the cancelled load targets starts on its genesis document");
+    let token = semio_framework_async::CancelToken::root_now();
+    let cancel = token.clone();
+    let cancelled_reports = Arc::new(Mutex::new(Vec::new()));
+    let observer = Arc::clone(&cancelled_reports);
+    let scope = ActivationScope::new(token, move |phase, fraction| {
+        observer.lock().expect("reports").push((phase, fraction));
+        if phase == ActivationPhase::LoadingDocument {
+            cancel.cancel_now();
+        }
+    });
+    let refusal = channel.load_session_document(2, "stepped-load-law", &pack, &spr, &scope).expect_err("a cancel at the first polled status stops the load");
+    let fractions = loading_fractions(&cancelled_reports);
+    println!("[S3-LOAD] cancelled after {fractions:?}: {}: {}", refusal.code, refusal.message);
+    assert!(fractions.first().is_some_and(|fraction| *fraction < 1.0), "the cancel landed before the load completed: {fractions:?}");
+    assert_eq!(refusal.code, ACTIVATION_CANCELLED_FAULT_CODE, "{}", refusal.message);
+    assert_eq!(document_witness(&mut channel, 2), previous, "a cancelled load leaves the previous document with zero trace");
+    assert_eq!(history_stamp(&mut channel, 2), "0@", "a cancelled load leaves no history row");
+    channel.load_session_document(2, "stepped-load-law", &pack, &spr, &ActivationScope::detached()).expect("the cancelled operation was acknowledged, so the next load is admitted");
+    assert_eq!(history_stamp(&mut channel, 2), source_head, "the reloaded head is the source head");
+}
+//#endregion 🔖️SteppedDocumentLoad

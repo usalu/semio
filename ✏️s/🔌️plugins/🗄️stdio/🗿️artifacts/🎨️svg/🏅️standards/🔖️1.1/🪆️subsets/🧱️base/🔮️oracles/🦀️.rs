@@ -499,8 +499,59 @@ mod oracles {
     //#region 🔖️Apply
     /// 🦠️ Mutates `doc` in place for one declared kind, reading `params` as that leaf's wire payload. An unrecognised
     /// kind is an error, never a silent no-op.
+    /// 🌲️ One node as the `XmlNode` wire [`qnode_from_wire`] reads.
+    fn qnode_to_wire(node: &QNode) -> Json {
+        let text = |kind: &str, text: &str| obj(vec![("kind", Json::String(kind.into())), ("text", Json::String(text.into()))]);
+        match node {
+            QNode::Element { name, attrs, children } => obj(vec![
+                ("kind", Json::String("element".into())),
+                ("name", Json::String(name.clone())),
+                ("attrs", Json::Array(attrs.iter().map(|(name, value)| obj(vec![("name", Json::String(name.clone())), ("value", Json::String(value.clone()))])).collect())),
+                ("children", Json::Array(children.iter().map(qnode_to_wire).collect())),
+            ]),
+            QNode::Text(value) => text("text", value),
+            QNode::CData(value) => text("cData", value),
+            QNode::Comment(value) => text("comment", value),
+            QNode::Pi { target, data } => obj(vec![("kind", Json::String("processingInstruction".into())), ("target", Json::String(target.clone())), ("data", Json::String(data.clone()))]),
+        }
+    }
+
+    /// 🩹️ `doc` with a `patch-snapshot` row's one pointer operation applied to this tree's own `{schema, doc}` reading
+    /// (`semio_repo_test_host::law::patched_snapshot`); the doctype stays the raw body this tree keeps, so a pointer into
+    /// `/doc/doctype` is refused rather than guessed.
+    fn patched_doc(doc: &QDoc, patch: &Json) -> Result<QDoc, String> {
+        if patch.str("path").starts_with("/doc/doctype") || patch.str("from").starts_with("/doc/doctype") {
+            return Err("patch-snapshot: this reference tree keeps the doctype raw and reads no pointer into it".to_string());
+        }
+        let declaration = doc.declaration.as_ref().map_or(Json::Null, |declaration| {
+            obj(vec![("version", Json::String(declaration.version.clone())), ("encoding", declaration.encoding.clone().map_or(Json::Null, Json::String)), ("standalone", declaration.standalone.map_or(Json::Null, Json::Bool))])
+        });
+        let nodes = |nodes: &[QNode]| Json::Array(nodes.iter().map(qnode_to_wire).collect());
+        let reading = obj(vec![
+            ("schema", Json::String("stdio.svg".into())),
+            ("doc", obj(vec![("declaration", declaration), ("doctype", Json::Null), ("prolog", nodes(&doc.prolog)), ("root", doc.root.as_ref().map_or(Json::Null, qnode_to_wire)), ("epilog", nodes(&doc.epilog))])),
+        ]);
+        let patched = member(&semio_repo_test_host::law::patched_snapshot(&reading, patch)?, "doc");
+        let read = |key: &str| patched.array(key).iter().map(qnode_from_wire).collect::<Result<Vec<_>, _>>();
+        Ok(QDoc {
+            declaration: decl_from_wire(&member(&patched, "declaration")),
+            doctype: doc.doctype.clone(),
+            doctype_prolog_position: doc.doctype_prolog_position,
+            prolog: read("prolog")?,
+            root: match member(&patched, "root") {
+                Json::Null => None,
+                root => Some(qnode_from_wire(&root)?),
+            },
+            epilog: read("epilog")?,
+        })
+    }
+
     fn apply_kind(doc: &mut QDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
+            "patch-snapshot" => {
+                *doc = patched_doc(doc, &member(params, "patch"))?;
+                Ok(())
+            }
             "set-declaration" => {
                 doc.declaration = decl_from_wire(&member(params, "declaration"));
                 Ok(())
@@ -583,6 +634,7 @@ mod oracles {
     fn invert(base: &QDoc, doc: &mut QDoc, kind: &str, params: &Json) -> Result<(), String> {
         let prior_attr = |path: &[usize], name: &str| q_node_at(base, path).ok().and_then(|node| q_element_attr(node, name)).map(str::to_string);
         match kind {
+            "patch-snapshot" => *doc = base.clone(),
             "set-declaration" => doc.declaration = base.declaration.clone(),
             "set-doctype" => {
                 doc.doctype = base.doctype.clone();

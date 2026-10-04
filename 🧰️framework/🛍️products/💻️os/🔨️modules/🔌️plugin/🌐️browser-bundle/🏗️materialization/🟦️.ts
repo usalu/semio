@@ -20,6 +20,7 @@ import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚
 import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts";
+import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
@@ -928,6 +929,8 @@ const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
 const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
 const commandIngressKinds = new Map([${COMMAND_INGRESS_KINDS.map((tag, kind) => `[${kind}, "${tag}"]`).join(", ")}]);
 const codecAnswer = ${actorCodecAnswer.toString()};
+const HOST_CHANNEL = ${APP_CHANNEL_VERSION};
+const admitGuestChannelVersion = ${admitGuestChannelVersion.toString()};
 
 /** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
  * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */
@@ -1011,6 +1014,8 @@ export async function createActorApi(actorId, activationGeneration) {
   hostUrl.search = componentUrl.search;
   const hostShim = await import(hostUrl.href);
   const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
+  const channelRefusal = admitGuestChannelVersion(await reactor.channelVersion(), HOST_CHANNEL);
+  if (channelRefusal !== null) throw Object.assign(new Error(\`\${channelRefusal.code}: \${channelRefusal.message}\`), { fault: channelRefusal });
   return {
     poll: async (events, commandPage, coldPairPage, budget) => {
       if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);

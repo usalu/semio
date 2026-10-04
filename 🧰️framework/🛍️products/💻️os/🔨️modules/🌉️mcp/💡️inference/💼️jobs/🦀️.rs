@@ -313,7 +313,7 @@ pub fn hub_events_page(service: &InferenceService, document_id: &str, page: &Hub
         state: page.state,
         proposal_state: page.proposal_state,
         cancel_requested: page.cancel_requested,
-        proposal: page.proposal_hash.clone().map(|hash| InferenceProposalV1 { hash, action: None, capability_id: None, input: None, preview: page.preview.as_ref().and_then(|preview| serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(preview)).ok()) }),
+        proposal: page.proposal_hash.clone().map(|hash| InferenceProposalV1 { hash, action: None, capability_id: None, input: None, preview: page.preview.as_ref().and_then(|preview| serde_json::from_str(&semio_framework_pack_json::to_json_string(preview)).ok()) }),
         events: page.events.iter().map(|event| InferenceJobEventV1 { ordinal: event.ordinal, kind: event.kind.clone(), at_ms: event.at_ms, message: None }).collect(),
         progress: page.progress.iter().map(|row| InferenceJobProgressV1 { cursor: row.cursor, fraction: if row.total == 0 { 0.0 } else { row.completed as f64 / row.total as f64 }, at_ms: row.at_ms, message: None }).collect(),
         next_cursor: page.next_cursor,

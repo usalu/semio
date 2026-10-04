@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_dwg::{dwg_drawing_to_mesh, DwgSnapshot};
 
 pub fn register() {}
 
-pub fn deserialize(from: &DwgSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize(from: &DwgSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let drawing = from.drawing.to_native().map_err(|e| text_error(format!("dwg->lowpoly: {e}")))?;
     let mesh = dwg_drawing_to_mesh(&drawing);
     if mesh.indices.len() < 3 || mesh.positions.len() < 9 {
@@ -25,7 +25,7 @@ pub fn deserialize(from: &DwgSnapshot) -> Result<LowpolySnapshot, store::TextErr
     snapshot_from_parts("dwg", vec![part])
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let snap = decode_dwg(bytes).map_err(|e| text_error(format!("dwg->lowpoly: {e}")))?;
     deserialize(&snap)
 }

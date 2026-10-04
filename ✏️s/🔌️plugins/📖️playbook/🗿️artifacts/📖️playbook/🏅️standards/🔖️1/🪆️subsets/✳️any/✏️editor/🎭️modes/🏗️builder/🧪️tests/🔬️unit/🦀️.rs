@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_tab_stack_lists_every_authored_scene_window() {
-    let json = protocol::json::to_json_string(&layout());
+    let json = semio_framework_pack_json::to_json_string(&layout());
     for window in [
         builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER,
         steps_window::PLAYBOOK_PLAY_WINDOW_STEPS,

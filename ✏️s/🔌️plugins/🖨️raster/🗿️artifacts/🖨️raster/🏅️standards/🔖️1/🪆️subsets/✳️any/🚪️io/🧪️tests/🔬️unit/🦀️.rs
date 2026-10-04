@@ -80,7 +80,7 @@ async fn composite_preserves_centered_pixels_at_negative_coordinates() {
 async fn composite_applies_a_visible_brightness_adjustment() {
     let mut document = document_with_solid_layer(64, 64, 64, 255, 2, 2);
     let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
-    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),dsl::DslValue::float(0.2)).unwrap();}
+    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),semio_framework_value::DslValue::float(0.2)).unwrap();}
     document.layers.push(adjustment);
     let result=raster_composite_image(&document);
     retire(document);
@@ -104,7 +104,7 @@ async fn composite_applies_group_opacity_once_after_overlapping_children() {
 async fn composite_svg_matches_adjusted_pixel_export() {
     let mut document=document_with_solid_layer(64,64,64,255,2,2);
     let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
-    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),dsl::DslValue::float(0.2)).unwrap();}
+    if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),semio_framework_value::DslValue::float(0.2)).unwrap();}
     document.layers.push(adjustment);
     let svg=raster_document_json_to_svg(&document);
     retire(document);

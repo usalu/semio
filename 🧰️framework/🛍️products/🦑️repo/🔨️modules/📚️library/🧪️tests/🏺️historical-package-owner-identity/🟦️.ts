@@ -151,7 +151,7 @@ test("current isolated census follows moved added and retired files without reop
   write(vector.fixture.source, sourceBytes());
   observe([vector.fixture.source]);
 });
-test("genuine historical census remains unchanged through a scoped Draw transaction", () => {
+test("a frozen package-owner census naming moved Draw files stays byte-identical through a scoped Draw transaction", () => {
   const root = mkdtempSync(join(ticketRoot, "🧪️purity-transaction-"));
   const write = (path: string, bytes: string | Buffer) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" }); if (run.exitCode) throw new Error(run.stderr.toString()); return run.stdout.toString().trim(); };
@@ -162,13 +162,17 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
   const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
   const projection = catalog.projections[1];
-  for (const row of projection.mappings) write(row.sourcePath, row.sourcePath === golden.mappings[29][0] ? sourceBytes() : row.sourcePath.endsWith("Cargo.toml") ? vector.fixture.manifest : row.sourcePath.endsWith("/📜️script.ts") ? members.find(({ path }) => `${projection.sourceRoot}/${path}` === row.sourcePath)!.content : "pub fn fixture() -> usize { 1 }\n");
+  const owner = `${projection.sourceRoot}/🔄️fsm/✨️macros`, moved = projection.mappings.find(({ sourcePath }: { sourcePath: string }) => sourcePath === `${owner}/🦀️.rs`)!;
+  const row = [...golden.mappings[29]];
+  [row[0], row[3], row[4], row[5], row[6], row[10]] = [moved.sourcePath, `unmarked:${owner}`, owner, `${owner}/📦️packages/🦀️rust`, `${owner}/📦️packages/🦀️rust`, moved.destinationPath];
+  const census = { ...golden, mappings: golden.mappings.map((entry: unknown[], index: number) => (index === 29 ? row : entry)) }, censusBytes = Buffer.from(JSON.stringify(census, null, 2));
+  for (const row of projection.mappings) write(row.sourcePath, row.sourcePath === moved.sourcePath ? sourceBytes() : row.sourcePath.endsWith("Cargo.toml") ? vector.fixture.manifest : row.sourcePath.endsWith("/📜️script.ts") ? members.find(({ path }) => `${projection.sourceRoot}/${path}` === row.sourcePath)!.content : "pub fn fixture() -> usize { 1 }\n");
   delete taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery;
   taxonomy.generatorContracts["plugin-registry"]!.inputPatterns = ["🧪️unrelated-input"];
-  taxonomy.frozenCoordinateEvidenceContracts = { ...taxonomy.frozenCoordinateEvidenceContracts, "remaining-package-purity-history-v1": { path: historyPath, sha256: sha(goldenBytes), schemaVersion: 1, coordinates: vector.historicalCoordinates } };
+  taxonomy.frozenCoordinateEvidenceContracts = { ...taxonomy.frozenCoordinateEvidenceContracts, "remaining-package-purity-history-v1": { path: historyPath, sha256: sha(censusBytes), schemaVersion: 1, coordinates: vector.historicalCoordinates } };
   write(schemaPath, JSON.stringify(taxonomy));
-  write(historyPath, goldenBytes);
-  write("🔣️neighbor.json", JSON.stringify({ sourcePath: golden.mappings[29][0] }));
+  write(historyPath, censusBytes);
+  write("🔣️neighbor.json", JSON.stringify({ sourcePath: moved.sourcePath }));
   git(["init", "-q"]);
   git(["config", "user.name", "Historical Purity Fixture"]);
   git(["config", "user.email", "historical-purity@invalid.example"]);
@@ -183,7 +187,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   expect(source.regenerations).toHaveLength(0);
   expect(source.edits.filter((row) => row.path === historyPath)).toHaveLength(0);
   expect(source.edits.filter((row) => row.path === "🔣️neighbor.json")).toHaveLength(1);
-  const changed = Buffer.from(JSON.stringify({ ...golden, extraOwner: golden.mappings[29][3] }));
+  const changed = Buffer.from(JSON.stringify({ ...census, extraOwner: row[3] }));
   const altered: ProbeTaxonomy = structuredClone(taxonomy);
   altered.frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"] = { ...altered.frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"]!, sha256: sha(changed) };
   write(historyPath, changed);
@@ -191,14 +195,14 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const unowned = plan(projection.sourceRoot);
   expect(unowned.unresolved.some((row) => row.code === "frozen-coordinate-evidence-unowned" && row.path === historyPath)).toBe(true);
   expect(unowned.edits.filter((row) => row.path === historyPath)).toHaveLength(0);
-  write(historyPath, goldenBytes);
+  write(historyPath, censusBytes);
   write(schemaPath, JSON.stringify(taxonomy));
   const options = { repoRoot: root, ticketDir: join(root, "🧪️transaction"), expectedBaselineCommit: baselineCommit, expectedPlanDigest: source.planDigest };
   expect(applyTaxonomyPlan(source, { ...options, injectFailureAt: "after-edits" }).state).toBe("rolled-back");
-  expect(readFileSync(join(root, historyPath))).toEqual(goldenBytes);
-  expect(existsSync(join(root, golden.mappings[29][0]))).toBe(true);
+  expect(readFileSync(join(root, historyPath))).toEqual(censusBytes);
+  expect(existsSync(join(root, moved.sourcePath))).toBe(true);
   expect(applyTaxonomyPlan(source, options).state).toBe("committed");
-  expect(readFileSync(join(root, historyPath))).toEqual(goldenBytes);
+  expect(readFileSync(join(root, historyPath))).toEqual(censusBytes);
   const canonical = plan(projection.destinationRoot);
   expect({ moves: canonical.moves.length, edits: canonical.edits.length, errors: canonical.unresolved.filter((row) => row.severity === "error") }).toEqual({ moves: 0, edits: 0, errors: [] });
   expect(lstatSync(options.ticketDir).isDirectory()).toBe(true);

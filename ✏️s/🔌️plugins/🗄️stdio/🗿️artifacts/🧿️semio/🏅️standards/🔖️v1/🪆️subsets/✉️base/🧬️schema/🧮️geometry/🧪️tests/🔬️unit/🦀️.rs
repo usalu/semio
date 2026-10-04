@@ -2,17 +2,17 @@ use super::*;
 
 fn assert_geometry_contract<T>(input: &serde_json::Value, valid: bool)
 where
-    T: dsl::FromValue + dsl::ToValue + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
+    T: semio_framework_value::FromValue + semio_framework_value::ToValue + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
 {
     let text = serde_json::to_string(input).expect("fixture JSON");
-    let native = dsl::json::from_json_str::<T>(&text);
+    let native = semio_framework_pack_json::from_json_str::<T>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject);
     let oracle = serde_json::from_str::<T>(&text);
     assert_eq!(native.is_ok(), valid, "native admission: {input}");
     assert_eq!(oracle.is_ok(), valid, "independent admission: {input}");
     if valid {
         let native = native.expect("valid native geometry");
         assert_eq!(native, oracle.expect("valid oracle geometry"));
-        let encoded = dsl::json::to_json_string(&native);
+        let encoded = semio_framework_pack_json::to_json_string(&native);
         assert_eq!(native, serde_json::from_str::<T>(&encoded).expect("independent geometry decode"));
     }
 }

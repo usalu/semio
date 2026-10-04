@@ -1,6 +1,7 @@
 
 use super::*;
 use crate::editor::puzzle3d::precompute::Puzzle3dCollision;
+use crate::editor::puzzle3d::precompute::geometry::{precompute_work_clock, precompute_work_done};
 use crate::standards::v1::subsets::any::schema::ObjectKindRepresentation;
 
 #[test]
@@ -902,38 +903,33 @@ fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the tolerance band: {ambiguous} of {decisive}");
 }
 
-/// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, every real-clock step of the run under the
-/// interactive lane budget stays below 2 ms — preparation, target listing and collision units alike — across the
-/// fixture's targets. The best of the fixture's cold runs is taken, so concurrent builds cannot fake a regression.
+/// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, the run is driven across the fixture's targets with the
+/// thread's primitive-work meter as its clock ([`precompute_work_clock`]) and a slice of `budgetWork` units: every step —
+/// preparation, target listing and collision units alike — stays inside `stepWorkCeiling` units, so no unit between two
+/// deadline checks outgrows the slice. The count is deterministic: the same steps on an idle and a saturated machine.
 #[test]
 fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
     let law = &fixture["laws"]["interactive"];
     let (scene, lane, targets) = brush_run_example_scene(law["document"].as_str().expect("document"));
-    let budget_us = law["budgetUs"].as_u64().expect("budget");
-    let worst_runs: Vec<(u128, usize)> = (0..law["runs"].as_u64().expect("runs"))
-        .map(|_| {
-            let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
-            let mut job = brush_run_job(&owner, &port, scene.clone(), lane.clone(), brush_run_no_meshes, 0);
-            let (mut worst, mut steps) = (0u128, 0usize);
-            for target in targets.iter().take(law["targets"].as_u64().expect("targets") as usize) {
-                brush_run_link(&owner, |link| link.hover(Some(target.clone())));
-                while !port.is_waiting() {
-                    let mut sequence = 0;
-                    let now = semio_framework_job::default_now_us().expect("clock");
-                    let budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, now, semio_framework_job::INTERACTIVE_LANE_WALL_US).expect("budget");
-                    let mut context = StepContext::new(OperationId(92), Generation(1), budget, root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
-                    let started = std::time::Instant::now();
-                    let outcome = job.step(&mut context);
-                    worst = worst.max(started.elapsed().as_micros());
-                    drop(brush_run_settle(outcome));
-                    steps += 1;
-                }
-            }
-            (worst, steps)
-        })
-        .collect();
-    let (best, steps) = worst_runs.iter().copied().min().expect("runs");
-    assert!(best < u128::from(budget_us), "the worst step of the best run took {best} µs over {steps} steps against {budget_us} µs (runs: {worst_runs:?})");
+    let (budget, ceiling) = (law["budgetWork"].as_u64().expect("budget"), law["stepWorkCeiling"].as_u64().expect("ceiling"));
+    let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
+    let mut job = brush_run_job(&owner, &port, scene, lane, brush_run_no_meshes, 0);
+    let (mut worst, mut steps) = (0_u64, 0_usize);
+    for target in targets.iter().take(law["targets"].as_u64().expect("targets") as usize) {
+        brush_run_link(&owner, |link| link.hover(Some(target.clone())));
+        while !port.is_waiting() {
+            let mut sequence = 0;
+            let start = precompute_work_done();
+            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget).expect("budget");
+            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence);
+            let outcome = job.step(&mut context);
+            worst = worst.max(precompute_work_done() - start);
+            drop(brush_run_settle(outcome));
+            steps += 1;
+        }
+    }
+    eprintln!("[DEBUG] brush suggestions nakagin: worst step {worst} units over {steps} steps (slice {budget})");
+    assert!(worst <= ceiling, "the worst step cost {worst} units of primitive work over {steps} steps against a {ceiling}-unit ceiling (slice {budget})");
 }
 //#endregion ⏯️BrushSuggestionsRun

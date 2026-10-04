@@ -51,7 +51,7 @@ async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
     let outcome = MutationKind::diff(&payload, &base);
     assert_eq!(outcome.diff(), &crate::VcsDiff::default());
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a duplicate add must carry a no-op message");
-    assert!(MutationKind::inverse(&payload, &base).is_empty(), "inverse of a no-op add must have nothing to undo");
+    assert!(MutationKind::inverse(&payload, &base).expect("valid retained mutation inverse fixture").is_empty(), "inverse of a no-op add must have nothing to undo");
 }
 
 /// 🪧 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS Pass 3 — the `remove`
@@ -103,7 +103,7 @@ async fn txt_dsl_carrier_round_trips_exactly() {
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
-    let exported = export::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoVcs::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

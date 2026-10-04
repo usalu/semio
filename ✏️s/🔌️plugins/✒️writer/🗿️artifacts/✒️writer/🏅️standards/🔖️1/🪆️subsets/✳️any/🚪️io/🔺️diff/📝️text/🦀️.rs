@@ -115,11 +115,11 @@ pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
 
 impl protocol::DiffCodec for WriterDiff {
     fn print_diff(&self) -> String {
-        dsl::os_pack::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        dsl::os_pack::json::from_json_str(line).map_err(|error| dsl::__rt::field_error(error.to_string()))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(error.to_string()).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

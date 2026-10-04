@@ -300,8 +300,27 @@ mod oracles {
     /// routing) -- mutates `document` in place. Out-of-range indices / missing ids / unresolvable
     /// paths are no-ops, mirroring `apply_pdf_mutation`'s own "never panic on a stale reference"
     /// contract at the Rust-model level.
+    /// 🩹️ A `patch-snapshot` row as the declared kind its one pointer operation is in this oracle's reading: setting a
+    /// page's `mediaBox` or `cropBox` is `set-page-media-box` / `set-page-crop-box`; any other pointer has no reading here.
+    fn patch_as_kind(params: &Json) -> Result<(String, Json), String> {
+        let patch = params.get("patch").ok_or("patch-snapshot: missing `patch`")?;
+        let path = patch.str("path");
+        let segments: Vec<&str> = path.split('/').skip(1).collect();
+        match (patch.str("operation").as_str(), segments.as_slice()) {
+            ("set", ["pages", index, field @ ("mediaBox" | "cropBox")]) if index.parse::<usize>().is_ok() => {
+                let kind = if *field == "mediaBox" { "set-page-media-box" } else { "set-page-crop-box" };
+                Ok((kind.to_string(), object(vec![("index", Json::Number(index.parse::<usize>().unwrap_or(0) as f64)), (*field, patch.get("value").cloned().unwrap_or(Json::Null))])))
+            }
+            (operation, _) => Err(format!("patch-snapshot {operation} {path} has no reading in this oracle")),
+        }
+    }
+
     fn apply_kind(document: &mut Document, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
+            "patch-snapshot" => {
+                let (kind, params) = patch_as_kind(params)?;
+                return apply_kind(document, &kind, &params);
+            }
             "insert-page" => {
                 let page = params.get("page").cloned().unwrap_or(Json::Null);
                 only_members(&page, &["mediaBox", "cropBox", "rotate", "content"], "PdfPage")?;
@@ -425,6 +444,10 @@ mod oracles {
     fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
         Ok(match kind {
+            "patch-snapshot" => {
+                let (kind, params) = patch_as_kind(params)?;
+                return inverse_spec(document, &kind, &params);
+            }
             "set-info" => {
                 let mut entries = Vec::new();
                 if let Some(title) = info_entry(document, b"Title") {
@@ -789,6 +812,12 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
 #[cfg(feature = "oracles")]
 pub fn project_pdf_1_7(bytes: &[u8]) -> Result<Json, String> {
     oracles::project_pdf_1_7(bytes)
+}
+
+/// 🔒️ Reads actual file encryption independently without exposing reference-library types.
+#[cfg(feature = "oracles")]
+pub fn encryption_present(bytes: &[u8]) -> Result<bool, String> {
+    lopdf::Document::load_mem(bytes).map(|document| document.trailer.get(b"Encrypt").is_ok()).map_err(|error| error.to_string())
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.

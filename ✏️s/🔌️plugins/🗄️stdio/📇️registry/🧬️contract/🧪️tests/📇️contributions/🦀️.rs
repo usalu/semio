@@ -120,7 +120,13 @@ fn authored_definition_constraints_match_independent_serde_oracle() {
     for row in vectors["validationCases"].as_array().unwrap() {
         let mut source: serde_json::Value = serde_json::from_str(ALPHA).unwrap();
         source["representations"][0]["mimes"] = row["mimes"].clone();
-        let claims: Vec<_> = row["mimes"].as_array().unwrap().iter().map(|mime| serde_json::json!({"namespace": "mime", "value": mime})).chain(source["representations"][0]["extensions"].as_array().unwrap().iter().map(|extension| serde_json::json!({"namespace": "extension", "value": extension}))).collect();
+        let claims: Vec<_> = row["mimes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|mime| serde_json::json!({"namespace": "mime", "value": mime}))
+            .chain(source["representations"][0]["extensions"].as_array().unwrap().iter().map(|extension| serde_json::json!({"namespace": "extension", "value": extension})))
+            .collect();
         let descriptor = format!("runtime-capability:representation:{}", claims.iter().map(|claim| format!("{}:{}", claim["namespace"].as_str().unwrap(), claim["value"].as_str().unwrap())).collect::<Vec<_>>().join("|"));
         let representation = source["runtime_capabilities"].as_array_mut().unwrap().iter_mut().find(|item| item["category"] == "representation").unwrap();
         representation["claims"] = serde_json::to_value(claims).unwrap();

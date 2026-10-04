@@ -12,7 +12,10 @@
 //! the three is computable by `describe()` itself, running inside the not-yet-hashed wasm. Unchanged
 //! from E1's own placeholder.
 
-use semio_framework::{io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, };
+use semio_framework::{
+    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType,
+    PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
+};
 
 /// 📚️ The largest example document body a descriptor still carries inline.
 ///
@@ -98,7 +101,7 @@ async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::p
     let bytes = crate::plugin_runtime::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
     std::str::from_utf8(&bytes)
         .ok()
-        .and_then(|text| dsl::os_pack::json::from_json_str::<Vec<crate::app::WireArtifactInferenceMetadata>>(text).ok())
+        .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<crate::app::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
@@ -118,12 +121,11 @@ async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::p
         .collect()
 }
 
-/// 🚪️ This plugin's own registered IO composer routes (`writes.artifact_kind` owned by
-/// `plugin_id`) — `ContributionSet.io_entries`/`composer_entries`, reading the real
-/// `io::list_composer_entries()` registry (`🚪️io/🦀️.rs`'s `IO_REGISTRY`). Each `(writes,
-/// reads)` composer row yields one `IoEntryDescriptor{owner: writes, counterpart: read, direction:
-/// Import}` per read dialect — `writes` is composed FROM `reads` (`ComposerEntry`'s own doc), so
-/// `Import` is the faithful direction from this package's (the `writes` owner's) perspective.
+/// 🚪️ This plugin's own registered IO routes — `ContributionSet.io_entries`/`composer_entries` — from both registries: each
+/// composer row of `io::list_composer_entries()` (`writes.artifact_kind` owned by `plugin_id`) yields one
+/// `IoEntryDescriptor{owner: writes, counterpart: read, direction: Import}` per read dialect (`writes` is composed FROM `reads`), and
+/// each `io_mechanism` entry whose native side the plugin owns (`io_mechanism::io_native_routes()`) yields
+/// `IoEntryDescriptor{owner: native, counterpart: foreign, direction}` — a serializer exports, a deserializer imports.
 ///
 /// ⚠️ `ContributionSet.mutation_services` has NO equivalent version-tracked registry to read from:
 /// the owner mutation roster (`crate::app::mutation_roster_entries`, `WireMutationRosterEntry`)
@@ -143,6 +145,19 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
             io_entries.push(IoEntryDescriptor { owner: writes.clone(), counterpart: read.clone(), direction: IoEntryDirection::Import });
         }
         composer_entries.push(ComposerEntryDescriptor { writes, reads });
+    }
+    for route in io::io_mechanism::io_native_routes() {
+        if !owns_artifact_kind(plugin_id, &route.native.artifact_kind).await {
+            continue;
+        }
+        let direction = match route.direction {
+            io::io_mechanism::IoEntryDirection::Export => IoEntryDirection::Export,
+            io::io_mechanism::IoEntryDirection::Import => IoEntryDirection::Import,
+        };
+        let row = IoEntryDescriptor { owner: route.native, counterpart: route.foreign, direction };
+        if !io_entries.contains(&row) {
+            io_entries.push(row);
+        }
     }
     (io_entries, composer_entries)
 }

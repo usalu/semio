@@ -1,0 +1,172 @@
+{
+  "state": "mounted",
+  "purpose": "Full native Table owner: declaration hints are ordered named fields, each row owns its independently ordered typed value cells",
+  "beforeReceipt": "root-semio-video-table-mesh-intermediate-three-leaf-source-before.log",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "before": "column_id INTEGER NOT NULL REFERENCES semio_table_column(id)",
+      "after": "column_ordinal INTEGER NOT NULL CHECK (column_ordinal >= 0)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "column_id INTEGER NOT NULL REFERENCES semio_table_column(id)",
+      "after": "column_ordinal INTEGER NOT NULL CHECK (column_ordinal >= 0)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "ArtifactSqliteProjection,artifactSqliteTables",
+      "after": "ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "import type {SqliteDatabase,SqliteRow} from ",
+      "after": "import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  await artifactSqliteCheckpoint(options,\"projectSnapshot\",0,0);",
+      "after": "  options=sqliteOperation(options);await artifactSqliteCheckpoint(options,\"projectSnapshot\",0,0);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": ";const names=new Set<string>();",
+      "after": ";"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "if(names.has(column.name))throw Error(\"duplicate Semio table column name\");names.add(column.name);",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "if(row.cells.length!==snapshot.columns.length)throw Error(\"Semio table row width differs from columns\");",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "[id,BigInt(column+1),value]",
+      "after": "[id,BigInt(column),value]"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "/** 📥️ Require every row/column pair exactly once and complete typed value ownership. */",
+      "after": "/** 📥️ Restore contiguous cells per row independently of named declaration hints. */"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "  await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",0,0);const[documents,columns,rows,cells]=await artifactSqliteTables(database,SEMIO_TABLE_SQLITE_SCHEMA,options),document=artifactSqliteDocument(documents!);identity(document,2);\n  const ordered=await artifactSqliteOrderedRowsControlled(columns!,2,options),columnIndex=new Map<bigint,number>(),names=new Set<string>(),out:SemioTableColumn[]=[];let units=0;\n  for(let i=0;i<ordered.length;i++){const row=ordered[i]!;identity(row,5);artifactSqliteDocumentReference(row,1);const name=artifactSqliteText(row,3);if(columnIndex.has(row.rowid)||names.has(name))throw Error(\"duplicate Semio table column identity\");columnIndex.set(row.rowid,i);names.add(name);out.push({name,kind:kind(artifactSqliteText(row,4))});if(++units%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",units,0);}\n  const orderedRows=await artifactSqliteOrderedRowsControlled(rows!,2,options),rowCells=new Map<bigint,Map<number,bigint>>();for(const row of orderedRows){identity(row,3);artifactSqliteDocumentReference(row,1);if(rowCells.has(row.rowid))throw Error(\"duplicate Semio table row identity\");rowCells.set(row.rowid,new Map());if(++units%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",units,0);}\n  const ids=new Set<bigint>();for(const row of cells!){identity(row,4);const owner=rowCells.get(artifactSqliteInteger(row,1)),column=columnIndex.get(artifactSqliteInteger(row,2));if(!owner||column===undefined||owner.has(column)||ids.has(row.rowid))throw Error(\"invalid Semio table cell owner or column\");ids.add(row.rowid);owner.set(column,artifactSqliteInteger(row,3));if(++units%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",units,0);}\n  const roots:bigint[]=[];for(const row of orderedRows){const items=rowCells.get(row.rowid)!;if(items.size!==out.length)throw Error(\"missing Semio table row cell\");for(let column=0;column<out.length;column++){const id=items.get(column);if(id===undefined)throw Error(\"missing Semio table column cell\");roots.push(id);if(++units%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",units,0);}}\n  const restored=await reconstructSemioValueForest(database,VALUES,roots,null,options),result:SemioTableRow[]=[];let position=0;for(const row of orderedRows){const values:SemioTableRow[\"cells\"]=[];for(let column=0;column<out.length;column++)values.push(restored[position++]!);result.push({cells:values});if(++units%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",units,0);}\n  return{schema:artifactSqliteText(document,1),columns:out,rows:result};\n}\n",
+      "after": "  options=sqliteOperation(options);await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",0,0);\n  const tables=await artifactSqliteTables(database,SEMIO_TABLE_SQLITE_SCHEMA,options),document=artifactSqliteDocument(tables[0]!);identity(document,2);\n  const index=await ArtifactSqliteRowIndex.create(database.tables.filter(table=>[\"semio_table_document\",\"semio_table_column\",\"semio_table_row\",\"semio_table_cell\"].includes(table.name)),options);await index.take(document);\n  const columns:SemioTableColumn[]=[],orderedRows:SqliteRow[]=[],widths:number[]=[],roots:bigint[]=[];\n  for(const row of await index.grouped(\"semio_table_column\",1n)){identity(row,5);artifactSqliteDocumentReference(row,1);columns.push({name:artifactSqliteText(row,3),kind:kind(artifactSqliteText(row,4))});await index.take(row);}\n  for(const row of await index.grouped(\"semio_table_row\",1n)){\n    identity(row,3);artifactSqliteDocumentReference(row,1);orderedRows.push(row);await index.take(row);\n    const cells=await index.grouped(\"semio_table_cell\",row.rowid);widths.push(cells.length);\n    for(const cell of cells){identity(cell,4);if(artifactSqliteInteger(cell,1)!==row.rowid)throw Error(\"invalid Semio table cell parent\");roots.push(artifactSqliteInteger(cell,3));await index.take(cell);}\n  }\n  await index.finish();\n  const restored=await reconstructSemioValueForest(database,VALUES,roots,null,options),rows:SemioTableRow[]=[];let position=0;\n  for(let ordinal=0;ordinal<orderedRows.length;ordinal++){const cells:SemioTableRow[\"cells\"]=[];for(let column=0;column<widths[ordinal]!;column++){cells.push(restored[position++]!);if(position%256===0)await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",position,restored.length);}rows.push({cells});}\n  if(position!==restored.length)throw Error(\"unconsumed Semio table value\");await artifactSqliteCheckpoint(options,\"reconstructSnapshot\",position,position);return{schema:artifactSqliteText(document,1),columns,rows};\n}\n"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "before": "artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,",
+      "after": "artifactSqliteCheckpoint,"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "//! 📊️ Declared column kinds and positionally aligned, independently typed native cell values.",
+      "after": "//! 📊️ Ordered declaration hints and independent contiguous native cell occurrences."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};",
+      "after": "use semio_framework_value::{ValueError,ValueRefusalKind};"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "use std::collections::{BTreeMap,BTreeSet};",
+      "after": "use semio_framework_os_kernel::sqlite_snapshot::transfer;"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": ";let mut names=BTreeSet::new();for(ordinal,column)",
+      "after": ";for(ordinal,column)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "if !names.insert(column.name.as_str()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"duplicate Semio table column name\"));}",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "if row.cells.len()!=self.columns.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio table cells must align with declared columns\"));}",
+      "after": ""
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "Cell::Integer(number(column+1)?)",
+      "after": "Cell::Integer(number(column)?)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,declared_schema,control.limits())?;let document=database.table(\"semio_table_document\")?.single_row()?;identity(document,2)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio table document identifier\"));}\nlet ordered_columns=database.table(\"semio_table_column\")?.ordered_rows(2)?;let mut column_positions=BTreeMap::new();let mut names=BTreeSet::new();let mut columns=Vec::new();for(ordinal,row)in ordered_columns.into_iter().enumerate(){identity(row,5)?;if row.integer(1)?!=1||column_positions.insert(row.rowid,ordinal).is_some()||!names.insert(row.text(3)?){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio table column ownership or identity\"));}let kind=match row.text(4)?{\"null\"=>SemioTableCellKind::Null,\"bool\"=>SemioTableCellKind::Bool,\"int\"=>SemioTableCellKind::Int,\"float\"=>SemioTableCellKind::Float,\"str\"=>SemioTableCellKind::Str,\"bytes\"=>SemioTableCellKind::Bytes,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"unknown Semio table column kind\"))};columns.push(SemioTableColumn{name:reconstruct_text(control,row.text(3)?)?,kind});}\nlet ordered_rows=database.table(\"semio_table_row\")?.ordered_rows(2)?;let mut row_positions=BTreeMap::new();for(ordinal,row)in ordered_rows.iter().enumerate(){identity(row,3)?;if row.integer(1)?!=1||row_positions.insert(row.rowid,ordinal).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio table row ownership or identity\"));}}\nlet mut cells=BTreeMap::new();let mut ids=BTreeSet::new();let mut completed=0usize;for row in &database.table(\"semio_table_cell\")?.rows{identity(row,4)?;let owner=*row_positions.get(&row.integer(1)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,\"dangling Semio table row\"))?;let column=*column_positions.get(&row.integer(2)?).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,\"dangling Semio table column\"))?;if !ids.insert(row.rowid)||cells.insert((owner,column),row.integer(3)?).is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"duplicate Semio table cell identity or position\"));}completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}\nlet expected=ordered_rows.len().checked_mul(columns.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit,\"Semio table dimensions overflow\"))?;if cells.len()!=expected{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio table cells must align with declared columns\"));}let roots=cells.values().copied().collect::<Vec<_>>();let mut values=Owned::new(reconstruct_value_forest(database,VALUES,&roots,None,control)?);values.get_mut().reverse();let mut rows=Owned::new(Vec::new());for _ in ordered_rows{let mut cells=Owned::new(Vec::new());for _ in &columns{cells.get_mut().push(values.get_mut().pop().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,\"missing Semio table cell value\"))?);}rows.get_mut().push(SemioTableRow{cells:cells.take()});}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(Self{schema:reconstruct_text(control,document.text(1)?)?,columns,rows:rows.take()})",
+      "after": "control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema(database,declared_schema,control.limits())?;let document=database.table(\"semio_table_document\")?.single_row()?;identity(document,2)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio table document identifier\"));}\nlet column_rows=ordered(&database.table(\"semio_table_column\")?.rows,5,control)?;let ordered_rows=ordered(&database.table(\"semio_table_row\")?.rows,3,control)?;\nlet mut columns=transfer::reserve(column_rows.len(),control)?;for(at,row)in column_rows.iter().enumerate(){let kind=match row.text(4)?{\"null\"=>SemioTableCellKind::Null,\"bool\"=>SemioTableCellKind::Bool,\"int\"=>SemioTableCellKind::Int,\"float\"=>SemioTableCellKind::Float,\"str\"=>SemioTableCellKind::Str,\"bytes\"=>SemioTableCellKind::Bytes,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"unknown Semio table column kind\"))};columns.push(SemioTableColumn{name:reconstruct_text(control,row.text(3)?)?,kind});if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,column_rows.len())?;}}\nlet row_ids=identities(&database.table(\"semio_table_row\")?.rows,3,control)?;let cell_rows=&database.table(\"semio_table_cell\")?.rows;identities(cell_rows,4,control)?;\nlet mut cells=transfer::reserve(cell_rows.len(),control)?;for(at,row)in cell_rows.iter().enumerate(){if row_ids.binary_search(&row.integer(1)?).is_err(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"dangling Semio table row\"));}cells.push(row);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,cell_rows.len())?;}}\ntransfer::heap_sort(&mut cells,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.integer(1)?.cmp(&b.integer(1)?).then(a.integer(2)?.cmp(&b.integer(2)?))))?;\nlet mut roots=transfer::reserve(cells.len(),control)?;let mut widths=transfer::reserve(ordered_rows.len(),control)?;let mut completed=0usize;\nfor row in &ordered_rows{let start=cells.partition_point(|cell|cell.integer(1).is_ok_and(|parent|parent<row.rowid));let end=cells.partition_point(|cell|cell.integer(1).is_ok_and(|parent|parent<=row.rowid));widths.push(end-start);for(ordinal,cell)in cells[start..end].iter().enumerate(){if cell.integer(2)?!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio table cell ordinals require contiguous occurrences\"));}roots.push(cell.integer(3)?);completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,cells.len())?;}}}\nif completed!=cells.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"unconsumed Semio table cell\"));}\nlet mut values=Owned::new(reconstruct_value_forest(database,VALUES,&roots,None,control)?);let count=values.get_mut().len();for(at,left)in(0..count/2).enumerate(){values.get_mut().swap(left,count-1-left);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,count/2)?;}}\nlet mut rows=Owned::new(transfer::reserve(widths.len(),control)?);for width in widths{let mut cells=Owned::new(transfer::reserve(width,control)?);for _ in 0..width{cells.get_mut().push(values.get_mut().pop().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"missing Semio table cell value\"))?);completed+=1;if completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,0)?;}}rows.get_mut().push(SemioTableRow{cells:cells.take()});}\nif !values.get_mut().is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"unconsumed Semio table cell value\"));}control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,completed,completed)?;Ok(Self{schema:reconstruct_text(control,document.text(1)?)?,columns,rows:rows.take()})"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "before": "\nimpl SemioTableSnapshot{\n/// 📏️ Bounds explicitly owned native fields before encoding.\npub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{crate::standards::v1::subsets::value::schema::snapshot::sqlite::native_values(&row.cells,b)?;}Ok(())}\n}\n",
+      "after": "\nimpl SemioTableSnapshot{\n/// 📏️ Bounds explicitly owned native fields before encoding.\npub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{crate::standards::v1::subsets::value::schema::snapshot::sqlite::native_values(&row.cells,b)?;}Ok(())}\n}\n\nfn ordered<'a>(rows:&'a[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{\n identities(rows,columns,control)?;let mut ordered=transfer::reserve(rows.len(),control)?;for(at,row)in rows.iter().enumerate(){if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio table document parent\"));}ordered.push(row);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}\n transfer::heap_sort(&mut ordered,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.integer(2)?.cmp(&b.integer(2)?)))?;for(at,row)in ordered.iter().enumerate(){if row.integer(2)?!=number(at)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"Semio table row ordinals require contiguous occurrences\"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ordered)\n}\nfn identities(rows:&[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<i64>,ValueError>{\n let mut ids=transfer::reserve(rows.len(),control)?;for(at,row)in rows.iter().enumerate(){identity(row,columns)?;ids.push(row.rowid);if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}\n transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;for(at,id)in ids.iter().enumerate(){if at>0&&ids[at-1]==*id{return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"duplicate Semio table row identity\"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ids)\n}\n"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+      "before": "ON column_id=semio_table_column.id",
+      "after": "ON c.column_ordinal=semio_table_column.ordinal"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "cell ownership completeness, unique columns and bounded reconstruction",
+      "after": "cell ownership completeness, contiguous ordinals and bounded reconstruction"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "x.tables[1].rows[1].values[3]=x.tables[1].rows[0].values[3]",
+      "after": "x.tables[1].rows[1].values[2]=x.tables[1].rows[0].values[2]"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioTableSnapshotFromSqliteDatabase(x)).rejects.toThrow();",
+      "after": "await expect(semioTableSnapshotFromSqliteDatabase(x)).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioTableSnapshotToSqliteDatabase({...input,rows:[{cells:[]}]})).rejects.toThrow();",
+      "after": "await expect(semioTableSnapshotToSqliteDatabase({...input,columns:[{name:\"invalid\",kind:\"unknown\"}] as any})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioTableSnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();",
+      "after": "await expect(semioTableSnapshotToSqliteDatabase(input,{maxRows:1})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioTableSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();",
+      "after": "await expect(semioTableSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(semioTableSnapshotFromSqliteDatabase(d,{signal:c.signal})).rejects.toThrow();",
+      "after": "await expect(semioTableSnapshotFromSqliteDatabase(d,{signal:c.signal})).rejects.toThrow();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "before": "expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);}finally{db.close();}\n});",
+      "after": "expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);db.query(\"UPDATE semio_table_value SET string_value=? WHERE kind='str'\").run(\"independently edited\");input.rows[0].cells[4]={kind:\"str\",value:\"independently edited\"};expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);console.log(\"[DEBUG] Semio table retains duplicate declaration names, arbitrary row widths and all nine independently queried native cell variants\");}finally{db.close();}\n});"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "before": "3=>db.table_mut(\"semio_table_cell\").unwrap().rows[1].values[2]=SqliteValue::Integer(1)",
+      "after": "3=>db.table_mut(\"semio_table_cell\").unwrap().rows[1].values[2]=SqliteValue::Integer(0)"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "before": "assert!(invalid.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());",
+      "after": "assert_eq!(restore(&project(&invalid)).unwrap(),invalid);"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "before": "ON column_id=t.id",
+      "after": "ON c.column_ordinal=t.ordinal"
+    }
+  ]
+}

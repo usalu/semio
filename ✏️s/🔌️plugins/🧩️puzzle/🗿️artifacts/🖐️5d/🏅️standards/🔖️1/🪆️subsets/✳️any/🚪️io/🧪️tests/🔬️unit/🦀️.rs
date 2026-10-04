@@ -24,7 +24,7 @@ fn zip_is_a_real_archive_of_the_exact_document() {
 
 #[test]
 fn png_draws_the_board() {
-    let png = semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&assembly()).expect("png")).expect("decodes as png");
+    let png = semio_s_artifact_stdio_png::io::png_layout(&semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&assembly()).expect("png")).expect("decodes as png")).expect("png header");
     assert!(png.width >= 64 && png.height >= 64);
 }
 

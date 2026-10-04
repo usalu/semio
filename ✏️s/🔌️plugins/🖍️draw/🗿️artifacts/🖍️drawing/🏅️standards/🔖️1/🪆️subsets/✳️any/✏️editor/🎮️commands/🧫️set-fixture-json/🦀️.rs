@@ -3,10 +3,11 @@
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "fixture-json")]
 pub struct SetFixtureJson {
     pub json: String,
@@ -21,7 +22,7 @@ pub fn handle(
     _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     if payload.json.contains(DRAWING_DOCUMENT_SCHEMA) {
-        if let Ok(snapshot) = dsl::json::from_json_str::<DrawingSnapshot>(&payload.json) {
+        if let Ok(snapshot) = semio_framework_pack_json::from_json_str::<DrawingSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
             return Ok(Emit { effects: vec![crate::editor::drawing::drawing_reset_document_effect(&snapshot)], ..Default::default() });
         }
     }

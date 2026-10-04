@@ -1,0 +1,1 @@
+CREATE TABLE fixture_refusal (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);

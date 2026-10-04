@@ -12,7 +12,7 @@ mod sqlite_tests;
 
 //#region 🔖️Snapshot
 /// 📸️ Durable form definition and immutable responses with derived value/table child projections.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "forms")]
 #[artifact_schema(id = "s.forms.forms")]
@@ -38,8 +38,8 @@ pub struct FormsSnapshot {
     pub results: FormsResultsChild,
 }
 
-impl dsl::FromValue for FormsSnapshot {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for FormsSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let mut schema = None;
         let mut id = None;
         let mut version = None;
@@ -48,21 +48,21 @@ impl dsl::FromValue for FormsSnapshot {
         let mut responses = None;
         let mut structure = None;
         let mut results = None;
-        for (key, value) in dsl::DslValue::into_object(value)? {
+        for (key, value) in semio_framework_value::DslValue::into_object(value)? {
             match key.as_str() {
-                "schema" if schema.is_none() => schema = Some(dsl::FromValue::from_value(value)?),
-                "id" if id.is_none() => id = Some(dsl::FromValue::from_value(value)?),
-                "version" if version.is_none() => version = Some(dsl::FromValue::from_value(value)?),
-                "title" if title.is_none() => title = Some(dsl::FromValue::from_value(value)?),
-                "definition" if definition.is_none() => definition = Some(dsl::FromValue::from_value(value)?),
-                "responses" if responses.is_none() => responses = Some(dsl::FromValue::from_value(value)?),
-                "structure" if structure.is_none() => structure = Some(dsl::FromValue::from_value(value)?),
-                "results" if results.is_none() => results = Some(dsl::FromValue::from_value(value)?),
-                _ => return Err(dsl::ValueError::new(format!("unknown or duplicate Forms field {key}"))),
+                "schema" if schema.is_none() => schema = Some(semio_framework_value::FromValue::from_value(value)?),
+                "id" if id.is_none() => id = Some(semio_framework_value::FromValue::from_value(value)?),
+                "version" if version.is_none() => version = Some(semio_framework_value::FromValue::from_value(value)?),
+                "title" if title.is_none() => title = Some(semio_framework_value::FromValue::from_value(value)?),
+                "definition" if definition.is_none() => definition = Some(semio_framework_value::FromValue::from_value(value)?),
+                "responses" if responses.is_none() => responses = Some(semio_framework_value::FromValue::from_value(value)?),
+                "structure" if structure.is_none() => structure = Some(semio_framework_value::FromValue::from_value(value)?),
+                "results" if results.is_none() => results = Some(semio_framework_value::FromValue::from_value(value)?),
+                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown or duplicate Forms field {key}"))),
             }
         }
-        let result = Self { schema: schema.ok_or_else(|| dsl::ValueError::new("missing Forms schema"))?, id: id.ok_or_else(|| dsl::ValueError::new("missing Forms id"))?, version: version.ok_or_else(|| dsl::ValueError::new("missing Forms version"))?, title: title.unwrap_or(None), definition: definition.ok_or_else(|| dsl::ValueError::new("missing Forms definition"))?, responses: responses.ok_or_else(|| dsl::ValueError::new("missing Forms responses"))?, structure: structure.ok_or_else(|| dsl::ValueError::new("missing Forms structure"))?, results: results.ok_or_else(|| dsl::ValueError::new("missing Forms results"))? };
-        result.validate().map_err(dsl::ValueError::new)?;
+        let result = Self { schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms schema"))?, id: id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms id"))?, version: version.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms version"))?, title: title.unwrap_or(None), definition: definition.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms definition"))?, responses: responses.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms responses"))?, structure: structure.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms structure"))?, results: results.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Forms results"))? };
+        result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
 }

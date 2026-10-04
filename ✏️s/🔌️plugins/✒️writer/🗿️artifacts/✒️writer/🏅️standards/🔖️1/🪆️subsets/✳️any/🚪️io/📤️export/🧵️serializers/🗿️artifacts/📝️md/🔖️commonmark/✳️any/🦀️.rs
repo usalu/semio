@@ -7,7 +7,7 @@
 //! class of bug this ticket's sequence pilot's CSV fix found; fixed here in passing).
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_md::MdSnapshot;
@@ -21,7 +21,7 @@ impl Serializer<WriterSnapshot> for WriterIntoMd {
     /// 🪧️ Lossy: only the document's content text survives — `schema`/`id`/`uri`/`language_id` have
     /// no home in a markdown file.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &WriterSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let md = MdSnapshot::from_text(&writer_text(from));
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&md)), diagnostics: Vec::new() })
     }

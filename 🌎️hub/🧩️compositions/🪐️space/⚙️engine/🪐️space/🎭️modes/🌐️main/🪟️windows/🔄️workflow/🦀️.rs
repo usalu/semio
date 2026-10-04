@@ -83,19 +83,19 @@ pub async fn definition() -> WindowKindDefinition {
 // site compiles without doing the real space producer cutover. Delete once the space producer is
 // flipped to build the typed records directly.
 async fn json_array_to_node_graph_nodes(json: &str) -> Vec<NodeGraphNodeRecord> {
-    pack::from_json_str(json).unwrap_or_default()
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
 async fn json_array_to_node_graph_edges(json: &str) -> Vec<NodeGraphEdgeRecord> {
-    pack::from_json_str(json).unwrap_or_default()
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
 async fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindItem> {
-    pack::from_json_str(json).unwrap_or_default()
+    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
 async fn json_array_to_node_graph_operators<T: dsl::ToValue + Clone>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
-    Some(pack::to_json_string(&operators.to_vec())).and_then(|json| pack::from_json_str(&json).ok()).unwrap_or_default()
+    Some(semio_framework_pack_json::to_json_string(&operators.to_vec())).and_then(|json| semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).unwrap_or_default()
 }
 // TEMP(Wave 3) end
 

@@ -57,14 +57,14 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioBrepValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_brep_referential_integrity(&snapshot),
-                None => vec![dsl::Diagnostic::error("stdio.semio_brep.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioBrepValidator: payload did not decode as a SemioBrepSnapshot".to_string())],
+                None => vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_brep.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioBrepValidator: payload did not decode as a SemioBrepSnapshot".to_string())],
             }
         }
     }
@@ -72,7 +72,7 @@ pub mod derived_composition {
     /// 🔗️ Real cross-collection referential-invariant check — dangling ids are reported as errors, not
     /// silently ignored (nothing here is decode-only anymore).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<dsl::Diagnostic> {
+    pub fn check_brep_referential_integrity(snapshot: &SemioBrepSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
         let vertex_ids: HashSet<&str> = snapshot.vertices.iter().map(|v| v.id.as_str()).collect();
         let edge_ids: HashSet<&str> = snapshot.edges.iter().map(|e| e.id.as_str()).collect();
         let loop_ids: HashSet<&str> = snapshot.loops.iter().map(|l| l.id.as_str()).collect();
@@ -81,7 +81,7 @@ pub mod derived_composition {
 
         let mut diagnostics = Vec::new();
         let mut dangling = |code: &'static str, message: String| {
-            diagnostics.push(dsl::Diagnostic::error(code, dsl::TextSpan::at(1, 1), message));
+            diagnostics.push(semio_framework_diagnostic::Diagnostic::error(code, semio_framework_diagnostic::TextSpan::at(1, 1), message));
         };
 
         for e in &snapshot.edges {

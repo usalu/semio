@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "body": [
+    {
+      "kind": "emptyParagraph"
+    }
+  ],
+  "editableTarget": {
+    "kind": "emptyParagraph",
+    "text": ""
+  }
+}

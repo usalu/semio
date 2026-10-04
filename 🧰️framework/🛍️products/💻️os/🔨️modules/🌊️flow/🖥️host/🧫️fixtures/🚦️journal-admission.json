@@ -1,0 +1,27 @@
+{
+  "schema": "flow.journal-admission/v1",
+  "capacity": 256,
+  "moves": [
+    {
+      "id": "slider",
+      "dx": 1,
+      "dy": 0
+    },
+    {
+      "id": "add",
+      "dx": 2,
+      "dy": 0
+    }
+  ],
+  "cases": [
+    {
+      "pendingRows": 0,
+      "admitted": true
+    },
+    {
+      "pendingRows": 255,
+      "admitted": false
+    }
+  ]
+}
+

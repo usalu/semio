@@ -22,7 +22,7 @@ pub mod derived_construction {
     use crate::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
     use crate::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, SvgTinyMutation};
     use crate::{SvgDiff, SvgSnapshot};
-    use dsl::Diagnostic;
+    use semio_framework_diagnostic::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -44,7 +44,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -71,7 +71,7 @@ pub mod derived_construction {
                 set_element_attr(root, "baseProfile", Some("tiny".into()));
                 set_element_attr(root, "version", Some("1.1".into()));
             }
-            let hard: Vec<Diagnostic> = check_svg_tiny_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
+            let hard: Vec<Diagnostic> = check_svg_tiny_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -92,7 +92,10 @@ pub mod derived_analysis {
     use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
     use crate::standards::v1_1::subsets::base::schema::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::standards::v1_1::subsets::base::schema::SvgParts;
-    use dsl::{Diagnostic, FaultCode, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
@@ -139,12 +142,12 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn hard(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
+        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn soft(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: dsl::FaultScope::default() }
+        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
     }
 
     /// 🌳 Recursively walks one element (and its descendants), reporting blocklisted elements,
@@ -185,11 +188,11 @@ pub mod derived_analysis {
     /// the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     /// 🛡️ Applies SVG Tiny's existing borrowed rules with iterative cancellation checkpoints.
-    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+        use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotPhase, ValueError, ValueRefusalKind};
         let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let Some(root)=&snapshot.doc.root else{return Ok(out)};
-        let mut pending=vec![std::slice::from_ref(root).iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};count=count.checked_add(1).ok_or("SVG validation count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
-            if let XmlNode::Element{name,attrs,children}=node{if is_blocked_element(name){out.push(hard(CODE_ELEMENT,format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));}for a in attrs{count=count.checked_add(1).ok_or("SVG validation count overflow")?;if count%256==0||a.value.len()>65536||a.name.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}let ln=local_name(&a.name);if BLOCKED_ATTRS.contains(&ln){out.push(hard(CODE_ATTRIBUTE,format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1",a.name)));}if ln=="href"&&is_external_href(&a.value){out.push(soft(CODE_EXTERNAL_HREF,format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document",a.name,a.value)));}}pending.push(children.iter());}
+        let mut pending=vec![std::slice::from_ref(root).iter()];while let Some(nodes)=pending.last_mut(){let Some(node)=nodes.next()else{pending.pop();continue;};count=count.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "SVG validation count overflow"))?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
+            if let XmlNode::Element{name,attrs,children}=node{if is_blocked_element(name){out.push(hard(CODE_ELEMENT,format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));}for a in attrs{count=count.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "SVG validation count overflow"))?;if count%256==0||a.value.len()>65536||a.name.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}let ln=local_name(&a.name);if BLOCKED_ATTRS.contains(&ln){out.push(hard(CODE_ATTRIBUTE,format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1",a.name)));}if ln=="href"&&is_external_href(&a.value){out.push(soft(CODE_EXTERNAL_HREF,format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document",a.name,a.value)));}}pending.push(children.iter());}
         }
         if let XmlNode::Element{name,..}=root{let attrs=root_attrs(root);let base_profile_ok=attrs.iter().any(|a|a.name=="baseProfile"&&a.value=="tiny");let version_ok=attrs.iter().any(|a|a.name=="version"&&a.value=="1.1");if !base_profile_ok||!version_ok{out.push(soft(CODE_BASE_PROFILE,format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")));}}
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,count)?;Ok(out)

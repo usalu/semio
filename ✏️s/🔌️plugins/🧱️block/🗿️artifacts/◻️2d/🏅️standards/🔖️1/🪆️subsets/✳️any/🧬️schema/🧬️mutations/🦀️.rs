@@ -24,7 +24,7 @@ pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 /// no-op sentinel variants are gone — whole-document loads (examples, DSL text edit) now decompose
 /// into this vocabulary (see the editor's `🎮️commands/🎬️set-active-example/🦀️.rs`'s
 /// `replace_document_operations`).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
@@ -129,8 +129,11 @@ pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block
     Ok(())
 }
 
-pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🌉️TestBridge
@@ -143,29 +146,29 @@ pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2d
 /// `after_json`, `diff` the produced delta, `messages` the diagnostics it raised, `inverseSteps` the
 /// computed inverse and `inverseSnapshot` the document those steps land on.
 pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let base: Block2dSnapshot = dsl::json::from_json_str(base_json).map_err(|error| error.to_string())?;
-    let expected: Block2dSnapshot = dsl::json::from_json_str(after_json).map_err(|error| error.to_string())?;
-    let mutation: Block2dMutation = dsl::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let base: Block2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let expected: Block2dSnapshot = semio_framework_pack_json::from_json_str(after_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let mutation: Block2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Block2dMutation as Mutation<Block2dSnapshot>>::inverse(&mutation, &base);
+    let inverse = <Block2dMutation as Mutation<Block2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = dsl::DslValue::object([
-        ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
-        ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
-        ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
-        ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&forward.messages().to_vec()))),
-        ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
-        ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
-        ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
+    let report = semio_framework_value::DslValue::object([
+        ("base".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&applied))),
+        ("diff".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&forward.messages().to_vec()))),
+        ("inverseSteps".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse_messages))),
     ]);
-    Ok(dsl::json::to_json_string(&report))
+    Ok(semio_framework_pack_json::to_json_string(&report))
 }
 //#endregion 🌉️TestBridge
 

@@ -1,11 +1,9 @@
-//! 🧵️ SpreadsheetML (xlsx) export — `XlsxWorkbook` → `xl/workbook.xml`/`xl/worksheets/sheetN.xml`/
-//! `xl/sharedStrings.xml` XML render, and the OPC package assembly/sync around it. Zip/OPC/XML
-//! byte-level work is never reimplemented here: it is reused from the shared
-//! `semio_s_artifact_stdio_zip::opc` layer. Shared strings (`t="s"` cells reference an index into
-//! `xl/sharedStrings.xml`) are decoded/encoded as an EXPLICIT `workbook.shared_strings` table —
-//! never eagerly resolved into cell text — so the `t="s"` (shared-string reference) vs
-//! `t="inlineStr"` (literal text) distinction the format itself makes survives round-trip, and a
-//! diff over `shared_strings` means something (see `🧬️schema/🔺️diff`).
+//! 🧵️ SpreadsheetML export from authoritative OPC and ordered XML parts.
+//!
+//! Canonical saves serialize every retained XML document, reinsert those bytes beside the retained
+//! non-XML parts, and delegate ZIP/OPC encoding to `semio_s_artifact_stdio_zip::opc`. The workbook
+//! rendering helpers below are used only to construct a new minimal package and never replace the
+//! authoritative XML parts of an imported snapshot.
 
 use super::super::super::{attr, XlsxError, REL_TYPE_SHARED_STRINGS, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, SML_NS, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART, WORKSHEET_CONTENT_TYPE};
 use crate::{
@@ -17,11 +15,11 @@ use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode
 
 //#region 🔖️SharedStringsXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn sst_to_xml(shared: &[String]) -> XmlDocument {
+fn sst_to_xml(shared: &[String], reference_count: usize) -> XmlDocument {
     let children =
         shared.iter().map(|s| XmlNode::Element { name: "si".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: s.clone() }] }] }).collect();
     XmlDocument {
-        root: Some(XmlNode::Element { name: "sst".into(), attrs: vec![attr("xmlns", SML_NS), attr("count", &shared.len().to_string()), attr("uniqueCount", &shared.len().to_string())], children }),
+        root: Some(XmlNode::Element { name: "sst".into(), attrs: vec![attr("xmlns", SML_NS), attr("count", &reference_count.to_string()), attr("uniqueCount", &shared.len().to_string())], children }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -250,7 +248,7 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     }
 
     let (rids, workbook_rels) = workbook_relationships(opc.relationships_for(WORKBOOK_PART), workbook.sheets.len());
-    opc.relationships.insert(WORKBOOK_PART.to_string(), workbook_rels);
+    opc.relationships.replace_owner(WORKBOOK_PART.to_string(), workbook_rels);
 
     let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).into_bytes();
     opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, workbook_bytes);
@@ -258,7 +256,17 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     // 🩹 `workbook.shared_strings` IS the SST — cells already carry `SharedString(idx)` indices
     // into it, so this is a direct serialize, never a text-dedup rebuild (the #1 xlsx gotcha this
     // engine used to paper over by eagerly resolving text; see the module doc comment).
-    let sst_bytes = xml_document_to_text(&sst_to_xml(&workbook.shared_strings)).into_bytes();
+    let shared_string_references = workbook
+        .sheets
+        .iter()
+        .flat_map(|sheet| &sheet.cells)
+        .filter(|cell| match &cell.value {
+            XlsxCellValue::SharedString(_) => true,
+            XlsxCellValue::Formula { cached: Some(value), .. } => matches!(value.as_ref(), XlsxCellValue::SharedString(_)),
+            _ => false,
+        })
+        .count();
+    let sst_bytes = xml_document_to_text(&sst_to_xml(&workbook.shared_strings, shared_string_references)).into_bytes();
     opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_bytes);
 
     for (i, bytes) in sheet_bytes.into_iter().enumerate() {

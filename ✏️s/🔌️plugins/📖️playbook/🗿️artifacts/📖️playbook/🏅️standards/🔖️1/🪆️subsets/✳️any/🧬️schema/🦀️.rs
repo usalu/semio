@@ -1,6 +1,6 @@
 //! 🧬️ Playbook artifact schema — every field of the artifact with its state class.
 
-use crate::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::{PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -18,9 +18,6 @@ pub struct PlaybookArtifact {
     pub title: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub document: PlaybookDocumentChild,
-    #[state(artifact)]
-    #[child(kind = "s.stdio.semio")]
     pub flow: PlaybookFlowChild,
 }
 //#endregion 🔖️Artifact
@@ -29,19 +26,19 @@ pub struct PlaybookArtifact {
 impl Default for PlaybookArtifact {
     fn default() -> Self {
         let snapshot = crate::PlaybookSnapshot::default();
-        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow }
+        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, flow: snapshot.flow }
     }
 }
 
 impl PlaybookArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::PlaybookSnapshot {
-        crate::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), document: self.document.clone(), flow: self.flow.clone() }
+        crate::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), flow: self.flow.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PlaybookSnapshot) -> Self {
-        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, flow: snapshot.flow }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -50,41 +47,38 @@ impl PlaybookArtifact {
         self.id = snapshot.id;
         self.version = snapshot.version;
         self.title = snapshot.title;
-        self.document = snapshot.document;
         self.flow = snapshot.flow;
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `document`/`flow` are `store::ArtifactChild<S>` composed-artifact
-/// handles, which speak `serde` (framework-internal, unaffected by this ticket) rather than
+/// 🔀️ Hand-written, not derived: `flow` is a `store::ArtifactChild<S>` composed-artifact
+/// handle, which speak `serde` (framework-internal, unaffected by this ticket) rather than
 /// `ToValue`/`FromValue` directly — bridged per-field through the pre-existing
 /// `to_dsl_value`/`from_dsl_value` seam (`🌱️value/🔀️serde`) instead of widening the derive macro to
 /// understand child-slot handles. See the fan-out playbook's "composed artifact fields" trap.
-impl ::semio_framework_os_kernel::ToValue for PlaybookArtifact {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        ::semio_framework_os_kernel::DslValue::object([
-            ("schema".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.schema)),
-            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
-            ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
-            ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
-            ("document".to_string(), semio_framework_value::ToValue::to_value(&self.document)),
+impl semio_framework_value::ToValue for PlaybookArtifact {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("version".to_string(), semio_framework_value::ToValue::to_value(&self.version)),
+            ("title".to_string(), semio_framework_value::ToValue::to_value(&self.title)),
             ("flow".to_string(), semio_framework_value::ToValue::to_value(&self.flow)),
         ])
     }
 }
-impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+impl semio_framework_value::FromValue for PlaybookArtifact {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.into_object()?;
         let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
-        let field = |key: &str| get(key).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing field `{key}`")));
+        let field = |key: &str| get(key).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing field `{key}`")));
         Ok(Self {
-            schema: ::semio_framework_os_kernel::FromValue::from_value(field("schema")?)?,
-            id: ::semio_framework_os_kernel::FromValue::from_value(field("id")?)?,
-            version: ::semio_framework_os_kernel::FromValue::from_value(field("version")?)?,
-            title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
-            document: semio_framework_value::FromValue::from_value(field("document")?)?,
+            schema: semio_framework_value::FromValue::from_value(field("schema")?)?,
+            id: semio_framework_value::FromValue::from_value(field("id")?)?,
+            version: semio_framework_value::FromValue::from_value(field("version")?)?,
+            title: semio_framework_value::FromValue::from_value(field("title")?)?,
             flow: semio_framework_value::FromValue::from_value(field("flow")?)?,
         })
     }
@@ -129,7 +123,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct PlaybookBuilderConstruction {
         snapshot: PlaybookSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for PlaybookBuilderConstruction {
@@ -142,7 +136,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -152,7 +146,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -161,7 +155,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -203,14 +197,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <PlaybookSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

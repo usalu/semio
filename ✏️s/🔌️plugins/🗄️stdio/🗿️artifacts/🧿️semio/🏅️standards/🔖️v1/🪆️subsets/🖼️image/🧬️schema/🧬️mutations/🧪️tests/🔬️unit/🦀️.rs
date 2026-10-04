@@ -56,7 +56,7 @@ async fn inverse_law() {
 
         let mut round_tripped = base.clone();
         apply_semio_image_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base) {
+        for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_semio_image_mutation(&mut round_tripped, &inverse_mutation);
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
@@ -104,6 +104,7 @@ async fn op_text_binary_roundtrip_law() {
 /// no arm here, so the crate stops building until both this match and `KINDS` name it.
 fn kind_of(mutation: &SemioImageMutation) -> &'static str {
     match mutation {
+        SemioImageMutation::PatchSnapshot(_) => "patch-snapshot",
         SemioImageMutation::SetSnapshot(_) => "set-snapshot",
         SemioImageMutation::SetDimensions(_) => "set-dimensions",
         SemioImageMutation::SetColorspace(_) => "set-colorspace",
@@ -126,6 +127,7 @@ fn kind_of(mutation: &SemioImageMutation) -> &'static str {
 fn kinds_match_the_enum_and_the_catalog() {
     let one_per_variant = [
         SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioImageSnapshot::default() }),
+        SemioImageMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("owned schema".into()) } }),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 4, height: 2 }),
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: SemioColorspace::Rgba }),
         SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: 16 }),

@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateColdFormedInputs, base: &En1993Snapshot) -> protocol
     let mut values = base.cold_formed_members.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.cold_formed_member.id) {
         if values[idx] == payload.cold_formed_member {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.cold_formed_member.clone();
     } else {

@@ -60,24 +60,24 @@ fn item_key(item: &semio_framework_os_flow::CatalogueItem) -> String {
 }
 
 /// 🖱️ Widget descriptor JSON: kind, neuronKind for neurons, and format or action when the item has them.
-fn widget_descriptor(item: &semio_framework_os_flow::CatalogueItem) -> dsl::os_pack::json::Value {
-    let kind = ("kind".to_string(), dsl::os_pack::json::Value::String(item.kind.clone()));
+fn widget_descriptor(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
+    let kind = ("kind".to_string(), semio_framework_pack_json::Value::String(item.kind.clone()));
     if item.kind == "neuron" {
         let neuron = item.neuron_kind.clone().unwrap_or_else(|| "math.add".into());
-        return dsl::os_pack::json::object([kind, ("neuronKind".to_string(), dsl::os_pack::json::Value::String(neuron))]);
+        return semio_framework_pack_json::object([kind, ("neuronKind".to_string(), semio_framework_pack_json::Value::String(neuron))]);
     }
     if let Some(format) = item.format.clone() {
-        return dsl::os_pack::json::object([kind, ("format".to_string(), dsl::os_pack::json::Value::String(format))]);
+        return semio_framework_pack_json::object([kind, ("format".to_string(), semio_framework_pack_json::Value::String(format))]);
     }
     if let Some(action) = item.action.clone() {
-        return dsl::os_pack::json::object([kind, ("action".to_string(), dsl::os_pack::json::Value::String(action))]);
+        return semio_framework_pack_json::object([kind, ("action".to_string(), semio_framework_pack_json::Value::String(action))]);
     }
-    dsl::os_pack::json::object([kind])
+    semio_framework_pack_json::object([kind])
 }
 
-fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> dsl::os_pack::json::Value {
+fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
     let descriptor = widget_descriptor(item);
-    dsl::os_pack::json::object([(FLOW_WIDGET_DRAG_MIME.to_string(), dsl::os_pack::json::Value::String(descriptor.to_string()))])
+    semio_framework_pack_json::object([(FLOW_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 
 fn click_args(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {

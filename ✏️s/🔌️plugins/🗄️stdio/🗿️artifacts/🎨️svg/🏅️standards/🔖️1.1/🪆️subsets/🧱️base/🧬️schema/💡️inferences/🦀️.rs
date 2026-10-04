@@ -20,8 +20,11 @@ pub struct SvgInference {
 }
 
 impl protocol::Inference<SvgSnapshot> for SvgInference {
-    fn infer(snapshot: &SvgSnapshot) -> Self {
+    fn infer(snapshot: &SvgSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_svg_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -30,7 +33,9 @@ impl protocol::Inference<SvgSnapshot> for SvgInference {
 /// trick as `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for SvgInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SvgSnapshot>>::infer(&SvgSnapshot::default())
+        let snapshot = &SvgSnapshot::default();
+
+        Self { dimensions: compute_svg_dimensions(snapshot) }
     }
 }
 
@@ -46,15 +51,6 @@ impl protocol::InferenceSpec<SvgSnapshot> for SvgInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a root-element read is already O(1), nothing to incrementally
-/// cache) — the default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1_1::subsets::base::schema::SvgBuilder {
-    type Snapshot = SvgSnapshot;
-    type Inference = SvgInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.svg.inference`'s facet leaves into the OS-wide inference catalog — call

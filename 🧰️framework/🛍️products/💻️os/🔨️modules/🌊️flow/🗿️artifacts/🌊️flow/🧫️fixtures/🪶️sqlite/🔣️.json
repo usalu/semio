@@ -1,0 +1,122 @@
+{
+  "schema": "",
+  "literal": "!@/\u0000引用😀",
+  "documentSchema": "flow.host_snapshot",
+  "nativeEnvelope": "flow.flow",
+  "widgetKinds": [
+    "neuron",
+    "inputSlider",
+    "inputNote",
+    "inputImage",
+    "variable",
+    "outputPreview",
+    "outputAction",
+    "outputExport",
+    "cluster"
+  ],
+  "chromeKinds": [
+    "plain",
+    "slider",
+    "note",
+    "image",
+    "variable"
+  ],
+  "neuralVariants": [
+    "null",
+    "boolean",
+    "integer",
+    "decimal",
+    "text",
+    "dictionary"
+  ],
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007",
+    "4340000000000001"
+  ],
+  "signedWords": [
+    "-9223372036854775808",
+    "-9007199254740993",
+    "-1",
+    "0",
+    "9007199254740993",
+    "9223372036854775807"
+  ],
+  "work": {
+    "repeat": 20000,
+    "interiorBytes": 65536,
+    "recursiveDepth": 300
+  },
+  "tableWidths": {
+    "flow_document": 11,
+    "flow_widget": 5,
+    "flow_neuron_widget": 5,
+    "flow_widget_port": 5,
+    "flow_slider_widget": 15,
+    "flow_note_widget": 3,
+    "flow_image_widget": 3,
+    "flow_variable_widget": 4,
+    "flow_preview_widget": 3,
+    "flow_widget_expanded": 4,
+    "flow_action_widget": 3,
+    "flow_export_widget": 3,
+    "flow_cluster_widget": 5,
+    "flow_synapse": 8,
+    "flow_layout": 10,
+    "flow_gui": 10,
+    "flow_gui_node": 11,
+    "flow_chrome_plain": 3,
+    "flow_chrome_slider": 15,
+    "flow_chrome_note": 3,
+    "flow_chrome_image": 3,
+    "flow_chrome_variable": 4,
+    "flow_gui_preview": 6,
+    "flow_preview_source": 4,
+    "flow_preview_layout": 8,
+    "flow_gui_expanded": 4,
+    "flow_tree": 1,
+    "flow_tree_neuron": 7,
+    "flow_tree_synapse": 8,
+    "flow_dictionary": 1,
+    "flow_dictionary_entry": 5,
+    "flow_neural_value": 2,
+    "flow_neural_boolean": 3,
+    "flow_neural_integer": 3,
+    "flow_neural_decimal": 5,
+    "flow_neural_text": 3,
+    "flow_neural_dictionary": 3
+  },
+  "wireText": {
+    "from": "",
+    "fromPort": "!@/\u0000引用😀",
+    "to": "!@/\u0000引用😀",
+    "toPort": "",
+    "canonical": "\"\"@\"!@/\\u{0}引用😀\"->\"!@/\\u{0}引用😀\"@\"\""
+  },
+  "recordMapText": {
+    "entries": [
+      {
+        "key": "bool",
+        "field": "bool",
+        "literal": "false"
+      },
+      {
+        "key": "decimal",
+        "field": "decimal",
+        "literal": "nan64_7ff8000000000011"
+      }
+    ],
+    "canonical": "{ bool={bool=false} decimal={decimal=nan64_7ff8000000000011} }"
+  },
+  "namedFieldText": {
+    "key": "null",
+    "value": true,
+    "canonical": "\"null\"=true"
+  }
+}

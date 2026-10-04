@@ -37,12 +37,8 @@
       "x-semio-state": "artifact"
     },
     "annex": {
-      "type": "string",
-      "enum": [
-        "de",
-        "en"
-      ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "$ref": "#/$defs/AnnexChoice"
     },
     "groundwaterLevel": {
       "type": "number",

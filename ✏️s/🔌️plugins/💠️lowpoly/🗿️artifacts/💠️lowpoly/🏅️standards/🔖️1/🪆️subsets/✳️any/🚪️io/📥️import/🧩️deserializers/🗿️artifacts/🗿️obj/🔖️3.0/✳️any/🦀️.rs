@@ -12,12 +12,12 @@ use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &ObjSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize(from: &ObjSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     snapshot_from_obj_geometry(from)
 }
 
 /// 🕸️ Real-geometry import (see module docs).
-pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let positions: Vec<[f32; 3]> = from.vertices.iter().map(|v| [v.x as f32, v.y as f32, v.z as f32]).collect();
     let polygon = |face_index: usize| -> Vec<u32> { from.faces[face_index].vertices.iter().map(|fv| fv.vertex).collect() };
 
@@ -57,8 +57,8 @@ pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot,
     snapshot_from_parts("obj", parts)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    let snap = decode_obj(text).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let snap = decode_obj(text).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     deserialize(&snap)
 }

@@ -1,0 +1,54 @@
+{
+  "families": [
+    "orderedMap",
+    "orderedSet",
+    "tree",
+    "neuron",
+    "synapse"
+  ],
+  "keys": [
+    "z",
+    "\u0000",
+    "",
+    "😀",
+    "a"
+  ],
+  "orderedKeys": [
+    "",
+    "\u0000",
+    "a",
+    "z",
+    "😀"
+  ],
+  "limits": {
+    "successBytes": 16777216,
+    "refusedBytes": 0,
+    "interiorBytes": 65536,
+    "repeat": 20000,
+    "recursiveDepth": 300
+  },
+  "refusals": {
+    "ownership": "OwnershipLimit",
+    "cancel": "Canceled",
+    "depth": "DepthLimit"
+  },
+  "recordFields": {
+    "tree": [
+      "neurons",
+      "synapses"
+    ],
+    "neuron": [
+      "id",
+      "kind",
+      "params",
+      "tree"
+    ],
+    "synapse": [
+      "id",
+      "from",
+      "to",
+      "fromPort",
+      "toPort"
+    ]
+  }
+}

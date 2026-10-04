@@ -4,11 +4,11 @@ use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::questions::patch_question;
 use crate::schema::{locate_question, question_edit_mutations, value_to_dsl};
 use crate::{op::FormMutation, FormsSnapshot};
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-questions")]
 pub struct PatchQuestions {
     pub question_ids: Vec<String>,
@@ -18,7 +18,7 @@ pub struct PatchQuestions {
 }
 
 pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    let raw_value: Value = dsl::os_pack::json::parse(&payload.value_json).map_err(|_| Fault::from("forms.patch.invalid-json"))?;
+    let raw_value: Value = semio_framework_pack_json::parse(&payload.value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Fault::from("forms.patch.invalid-json"))?;
     let mut operations = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for id in &payload.question_ids {
@@ -31,8 +31,8 @@ pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _
         } else if payload.field == "param" {
             let key = payload.param_key.as_deref().filter(|key| !key.trim().is_empty()).ok_or_else(|| Fault::from("forms.patch.parameter-required"))?;
             let mut next = location.question.clone();
-            let mut params = next.params.take().unwrap_or(dsl::DslValue::Object(Vec::new()));
-            let dsl::DslValue::Object(entries) = &mut params else { return Err(Fault::from("forms.patch.invalid-parameters")); };
+            let mut params = next.params.take().unwrap_or(semio_framework_value::DslValue::Object(Vec::new()));
+            let semio_framework_value::DslValue::Object(entries) = &mut params else { return Err(Fault::from("forms.patch.invalid-parameters")); };
             let value = value_to_dsl(&raw_value);
             if let Some((_, slot)) = entries.iter_mut().find(|(name, _)| name == key) { *slot = value; }
             else { entries.push((key.to_owned(), value)); }

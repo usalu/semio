@@ -50,7 +50,6 @@ fn a_one_shot_is_one_transaction() {
     let transaction = dispatch.emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.layout.layout@1/*#editor#translateSelection", "{transaction:?}");
     assert_eq!(dispatch.emit.artifact_mutations, vec![drag(5.0, -2.0).mutation()]);
-    assert_eq!(dispatch.emit.coalesce_key, None);
 }
 
 /// 🌊️ A streamed gesture: every tick lands in ONE open transaction the window persists — no edit — and the commit
@@ -121,7 +120,7 @@ fn a_fully_locked_request_raises_one_notice() {
 #[test]
 fn the_persisted_gesture_round_trips_and_previews() {
     let open = opened(step(LayoutTransformPhase::Stream, Some(drag(10.0, 4.0)), None, "rev-1"));
-    let restored: LayoutTransformToolState = dsl::FromValue::from_value(dsl::ToValue::to_value(&open)).expect("the tool state decodes from its value form");
+    let restored: LayoutTransformToolState = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&open)).expect("the tool state decodes from its value form");
     assert_eq!(restored, open);
     let tool = LayoutTransformTool::resume(&restored).expect("the gesture resumes");
     assert!(!tool.at_rest(), "a resumed gesture is still streaming");

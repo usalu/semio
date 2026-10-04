@@ -112,7 +112,7 @@ impl protocol::OpBinary for En1993Mutation {
             En1993Mutation::RemoveCraneRunway(_) => TAG_REMOVE_CRANE_RUNWAY,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        write_str_bin(&mut out, &pack::json::to_json_string(self));
+        write_str_bin(&mut out, &semio_framework_pack_json::to_json_string(self));
         Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -121,6 +121,6 @@ impl protocol::OpBinary for En1993Mutation {
         if format != store::pack_rt::OP_BINARY_FORMAT { return Err(protocol::ProtocolError::Io(format!("bad op format {format}"))); }
         let _tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Io(e.to_string()))?;
         let body = read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Io(e))?;
-        pack::json::from_json_str(&body).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        semio_framework_pack_json::from_json_str(&body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }

@@ -19,6 +19,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg")]
 pub enum SvgMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     SetDeclaration(SetDeclarationMutation),
     SetDoctype(SetDoctypeMutation),
     InsertElement(InsertElementMutation),

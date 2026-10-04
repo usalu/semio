@@ -20,9 +20,12 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         agg_diff(&TsvMutation::SetCell(self.clone()), base)
     }
-    fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
-        agg_inverse(&TsvMutation::SetCell(self.clone()), base)
-    }
+    fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&TsvMutation::SetCell(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
     }

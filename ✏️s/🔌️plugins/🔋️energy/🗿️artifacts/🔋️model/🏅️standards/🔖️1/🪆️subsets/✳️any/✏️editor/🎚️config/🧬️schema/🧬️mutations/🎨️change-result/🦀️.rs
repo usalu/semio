@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// 🎨️ `change-result-field`: replaces `resultField` alone and leaves the three run settings exactly as
 /// the base had them; its inverse restores the base's field. Unlike `change-simulation-settings` this
 /// touches no pointer the simulation run reads, so publishing it never restarts a live run.
-#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -32,9 +32,12 @@ impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for Ch
     fn diff(&self, base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
         protocol::MutationOutcome::new(self.config(base))
     }
-    fn inverse(&self, base: &EnergyModelConfig) -> Vec<EnergyModelConfigMutation> {
+    fn inverse(&self, base: &EnergyModelConfig) -> Result<Vec<EnergyModelConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![EnergyModelConfigMutation::ChangeResultField(Self::of(base))]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Colour surfaces by {}", self.field), &format!("Oberflächen nach {} einfärben", self.field))
     }

@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceMaterial, base: &Fem3dSnapshot) -> protocol::Mutati
         return target_mismatch("Material", &payload.id, &payload.new_material.id);
     }
     if existing == &payload.new_material {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material \"{}\" already has that value.", payload.id));
     }
     if let Some(breach) = material_breach(&payload.new_material) {
         return invariant(breach, vec![payload.id.clone()]);

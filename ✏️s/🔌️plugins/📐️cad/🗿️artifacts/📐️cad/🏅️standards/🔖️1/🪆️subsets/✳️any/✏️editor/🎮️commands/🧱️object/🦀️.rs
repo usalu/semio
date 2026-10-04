@@ -35,7 +35,7 @@ fn origin_delta_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, ids: Vec<S
 pub mod add_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-object")]
     pub struct AddObject {
         pub typology: Option<String>,
@@ -55,7 +55,7 @@ pub mod patch_object {
     use super::*;
     use crate::editor::cad::command_value_json;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-object")]
     pub struct PatchObject {
         pub object_id: String,
@@ -72,7 +72,7 @@ pub mod patch_object {
             return Ok(emit);
         }
         let value = payload.value.as_deref().map(|value| command_value_json(&payload.field, value));
-        let delta = payload.delta.map(protocol::DslValue::float);
+        let delta = payload.delta.map(semio_framework_value::DslValue::float);
         Ok(Emit::mutations(patch_objects_mutations(doc.snapshot, std::slice::from_ref(&payload.object_id), &payload.field, value.as_ref(), delta.as_ref())))
     }
 }
@@ -83,7 +83,7 @@ pub mod patch_selection {
     use super::*;
     use crate::editor::cad::command_value_json;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-selection")]
     pub struct PatchSelection {
         pub object_ids: Vec<String>,
@@ -101,7 +101,7 @@ pub mod patch_selection {
             return Ok(emit);
         }
         let value = payload.value.as_deref().map(|value| command_value_json(&payload.field, value));
-        let delta = payload.delta.map(protocol::DslValue::float);
+        let delta = payload.delta.map(semio_framework_value::DslValue::float);
         Ok(Emit::mutations(patch_objects_mutations(doc.snapshot, &ids, &payload.field, value.as_ref(), delta.as_ref())))
     }
 }
@@ -111,7 +111,7 @@ pub mod patch_selection {
 pub mod delete_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "delete-object")]
     pub struct DeleteObject {
         pub object_id: String,
@@ -127,7 +127,7 @@ pub mod delete_object {
 pub mod duplicate_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "duplicate-object")]
     pub struct DuplicateObject {
         pub object_id: String,

@@ -3,6 +3,10 @@
 For S3-W2A (runtime adoption) and S3-E2E. Owner: W1-G (store). Status and verification: `📓️w1-g-report.md`, section
 "Session 3 — 2026-10-02".
 
+**Verified at 19:00 on 2026-10-02:** the store laws pass (3 local-step laws over a 240-mutation history, plus the 4
+remote laws). The reload law `a_long_history_reloads_one_operation_per_initializer_step` is written but not yet run; its
+plugin build is blocked by a peer's DSL crate extraction.
+
 ## 1. What it is
 
 A history step can need a Report replay of everything downstream of it. Over a long history (the paged ledger admits
@@ -29,7 +33,7 @@ tail edits.
 store.defer_local_replays(Some(operations))   // None (default): every local step replays inside its dispatch
 store.local_step_pending() -> bool            // a local step waits for later turns
 store.discard_local_step() -> bool            // drop it: zero trace (nothing was logged, announced or shown)
-store.reprojection_progress() -> Option<ReplayProgress>   // remote, local or both; {done,total}
+store.reprojection_progress() -> Option<ReplayProgress>   // remote, local or both; {done,total}; done 0 after a restart
 store.step_reprojection().await -> Result<Option<ReplayProgress>, VcsError>  // one budget; None once adopted
 store.cancel_reprojection() -> bool           // pause: drops the running replay, the change stays admitted
 ArtifactCommand::moves_history(&self) -> bool

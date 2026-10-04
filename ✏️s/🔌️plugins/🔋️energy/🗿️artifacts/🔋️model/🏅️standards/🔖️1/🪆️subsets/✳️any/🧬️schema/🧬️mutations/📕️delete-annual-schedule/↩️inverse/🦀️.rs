@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = base.model.schedules.annual.iter().position(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -41,5 +42,7 @@ pub fn inverse(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot
     // must be LAST in this list — reversed, it is re-created before its dependants.
     steps.reverse();
     steps
+
+    })())
 }
 //#endregion 🔖️Inverse

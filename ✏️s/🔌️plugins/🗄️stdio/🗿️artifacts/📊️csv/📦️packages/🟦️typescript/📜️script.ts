@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ csv TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-csv");
+await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-csv", { suites: ["🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

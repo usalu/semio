@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::io as io_root;
 use crate::RemodelingSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
-use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};
+use semio_framework_plugin::{ ArtifactDeserializer};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_las::standards::v1_0::engine::decode_las;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
@@ -26,11 +26,11 @@ impl Deserializer<RemodelingSnapshot> for LasIntoRemodeling {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<RemodelingSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "las→remodeling: expected a binary las payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "las→remodeling: expected a binary las payload".to_string())));
         };
-        let las = decode_las(bytes).map_err(|error| IoError { message: format!("las→remodeling: decode failed: {error}"), diagnostics: Vec::new() })?;
-        let semio = resolve_ready(SemioMeshFromLas::deserialize(&las)).map_err(|error| IoError { message: format!("las→remodeling: {error}"), diagnostics: Vec::new() })?;
-        let scene = io_root::scene_from_semio_cloud(&semio).map_err(|reason| IoError { message: format!("las→remodeling: {reason}"), diagnostics: Vec::new() })?;
+        let las = decode_las(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("las→remodeling: decode failed: {error}"))))?;
+        let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&las)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("las→remodeling: {error}"))))?;
+        let scene = io_root::scene_from_semio_cloud(&semio).map_err(|reason| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("las→remodeling: {reason}"))))?;
         Ok(IoOutcome::clean(scene))
     }
 }

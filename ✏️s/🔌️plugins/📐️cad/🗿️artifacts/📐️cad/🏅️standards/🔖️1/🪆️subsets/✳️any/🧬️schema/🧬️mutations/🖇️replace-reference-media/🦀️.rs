@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🖇️ Whole-value swap of a reference overlay's media-identity/appearance bundle
 /// (`source_url`/`media_kind`/`orientation`/`scale`/`opacity`) — the rarely-touched fields no
 /// editor gesture sets independently, unlike `hidden`/`locked`/`width_world`/`origin`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-reference-media")]
@@ -28,9 +28,12 @@ impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferenceMedia {
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace media of reference \"{}\"", self.reference_id), &format!("Medien von Referenz \"{}\" ersetzen", self.reference_id))
     }

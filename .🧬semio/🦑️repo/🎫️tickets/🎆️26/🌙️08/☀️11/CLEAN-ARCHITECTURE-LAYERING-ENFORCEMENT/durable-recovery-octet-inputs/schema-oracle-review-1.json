@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-03T07:12:59.016Z",
+  "strictAjv": true,
+  "closedFixtureValid": true,
+  "bindings": [
+    {
+      "record": "unbound",
+      "fields": [
+        "next-clock-canonical-json",
+        "edit-without-group-canonical-json",
+        "post-snapshot-pack"
+      ]
+    },
+    {
+      "record": "bound",
+      "fields": [
+        "next-clock-canonical-json",
+        "edit-canonical-json",
+        "post-snapshot-pack"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "empty",
+      "length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "nul-high",
+      "length": 4,
+      "sha256": "6509423fd9da5c225d2f8619ffae394b40f9f7686fee55a38c54b1424ac65f46"
+    },
+    {
+      "id": "every-octet",
+      "length": 256,
+      "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+    },
+    {
+      "id": "page",
+      "length": 4096,
+      "sha256": "4a1f040873cdda462016a0450d88c2c223157a2e84e906260b384277d7d7c11c"
+    }
+  ],
+  "grammarAttempt": {
+    "result": "unavailable",
+    "error": "Cannot find package tree-sitter from root Bun eval; no compiler/runtime claim"
+  },
+  "mounted": false
+}

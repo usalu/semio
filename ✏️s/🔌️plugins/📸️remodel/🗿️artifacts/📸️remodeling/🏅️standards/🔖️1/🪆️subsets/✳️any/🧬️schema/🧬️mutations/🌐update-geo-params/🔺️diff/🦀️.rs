@@ -14,7 +14,7 @@ pub fn diff(payload: &super::UpdateGeoParams, base: &RemodelingSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", "Geo params need finite positive distances, a positive ortho resolution, and an in-range origin.", Vec::<String>::new());
     }
     if *params == base.params.geo {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Geo params are unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Geo params are unchanged.");
     }
     let mut params_state = base.params.clone();
     params_state.geo = params.clone();

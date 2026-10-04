@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeMaterialSpecificHeat, base: &EnergyModelSnaps
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: specific heat (J/kg·K) must be a positive finite value, got {}.", payload.id.0, payload.new_specific_heat_j_kg_k), [payload.id.0.to_string()]);
     }
     if existing.specific_heat_j_kg_k == payload.new_specific_heat_j_kg_k {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this specific heat (J/kg·K): {}.", payload.id.0, payload.new_specific_heat_j_kg_k));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this specific heat (J/kg·K): {}.", payload.id.0, payload.new_specific_heat_j_kg_k));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

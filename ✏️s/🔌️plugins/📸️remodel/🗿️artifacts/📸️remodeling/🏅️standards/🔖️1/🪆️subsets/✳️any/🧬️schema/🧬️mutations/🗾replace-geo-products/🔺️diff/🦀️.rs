@@ -9,7 +9,7 @@ pub fn diff(payload: &super::ReplaceGeoProducts, base: &RemodelingSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", "There are no geo products to clear.".to_string(), [base.id.clone()]);
     }
     if payload.geo == base.results.geo {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Geo products are already up to date.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Geo products are already up to date.".to_string());
     }
     let mut results = base.results.clone();
     results.geo = payload.geo.clone();

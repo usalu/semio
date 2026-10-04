@@ -275,11 +275,10 @@ fn raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonze
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut clone = RasterSnapshotCloneAuthority::new();
-    let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.low-fuel");
     let mut turns = 0;
     while !clone.terminal {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        assert!(!clone.step(&source, &mut digest, &mut context).expect("bounded Raster clone") || clone.terminal);
+        assert!(!clone.step(&source, &mut context).expect("bounded Raster clone") || clone.terminal);
         turns += 1;
         assert!(turns < 20_000);
     }
@@ -374,9 +373,8 @@ fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut clone = RasterSnapshotCloneAuthority::new();
-    let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.expired");
     let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, 10), cancel, expired_now, &mut preview_sequence);
-    assert!(!clone.step(&source, &mut digest, &mut context).expect("expired clone yields"));
+    assert!(!clone.step(&source, &mut context).expect("expired clone yields"));
     assert_eq!(clone.phase, 0);
     assert_eq!(clone.bounds.phase, 0);
     assert!(clone.value.as_ref().expect("clone shell").layers.is_empty());
@@ -473,9 +471,9 @@ fn raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth() {
     }
     drop(retirement);
 
-    let mut value = dsl::DslValue::String(String::with_capacity(RASTER_OWNED_FIELD_BYTES));
+    let mut value = semio_framework_value::DslValue::String(String::with_capacity(RASTER_OWNED_FIELD_BYTES));
     for _ in 0..(RASTER_MAXIMUM_NESTED_DEPTH - 8) {
-        value = dsl::DslValue::Array(vec![value]);
+        value = semio_framework_value::DslValue::Array(vec![value]);
     }
     let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(value));
     let mut turns = 0;
@@ -509,7 +507,7 @@ fn raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_
     // constructed is a different instant, and a sibling releasing a page in between made this an
     // exact-equality coin flip (measured 2 vs 3, 2026-09-21).
     let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(dsl::DslValue::Array(vec![dsl::DslValue::String("owned".into())])));
+    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("owned".into())])));
     assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("nested owner stages one push"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
     let baseline = RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire);
     assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("page credit is claimed before allocation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
@@ -581,7 +579,7 @@ fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, ope
 fn retained_mask_keys_and_transforms_survive_clone_and_bounded_retirement() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🎭️mask/🔣️.json")).unwrap();
     for (index,case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
-        let mask:crate::RasterLayerMask=dsl::json::from_json_str(&case["mask"].to_string()).unwrap();
+        let mask:crate::RasterLayerMask=semio_framework_pack_json::from_json_str(&case["mask"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mut base=empty_raster_document();
         let id=crate::standards::v1::subsets::any::schema::layer_node_id(&base.layers[0]).to_owned();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut base.layers[0] {*target=Some(mask.clone());}
@@ -947,7 +945,7 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
         if index == 0 {
             first_key_pointer = key.as_ptr();
         }
-        let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::uint(index as u64))])]))]);
+        let value = semio_framework_value::DslValue::Object(vec![("nested".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(format!("value-{index}")), semio_framework_value::DslValue::Object(vec![("leaf".into(), semio_framework_value::DslValue::uint(index as u64))])]))]);
         params.insert(key, value).expect("maximum populated DSL map remains exactly page admitted");
     }
     assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
@@ -955,7 +953,7 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
 
     let plus_one_key = String::from("key-plus-one");
     let plus_one_key_pointer = plus_one_key.as_ptr();
-    let plus_one_value = dsl::DslValue::String("plus-one-value".into());
+    let plus_one_value = semio_framework_value::DslValue::String("plus-one-value".into());
     let rejected = params.insert(plus_one_key, plus_one_value).expect_err("capacity plus one returns both exact owners");
     assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
     assert_eq!(rejected.reason, "raster-map.item-capacity");
@@ -966,8 +964,8 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     // `RasterOwnedMap`'s own doc comment). It used to refuse a populated map outright, which trapped
     // every whole-document route. What this law still pins is the OWNERSHIP half: projecting the map
     // leaves every key, value and page owner exactly where it was.
-    let output = dsl::DslField::to_value(&params);
-    let dsl::FieldValue::Map(projected) = &output else { panic!("a populated Raster owned map projects as a map") };
+    let output = semio_framework_dsl_record::DslField::to_value(&params);
+    let semio_framework_dsl_record::FieldValue::Map(projected) = &output else { panic!("a populated Raster owned map projects as a map") };
     assert_eq!(projected.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     assert_eq!(params.entry_at(0).expect("the projection keeps the first exact key/value/page owner installed").0.as_ptr(), first_key_pointer);
@@ -976,7 +974,7 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     drop(rejected_retirement);
 
     // 🗂️ …and the input direction recovers that same real content rather than faulting on it.
-    let mut parsed = <RasterOwnedMap<dsl::DslValue> as dsl::DslField>::from_value(&output).expect("a populated Raster owned map parses its own projection");
+    let mut parsed = <RasterOwnedMap<semio_framework_value::DslValue> as semio_framework_dsl_record::DslField>::from_value(&output).expect("a populated Raster owned map parses its own projection");
     assert_eq!(parsed.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     parsed.retire();
     let layer = RasterLayerNode::Adjustment { id: "dsl-output".into(), name: "DSL Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
@@ -1000,7 +998,7 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
         if index == 0 {
             first_key_pointer = key.as_ptr();
         }
-        let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("serde-value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::uint(index as u64))])]))]);
+        let value = semio_framework_value::DslValue::Object(vec![("nested".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String(format!("serde-value-{index}")), semio_framework_value::DslValue::Object(vec![("leaf".into(), semio_framework_value::DslValue::uint(index as u64))])]))]);
         params.insert(key, value).expect("maximum populated serde map remains exactly page admitted");
     }
     assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
@@ -1008,7 +1006,7 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
 
     let plus_one_key = String::from("serde-key-plus-one");
     let plus_one_key_pointer = plus_one_key.as_ptr();
-    let rejected = params.insert(plus_one_key, dsl::DslValue::String("serde-plus-one-value".into())).expect_err("serde capacity plus one returns both exact owners");
+    let rejected = params.insert(plus_one_key, semio_framework_value::DslValue::String("serde-plus-one-value".into())).expect_err("serde capacity plus one returns both exact owners");
     assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
     assert_eq!(rejected.reason, "raster-map.item-capacity");
     let mut rejected_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) });
@@ -1020,10 +1018,10 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
     // 🗂️ The public `ToValue` projection of a layer READS its populated parameter map whole (it used
     // to refuse it, which trapped every whole-document route) and must not consume, move or
     // reallocate a single owner while doing so — the pointer identity below is what proves it.
-    let output = dsl::ToValue::to_value(&layer);
-    let dsl::DslValue::Object(fields) = &output else { panic!("an adjustment layer projects as an object") };
+    let output = semio_framework_value::ToValue::to_value(&layer);
+    let semio_framework_value::DslValue::Object(fields) = &output else { panic!("an adjustment layer projects as an object") };
     let projected = fields.iter().find(|(key, _)| key == "params").map(|(_, value)| value).expect("the projection carries the parameter map");
-    let dsl::DslValue::Object(entries) = projected else { panic!("a populated parameter map projects as an object") };
+    let semio_framework_value::DslValue::Object(entries) = projected else { panic!("a populated parameter map projects as an object") };
     assert_eq!(entries.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     let params = match &layer {
         RasterLayerNode::Adjustment { params, .. } => params,
@@ -1045,9 +1043,9 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
 fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
     let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
     let baseline = RasterProcessCreditBaseline::observe();
-    let mut deepest = dsl::DslValue::String("deep-output-owner".into());
+    let mut deepest = semio_framework_value::DslValue::String("deep-output-owner".into());
     for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
-        deepest = dsl::DslValue::Array(vec![deepest]);
+        deepest = semio_framework_value::DslValue::Array(vec![deepest]);
     }
     let mut params = RasterOwnedMap::new();
     let mut first_param_pointer = std::ptr::null();
@@ -1056,17 +1054,17 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
         if index == 0 {
             first_param_pointer = key.as_ptr();
         }
-        let value = if index == 0 { std::mem::replace(&mut deepest, dsl::DslValue::Null) } else { dsl::DslValue::String(format!("output-value-{index}")) };
+        let value = if index == 0 { std::mem::replace(&mut deepest, semio_framework_value::DslValue::Null) } else { semio_framework_value::DslValue::String(format!("output-value-{index}")) };
         params.insert(key, value).expect("maximum populated output parameter map remains exactly admitted");
     }
     let plus_one_param_key = String::from("output-param-plus-one");
     let plus_one_param_pointer = plus_one_param_key.as_ptr();
     let plus_one_param_value = String::from("rejected-output-value");
     let plus_one_param_value_pointer = plus_one_param_value.as_ptr();
-    let rejected_param = params.insert(plus_one_param_key, dsl::DslValue::String(plus_one_param_value)).expect_err("output parameter capacity plus one returns both exact owners");
+    let rejected_param = params.insert(plus_one_param_key, semio_framework_value::DslValue::String(plus_one_param_value)).expect_err("output parameter capacity plus one returns both exact owners");
     assert_eq!(rejected_param.key.as_ptr(), plus_one_param_pointer);
     let rejected_param_value = match &rejected_param.value {
-        dsl::DslValue::String(value) => value,
+        semio_framework_value::DslValue::String(value) => value,
         _ => unreachable!("rejected output parameter remains the exact string variant"),
     };
     assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer, "rejected output parameter returns the exact value allocation");
@@ -1142,9 +1140,9 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
 
 #[test]
 fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
-    let mut value = dsl::DslValue::String("terminal".into());
+    let mut value = semio_framework_value::DslValue::String("terminal".into());
     for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
-        value = dsl::DslValue::Array(vec![value]);
+        value = semio_framework_value::DslValue::Array(vec![value]);
     }
     let mut params = RasterOwnedMap::new();
     params.insert("deep".into(), value).expect("one fixed parameter page");
@@ -1171,7 +1169,7 @@ fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
 #[test]
 fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
     let mut params = RasterOwnedMap::new();
-    params.insert("nested".repeat(16), dsl::DslValue::Object(vec![("array".repeat(16), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(64)), dsl::DslValue::String("tail".into())]))])).expect("bounded fixture operation succeeds");
+    params.insert("nested".repeat(16), semio_framework_value::DslValue::Object(vec![("array".repeat(16), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("payload".repeat(64)), semio_framework_value::DslValue::String("tail".into())]))])).expect("bounded fixture operation succeeds");
     let adjustment = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
     let mut snapshot = empty_raster_document();
     snapshot.title = Some("Nested raster".into());
@@ -1245,6 +1243,14 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
             color: vec![0.2, 0.2, 0.2, 1.0],
             selection: Some(vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 2, coverage: 255 }]),
         }),
+        RasterMutation::ApplyFilter(crate::mutations::apply_filter::ApplyFilter {
+            layer_id: "pixel".into(),
+            filter: "brightness".into(),
+            amount: -0.25,
+            selection: Some(vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 2, coverage: 128 }]),
+        }),
+        crate::mutations::transform_image::crop_image("pixel", 1, 2, 3, 4),
+        crate::mutations::fill_selection::fill_selection("pixel", "mask", [0.5, 0.5, 0.5, 1.0]),
     ];
     assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {
@@ -1334,9 +1340,9 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
         let mut source = fixture["before"].clone();
         let resolve = |key: &serde_json::Value| key.as_str().map(|key| fixture[key].clone()).unwrap_or(serde_json::Value::Null);
         source["layers"][0]["mask"] = resolve(&case["before"]);
-        let base: RasterSnapshot = dsl::json::from_json_str(&source.to_string()).unwrap();
-        let operation: RasterMutation = dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":resolve(&case["before"]),"mask":resolve(&case["after"])}).to_string()).unwrap();
-        let inverse = operation.inverse(&base).remove(0);
+        let base: RasterSnapshot = semio_framework_pack_json::from_json_str(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let operation: RasterMutation = semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":resolve(&case["before"]),"mask":resolve(&case["after"])}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);
         let (diff, _) = operation.diff(&base).into_parts();
         let cold = diff.apply(&base).unwrap();
         let candidate = drive_raster_candidate(&base, &operation, 930 + index as u64);
@@ -1358,9 +1364,9 @@ fn retained_adjustment_parameters_match_cold_apply_and_undo() {
         let parameter=row["parameter"].as_str().unwrap();
         let mut source=serde_json::json!({"schema":"raster.document","id":"retained-tone","layers":[{"kind":"adjustment","id":"tone","name":"Tone","adjustmentKind":"brightnessContrast","params":{"metadata":"preserve"}}]});
         if !row["before"].is_null() {source["layers"][0]["params"][parameter]=row["before"].clone();}
-        let before:RasterSnapshot=dsl::json::from_json_str(&source.to_string()).unwrap();
-        let operation:RasterMutation=dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerAdjustmentParameter","layerId":"tone","parameter":parameter,"expected":row["before"],"value":row["after"]}).to_string()).unwrap();
-        let inverse=operation.inverse(&before).remove(0);let (diff,_)=operation.diff(&before).into_parts();let cold=diff.apply(&before).unwrap();
+        let before:RasterSnapshot=semio_framework_pack_json::from_json_str(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let operation:RasterMutation=semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerAdjustmentParameter","layerId":"tone","parameter":parameter,"expected":row["before"],"value":row["after"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let inverse=operation.inverse(&before).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&before).into_parts();let cold=diff.apply(&before).unwrap();
         let candidate=drive_raster_candidate(&before,&operation,960+index as u64);assert_eq!(candidate,cold);
         let restored=drive_raster_candidate(&candidate,&inverse,970+index as u64);assert_eq!(restored,before);
         diff.retire_cold();for document in [before,cold,candidate,restored] {retirement::retire_raster_snapshot(document);}
@@ -1389,7 +1395,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
 #[test]
 fn retained_layer_clone_preserves_protection_during_history_replay() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut base=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();base.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    let mut base=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();base.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"Accepted history".into()});
     let candidate=drive_raster_candidate(&base,&operation,981);
     for row in fixture["cases"].as_array().unwrap() {let id=row["id"].as_str().unwrap();assert_eq!(crate::standards::v1::subsets::any::schema::layer_protection(&candidate.layers,id),crate::standards::v1::subsets::any::schema::layer_protection(&base.layers,id));}

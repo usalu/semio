@@ -1,5 +1,5 @@
 import type { DocxXmlPart, OpcPart, OpcRelationship } from '../📸️snapshot/🟦️.ts';
-import { parseXmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { parseRetainedXmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 import { parseXmlDiff, type XmlDiff } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 
 export interface NamedModified<K, D> { key: K; diff: D }
@@ -58,7 +58,7 @@ function parseOpcDiff(value: unknown, at: string): DocxOpcDiff {
 }
 function parseDocxXmlPart(value: unknown, at: string): DocxXmlPart {
   const row = object(value, at);
-  return { path: text(row.path, `${at}.path`), contentType: text(row.contentType, `${at}.contentType`), document: parseXmlDocument(row.document, `${at}.document`) };
+  return { path: text(row.path, `${at}.path`), contentType: text(row.contentType, `${at}.contentType`), document: parseRetainedXmlDocument(row.document, `${at}.document`) };
 }
 function parseDocxXmlPartDiff(value: unknown, at: string): DocxXmlPartDiff {
   const row = object(value, at);

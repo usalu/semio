@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/2d/flatten",
+  "type": "object",
+  "required": [
+    "segments",
+    "transform",
+    "tolerance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "transform": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "minimum": 1e-06,
+      "maximum": 16
+    },
+    "segments": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "move",
+                  "line"
+                ]
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "ctrl",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "quad"
+              },
+              "ctrl": {
+                "$ref": "#/definitions/point"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "ctrl1",
+              "ctrl2",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "cubic"
+              },
+              "ctrl1": {
+                "$ref": "#/definitions/point"
+              },
+              "ctrl2": {
+                "$ref": "#/definitions/point"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "rx",
+              "ry",
+              "rotation",
+              "largeArc",
+              "sweep",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "arc"
+              },
+              "rx": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "ry": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "rotation": {
+                "$ref": "#/definitions/coordinate"
+              },
+              "largeArc": {
+                "type": "boolean"
+              },
+              "sweep": {
+                "type": "boolean"
+              },
+              "to": {
+                "$ref": "#/definitions/point"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "close"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "coordinate": {
+      "type": "number",
+      "minimum": -1000000000,
+      "maximum": 1000000000
+    },
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/definitions/coordinate"
+      }
+    },
+    "retirementProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "work",
+        "done"
+      ],
+      "description": "Complete valid contours transfer unchanged to the caller; partial or failed contours remain private. Each grant consumes one flat source/subdivision buffer or one private contour, then the empty contour container. Structural work does not report freed allocator bytes.",
+      "properties": {
+        "phase": {
+          "enum": [
+            "closing",
+            "complete"
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "boolean"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "phase": {
+              "const": "closing"
+            },
+            "done": {
+              "const": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "complete"
+            },
+            "done": {
+              "const": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

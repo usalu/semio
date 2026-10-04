@@ -6,7 +6,6 @@
 
 use crate::En1991Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1991 snapshot. One field per named inference under
@@ -23,8 +22,11 @@ pub struct En1991Inference {
 }
 
 impl protocol::Inference<En1991Snapshot> for En1991Inference {
-    fn infer(snapshot: &En1991Snapshot) -> Self {
+    fn infer(snapshot: &En1991Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: En1991Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -40,13 +42,6 @@ impl protocol::InferenceSpec<En1991Snapshot> for En1991Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1991Builder {
-    type Snapshot = En1991Snapshot;
-    type Inference = En1991Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1991.inference`'s facet leaves into the OS-wide inference catalog — call once at

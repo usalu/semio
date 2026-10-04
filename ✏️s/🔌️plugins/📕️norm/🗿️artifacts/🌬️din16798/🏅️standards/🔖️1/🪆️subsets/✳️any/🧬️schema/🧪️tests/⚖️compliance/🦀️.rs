@@ -6,7 +6,7 @@ use crate::artifact_schema::{check_full_environment, parse_category, ComfortMode
 use crate::document::{AnnexChoice, CheckStatus};
 use crate::field_meta::din16798_field_meta;
 use crate::Din16798Snapshot;
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -127,7 +127,7 @@ fn decentral_mech_runs_heat_recovery_with_eta_min_0_73() {
 fn every_emitted_subject_path_parses_and_resolves_on_default_and_noncompliant() {
     for (label, doc) in [("compliant", Din16798Snapshot::compliant_office()), ("noncompliant", Din16798Snapshot::noncompliant_office())] {
         let report = check_full_environment(&doc);
-        let root = ToValue::to_value(&doc);
+        let root = semio_framework_value::ToValue::to_value(&doc);
         let mut seen = 0usize;
         for check in &report.checks {
             for path in std::iter::once(check.subject.path.as_str()).chain(check.remedies.iter().map(|r| r.target.path.as_str())) {
@@ -149,18 +149,18 @@ fn every_emitted_subject_path_parses_and_resolves_on_default_and_noncompliant() 
     }
 }
 
-fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>) {
+fn collect_leaf_paths(value: &semio_framework_value::DslValue, prefix: &str, out: &mut Vec<String>) {
     match value {
-        dsl::DslValue::Object(fields) => {
+        semio_framework_value::DslValue::Object(fields) => {
             for (key, child) in fields {
                 let next = if prefix.is_empty() { key.clone() } else { format!("{prefix}.{key}") };
                 match child {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(child, &next, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(child, &next, out),
                     _ => out.push(next),
                 }
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             if items.is_empty() {
                 out.push(format!("{prefix}[]"));
                 return;
@@ -168,11 +168,11 @@ fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>
             // Prefer id selectors when present
             for (i, item) in items.iter().enumerate() {
                 let selector = match item {
-                    dsl::DslValue::Object(fields) => fields
+                    semio_framework_value::DslValue::Object(fields) => fields
                         .iter()
                         .find(|(k, _)| k == "id")
                         .and_then(|(_, v)| match v {
-                            dsl::DslValue::String(s) => Some(format!("[id={s}]")),
+                            semio_framework_value::DslValue::String(s) => Some(format!("[id={s}]")),
                             _ => None,
                         })
                         .unwrap_or_else(|| format!("[{i}]")),
@@ -180,7 +180,7 @@ fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>
                 };
                 let next = format!("{prefix}{selector}");
                 match item {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(item, &next, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(item, &next, out),
                     _ => out.push(next),
                 }
             }
@@ -192,7 +192,7 @@ fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>
 #[test]
 fn default_snapshot_editable_leaves_have_en_de_field_meta() {
     let doc = Din16798Snapshot::default();
-    let root = ToValue::to_value(&doc);
+    let root = semio_framework_value::ToValue::to_value(&doc);
     let mut paths = Vec::new();
     collect_leaf_paths(&root, "", &mut paths);
     assert!(!paths.is_empty());
@@ -515,30 +515,30 @@ fn report_fingerprint(report: &crate::document::CheckReport) -> Vec<(String, Che
 }
 
 fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
-    let mut tree = ToValue::to_value(&*doc);
+    let mut tree = semio_framework_value::ToValue::to_value(&*doc);
     let cur = crate::app_surface::get_value_at_path(&tree, path).expect("get").clone();
     let next = match cur {
-        dsl::DslValue::Bool(b) => dsl::DslValue::Bool(!b),
-        dsl::DslValue::Number(n) => {
+        semio_framework_value::DslValue::Bool(b) => semio_framework_value::DslValue::Bool(!b),
+        semio_framework_value::DslValue::Number(n) => {
             let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
             let int_leaf = matches!(
                 leaf,
                 "occupants" | "yearsSinceInspection" | "sfpRequiredClass" | "index"
             );
             match n {
-                dsl::Number::Int(i) => {
+                semio_framework_value::Number::Int(i) => {
                     let bumped = if i == 0 { 1 } else { i + 1 };
-                    dsl::DslValue::Number(dsl::Number::Int(bumped))
+                    semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(bumped))
                 }
-                dsl::Number::UInt(u) => {
+                semio_framework_value::Number::UInt(u) => {
                     let bumped = if u == 0 { 1 } else { u + 1 };
-                    dsl::DslValue::Number(dsl::Number::UInt(bumped))
+                    semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(bumped))
                 }
-                dsl::Number::Float(f) => {
+                semio_framework_value::Number::Float(f) => {
                     if int_leaf {
                         let base = f.round() as i64;
                         let bumped = if base == 0 { 1 } else { base + 1 };
-                        dsl::DslValue::Number(dsl::Number::Int(bumped))
+                        semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(bumped))
                     } else {
                         let bumped = if path.contains("Percent") || path.ends_with("rhPercent") {
                             (f + 8.0).clamp(5.0, 95.0)
@@ -547,12 +547,12 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
                         } else {
                             f * 1.2 + 1.0
                         };
-                        dsl::DslValue::float(bumped)
+                        semio_framework_value::DslValue::float(bumped)
                     }
                 }
             }
         }
-        dsl::DslValue::String(s) => {
+        semio_framework_value::DslValue::String(s) => {
             let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
             let alt: String = match leaf {
                 "annex" => if s.eq_ignore_ascii_case("de") { "En" } else { "De" }.into(),
@@ -576,12 +576,12 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
                 "ventSystemId" => if s == "vent-central" { "vent-other" } else { "vent-central" }.into(),
                 _ => format!("{s}-x"),
             };
-            dsl::DslValue::String(alt)
+            semio_framework_value::DslValue::String(alt)
         }
         other => panic!("unsupported leaf value at {path}: {other:?}"),
     };
     crate::app_surface::set_value_at_path(&mut tree, path, next).expect("set");
-    *doc = <Din16798Snapshot as dsl::FromValue>::from_value(tree).expect("from_value");
+    *doc = <Din16798Snapshot as semio_framework_value::FromValue>::from_value(tree).expect("from_value");
 }
 
 
@@ -651,7 +651,7 @@ fn editable_leaves_perturb_at_least_one_check_across_examples() {
         ("residential-method3", Din16798Snapshot::residential_method3()),
         ("adaptive-office", adaptive),
     ] {
-        let root = ToValue::to_value(&base);
+        let root = semio_framework_value::ToValue::to_value(&base);
         let mut paths = Vec::new();
         collect_leaf_paths(&root, "", &mut paths);
         let baseline = report_fingerprint(&check_full_environment(&base));

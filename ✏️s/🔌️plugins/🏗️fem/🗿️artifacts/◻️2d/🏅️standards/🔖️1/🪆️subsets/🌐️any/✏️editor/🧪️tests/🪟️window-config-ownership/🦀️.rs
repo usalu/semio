@@ -5,15 +5,15 @@ fn fem2d_window_config_document_admission_rejects_window_and_os_fields() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "2d").expect("dimension");
     let base = row["document"].to_string();
-    let _ = dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&base).expect("neutral FEM artifact admission");
-    let _ = dsl::json::from_json_str::<crate::Fem2dSnapshot>(&base).expect("neutral FEM snapshot admission");
+    let _ = semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");
+    let _ = semio_framework_pack_json::from_json_str::<crate::Fem2dSnapshot>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM snapshot admission");
     for field in row["foreignFields"].as_array().expect("foreign fields") {
         let key = field["key"].as_str().expect("field key");
         let mut candidate = row["document"].clone();
         candidate[key] = field["value"].clone();
         let text = candidate.to_string();
-        assert!(dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&text).is_err(), "artifact admitted {key}");
-        assert!(dsl::json::from_json_str::<crate::Fem2dSnapshot>(&text).is_err(), "snapshot admitted {key}");
+        assert!(semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "artifact admitted {key}");
+        assert!(semio_framework_pack_json::from_json_str::<crate::Fem2dSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "snapshot admitted {key}");
     }
 }
 
@@ -103,7 +103,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     let [semio_framework::kernel::Effect::LoadDocument { pack, spr }] = reset.effects.as_slice() else {
                         return Err("FEM example command did not emit one host-owned document load".into());
                     };
-                    app.load_document_pack(&store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }).await.map_err(|error| format!("{error:?}"))?;
                     let after_example = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     let after_example: Vec<(String, Vec<u8>)> = after_example.iter().map(|pack| (pack.window_id.clone(), pack.files.pack.clone())).collect();
                     if before_example != after_example {

@@ -101,7 +101,7 @@ pub enum DbError {
     /// graded messages verbatim to the submitter).
     Rejected {
         policy: protocol::MergePolicy,
-        worst: protocol::Severity,
+        worst: semio_framework_diagnostic::Severity,
         messages: Vec<protocol::MutationMessage>,
     },
 }
@@ -149,7 +149,7 @@ impl From<pack::PackError> for DbError {
         match err {
             pack::PackError::Io(message) => DbError::Io(message),
             pack::PackError::LimitExceeded(what) => DbError::LimitExceeded(what),
-            pack::PackError::Schema(message) => DbError::InvalidArgument(message),
+            pack::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)) => DbError::InvalidArgument(message),
             other => DbError::Corrupt(other.to_string()),
         }
     }

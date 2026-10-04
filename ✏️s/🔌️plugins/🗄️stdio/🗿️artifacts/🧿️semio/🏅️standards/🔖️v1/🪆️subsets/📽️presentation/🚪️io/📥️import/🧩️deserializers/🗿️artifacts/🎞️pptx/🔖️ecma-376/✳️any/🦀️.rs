@@ -79,7 +79,8 @@ impl ArtifactDeserializer for SemioPresentationFromPptx {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let slides = from.presentation.slides.iter().enumerate().map(|(i, slide)| Slide { id: format!("slide{i}"), layout_id: None, shapes: slide.shapes.iter().filter_map(map_shape).collect(), notes: Vec::new() }).collect();
+        let presentation = from.presentation().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        let slides = presentation.slides.iter().enumerate().map(|(i, slide)| Slide { id: format!("slide{i}"), layout_id: None, shapes: slide.shapes.iter().filter_map(map_shape).collect(), notes: Vec::new() }).collect();
         Ok(SemioPresentationSnapshot { schema: STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.into(), masters: Vec::new(), layouts: Vec::new(), slides })
     }
 }

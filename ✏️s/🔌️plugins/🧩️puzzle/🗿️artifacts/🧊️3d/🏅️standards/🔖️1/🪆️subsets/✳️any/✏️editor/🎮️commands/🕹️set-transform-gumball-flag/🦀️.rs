@@ -1,7 +1,7 @@
 //! ⚙️ `set-transform-gumball-flag` command.
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 pub fn set_transform_gumball_flag(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("");

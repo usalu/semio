@@ -1,0 +1,24 @@
+{
+  "dialect": {
+    "artifactKind": "fixture.sqlite-transfer",
+    "standard": "1",
+    "subset": "*"
+  },
+  "schema": "fixture.sqlite-transfer/v1",
+  "table": "transfer_literal",
+  "schemaSql": "CREATE TABLE transfer_literal (id INTEGER PRIMARY KEY, literal TEXT NOT NULL);",
+  "literal": "literal 世界 🌠 complete transfer",
+  "maximumAllocationBytes": 1048576,
+  "exportCopies": 1,
+  "importCopies": 2,
+  "exportPhases": [
+    "decodeNative",
+    "projectSnapshot",
+    "writePages"
+  ],
+  "importPhases": [
+    "readPages",
+    "reconstructSnapshot",
+    "encodeNative"
+  ]
+}

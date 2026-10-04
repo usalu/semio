@@ -51,6 +51,33 @@ type XmlDocument {
   epilog: [XmlNode!]!
 }
 
+scalar RetainedXmlIndex
+type RetainedXmlAttribute { name: String! value: String! }
+type RetainedXmlNodeValue {
+  kind: XmlNodeKind!
+  name: String
+  firstAttribute: RetainedXmlIndex
+  attributeCount: RetainedXmlIndex
+  firstChild: RetainedXmlIndex
+  text: String
+  target: String
+  data: String
+}
+type RetainedXmlNode { nextSibling: RetainedXmlIndex value: RetainedXmlNodeValue! }
+type RetainedXmlDeclaration { version: String! encoding: String standalone: Boolean quote: XmlQuote! }
+type RetainedXmlDoctype { prologPosition: String! name: String! externalId: XmlExternalId declarations: [XmlDtdEntity!]! }
+
+""" 🗂️ Flat retained XML document authority. """
+type RetainedXmlDocument {
+  nodes: [RetainedXmlNode!]!
+  attributes: [RetainedXmlAttribute!]!
+  prolog: [RetainedXmlIndex!]!
+  epilog: [RetainedXmlIndex!]!
+  root: RetainedXmlIndex
+  doctype: RetainedXmlDoctype
+  declaration: RetainedXmlDeclaration
+}
+
 """ 📸️ Persisted `stdio.xml` snapshot. """
 type XmlSnapshot {
   schema: String!

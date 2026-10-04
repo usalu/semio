@@ -557,11 +557,68 @@
     "waveRule": "One hop parks EVERY contributed node whose inputs are ready — a whole topological wave — and never one behind a parked answer, so the chain costs one round trip per dependency LEVEL rather than one per contributed node.",
     "monotone": true,
     "sequence": [
-      { "step": "armed", "working": true, "nodesDone": 2, "nodesTotal": 6, "inFlight": 0, "wave": [], "unitsDone": 2, "unitsTotal": 6, "ratio": 0.3333333333333333 },
-      { "step": "wave-1-parked", "working": true, "nodesDone": 2, "nodesTotal": 6, "inFlight": 2, "wave": ["brep_prim3d_sphere_3", "brep_prim3d_torus_4"], "unitsDone": 2, "unitsTotal": 6, "ratio": 0.3333333333333333 },
-      { "step": "wave-2-parked", "working": true, "nodesDone": 4, "nodesTotal": 6, "inFlight": 1, "wave": ["brep_bool_cut_5"], "unitsDone": 4, "unitsTotal": 6, "ratio": 0.6666666666666666 },
-      { "step": "wave-3-parked", "working": true, "nodesDone": 5, "nodesTotal": 6, "inFlight": 1, "wave": ["brep_measure_volume_2"], "unitsDone": 5, "unitsTotal": 6, "ratio": 0.8333333333333334 },
-      { "step": "settled", "working": false, "nodesDone": 6, "nodesTotal": 6, "inFlight": 0, "wave": [], "unitsDone": 6, "unitsTotal": 6, "ratio": 1.0 }
+      {
+        "step": "armed",
+        "working": true,
+        "nodesDone": 2,
+        "nodesTotal": 6,
+        "inFlight": 0,
+        "wave": [],
+        "unitsDone": 2,
+        "unitsTotal": 6,
+        "ratio": 0.3333333333333333
+      },
+      {
+        "step": "wave-1-parked",
+        "working": true,
+        "nodesDone": 2,
+        "nodesTotal": 6,
+        "inFlight": 2,
+        "wave": [
+          "brep_prim3d_sphere_3",
+          "brep_prim3d_torus_4"
+        ],
+        "unitsDone": 2,
+        "unitsTotal": 6,
+        "ratio": 0.3333333333333333
+      },
+      {
+        "step": "wave-2-parked",
+        "working": true,
+        "nodesDone": 4,
+        "nodesTotal": 6,
+        "inFlight": 1,
+        "wave": [
+          "brep_bool_cut_5"
+        ],
+        "unitsDone": 4,
+        "unitsTotal": 6,
+        "ratio": 0.6666666666666666
+      },
+      {
+        "step": "wave-3-parked",
+        "working": true,
+        "nodesDone": 5,
+        "nodesTotal": 6,
+        "inFlight": 1,
+        "wave": [
+          "brep_measure_volume_2"
+        ],
+        "unitsDone": 5,
+        "unitsTotal": 6,
+        "ratio": 0.8333333333333334
+      },
+      {
+        "step": "settled",
+        "working": false,
+        "nodesDone": 6,
+        "nodesTotal": 6,
+        "inFlight": 0,
+        "wave": [],
+        "unitsDone": 6,
+        "unitsTotal": 6,
+        "ratio": 1.0
+      }
     ]
   },
   "settlePath": {
@@ -628,5 +685,36 @@
       ],
       "settlesWith": "effects=0"
     }
-  }
+  },
+  "boundedCancelReplies": [
+    {
+      "id": "pending",
+      "ok": true,
+      "reply": {
+        "ok": true,
+        "retired": 1,
+        "pending": true
+      },
+      "poll": true
+    },
+    {
+      "id": "drained",
+      "ok": true,
+      "reply": {
+        "ok": true,
+        "retired": 0,
+        "pending": false
+      },
+      "poll": false
+    },
+    {
+      "id": "refused",
+      "ok": false,
+      "reply": {
+        "ok": false,
+        "pending": true
+      },
+      "poll": false
+    }
+  ]
 }

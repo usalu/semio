@@ -7,27 +7,13 @@
   "required": [
     "id",
     "source",
-    "target"
+    "target",
+    "kind",
+    "label",
+    "properties"
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/GraphEdgeId"
-    },
-    "source": {
-      "$ref": "#/$defs/GraphNodeId"
-    },
-    "target": {
-      "$ref": "#/$defs/GraphNodeId"
-    },
-    "kind": {
-      "type": "string"
-    },
-    "label": {
-      "type": "string"
-    }
-  },
-  "$defs": {
-    "GraphEdgeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -39,7 +25,396 @@
         }
       }
     },
-    "GraphNodeId": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "kind": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/$defs/SemioValue"
+          }
+        }
+      }
+    },
+    "source_port": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target_port": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "at": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1048575,
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Position in set",
+          "de": "Position in der Menge"
+        },
+        "description": {
+          "en": "Index the edge is inserted at; absent appends it. Undo of a delete names the removed index.",
+          "de": "Index, an dem die Kante eingefügt wird; fehlt er, wird angehängt. Das Rückgängigmachen eines Löschens nennt den entfernten Index."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "SemioValue": {
+      "description": "One typed value, internally tagged on `kind` exactly as the Rust `SemioValue` enum: numbers keep their lexeme, bytes are raw octets.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Null",
+              "de": "Null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean",
+              "x-semio-ui": {
+                "widget": "toggle",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Boolean",
+              "de": "Wahrheitswert"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Integer",
+              "de": "Ganzzahl"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Lexeme",
+                  "de": "Lexem"
+                },
+                "description": {
+                  "en": "Exact textual form of a number or string value.",
+                  "de": "Genaue Textform eines Zahlen- oder Zeichenkettenwerts."
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Floating point",
+              "de": "Gleitkommazahl"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Bytes",
+                  "de": "Bytes"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Bytes",
+              "de": "Bytes"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "List items",
+                  "de": "Listenelemente"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "List",
+              "de": "Liste"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Map entries",
+                  "de": "Map-Einträge"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Map",
+              "de": "Map"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Referenced node",
+                  "de": "Referenzierter Knoten"
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference",
+              "de": "Referenz"
+            }
+          }
+        }
+      ]
+    },
+    "SemioValueEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioValueNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ValueId"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      },
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "ValueId": {
       "type": "object",
       "additionalProperties": false,
       "required": [

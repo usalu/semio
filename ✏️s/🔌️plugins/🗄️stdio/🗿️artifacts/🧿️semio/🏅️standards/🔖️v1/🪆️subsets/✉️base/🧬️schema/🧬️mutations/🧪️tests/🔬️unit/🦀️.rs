@@ -25,7 +25,7 @@ async fn mutation_diff_law_covers_set_snapshot_and_a_wrapped_variant() {
     let set_snap = SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: target.clone() });
     let d1 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&set_snap, &base);
     assert_eq!(d1.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), target);
-    let inv1 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&set_snap, &base);
+    let inv1 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&set_snap, &base).expect("valid retained mutation inverse fixture");
     let mut round = target.clone();
     let _ = apply_semio_mutation(&mut round, &inv1[0]);
     assert_eq!(round, base);
@@ -37,7 +37,7 @@ async fn mutation_diff_law_covers_set_snapshot_and_a_wrapped_variant() {
     let returned_diff = apply_semio_mutation(&mut applied, &wrapped);
     assert_eq!(d2.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, d2);
-    let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
+    let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv2.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv2[0]);
@@ -58,7 +58,7 @@ async fn mutation_diff_law_flow_insert_node() {
         SemioSubsetSnapshot::Flow(s) => assert_eq!(s.nodes, vec![node]),
         other => panic!("expected Flow, got {other:?}"),
     }
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
     assert_eq!(restored, base);
@@ -73,7 +73,7 @@ async fn kind_mismatch_wrapped_mutation_records_an_error_outcome() {
     assert_eq!(diff.diff(), &SemioDiff::NoChange);
     assert!(diff.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
     assert_eq!(diff.diff().apply(&base).unwrap(), base);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, Vec::<SemioMutation>::new(), "a kind-mismatched wrapped mutation has nothing to restore");
 }
 
@@ -147,7 +147,7 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
         let m = wrap_absent_mutation(&base.subset);
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
         assert!(diff.diff().is_empty(), "wrapped no-op mutation must diff empty: {diff:?}");
-        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+        let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         assert_eq!(inv.len(), 1);
     }
 }
@@ -168,7 +168,7 @@ async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -193,7 +193,7 @@ async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -217,7 +217,7 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -241,7 +241,7 @@ async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -259,7 +259,7 @@ async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
     let m = SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
-        mutation: SemioGraphMutation::CreateNode(create_node::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), ports: vec![], properties: vec![] }),
+        mutation: SemioGraphMutation::CreateNode(create_node::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), width: 0.0, height: 0.0, ports: vec![], properties: vec![], at: None }),
     });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Graph(_)));
@@ -268,7 +268,7 @@ async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -293,7 +293,7 @@ async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -317,7 +317,7 @@ async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
     let returned_diff = apply_semio_mutation(&mut applied, &m);
     assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
-    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
+    let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
     let _ = apply_semio_mutation(&mut restored, &inv[0]);
@@ -350,6 +350,7 @@ async fn op_text_binary_roundtrip_law() {
 /// no case here, so the crate stops building until both this match and `KINDS` name it.
 fn kind_of(mutation: &SemioMutation) -> &'static str {
     match mutation {
+        SemioMutation::PatchSnapshot(_) => "patch-snapshot",
         SemioMutation::SetSnapshot(_) => "set-snapshot",
         SemioMutation::ApplyBrep(_) => "apply-brep",
         SemioMutation::ApplyMesh(_) => "apply-mesh",
@@ -405,9 +406,10 @@ fn kinds_match_the_enum_and_the_catalog() {
         SemioSubsetSnapshot::Object(Default::default()),
         SemioSubsetSnapshot::Kit(Default::default()),
     ];
-    assert_eq!(KINDS.len(), arms.len() + 1, "KINDS must name the one envelope-owned verb plus exactly one entry per subset arm");
+    assert_eq!(KINDS.len(), arms.len() + 2, "KINDS must name both envelope verbs and each subset arm");
     assert_eq!(KINDS[0], kind_of(&SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioSnapshot::default() })), "the full-replace verb comes first");
-    for (kind, arm) in KINDS[1..].iter().zip(arms) {
+    assert_eq!(KINDS[1], kind_of(&SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("owned schema".into()) } })));
+    for (kind, arm) in KINDS[2..].iter().zip(arms) {
         assert_eq!(*kind, format!("apply-{}", semio_subset_tag(&enveloped(arm))), "KINDS must follow SemioSubsetSnapshot's own declaration order and wrap the envelope's own runtime subset tag");
     }
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");

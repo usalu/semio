@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceDecision, base: &ProgramSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "No decision exists with this id.", [payload.decision.header.id.0.clone()]);
     };
     if existing == &payload.decision {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This decision already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This decision already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.decision).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { decisions: Some(ProgramDecisionsDelta { patched: vec![ProgramDecisionsPatchEntry { id: payload.decision.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

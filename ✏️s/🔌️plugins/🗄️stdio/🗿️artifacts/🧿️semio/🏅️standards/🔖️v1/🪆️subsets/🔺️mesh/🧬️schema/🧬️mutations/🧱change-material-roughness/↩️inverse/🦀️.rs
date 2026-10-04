@@ -6,10 +6,13 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::ChangeMaterialRoughness, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+pub fn inverse(payload: &super::ChangeMaterialRoughness, base: &SemioMeshSnapshot) -> Result<Vec<SemioMeshMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match material_at(base, &payload.id) {
         Some(material) => vec![SemioMeshMutation::ChangeMaterialRoughness(super::ChangeMaterialRoughness { id: payload.id.clone(), new_roughness: material.roughness })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -67,7 +67,7 @@ struct Generation3dMountedWidgetOwner {
     boolean: bool,
     lists: [Vec<String>; 2],
     dictionaries: [semio_framework_artifact_flow_flow::neural::Dictionary; 2],
-    dynamic: [Option<dsl::DslValue>; 2],
+    dynamic: [Option<semio_framework_value::DslValue>; 2],
 }
 
 #[derive(Default)]
@@ -83,7 +83,7 @@ struct Generation3dMountedSynapseOwner {
 struct Generation3dMountedGenerationOwner {
     id: String,
     name: String,
-    values: Vec<(String, dsl::DslValue)>,
+    values: Vec<(String, semio_framework_value::DslValue)>,
 }
 
 #[derive(Default)]
@@ -156,13 +156,13 @@ struct Generation3dMountedStringOwner {
 }
 
 enum Generation3dMountedJsonFrame {
-    Array(Vec<dsl::DslValue>),
-    Object { values: Vec<(String, dsl::DslValue)>, key: Option<String> },
+    Array(Vec<semio_framework_value::DslValue>),
+    Object { values: Vec<(String, semio_framework_value::DslValue)>, key: Option<String> },
 }
 
 enum Generation3dMountedDslFrame {
-    Array(Vec<dsl::DslValue>),
-    Object { values: Vec<(String, dsl::DslValue)>, key: Option<String> },
+    Array(Vec<semio_framework_value::DslValue>),
+    Object { values: Vec<(String, semio_framework_value::DslValue)>, key: Option<String> },
 }
 
 /// 🧬️ Fixed-depth schema owner consuming catalog/value events directly into P3 domain
@@ -388,12 +388,12 @@ impl Generation3dMountedTypedSnapshotOwner {
                 Some(Generation3dMountedJsonFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("generation3d-mounted.json-key-owner"),
             },
-            Generation3dMountedStringTarget::JsonValue => self.assign_json(dsl::DslValue::String(owner.value))?,
+            Generation3dMountedStringTarget::JsonValue => self.assign_json(semio_framework_value::DslValue::String(owner.value))?,
             Generation3dMountedStringTarget::DslKey => match self.dsl_stack.last_mut() {
                 Some(Generation3dMountedDslFrame::Object { key, .. }) if key.is_none() => *key = Some(owner.value),
                 _ => return Err("generation3d-mounted.dsl-key-owner"),
             },
-            Generation3dMountedStringTarget::DslValue => self.assign_dsl(dsl::DslValue::String(owner.value))?,
+            Generation3dMountedStringTarget::DslValue => self.assign_dsl(semio_framework_value::DslValue::String(owner.value))?,
             Generation3dMountedStringTarget::Wire(index, role) => {
                 let (table, row) = match self.stack.get(index) {
                     Some(Generation3dMountedContainerOwner::Wire { table, row, .. }) => (*table, *row),
@@ -416,7 +416,7 @@ impl Generation3dMountedTypedSnapshotOwner {
         Ok(())
     }
 
-    fn assign_json(&mut self, value: dsl::DslValue) -> Result<(), &'static str> {
+    fn assign_json(&mut self, value: semio_framework_value::DslValue) -> Result<(), &'static str> {
         match self.json_stack.last_mut() {
             Some(Generation3dMountedJsonFrame::Array(values)) => values.push(value),
             Some(Generation3dMountedJsonFrame::Object { values, key }) => {
@@ -425,7 +425,7 @@ impl Generation3dMountedTypedSnapshotOwner {
             None => {
                 let (table, row) = self.json_destination.take().ok_or("generation3d-mounted.json-destination")?;
                 let values = match value {
-                    dsl::DslValue::Object(values) => values,
+                    semio_framework_value::DslValue::Object(values) => values,
                     _ => return Err("generation3d-mounted.generation-values-shape"),
                 };
                 match self.stack.get_mut(table) {
@@ -437,7 +437,7 @@ impl Generation3dMountedTypedSnapshotOwner {
         Ok(())
     }
 
-    fn assign_dsl(&mut self, value: dsl::DslValue) -> Result<(), &'static str> {
+    fn assign_dsl(&mut self, value: semio_framework_value::DslValue) -> Result<(), &'static str> {
         match self.dsl_stack.last_mut() {
             Some(Generation3dMountedDslFrame::Array(values)) => values.push(value),
             Some(Generation3dMountedDslFrame::Object { values, key }) => values.push((key.take().ok_or("generation3d-mounted.dsl-value-key")?, value)),
@@ -460,8 +460,8 @@ impl Generation3dMountedTypedSnapshotOwner {
             return Ok(false);
         }
         let value = match self.dsl_stack.pop().ok_or("generation3d-mounted.dsl-end")? {
-            Generation3dMountedDslFrame::Array(values) if kind == mounted::RetainedValueContainer::List => dsl::DslValue::Array(values),
-            Generation3dMountedDslFrame::Object { values, key: None } if kind == mounted::RetainedValueContainer::Map => dsl::DslValue::Object(values),
+            Generation3dMountedDslFrame::Array(values) if kind == mounted::RetainedValueContainer::List => semio_framework_value::DslValue::Array(values),
+            Generation3dMountedDslFrame::Object { values, key: None } if kind == mounted::RetainedValueContainer::Map => semio_framework_value::DslValue::Object(values),
             _ => return Err("generation3d-mounted.dsl-container-mismatch"),
         };
         self.assign_dsl(value)?;
@@ -534,8 +534,8 @@ impl Generation3dMountedTypedSnapshotOwner {
             return Err("generation3d-mounted.json-container-mismatch");
         }
         let value = match self.json_stack.pop().ok_or("generation3d-mounted.json-end")? {
-            Generation3dMountedJsonFrame::Array(values) => dsl::DslValue::Array(values),
-            Generation3dMountedJsonFrame::Object { values, key: None } => dsl::DslValue::Object(values),
+            Generation3dMountedJsonFrame::Array(values) => semio_framework_value::DslValue::Array(values),
+            Generation3dMountedJsonFrame::Object { values, key: None } => semio_framework_value::DslValue::Object(values),
             Generation3dMountedJsonFrame::Object { .. } => return Err("generation3d-mounted.json-key-without-value"),
         };
         self.assign_json(value)?;
@@ -917,11 +917,11 @@ impl mounted::RetainedTypedPackOwner for Generation3dMountedTypedSnapshotOwner {
             Token::Tag { value: 0x11, .. } if self.json_destination.is_none() => {
                 self.begin_dsl();
             }
-            Token::F64(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::float(f64::from_bits(value)))?,
-            Token::F64(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::float(f64::from_bits(value)))?,
+            Token::F64(value) if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::float(f64::from_bits(value)))?,
+            Token::F64(value) if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::float(f64::from_bits(value)))?,
             Token::F64(value) => self.assign_f64(f64::from_bits(value))?,
-            Token::Signed(value) if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::int(value))?,
-            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::int(value))?,
+            Token::Signed(value) if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::int(value))?,
+            Token::Signed(value) if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::int(value))?,
             Token::Signed(value) => match self.stack.last_mut() {
                 Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if *field == Some(2) && target.is_none() => {
                     *target = Some(semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(value)));
@@ -929,14 +929,14 @@ impl mounted::RetainedTypedPackOwner for Generation3dMountedTypedSnapshotOwner {
                 }
                 _ => return Err("generation3d-mounted.integer-owner"),
             },
-            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::uint(value))?,
-            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::uint(value))?,
-            Token::Tag { value: 0x01, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Bool(false))?,
-            Token::Tag { value: 0x02, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Bool(true))?,
-            Token::Tag { value: 0x12, .. } if self.dsl_destination.is_some() => self.assign_dsl(dsl::DslValue::Null)?,
-            Token::Tag { value: 0x01, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Bool(false))?,
-            Token::Tag { value: 0x02, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Bool(true))?,
-            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(dsl::DslValue::Null)?,
+            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::uint(value))?,
+            Token::Unsigned { role: Role::Integer | Role::Unsigned | Role::Enum, value } if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::uint(value))?,
+            Token::Tag { value: 0x01, .. } if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::Bool(false))?,
+            Token::Tag { value: 0x02, .. } if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::Bool(true))?,
+            Token::Tag { value: 0x12, .. } if self.dsl_destination.is_some() => self.assign_dsl(semio_framework_value::DslValue::Null)?,
+            Token::Tag { value: 0x01, .. } if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::Bool(false))?,
+            Token::Tag { value: 0x02, .. } if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::Bool(true))?,
+            Token::Tag { value: 0x12, .. } if self.json_destination.is_some() => self.assign_json(semio_framework_value::DslValue::Null)?,
             Token::Tag { value: 0x11, .. } if self.json_destination.is_some() => {}
             Token::Tag { value: 0x01, .. } => self.assign_bool(false),
             Token::Tag { value: 0x02, .. } => self.assign_bool(true),

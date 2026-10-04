@@ -44,478 +44,449 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-// 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): the
-// real bmp codec (BITMAPFILEHEADER + BITMAPINFOHEADER) relocated here verbatim (destination
-// rule 2: codecs → `🚪️io/`; rule 6: pure format algorithms with no snapshot dependency stay
-// WITH the codec here, since they're BMP-specific, not artifact-independent).
-//
-// Decode reads the FULL BITMAPINFOHEADER (11 real fields, honestly typed on `BmpSnapshot`, see
-// `schema::snapshot`) and supports 1/4/8-bit indexed (BGR[A] palette), 16/32-bit
-// `BI_BITFIELDS`, 24-bit `BI_RGB`, and 32-bit `BI_RGB` (default full-byte channel masks) —
-// pixel data is always canonicalized into an 8-bit RGBA `pixels` buffer (`width * height * 4`
-// bytes, row 0 = image top, regardless of the file's on-disk row order). Encode mirrors that
-// split: a 1/4/8-bit indexed BITMAPINFOHEADER (real palette, real per-pixel indices) when the
-// snapshot declares one (`bits_per_pixel` in {1,4,8} and `palette` non-empty), a 24-bit `BI_RGB`
-// bitmap otherwise — both are 40-byte-header, uncompressed, row order honors `row_order`, and
-// the remaining metadata fields (resolution, colors used/important) round-trip from the
-// snapshot) — see 🚫️EncodeScopeNote below. `BmpEngine` (zero construction sites) deleted
-// outright. `register`/`register_artifact_schema`/`register_artifact_inferences`/
-// `register_pilot_languages`/`register_schema_specs` kept together here (not dead: `register()`
-// is reached by stdio's protected imperative `crate::engine::register()`
-// plugin-root call via this standard's own inline `engine` barrel). `empty_bmp_snapshot`/
-// `demo_bmp_snapshot` moved to `../🧬️schema`.
+/// 🧭 Checked BMP v3 layout projections and exact byte-preserving edits.
 use crate::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
-use std::collections::HashMap;
 
-//#region ByteIo
 const BMP_MAGIC: [u8; 2] = *b"BM";
+const BITMAPINFOHEADER_SIZE: u32 = 40;
+const BI_RGB: u32 = 0;
+const BI_BITFIELDS: u32 = 3;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_u16(b: &[u8], pos: usize) -> Result<u16, String> {
-    b.get(pos..pos + 2).map(|s| u16::from_le_bytes([s[0], s[1]])).ok_or_else(|| "bmp: truncated (u16)".into())
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[value(rename_all = "camelCase")]
+pub enum BmpProfile {
+    IndexedRgb1,
+    IndexedRgb4,
+    IndexedRgb8,
+    DirectRgb16,
+    DirectRgb24,
+    DirectRgb32,
+    DirectBitfields16,
+    DirectBitfields32,
 }
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_u32(b: &[u8], pos: usize) -> Result<u32, String> {
-    b.get(pos..pos + 4).map(|s| u32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (u32)".into())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
-    b.get(pos..pos + 4).map(|s| i32::from_le_bytes([s[0], s[1], s[2], s[3]])).ok_or_else(|| "bmp: truncated (i32)".into())
-}
-//#endregion ByteIo
 
-//#region RowGeometry
-/// 📏 BMP scanlines are padded to a 4-byte boundary: `((width*bpp + 31) / 32) * 4`. `pub(crate)`
-/// so `../🧬️schema`'s own `demo_bmp_snapshot()` can compute a real `image_size`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn row_bytes(width: u32, bpp: u16) -> usize {
-    (width as usize * bpp as usize).div_ceil(32) * 4
-}
-//#endregion RowGeometry
+impl BmpProfile {
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::IndexedRgb1 => "indexedRgb1",
+            Self::IndexedRgb4 => "indexedRgb4",
+            Self::IndexedRgb8 => "indexedRgb8",
+            Self::DirectRgb16 => "directRgb16",
+            Self::DirectRgb24 => "directRgb24",
+            Self::DirectRgb32 => "directRgb32",
+            Self::DirectBitfields16 => "directBitfields16",
+            Self::DirectBitfields32 => "directBitfields32",
+        }
+    }
 
-//#region Bitfields
-/// 🧮 `(shift, bit-width)` of a contiguous bitfield mask, used to extract+normalize a channel.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn is_indexed(self) -> bool {
+        matches!(self, Self::IndexedRgb1 | Self::IndexedRgb4 | Self::IndexedRgb8)
+    }
+
+    pub fn is_direct(self) -> bool {
+        !self.is_indexed()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct BmpRegion {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct BmpColor {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+    pub alpha: u8,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BmpPngPreview {
+    pub width: u32,
+    pub height: u32,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct BmpLayout {
+    pub profile: BmpProfile,
+    pub file_size: u32,
+    pub reserved_1: u16,
+    pub reserved_2: u16,
+    pub data_offset: usize,
+    pub width: u32,
+    pub height: u32,
+    pub row_order: BmpRowOrder,
+    pub planes: u16,
+    pub bits_per_pixel: u16,
+    pub compression: u32,
+    pub image_size: u32,
+    pub x_pixels_per_meter: i32,
+    pub y_pixels_per_meter: i32,
+    pub colors_used: u32,
+    pub colors_important: u32,
+    pub masks: [u32; 4],
+    pub palette_offset: usize,
+    pub palette_entries: usize,
+    pub metadata_end: usize,
+    pub row_stride: usize,
+    pub row_payload: usize,
+    pub pixel_bytes: usize,
+    pub pixel_end: usize,
+}
+
+pub fn empty_bmp_bytes() -> Vec<u8> {
+    vec![0x42, 0x4d, 0x3a, 0, 0, 0, 0, 0, 0, 0, 0x36, 0, 0, 0, 0x28, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0]
+}
+pub fn demo_bmp_bytes() -> Vec<u8> {
+    let mut bytes = vec![0; 78];
+    bytes[..2].copy_from_slice(&BMP_MAGIC);
+    bytes[2..6].copy_from_slice(&78u32.to_le_bytes());
+    bytes[10..14].copy_from_slice(&54u32.to_le_bytes());
+    bytes[14..18].copy_from_slice(&BITMAPINFOHEADER_SIZE.to_le_bytes());
+    bytes[18..22].copy_from_slice(&4i32.to_le_bytes());
+    bytes[22..26].copy_from_slice(&2i32.to_le_bytes());
+    bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
+    bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
+    bytes[34..38].copy_from_slice(&24u32.to_le_bytes());
+    bytes[38..42].copy_from_slice(&2835i32.to_le_bytes());
+    bytes[42..46].copy_from_slice(&2835i32.to_le_bytes());
+    bytes[54..].copy_from_slice(&[255, 255, 0, 255, 0, 255, 255, 255, 255, 128, 128, 128, 0, 0, 255, 0, 255, 0, 255, 0, 0, 0, 255, 255]);
+    bytes
+}
+
+fn range<'a>(bytes: &'a [u8], offset: usize, len: usize, name: &str) -> Result<&'a [u8], String> {
+    bytes.get(offset..offset.checked_add(len).ok_or_else(|| format!("bmp: {name} range overflow"))?).ok_or_else(|| format!("bmp: truncated {name}"))
+}
+
+fn checked_row_geometry(width: u32, bits_per_pixel: u16) -> Result<(usize, usize), String> {
+    let row_bits = u64::from(width).checked_mul(u64::from(bits_per_pixel)).ok_or_else(|| "bmp: row bit count overflow".to_string())?;
+    let row_stride = row_bits.checked_add(31).ok_or_else(|| "bmp: row alignment overflow".to_string())? / 32 * 4;
+    let row_payload = row_bits.checked_add(7).ok_or_else(|| "bmp: row payload overflow".to_string())? / 8;
+    Ok((usize::try_from(row_stride).map_err(|_| "bmp: row stride exceeds address space")?, usize::try_from(row_payload).map_err(|_| "bmp: row payload exceeds address space")?))
+}
+
+pub(crate) fn row_bytes(width: u32, bits_per_pixel: u16) -> usize {
+    checked_row_geometry(width, bits_per_pixel).expect("bounded BMP row geometry").0
+}
+
+pub fn bmp_layout(snapshot: &BmpSnapshot) -> Result<BmpLayout, String> {
+    if snapshot.schema != STDIO_BMP_DOCUMENT_SCHEMA {
+        return Err(format!("bmp: schema must be {STDIO_BMP_DOCUMENT_SCHEMA}"));
+    }
+    bmp_layout_bytes(&snapshot.bytes)
+}
+
+#[path = "🧩️layout/🦀️.rs"]
+pub(crate) mod layout;
+
+/// 📐️ Exposes the canonical borrowed layout grammar at the ordinary native message terminal.
+pub fn bmp_layout_bytes(bytes: &[u8]) -> Result<BmpLayout, String> {
+    layout::inspect(bytes).map_err(|failure| failure.to_string())
+}
+
+pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
+    bmp_layout_bytes(bytes)?;
+    Ok(BmpSnapshot { schema: STDIO_BMP_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
+}
+
+pub fn bmp_direct_rgb24_from_rgba8(width: u32, height: u32, rgba8: &[u8], x_pixels_per_meter: i32, y_pixels_per_meter: i32) -> Result<BmpSnapshot, String> {
+    if (width == 0) != (height == 0) {
+        return Err("bmp: empty dimensions must both be zero".into());
+    }
+    if width > i32::MAX as u32 || height > i32::MAX as u32 {
+        return Err("bmp: dimensions exceed the signed BITMAPINFOHEADER range".into());
+    }
+    let pixel_count = usize::try_from(width)
+        .map_err(|_| "bmp: width exceeds address space")?
+        .checked_mul(usize::try_from(height).map_err(|_| "bmp: height exceeds address space")?)
+        .ok_or_else(|| "bmp: pixel count overflow".to_string())?;
+    let expected = pixel_count.checked_mul(4).ok_or_else(|| "bmp: RGBA8 byte count overflow".to_string())?;
+    if rgba8.len() != expected {
+        return Err(format!("bmp: RGBA8 source has {} bytes; expected {expected}", rgba8.len()));
+    }
+    if rgba8.chunks_exact(4).any(|pixel| pixel[3] != 255) {
+        return Err("bmp: Direct RGB24 cannot represent nonopaque RGBA8 pixels".into());
+    }
+    let (row_stride, _) = checked_row_geometry(width, 24)?;
+    let pixel_bytes = row_stride.checked_mul(height as usize).ok_or_else(|| "bmp: pixel storage length overflow".to_string())?;
+    let file_len = 54usize.checked_add(pixel_bytes).ok_or_else(|| "bmp: file length overflow".to_string())?;
+    let file_size = u32::try_from(file_len).map_err(|_| "bmp: file exceeds v3 file-size field")?;
+    let image_size = u32::try_from(pixel_bytes).map_err(|_| "bmp: pixel storage exceeds v3 image-size field")?;
+    let mut bytes = vec![0; file_len];
+    bytes[..2].copy_from_slice(&BMP_MAGIC);
+    bytes[2..6].copy_from_slice(&file_size.to_le_bytes());
+    bytes[10..14].copy_from_slice(&54u32.to_le_bytes());
+    bytes[14..18].copy_from_slice(&BITMAPINFOHEADER_SIZE.to_le_bytes());
+    bytes[18..22].copy_from_slice(&(width as i32).to_le_bytes());
+    bytes[22..26].copy_from_slice(&(height as i32).to_le_bytes());
+    bytes[26..28].copy_from_slice(&1u16.to_le_bytes());
+    bytes[28..30].copy_from_slice(&24u16.to_le_bytes());
+    bytes[30..34].copy_from_slice(&BI_RGB.to_le_bytes());
+    bytes[34..38].copy_from_slice(&image_size.to_le_bytes());
+    bytes[38..42].copy_from_slice(&x_pixels_per_meter.to_le_bytes());
+    bytes[42..46].copy_from_slice(&y_pixels_per_meter.to_le_bytes());
+    let width = width as usize;
+    for y in 0..height as usize {
+        let source_row = y * width * 4;
+        let destination_row = 54 + (height as usize - 1 - y) * row_stride;
+        for x in 0..width {
+            let source = source_row + x * 4;
+            let destination = destination_row + x * 3;
+            bytes[destination..destination + 3].copy_from_slice(&[rgba8[source + 2], rgba8[source + 1], rgba8[source]]);
+        }
+    }
+    decode_bmp(&bytes)
+}
+
+pub fn encode_bmp(snapshot: &BmpSnapshot) -> Result<Vec<u8>, String> {
+    bmp_layout(snapshot)?;
+    Ok(snapshot.bytes.clone())
+}
+
+pub fn bmp_palette(snapshot: &BmpSnapshot) -> Result<Vec<BmpPaletteEntry>, String> {
+    let layout = bmp_layout(snapshot)?;
+    (0..layout.palette_entries)
+        .map(|index| {
+            let offset = layout.palette_offset + index * 4;
+            let entry = range(&snapshot.bytes, offset, 4, "palette entry")?;
+            Ok(BmpPaletteEntry { b: entry[0], g: entry[1], r: entry[2], reserved: entry[3] })
+        })
+        .collect()
+}
+
 fn mask_shift_width(mask: u32) -> (u32, u32) {
     if mask == 0 {
         return (0, 0);
     }
-    let shift = mask.trailing_zeros();
-    let width = (mask >> shift).trailing_ones();
-    (shift, width)
+    (mask.trailing_zeros(), (mask >> mask.trailing_zeros()).trailing_ones())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn extract_channel(raw: u32, mask: u32) -> u8 {
+    let (shift, width) = mask_shift_width(mask);
+    if width == 0 {
+        return 255;
+    }
+    let value = (raw & mask) >> shift;
+    let maximum = if width == 32 { u32::MAX } else { (1u32 << width) - 1 };
+    ((u64::from(value) * 255 + u64::from(maximum) / 2) / u64::from(maximum)) as u8
+}
+
+fn packed_index(row: &[u8], x: usize, bits_per_pixel: u16) -> usize {
+    match bits_per_pixel {
+        1 => ((row[x / 8] >> (7 - x % 8)) & 1) as usize,
+        4 => {
+            if x.is_multiple_of(2) {
+                (row[x / 2] >> 4) as usize
+            } else {
+                (row[x / 2] & 15) as usize
+            }
+        }
+        8 => row[x] as usize,
+        _ => unreachable!("checked indexed profile"),
+    }
+}
+
+fn source_row(layout: &BmpLayout, y: usize) -> usize {
+    match layout.row_order {
+        BmpRowOrder::TopDown => y,
+        BmpRowOrder::BottomUp => layout.height as usize - 1 - y,
+    }
+}
+
+pub fn bmp_rgba8_preview(snapshot: &BmpSnapshot) -> Result<Vec<u8>, String> {
+    let layout = bmp_layout(snapshot)?;
+    let palette = bmp_palette(snapshot)?;
+    let pixel_count = (layout.width as usize).checked_mul(layout.height as usize).ok_or_else(|| "bmp: preview pixel count overflow".to_string())?;
+    let mut rgba = vec![0; pixel_count.checked_mul(4).ok_or_else(|| "bmp: preview byte count overflow".to_string())?];
+    for y in 0..layout.height as usize {
+        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
+        let row = range(&snapshot.bytes, row_offset, layout.row_payload, "pixel row")?;
+        for x in 0..layout.width as usize {
+            let output = (y * layout.width as usize + x) * 4;
+            let color = if layout.profile.is_indexed() {
+                let index = packed_index(row, x, layout.bits_per_pixel);
+                let entry = palette.get(index).ok_or_else(|| format!("bmp: pixel ({x},{y}) references absent palette index {index}"))?;
+                BmpColor { red: entry.r, green: entry.g, blue: entry.b, alpha: 255 }
+            } else {
+                match layout.profile {
+                    BmpProfile::DirectRgb24 => {
+                        let offset = x * 3;
+                        BmpColor { red: row[offset + 2], green: row[offset + 1], blue: row[offset], alpha: 255 }
+                    }
+                    BmpProfile::DirectRgb32 => {
+                        let offset = x * 4;
+                        BmpColor { red: row[offset + 2], green: row[offset + 1], blue: row[offset], alpha: 255 }
+                    }
+                    _ => {
+                        let bytes_per_sample = layout.bits_per_pixel as usize / 8;
+                        let offset = x * bytes_per_sample;
+                        let raw = if bytes_per_sample == 2 { u32::from(u16::from_le_bytes([row[offset], row[offset + 1]])) } else { u32::from_le_bytes([row[offset], row[offset + 1], row[offset + 2], row[offset + 3]]) };
+                        BmpColor {
+                            red: extract_channel(raw, layout.masks[0]),
+                            green: extract_channel(raw, layout.masks[1]),
+                            blue: extract_channel(raw, layout.masks[2]),
+                            alpha: if layout.masks[3] == 0 { 255 } else { extract_channel(raw, layout.masks[3]) },
+                        }
+                    }
+                }
+            };
+            rgba[output..output + 4].copy_from_slice(&[color.red, color.green, color.blue, color.alpha]);
+        }
+    }
+    Ok(rgba)
+}
+
+pub fn bmp_png_preview(snapshot: &BmpSnapshot) -> Result<BmpPngPreview, String> {
+    const MAX_RGBA_BYTES: usize = 64 * 1024 * 1024;
+    let layout = bmp_layout(snapshot)?;
+    let rgba_bytes = usize::try_from(layout.width)
+        .map_err(|_| "bmp: preview width exceeds address space")?
+        .checked_mul(usize::try_from(layout.height).map_err(|_| "bmp: preview height exceeds address space")?)
+        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or_else(|| "bmp: preview byte count overflow".to_string())?;
+    if rgba_bytes > MAX_RGBA_BYTES {
+        return Err(format!("bmp: preview needs {rgba_bytes} RGBA bytes, above the {MAX_RGBA_BYTES}-byte display limit"));
+    }
+    let pixels = bmp_rgba8_preview(snapshot)?;
+    let bytes = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: layout.width, height: layout.height, pixels }).map_err(|failure| failure.to_string())?;
+    Ok(BmpPngPreview { width: layout.width, height: layout.height, bytes })
+}
+
+pub fn bmp_revision(snapshot: &BmpSnapshot) -> String {
+    let mut hash = 0xcbf29ce484222325u64;
+    for byte in snapshot.schema.as_bytes().iter().chain(snapshot.bytes.iter()) {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    format!("{hash:016x}")
+}
+
+fn checked_region(layout: &BmpLayout, region: BmpRegion) -> Result<(), String> {
+    if region.width == 0 || region.height == 0 {
+        return Err("bmp: paint region must be nonempty".into());
+    }
+    let end_x = region.x.checked_add(region.width).ok_or_else(|| "bmp: region x overflow".to_string())?;
+    let end_y = region.y.checked_add(region.height).ok_or_else(|| "bmp: region y overflow".to_string())?;
+    if end_x > layout.width || end_y > layout.height {
+        return Err(format!("bmp: paint region {region:?} exceeds {}x{} image", layout.width, layout.height));
+    }
+    Ok(())
+}
+
+fn require_revision(snapshot: &BmpSnapshot, revision: &str) -> Result<(), String> {
+    let actual = bmp_revision(snapshot);
+    if revision != actual {
+        return Err(format!("bmp: stale bitmap revision {revision}; expected {actual}"));
+    }
+    Ok(())
+}
+
+pub fn paint_indexed_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, palette_index: u8, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
+    require_revision(snapshot, revision)?;
+    let layout = bmp_layout(snapshot)?;
+    if !layout.profile.is_indexed() {
+        return Err("bmp: indexed paint requires a 1-, 4-, or 8-bit indexed profile".into());
+    }
+    if usize::from(palette_index) >= layout.palette_entries || usize::from(palette_index) >= (1usize << layout.bits_per_pixel) {
+        return Err(format!("bmp: palette index {palette_index} is outside the checked palette"));
+    }
+    checked_region(&layout, region)?;
+    let total = region.height as usize;
+    let mut next = snapshot.clone();
+    for local_y in 0..region.height as usize {
+        if !progress(local_y, total) {
+            return Err("bmp: indexed paint cancelled".into());
+        }
+        let y = region.y as usize + local_y;
+        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
+        for x in region.x as usize..(region.x + region.width) as usize {
+            match layout.bits_per_pixel {
+                1 => {
+                    let byte = &mut next.bytes[row_offset + x / 8];
+                    let mask = 1 << (7 - x % 8);
+                    *byte = (*byte & !mask) | ((palette_index & 1) << (7 - x % 8));
+                }
+                4 => {
+                    let byte = &mut next.bytes[row_offset + x / 2];
+                    if x.is_multiple_of(2) {
+                        *byte = (*byte & 0x0f) | (palette_index << 4);
+                    } else {
+                        *byte = (*byte & 0xf0) | (palette_index & 0x0f);
+                    }
+                }
+                8 => next.bytes[row_offset + x] = palette_index,
+                _ => unreachable!("checked indexed profile"),
+            }
+        }
+    }
+    if !progress(total, total) {
+        return Err("bmp: indexed paint cancelled".into());
+    }
+    Ok(next)
+}
+
+fn pack_channel(value: u8, mask: u32) -> u32 {
     let (shift, width) = mask_shift_width(mask);
     if width == 0 {
         return 0;
     }
-    let v = (raw & mask) >> shift;
-    if width >= 8 {
-        (v >> (width - 8)) as u8
-    } else {
-        let maxval = (1u32 << width) - 1;
-        ((v * 255 + maxval / 2) / maxval) as u8
-    }
-}
-//#endregion Bitfields
-
-//#region IndexUnpack
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
-    match bpp {
-        8 => row[x] as usize,
-        4 => {
-            let byte = row[x / 2];
-            if x.is_multiple_of(2) {
-                (byte >> 4) as usize
-            } else {
-                (byte & 0x0F) as usize
-            }
-        }
-        1 => {
-            let byte = row[x / 8];
-            let bit = 7 - (x % 8);
-            ((byte >> bit) & 1) as usize
-        }
-        _ => unreachable!("caller only passes 1|4|8"),
-    }
+    let maximum = if width == 32 { u32::MAX } else { (1u32 << width) - 1 };
+    ((((u64::from(value) * u64::from(maximum)) + 127) / 255) as u32) << shift
 }
 
-/// ✍️ The write-side mirror of `unpack_index` — packs a `0..2^bpp` palette index into its
-/// sub-byte position within an already zero-initialized row buffer.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pack_index(row: &mut [u8], x: usize, bpp: u16, index: u8) {
-    match bpp {
-        8 => row[x] = index,
-        4 => {
-            let byte = &mut row[x / 2];
-            if x.is_multiple_of(2) {
-                *byte = (*byte & 0x0F) | (index << 4);
-            } else {
-                *byte = (*byte & 0xF0) | (index & 0x0F);
-            }
+pub fn paint_direct_region_controlled(snapshot: &BmpSnapshot, revision: &str, region: BmpRegion, color: BmpColor, progress: &mut dyn FnMut(usize, usize) -> bool) -> Result<BmpSnapshot, String> {
+    require_revision(snapshot, revision)?;
+    let layout = bmp_layout(snapshot)?;
+    if !layout.profile.is_direct() {
+        return Err("bmp: direct paint requires a direct-color profile".into());
+    }
+    checked_region(&layout, region)?;
+    let total = region.height as usize;
+    let mut next = snapshot.clone();
+    for local_y in 0..region.height as usize {
+        if !progress(local_y, total) {
+            return Err("bmp: direct paint cancelled".into());
         }
-        1 => {
-            if index & 1 != 0 {
-                let byte = &mut row[x / 8];
-                let bit = 7 - (x % 8);
-                *byte |= 1 << bit;
-            }
-        }
-        _ => unreachable!("caller only passes 1|4|8"),
-    }
-}
-//#endregion IndexUnpack
-
-//#region Codec
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
-    if bytes.len() < 14 || bytes[0..2] != BMP_MAGIC {
-        return Err("bmp: bad signature".into());
-    }
-    let data_offset = read_u32(bytes, 10)? as usize;
-    let header_size = read_u32(bytes, 14)?;
-    if (header_size as usize) < 40 {
-        return Err(format!("bmp: unsupported info header size {header_size}"));
-    }
-    let width_i = read_i32(bytes, 18)?;
-    let height_i = read_i32(bytes, 22)?;
-    // 🧾 The rest of BITMAPINFOHEADER's 11 real fields — read honestly regardless of which
-    // branch (empty-sentinel vs. real image) follows, per the recipe's "codec fills what it
-    // decodes" rule.
-    let planes = read_u16(bytes, 26)?;
-    let bpp = read_u16(bytes, 28)?;
-    let compression = read_u32(bytes, 30)?;
-    let image_size = read_u32(bytes, 34)?;
-    let x_pixels_per_meter = read_i32(bytes, 38)?;
-    let y_pixels_per_meter = read_i32(bytes, 42)?;
-    let colors_used_field = read_u32(bytes, 46)?;
-    let colors_important = read_u32(bytes, 50)?;
-
-    if width_i == 0 && height_i == 0 {
-        // 🌱 The zero-dimension "empty document" case round-tripped by encode_bmp — no pixel
-        // data or palette to read, but the header fields themselves are still real bytes.
-        return Ok(BmpSnapshot {
-            schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
-            header_size,
-            width: 0,
-            height: 0,
-            row_order: BmpRowOrder::BottomUp,
-            planes,
-            bits_per_pixel: bpp,
-            compression,
-            image_size,
-            x_pixels_per_meter,
-            y_pixels_per_meter,
-            colors_used: colors_used_field,
-            colors_important,
-            palette: Vec::new(),
-            pixels: Vec::new(),
-        });
-    }
-    if width_i <= 0 {
-        return Err("bmp: non-positive width".into());
-    }
-    if height_i == 0 {
-        return Err("bmp: zero height".into());
-    }
-    let width = width_i as u32;
-    let top_down = height_i < 0;
-    let row_order = if top_down { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp };
-    let height = height_i.unsigned_abs();
-
-    if compression != 0 && compression != 3 {
-        return Err(format!("bmp: unsupported compression {compression} (only BI_RGB/BI_BITFIELDS are implemented)"));
-    }
-
-    let mut cursor = 14 + header_size as usize;
-    let mut masks = [0u32; 4]; // r, g, b, a
-    if compression == 3 {
-        if bpp != 16 && bpp != 32 {
-            return Err("bmp: BI_BITFIELDS only valid for 16/32bpp".into());
-        }
-        if header_size == 40 {
-            // 📌 Classic Win9x extension: 3 (sometimes 4) DWORD masks immediately follow the
-            // core 40-byte BITMAPINFOHEADER, before the pixel data.
-            masks[0] = read_u32(bytes, cursor)?;
-            masks[1] = read_u32(bytes, cursor + 4)?;
-            masks[2] = read_u32(bytes, cursor + 8)?;
-            cursor += 12;
-            if cursor + 4 <= data_offset {
-                masks[3] = read_u32(bytes, cursor)?;
-                cursor += 4;
-            }
-        } else {
-            // 📌 BITMAPV2/V3/V4/V5INFOHEADER embed the masks at fixed offsets inside the header.
-            masks[0] = read_u32(bytes, 14 + 40)?;
-            masks[1] = read_u32(bytes, 14 + 44)?;
-            masks[2] = read_u32(bytes, 14 + 48)?;
-            if header_size >= 56 {
-                masks[3] = read_u32(bytes, 14 + 52)?;
-            }
-        }
-    } else if bpp == 16 {
-        masks = [0x7C00, 0x03E0, 0x001F, 0]; // BI_RGB default: X1R5G5B5
-    } else if bpp == 32 {
-        masks = [0x00FF0000, 0x0000FF00, 0x000000FF, 0]; // BI_RGB default: 8-8-8, no alpha
-    }
-
-    let palette_count = if bpp <= 8 {
-        let raw = if colors_used_field != 0 { colors_used_field as usize } else { 1usize << bpp };
-        if raw > 1usize << bpp {
-            return Err("bmp: colorsUsed exceeds bit-depth capacity".into());
-        }
-        raw
-    } else {
-        0
-    };
-    let mut palette: Vec<BmpPaletteEntry> = Vec::with_capacity(palette_count);
-    for i in 0..palette_count {
-        let o = cursor + i * 4;
-        if o + 4 > bytes.len() || o + 4 > data_offset {
-            return Err("bmp: palette truncated".into());
-        }
-        palette.push(BmpPaletteEntry { b: bytes[o], g: bytes[o + 1], r: bytes[o + 2], reserved: bytes[o + 3] });
-    }
-
-    let rb = row_bytes(width, bpp);
-    let mut pixels = vec![0u8; width as usize * height as usize * 4];
-    for file_row in 0..height as usize {
-        let row_off = data_offset + file_row * rb;
-        if row_off + rb > bytes.len() {
-            return Err("bmp: pixel data truncated".into());
-        }
-        let row = &bytes[row_off..row_off + rb];
-        let out_y = if top_down { file_row } else { height as usize - 1 - file_row };
-        match bpp {
-            1 | 4 | 8 => {
-                for x in 0..width as usize {
-                    let idx = unpack_index(row, x, bpp);
-                    let pentry = palette.get(idx).ok_or_else(|| format!("bmp: palette index {idx} out of range"))?;
-                    let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = pentry.r;
-                    pixels[o + 1] = pentry.g;
-                    pixels[o + 2] = pentry.b;
-                    pixels[o + 3] = 255;
+        let y = region.y as usize + local_y;
+        let row_offset = layout.data_offset + source_row(&layout, y) * layout.row_stride;
+        for x in region.x as usize..(region.x + region.width) as usize {
+            match layout.profile {
+                BmpProfile::DirectRgb24 => {
+                    let offset = row_offset + x * 3;
+                    next.bytes[offset..offset + 3].copy_from_slice(&[color.blue, color.green, color.red]);
+                }
+                BmpProfile::DirectRgb32 => {
+                    let offset = row_offset + x * 4;
+                    next.bytes[offset..offset + 3].copy_from_slice(&[color.blue, color.green, color.red]);
+                }
+                _ => {
+                    let bytes_per_sample = layout.bits_per_pixel as usize / 8;
+                    let offset = row_offset + x * bytes_per_sample;
+                    let mut raw = if bytes_per_sample == 2 { u32::from(u16::from_le_bytes([next.bytes[offset], next.bytes[offset + 1]])) } else { u32::from_le_bytes(next.bytes[offset..offset + 4].try_into().expect("checked sample")) };
+                    let edited_masks = layout.masks[0] | layout.masks[1] | layout.masks[2] | layout.masks[3];
+                    raw = (raw & !edited_masks) | pack_channel(color.red, layout.masks[0]) | pack_channel(color.green, layout.masks[1]) | pack_channel(color.blue, layout.masks[2]) | pack_channel(color.alpha, layout.masks[3]);
+                    if bytes_per_sample == 2 {
+                        next.bytes[offset..offset + 2].copy_from_slice(&(raw as u16).to_le_bytes());
+                    } else {
+                        next.bytes[offset..offset + 4].copy_from_slice(&raw.to_le_bytes());
+                    }
                 }
             }
-            24 => {
-                for x in 0..width as usize {
-                    let so = x * 3;
-                    let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = row[so + 2];
-                    pixels[o + 1] = row[so + 1];
-                    pixels[o + 2] = row[so];
-                    pixels[o + 3] = 255;
-                }
-            }
-            16 => {
-                for x in 0..width as usize {
-                    let so = x * 2;
-                    let raw = u16::from_le_bytes([row[so], row[so + 1]]) as u32;
-                    let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]);
-                    pixels[o + 1] = extract_channel(raw, masks[1]);
-                    pixels[o + 2] = extract_channel(raw, masks[2]);
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
-                }
-            }
-            32 => {
-                for x in 0..width as usize {
-                    let so = x * 4;
-                    let raw = u32::from_le_bytes([row[so], row[so + 1], row[so + 2], row[so + 3]]);
-                    let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]);
-                    pixels[o + 1] = extract_channel(raw, masks[1]);
-                    pixels[o + 2] = extract_channel(raw, masks[2]);
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
-                }
-            }
-            _ => return Err(format!("bmp: unsupported bit depth {bpp}")),
         }
     }
-    Ok(BmpSnapshot {
-        schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
-        header_size,
-        width,
-        height,
-        row_order,
-        planes,
-        bits_per_pixel: bpp,
-        compression,
-        image_size,
-        x_pixels_per_meter,
-        y_pixels_per_meter,
-        colors_used: colors_used_field,
-        colors_important,
-        palette,
-        pixels,
-    })
+    if !progress(total, total) {
+        return Err("bmp: direct paint cancelled".into());
+    }
+    Ok(next)
 }
-
-/// 🚫 EncodeScopeNote: mirrors `decode_bmp`'s own indexed/direct split rather than the old
-/// always-24-bit behaviour. When the snapshot DECLARES a palette (`bits_per_pixel` is 1, 4 or 8
-/// AND `palette` is non-empty) encode emits a real 1/4/8-bit indexed BITMAPINFOHEADER: the exact
-/// `snap.palette` entries, in order, as the on-disk BGR-reserved color table, and per-pixel
-/// indices recovered by matching each canonical RGBA pixel's RGB triple against that table
-/// (`encode_bmp_indexed`, below). Every other snapshot — `bits_per_pixel` outside 1/4/8, or an
-/// empty palette — falls back to the original 24-bit `BI_RGB` direct-color path
-/// (`encode_bmp_direct`); 16/32-bit `BI_BITFIELDS` remain decode-only, same scope cut as before.
-/// Both paths are 40-byte-header, uncompressed, honor `row_order` (drives
-/// the sign of the on-disk `height` field and the row-write direction), and round-trip
-/// `x_pixels_per_meter`/`y_pixels_per_meter`/`colors_used`/`colors_important` verbatim from the
-/// snapshot. `pixels` is always canonical 8-bit RGBA (row 0 = image top); both paths drop the
-/// alpha channel (neither `BI_RGB` variant carries one). The indexed path is the one exception to
-/// "verbatim": it writes `palette.len()` as `biClrUsed` rather than `snap.colors_used`, because
-/// that header field states the size of the colour table immediately following it and this encoder
-/// writes exactly as many entries as the snapshot holds — see the comment at the write site.
-///
-/// The indexed path can genuinely fail: `pixels` and `palette` are independent fields (a
-/// `SetPaletteEntry`/`RemovePaletteEntry` mutation only ever touches `palette`, never remaps
-/// `pixels`), so a snapshot can legitimately describe a canonical color no longer present in its
-/// own declared palette. That is reported as an `Err` — never silently narrowed to the nearest
-/// palette entry, and never silently downgraded to 24-bit behind the caller's back — because
-/// either of those would hide the very loss of fidelity the mutation just introduced.
-///
-/// `replace-pixel-data` never reaches that state: the mutation itself promotes an indexed document whose new raster
-/// has a colour the table lacks to the 24-bit `BI_RGB` form (no colour table), so this encoder writes its direct path
-/// (`../🧬️schema/🧬️mutations/🔲️replace-pixel-data/🦀️.rs`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
-    let (w, h) = (snap.width, snap.height);
-    let expected = w as usize * h as usize * 4;
-    if snap.pixels.len() != expected {
-        return Err("bmp: pixels length mismatch (expected width*height*4 RGBA)".into());
-    }
-    if matches!(snap.bits_per_pixel, 1 | 4 | 8) && !snap.palette.is_empty() {
-        encode_bmp_indexed(snap, w, h)
-    } else {
-        Ok(encode_bmp_direct(snap, w, h))
-    }
-}
-
-/// 🎨 Indexed encode path — see `encode_bmp`'s own `EncodeScopeNote` for the full contract.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_bmp_indexed(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, String> {
-    let bpp = snap.bits_per_pixel;
-    let capacity = 1usize << bpp;
-    if snap.palette.len() > capacity {
-        return Err(format!("bmp: palette has {} entries, which exceeds the {}-bit capacity of {} — cannot encode without narrowing", snap.palette.len(), bpp, capacity));
-    }
-    // 🔎 First-match-wins RGB -> index lookup (mirrors `decode_bmp`'s own first-write-wins
-    // palette semantics: the earliest entry at a given color is the one every matching pixel
-    // resolves to).
-    let mut index_of: HashMap<(u8, u8, u8), usize> = HashMap::with_capacity(snap.palette.len());
-    for (index, entry) in snap.palette.iter().enumerate() {
-        index_of.entry((entry.r, entry.g, entry.b)).or_insert(index);
-    }
-
-    let rb = row_bytes(w, bpp);
-    let pixel_bytes = rb * h as usize;
-    let palette_bytes = snap.palette.len() * 4;
-    let data_offset = 14 + 40 + palette_bytes;
-    let file_size = data_offset + pixel_bytes;
-    let mut out = Vec::with_capacity(file_size);
-    out.extend_from_slice(&BMP_MAGIC);
-    out.extend_from_slice(&(file_size as u32).to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&(data_offset as u32).to_le_bytes());
-    out.extend_from_slice(&40u32.to_le_bytes());
-    out.extend_from_slice(&(w as i32).to_le_bytes());
-    let height_field: i32 = match snap.row_order {
-        BmpRowOrder::BottomUp => h as i32,
-        BmpRowOrder::TopDown => -(h as i32),
-    };
-    out.extend_from_slice(&height_field.to_le_bytes());
-    out.extend_from_slice(&1u16.to_le_bytes());
-    out.extend_from_slice(&bpp.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes()); // BI_RGB
-    out.extend_from_slice(&(pixel_bytes as u32).to_le_bytes());
-    out.extend_from_slice(&snap.x_pixels_per_meter.to_le_bytes());
-    out.extend_from_slice(&snap.y_pixels_per_meter.to_le_bytes());
-    // 🧾 `biClrUsed` states how many entries the colour table that follows actually has (BMP v3
-    // BITMAPINFOHEADER). This path writes exactly `snap.palette.len()` of them, so any other value
-    // — including a `snap.colors_used` an InsertPaletteEntry/RemovePaletteEntry mutation left
-    // behind, since neither maintains that field — would describe a table this encoder did not
-    // write, and every reader that sizes the table from the header would then misread the palette.
-    out.extend_from_slice(&(snap.palette.len() as u32).to_le_bytes());
-    out.extend_from_slice(&snap.colors_important.to_le_bytes());
-    for entry in &snap.palette {
-        out.push(entry.b);
-        out.push(entry.g);
-        out.push(entry.r);
-        out.push(entry.reserved);
-    }
-    for file_row in 0..h as usize {
-        let src_y = match snap.row_order {
-            BmpRowOrder::BottomUp => h as usize - 1 - file_row,
-            BmpRowOrder::TopDown => file_row,
-        };
-        let mut row_buf = vec![0u8; rb];
-        for x in 0..w as usize {
-            let i = (src_y * w as usize + x) * 4;
-            let (r, g, b) = (snap.pixels[i], snap.pixels[i + 1], snap.pixels[i + 2]);
-            let index = *index_of
-                .get(&(r, g, b))
-                .ok_or_else(|| format!("bmp: pixel ({x},{src_y}) is rgb({r},{g},{b}), which has no matching entry in the declared {}-entry palette — cannot encode as {bpp}-bit indexed without narrowing", snap.palette.len()))?;
-            pack_index(&mut row_buf, x, bpp, index as u8);
-        }
-        out.extend_from_slice(&row_buf);
-    }
-    Ok(out)
-}
-
-/// 🎨 Direct-color (24-bit `BI_RGB`) encode path — the original, unconditional encode body, now
-/// only reached when the snapshot declares no usable palette. See `encode_bmp`'s own
-/// `EncodeScopeNote` for the full contract.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Vec<u8> {
-    let rb = row_bytes(w, 24);
-    let pixel_bytes = rb * h as usize;
-    let file_size = 14 + 40 + pixel_bytes;
-    let mut out = Vec::with_capacity(file_size);
-    out.extend_from_slice(&BMP_MAGIC);
-    out.extend_from_slice(&(file_size as u32).to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&0u16.to_le_bytes());
-    out.extend_from_slice(&54u32.to_le_bytes());
-    out.extend_from_slice(&40u32.to_le_bytes());
-    out.extend_from_slice(&(w as i32).to_le_bytes());
-    let height_field: i32 = match snap.row_order {
-        BmpRowOrder::BottomUp => h as i32,
-        BmpRowOrder::TopDown => -(h as i32),
-    };
-    out.extend_from_slice(&height_field.to_le_bytes());
-    out.extend_from_slice(&1u16.to_le_bytes());
-    out.extend_from_slice(&24u16.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes()); // BI_RGB
-    out.extend_from_slice(&(pixel_bytes as u32).to_le_bytes());
-    out.extend_from_slice(&snap.x_pixels_per_meter.to_le_bytes());
-    out.extend_from_slice(&snap.y_pixels_per_meter.to_le_bytes());
-    out.extend_from_slice(&snap.colors_used.to_le_bytes());
-    out.extend_from_slice(&snap.colors_important.to_le_bytes());
-    for file_row in 0..h as usize {
-        let src_y = match snap.row_order {
-            BmpRowOrder::BottomUp => h as usize - 1 - file_row,
-            BmpRowOrder::TopDown => file_row,
-        };
-        let mut row_buf = vec![0u8; rb];
-        for x in 0..w as usize {
-            let i = (src_y * w as usize + x) * 4;
-            let o = x * 3;
-            row_buf[o] = snap.pixels[i + 2];
-            row_buf[o + 1] = snap.pixels[i + 1];
-            row_buf[o + 2] = snap.pixels[i];
-        }
-        out.extend_from_slice(&row_buf);
-    }
-    out
-}
-//#endregion Codec
 
 //#region 🔖️Register
 /// 🗂️ Registers codecs and the artifact schema descriptor.
@@ -526,13 +497,17 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_plugin::StandardId("v3"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_snapshot_codec(
+        semio_framework_plugin::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_plugin::StandardId("v3"), subset: semio_framework_plugin::SubsetId("*") },
+        store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA),
+    )
+    .expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
 /// real, non-fabricated calls (unlike json/csv/zip/png's hand-rolled types, `BmpSnapshot`/
 /// `BmpDiff` DO carry genuine derived `RecordSpec` constructors:
-/// `#[derive(dsl::DslRecord)]`/`#[derive(dsl::DslDiff)]` emit `__dsl_spec`/`__dsl_diff_spec`
+/// `#[derive(semio_framework_dsl_record_derive::DslRecord)]`/`#[derive(dsl::DslDiff)]` emit `__dsl_spec`/`__dsl_diff_spec`
 /// respectively, see ../🪆️subsets/✳️any/🧬️schema/📸️snapshot and 🔺️diff's own doc comments).
 /// Covers both the document's own schema id and its `"<doc>#diff"` diff schema id, per design
 /// ruling B-R4, `stdio.txt`'s own exemplar pattern. `#[cfg]`-gated to match
@@ -543,8 +518,8 @@ pub fn register() {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec));
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp#diff", crate::schema::diff::BmpDiff::__dsl_diff_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp", BmpSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.bmp#diff", crate::schema::diff::BmpDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -556,30 +531,30 @@ pub fn register_schema_specs() {}
 /// (text) and protocols (binary) — was a single Document-only registration before this wave.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp",
         extension: Some("bmp"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.bmp"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.bmp.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         // 🎫️ The 5-role scheme has no dedicated "diff binary" role even when a real diff
@@ -588,27 +563,27 @@ pub fn register_pilot_languages() {
         // 📡️.protocol.semio), just not registered here.
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("stdio.bmp.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.bmp.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.bmp.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.spr"),
     });
 }
 

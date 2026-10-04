@@ -124,17 +124,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
         return Err(protocol::ProtocolError::LimitExceeded("process3d mutation exceeds fixed binary owner"));
     }
     let mut reader = store::ByteReader::new(bytes);
-    if reader.read_u8().map_err(protocol::ProtocolError::Pack)? != PROCESS3D_MUTATION_BINARY_FORMAT {
+    if reader.read_u8().map_err(protocol::ProtocolError::from)? != PROCESS3D_MUTATION_BINARY_FORMAT {
         return Err(process3d_protocol_error("unsupported process3d mutation binary format".into()));
     }
-    let tag = reader.read_u8().map_err(protocol::ProtocolError::Pack)?;
+    let tag = reader.read_u8().map_err(protocol::ProtocolError::from)?;
     let mutation = match tag {
         0 => {
-            let index = reader.read_varint_u64().map_err(protocol::ProtocolError::Pack)? as usize;
+            let index = reader.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
             let id = read_str_lp(&mut reader).map_err(process3d_protocol_error)?;
             let label = read_str_lp(&mut reader).map_err(process3d_protocol_error)?;
-            let enabled = reader.read_u8().map_err(protocol::ProtocolError::Pack)? != 0;
-            let origin = match reader.read_u8().map_err(protocol::ProtocolError::Pack)? {
+            let enabled = reader.read_u8().map_err(protocol::ProtocolError::from)? != 0;
+            let origin = match reader.read_u8().map_err(protocol::ProtocolError::from)? {
                 0 => None,
                 1 => Some(StepOrigin { machine_id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, capability_id: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
                 _ => return Err(process3d_protocol_error("invalid step origin tag".into())),
@@ -143,10 +143,10 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
         }
         1 => Process3dMutation::DeleteStep(delete_step::DeleteStep { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         2 => Process3dMutation::RenameStep(rename_step::RenameStep { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_label: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
-        3 => Process3dMutation::ChangeStepEnabled(change_step_enabled::ChangeStepEnabled { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_enabled: reader.read_u8().map_err(protocol::ProtocolError::Pack)? != 0 }),
+        3 => Process3dMutation::ChangeStepEnabled(change_step_enabled::ChangeStepEnabled { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_enabled: reader.read_u8().map_err(protocol::ProtocolError::from)? != 0 }),
         4 => {
             let id = read_str_lp(&mut reader).map_err(process3d_protocol_error)?;
-            let new_origin = match reader.read_u8().map_err(protocol::ProtocolError::Pack)? {
+            let new_origin = match reader.read_u8().map_err(protocol::ProtocolError::from)? {
                 0 => None,
                 1 => Some(StepOrigin { machine_id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, capability_id: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
                 _ => return Err(process3d_protocol_error("invalid step origin tag".into())),
@@ -154,14 +154,14 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
             Process3dMutation::ChangeStepOrigin(change_step_origin::ChangeStepOrigin { id, new_origin })
         }
         5 => Process3dMutation::ReplaceStepMeasure(replace_step_measure::ReplaceStepMeasure { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_measure: read_measure(&mut reader).map_err(process3d_protocol_error)? }),
-        6 => Process3dMutation::ReorderSteps(reorder_steps::ReorderSteps { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, to_index: reader.read_varint_u64().map_err(protocol::ProtocolError::Pack)? as usize }),
-        7 => Process3dMutation::CreateMachine(create_machine::CreateMachine { index: reader.read_varint_u64().map_err(protocol::ProtocolError::Pack)? as usize, machine: read_machine(&mut reader).map_err(process3d_protocol_error)? }),
+        6 => Process3dMutation::ReorderSteps(reorder_steps::ReorderSteps { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, to_index: reader.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize }),
+        7 => Process3dMutation::CreateMachine(create_machine::CreateMachine { index: reader.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize, machine: read_machine(&mut reader).map_err(process3d_protocol_error)? }),
         8 => Process3dMutation::DeleteMachine(delete_machine::DeleteMachine { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         9 => Process3dMutation::RenameMachine(rename_machine::RenameMachine { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_label: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         10 => Process3dMutation::ChangeMachineIcon(change_machine_icon::ChangeMachineIcon { id: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, new_icon_id: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         11 => {
             let id = read_str_lp(&mut reader).map_err(process3d_protocol_error)?;
-            let count = reader.read_varint_u64().map_err(protocol::ProtocolError::Pack)? as usize;
+            let count = reader.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
             if count > PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
                 return Err(protocol::ProtocolError::LimitExceeded("process3d mutation capability count exceeds fixed catalog"));
             }
@@ -1290,9 +1290,9 @@ impl Process3dRetirementStack {
         Self { slots: std::mem::ManuallyDrop::new(slots), len: 1 }
     }
 
-    fn push(&mut self, owner: Process3dRetirementOwner) -> Result<(), String> {
+    fn push(&mut self, owner: Process3dRetirementOwner) -> Result<(), semio_framework_value::ValueError> {
         if self.len >= PROCESS3D_RETAINED_STACK_CAPACITY {
-            return Err("Process3d combined retirement depth exceeded its fixed authority".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d combined retirement depth exceeded its fixed authority"));
         }
         self.slots[self.len] = Some(owner);
         self.len += 1;
@@ -1307,10 +1307,10 @@ impl Process3dRetirementStack {
         Self::string([Some(value), None, None, None, None, None])
     }
 
-    fn release_string(value: String, maximum_bytes: usize) -> Result<(usize, usize), String> {
+    fn release_string(value: String, maximum_bytes: usize) -> Result<(usize, usize), semio_framework_value::ValueError> {
         let bytes = value.capacity();
         if bytes > maximum_bytes {
-            return Err("Process3d string owner exceeds one close byte grant".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d string owner exceeds one close byte grant"));
         }
         drop(value);
         Ok((1, bytes))
@@ -1324,7 +1324,7 @@ impl Process3dRetirementStack {
         self.slots[self.len].take()
     }
 
-    fn advance(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn advance(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         let Some(owner) = self.pop_owner() else { return Ok(store::SnapshotRetirementStep::Complete) };
         let mut parent = None;
         let mut child = None;
@@ -1570,7 +1570,7 @@ impl Process3dRetirementStack {
             }
         }
         if released_bytes > maximum_bytes {
-            return Err("Process3d owner exceeded exact close byte grant".into());
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d owner exceeded exact close byte grant"));
         }
         if let Some(parent) = parent {
             self.push(parent)?;
@@ -1614,7 +1614,7 @@ impl Process3dOwnedRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for Process3dOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1653,7 +1653,7 @@ struct Process3dSnapshotRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for Process3dSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1664,7 +1664,7 @@ impl store::ErasedSnapshotRetirement for Process3dSnapshotRootRetirement {
                     self.terminal = true;
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Process3d snapshot root reported false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d snapshot root reported false terminal")),
                 step => Ok(step),
             };
         }
@@ -3121,7 +3121,7 @@ impl Process3dSnapshotCopyCursor {
         Self { phase: Process3dCopyPhase::Shell, machine_capacity, candidate: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), terminal_handoff: false }
     }
 
-    fn step(&mut self, source: &Process3dSnapshot, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, source: &Process3dSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if cx.should_yield() || cx.fuel_remaining() == 0 {
             return Ok(false);
         }
@@ -3145,15 +3145,11 @@ impl Process3dSnapshotCopyCursor {
                     step_payloads,
                     tool_solids,
                 });
-                digest.observe(b"process3d.snapshot");
-                digest.observe(source.stock_id.as_bytes());
-                digest.observe(source.stock_label.as_bytes());
                 self.phase = Process3dCopyPhase::Machines(0);
             }
             Process3dCopyPhase::Machines(index) => {
                 if let Some(machine) = source.workshop.machines.get(index) {
                     self.candidate.as_mut().expect("Process3d clone shell remains retained").workshop.machines.push(process3d_copy_machine(machine)?);
-                    digest.observe(machine.id.as_bytes());
                     self.phase = Process3dCopyPhase::Machines(index + 1);
                 } else {
                     self.phase = Process3dCopyPhase::Steps(0);
@@ -3162,7 +3158,6 @@ impl Process3dSnapshotCopyCursor {
             Process3dCopyPhase::Steps(index) => {
                 if let Some(step) = source.step_payloads.get(index) {
                     self.candidate.as_mut().expect("Process3d clone shell remains retained").step_payloads.push(process3d_copy_step(step)?);
-                    digest.observe(step.id.as_bytes());
                     self.phase = Process3dCopyPhase::Steps(index + 1);
                 } else {
                     self.phase = Process3dCopyPhase::Tools(0);
@@ -3171,7 +3166,6 @@ impl Process3dSnapshotCopyCursor {
             Process3dCopyPhase::Tools(index) => {
                 if let Some(child) = source.tool_solids.get(index) {
                     self.candidate.as_mut().expect("Process3d clone shell remains retained").tool_solids.push(process3d_copy_child(child)?);
-                    digest.observe(child.child_id.as_bytes());
                     self.phase = Process3dCopyPhase::Tools(index + 1);
                 } else {
                     self.phase = Process3dCopyPhase::Complete;
@@ -3192,7 +3186,7 @@ impl Process3dSnapshotCopyCursor {
         Some(value)
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -3211,7 +3205,7 @@ impl Process3dSnapshotCopyCursor {
                 self.terminal_handoff = true;
                 Ok(store::SnapshotRetirementStep::Complete)
             }
-            store::SnapshotRetirementStep::Complete => Err("Process3d clone retirement false terminal".into()),
+            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d clone retirement false terminal")),
             step => Ok(step),
         }
     }
@@ -3244,125 +3238,6 @@ fn process3d_fault_detail(code: &[u8]) -> Vec<u8> {
     detail.try_reserve_exact(code.len()).expect("Process3d fixed fault detail was pre-admitted");
     detail.extend_from_slice(code);
     detail
-}
-
-fn process3d_observe_mutation(digest: &mut store::ArtifactStoreInitializationDigest, mutation: &Process3dMutation) {
-    use Process3dMutation::*;
-    let (tag, id) = match mutation {
-        CreateStep(value) => (b"create-step".as_slice(), value.step.id.as_bytes()),
-        DeleteStep(value) => (b"delete-step".as_slice(), value.id.as_bytes()),
-        RenameStep(value) => (b"rename-step".as_slice(), value.id.as_bytes()),
-        ChangeStepEnabled(value) => (b"change-step-enabled".as_slice(), value.id.as_bytes()),
-        ChangeStepOrigin(value) => (b"change-step-origin".as_slice(), value.id.as_bytes()),
-        ReplaceStepMeasure(value) => (b"replace-step-measure".as_slice(), value.id.as_bytes()),
-        ReorderSteps(value) => (b"reorder-steps".as_slice(), value.id.as_bytes()),
-        CreateMachine(value) => (b"create-machine".as_slice(), value.machine.id.as_bytes()),
-        DeleteMachine(value) => (b"delete-machine".as_slice(), value.id.as_bytes()),
-        RenameMachine(value) => (b"rename-machine".as_slice(), value.id.as_bytes()),
-        ChangeMachineIcon(value) => (b"change-machine-icon".as_slice(), value.id.as_bytes()),
-        ReplaceMachineCapabilities(value) => (b"replace-machine-capabilities".as_slice(), value.id.as_bytes()),
-        MoveStock(_) => (b"move-stock".as_slice(), b"stock".as_slice()),
-        ChangeStockLabel(value) => (b"change-stock-label".as_slice(), value.new_label.as_bytes()),
-        ReplaceStockSolid(value) => (b"replace-stock-solid".as_slice(), value.new_solid.child_id.as_bytes()),
-    };
-    digest.observe(tag);
-    digest.observe(id);
-    match mutation {
-        CreateStep(value) => {
-            digest.observe(&value.index.to_be_bytes());
-            digest.observe(value.step.label.as_bytes());
-        }
-        RenameStep(value) => digest.observe(value.new_label.as_bytes()),
-        ChangeStepEnabled(value) => digest.observe(&[u8::from(value.new_enabled)]),
-        ChangeStepOrigin(value) => {
-            if let Some(origin) = &value.new_origin {
-                digest.observe(origin.machine_id.as_bytes());
-                digest.observe(origin.capability_id.as_bytes());
-            }
-        }
-        ReorderSteps(value) => digest.observe(&value.to_index.to_be_bytes()),
-        CreateMachine(value) => {
-            digest.observe(&value.index.to_be_bytes());
-            digest.observe(value.machine.label.as_bytes());
-            digest.observe(value.machine.icon_id.as_bytes());
-        }
-        RenameMachine(value) => digest.observe(value.new_label.as_bytes()),
-        ChangeMachineIcon(value) => digest.observe(value.new_icon_id.as_bytes()),
-        ReplaceMachineCapabilities(value) => {
-            digest.observe(&value.new_capabilities.len().to_be_bytes());
-            for capability in &value.new_capabilities {
-                digest.observe(capability.id.as_bytes());
-                digest.observe(capability.label.as_bytes());
-            }
-        }
-        MoveStock(value) => {
-            for scalar in value.new_pose.position.iter().chain(value.new_pose.axis.iter()).chain(std::iter::once(&value.new_pose.angle)) {
-                digest.observe(&scalar.to_bits().to_be_bytes());
-            }
-        }
-        ReplaceStepMeasure(value) => process3d_observe_measure(digest, &value.new_measure),
-        ReplaceStockSolid(value) => digest.observe(value.new_solid.target.artifact_id.as_bytes()),
-        DeleteStep(_) | DeleteMachine(_) | ChangeStockLabel(_) => {}
-    }
-}
-
-fn process3d_observe_pose(digest: &mut store::ArtifactStoreInitializationDigest, pose: &Pose) {
-    for scalar in pose.position.iter().chain(pose.axis.iter()).chain(std::iter::once(&pose.angle)) {
-        digest.observe(&scalar.to_bits().to_be_bytes());
-    }
-}
-
-fn process3d_observe_solid(digest: &mut store::ArtifactStoreInitializationDigest, solid: &WorkingSolid) {
-    match solid {
-        WorkingSolid::Box { width, depth, height } => {
-            digest.observe(b"box");
-            for scalar in [width, depth, height] {
-                digest.observe(&scalar.to_bits().to_be_bytes());
-            }
-        }
-        WorkingSolid::Cylinder { radius, height } => {
-            digest.observe(b"cylinder");
-            digest.observe(&radius.to_bits().to_be_bytes());
-            digest.observe(&height.to_bits().to_be_bytes());
-        }
-        WorkingSolid::Sphere { radius } => {
-            digest.observe(b"sphere");
-            digest.observe(&radius.to_bits().to_be_bytes());
-        }
-        WorkingSolid::ImportedMesh { mesh_url } => {
-            digest.observe(b"mesh");
-            digest.observe(mesh_url.as_bytes());
-        }
-        WorkingSolid::ImportedSolid { solid_handle } => {
-            digest.observe(b"solid");
-            digest.observe(solid_handle.as_bytes());
-        }
-        WorkingSolid::Reference { reference_id } => {
-            digest.observe(b"reference");
-            digest.observe(reference_id.as_bytes());
-        }
-    }
-}
-
-fn process3d_observe_measure(digest: &mut store::ArtifactStoreInitializationDigest, measure: &ProcessMeasure) {
-    match measure {
-        ProcessMeasure::Cut { tool, pose } => {
-            digest.observe(b"cut");
-            process3d_observe_solid(digest, tool);
-            process3d_observe_pose(digest, pose);
-        }
-        ProcessMeasure::Drill { radius, depth, pose } => {
-            digest.observe(b"drill");
-            digest.observe(&radius.to_bits().to_be_bytes());
-            digest.observe(&depth.to_bits().to_be_bytes());
-            process3d_observe_pose(digest, pose);
-        }
-        ProcessMeasure::Attach { component, pose } => {
-            digest.observe(b"attach");
-            process3d_observe_solid(digest, component);
-            process3d_observe_pose(digest, pose);
-        }
-    }
 }
 
 fn process3d_apply_retained_mutation(snapshot: &mut Process3dSnapshot, mutation: &Process3dMutation) -> Result<Option<Box<dyn store::ErasedSnapshotRetirement>>, &'static str> {
@@ -3428,18 +3303,16 @@ fn process3d_apply_retained_mutation(snapshot: &mut Process3dSnapshot, mutation:
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Process3dStoreInitializationPhase {
     ValidateEnvelope,
-    ValidateEditPair { left: usize, right: usize },
+    ValidateEdit { index: usize },
     CensusHistory { edit: usize, mutation: usize },
     Census,
     CloneInitial,
     SeedHistory { edit: usize, lane: u8, index: usize },
-    FindApplied { position: usize, scan: usize },
+    FoldSupersessions { transition: usize },
+    FindApplied { position: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
-    HashInverse { position: usize, edit: usize, mutation: usize },
     CommitApplied { position: usize, edit: usize },
-    FindRedo { position: usize, scan: usize },
-    HashRedoForward { position: usize, edit: usize, mutation: usize },
-    HashRedoInverse { position: usize, edit: usize, mutation: usize },
+    FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
     BuildCandidate,
     Complete,
@@ -3465,8 +3338,7 @@ struct Process3dStoreInitializationAuthority {
     clone_cursor: std::mem::ManuallyDrop<Option<Process3dSnapshotCopyCursor>>,
     census: std::mem::ManuallyDrop<Option<Process3dOwnerCensusCursor>>,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<Process3dSnapshot, Process3dMutation>>>,
-    initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
-    edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: Process3dStoreInitializationPhase,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
@@ -3495,8 +3367,7 @@ impl Process3dStoreInitializationAuthority {
             clone_cursor: std::mem::ManuallyDrop::new(None),
             census: std::mem::ManuallyDrop::new(Some(Process3dOwnerCensusCursor::new())),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
-            initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"process3d.initial"))),
-            edit_digest: std::mem::ManuallyDrop::new(None),
+            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             phase: Process3dStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -3521,7 +3392,7 @@ impl Process3dStoreInitializationAuthority {
         self.phase = Process3dStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self) -> Result<bool, String> {
+    fn pump_active(&mut self) -> Result<bool, semio_framework_value::ValueError> {
         if self.active_terminal {
             drop(self.active.take());
             self.active_terminal = false;
@@ -3530,15 +3401,15 @@ impl Process3dStoreInitializationAuthority {
         let Some(active) = self.active.as_mut() else { return Ok(false) };
         match active.close_step(1, PROCESS3D_OWNER_BYTES)? {
             store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => self.active_terminal = true,
-            store::SnapshotRetirementStep::Complete => return Err("Process3d initializer active false terminal".into()),
+            store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d initializer active false terminal")),
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= PROCESS3D_OWNER_BYTES => {}
-            store::SnapshotRetirementStep::Pending { .. } => return Err("Process3d initializer active exceeded grant".into()),
+            store::SnapshotRetirementStep::Pending { .. } => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d initializer active exceeded grant")),
             store::SnapshotRetirementStep::Blocked => {}
         }
         Ok(true)
     }
 
-    fn pump_terminal_retirement(&mut self, maximum_bytes: usize) -> Result<bool, String> {
+    fn pump_terminal_retirement(&mut self, maximum_bytes: usize) -> Result<bool, semio_framework_value::ValueError> {
         if self.pump_active()? {
             return Ok(false);
         }
@@ -3549,13 +3420,13 @@ impl Process3dStoreInitializationAuthority {
                 return Ok(false);
             }
             let disposer = self.candidate_disposer.as_mut().expect("Process3d candidate disposer retained");
-            return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| "Process3d candidate disposer fault".to_owned())? {
+            return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer fault"))? {
                 semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
                     *self.candidate_disposer = None;
                     drop(self.candidate.take());
                     Ok(false)
                 }
-                semio_framework_plugin::PluginCloseStep::Complete => Err("Process3d candidate disposer false terminal".into()),
+                semio_framework_plugin::PluginCloseStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d candidate disposer false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3565,7 +3436,7 @@ impl Process3dStoreInitializationAuthority {
                     drop(self.runtime.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Process3d runtime false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d runtime false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3575,7 +3446,7 @@ impl Process3dStoreInitializationAuthority {
                     drop(self.clone_cursor.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Process3d clone false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d clone false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3592,7 +3463,7 @@ impl Process3dStoreInitializationAuthority {
                     drop(self.envelope_retirement.take());
                     Ok(false)
                 }
-                store::SnapshotRetirementStep::Complete => Err("Process3d envelope retirement false terminal".into()),
+                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d envelope retirement false terminal")),
                 _ => Ok(false),
             };
         }
@@ -3609,8 +3480,6 @@ impl Process3dStoreInitializationAuthority {
             && self.clone_cursor.is_none()
             && self.census.is_none()
             && self.candidate_disposer.is_none()
-            && self.initial_digest.is_none()
-            && self.edit_digest.is_none()
     }
 }
 
@@ -3632,28 +3501,24 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             }
             Ok(false) => {}
             Err(error) => {
-                self.fault = Some(error.into_bytes());
+                self.fault = Some(error.into_message().into_bytes());
                 self.phase = Process3dStoreInitializationPhase::RetireFault;
             }
         }
         match self.phase {
             Process3dStoreInitializationPhase::ValidateEnvelope => {
                 let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == crate::PROCESS_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= PROCESS3D_OWNER_BYTES);
-                self.phase = if valid { Process3dStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 } } else { Process3dStoreInitializationPhase::RetireFault };
+                self.phase = if valid { Process3dStoreInitializationPhase::ValidateEdit { index: 0 } } else { Process3dStoreInitializationPhase::RetireFault };
                 if !valid {
                     self.fault = Some(process3d_fault_detail(b"process3d-store.initializer-envelope-invalid"));
                 }
             }
-            Process3dStoreInitializationPhase::ValidateEditPair { left, right } => {
+            Process3dStoreInitializationPhase::ValidateEdit { index } => {
                 let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
-                if left >= envelope.vcs.edits.len() {
-                    self.phase = Process3dStoreInitializationPhase::CensusHistory { edit: 0, mutation: 0 };
-                } else if right >= envelope.vcs.edits.len() {
-                    self.phase = Process3dStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
-                } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id {
-                    self.fail(b"process3d-store.initializer-duplicate-edit");
-                } else {
-                    self.phase = Process3dStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                match self.edit_index.admit(&envelope.vcs.edits, index, usize::MAX) {
+                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = Process3dStoreInitializationPhase::CensusHistory { edit: 0, mutation: 0 },
+                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = Process3dStoreInitializationPhase::ValidateEdit { index: index + 1 },
+                    store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"process3d-store.initializer-duplicate-edit"),
                 }
             }
             Process3dStoreInitializationPhase::CensusHistory { edit, mutation } => {
@@ -3707,7 +3572,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             }
             Process3dStoreInitializationPhase::CloneInitial => {
                 let source = &self.envelope.as_ref().expect("Process3d envelope retained").vcs.initial_snapshot;
-                let complete = match self.clone_cursor.as_mut().expect("Process3d clone retained").step(source, self.initial_digest.as_mut().expect("Process3d digest retained"), cx) {
+                let complete = match self.clone_cursor.as_mut().expect("Process3d clone retained").step(source, cx) {
                     Ok(value) => value,
                     Err(code) => {
                         self.fail(code.as_bytes());
@@ -3718,7 +3583,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     let initial = self.clone_cursor.as_mut().expect("Process3d clone retained").take().expect("Process3d clone handoff");
                     drop(self.clone_cursor.take());
                     *self.census = None;
-                    let initial_digest = self.initial_digest.take().expect("Process3d digest retained").finish();
+                    let initial_digest = store::artifact_initial_digest(&initial);
                     let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
                     *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, initial, initial_digest));
                     self.phase = Process3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
@@ -3728,7 +3593,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Process3dStoreInitializationPhase::SeedHistory { edit, lane, index } => {
                 let envelope = self.envelope.as_ref().expect("Process3d history retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = Process3dStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                    self.phase = Process3dStoreInitializationPhase::FoldSupersessions { transition: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 let runtime = self.runtime.as_mut().expect("Process3d runtime retained");
@@ -3762,7 +3627,18 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     _ => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
                 }
             }
-            Process3dStoreInitializationPhase::FindApplied { position, scan } => {
+            Process3dStoreInitializationPhase::FoldSupersessions { transition } => {
+                let envelope = self.envelope.as_ref().expect("Process3d envelope remains retained while its supersessions fold");
+                match self.runtime.as_mut().expect("Process3d runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
+                    Ok(true) => self.phase = Process3dStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
+                    Ok(false) => self.phase = Process3dStoreInitializationPhase::FindApplied { position: 0 },
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        self.phase = Process3dStoreInitializationPhase::RetireFault;
+                    }
+                }
+            }
+            Process3dStoreInitializationPhase::FindApplied { position } => {
                 let Some(id) = self.applied_id(position) else {
                     let checkpoint = self
                         .envelope
@@ -3770,58 +3646,48 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                         .and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.as_ref()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| &checkpoint.id)))
                         .and_then(|id| process3d_copy_string(id).ok());
                     self.runtime.as_mut().expect("Process3d runtime retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = Process3dStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                    self.phase = Process3dStoreInitializationPhase::FindRedo { position: 0 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 let envelope = self.envelope.as_ref().expect("Process3d envelope retained");
                 match envelope.vcs.edits.get(scan) {
                     Some(edit) if edit.id == id => {
-                        let mut digest = store::ArtifactStoreInitializationDigest::new(b"process3d.edit");
-                        digest.observe(edit.id.as_bytes());
-                        digest.observe(&edit.sequence_number.to_be_bytes());
-                        digest.observe(edit.started_at.as_bytes());
-                        *self.edit_digest = Some(digest);
                         self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
                     }
-                    Some(_) => self.phase = Process3dStoreInitializationPhase::FindApplied { position, scan: scan + 1 },
+                    Some(_) => self.fail(b"process3d-store.initializer-applied-missing"),
                     None => self.fail(b"process3d-store.initializer-applied-missing"),
                 }
             }
             Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
                 let Some(operation) = operation else {
-                    self.phase = Process3dStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
+                    self.phase = Process3dStoreInitializationPhase::CommitApplied { position, edit };
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                process3d_observe_mutation(self.edit_digest.as_mut().expect("Process3d edit digest retained"), operation);
-                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Process3d current retained");
-                match process3d_apply_retained_mutation(current, operation) {
-                    Ok(retired) => {
+                let envelope = self.envelope.as_ref().expect("Process3d envelope remains retained while its forwards fold");
+                let entry = envelope.vcs.edits.get(edit).expect("Process3d applied edit remains retained");
+                let effective = self.runtime.as_ref().and_then(|runtime| runtime.effective_forward(entry, mutation, &envelope.schema)).expect("Process3d applied forward remains retained");
+                let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("Process3d runtime current retained");
+                let applied = effective.operation().map(|operation| process3d_apply_retained_mutation(current, operation));
+                drop(effective);
+                match applied {
+                    Some(Ok(retired)) => {
                         *self.active = retired;
                         self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
                     }
-                    Err(code) => self.fail(code.as_bytes()),
-                }
-            }
-            Process3dStoreInitializationPhase::HashInverse { position, edit, mutation } => {
-                let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.inverse.get(mutation));
-                if let Some(operation) = operation {
-                    process3d_observe_mutation(self.edit_digest.as_mut().expect("Process3d edit digest retained"), operation);
-                    self.phase = Process3dStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
-                } else {
-                    self.phase = Process3dStoreInitializationPhase::CommitApplied { position, edit };
+                    None => self.phase = Process3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 },
+                    Some(Err(code)) => self.fail(code.as_bytes()),
                 }
             }
             Process3dStoreInitializationPhase::CommitApplied { position, edit } => {
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Process3d applied retained");
-                let id = process3d_copy_string(&entry.id).unwrap_or_default();
                 let actor = entry.actor.as_ref().and_then(|value| process3d_copy_string(value).ok());
-                let digest = self.edit_digest.take().expect("Process3d edit digest retained").finish();
                 let runtime = self.runtime.as_mut().expect("Process3d runtime retained");
-                match runtime.push_applied(id, digest) {
+                match runtime.push_applied_edit(entry) {
                     Ok(()) => {
                         runtime.set_local_actor_id(actor);
-                        self.phase = Process3dStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                        self.phase = Process3dStoreInitializationPhase::FindApplied { position: position + 1 };
                     }
                     Err(error) => {
                         self.fault = Some(error.into_bytes());
@@ -3829,47 +3695,25 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     }
                 }
             }
-            Process3dStoreInitializationPhase::FindRedo { position, scan } => {
+            Process3dStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
+                    self.edit_index.clear();
                     self.phase = Process3dStoreInitializationPhase::BuildCandidate;
                     return semio_framework_job::StepOutcome::Yield;
                 };
+                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
                 match self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(scan)) {
                     Some(edit) if edit.id == id => {
-                        let mut digest = store::ArtifactStoreInitializationDigest::new(b"process3d.edit");
-                        digest.observe(edit.id.as_bytes());
-                        digest.observe(&edit.sequence_number.to_be_bytes());
-                        digest.observe(edit.started_at.as_bytes());
-                        *self.edit_digest = Some(digest);
-                        self.phase = Process3dStoreInitializationPhase::HashRedoForward { position, edit: scan, mutation: 0 };
+                        self.phase = Process3dStoreInitializationPhase::CommitRedo { position, edit: scan };
                     }
-                    Some(_) => self.phase = Process3dStoreInitializationPhase::FindRedo { position, scan: scan + 1 },
+                    Some(_) => self.fail(b"process3d-store.initializer-redo-missing"),
                     None => self.fail(b"process3d-store.initializer-redo-missing"),
                 }
             }
-            Process3dStoreInitializationPhase::HashRedoForward { position, edit, mutation } => {
-                let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
-                if let Some(operation) = operation {
-                    process3d_observe_mutation(self.edit_digest.as_mut().expect("Process3d redo digest retained"), operation);
-                    self.phase = Process3dStoreInitializationPhase::HashRedoForward { position, edit, mutation: mutation + 1 };
-                } else {
-                    self.phase = Process3dStoreInitializationPhase::HashRedoInverse { position, edit, mutation: 0 };
-                }
-            }
-            Process3dStoreInitializationPhase::HashRedoInverse { position, edit, mutation } => {
-                let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.inverse.get(mutation));
-                if let Some(operation) = operation {
-                    process3d_observe_mutation(self.edit_digest.as_mut().expect("Process3d redo digest retained"), operation);
-                    self.phase = Process3dStoreInitializationPhase::HashRedoInverse { position, edit, mutation: mutation + 1 };
-                } else {
-                    self.phase = Process3dStoreInitializationPhase::CommitRedo { position, edit };
-                }
-            }
             Process3dStoreInitializationPhase::CommitRedo { position, edit } => {
-                let id = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| process3d_copy_string(&entry.id).ok()).unwrap_or_default();
-                let digest = self.edit_digest.take().expect("Process3d redo digest retained").finish();
-                match self.runtime.as_mut().expect("Process3d runtime retained").push_redo(id, digest) {
-                    Ok(()) => self.phase = Process3dStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 },
+                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Process3d redo edit retained");
+                match self.runtime.as_mut().expect("Process3d runtime retained").push_redo_edit(entry) {
+                    Ok(()) => self.phase = Process3dStoreInitializationPhase::FindRedo { position: position + 1 },
                     Err(error) => {
                         self.fault = Some(error.into_bytes());
                         self.phase = Process3dStoreInitializationPhase::RetireFault;
@@ -3901,8 +3745,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
                     process3d_release_app_publication_authority(self.operation);
-                    *self.initial_digest = None;
-                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == Process3dStoreInitializationPhase::RetireCancelled {
                         self.phase = Process3dStoreInitializationPhase::Cancelled;
@@ -3913,7 +3755,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                     let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &bytes).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                     return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail });
                 }
-                Err(error) => self.fault = Some(error.into_bytes()),
+                Err(error) => self.fault = Some(error.into_message().into_bytes()),
             },
             Process3dStoreInitializationPhase::Complete => {
                 return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
@@ -3941,8 +3783,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             return None;
         }
         let candidate = self.candidate.take()?;
-        *self.initial_digest = None;
-        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }
@@ -3963,12 +3803,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
                 process3d_release_app_publication_authority(self.operation);
-                *self.initial_digest = None;
-                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
-            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close"), format!("Process3d initializer close failed: {error}"))),
+            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close"), format!("Process3d initializer close failed: {}", error.into_message()))),
         }
     }
 

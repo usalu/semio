@@ -84,7 +84,7 @@ impl machine::Host<world_tool::WorldTool> for WorldToolHost {
 /// admission's `authoring_seed` and the host clock. `None` when the gesture places nothing: zero trace.
 pub fn process3d_world_commit(verb: &str, authoring_seed: &str, request: WorldToolRequest) -> Option<(protocol::TransactionRef, Vec<Process3dMutation>)> {
     let mut runner = ToolMachineRunner::<world_tool::WorldTool, WorldToolHost>::start(format!("{PROCESS3D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), WorldToolContext, WorldToolHost).ok()?;
-    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
+    let clock = semio_framework_tool_machine::authoring_clock(0);
     match runner.send(world_tool::Event::Gesture(request), clock).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
@@ -136,7 +136,7 @@ fn process3d_step_from_face_drag(fixture: &Process3dSnapshot, normal: [f64; 3], 
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {
         #[dsl(coord)]
@@ -171,7 +171,7 @@ pub mod world_pointer_down {
 pub mod world_face_drag_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "world-face-drag-end")]
     pub struct WorldFaceDragEnd {
         #[dsl(coord)]

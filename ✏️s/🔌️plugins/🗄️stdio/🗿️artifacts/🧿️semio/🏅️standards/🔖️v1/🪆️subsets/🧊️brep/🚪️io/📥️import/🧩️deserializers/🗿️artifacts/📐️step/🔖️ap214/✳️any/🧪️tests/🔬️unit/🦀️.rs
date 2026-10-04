@@ -14,7 +14,7 @@ fn fixture_step_snapshot() -> StepSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
     let step = fixture_step_snapshot();
-    let brep = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize real fixture");
+    let brep = ::semio_framework_async::poll::resolve_ready(SemioBrepFromStep::deserialize(&step)).expect("deserialize real fixture");
 
     assert_eq!(brep.vertices.len(), 3);
     assert_eq!(brep.edges.len(), 3);
@@ -48,7 +48,7 @@ async fn dangling_curve_reference_errors_rather_than_fabricating() {
     let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
     let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);
-    let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
+    let result = ::semio_framework_async::poll::resolve_ready(SemioBrepFromStep::deserialize(&step));
     assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
 }
 
@@ -58,6 +58,6 @@ async fn unsupported_surface_kind_errors_rather_than_fabricating() {
     let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
     let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);
-    let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
+    let result = ::semio_framework_async::poll::resolve_ready(SemioBrepFromStep::deserialize(&step));
     assert!(result.is_err(), "an unsupported surface entity must error, never silently become a Plane");
 }

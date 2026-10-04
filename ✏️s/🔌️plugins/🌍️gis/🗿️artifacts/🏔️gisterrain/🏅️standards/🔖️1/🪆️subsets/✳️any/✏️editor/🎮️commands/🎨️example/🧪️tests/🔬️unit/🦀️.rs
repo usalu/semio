@@ -85,6 +85,6 @@ async fn the_reducer_emits_only_the_fields_that_differ() {
     assert!(same.artifact_mutations.is_empty(), "the boot document already IS the demo, so re-selecting it changes no field");
 
     let cleared = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &doc, &cfg).expect("the none arm reduces");
-    assert_eq!(cleared.artifact_mutations.len(), 1, "only `exaggeration` differs between the demo and the flat terrain; `importedFeaturesJson` is empty in both");
+    assert_eq!(cleared.artifact_mutations.len(), 1, "only `exaggeration` differs between the demo and the flat terrain; `importedMap` is empty in both");
     assert!(matches!(cleared.artifact_mutations.first(), Some(crate::op::GisTerrainMutation::ChangeExaggeration(_))), "the differing field is emitted through its own authored leaf: {:?}", cleared.artifact_mutations);
 }

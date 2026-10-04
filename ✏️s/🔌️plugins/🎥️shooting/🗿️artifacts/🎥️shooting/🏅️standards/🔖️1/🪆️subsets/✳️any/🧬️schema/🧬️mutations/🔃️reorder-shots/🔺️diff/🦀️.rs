@@ -17,7 +17,7 @@ pub fn diff(payload: &ReorderShots, base: &ShootingSnapshot) -> protocol::Mutati
         ids.insert(to, item);
     }
     if ids == original {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" order is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" order is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(ShootingDiff { shots: Some(ShootingShotsDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
 }

@@ -10,7 +10,7 @@ pub fn diff(payload: &RenameGeneration, base: &Generation2dSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if entry.name == payload.name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Generation \"{}\" is already named \"{}\".", payload.id, payload.name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Generation \"{}\" is already named \"{}\".", payload.id, payload.name));
     }
     protocol::MutationOutcome::new(diff_generation_from_ops(base, &[GenerationMutation::Rename { id: payload.id.clone(), name: payload.name.clone() }]))
 }

@@ -17,7 +17,7 @@ mod sqlite;
 /// doc comment for the honest gap). Both slots are bare (never absent) — this artifact always
 /// composes exactly one of each, matching writer's `document: WriterDocumentChild` single-`Option`-in-
 /// the-diff convention rather than lowpoly's optional-slot double-`Option` shape.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "presentation")]
 #[artifact_schema(id = "s.animate.presentation")]

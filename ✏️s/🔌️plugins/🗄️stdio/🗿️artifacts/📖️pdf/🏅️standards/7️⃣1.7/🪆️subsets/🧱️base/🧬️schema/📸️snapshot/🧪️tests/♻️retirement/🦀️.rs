@@ -77,10 +77,10 @@ fn pdf_recursive_retirement_depth_refusal_cleans_partial_owned_children() {
     let mut accept = |_| true;
     let mut decoding = NativeDecodeControl::new(1_000_000, &mut accept);
     let error = PdfFunction::from_value_controlled(&input, &mut decoding).err().unwrap();
-    assert!(error.0.contains("depth limit"));
+    assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::DepthLimit);
     let mut accept = |_| true;
     let mut encoding = NativeEncodeControl::new(1_000_000, &mut accept);
-    assert!(function.to_value_controlled(&mut encoding).unwrap_err().0.contains("depth limit"));
+    assert_eq!(function.to_value_controlled(&mut encoding).unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit);
     PdfFunction::retire_decoded(function);
     DslValue::retire_decoded(input);
 }
@@ -140,7 +140,7 @@ fn pdf_recursive_retirement_interior_cancel_and_later_child_error_clean_admitted
     let mut accept = |_| true;
     let mut decoding = NativeDecodeControl::new(1_000_000, &mut accept);
     let actual = PdfFunction::from_value_controlled(&later_error, &mut decoding).err().unwrap();
-    assert_eq!(actual.0, format!("functions.1.{}", expected.0));
+    assert_eq!(actual.kind,expected.kind);assert_eq!(actual.message, format!("functions.1.{}", expected.message));
     assert!(decoding.owned_bytes() > 0);
     PdfFunction::retire_decoded(first);
     DslValue::retire_decoded(later_error);

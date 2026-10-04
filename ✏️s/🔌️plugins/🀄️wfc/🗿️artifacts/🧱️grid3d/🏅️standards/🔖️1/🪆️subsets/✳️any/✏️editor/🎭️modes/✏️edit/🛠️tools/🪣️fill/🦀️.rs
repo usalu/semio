@@ -96,7 +96,7 @@ impl Grid3dFillPayload {
 //#region 🔖️Definition
 /// 📋 Stitched into the editor manifest by `crate::editor::grid3d::create_grid3d_editor`.
 pub fn definition() -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..semio_framework_plugin::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, LocalizedLabel::native("Fill", "Füllen"), "paint-bucket")) }
 }
 
 /// ▶️ Non-mutating collapse: pause/resume/step/abort are the framework panel's; each tick dirties the preview.
@@ -114,6 +114,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: None,
         settings: ToolRunSettingsReads::default(),
         windows: vec![preview::WINDOW_KIND_ID.into()],
+        member: None,
     }
 }
 

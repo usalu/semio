@@ -1,0 +1,195 @@
+{
+  "source": "🗑️generated/neutral-field-binding/stage-3/source-ready-1.json",
+  "sha256": "a6830a23544aebb98ae9b35a104fe8c0232d546bf75a1a4e7213d5093aabbd96",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧫️fixtures/🪆️binding/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪆️binding/🔣️.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🚦️refusals/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪟️poses/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection/🦀️.rs",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🟦️.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📋️project.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/package.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/package.json",
+      "hashes": true,
+      "forward": true,
+      "inverse": true,
+      "current": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "hashes": true,
+      "forward": false,
+      "inverse": false,
+      "current": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Record Eighty Three Current Receipt Scope
+
+Actual existing log `🗑️generated/root-authentic-encoded-record-whole-eighty-three-owned-storage-current.log` now ends with 83 run, 83 passed, zero skipped, 0.132 seconds; Nx duration 6.7 seconds. This is executed whole mounted library authority, unlike former thirteen source candidates or prefix two-law selection. No new Cargo run performed by this audit.
+
+Bounded source scan of canonical shared/OS DSL and shared Pack found no old `HashMap<u16,FieldValue>`, record tuple-plus128 estimate or old record max64 forecast in the reviewed record paths. This does not remove unrelated owned dictionaries/symbol indexes or certify every repository frontier. Current RecordFields/EncodedRecord facts are detailed in the paired codegen report.
+
+The controlled decoder test facet remains staged outside the canonical library root mount. Accordingly, its map-record boundary law is not implicitly covered by whole83. Canonical Map<Record> output and parsing must retain braces around each actual record body and reject obsolete unbraced forms; ordinary scalar maps need no extra Record delimiter. The Flow fullowner receipt, its neutral map-record Source witness and actual owning tests are the relevant execution authority for the Flow regression. No legacy grammar acceptance should be introduced to preserve old fixture spellings.
+
+Current temporary debug census finds Flow Native public success eprintln at test397 and Process public inspect diagnostic helper12. Current shared Reader no longer contains the numeric temporary eprintln. Process helper script now uses a Rust raw string, addressing the source quoting prerequisite; actual Process completion must come from Root's owning receipt. Remove diagnostic context only after the relevant final GREEN, preserving permanent assertions and child stderr on failure. This read-only lane does not alter source.

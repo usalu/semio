@@ -111,7 +111,7 @@ mod subject {
         if encode_deflate_snapshot(&restored) == input {
             return Err("byte pass-through: mutated output is bit-identical to the input".to_string());
         }
-        for step in mutation_inverse(&mutation, &original) {
+        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
             apply_deflate_mutation(&mut restored, &step);
         }
         let restored_bytes = encode_deflate_snapshot(&restored);

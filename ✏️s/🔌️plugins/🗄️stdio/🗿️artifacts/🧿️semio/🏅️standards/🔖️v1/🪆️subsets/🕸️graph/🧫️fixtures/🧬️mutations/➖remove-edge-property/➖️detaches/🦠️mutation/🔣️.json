@@ -1,0 +1,8 @@
+{
+  "RemoveEdgeProperty": {
+    "edge_id": {
+      "value": "e1"
+    },
+    "key": "weight"
+  }
+}

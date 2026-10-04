@@ -93,8 +93,11 @@ pub fn apply_grid3d_mutation(projection: &mut Grid3dSnapshot, mutation: &Grid3dM
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_grid3d_mutation(projection: &Grid3dSnapshot, mutation: &Grid3dMutation) -> Vec<Grid3dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_grid3d_mutation(projection: &Grid3dSnapshot, mutation: &Grid3dMutation) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🌉️TestBridge

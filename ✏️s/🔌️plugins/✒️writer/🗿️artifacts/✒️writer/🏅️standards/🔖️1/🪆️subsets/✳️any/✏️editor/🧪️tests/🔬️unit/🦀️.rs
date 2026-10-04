@@ -66,7 +66,7 @@ pub(crate) mod context {
     /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
     /// see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
     /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
-    /// command's `Effect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
+    /// command's `Effect::LoadDocument`, through the stepped archive load (`artifact_app_laws::load_document`) — the same
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
     pub async fn app_with_jack() -> WriterApp {
         let mut app = new_app().await;
@@ -75,7 +75,7 @@ pub(crate) mod context {
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
         let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
         retire_writer_envelope(envelope);
-        app.load_document_pack(&files).await.expect("load jack");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load jack");
         app
     }
 
@@ -104,7 +104,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -142,19 +142,19 @@ pub(crate) mod context {
     /// ⌨️ One live typing delivery of the main text window at `now_ms`: `action` with `args` plus the window's `typing` buffer,
     /// admitted and published — the window folds it into its typing run (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-
     /// EDITING).
-    pub async fn type_delivery(app: &mut WriterApp, action: &str, mut args: Vec<(String, dsl::DslValue)>, now_ms: u64) -> InvocationResult {
+    pub async fn type_delivery(app: &mut WriterApp, action: &str, mut args: Vec<(String, semio_framework_value::DslValue)>, now_ms: u64) -> InvocationResult {
         let mut meta = meta("local");
         meta.view_state = Some(main_window_view());
-        args.push((semio_framework_plugin::TYPING_BUFFER_ARG.into(), dsl::DslValue::String(WRITER_TYPING_BUFFER.into())));
+        args.push((semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
         app.set_tool_clock_ms(Some(now_ms));
-        let result = app.handle_action(action, Some(&dsl::DslValue::Object(args)), &meta).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
+        let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &meta).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
         drain_typed_operations(app).await;
         result
     }
 
     /// 🏁️ The host's commit signal for the main text window's run (`reason`, no edit) at `now_ms`.
     pub async fn end_typing_run(app: &mut WriterApp, action: &str, reason: &str, now_ms: u64) -> InvocationResult {
-        let args = vec![(semio_framework_plugin::TYPING_COMMIT_ARG.to_string(), dsl::DslValue::String(reason.into()))];
+        let args = vec![(semio_framework_plugin::TYPING_COMMIT_ARG.to_string(), semio_framework_value::DslValue::String(reason.into()))];
         type_delivery(app, action, args, now_ms).await
     }
 
@@ -236,7 +236,7 @@ fn writer_artifact_store_preparation_is_exact_bounded_and_reversible() {
 
 #[test]
 fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
-    let snapshot_json = dsl::os_pack::json::to_json_string(&crate::schema::empty_writer_snapshot());
+    let snapshot_json = semio_framework_pack_json::to_json_string(&crate::schema::empty_writer_snapshot());
     let commands = vec![
         WriterCommand::TextEdit(text_edit::TextEdit { text: "ä".into() }),
         WriterCommand::SetText(set_text::SetText { text: "bounded".into() }),
@@ -262,10 +262,10 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
         let wire = <WriterCommand as protocol::OpBinary>::encode_op(&command).expect("owned protocol wire");
         assert!(wire.len() <= MAX_WRITER_COMMAND_RAW_BYTES);
         assert_eq!(<WriterCommand as protocol::OpBinary>::decode_op(&wire).expect("owned retained decoder"), command);
-        let owned_wire = dsl::os_pack::json::to_json_string(&command);
+        let owned_wire = semio_framework_pack_json::to_json_string(&command);
         let oracle: Value = serde_json::from_str(&owned_wire).expect("third-party JSON decoder");
         let serde_wire = serde_json::to_string(&oracle).expect("third-party JSON encoder");
-        assert_eq!(dsl::os_pack::json::from_json_str::<WriterCommand>(&serde_wire).expect("owned command decoder"), command);
+        assert_eq!(semio_framework_pack_json::from_json_str::<WriterCommand>(&serde_wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned command decoder"), command);
     }
 }
 
@@ -638,7 +638,7 @@ async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
+    let topology = WriterPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     let ast = topology.domains.get("ast").expect("ast domain present in topology");
     assert!(!ast.ordered.is_empty(), "jack document must produce a non-empty ast topology");
     let root = &ast.ordered[0];
@@ -655,7 +655,7 @@ async fn interaction_topology_is_empty_for_non_jack_documents() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = WriterPlayApp::interaction_topology(&doc, &cfg);
+    let topology = WriterPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
     assert!(topology.domains.get("ast").expect("ast domain present in topology").ordered.is_empty());
 }
 //#endregion 🔖️Interaction
@@ -879,7 +879,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
 fn the_artifact_preflight_declares_room_for_the_inverse_it_will_stage() {
     let base = jack_snapshot();
     let mutation = WriterMutation::EditText(crate::op::EditText { text: format!("{}\nsemio", crate::writer_text(&base)) });
-    let inverse = crate::op::inverse_writer_mutation(&base, &mutation);
+    let inverse = crate::op::inverse_writer_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let footprint = admit_writer_artifact_mutation(&mutation).expect("an EditText inside the retained envelope is admitted");
     assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(1 + inverse.len() <= footprint.work_items, "declared {} rows for 1 forward + {} inverse", footprint.work_items, inverse.len());

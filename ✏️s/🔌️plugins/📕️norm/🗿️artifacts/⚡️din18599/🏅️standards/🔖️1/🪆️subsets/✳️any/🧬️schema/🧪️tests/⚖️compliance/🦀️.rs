@@ -1,7 +1,7 @@
 //! ⚖️ DIN V 18599 / GEG compliance numeric + remedy tests.
 
 use crate::app_surface::{get_value_at_path, parse_path, set_value_at_path};
-use dsl::ToValue;
+use semio_framework_value::ToValue;
 
 use crate::document::{CheckReport, CheckStatus};
 use crate::standards::v1::subsets::any::schema::{
@@ -343,8 +343,8 @@ fn remedy_law_apply_delta_u_wb_makes_ht_check_pass() {
     assert_eq!(ht.subject.path, "deltaUWbWM2k");
     let remedy = ht.remedies.iter().find(|r| r.applicable && r.target.path == "deltaUWbWM2k").expect("ΔU_WB remedy on failing H′T");
     // Prove app-surface path write (same API Inputs/applyRemedy use)
-    let mut tree = ToValue::to_value(&doc);
-    set_value_at_path(&mut tree, &remedy.target.path, dsl::DslValue::float(remedy.required.value)).expect("set deltaUWbWM2k");
+    let mut tree = semio_framework_value::ToValue::to_value(&doc);
+    set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("set deltaUWbWM2k");
     apply_path_f64(&mut doc, &remedy.target.path, remedy.required.value);
     assert!((doc.delta_u_wb_w_m2k - remedy.required.value).abs() < 1e-12);
     let again = evaluate_document(&doc);
@@ -357,7 +357,7 @@ fn remedy_law_apply_delta_u_wb_makes_ht_check_pass() {
 fn every_emitted_path_resolves_via_get_value_at_path() {
     let doc = crate::subjects::noncompliant_detached_house();
     let report = evaluate_document(&doc);
-    let tree = ToValue::to_value(&doc);
+    let tree = semio_framework_value::ToValue::to_value(&doc);
     let mut saw_id = false;
     let mut resolved = 0usize;
     for check in &report.checks {
@@ -381,7 +381,7 @@ fn every_emitted_path_resolves_via_get_value_at_path() {
             }
             if remedy.options.is_empty() {
                 let mut probe = tree.clone();
-                set_value_at_path(&mut probe, &remedy.target.path, dsl::DslValue::float(remedy.required.value))
+                set_value_at_path(&mut probe, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value))
                     .unwrap_or_else(|e| panic!("set_value_at_path {}: {e}", remedy.target.path));
             }
         }
@@ -471,19 +471,6 @@ fn check_sig(report: &CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> 
         .collect()
 }
 
-fn restore_climate_owner_if_handle_matches(base: &crate::Din18599Snapshot, doc: &mut crate::Din18599Snapshot) {
-    if doc.climate.child_id == base.climate.child_id
-        && doc.climate.target.artifact_id == base.climate.target.artifact_id
-        && doc.climate.target.dialect.artifact_kind == base.climate.target.dialect.artifact_kind
-        && doc.climate.target.dialect.standard == base.climate.target.dialect.standard
-        && doc.climate.target.dialect.subset == base.climate.target.dialect.subset
-    {
-        if let Some(owner) = base.climate.local_owner::<crate::Din18599ClimateWorkingData>() {
-            doc.climate.set_local_owner(owner);
-        }
-    }
-}
-
 fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din18599Snapshot) {
     let base_sig = check_sig(&evaluate_document(base));
     let value = serde_json::to_value(base).expect("json");
@@ -545,7 +532,6 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din1
         let Ok(mut perturbed) = serde_json::from_value::<crate::Din18599Snapshot>(tree) else {
             continue;
         };
-        restore_climate_owner_if_handle_matches(base, &mut perturbed);
         let sig = check_sig(&evaluate_document(&perturbed));
         if sig == base_sig {
             unchanged.push(path.clone());
@@ -560,22 +546,20 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din1
 fn assert_climate_payload_influences_checks(fixture_name: &str, base: &crate::Din18599Snapshot) {
     let base_sig = check_sig(&evaluate_document(base));
     let mut cold = base.clone();
-    let mut climate = crate::din18599_climate(base);
-    for t in &mut climate.theta_e_c {
+    for t in &mut cold.climate.theta_e_c {
         *t -= 5.0;
     }
-    cold.climate = crate::din18599_climate_child_from_data(&climate);
+    cold.climate_table = crate::din18599_climate_table_child(&cold.climate);
     let sig_t = check_sig(&evaluate_document(&cold));
     assert!(
         sig_t != base_sig,
         "{fixture_name}: climate θ_e payload must change Q_h/Q_c/q_p checks"
     );
     let mut bright = base.clone();
-    let mut climate = crate::din18599_climate(base);
-    for g in &mut climate.g_h_w_m2 {
+    for g in &mut bright.climate.g_h_w_m2 {
         *g = (*g * 2.0).max(50.0);
     }
-    bright.climate = crate::din18599_climate_child_from_data(&climate);
+    bright.climate_table = crate::din18599_climate_table_child(&bright.climate);
     let sig_g = check_sig(&evaluate_document(&bright));
     assert!(
         sig_g != base_sig,

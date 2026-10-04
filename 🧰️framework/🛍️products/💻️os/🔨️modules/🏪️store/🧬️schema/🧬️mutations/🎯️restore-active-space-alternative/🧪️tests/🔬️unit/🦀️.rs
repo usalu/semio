@@ -1,5 +1,6 @@
 use super::*;
-use crate::os_dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use crate::os_spr::{MutationLeaf, OpBinary, OpText};
 
 #[test]

@@ -21,7 +21,7 @@ pub fn diff(payload: &super::SetInputPixels, base: &BitmapSnapshot) -> protocol:
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
     };
     if read_region(&buffer, base.input.width, base.input.height, payload.x, payload.y, payload.width, payload.height).as_deref() == Some(region.as_slice()) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "The region already holds these pixels.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The region already holds these pixels.".to_string());
     }
     let entry = BitmapPixelRegion { x: payload.x, y: payload.y, width: payload.width, height: payload.height, pixels: payload.pixels.clone() };
     protocol::MutationOutcome::new(BitmapDiff { input_regions: vec![entry], ..Default::default() })

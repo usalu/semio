@@ -1,5 +1,0 @@
-# 🗂️ change-step-collapsed direct payload.
-input ChangeStepCollapsedInput {
-  id: String!
-  collapsed: Boolean!
-}

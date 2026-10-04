@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "assets": {
+    "entries": {
+      "pixels-paint-eb218085fc5d16b3": {
+        "data": "iVNFTQ0KGgobAAAAcy5zdGRpby5zZW1pby5pbWFnZS5wYWNrIHYxARNzLnN0ZGlvLnNlbWlvLmltYWdlBgAAAAQAAAABCAABAAAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wD///8A////AP8AAAAAAAAAAAAAAAD//wCA//8AgP//AID//wCA//8AgP//AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "mime": "application/x-semio-image"
+      }
+    }
+  },
+  "id": null,
+  "layers": {
+    "added": [],
+    "moved": [],
+    "patched": [
+      {
+        "id": "paint",
+        "patch": {
+          "adjustmentKind": null,
+          "blendMode": null,
+          "height": null,
+          "locked": null,
+          "name": null,
+          "opacity": null,
+          "pixelContent": {
+            "height": 4,
+            "imageKey": "pixels-paint-eb218085fc5d16b3",
+            "width": 6
+          },
+          "transformX": null,
+          "transformY": null,
+          "visible": null,
+          "width": null
+        }
+      }
+    ],
+    "removed": []
+  },
+  "schema": null,
+  "title": null
+}

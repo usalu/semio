@@ -35,7 +35,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct TiffBaselineBuilderConstruction {
         snapshot: TiffSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for TiffBaselineBuilderConstruction {
@@ -51,7 +51,7 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -72,7 +72,7 @@ pub mod derived_construction {
         /// 🛡️ Re-runs the honestly-scope-limited Baseline TIFF check -- always SOFT at this schema,
         /// so `build()` never fails; the diagnostics still surface via the analyzer/composer/
         /// validator paths for anyone inspecting them.
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             let _ = check_tiff_baseline_conformance(&self.snapshot);
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
@@ -93,7 +93,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
     use crate::standards::v6_0::subsets::document::schema::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -139,9 +143,8 @@ pub mod derived_analysis {
 
         match (snapshot.width(), snapshot.height()) {
             (Some(width), Some(height)) => {
-                let expected_len = width as usize * height as usize * 4;
-                if width == 0 || height == 0 || snapshot.pixels.len() != expected_len {
-                    out.push(soft(CODE_DEGENERATE_RASTER, format!("raster is degenerate (width={width}, height={height}, pixels.len()={}, expected {expected_len})", snapshot.pixels.len())));
+                if width == 0 || height == 0 || ifd0.storage.chunks.is_empty() {
+                    out.push(soft(CODE_DEGENERATE_RASTER, format!("raster is degenerate (width={width}, height={height}, chunks={})", ifd0.storage.chunks.len())));
                 }
             }
             _ => out.push(soft(CODE_DEGENERATE_RASTER, "IFD 0 has no ImageWidth/ImageLength tag".into())),
@@ -161,10 +164,10 @@ pub mod derived_analysis {
         if bits.iter().any(|&b| b != 1 && b != 4 && b != 8) {
             out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE, format!("BitsPerSample {bits:?} has a value outside Baseline TIFF's {{1,4,8}}")));
         }
-        let has_tile = ifd0.entries.iter().any(|t| t.tag == TAG_TILE_WIDTH || t.tag == TAG_TILE_LENGTH);
+        let has_tile = ifd0.storage.kind == super::snapshot::TiffStorageKind::Tiles || ifd0.entries.iter().any(|t| t.tag == TAG_TILE_WIDTH || t.tag == TAG_TILE_LENGTH);
         if has_tile {
             out.push(soft(CODE_TILED_NOT_BASELINE, "Baseline TIFF requires strip organization; this IFD carries Tile* tags".into()));
-        } else if !ifd0.entries.iter().any(|t| t.tag == TAG_STRIP_OFFSETS) {
+        } else if ifd0.storage.kind != super::snapshot::TiffStorageKind::Strips {
             out.push(soft(CODE_MISSING_STRIP_OFFSETS, "IFD 0 has neither StripOffsets nor Tile* tags -- no recognizable pixel organization".into()));
         }
 
@@ -172,17 +175,18 @@ pub mod derived_analysis {
     }
 
     /// 🛡️ Checks the same native baseline rules with borrowed, bounded traversal.
-    pub fn check_tiff_baseline_conformance_controlled(snapshot:&TiffSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+    pub fn check_tiff_baseline_conformance_controlled(snapshot:&TiffSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{
         use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+        use semio_framework_value::{ValueError,ValueRefusalKind};
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;let mut out=Vec::new();let Some(ifd)=snapshot.ifds.first()else{out.push(soft(CODE_NO_IFD,"no IFD present -- Baseline TIFF conformance cannot be checked at all".into()));return Ok(out);};
         let mut width=None;let mut height=None;let mut compression=None;let mut photometric=None;let mut bits=None;let mut strip=false;let mut tiled=false;let mut checked=0usize;
-        for tag in &ifd.entries{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}match tag.tag{super::snapshot::TAG_IMAGE_WIDTH if width.is_none()=>width=Some(&tag.values),super::snapshot::TAG_IMAGE_LENGTH if height.is_none()=>height=Some(&tag.values),TAG_COMPRESSION if compression.is_none()=>compression=Some(&tag.values),TAG_PHOTOMETRIC if photometric.is_none()=>photometric=Some(&tag.values),TAG_BITS_PER_SAMPLE if bits.is_none()=>bits=Some(&tag.values),TAG_STRIP_OFFSETS=>strip=true,TAG_TILE_WIDTH|TAG_TILE_LENGTH=>tiled=true,_=>{}}}
-        match(width.and_then(TiffValues::first_u32),height.and_then(TiffValues::first_u32)){(Some(width),Some(height))=>{let expected=u128::from(width)*u128::from(height)*4;if width==0||height==0||snapshot.pixels.len()as u128!=expected{out.push(soft(CODE_DEGENERATE_RASTER,format!("raster is degenerate (width={width}, height={height}, pixels.len()={}, expected {expected})",snapshot.pixels.len())));}},_=>out.push(soft(CODE_DEGENERATE_RASTER,"IFD 0 has no ImageWidth/ImageLength tag".into()))}
+        for tag in &ifd.entries{checked=checked.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"TIFF baseline traversal count overflow"))?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}match tag.tag{super::snapshot::TAG_IMAGE_WIDTH if width.is_none()=>width=Some(&tag.values),super::snapshot::TAG_IMAGE_LENGTH if height.is_none()=>height=Some(&tag.values),TAG_COMPRESSION if compression.is_none()=>compression=Some(&tag.values),TAG_PHOTOMETRIC if photometric.is_none()=>photometric=Some(&tag.values),TAG_BITS_PER_SAMPLE if bits.is_none()=>bits=Some(&tag.values),TAG_TILE_WIDTH|TAG_TILE_LENGTH=>tiled=true,_=>{}}}strip=ifd.storage.kind==super::snapshot::TiffStorageKind::Strips;tiled|=ifd.storage.kind==super::snapshot::TiffStorageKind::Tiles;
+        match(width.and_then(TiffValues::first_u32),height.and_then(TiffValues::first_u32)){(Some(width),Some(height))=>{if width==0||height==0||ifd.storage.chunks.is_empty(){out.push(soft(CODE_DEGENERATE_RASTER,format!("raster is degenerate (width={width}, height={height}, chunks={})",ifd.storage.chunks.len())));}},_=>out.push(soft(CODE_DEGENERATE_RASTER,"IFD 0 has no ImageWidth/ImageLength tag".into()))}
         fn first(value:Option<&TiffValues>)->Option<u32>{match value{Some(TiffValues::Short(v))=>v.first().map(|&v|u32::from(v)),Some(TiffValues::Long(v))=>v.first().copied(),_=>None}}
         if let Some(c)=first(compression){if c!=1&&c!=2&&c!=32773{out.push(soft(CODE_UNSUPPORTED_COMPRESSION,format!("Compression {c} is not one of Baseline TIFF's {{1 none, 2 CCITT G3 1D, 32773 PackBits}}")));}}
         if let Some(p)=first(photometric){if p>3{out.push(soft(CODE_UNSUPPORTED_PHOTOMETRIC,format!("PhotometricInterpretation {p} is not one of Baseline TIFF's {{0,1,2,3}}")));}}
-        let mut invalid=false;match bits{Some(TiffValues::Short(values))=>for &v in values{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},Some(TiffValues::Long(values))=>for &v in values{checked=checked.checked_add(1).ok_or("TIFF baseline traversal count overflow")?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},_=>{}}
-        if invalid{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,checked)?;let repr=match bits{Some(TiffValues::Short(v))=>format!("{v:?}"),Some(TiffValues::Long(v))=>format!("{v:?}"),_=>return Err("missing TIFF bits-per-sample values".into())};out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE,format!("BitsPerSample {repr} has a value outside Baseline TIFF's {{1,4,8}}")));}
+        let mut invalid=false;match bits{Some(TiffValues::Short(values))=>for &v in values{checked=checked.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"TIFF baseline traversal count overflow"))?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},Some(TiffValues::Long(values))=>for &v in values{checked=checked.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"TIFF baseline traversal count overflow"))?;if checked%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,0)?;}invalid|=!matches!(v,1|4|8);},_=>{}}
+        if invalid{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,checked)?;let repr=match bits{Some(TiffValues::Short(v))=>format!("{v:?}"),Some(TiffValues::Long(v))=>format!("{v:?}"),_=>return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"missing TIFF bits-per-sample values"))};out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE,format!("BitsPerSample {repr} has a value outside Baseline TIFF's {{1,4,8}}")));}
         if tiled{out.push(soft(CODE_TILED_NOT_BASELINE,"Baseline TIFF requires strip organization; this IFD carries Tile* tags".into()));}else if !strip{out.push(soft(CODE_MISSING_STRIP_OFFSETS,"IFD 0 has neither StripOffsets nor Tile* tags -- no recognizable pixel organization".into()));}control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,checked,checked)?;Ok(out)
     }
     //#endregion 🔖️Conformance

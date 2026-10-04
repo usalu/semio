@@ -8,6 +8,8 @@ pub mod set_frames;
 pub mod set_id3v1;
 #[path = "🏷️set-id3v2/🦀️.rs"]
 pub mod set_id3v2;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -26,6 +28,7 @@ use protocol::{OpBinary, OpText};
 pub enum Mp3Mutation {
     /// 🔁️ Full-snapshot replace.
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🏷️ Sets (`Some`) or clears (`None`) the ID3v2 tag wholesale.
     SetId3v2(set_id3v2::SetId3v2),
     /// 🎼️ Replaces the MPEG frame sequence wholesale.
@@ -61,6 +64,7 @@ impl Mp3Mutation {
     pub fn kind(&self) -> &'static str {
         match self {
             Mp3Mutation::SetSnapshot(_) => "set-snapshot",
+            Mp3Mutation::PatchSnapshot(_) => "patch-snapshot",
             Mp3Mutation::SetId3v2(_) => "set-id3v2",
             Mp3Mutation::SetFrames(_) => "set-frames",
             Mp3Mutation::SetId3v1(_) => "set-id3v1",
@@ -70,7 +74,7 @@ impl Mp3Mutation {
 
 /// 🏷️ Every declared kind, kebab-case, in the enum's own declaration order — mirrors the catalog's
 /// `mutationCatalogs[].kinds` exactly.
-pub const KINDS: &[&str] = &["set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
 //#endregion 🔖️Kinds
 
 //#region OpCodecs
@@ -81,12 +85,12 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-id3v2", "set-frames", "set-id3
 /// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
 /// comment) — an op is always plain JSON here.
 impl OpText for Mp3Mutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let parsed = pack::parse_json(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self)))
+        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
     }
 }
 
@@ -110,6 +114,7 @@ impl OpBinary for Mp3Mutation {
 pub(crate) fn agg_diff(this: &Mp3Mutation, base: &Mp3Snapshot) -> protocol::MutationOutcome<Mp3Diff> {
     protocol::MutationOutcome::new(match this {
         Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        Mp3Mutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<Mp3Snapshot, Mp3Mutation>>::diff(patch, base),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2 }) => diff_set_id3v2(id3v2.clone()),
         Mp3Mutation::SetFrames(set_frames::SetFrames { frames }) => diff_set_frames(frames.clone()),
         Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1 }) => diff_set_id3v1(id3v1.clone()),
@@ -117,13 +122,17 @@ pub(crate) fn agg_diff(this: &Mp3Mutation, base: &Mp3Snapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Mp3Mutation, base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
+pub(crate) fn agg_inverse(this: &Mp3Mutation, base: &Mp3Snapshot) -> Result<Vec<Mp3Mutation>, semio_framework_value::ValueError> {
+    Ok({
     vec![match this {
         Mp3Mutation::SetSnapshot(_) => Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        Mp3Mutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<Mp3Snapshot, Mp3Mutation>>::inverse(patch, base)?),
         Mp3Mutation::SetId3v2(_) => Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: base.id3v2.clone() }),
         Mp3Mutation::SetFrames(_) => Mp3Mutation::SetFrames(set_frames::SetFrames { frames: base.frames.clone() }),
         Mp3Mutation::SetId3v1(_) => Mp3Mutation::SetId3v1(set_id3v1::SetId3v1 { id3v1: base.id3v1.clone() }),
     }]
+
+    })
 }
 //#endregion 🔖️MutationTrait
 

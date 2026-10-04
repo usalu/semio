@@ -1,6 +1,6 @@
-# 🧬️ Logical PPTX sparse diff roots.
+# 🧬️ Sparse replacements of canonical PPTX fields.
 type PptxDiff {
+  schema: String
   opc: PptxOpcPackage
   xmlParts: [PptxXmlPart!]
-  presentation: PptxPresentation
 }

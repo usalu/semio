@@ -16,21 +16,21 @@ async fn header_round_trips_via_begin_and_validate() {
 async fn header_rejects_bad_magic() {
     let mut bytes = build_header_bytes(0, 0).await.to_vec();
     bytes[0] = 0x00;
-    assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(PackError::BadMagic))));
+    assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::BadMagic)))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_rejects_unknown_required_flags() {
     let bytes = build_header_bytes(1 << 5, 0).await.to_vec();
     let err = validate_header(&bytes).await.unwrap_err();
-    assert!(matches!(err, ProtocolError::Pack(PackError::UnknownRequiredFlags(bits)) if bits == 1 << 5));
+    assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::UnknownRequiredFlags(bits))) if bits == 1 << 5));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn header_rejects_corrupted_crc() {
     let mut bytes = build_header_bytes(0, 0).await.to_vec();
     bytes[15] ^= 0xFF;
-    assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(PackError::ChecksumMismatch { .. }))));
+    assert!(matches!(validate_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::ChecksumMismatch { .. })))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -44,7 +44,7 @@ async fn read_header_exposes_decoded_fields_to_downstream_crates() {
 async fn read_header_propagates_validation_failures() {
     let mut bytes = build_header_bytes(0, 0).await.to_vec();
     bytes[0] = 0x00;
-    assert!(matches!(read_header(&bytes).await, Err(ProtocolError::Pack(PackError::BadMagic))));
+    assert!(matches!(read_header(&bytes).await, Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::BadMagic)))));
 }
 //#endregion 🔖️Header
 
@@ -136,7 +136,7 @@ async fn frame_detects_crc_corruption() {
     bytes[corrupt_at] ^= 0xFF;
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
     let err = cursor.next_frame().await.unwrap_err();
-    assert!(matches!(err, ProtocolError::Pack(PackError::ChecksumMismatch { .. })));
+    assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::ChecksumMismatch { .. }))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -146,7 +146,7 @@ async fn frame_detects_back_len_tamper_via_reverse_cursor() {
     bytes[last - 1] ^= 0xFF;
     let mut cursor = ReverseFrameCursor::at_end(&bytes).await;
     let err = cursor.prev_frame().await.unwrap_err();
-    assert!(matches!(err, ProtocolError::Pack(PackError::ChecksumMismatch { .. }) | ProtocolError::FrameFraming(_)));
+    assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::ChecksumMismatch { .. })) | ProtocolError::FrameFraming(_)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -374,7 +374,7 @@ async fn begin_rejects_unknown_required_flags() {
     let result = SprWriter::begin(Vec::new(), &options).await;
     match result {
         Ok(_) => panic!("expected UnknownRequiredFlags error, got Ok"),
-        Err(err) => assert!(matches!(err, ProtocolError::Pack(PackError::UnknownRequiredFlags(bits)) if bits == 1 << 10)),
+        Err(err) => assert!(matches!(err, ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(semio_framework_pack_error::PackRefusal::UnknownRequiredFlags(bits))) if bits == 1 << 10)),
     }
 }
 

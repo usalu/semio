@@ -1,4 +1,25 @@
 use super::*;
+
+#[test]
+fn incremental_mux_matches_the_real_fixture_under_small_grants() {
+    let source = include_bytes!("../../../🧫️fixtures/🎬️.mp4");
+    let snapshot = decode_mp4(source).expect("real MP4 fixture decodes");
+    let mut cursor = Mp4EncodeCursor::new(&snapshot);
+    let mut output = Vec::new();
+    let mut advances = 0usize;
+    loop {
+        advances += 1;
+        assert!(advances < 1_000_000, "incremental MP4 mux must terminate");
+        match cursor.advance(&snapshot, 257).expect("bounded MP4 mux advance") {
+            Mp4EncodeAdvance::Progress => {}
+            Mp4EncodeAdvance::Chunk(bytes) => { assert!(!bytes.is_empty() && bytes.len() <= 257); output.extend(bytes); }
+            Mp4EncodeAdvance::Complete => break,
+        }
+    }
+    assert!(advances > 100, "the real mux must cross many cancellable checkpoints");
+    assert_eq!(output, source);
+    assert_eq!(cursor.emitted_bytes(), source.len() as u64);
+}
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Sample, Mp4Snapshot, Mp4Track};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -147,7 +168,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     let restored = diff.inverse(&snapshot).apply(&after).unwrap();
     assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
     assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
-    for inverse in mutation.inverse(&snapshot) {
+    for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
         apply_mp4_mutation(&mut changed, &inverse);
     }
     assert_eq!(encode_mp4(&changed), bytes);

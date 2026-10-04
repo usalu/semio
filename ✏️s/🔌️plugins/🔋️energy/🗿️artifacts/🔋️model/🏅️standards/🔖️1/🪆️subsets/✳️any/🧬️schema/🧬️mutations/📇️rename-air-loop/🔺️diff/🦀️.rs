@@ -16,7 +16,7 @@ pub fn diff(payload: &super::RenameAirLoop, base: &EnergyModelSnapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another air loop is already named {:?}.", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air loop {} already has that name.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Air loop {} already has that name.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.air_loops.iter_mut().find(|item| item.id == payload.id) {

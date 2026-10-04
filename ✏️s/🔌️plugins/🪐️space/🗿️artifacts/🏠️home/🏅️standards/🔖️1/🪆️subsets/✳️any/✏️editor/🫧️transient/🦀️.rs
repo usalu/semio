@@ -306,11 +306,11 @@ impl HomeTransient {
         }
     }
 
-    fn from_wire(wire: HomeTransientWire) -> Result<Self, protocol::ValueError> {
+    fn from_wire(wire: HomeTransientWire) -> Result<Self, semio_framework_value::ValueError> {
         let mut spaces = BTreeMap::new();
         for (id, space) in wire.directory.spaces {
             if space.view.id != id {
-                return Err(protocol::ValueError::new(format!("s.home.directory-projection-malformed: space row {id} carries the id {}", space.view.id)));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("s.home.directory-projection-malformed: space row {id} carries the id {}", space.view.id)));
             }
             spaces.insert(Arc::from(id.as_str()), Arc::new(store::os_directory::DirectorySpace { view: space.view, members: space.members, documents: space.documents, indexed_documents: space.indexed_documents }));
         }
@@ -323,21 +323,21 @@ impl HomeTransient {
             users: Arc::new(wire.directory.users),
         };
         if !directory.resume_state_is_valid() {
-            return Err(protocol::ValueError::new("s.home.directory-projection-malformed: the resume authority is neither unbound nor a complete authenticated frontier"));
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "s.home.directory-projection-malformed: the resume authority is neither unbound nor a complete authenticated frontier"));
         }
         Ok(Self::with_directory(directory))
     }
 }
 
-impl protocol::ToValue for HomeTransient {
-    fn to_value(&self) -> protocol::DslValue {
-        protocol::ToValue::to_value(&self.wire())
+impl semio_framework_value::ToValue for HomeTransient {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.wire())
     }
 }
 
-impl protocol::FromValue for HomeTransient {
-    fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
-        Self::from_wire(<HomeTransientWire as protocol::FromValue>::from_value(value)?)
+impl semio_framework_value::FromValue for HomeTransient {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Self::from_wire(<HomeTransientWire as semio_framework_value::FromValue>::from_value(value)?)
     }
 }
 //#endregion 🔖️Wire
@@ -345,10 +345,10 @@ impl protocol::FromValue for HomeTransient {
 //#region 🔖️ArtifactCodec
 /// 📜️ The transient's text/pack record: its JSON projection as one field. Tooling and fixtures only — the transient
 /// lane itself never encodes its root.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(id = "home.transient")]
-#[dsl(extension = "hometransient")]
+#[artifact(id = "home.transient")]
+#[artifact(extension = "hometransient")]
 #[dsl(layout = "lines")]
 struct HomeTransientRecord {
     projection_json: String,
@@ -356,12 +356,12 @@ struct HomeTransientRecord {
 
 impl HomeTransientRecord {
     fn of(transient: &HomeTransient) -> Self {
-        Self { projection_json: pack::to_json_string(&transient.wire()) }
+        Self { projection_json: semio_framework_pack_json::to_json_string(&transient.wire()) }
     }
 
-    fn transient(&self) -> Result<HomeTransient, store::TextError> {
-        let wire: HomeTransientWire = pack::from_json_str(&self.projection_json).map_err(|error| dsl::__rt::field_error(format!("s.home.directory-projection-malformed: {error}")))?;
-        HomeTransient::from_wire(wire).map_err(|error| dsl::__rt::field_error(error.to_string()))
+    fn transient(&self) -> Result<HomeTransient, semio_framework_diagnostic::TextError> {
+        let wire: HomeTransientWire = semio_framework_pack_json::from_json_str(&self.projection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("s.home.directory-projection-malformed: {error}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        HomeTransient::from_wire(wire).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(error.to_string()).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
 }
 
@@ -370,16 +370,16 @@ impl store::ArtifactDsl for HomeTransient {
     fn envelope_id() -> &'static str {
         "home.transient"
     }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &HomeTransientRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &HomeTransientRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         HomeTransientRecord::__dsl_from_record(&record)?.transient()
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&HomeTransientRecord::of(self).__dsl_to_record(), &HomeTransientRecord::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&HomeTransientRecord::of(self).__dsl_to_record(), &HomeTransientRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Home transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -388,18 +388,18 @@ impl store::ArtifactDsl for HomeTransient {
 impl store::ArtifactPack for HomeTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&HomeTransientRecord::__dsl_spec(), &HomeTransientRecord::of(self).__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &HomeTransientRecord::__dsl_spec(), options)?;
         HomeTransientRecord::__dsl_from_record(&record).and_then(|record| record.transient()).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(HomeTransientRecord::__dsl_spec())
     }
 }
@@ -417,7 +417,7 @@ struct HomeTransientRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for HomeTransientRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }

@@ -400,7 +400,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
-    let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: String::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
     let rejection = denied
         .iter()
@@ -416,7 +416,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     assert!(denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == 0)), "the rejected command still closes its own ingress slot: {denied:?}");
     for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
         let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
-        let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+        let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
         assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[TRACE] transaction prepare seq={prepare_seq} frames={prepared:?}");
         assert!(prepared.iter().any(|frame| matches!(frame, protocol::AppFrame::TransactionPrepared { txn_id: actual, rejection, .. } if actual == txn_id && rejection.is_empty())));
         let command = if commit { protocol::AppCommand::TransactionCommit { seq: finish_seq, txn_id: txn_id.into() } } else { protocol::AppCommand::TransactionRollback { seq: finish_seq, txn_id: txn_id.into() } };
@@ -507,7 +507,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     assert!(ephemeral > 0);
     assert_eq!(received_receipt, seq);
     assert!(pages > 16 && output.len() > 4096);
-    let capture: protocol::LocalInteractionCapture = protocol::json::from_json_str(std::str::from_utf8(&output).unwrap()).unwrap();
+    let capture: protocol::LocalInteractionCapture = semio_framework_pack_json::from_json_str(std::str::from_utf8(&output).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(Some(capture.identity), expected_identity);
     assert!(!cell.instance.lock().unwrap().app.has_pending_typed_operations());
     drop(cell);

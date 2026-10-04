@@ -1,3 +1,10 @@
+import Ajv from "ajv";
+import { SaxesParser } from "saxes";
+import boundaryContract from "../../🧫️fixtures/🪶️sqlite/🧭️boundaries/🔣️.json";
+import boundarySchema from "../../🧫️fixtures/🪶️sqlite/🧭️boundaries/🧬️schema/🔣️.json";
+import { validateXmlDocumentWireBoundary } from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import ownership from "../../🧫️fixtures/🪶️sqlite/💰️backing/🔣️.json";
+import ownershipSchema from "../../🧫️fixtures/🪶️sqlite/💰️backing/🧬️schema/🔣️.json";
 /** 🧫️ SVG's shared typed XML corpus retains independent SVG table names. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
@@ -21,7 +28,7 @@ const input: SvgSnapshot = { schema: fixture.schema, doc: {
 
 test("SVG handcrafted thirteen tables preserve typed metadata, nodes and independently edited path attributes", async () => {
   expect(SVG_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql", import.meta.url)).text());
-  expect(parseSvgSnapshot(input)).toEqual(input);
+  expect(parseSvgSnapshot({ ...input, doc: { ...input.doc, doctype: { ...input.doc.doctype!, prologPosition: input.doc.doctype!.prologPosition.toString() } } })).toEqual(input);
   const database = await svgSnapshotToSqliteDatabase(input);
   expect(await svgSnapshotFromSqliteDatabase(database)).toEqual(input);
   expect(database.tables.every(table => table.name.startsWith("svg_"))).toBe(true);
@@ -48,9 +55,9 @@ test("SVG independent root, component, ownership, boundary and metadata edits re
     "DELETE FROM svg_element WHERE node_id=1",
     "UPDATE svg_child SET child_node_id=1 WHERE id=1",
     "UPDATE svg_attribute SET ordinal=99 WHERE id=1",
-    "UPDATE svg_doctype SET prolog_position=99",
+    "UPDATE svg_doctype SET prolog_position_decimal='18446744073709551616'",
     "UPDATE svg_entity SET doctype_id=999",
-    "UPDATE svg_declaration SET encoding='UTF-16'",
+    "UPDATE svg_document_misc SET ordinal=99 WHERE position='prolog'",
   ]) {
     const db = Database.deserialize(await exportSqliteDatabase(await svgSnapshotToSqliteDatabase(input)));
     try { db.run(edit); await expect(svgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow(); }
@@ -74,7 +81,85 @@ test("SVG projection and reconstruction carry cancellation through typed XML hel
     const database = await svgSnapshotToSqliteDatabase(input);
     const controller = new AbortController();
     const options = { signal: controller.signal, onProgress: () => controller.abort() };
-    await expect(direction === "project" ? svgSnapshotToSqliteDatabase(input, options) : svgSnapshotFromSqliteDatabase(database, options)).rejects.toMatchObject({ name: "AbortError" });
+    await expect(direction === "project" ? svgSnapshotToSqliteDatabase(input, options) : svgSnapshotFromSqliteDatabase(database, options)).rejects.toMatchObject({ kind: "canceled" });
   }
 });
 
+test("SVG SQLite retains declaration encoding metadata independently of an external UTF-8 document export", async () => {
+  const database = await svgSnapshotToSqliteDatabase(input);
+  const db = Database.deserialize(await exportSqliteDatabase(database));
+  try {
+    const control = await Bun.file(new URL("../../🧫️fixtures/🪶️sqlite/🛂️native.json", import.meta.url)).json();
+    db.query("UPDATE svg_declaration SET version=?,encoding=?").run(control.metadata.version, control.metadata.encoding);
+    db.query("UPDATE svg_doctype SET prolog_position_decimal=?").run(control.metadata.prologPosition);
+    const restored = await svgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())));
+    expect(restored.doc.declaration).toEqual({ ...input.doc.declaration!, version: control.metadata.version, encoding: control.metadata.encoding });
+    expect(restored.doc.doctype!.prologPosition).toBe(18446744073709551615n);
+    expect(await svgSnapshotFromSqliteDatabase(await svgSnapshotToSqliteDatabase(restored))).toEqual(restored);
+  } finally { db.close(); }
+});
+
+
+test("SVG neutral native controls retain the full Unicode field and independently counted entity rows", async () => {
+  const control = await Bun.file(new URL("../../🧫️fixtures/🪶️sqlite/🛂️native.json", import.meta.url)).json();
+  const text = control.text.repeat(control.repeat);
+  const value: SvgSnapshot = { schema: control.literalSchema, doc: { prolog: [], epilog: [], root: { kind: "element", name: "svg", attrs: [], children: [{ kind: "text", text }] } } };
+  expect(parseSvgSnapshot(value)).toEqual(value);
+  const database = await svgSnapshotToSqliteDatabase(value);
+  expect(await svgSnapshotFromSqliteDatabase(database)).toEqual(value);
+  const db = Database.deserialize(await exportSqliteDatabase(database));
+  try {
+    expect(db.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+    expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(db.query("SELECT text,length(CAST(text AS BLOB)) AS bytes FROM svg_text").get()).toEqual({ text, bytes: Buffer.byteLength(text) });
+    expect(db.query("SELECT schema FROM svg_document").get()).toEqual({ schema: control.literalSchema });
+  } finally { db.close(); }
+  const wide: SvgSnapshot = { schema: control.literalSchema, doc: { prolog: [], epilog: [], root: { kind: "element", name: "svg", attrs: [], children: Array.from({ length: control.wideChildren }, () => ({ kind: "element" as const, name: "g", attrs: [], children: [] })) } } };
+  const wideDatabase = await svgSnapshotToSqliteDatabase(wide);
+  expect(wideDatabase.tables.reduce((rows, table) => rows + table.rows.length, 0)).toBe(3 + 3 * control.wideChildren);
+  const wideDb = Database.deserialize(await exportSqliteDatabase(wideDatabase));
+  try { expect(wideDb.query("SELECT COUNT(*) AS count FROM svg_child").get()).toEqual({ count: control.wideChildren }); }
+  finally { wideDb.close(); }
+});
+
+test("SVG actual paid owner keeps literal native fields distinct from external markup",async()=>{
+ expect(new Ajv({strict:true}).compile(ownershipSchema)(ownership)).toBe(true);
+ const contract=ownership as unknown as {literal:string,literalUtf8Hex:string,tableCount:number,snapshotFields:string[]};
+ expect(Buffer.from(contract.literal,"utf8").toString("hex")).toBe(contract.literalUtf8Hex);
+ const value:SvgSnapshot={schema:"SVG owned 世界",doc:{prolog:[],epilog:[],root:{kind:"element",name:"svg",attrs:[],children:[{kind:"text",text:contract.literal}]}}};
+ const db=Database.deserialize(await exportSqliteDatabase(await svgSnapshotToSqliteDatabase(value)));
+ try{
+  expect(db.query("SELECT count(*) AS n FROM sqlite_schema WHERE type='table'").get()).toEqual({n:contract.tableCount});
+  expect(db.query("SELECT hex(CAST(text AS BLOB)) AS octets FROM svg_text").get()).toEqual({octets:contract.literalUtf8Hex.toUpperCase()});
+  expect(db.query("SELECT (SELECT count(*) FROM svg_document)+(SELECT count(*) FROM svg_node)+(SELECT count(*) FROM svg_element)+(SELECT count(*) FROM svg_text)+(SELECT count(*) FROM svg_child) AS rows").get()).toEqual({rows:6});
+  expect(contract.snapshotFields).toEqual(["schema","root","doctype","declaration","prolog","epilog"]);
+ }finally{db.close();}
+});
+
+test("SVG owned metadata and boundary nodes remain literal while external XML validates publication",async()=>{
+ expect(new Ajv({strict:true}).compile(boundarySchema)(boundaryContract)).toBe(true);
+ const authored=await Bun.file(new URL("../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧫️fixtures/🧭️document-boundaries/🔣️.json",import.meta.url)).json();
+ expect(authored.invalidAuthored.map((item:{id:string})=>item.id)).toEqual(boundaryContract.cases);
+ const mutationSchema=await Bun.file(new URL("../../../🧬️mutations/🔣️.json",import.meta.url)).json();
+ expect(mutationSchema.oneOf.map((item:{properties:{mutation:{const:string}}})=>item.properties.mutation.const.replace(/[A-Z]/g,letter=>"-"+letter.toLowerCase()))).toEqual(boundaryContract.mutationKinds);
+ for(const [index,case_]of authored.invalidAuthored.entries()){
+  const value:SvgSnapshot={schema:"stdio.svg",doc:{root:{kind:"element",name:"svg",attrs:[],children:[]},prolog:[],epilog:[]}};
+  if(index===0){value.doc.prolog=[{kind:"comment",text:"before"}];value.doc.doctype={prologPosition:BigInt(case_.doctypePosition),name:"svg",declarations:[]};}
+  else if(index===1)value.doc.epilog=[{kind:"text",text:"outside"}];
+  else{value.doc.declaration={version:"1.0",encoding:case_.encoding,quote:case_.quote};value.doc.root={kind:"element",name:"svg",attrs:[],children:[{kind:"text",text:case_.rootText}]};}
+  expect(()=>validateXmlDocumentWireBoundary(value.doc)).toThrow();
+  const db=Database.deserialize(await exportSqliteDatabase(await svgSnapshotToSqliteDatabase(value)));
+  try{
+   expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
+   if(index===0)expect(db.query("SELECT prolog_position_decimal AS position FROM svg_doctype").get()).toEqual({position:String(case_.doctypePosition)});
+   if(index===1)expect(db.query("SELECT n.kind FROM svg_document_misc m JOIN svg_node n ON n.id=m.node_id WHERE m.position='epilog'").get()).toEqual({kind:"text"});
+   if(index>=2)expect(db.query("SELECT hex(CAST(encoding AS BLOB)) AS octets FROM svg_declaration").get()).toEqual({octets:Buffer.from(case_.encoding).toString("hex").toUpperCase()});
+   expect(await svgSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(value);
+  }finally{db.close();}
+ }
+ const wellFormed=(text:string)=>{let accepted=true;const parser=new SaxesParser();parser.on("error",()=>{accepted=false;});parser.write(text).close();return accepted;};
+ expect(wellFormed('<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg/>')).toBe(true);
+ expect(wellFormed('<?xml version="1.0" encoding="UTF-8" standalone="no?><svg/>')).toBe(false);
+ expect(wellFormed('<svg/>outside')).toBe(false);
+ expect(wellFormed("<?xml version='1.0' encoding='ISO-8859-1'?><svg/>")).toBe(true);
+});

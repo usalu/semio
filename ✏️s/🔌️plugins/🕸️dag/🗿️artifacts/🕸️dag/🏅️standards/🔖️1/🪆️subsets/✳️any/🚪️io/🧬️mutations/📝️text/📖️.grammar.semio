@@ -1,9 +1,0 @@
-dialect grammar
-grammar dag.mutations
-extension dag
-start document
-
-document = header body
-header = "schema" SP "dag.dag.mutations" NL
-body = payload NL?
-payload = OCTET+

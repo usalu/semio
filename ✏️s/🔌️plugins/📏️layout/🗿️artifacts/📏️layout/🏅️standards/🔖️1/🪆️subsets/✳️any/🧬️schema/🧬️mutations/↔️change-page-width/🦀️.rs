@@ -22,9 +22,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageWidth {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_page_width(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_page_width(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_page_width(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change page \"{}\" width", self.id), &format!("Breite von Seite \"{}\" ändern", self.id))
     }
@@ -40,7 +43,7 @@ pub fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if page.width == payload.new_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has width {}.", payload.id, payload.new_width));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has width {}.", payload.id, payload.new_width));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { width: Some(payload.new_width), ..Default::default() } }], ..Default::default() }),
@@ -50,10 +53,13 @@ pub fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) 
 //#endregion ↔️ChangePageWidth
 
 //#region ↔️ChangePageWidth
-pub fn inverse_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::ChangePageWidth(ChangePageWidth { id: payload.id.clone(), new_width: page.width })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion ↔️ChangePageWidth

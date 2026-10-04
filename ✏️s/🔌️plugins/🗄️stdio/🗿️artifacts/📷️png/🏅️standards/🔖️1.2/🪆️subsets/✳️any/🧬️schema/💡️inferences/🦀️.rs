@@ -20,8 +20,11 @@ pub struct PngInference {
 }
 
 impl protocol::Inference<PngSnapshot> for PngInference {
-    fn infer(snapshot: &PngSnapshot) -> Self {
+    fn infer(snapshot: &PngSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_png_dimensions(snapshot) }
+
+        })
     }
 }
 
@@ -32,7 +35,9 @@ impl protocol::Inference<PngSnapshot> for PngInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for PngInference {
     fn default() -> Self {
-        <Self as protocol::Inference<PngSnapshot>>::infer(&PngSnapshot::default())
+        let snapshot = &PngSnapshot::default();
+
+        Self { dimensions: compute_png_dimensions(snapshot) }
     }
 }
 
@@ -44,19 +49,10 @@ impl protocol::InferenceSpec<PngSnapshot> for PngInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.png.inference.dimensions", reads: &["width", "height", "bitDepth", "colorType"] }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.png.inference.dimensions", reads: &["bytes"] }]
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (an IHDR-field read is already O(1)) — the default `infer_cached`
-/// passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1_2::subsets::any::schema::PngBuilder {
-    type Snapshot = PngSnapshot;
-    type Inference = PngInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.png.inference`'s facet leaves into the OS-wide inference catalog — call

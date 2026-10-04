@@ -14,10 +14,10 @@ pub use crate::preview_eval::FlowEvalTick;
 /// 🔢️ The digest of the text `target` evaluates for this document and config — what a hop records and
 /// what the editor's poll compares.
 pub fn target_digest(target: PreviewEvalTarget, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> u64 {
-    let fixture = dsl::json::to_json_string(&doc.snapshot.host_snapshot);
+    let fixture = semio_framework_pack_json::to_json_string(&doc.snapshot.host_snapshot);
     match target {
         PreviewEvalTarget::Document => preview_eval::preview_eval_digest(&[&fixture]),
-        PreviewEvalTarget::Generation => preview_eval::preview_eval_digest(&[&fixture, &dsl::json::to_json_string(doc.snapshot.generation.as_state()), cfg.snapshot.selected_generation_id.as_deref().unwrap_or_default()]),
+        PreviewEvalTarget::Generation => preview_eval::preview_eval_digest(&[&fixture, &semio_framework_pack_json::to_json_string(doc.snapshot.generation.as_state()), cfg.snapshot.selected_generation_id.as_deref().unwrap_or_default()]),
     }
 }
 

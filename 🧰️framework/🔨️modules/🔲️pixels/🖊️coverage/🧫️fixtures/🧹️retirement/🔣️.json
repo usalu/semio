@@ -1,0 +1,20 @@
+[
+ {"name":"fresh private mask","source":"integer rectangle","stop":"fresh","output":false,"work":{"native":15,"typescript":14}},
+ {"name":"active source preparation","source":"integer rectangle","stop":"preparing","output":false,"work":{"native":15,"typescript":14}},
+ {"name":"event merge sort","source":"integer rectangle","stop":"events","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"event application","source":"integer rectangle","stop":"apply","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"active edge copy","source":"integer rectangle","stop":"copy","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"row edge merge sort","source":"integer rectangle","stop":"sort","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"crossing scan","source":"crossing inside pixel","stop":"cross","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"winding scan","source":"integer rectangle","stop":"wind","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"pixel area integration","source":"integer rectangle","stop":"span","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"finished sweep span","source":"integer rectangle","stop":"finish","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"partial mask write","source":"integer rectangle","stop":"write","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"complete mask moves once","source":"integer rectangle","stop":"done","output":true,"work":{"native":15,"typescript":20}},
+ {"name":"invalid coordinate retains candidate","source":"integer rectangle","stop":"failure","output":false,"work":{"native":15,"typescript":14}},
+ {"name":"cancelled sort retains owners","source":"integer rectangle","stop":"cancelled","output":false,"work":{"native":15,"typescript":20}},
+ {"name":"hole mask retains both contours","source":"even odd hole","stop":"done","output":true,"work":{"native":16,"typescript":26}},
+ {"name":"published mask survives cancellation","source":"integer rectangle","stop":"done","publishedBeforeCancel":true,"output":false,"work":{"native":15,"typescript":20}},
+ {"name":"unpublished complete mask is cancelled","source":"integer rectangle","stop":"done","cancelBeforeTransfer":true,"output":false,"work":{"native":15,"typescript":20}},
+ {"name":"degenerate mask moves empty coverage","source":"empty and degenerate contours","stop":"done","output":true,"work":{"native":17,"typescript":14}}
+]

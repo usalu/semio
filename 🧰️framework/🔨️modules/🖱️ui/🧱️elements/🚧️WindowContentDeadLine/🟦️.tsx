@@ -20,6 +20,11 @@ export const windowContentDeadLineVar = "--window-content-dead-line";
 /** 🏝️ Chrome-aware scroll hosts stay edgeless but reserve scroll-padding for the dead line. */
 export const windowContentDeadLineScrollClass = "overscroll-contain [scroll-padding-top:var(--window-content-dead-line)]";
 
+/** 🪟️ Floating top chrome belongs only to its nearest window body. */
+function windowTopOverlays(body: Element): Element[] {
+  return Array.from(body.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]')).filter((overlay) => overlay.closest('[data-slot="window-body"]') === body);
+}
+
 /** 📐️ Resolves {@link windowChromeScrollClearanceVar} to px for layout math. */
 export function readWindowChromeScrollClearancePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
   const measured = measureWindowChromeScrollClearancePx(element);
@@ -33,7 +38,7 @@ export function readWindowChromeScrollClearancePx(element?: Element | null, root
 export function measureWindowChromeScrollClearancePx(element?: Element | null): number {
   const windowBody = element?.closest('[data-slot="window-body"]');
   if (!windowBody) return 0;
-  const overlays = windowBody.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]');
+  const overlays = windowTopOverlays(windowBody);
   const bodyTop = windowBody.getBoundingClientRect().top;
   let maxBottom = bodyTop;
   for (const overlay of overlays) {
@@ -50,7 +55,7 @@ export function isWindowContentDeadLineHost(element: Element | null): boolean {
   if (element.closest("[data-window-content-layout=edgeless]")) return false;
   const windowBody = element.closest('[data-slot="window-body"]');
   if (!windowBody) return false;
-  return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]') != null;
+  return windowTopOverlays(windowBody).length > 0;
 }
 
 /** 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
@@ -73,49 +78,31 @@ export function readScrollerContentOverflows(scroller: HTMLElement): boolean {
   return false;
 }
 
-/** 🏝️ Clears the first line under floating chrome by default; scrolling up reveals it edgelessly. */
-export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTMLElement | null>): void {
-  const edgelessScrollRef = reactHostPort.useRef(false);
+/** 🚧️ Reserves the floating chrome's measured space without discarding content or changing scroll position. */
+export function useWindowContentDeadLineInset(scrollerRef: React.RefObject<HTMLElement | null>): void {
   reactHostPort.useLayoutEffect(() => {
     const el = scrollerRef.current;
-    if (!el) return;
-    const applyDefault = () => {
-      if (!isWindowContentDeadLineHost(el)) return;
-      const overflows = readScrollerContentOverflows(el);
-      if (!overflows) {
-        edgelessScrollRef.current = false;
-        if (el.scrollTop !== 0) el.scrollTop = 0;
-        return;
-      }
-      const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine <= 0 || edgelessScrollRef.current) return;
-      if (el.scrollTop < deadLine) el.scrollTop = deadLine;
+    const body = el?.closest('[data-slot="window-body"]');
+    if (!el || !body) return;
+    const previous = el.style.paddingBlockStart;
+    const apply = () => {
+      const edgeless = el.closest('[data-window-content-layout="edgeless"]') || el.querySelector(':scope > [data-window-content-layout="edgeless"]:only-child');
+      const bottom = windowTopOverlays(body).reduce((value, overlay) => Math.max(value, overlay.getBoundingClientRect().bottom), -Infinity);
+      el.style.paddingBlockStart = `${edgeless ? 0 : Math.max(0, Math.ceil(bottom - el.getBoundingClientRect().top))}px`;
     };
-    const onScroll = () => {
-      if (!isWindowContentDeadLineHost(el)) return;
-      if (!readScrollerContentOverflows(el)) {
-        edgelessScrollRef.current = false;
-        return;
-      }
-      const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine <= 0) return;
-      if (el.scrollTop < deadLine - 1) edgelessScrollRef.current = true;
-      else if (el.scrollTop >= deadLine) edgelessScrollRef.current = false;
+    const resize = new ResizeObserver(apply);
+    const observe = () => {
+      resize.disconnect();
+      resize.observe(body);
+      resize.observe(el);
+      for (const overlay of windowTopOverlays(body)) resize.observe(overlay);
+      apply();
     };
-    applyDefault();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    const body = el.closest('[data-slot="window-body"]');
-    if (!body) return () => el.removeEventListener("scroll", onScroll);
-    const ro = new ResizeObserver(applyDefault);
-    ro.observe(body);
-    for (const slot of ["window-engagement-overlay", "window-search-overlay", "window-measures-overlay"] as const) {
-      const overlay = body.querySelector(`[data-slot="${slot}"]`);
-      if (overlay) ro.observe(overlay);
-    }
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      ro.disconnect();
-    };
+    const mutations = new MutationObserver(observe);
+    mutations.observe(body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-window-content-layout"] });
+    observe();
+    return () => { resize.disconnect(); mutations.disconnect(); el.style.paddingBlockStart = previous; };
   }, []);
 }
+
 // #endregion 🚧️WindowContentDeadLine

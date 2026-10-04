@@ -204,7 +204,7 @@ fn every_emitted_path_parses_and_resolves() {
     use crate::app_surface::{get_value_at_path, parse_path};
     for doc in [En1993Snapshot::compliant_heb240_frame(), En1993Snapshot::noncompliant_overloaded_frame()] {
         let report = check_full_steel_structure(&doc);
-        let snap_val = dsl::ToValue::to_value(&doc);
+        let snap_val = semio_framework_value::ToValue::to_value(&doc);
         for check in &report.checks {
             if check.subject.path.is_empty() {
                 continue;

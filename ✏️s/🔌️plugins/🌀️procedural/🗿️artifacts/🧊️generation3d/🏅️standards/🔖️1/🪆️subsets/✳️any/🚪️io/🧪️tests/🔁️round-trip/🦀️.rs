@@ -133,6 +133,27 @@ pub fn retire_document(document: semio_s_artifact_procedural_generation3d::Gener
     generation.retire_cold();
     host_snapshot.retire_cold();
 }
+
+/// 🧊️ Checks the editable polygon payload planted by a surface import against the independent cube oracle.
+pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge;
+    let (kind, payload) = mesh_bridge::imported_source(&document).expect("import plants a source and constructor");
+    let kind = kind.to_owned();
+    let payload = payload.to_owned();
+    retire_document(document);
+    assert_eq!(kind, "brep.mesh.construct", "{format}: import creates editable polygon geometry");
+    let polygon: serde_json::Value = serde_json::from_str(&payload).expect("the source is owned polygon JSON");
+    let positions = polygon["vertices"].as_array().expect("polygon vertices").iter().flat_map(|point| point.as_array().expect("point tuple").iter().map(|coordinate| coordinate.as_f64().expect("coordinate") as f32)).collect();
+    let indices = polygon["faces"].as_array().expect("polygon faces").iter().flat_map(|face| {
+        let face = face.as_array().expect("face indices");
+        assert_eq!(face.len(), 3, "the committed cube has triangle faces");
+        face.iter().map(|index| index.as_u64().expect("vertex index") as u32).collect::<Vec<_>>()
+    }).collect();
+    let prepared = semio_framework_plugin::MeshData { positions, indices, ..Default::default() };
+    let mesh = mesh_bridge::semio_mesh_from_mesh_data(&prepared).expect("the planted geometry is exportable");
+    assert_is_unit_cube(format, &project(&mesh));
+    assert_oracle_agrees_on_unit_cube(format, &mesh);
+}
 //#endregion ⚖️Assertions
 
 //#region 🔮️Oracle

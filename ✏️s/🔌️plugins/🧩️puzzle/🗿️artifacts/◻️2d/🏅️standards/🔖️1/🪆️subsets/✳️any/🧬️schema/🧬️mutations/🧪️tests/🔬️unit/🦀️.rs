@@ -19,7 +19,7 @@ fn puzzle2d_delta_ops_are_granular_and_round_trip() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward));
+        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
         forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
@@ -47,9 +47,9 @@ fn create_delete_node_inverse_law() {
     use crate::{Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &delete_node("n1".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &delete_node("n1".into())));
 }
 
 #[test]
@@ -58,11 +58,11 @@ fn move_node_inverse_and_absorb_law() {
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &move_node("n1".into(), 5.0, 6.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &move_node("n1".into(), 5.0, 6.0)));
     let d1 = move_node("n1".into(), 10.0, 10.0).diff(&with_node).into_parts().0;
     let mid = MutationDiff::<Puzzle2dSnapshot>::apply(&d1, &with_node).expect("valid mutation diff");
     let d2 = move_node("n1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
-    semio_framework::io::resolve_ready(assert_mutation_diff_absorb_law(&with_node, d1, d2));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_diff_absorb_law(&with_node, d1, d2));
 }
 
 #[test]
@@ -71,18 +71,18 @@ fn node_field_mutations_inverse_law() {
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_geometry("n1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_kind("n1".into(), Some("core.capsule".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &edit_node_text("n1".into(), Some("hello".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_icon("n1".into(), Some("star".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &scale_node("n1".into(), Some(2.0))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_visible("n1".into(), Some(false))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_locked("n1".into(), Some(true))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_root("n1".into(), Some(true))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_anchor("n1".into(), Puzzle2dNodeAnchor::Derived)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &add_node_handle("n1".into(), Puzzle2dHandle { id: "h2".into(), ..Default::default() }, None)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &remove_node_handle("n1".into(), "h1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_handle("n1".into(), "h1".into(), Puzzle2dHandle { id: "h1".into(), angle: 1.5, ..Default::default() })));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_geometry("n1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_kind("n1".into(), Some("core.capsule".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &edit_node_text("n1".into(), Some("hello".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_icon("n1".into(), Some("star".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &scale_node("n1".into(), Some(2.0))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_visible("n1".into(), Some(false))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_locked("n1".into(), Some(true))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_root("n1".into(), Some(true))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_anchor("n1".into(), Puzzle2dNodeAnchor::Derived)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &add_node_handle("n1".into(), Puzzle2dHandle { id: "h2".into(), ..Default::default() }, None)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &remove_node_handle("n1".into(), "h1".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_handle("n1".into(), "h1".into(), Puzzle2dHandle { id: "h1".into(), angle: 1.5, ..Default::default() })));
 }
 
 #[test]
@@ -94,14 +94,14 @@ fn connect_disconnect_handles_inverse_law() {
     let mut projection = base.clone();
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None)));
     let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_handles("e1".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &replace_edge_geometry("e1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_kind("e1".into(), Some("core.link".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_tips("e1".into(), Some("arrow".into()), Some("dot".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_visible("e1".into(), Some(false))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_locked("e1".into(), Some(true))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_handles("e1".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &replace_edge_geometry("e1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_kind("e1".into(), Some("core.link".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_tips("e1".into(), Some("arrow".into()), Some("dot".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_visible("e1".into(), Some(false))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_locked("e1".into(), Some(true))));
 }
 
 #[test]
@@ -118,18 +118,18 @@ fn delete_node_severs_and_reconnects_edges() {
     let removed = delete_node("a".into());
     let after = MutationDiff::<Puzzle2dSnapshot>::apply(removed.diff(&projection).diff(), &projection).expect("valid mutation diff");
     assert!(!after.edges.iter().any(|edge| edge.id == "e1"), "delete-node must sever edges touching its handles");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &removed));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &removed));
 }
 
 #[test]
 fn meta_mutations_inverse_law() {
     use crate::{Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
     let base = empty_puzzle2d_snapshot();
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle)));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle)));
     let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle).diff(&base).diff(), &base).expect("valid mutation diff");
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into())));
-    semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle2dKindCatalogs::default()))));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle2dKindCatalogs::default()))));
 }
 
 #[test]
@@ -151,15 +151,15 @@ use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing
 fn missing_target_is_error_per_verb_family() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
     let base = empty_puzzle2d_snapshot();
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &delete_node("missing".into()))); // delete
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into()))); // remove
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false)))); // change/set/update
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into())))); // edit/replace
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &disconnect_handles("missing".into())));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], 1.0, 1.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], 0.0, 0.0, 1.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], 0.0, 0.0, 2.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &delete_node("missing".into()))); // delete
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into()))); // remove
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false)))); // change/set/update
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into())))); // edit/replace
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &disconnect_handles("missing".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()], 1.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()], 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()], 0.0, 0.0, 2.0)));
     // disconnect/unbind
 }
 
@@ -170,8 +170,8 @@ fn create_duplicate_id_is_fatal_and_never_applies() {
     let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };
     base.nodes.push(node.clone());
     let outcome = create_node(node, None).diff(&base);
-    semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
+    ::semio_framework_async::poll::resolve_ready(assert_fatal_never_applies(&outcome));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws
@@ -195,7 +195,7 @@ fn selection_board() -> Puzzle2dSnapshot {
 fn selection_transforms_invert_exactly_on_awkward_floats() {
     let base = selection_board();
     for mutation in [drag_selection(vec!["a".into(), "r".into()], 0.7, -1.3), rotate_selection(vec!["a".into()], 0.3, 0.9, 0.61), scale_selection(vec!["a".into(), "r".into()], 0.3, 0.9, 1.7)] {
-        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &mutation));
+        ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &mutation));
     }
 }
 
@@ -215,8 +215,8 @@ fn selection_transforms_refuse_non_finite_and_collapsing_parameters() {
         scale_selection(vec!["ghost".into(), "ghost".into()], 0.0, 0.0, 2.0),
     ] {
         let outcome = mutation.diff(&base);
-        semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
-        assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal), "{mutation:?} must be Fatal");
+        ::semio_framework_async::poll::resolve_ready(assert_fatal_never_applies(&outcome));
+        assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "{mutation:?} must be Fatal");
         assert_eq!(outcome.messages()[0].code.0, "mutation.invariant", "{mutation:?} breaks the verb family's finite/positive invariant");
     }
 }
@@ -227,7 +227,7 @@ fn selection_transforms_refuse_non_finite_and_collapsing_parameters() {
 fn selection_transforms_skip_missing_and_locked_members_as_partial() {
     let base = selection_board();
     let outcome = drag_selection(vec!["b".into(), "ghost".into(), "a".into()], 1.0, 2.0).diff(&base);
-    assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     let reported: Vec<(&str, Vec<String>)> = outcome.messages().iter().map(|message| (message.code.0.as_str(), message.target.clone())).collect();
     assert_eq!(reported, vec![("mutation.partial", vec!["ghost".to_string()]), ("mutation.partial", vec!["b".to_string()])]);
     let moved = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), &base).expect("partial drag applies");
@@ -244,8 +244,8 @@ fn rotating_target_regions_is_partial_and_regions_alone_are_target_missing() {
     assert_eq!(mixed.messages().len(), 1);
     assert_eq!((mixed.messages()[0].code.0.as_str(), mixed.messages()[0].target.clone()), ("mutation.partial", vec!["r".to_string()]));
     assert!(mixed.diff().target_regions.is_none(), "a rotation never patches a target region");
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["r".into()], 0.0, 0.0, 1.0)));
-    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["b".into()], 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["r".into()], 0.0, 0.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["b".into()], 0.0, 0.0, 1.0)));
 }
 
 /// ⏸️ The identity parameters (zero offset, zero angle, unit factor) are warning-level no-ops.
@@ -256,7 +256,7 @@ fn identity_selection_transforms_are_no_ops() {
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.diff(), &Puzzle2dDiff::default(), "{mutation:?}");
         assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.no-op"], "{mutation:?}");
-        assert!(inverse_puzzle2d_mutation(&base, &mutation).is_empty(), "{mutation:?}: nothing moved, nothing to undo");
+        assert!(inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture").is_empty(), "{mutation:?}: nothing moved, nothing to undo");
     }
 }
 
@@ -334,9 +334,9 @@ fn every_bounded_leaf_refuses_what_its_schema_forbids() {
     ];
     for mutation in forbidden {
         let outcome = mutation.diff(&base);
-        semio_framework::io::resolve_ready(assert_fatal_never_applies(&outcome));
-        let codes: Vec<(dsl::Severity, &str)> = outcome.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect();
-        assert_eq!(codes, vec![(dsl::Severity::Fatal, "mutation.invariant")], "{mutation:?} must be refused as the schema forbids it");
+        ::semio_framework_async::poll::resolve_ready(assert_fatal_never_applies(&outcome));
+        let codes: Vec<(semio_framework_diagnostic::Severity, &str)> = outcome.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect();
+        assert_eq!(codes, vec![(semio_framework_diagnostic::Severity::Fatal, "mutation.invariant")], "{mutation:?} must be refused as the schema forbids it");
     }
     let admitted = [
         resize_target_region("r".into(), -3.0, 0.0),

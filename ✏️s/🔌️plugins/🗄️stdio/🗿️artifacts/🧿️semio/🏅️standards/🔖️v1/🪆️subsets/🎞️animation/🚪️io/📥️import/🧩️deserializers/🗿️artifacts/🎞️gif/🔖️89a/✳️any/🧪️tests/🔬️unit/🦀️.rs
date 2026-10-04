@@ -23,7 +23,7 @@ fn real_world_gif() -> GifSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
-    let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&real_world_gif())).expect("deserialize");
+    let anim = ::semio_framework_async::poll::resolve_ready(SemioAnimationFromGif::deserialize(&real_world_gif())).expect("deserialize");
     assert_eq!(anim.timelines.len(), 1);
     let ch = &anim.timelines[0].channels[0];
     assert_eq!(ch.target.node, GIF_FRAME_NODE);
@@ -39,6 +39,6 @@ async fn deserialize_derives_real_cumulative_delay_as_step_scalar_keyframes() {
 async fn zero_frames_yields_zero_timelines() {
     let mut gif = real_world_gif();
     gif.frames.clear();
-    let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGif::deserialize(&gif)).expect("deserialize");
+    let anim = ::semio_framework_async::poll::resolve_ready(SemioAnimationFromGif::deserialize(&gif)).expect("deserialize");
     assert!(anim.timelines.is_empty());
 }

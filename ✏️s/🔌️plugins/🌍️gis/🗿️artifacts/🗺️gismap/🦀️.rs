@@ -236,7 +236,7 @@ pub fn infer_gis_map_controlled(
         checkpoint(work)
     })?;
     let inference = GisMapInference { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds };
-    let mut canonical_payload = InferenceOutputGuard(semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_os_kernel::ToValue::to_value(&inference)));
+    let mut canonical_payload = InferenceOutputGuard(semio_framework_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&inference)));
     if canonical_payload.0.len() > allocation {
         return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.budget", "inference result exceeds allocation budget"));
     }

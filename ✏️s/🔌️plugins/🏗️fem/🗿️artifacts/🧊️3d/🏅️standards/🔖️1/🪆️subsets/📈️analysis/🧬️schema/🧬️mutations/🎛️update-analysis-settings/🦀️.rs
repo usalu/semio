@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🎛️ Atomically updates the document's inseparable analysis-settings facet (`modal_count`,
 /// `buckling_count`, `deformation_scale`) — never meaningfully set one field at a time (the command
 /// layer always merges partial input onto the current settings before emitting this).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "update-analysis-settings")]
@@ -24,9 +24,12 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for UpdateAnalysisSettings {
     fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Update analysis settings", "Analyseeinstellungen aktualisieren")
     }

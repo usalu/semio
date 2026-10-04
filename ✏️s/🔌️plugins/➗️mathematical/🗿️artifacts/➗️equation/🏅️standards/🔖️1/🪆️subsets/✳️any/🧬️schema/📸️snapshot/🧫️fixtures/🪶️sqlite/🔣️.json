@@ -11,17 +11,17 @@
   ],
   "labelMaximum": "18446744073709551615",
   "nextLabel": "0",
-  "lexeme": "NaN 01 世界\u0000",
+  "lexeme": "NaN 01 \u4e16\u754c\u0000",
   "numerator": "",
   "denominator": "0",
-  "symbol": "x\u0000世界",
+  "symbol": "x\u0000\u4e16\u754c",
   "deep": 2048,
   "cancelAt": 256,
   "maxRows": 10,
   "maxValueBytes": 128,
   "children": [
     {
-      "childId": "notation\u0000世界",
+      "childId": "notation\u0000\u4e16\u754c",
       "target": {
         "artifactId": "n",
         "dialect": {
@@ -53,5 +53,54 @@
         }
       }
     }
-  ]
+  ],
+  "invalidUtf16CodeUnits": [[55296], [57343]],
+  "renumberOffset": 1000,
+  "graph": {
+    "directed": false,
+    "nodes": [
+      {
+        "id": "n-0",
+        "label": "",
+        "x": -0.5,
+        "y": 1250.5
+      },
+      {
+        "id": "n\u00001",
+        "label": "Knoten \u4e16\u754c",
+        "x": 40.0,
+        "y": -60.25
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-0",
+        "source": "n-0",
+        "target": "n\u00001"
+      },
+      {
+        "id": "e-1",
+        "source": "n\u00001",
+        "target": "absent endpoint"
+      }
+    ],
+    "algorithm": "bfs",
+    "algorithmSeed": "n-0"
+  },
+  "geometry": {
+    "points": [
+      {
+        "x": 0.0,
+        "y": 0.0
+      },
+      {
+        "x": -1.5,
+        "y": 2.25
+      },
+      {
+        "x": 0.125,
+        "y": -4096.0
+      }
+    ]
+  }
 }

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ConnectReferencedModel, base: &EnergyModelSnapshot)
     };
     let link = store::ArtifactLink { target, pin: store::LinkPin::Head, role: vocabulary::REFERENCED_MODEL_LINK_ROLE.to_string() };
     if base.referenced_model.as_ref() == Some(&link) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The referenced model is already {}.", payload.target_uri));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The referenced model is already {}.", payload.target_uri));
     }
     protocol::MutationOutcome::new(EnergyModelDiff { referenced_model: Some(EnergyLinkSlotDelta::Attached { link }), ..Default::default() })
 }

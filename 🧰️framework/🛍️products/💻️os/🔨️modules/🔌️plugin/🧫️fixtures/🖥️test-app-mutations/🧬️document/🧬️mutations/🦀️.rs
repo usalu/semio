@@ -9,7 +9,7 @@ pub(crate) use set_count::SetCount;
 pub(crate) use set_label::SetLabel;
 pub(crate) use set_slot_children::SetSlotChildren;
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=super::TestSnapshot,diff=super::TestDiff,schema="plugin.testkit.document")]
@@ -20,20 +20,20 @@ pub(crate) enum TestMutation {
 }
 
 impl protocol::OpText for TestMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        for (keyword, spec) in <Self as dsl::DslVariants>::variants() {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        for (keyword, spec) in <Self as semio_framework_dsl_record::DslVariants>::variants() {
             let prefix = format!("{keyword} ");
             if line == keyword || line.starts_with(&prefix) {
                 let body = line[keyword.len()..].trim_start();
-                return <Self as dsl::DslVariants>::from_named_record(&keyword, &dsl::parse(body, &(spec.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?);
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(&keyword, &semio_framework_dsl_record::parse(body, &(spec.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let spec = <Self as dsl::DslVariants>::variants().into_iter().find(|(candidate, _)| candidate == &keyword).expect("declared variant").1;
-        let body = dsl::print(&record, &(spec.ordinary)(), dsl::JoinMode::Inline);
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let spec = <Self as semio_framework_dsl_record::DslVariants>::variants().into_iter().find(|(candidate, _)| candidate == &keyword).expect("declared variant").1;
+        let body = semio_framework_dsl_record::print(&record, &(spec.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {

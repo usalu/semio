@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-native-samples",
+  "semanticKind": "paint-native-samples",
+  "displayName": "Paint Native Samples",
+  "emoji": "🎨️",
+  "aggregateVariant": "PaintNativeSamples",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "paint-native-samples",
+  "binaryTag": 20,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "rejected"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

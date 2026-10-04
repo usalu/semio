@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveColorSpace {
         MutationOutcome::new(diff::diff_remove_color_space(base, &self.name))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.color_spaces.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetColorSpace(super::set_color_space::SetColorSpace { color_space: item.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))

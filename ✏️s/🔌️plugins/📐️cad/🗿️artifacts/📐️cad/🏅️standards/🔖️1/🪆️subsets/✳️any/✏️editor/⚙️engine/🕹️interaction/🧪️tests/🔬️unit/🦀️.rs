@@ -418,11 +418,11 @@ async fn engagement_session_json_is_canonical_across_encodes() {
     assert!(apply_event(&mut session, "start", None));
     assert!(apply_event(&mut session, "pointer.move", Some(&vec3_json([1.0, 2.0, 0.0]))));
     assert!(apply_event(&mut session, "pointer.down", Some(&vec3_json([1.0, 2.0, 0.0]))));
-    assert!(session.context.len() >= 2, "the box session carries several context fields: {:?}", session.context.keys().collect::<Vec<_>>());
-    let first = protocol::json::to_json_string(&session);
+    assert!(session.context.0.len() >= 2, "the box session carries several context fields: {:?}", session.context.0.keys().collect::<Vec<_>>());
+    let first = semio_framework_pack_json::to_json_string(&session);
     for _ in 0..8 {
-        let decoded: CadEngagementScratch = protocol::json::from_json_str(&first).expect("scratch");
-        let again = protocol::json::to_json_string(&decoded);
+        let decoded: CadEngagementScratch = semio_framework_pack_json::from_json_str(&first, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("scratch");
+        let again = semio_framework_pack_json::to_json_string(&decoded);
         assert_eq!(again, first, "re-encoding a decoded session must reproduce the same bytes");
     }
 }

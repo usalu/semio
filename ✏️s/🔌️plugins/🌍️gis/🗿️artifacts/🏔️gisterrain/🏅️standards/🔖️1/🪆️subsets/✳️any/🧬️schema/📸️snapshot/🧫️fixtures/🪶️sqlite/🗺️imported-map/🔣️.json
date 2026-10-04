@@ -1,0 +1,289 @@
+{
+  "dialect": {
+    "artifactKind": "s.gis.gisterrain",
+    "standard": "1",
+    "subset": "*"
+  },
+  "words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "fff8123456789abc",
+    "3ff8000000000000"
+  ],
+  "variantKinds": [
+    "null",
+    "boolean",
+    "unsigned",
+    "signed",
+    "float",
+    "text",
+    "bytes",
+    "array",
+    "object"
+  ],
+  "position": {
+    "kind": "object",
+    "members": [
+      {
+        "name": "id",
+        "value": {
+          "kind": "text",
+          "value": "position ! @ / 世界\u0000"
+        }
+      },
+      {
+        "name": "lon",
+        "value": {
+          "kind": "float",
+          "word": "8000000000000000"
+        }
+      },
+      {
+        "name": "lat",
+        "value": {
+          "kind": "float",
+          "word": "3ff8000000000000"
+        }
+      },
+      {
+        "name": "label",
+        "value": {
+          "kind": "text",
+          "value": "Latitude\nBreite"
+        }
+      },
+      {
+        "name": "source_url",
+        "value": {
+          "kind": "text",
+          "value": "https://example.invalid/世界"
+        }
+      }
+    ]
+  },
+  "route": {
+    "kind": "object",
+    "members": [
+      {
+        "name": "id",
+        "value": {
+          "kind": "text",
+          "value": "route / two"
+        }
+      },
+      {
+        "name": "points",
+        "value": {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "float",
+                  "word": "0000000000000000"
+                },
+                {
+                  "kind": "float",
+                  "word": "8000000000000000"
+                }
+              ]
+            },
+            {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "float",
+                  "word": "7fefffffffffffff"
+                },
+                {
+                  "kind": "float",
+                  "word": "0000000000000001"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "stroke_width",
+        "value": {
+          "kind": "float",
+          "word": "3ff8000000000000"
+        }
+      }
+    ]
+  },
+  "region": {
+    "kind": "object",
+    "members": [
+      {
+        "name": "id",
+        "value": {
+          "kind": "text",
+          "value": "region / three"
+        }
+      },
+      {
+        "name": "ring",
+        "value": {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "float",
+                  "word": "3ff8000000000000"
+                },
+                {
+                  "kind": "float",
+                  "word": "8000000000000000"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "unknown geometry property",
+        "value": {
+          "kind": "null"
+        }
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "__proto__",
+      "value": {
+        "kind": "null"
+      }
+    },
+    {
+      "name": "false",
+      "value": {
+        "kind": "boolean",
+        "value": false
+      }
+    },
+    {
+      "name": "uint64",
+      "value": {
+        "kind": "unsigned",
+        "value": "18446744073709551615"
+      }
+    },
+    {
+      "name": "int64",
+      "value": {
+        "kind": "signed",
+        "value": "-9223372036854775808"
+      }
+    },
+    {
+      "name": "exact words",
+      "value": {
+        "kind": "array",
+        "items": [
+          {
+            "kind": "float",
+            "word": "0000000000000000"
+          },
+          {
+            "kind": "float",
+            "word": "8000000000000000"
+          },
+          {
+            "kind": "float",
+            "word": "0000000000000001"
+          },
+          {
+            "kind": "float",
+            "word": "7fefffffffffffff"
+          },
+          {
+            "kind": "float",
+            "word": "7ff0000000000000"
+          },
+          {
+            "kind": "float",
+            "word": "fff0000000000000"
+          },
+          {
+            "kind": "float",
+            "word": "7ff0000000000001"
+          },
+          {
+            "kind": "float",
+            "word": "fff8123456789abc"
+          },
+          {
+            "kind": "float",
+            "word": "3ff8000000000000"
+          }
+        ]
+      }
+    },
+    {
+      "name": "literal\u0000世界",
+      "value": {
+        "kind": "text",
+        "value": "SQL ' ; -- \n<script>\u0000世界"
+      }
+    },
+    {
+      "name": "octets",
+      "value": {
+        "kind": "bytes",
+        "hex": "00017f80ff"
+      }
+    },
+    {
+      "name": "empty array",
+      "value": {
+        "kind": "array",
+        "items": []
+      }
+    },
+    {
+      "name": "empty object",
+      "value": {
+        "kind": "object",
+        "members": []
+      }
+    }
+  ],
+  "child": {
+    "childId": "independent mesh ! @ /",
+    "target": {
+      "artifactId": "independent mesh target 世界",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  },
+  "semanticTables": [
+    "gis_terrain_imported_map",
+    "gis_terrain_position",
+    "gis_terrain_route",
+    "gis_terrain_region",
+    "gis_terrain_property",
+    "gis_terrain_value",
+    "gis_terrain_boolean",
+    "gis_terrain_unsigned",
+    "gis_terrain_signed",
+    "gis_terrain_float",
+    "gis_terrain_text",
+    "gis_terrain_bytes",
+    "gis_terrain_array",
+    "gis_terrain_member"
+  ]
+}

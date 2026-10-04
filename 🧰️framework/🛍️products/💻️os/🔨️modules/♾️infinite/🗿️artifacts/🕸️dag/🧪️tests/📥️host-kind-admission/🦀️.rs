@@ -8,7 +8,7 @@ fn host_kind_admission_matches_language_neutral_vectors() {
     assert_eq!(cases.len(), 15);
     for case in cases {
         let text = serde_json::to_string(&case["snapshot"]).expect("independent JSON fixture encoding");
-        let decoded = crate::os_pack::json::from_json_str::<DagHostSnapshot>(&text);
+        let decoded = semio_framework_pack_json::from_json_str::<DagHostSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(decoded.is_ok(), case["accepted"].as_bool().expect("admission expectation"), "{}: {decoded:?}", case["id"]);
         if let Ok(snapshot) = decoded { assert_eq!(crate::dag_node_kind_tag(&snapshot.nodes[0].kind), case["id"].as_str().expect("exact typed discriminator")); }
     }

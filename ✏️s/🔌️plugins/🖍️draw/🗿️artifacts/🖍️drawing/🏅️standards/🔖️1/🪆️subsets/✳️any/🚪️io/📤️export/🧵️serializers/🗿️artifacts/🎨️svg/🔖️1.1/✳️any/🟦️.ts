@@ -1,11 +1,13 @@
 /** 🎨️ SVG scene serializer twin preserving paint, text and affine geometry. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment, type FillStyle, type StrokeStyle } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathGeometrySegment, type FillStyle, type StrokeStyle } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+
+import {PreparedFill} from "../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🟦️.ts";
 
 export interface DrawingSvgNode {
   readonly id: string;
   readonly groups?: readonly {readonly id:string;readonly opacity:number;readonly blendMode:string}[];
   readonly transform: readonly number[];
-  readonly segments: readonly PathSegment[];
+  readonly segments: readonly PathGeometrySegment[];
   readonly fill?: FillStyle;
   readonly stroke?: StrokeStyle;
   readonly opacity: number;
@@ -45,7 +47,8 @@ export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: rea
     }
     active=groups;
     const paint: Record<string,string | number> = {fill:"none",stroke:"none","fill-rule":node.fillRule ?? "evenodd"};
-    if (node.fill?.kind === "solid") { paint.fill = rgb(node.fill.color); paint["fill-opacity"] = node.fill.color[3]; }
+    const constant=node.fill ? new PreparedFill(node.fill).constantColor() : null;
+    if (constant) { paint.fill=rgb(constant);paint["fill-opacity"]=constant[3]; }
     else if (node.fill) {
       const fill = node.fill, id = `draw-gradient-${index}`;
       const stops = [...fill.stops].sort((a,b) => a.offset - b.offset).map(stop => element("stop",{offset:Math.min(1,Math.max(0,stop.offset)),"stop-color":rgb(stop.color),"stop-opacity":stop.color[3]})).join("");

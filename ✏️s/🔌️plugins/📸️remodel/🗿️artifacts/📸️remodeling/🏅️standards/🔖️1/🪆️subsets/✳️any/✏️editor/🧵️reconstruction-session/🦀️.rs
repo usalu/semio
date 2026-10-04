@@ -348,6 +348,7 @@ pub fn reconstruction_run_definition() -> ToolRunDefinition {
         revalidate_job: Some(JobKindId::new(RECONSTRUCTION_REVALIDATE_JOB_KIND)),
         settings: ToolRunSettingsReads::default(),
         windows: Vec::new(),
+        member: None,
     }
 }
 //#endregion 🔖️Contract
@@ -438,8 +439,8 @@ pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContent
             digest.record(snapshot.assets.get(&frame.asset_id).map_or(frame.asset_id.as_bytes(), |handle| handle.child_id.as_bytes()));
         }
     }
-    digest.record(dsl::json::to_json_string(&dsl::ToValue::to_value(&snapshot.params)).as_bytes());
-    digest.record(dsl::json::to_json_string(&dsl::ToValue::to_value(&snapshot.calibration)).as_bytes());
+    digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.params)).as_bytes());
+    digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.calibration)).as_bytes());
     digest
 }
 //#endregion 🔖️Checkpoint

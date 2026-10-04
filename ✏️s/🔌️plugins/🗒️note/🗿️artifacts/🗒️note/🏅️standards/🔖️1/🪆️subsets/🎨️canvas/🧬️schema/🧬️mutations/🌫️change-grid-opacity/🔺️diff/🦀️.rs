@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeGridOpacity, base: &NoteSnapshot) -> protocol::Mutat
         }
     }
     if payload.new_opacity == base.grid_opacity {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Grid opacity already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Grid opacity already has this value.");
     }
     protocol::MutationOutcome::new(NoteDiff { grid_opacity: Some(payload.new_opacity), ..Default::default() })
 }

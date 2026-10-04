@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeSlabThicknessM, base: &En1994Snapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", "slab missing", [payload.index.to_string()]);
     };
     if slab.concrete_thickness_m == payload.new_concrete_thickness_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "unchanged");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     let mut slabs = base.slabs.clone();
     slabs[payload.index].concrete_thickness_m = payload.new_concrete_thickness_m;

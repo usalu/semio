@@ -51,6 +51,7 @@ pub(super) fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<Comm
         config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
         command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
         io: semio_framework::AppIo::default(),
+        fault_notices: Vec::new(),
     }
 }
 
@@ -66,7 +67,7 @@ fn window_action_context_nested_menu_actions_preserve_the_clicked_window() {
         let group = ui_wgpu::wgpu::ContextMenuItemSpec { id: "group".into(), children: Some(vec![spec]), ..Default::default() };
         let mut items = vec![shell_context_menu_item_from_spec(group, "test", false)];
         scope_context_menu_items(&mut items, fixture["clickedWindowId"].as_str().unwrap());
-        let actual: Value = serde_json::from_str(&dsl::json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
+        let actual: Value = serde_json::from_str(&semio_framework_pack_json::from_dsl_value(items[0].children[0].action.as_ref().unwrap().args.as_ref().unwrap()).to_string()).unwrap();
         assert_eq!(actual, case["expected"]);
     }
 }
@@ -166,7 +167,7 @@ fn directory_page_json(after: u64, through: u64, has_more: bool, _receipt_seed: 
         receipt_sha256: String::new(),
     };
     page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
-    store::os_pack::json::to_json_string(&page)
+    semio_framework_pack_json::to_json_string(&page)
 }
 
 
@@ -287,7 +288,7 @@ fn space_administration_test_page(members: &[(&str, DirectorySpaceRole, bool)], 
     if let DirectorySpaceAdministrationPageV1::Author { receipt_sha256, .. } = &mut page {
         *receipt_sha256 = receipt;
     }
-    semio_framework_os_kernel::os_pack::json::to_json_string(&page)
+    semio_framework_pack_json::to_json_string(&page)
 }
 
 /// 🏛️ The finite administration operation drives a REAL `DirectoryClient` through

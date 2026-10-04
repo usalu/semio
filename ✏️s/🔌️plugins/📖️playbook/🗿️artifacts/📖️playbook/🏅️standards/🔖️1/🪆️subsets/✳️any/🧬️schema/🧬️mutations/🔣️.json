@@ -4,30 +4,6 @@
   "title": "PlaybookMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/add-step/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/remove-step/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/move-step/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/add-block/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/remove-block/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/move-block/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/replace-block/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/update-step/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/playbook/playbook/mutation/change-title/schema.json"
     }
   ]

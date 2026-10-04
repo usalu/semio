@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "owner": "semio-framework-value",
+  "borrowedSource": "std::str::Utf8Error",
+  "ownedSource": "std::string::FromUtf8Error",
+  "refusalKind": "invalidValue",
+  "messageClassification": false,
+  "cases": [
+    { "id": "empty", "bytes": [], "expected": { "text": "", "kind": null, "display": null } },
+    { "id": "ascii", "bytes": [65, 66], "expected": { "text": "AB", "kind": null, "display": null } },
+    { "id": "unicode", "bytes": [65, 240, 159, 152, 128, 66], "expected": { "text": "A😀B", "kind": null, "display": null } },
+    { "id": "invalid-leading-byte", "bytes": [255], "expected": { "text": null, "kind": "invalidValue", "display": "invalid utf-8 sequence of 1 bytes from index 0" } },
+    { "id": "isolated-continuation", "bytes": [128], "expected": { "text": null, "kind": "invalidValue", "display": "invalid utf-8 sequence of 1 bytes from index 0" } },
+    { "id": "overlong", "bytes": [192, 175], "expected": { "text": null, "kind": "invalidValue", "display": "invalid utf-8 sequence of 1 bytes from index 0" } },
+    { "id": "incomplete", "bytes": [226, 130], "expected": { "text": null, "kind": "invalidValue", "display": "incomplete utf-8 byte sequence from index 0" } },
+    { "id": "invalid-after-prefix", "bytes": [65, 255], "expected": { "text": null, "kind": "invalidValue", "display": "invalid utf-8 sequence of 1 bytes from index 1" } }
+  ]
+}

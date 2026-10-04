@@ -573,3 +573,339 @@ TS verification: `./node_modules/.bin/vitest run --config T/🔍️w3-t-flowcad-
 - Rust: every cargo check since 12:31 dies in the peer `semio-framework-schema-registry` extraction
   (`🧬️schema/📇️registry/🦀️.rs:349/511` duplicate definitions, 28 errors; reported to the coordinator). My Rust is WRITTEN BUT
   UNVERIFIED until that crate is green.
+
+### S3.6 Resume after the usage cut (~13:05) and the machine reboot (~17:00) — 18:40
+
+- Repair check: every edit of S3.3–S3.5 is on disk and complete (dag journal encoder, flow host, `GraphHost`, flow guest
+  decoder adoption + intent leaves, time-travel `Finalized { authored }`, plugin delete row, React `dispatchGraphEdits`). No edit
+  was in flight at the cut. 13:00 state of the peer break: `🛂️manifest/🦀️.rs:1266` and `♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs:48`
+  (schema-state extraction, owner S3-INFRA).
+- 18:44 `cargo check -p semio-framework-os-infinite -p semio-framework-surface -p semio-framework-os-flow -p semio-framework-plugin
+  -p semio-framework-os-renderer-wgpu --lib --keep-going` (`check-9.txt`): **os-infinite (dag journal), surface (`GraphHost`),
+  os-flow (flow host + wasm), plugin (§12 time travel, delete row): 0 errors.** renderer-wgpu: 158 errors, **none in my regions**
+  (`write_graph_edit_action`, `flow_widget_drop_args` type-check clean); all in peer code (`WorkerCell<Ui>::with` bounds ×87,
+  `&UiComponentSceneNode` ×41, arity ×21 — EngineCanvas `:957,1988,1990,2412,6006`, Interpreter, Shell).
+- 19:02–19:26 ✏️s workspace checks (`check-10..14`): two runs killed by the deadlock breaker (rule 33) while waiting on locks, then
+  the kernel went red in the peer DSL-crate extraction (`🗣️dsl/🦀️.rs:931` ambiguous `canonicalize`, then `dsl::Diagnostic`,
+  `📡️spr/🧵️channel` ×253). Per coordinator: no polling; verification resumes on "TREE GREEN".
+- **Flow TS source-contract suite** (`bun …/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts`): was red on drift, now **passes (exit 0)**
+  (`flow-source-contract-5.txt`). Fixes, all in that test file: the retained preparation digest arm is `1 | 2` since a peer
+  removed the edit-line/id texts (18:58), asserted as a regex over the arm + `flow-content-sha256-` prefix; two `URL` bases lacked
+  their trailing slash (`mutationFixtureRoot`, `duplicateRoot`), so every relative read resolved beside the directory; three
+  plugin-level paths moved to `🌎️hub/🧩️compositions/🌊️flow/` (rule 22: `🦀️.rs`, `🧫️fixtures/🧹️surface-owners`, `🧪️tests/🔬️surface`).
+- Re-run: `cad-window-transient-contract rows=6` PASS, `composed-child-history-oracle cases=4` PASS.
+
+**Owed verification (runs on "TREE GREEN", in this order, gated, one cargo at a time):**
+1. `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-cad-cad -p semio-s-artifact-flow-flow --lib --tests --keep-going`
+2. `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-flowcad cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-cad-cad --lib`
+   (baseline 459/2; S2.7 laws + transient laws)
+3. same for `-p semio-s-artifact-flow-flow --lib` (§12 laws ×6 incl. the 2 new, F6 ×2, intent rows ×4,
+   `optional_field_rows_keep_their_pre_migration_bytes` may need the AddWidget vector re-sealed)
+4. `… cargo test -p semio-framework-plugin --lib -- composed_child_history node_graph_delete_row time_travel scrub`
+5. `… cargo test -p semio-framework-os-infinite --lib -- node_graph_edit_rows wire_edit`
+6. `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-cad-cad -p semio-s-artifact-flow-flow --target wasm32-wasip2 --lib`
+- 19:44 one gated re-check (`check-15.txt`): kernel still red in the peer DSL extraction (`📡️spr/🧵️channel/🦀️.rs` ×253,
+  `⚖️protocol-laws` ×18, store ×9, vcs ×7). Parked for "TREE GREEN" (coordinator resumes me); the owed list above is unchanged.
+
+**Coordinator actions (S3):** rebuild the `framework-surface` wasm bindings (new `GraphSession.takeGraphEditsJson`) and the
+flow-core wasm (`pointerUpScreen` answers rows only, `alignSelection` answers rows) before any React node-graph probe; `describe`
+flow (`addWidget` gains `label`/`action`/`format`; `nodeGraphEdit` row vocabulary) and cad (S2.5 config/lanes); `verify taxonomy
+report` for the new open-pattern dirs (`RE/🧬️schema/🔣️node-graph-edit-rows`, `RE/🧫️fixtures/🧫️node-graph-edit-rows`,
+`RE/🧪️tests/🧪️node-graph-edit-rows`, dag `🧪️tests/🧪️node-graph-edit-rows`, plugin `🧪️tests/🧪️node-graph-delete-row`); S3-CLOSURE
+deletes the 4 `Edit { coalesce_key: None }` literals with the field; S3-GRAPHS/S3-PROCEDURAL/S3-TEXT drop their own
+`setHostSnapshot`/`deleteSelection` decoders (shared `node_graph_edit_rows`).
+
+### S3.7 Audit fixes (`📓️audit-s3-tools.md` S3-FLOWCAD F1–F7, X3) — source 05:57 (10-03)
+
+Resume note: the session context was cut between ~20:30 and 05:47; on resume I found the F1 caller wave partly on disk (flow host
+`journal_gesture_moves`/`take_graph_edits_json`, `GraphHost`, dag tests) and completed it compile-atomically below.
+
+- **F1 (major) — no silent drop.** `DAG_GRAPH_EDIT_CAPACITY` = 256 = `NODE_GRAPH_EDIT_MAX_ROWS` (law in the flow guest). Only moves
+  grow with the graph, so `DagHost::journal_moves(gesture, displacements)` reserves ALL move rows or refuses the WHOLE gesture
+  (`DagJournalRefusal {rows, limit}`, journal emptied, refusal kept until `take_journal_refusal`); `push_graph_edit` no longer drops
+  (a press journals ≤ 4 rows); `journal_drag` deleted. Every caller restores the baseline on refusal: flow host release (baseline
+  snapshot + `rebuild_dag` + `carry_journal_refusal`), flow host align, `GraphHost` release and align (`restore_node_positions`).
+  The JSON answer carries `"refused": {"rows", "limit"}` beside `operations` (renderers dispatch only `operations`).
+  Laws: `a_two_hundred_node_gesture_journals_whole_and_an_oversized_one_is_refused_whole` (200 rows whole; 256 moves + 1 port →
+  refused whole, nothing journalled, positions restored).
+- **F2 (major) — ONE encoder.** `write_dag_graph_edit_rows(edits, sink)` + trait `DagGraphEditRowSink` own every row's operation,
+  fields and order; the JSON answer (`DagGraphEditJsonRows`), the wgpu bounded builder (`BoundedGraphEditRows`, `⚙️EngineCanvas`)
+  and the credit census (`dag_graph_edit_row_strings`) are sinks of it. wgpu's hand-written row builder is deleted; `index` is an
+  integer on both. Law `the_row_string_census_names_every_written_field_and_text`; TS scans now assert the shared writer is used.
+- **F3** wgpu `DagPointerPhase::Leave` → `pointer_cancel_screen` (zero trace) on both engines; `Up` alone releases.
+- **F4** flow `insertPort.side` other than `input`/`output` is refused at execution (`node_graph_edit_result`), so a DSL/binary-decoded
+  op cannot reach `add_output_port` by default.
+- **F5** flow `tool_intent_kinds` (`#nodeGraphEdit`, `#moveMediaNode` → `drag-nodes`); law
+  `a_release_that_wires_and_drags_is_labelled_by_the_drag`.
+- **F6** §12 finalize: the session applies `Finalized` BEFORE the member publish (a publish failure can no longer strand it); the
+  history row label is the glossary `TimeTravelLabel::MemberEdited` ("History of a composed part edited" / "Verlauf eines
+  eingebetteten Teils bearbeitet") — Rust enum + `ALL` (37) + TS twin + schema enum + lifecycle fixture — instead of the raw
+  `<slot>/<childId>` literal.
+- **F7 — deferred (owner S3-W2A):** `node_graph_delete_selection_spec` keeps `is_de` like the whole `🖱️MenuBuilder` region
+  (`selection_count_phrase`); a locale-glossary pass needs the menu-wide API and a `disabled_reason` on the UI crate's
+  `ContextMenuItemSpec` (no such field today). Empty selection still omits the row (no refused row is dispatched).
+- **X3** dag `[TRACE]` diagnostics deleted with their logging-only state (`dag_debug_log`, `dag_interaction_label`,
+  `last_logged_lod`); wgpu per-gesture edit-list traces deleted. Kept: the digest-deduped wgpu hit/geometry census lines (a
+  documented browser-probe channel, not per tick).
+- TS: vitest node-graph suites **26/26** (`ts-node-graph-6.txt`).
+- §20.9 (flow host materializes declared input defaults): written by S3-PROCEDURAL (`default_neuron_params_from_info`, agreed
+  10-02 22:xx); I verify it with the flow lib run.
+
+**Verification 06:00–06:08 (10-03):**
+- `cargo check -p semio-framework-os-infinite -p semio-framework-surface -p semio-framework-os-flow -p semio-framework-time-travel
+  -p semio-framework-plugin -p semio-framework-os-renderer-wgpu --lib` (`check-17.txt`): **os-infinite, surface, os-flow,
+  time-travel, plugin: 0 errors.** renderer-wgpu: 10 errors, all `🧊️renderer/🦀️.rs:18985–18998` (`?` ValueError conversions, DSL
+  class) — none in `⚙️EngineCanvas` (the `BoundedGraphEditRows` sink and Leave→cancel type-check).
+- `cargo test -p semio-framework-time-travel` (private target): **14 passed, 0 failed** (label ALL == fixture incl. `memberEdited`).
+- `bun test …/⏪️time-travel/🧪️tests/🧪️conformance/🟦️.ts`: **20 pass** after bumping the schema's `labels` min/maxItems 36 → 37
+  (the first run failed exactly on that bound).
+- `cargo check --manifest-path ✏️s/Cargo.toml -p cad -p flow --lib --tests` (`check-16.txt`): blocked by stdio zip/step/svg/gltf
+  (`ValueError` conversions, DSL class, S3-INFRA). `cargo test -p semio-framework-os-infinite --lib` (`test-infinite-1.txt`):
+  blocked by `🏪️store/♻️retirement/🦀️.rs:4-5` E0117 under the test feature set (peer).
+- 06:32 one gated re-check (`check-18.txt`): ✏️s still blocked — stdio-step 125, stdio-zip 52, stdio-gltf 13, stdio-svg 6 (DSL
+  `ValueError` class). Parked for "TREE GREEN (✏️s)". Owed list = S3.6 items 1–6, plus: dag laws
+  (`node_graph_edit_rows_tests`, 4 incl. the 200-node and census laws; `wire_edit_tests`), flow F5 label law, plugin
+  `node_graph_delete_row`, renderer-wgpu check once `🧊️renderer/🦀️.rs:18985` is green.
+
+### S3.8 §20.15 — composed content only on the child lane (in progress, 11:45 10-03)
+
+Gate `schema mutation-editability` → `parentLeafReadsChild`: flow 10 (`flow_working_scene` ×9, `precondition` ×1), cad 8
+(`cad_pane_local_scene` ×5, `cad_selection_inverse_objects` ×3) (`🗑️generated/s3-flowcad/editability-*.txt`).
+
+**Flow plan (S3-GRAPHS' sequence pattern):** `FlowSnapshot` holds only the content coordinate, so the parent vocabulary becomes
+UNINHABITED (`pub enum FlowMutation {}` with hand `Mutation`/`SemanticMutation`/`OpText`/`OpBinary`/`ColdRetire` impls, empty
+json/ts/graphql/proto twins). Every content edit is already a child-lane leaf (`flow_content_leaves`, S3.4); the retained
+remove/disconnect/delete-selection routes build child leaves from the ids they scan instead of folding parent leaves. Deleted:
+the 10 parent leaves (+ text/binary codecs, grammar, fixtures `🧫️fixtures/🧬️mutations/*`), `🌊️mutate-flow-1` (case + fixture +
+python second implementation), the parent one-item preparation (`🧵️retained/🗿️artifact/**`, `🧵️retained/🧾️canonical/**`, the dead
+generic `FlowStoreOneItemPreparationFactory` + test helpers), `flow_content_edit`/`apply_flow_mutation`, the subset oracle catalog.
+
+## Session 4 — 2026-10-04
+
+Owner: S4-FLOWCAD (Opus executor, successor of S3-FLOWCAD). Scope: flow §20.15 finish, cad §20.15, reload laws, D24 flow default
+document, owed S3.6 runs, greenfield decision on `optional_field_rows_keep_their_pre_migration_bytes`.
+
+### S4.1 Repair check (rule 34) — 02:10–02:50
+
+- `git diff HEAD --stat` over the flow artifact tree: 124 files, mostly peer value/DSL sweeps (`dsl::` → `semio_framework_value::`,
+  `Ok((|| { … })())` codemod wraps, `step(.., _cx)` signature) plus the S3.7 audit fixes. S3.8's own on-disk edit was ONE file:
+  `🧬️schema/🧬️mutations/🦀️.rs` replaced by the uninhabited `pub enum FlowMutation {}` (hand `Mutation`/`SemanticMutation`/`OpText`/
+  `OpBinary`/`ColdRetire`). Nothing else of the S3.8 deletion list had landed, so the flow crate was NOT compile-atomic: the ten leaf
+  modules, `💾️binary`/`📝️text` facets, the parent one-item preparation (`🧵️retained/🗿️artifact/**`, `🧾️canonical`, `🔤️bytes`), the
+  direct-store routes (`DeleteWidget`/`DisconnectWidgets`/`ReplaceWidget` builders), `flow_content_edit`, `♻️retirement::retire_mutation`,
+  `🌊️mutate-flow-1` and their tests all still named the deleted variants and helpers (`apply_flow_mutation`, `KINDS`, `decode_flow_*`, …).
+- References outside the flow crate (git grep, tickets excluded): only the stdio composition ledger row for `🌊️mutate-flow-1/🦀️.rs`
+  (`🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧫️fixtures/🧩️composition/🔣️.json` `callers`) and the taxonomy member name `🌊️mutate-flow-1`.
+- Decision: finish the S3.8 wave in one compile-atomic source wave (S4.2) before any cargo run.
+
+### S4.2 Flow §20.15 deletion wave — source 11:55–12:40 (cargo check running)
+
+(The session stalled 02:50–11:50 — no work happened in that window; status sent to `main` 11:53.)
+
+- Parent vocabulary: `🧬️schema/🧬️mutations/🦀️.rs` = uninhabited `FlowMutation {}` (clean `match *self {}` bodies, value derives as
+  sequence), twins `🔣️.json` (`not: {}`), `🟦️.ts` (`never`), `🔗️.graphql`, `🛰️.proto` empty, law
+  `the_parent_vocabulary_is_empty_and_refuses_every_operation`.
+- DELETED (rule 32, zero references re-proved with git grep, tickets excluded): the ten leaf dirs `➕️create-widget`, `🗑️delete-widget`,
+  `🔢️reorder-widgets`, `🔁️replace-widget`, `🔌️connect-widgets`, `✂️disconnect-widgets`, `🔀️reorder-synapses`, `🔄️update-synapse-endpoints`,
+  `📍️move-widgets`, `👯️duplicate-widget` (+ diff/inverse/tests/schemas), `🧬️mutations/💾️binary/**`, `🧬️mutations/📝️text/**`,
+  `🧬️mutations/📖️.grammar.semio`, subset `🧫️fixtures/🧬️mutations/**` (20 quintets), `🧫️fixtures/🌊️mutate-flow-1`, `🧪️tests/🌊️mutate-flow-1`
+  (case, `🐍️.py` second implementation, `🥒️.feature`), subset `🔮️oracles/🔣️.json` (only the deleted case's oracle + catalog `flow-1-any` +
+  manifests), editor `🧵️retained/🗿️artifact/**` (one-item preparation, recipe, scene copy/hash + tests), `🧵️retained/🧾️canonical/**`,
+  `🧵️retained/🔤️bytes/**`, editor fixtures `🧬️artifact-recipes.json`, `🧾️artifact-canonical.json`; `♻️retirement::SceneRetirementFactory`;
+  the crate-root `op`/`spr` shims (all 40 `crate::op::FlowMutation` imports → `crate::FlowMutation`).
+- Editor: the `📬️StorePreparation` region (generic `FlowStoreOneItemPreparationFactory`, `prepare_flow_artifact`, admit/bounded-byte
+  helpers) is gone (only the three capacity constants stay, region `📏️StoreCapacity`); `build_artifact_store_one_item_preparation_factory`
+  removed (parent lane has nothing to prepare); `flow_content_edit` deleted. New `flow_removal_leaves(child, node_ids, edge_ids)`: every
+  named edge and every edge touching a named node (child order), then every named node — the retained `removeWidget`, `disconnect`
+  and `deleteSelection` routes scan ids (`node_ids`/`edge_ids: Option<Vec<String>>`, closed through `Owner::Strings`) and publish
+  `flow_content_leaves_emit(child_id, flow_removal_leaves(..))` on the content child; `patchFlowWidgets` no longer builds dead parent
+  `ReplaceWidget`s. `🧵️retained/🦀️.rs` shrinks to `Owner::{Bytes, Strings}` (every other owner served only the parent preparation).
+- `♻️retirement::retire_mutation` = `match mutation {}`.
+- Tests/fixtures: `delete_cascade_inverse_restores_exact_edge_order_and_label` → `a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content`
+  (fixture `🧹️delete-cascade` now pins `expectedLeaves` [remove-edge e1, remove-edge e3, remove-node cut]; child inserts append, so
+  undo restores by id, not by index — order is not semantic in the child model, S3.4); diff test `move_widgets_diff_touches_only_the_content_slot`
+  deleted (parent leaf); retained test `nested_dictionary_moves_without_cloning_and_retires_at_one_byte` deleted (owner removed).
+  TS source contract: regions `🧬️ArtifactRecipes`, `🧾️ArtifactCanonicalShapes` deleted; `↩️DeleteCascadeOracle` rewritten (independent
+  TS removal-leaf oracle + immer forward/inverse, compared by id); `🪪️ContentIdentityOracle` keeps digest/target/demo laws, drops the
+  canonical/preparation/mutation-fixture/duplicate checks. Fixture schema: defs `FlowArtifactRecipes`, `FlowArtifactCanonical`,
+  `FlowArtifactCanonicalMutation`, `FlowArtifactCanonicalEntry` deleted; `FlowDeleteCascade` pins `expectedLeaves`.
+- Greenfield decision: `optional_field_rows_keep_their_pre_migration_bytes` DELETED — it pinned command bytes "captured from the pre-merge
+  `flow_protocol` crate" (a compat pin); None/Some round trips stay covered by `every_command_round_trips_through_text_and_binary`
+  (`AddWidget` with `None` fields, `SetGridVisible { Some(true) }`, `SetGridSnapEnabled { None }`).
+- Shared files (Edit tool): taxonomy `members-of-tests` drops `🌊️mutate-flow-1`, `🟰️re`, `🟰️replaces`, `🟰️keeps`, `🗜️clamps` (no dir left
+  on disk); stdio composition ledger `callers` drops the deleted `🌊️mutate-flow-1/🦀️.rs` row.
+- Laws added (flow editor unit context): `composed_reload_law!("flow", FlowPlayApp, …, "../..")` (save → fresh load renders/folds
+  identically, history edit on the reloaded document) and `composed_child_history_law!("flow", …, [("nodeGraphEdit", move add by (25, 5))])`
+  (child-lane drag edited end to end on `content/<childId>`: overwrite, save/reload fold, alternative). The flow child-drag ONE-ROW
+  assertion the coordinator asked for already exists and stays: `a_node_drag_is_one_child_transaction_row_naming_its_member_store`
+  (`rows.len() == 1`, `transaction.tool == "s.flow.flow@1/*#editor#nodeGraphEdit"`, one `drag-nodes` row on `content/<childId>`), and
+  benefits from S4-GRAPHS' `close_streamed_transaction_unit` fix.
+
+### S4.3 Verification (rules 43/44: checks only, then CARGO FREEZE at ~12:27)
+
+| Command | Result |
+|---|---|
+| `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --lib --keep-going` (12:03–12:2x, `check-1.txt`) | the deletion wave compiles; flow 3 errors, all peer value/DSL fallout in my files, fixed after: `💡️inferences/🦀️.rs:23` `protocol::ValueError` private → `semio_framework_value::ValueError` (codemod wrap removed); `✏️editor/🦀️.rs:466` `Fault: From<ValueError>` missing → `map_err(\|error\| Fault::from(error.into_message()))`. cad 1 error `🪶️sqlite/🦀️.rs:256` `crate::CadArtifact` (S4-INFRA sqlite ABI sweep, rule 41c; already rewritten to `crate::schema::CadArtifact` on disk 12:17). Unused `serde_json::json` import → `#[cfg(test)]`. |
+| re-check `check-2.txt` | STOPPED by me at 12:27 for rule 44 (CARGO FREEZE) while rebuilding peer deps — OWED |
+| `bun ./✏️s/…/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts` (`flow-source-contract-1.txt`) | PASS (exit 0) — new delete-cascade oracle + fixture schema |
+| `./node_modules/.bin/vitest run --config T/🔍️w3-t-flowcad-node-graph.config.ts` (`ts-node-graph-1.txt`) | **26/26 passed**, 3 files |
+| `bun ./📜️script.ts verify taxonomy report --scope ✏️s/🔌️plugins/🌊️flow/🗿️artifacts` (`taxonomy-flow-1.txt`) | 29 findings, all pre-existing (directory-kind-unresolved ×27 on dirs I did not create, path-too-long ×1, script disposition ×1); this wave created no directory |
+
+**OWED (rules 43/44), exact commands, in order, on CARGO OPEN / TESTS RESUMED:**
+1. `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --lib --keep-going --message-format=short`
+2. `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --target wasm32-wasip2 --lib`, then
+   `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-flow -p semio-hub-cad --target wasm32-wasip2 --lib` (→ "COMPOSITION GREEN flow/cad")
+3. D24: `python3 T/🗑️generated/s4-flowcad/d24-patch.py` (staged; os-flow is a rule-39 shared crate, so it is applied only together with
+   an immediate `cargo check -p semio-framework-os-flow --lib`) — records math.add's declared defaults `a`, `b` = number 0.0 in
+   `FlowHostSnapshot::default()` and `FlowArtifact::default()` (§20.9; wires still shadow literals, §20.10).
+4. tests (TESTS RESUMED): `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s4-flowcad cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow --lib`
+   (incl. `documents_reload_identically`, `child_history_edits_end_to_end`, `history_edits_end_to_end`,
+   `a_node_drag_is_one_child_transaction_row_naming_its_member_store`, `a_release_that_wires_and_drags_is_labelled_by_the_drag`,
+   `a_node_delete_is_child_removal_leaves_whose_inverses_restore_the_content`, `the_parent_vocabulary_is_empty_and_refuses_every_operation`);
+   `… -p semio-s-artifact-cad-cad --lib` (baseline 459/2); `cargo test -p semio-framework-plugin --lib -- composed_child_history node_graph_delete_row time_travel scrub`;
+   `cargo test -p semio-framework-os-infinite --lib -- node_graph_edit_rows wire_edit`; `cargo test -p semio-framework-os-flow --lib` (+ `-- flow_vcs`).
+5. `bun ./📜️script.ts schema mutation-editability --json` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`): flow `parentLeafReadsChild` must read 0.
+
+### S4.4 CAD §20.15 — plan (NOT STARTED in source; needs cargo, rule 41b forbids an unverified CAD save before the describe wave)
+
+The 8 findings are the parent leaves that re-mint a pane's composed `s.stdio.semio@v1/model` child from its `local_owner` scene:
+`create-object`, `delete-object`, `move-objects`, `rotate-objects`, `scale-objects` (diff/inverse read `cad_pane_local_scene`) and
+`drag-selection`, `rotate-selection`, `scale-selection` (inverse reads `cad_selection_inverse_objects`). Conversion (flow/sequence pattern):
+1. **Child leaves (stdio semio `🏛️model`, shared crate `stdio-semio`, rule 39; schema-first: leaf schema + full `x-semio-ui` en/de +
+   `x-semio-inverse-rows perTarget:targets`, fixture quintets, third-party oracle row, TS twin):** relative `move-elements {targets, offset[3]}`,
+   `rotate-elements {targets, pivot[3], axis[3], angle}`, `scale-elements {targets, pivot[3], factor[3]}` over `SemioModelElement.placement`
+   (missing targets → `mutation.partial`, none → `mutation.target-missing`, non-finite → invariant). Existing `insert-element`,
+   `remove-element`, `set-element` cover create/delete/absolute pose. Needs central `schema generate` + describe cad/stdio afterwards.
+2. **CAD parent:** delete the 8 parent leaves (+ schemas, fixtures, tests, catalog/oracle rows, binary tags, grammar) — the parent keeps only
+   child-slot lifecycle (`create-*-model`/`delete-*-model`, drawings), references and nodes; pane children stop re-minting
+   (`cad_pane_rematerialized_child`, `cad_pane_child_diff_slot` die) — the child id stays stable like flow's `content`.
+3. **Readers compose parent + child on read:** `cad_pane_local_scene(document, pane)` → `cad_pane_scene(document, children, pane)` reading
+   `children.typed_read::<SemioModelSnapshot>(cad_pane_model_slot(pane), child_id)` through `objects_from_model_snapshot` (bundled catalogue
+   fallback only for an uncomposed handle), at every window/engine/tool/tree site (~12).
+4. **Writers:** gumball/transform tool commit, `transform.move/rotate/scale` interactions, create/delete object commands and inspector pose
+   edits publish `ChildEmit::of::<SemioModelSnapshot, _>(slot, child_id, leaves)` as ONE child transaction (`Emit::commit_transaction` with
+   `child_emits`, §12), labelled by the child leaf.
+5. **Laws:** `composed_reload_law!("cad", …)`, `composed_child_history_law!("cad", …, [gumball drag])`, one-row-per-gesture law, gate
+   `parentLeafReadsChild` cad 0.
+
+### S4.5 Coordinator actions
+- Run nothing new for flow until the OWED checks pass; then: `describe` flow (parent mutation vocabulary now EMPTY: descriptor's mutation
+  roster/kinds change; `addWidget` `label`/`action`/`format`; `nodeGraphEdit` rows) and cad (S2.5 config/lanes); central `schema generate`
+  (flow mutation catalog rows for the 10 deleted leaves disappear; `mutations.json` is `not: {}`).
+- Stale generated artifacts to regenerate (rule 32): flow committed descriptor `🌎️hub/🧩️compositions/🌊️flow/🔣️.json` + `🛂️.descriptor.semio`
+  and dev copies (they still list the 10 parent kinds), schema catalog rows `s/flow/flow/mutation/*`.
+- Wasm rebuilds still owed from S3: `framework-surface` (`GraphSession.takeGraphEditsJson`), flow-core (`pointerUpScreen`/`alignSelection`
+  rows) before any React node-graph probe.
+- CAD §20.15 (S4.4) needs a cargo window: model-subset relative leaves in `stdio-semio` (cross-WP with S4-STDIO; I will write them) +
+  central `schema generate` + describe stdio/cad after.
+- Notices item (S4-GATES) DONE in source: `flow.retained.tool-mismatch` → framework code `app.command.tool-mismatch` (`✏️editor/🦀️.rs`, same idiom as wfc/gen2d/gen3d); covered by OWED check 1.
+
+### S4.6 CAD §20.15 — staged waves (rule 45; coordinator approval 12:5x)
+
+Staging tool `T/🧪️s4-flowcad-stage.py <wave> add|new|delete|status|diff|apply` (mirror tree `🗑️generated/s4-flowcad/stage-<wave>/tree/`,
+manifest with the sha256 of every base; `apply` refuses the whole wave when any base drifted, writes nothing then). Waves:
+- `stage-d24` (os-flow, shared crate): flow DEFAULT document records `math.add`'s declared defaults (replaces the earlier patch script).
+- `stage-model` (stdio-semio 🏛️model, shared crate; SOURCE COMPLETE 13:4x): relative child leaves `drag-elements {targets, offset[3]}`,
+  `rotate-elements {targets, axis[3], angle}`, `scale-elements {targets, factors[3]}` — diff off the BASE placement (translation + offset;
+  Hamilton `delta ⊗ rotation` of the unit axis/angle turn; scale × factors), `mutation.partial` / `target-missing` / `no-op` / Fatal
+  `invariant` (incl. `axis-nonzero`), exact inverse = one absolute `set-element` placement per addressed element. Schema-first: leaf
+  schemas with full `x-semio-ui` en/de, `x-semio-inverse-rows {perTarget:{targets:1}}`, `x-semio-invariant`, reference
+  `{kind: object, domain: cad, granularity: object}` (CAD's selection domain, so "Use selection" fills the targets); leaf descriptors
+  (binary tags 11–13), protocol records, text grammar (`.grammar.semio`, `.g4`, `.ebnf`: `hex-list`, `triple`), union/TS/GraphQL/proto
+  twins, `KINDS` (= wire-tag order), print/parse, demo cases, unit law `relative_placement_leaves_derive_from_the_base_and_undo_exactly`.
+  Test platform `🏛️mutate-semio-model`: 3 Examples rows in each outline on the real capsule tower (two capsules dragged by a fractional
+  offset; two quarter-turned capsules half-turned so the turn composes; one capsule scaled non-uniformly), 3 spec-vector rows + fixtures
+  written by `T/🧪️s4-flowcad-model-vectors.py` (third statement of the semantics; `--check` idempotent), Python second implementation
+  extended (`placement_motion`, apply + exact inverse; exercised locally: all 3 vectors apply+undo, all 3 tower rows undo to the tower),
+  Rust adapter decoder arms, oracle catalog kinds + manifest rows. Finding for S4-STDIO: the stdio composition ledger's `callers[].sha256`
+  for `🏛️mutate-semio-model/🦀️.rs` already mismatches the on-disk file (peer edits), so that ledger test is red independent of this wave.
+
+### S4.7 PARKED (coordinator usage limit, 10-04) — exact state and next steps
+
+Repository tree: consistent. Nothing under `📐️cad/**`, stdio-semio or os-flow was saved in place this session. All CAD/model/D24 work is
+in the stage waves (`python3 T/🧪️s4-flowcad-stage.py <wave> status`: no DRIFT on `stage-cad` at park time). The flow §20.15 wave (S4.2) is
+on disk, and its checks are still OWED (S4.3, rule 44).
+
+`stage-cad` (CAD §20.15 plugin side, IN PROGRESS, not compile-checked, apply only at CARGO OPEN after `stage-model`):
+- Done in stage:
+  - Deleted the 8 parent object leaves plus their fixtures. Pruned the aggregate (`🦀️.rs`/`🟦️.ts`/`🔣️.json`/protocol/unit test/oracle rows).
+  - Lossless ModelBridge (`"cad"` pset).
+  - Crate root:
+    - removed `cad_pane_local_scene`, `cad_pane_genesis_child`, `cad_scene_with_pane_objects`, `cad_composed_snapshot` and the
+      duplicate `cad_working_scene_from_models`;
+    - the genesis catalogue `cad_bundled_pane_scene` is keyed by stable child id and built from `inferences::forest_pane_scene`, with no
+      `local_owner` read;
+    - `cad_genesis_child_pack` reads only the catalogue;
+    - new `CadComposedPanes::compose(snapshot, children)` reads child content only through `ChildContentView`, falling back to genesis
+      objects. It holds `CadComposedPane { objects, genesis: Option<Arc<CadWorkingScene>> }` with `geometry(pane)`. New
+      `cad_scene_pane_geometry`, `CadPaneId::index`.
+  - Inferences:
+    - `forest_pane_scene(pane)` is the single import, cached in a OnceLock;
+    - `forest_play_document()` mints plain handles, with no `with_local_owner`.
+  - Transform tool rewritten:
+    - `CadToolEntry::{Transform, Create{pane, element}}`, `CadToolLeaf {pane, leaf: SemioModelMutation}`;
+    - `CadPaneModels` + `cad_pane_models(snapshot, children)`;
+    - `cad_tool_yields` folds per-pane model state;
+    - `cad_child_leaves_emit` gives one ChildEmit per pane, with `commit_child_transaction` when a transaction exists;
+    - `cad_transform_tool_emit` reads `doc.children`.
+  - Editor:
+    - writers on models: `create_object_entry`, `cad_object_copy`, `delete_object_leaves`, `duplicate_object_entries`,
+      `apply_transformation_entries`, `cad_set_element_leaf` (facet-only `set-element`, foreign psets kept), `patch_objects_leaves`;
+    - `try_commit_session_entries`/`engagement_submit_entries` take `&CadPaneModels`;
+    - deleted the dead `object_field_mutation` and the document-based `cad_pane_objects`/`cad_pane_of_object`;
+    - publication lanes: object, transform and engagement-commit tools are `Child` (+ `WindowTransient`);
+    - `cad_retained_reduce` binds `ArtifactView::with_children(..).bound_to_operation(..)` from `context.children`;
+    - `CadPlayView` gains `pub(crate) panes: CadComposedPanes` plus `CadPlayView::of(document, children, runtime, interaction)`;
+      the 3 editor construction sites use it;
+    - `collect_pane_solids` reads panes;
+    - `import_media` `geometry:in` is now a real `insert-element` on the Shape child.
+- NEXT (in order), all inside `stage-cad`:
+  1. `🎮️commands/🧱️object/🦀️.rs`: models via `cad_pane_models(doc.snapshot, &doc.children)`. Then wire each command:
+     - add → `cad_transform_tool_emit(doc, "addObject", vec![create_object_entry(..)])`, with label count from `models.model(pane)`;
+     - delete → `cad_child_leaves_emit(&models, None, &delete_object_leaves(..))`;
+     - duplicate → tool emit;
+     - patch → `cad_child_leaves_emit(&models, None, &patch_objects_leaves(..))`;
+     - update the module doc.
+  2. `🤝️engagement` (lines 45/93/181) and `🔄️transform` (`apply_transformation_entries`, module doc).
+  3. `📥️io` CadPlayView sites 63/79/107 → `CadPlayView::of(.., &doc.children, ..)`.
+  4. Edit mode:
+     - delete `cad_pane_working_scene`;
+     - `build_world_scene_for_pane` reads `envelope.panes.pane(pane)`;
+     - mesh cache keyed by the genesis `Arc` (`Option<Weak>`, a None key cached by digest);
+     - fix the doc at :186/:342.
+  5. Panels `🗿️artifact` :156 and `🔍️inspection` :78/:191/:231 → `envelope.panes`.
+  6. Tests:
+     - editor tests (CadPlayView ×6 → `CadPlayView::of(.., &ChildContentView::EMPTY, ..)`; :925 local-owner guard → panes);
+     - inspection test :24;
+     - transform tool tests (CadToolEntry/models);
+     - example test :16 (`cad_bundled_pane_scene`).
+  7. Sample-scene fixture: delete `materialized_shape_scene`/`materialized_objects`.
+  8. Laws in the editor tests:
+     - `composed_reload_law!("cad", CadPlayApp, …, "../..")`;
+     - `composed_child_history_law!("cad", …, [("translateSelection", <ids of a forest shape object, dx>)])`;
+     - a one-row-per-gesture law.
+  9. Update the cad editor TS/source-contract regions, if any mention the deleted leaves.
+- Risk to re-verify: the lossless bridge changes content-addressed pane child ids. Committed fixtures or tests that pin forest child ids
+  must be re-sealed.
+
+Coordinator AUDIT-TOOLS routing (`📓️audit-s4-tools.md`, received before the park). NOT STARTED; record only:
+- F4 / D24 flow:
+  - build genesis from a plugin catalogue keyed by stable child id;
+  - compose-on-read reads only through `ChildContentView`;
+  - drop `FlowWorkingScene` as a cache vehicle;
+  - name or delete `flow-edit-scene-owner-missing`.
+  - The cad pattern above is the template.
+- F1 cad: covered by `stage-cad` above.
+- F9:
+  - cad `:2093` raw `cad-retained-command-tool-mismatch` → `app.command.tool-mismatch`;
+  - flow `fault_notices()` en+de for its 32 named faults.
+- F13: delete the dead parent `🧬️schema/🔺️diff` surface of flow (19 files) and imperative (19), plus `FlowStringList`. Coordinate
+  imperative/procedure with S4-GRAPHS.
+
+OWED (rule 44): every check in S4.3, plus the D24 and S3.6 runs. When CARGO OPEN comes, run them in this order:
+1. `stage-model` apply → `cargo check -p semio-s-artifact-stdio-semio --lib`.
+2. `stage-d24` apply → `cargo check -p semio-framework-os-flow --lib`.
+3. flow plugin native + wasm32-wasip2 check.
+4. `stage-cad` apply (after the NEXT list) → cad native + wasip2 check.
+5. hub `semio-hub-flow`/`semio-hub-cad` wasip2 → message "COMPOSITION GREEN flow/cad".
+6. At TESTS RESUMED: the S3.6/S4.3 test list.

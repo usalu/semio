@@ -32,6 +32,7 @@ import {
     historyEntryKey,
     historyEntryLabelText,
     type HistoryPatch,
+    type HistoryReprojection,
     type HistoryTimeTravel,
     // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
     // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
@@ -94,6 +95,8 @@ import {
     resolveWindowActions,
     SET_ACTIVE_UTILITY_ACTION_ID,
     SHELL_LOCALES,
+    SHELL_TERMINOLOGIES,
+    isShellTerminology,
     type ShellLocale,
     START_INTRODUCTION_ACTION_ID,
     START_TUTORIAL_ACTION_ID,
@@ -118,6 +121,9 @@ import {
     EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
     HOST_EVENT_ACTION_ID,
     IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+    NATURAL_FILE_PORT_ID,
+    OPEN_ARTIFACT_FILE_ACTION_ID,
+    SAVE_ARTIFACT_FILE_ACTION_ID,
 } from "@semio-tech/framework";
 import {
     type ArtifactSyncStatus,
@@ -194,7 +200,7 @@ import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦�
 import { parseUiColorHex, uiColorHex, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import type { SelectionMode } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { faultNotice, historyNotice, IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme, type UiPreferencesConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
@@ -285,8 +291,10 @@ export function historyPatchShouldApplyV1(
 }
 
 /** 🧾️ One program's history as the shell projects it: the cursor undo/redo act on, the rows folded under
- * {@link historyEntryKey}, the checkpoint the check-in lane watches, and the live history-edit session the time-travel
- * band and window indicators show (`null` while none is open — every patch carries the session in full). */
+ * {@link historyEntryKey}, the checkpoint the check-in lane watches, the live history-edit session the time-travel
+ * band and window indicators show (`null` while none is open — every patch carries the session in full), the history change
+ * replaying before adoption the shell's reprojection status announces (`HistoryPatch.reprojection`, `null` while none waits), and
+ * how many edits the history holds (`HistoryPatch.editCount`, the `{n}` of the `history.full` notice). */
 export type ShellHistoryProjectionV1 = {
   readonly cursor: number;
   readonly entries: Readonly<Record<string, HistoryEntry>>;
@@ -294,17 +302,19 @@ export type ShellHistoryProjectionV1 = {
   readonly canRedo: boolean;
   readonly currentCheckpointId: string | undefined;
   readonly timeTravel: HistoryTimeTravel | null;
+  readonly reprojection: HistoryReprojection | null;
+  readonly editCount: number;
 };
 
 /** 🧾️ What a program whose history has not been read yet projects: no rows, no session. */
-export const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined, timeTravel: null };
+export const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined, timeTravel: null, reprojection: null, editCount: 0 };
 
 /** 🧾️ `current` after one admitted patch ({@link historyPatchShouldApplyV1}): a snapshot replaces the rows, a delta
  * upserts them, and the session is the patch's own — a patch without one closes it. */
 export function shellHistoryProjectionAfterPatchV1(current: ShellHistoryProjectionV1, patch: HistoryPatch, replace: boolean): ShellHistoryProjectionV1 {
   const entries: Record<string, HistoryEntry> = replace ? {} : { ...current.entries };
   for (const entry of patch.upserts ?? []) entries[historyEntryKey(entry)] = entry;
-  return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), timeTravel: patch.timeTravel ?? null };
+  return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), timeTravel: patch.timeTravel ?? null, reprojection: patch.reprojection ?? null, editCount: patch.editCount ?? 0 };
 }
 
 /** 🎞️ One unsolicited mid-operation frame (`AppFrame::Invocation`, `in_reply_to` 0): the dirty scope a running
@@ -381,6 +391,8 @@ export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "setActiveTool",
   EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
   IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+  OPEN_ARTIFACT_FILE_ACTION_ID,
+  SAVE_ARTIFACT_FILE_ACTION_ID,
   HOST_EVENT_ACTION_ID,
 ]);
 
@@ -995,6 +1007,113 @@ export function requestFileOpen(accept: string, readAs?: string, multiple?: bool
   });
 }
 
+/** 📏️ Maximum browser-owned natural-file buffer admitted before native codec admission. */
+export const NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1 = 512 * 1024 * 1024;
+
+/** 🧩️ Maximum Blob slice materialized by one cancellable natural-file read turn. */
+export const NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1 = 256 * 1024;
+
+/** 📂️ Opens a picker without reading the selected files. Cancel always settles with an empty list and
+ * every terminal path detaches handlers and the transient input exactly once. */
+export function requestFileSelectionV1(accept: string, multiple = false): Promise<readonly File[]> {
+  if (typeof document === "undefined") return Promise.resolve([]);
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    input.multiple = multiple;
+    let settled = false;
+    const settle = (files: readonly File[]): void => {
+      if (settled) return;
+      settled = true;
+      input.onchange = null;
+      input.oncancel = null;
+      input.remove();
+      resolve(files);
+    };
+    input.onchange = () => settle(input.files ? Array.from(input.files) : []);
+    input.oncancel = () => settle([]);
+    try {
+      input.click();
+    } catch {
+      settle([]);
+    }
+  });
+}
+
+const readBlobSliceV1 = (blob: Blob, signal: AbortSignal): Promise<ArrayBuffer> => {
+  if (typeof FileReader === "undefined") {
+    let onAbort: (() => void) | undefined;
+    const aborted = new Promise<never>((_, reject) => {
+      onAbort = () => reject(signal.reason ?? new DOMException("The operation was aborted", "AbortError"));
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
+    return Promise.race([blob.arrayBuffer(), aborted]).finally(() => {
+      if (onAbort !== undefined) signal.removeEventListener("abort", onAbort);
+    });
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    let settled = false;
+    const finish = (result: { readonly ok: true; readonly value: ArrayBuffer } | { readonly ok: false; readonly error: unknown }): void => {
+      if (settled) return;
+      settled = true;
+      signal.removeEventListener("abort", abort);
+      reader.onload = null;
+      reader.onerror = null;
+      reader.onabort = null;
+      if (result.ok) resolve(result.value); else reject(result.error);
+    };
+    const abort = (): void => {
+      reader.abort();
+      finish({ ok: false, error: signal.reason ?? new DOMException("The operation was aborted", "AbortError") });
+    };
+    reader.onload = () => reader.result instanceof ArrayBuffer
+      ? finish({ ok: true, value: reader.result })
+      : finish({ ok: false, error: new Error("natural-file.read-result-invalid") });
+    reader.onerror = () => finish({ ok: false, error: reader.error ?? new Error("natural-file.read-failed") });
+    reader.onabort = () => finish({ ok: false, error: signal.reason ?? new DOMException("The operation was aborted", "AbortError") });
+    signal.addEventListener("abort", abort, { once: true });
+    try {
+      if (signal.aborted) abort(); else reader.readAsArrayBuffer(blob);
+    } catch (error) {
+      finish({ ok: false, error });
+    }
+  });
+};
+
+/** 🌊 Reads one Blob through bounded slices with exact byte progress and cancellation between every
+ * slice. The final contiguous owner is admitted before any slice is read. */
+export async function readBlobBytesBoundedV1(blob: Blob, control: Readonly<{
+  signal: AbortSignal;
+  maximumBytes: number;
+  chunkBytes: number;
+  progress: (completed: number, total: number) => void;
+}>): Promise<Uint8Array> {
+  if (!Number.isSafeInteger(control.maximumBytes) || control.maximumBytes < 0 || !Number.isSafeInteger(control.chunkBytes) || control.chunkBytes < 1)
+    throw new Error("natural-file.read-control-invalid");
+  if (!Number.isSafeInteger(blob.size) || blob.size < 0 || blob.size > control.maximumBytes) throw new Error("natural-file.read-limit");
+  const cancelled = (): never => { throw control.signal.reason ?? new DOMException("The operation was aborted", "AbortError"); };
+  if (control.signal.aborted) cancelled();
+  const bytes = new Uint8Array(blob.size);
+  control.progress(0, blob.size);
+  for (let offset = 0; offset < blob.size; offset += control.chunkBytes) {
+    if (control.signal.aborted) cancelled();
+    const end = Math.min(blob.size, offset + control.chunkBytes);
+    const slice = blob.slice(offset, end);
+    try {
+      const chunk = new Uint8Array(await readBlobSliceV1(slice, control.signal));
+      if (chunk.byteLength !== end - offset) throw new Error("natural-file.read-truncated");
+      bytes.set(chunk, offset);
+    } catch (error) {
+      if (control.signal.aborted) cancelled();
+      throw new Error("natural-file.read-failed", { cause: error });
+    }
+    control.progress(end, blob.size);
+  }
+  return bytes;
+}
+
 /** 🔁️ The one-action-at-a-time callback shared by the `requestFileOpen`/`dispatchAction`/
  * `requestMediaFrames` `applyHostEffects` branches: dispatches `action` against the emitting program
  * instance and feeds its own `requestedEffects` back through `applyHostEffects` recursively. */
@@ -1097,6 +1216,7 @@ export async function dispatchOpenedFiles(
   dispatchOne: EffectDispatchOne,
   signal?: AbortSignal,
   progress?: (completed: number, total: number) => void,
+  retainedArgs?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
   const total = opened.length;
   const pages = opened.map((file) => importPayloadChunks(file.contents));
@@ -1106,10 +1226,42 @@ export async function dispatchOpenedFiles(
     const file = opened[index]!;
     for (const page of pages[index]!) {
       signal?.throwIfAborted();
-      await dispatchOne(importAction, importChunkArguments(file.name, page, multiple ? { index, total } : undefined));
+      await dispatchOne(importAction, { ...retainedArgs, ...importChunkArguments(file.name, page, multiple ? { index, total } : undefined) });
       completed += 1;
       progress?.(completed, chunks);
     }
+  }
+}
+
+/** ⛔️ The verb an app declares to free an import a host stopped part-way (remodel's `importAbort {reason?}`): a host sends it
+ * without a reason — a person's cancel — once a cancelled import has handed the guest at least one chunk, so the open import
+ * transaction leaves zero trace instead of refusing every later verb with `toolTransaction.open`. */
+export const IMPORT_ABORT_ACTION_ID = "importAbort";
+
+/** 📥️ {@link dispatchOpenedFiles} as one cancellable task: `"done"`, or `"cancelled"` once `signal` stopped it — and then, when
+ * a chunk already reached the guest and the app declares {@link IMPORT_ABORT_ACTION_ID}, that abort is dispatched. Any other
+ * failure rethrows. */
+export async function importOpenedFilesV1(
+  app: Pick<AppDefinition, "actions">,
+  opened: readonly { readonly contents: string; readonly name: string }[],
+  importAction: string,
+  multiple: boolean,
+  dispatchOne: EffectDispatchOne,
+  signal: AbortSignal,
+  progress?: (completed: number, total: number) => void,
+  retainedArgs?: Readonly<Record<string, unknown>>,
+): Promise<"done" | "cancelled"> {
+  let delivered = 0;
+  try {
+    await dispatchOpenedFiles(opened, importAction, multiple, dispatchOne, signal, (completed, total) => {
+      delivered = completed;
+      progress?.(completed, total);
+    }, retainedArgs);
+    return "done";
+  } catch (error) {
+    if (!signal.aborted) throw error;
+    if (delivered > 0 && app.actions.some((action) => action.id === IMPORT_ABORT_ACTION_ID)) await dispatchOne(IMPORT_ABORT_ACTION_ID, {});
+    return "cancelled";
   }
 }
 
@@ -1403,15 +1555,17 @@ async function decodeOneMp4Frame(track: Mp4Track, bytes: Uint8Array, targetIndex
 }
 
 /** 🎞️ Tier 1 orchestration: demuxes `bytes` as MP4/AVC, decodes one frame per sampled timestamp, and
- * dispatches `frameAction` per frame + `doneAction` once. Returns `false` (no dispatch performed at
- * all) when the demux can't find a usable AVC video track, so the caller falls through to Tier 2. */
-async function runTier1VideoFrames(bytes: Uint8Array, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne): Promise<boolean> {
+ * dispatches `frameAction` per frame + `doneAction` once, reporting each dispatched frame to `run` and stopping with
+ * `run.signal`'s reason before the next frame once it is aborted. Returns `false` (no dispatch performed at all) when the
+ * demux can't find a usable AVC video track, so the caller falls through to Tier 2. */
+async function runTier1VideoFrames(bytes: Uint8Array, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne, run: MediaFramesRunV1): Promise<boolean> {
   const track = probeMp4VideoTrack(bytes);
   if (!track || track.samples.length === 0) return false;
   const durationMs = track.samples[track.samples.length - 1]!.timestampMs;
   const timestamps = sampleMediaFrameTimestampsMs(durationMs, effect.sampleStride, effect.maxFrames, effect.fpsHint);
   let sampledCount = 0;
   for (let index = 0; index < timestamps.length; index += 1) {
+    run.signal.throwIfAborted();
     const targetMs = timestamps[index]!;
     let targetSampleIndex = 0;
     for (let i = 0; i < track.samples.length; i += 1) if (track.samples[i]!.timestampMs <= targetMs) targetSampleIndex = i;
@@ -1429,7 +1583,9 @@ async function runTier1VideoFrames(bytes: Uint8Array, effect: RequestMediaFrames
       height: frame.height,
       ...effect.args,
     });
+    run.frame(index + 1, timestamps.length);
   }
+  run.signal.throwIfAborted();
   await dispatchOne(effect.doneAction, {
     name,
     durationMs,
@@ -1479,13 +1635,20 @@ function captureCanvasFrame(video: HTMLVideoElement, maxLongEdgePx: number): { r
   return { dataUrl: canvas.toDataURL("image/jpeg", 0.9), width, height };
 }
 
-function waitForVideoEvent(video: HTMLVideoElement, type: string): Promise<void> {
-  return new Promise((resolve) => {
+function waitForVideoEvent(video: HTMLVideoElement, type: string, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason);
+    const abort = () => {
+      video.removeEventListener(type, handler);
+      reject(signal!.reason);
+    };
     const handler = () => {
       video.removeEventListener(type, handler);
+      signal?.removeEventListener("abort", abort);
       resolve();
     };
     video.addEventListener(type, handler);
+    signal?.addEventListener("abort", abort, { once: true });
   });
 }
 
@@ -1495,17 +1658,18 @@ function waitForVideoEvent(video: HTMLVideoElement, type: string): Promise<void>
  * WebCodecs fallback and directly by tests (which inject a real `<video>` element with overridden
  * `duration`/`videoWidth`/`videoHeight`/`readyState` and manually dispatch `loadedmetadata`/`seeked`,
  * since headless test environments have no real media decoder). */
-export async function runTier2VideoFrames(video: HTMLVideoElement, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne): Promise<void> {
-  if (video.readyState < 1) await waitForVideoEvent(video, "loadedmetadata");
+export async function runTier2VideoFrames(video: HTMLVideoElement, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne, run: MediaFramesRunV1 = MEDIA_FRAMES_UNCANCELLABLE_RUN_V1): Promise<void> {
+  if (video.readyState < 1) await waitForVideoEvent(video, "loadedmetadata", run.signal);
   const durationMs = Number.isFinite(video.duration) ? video.duration * 1000 : 0;
   const width = video.videoWidth || 0;
   const height = video.videoHeight || 0;
   const timestamps = sampleMediaFrameTimestampsMs(durationMs, effect.sampleStride, effect.maxFrames, effect.fpsHint);
   const total = timestamps.length;
   for (let index = 0; index < total; index += 1) {
+    run.signal.throwIfAborted();
     const timestampMs = timestamps[index]!;
     video.currentTime = timestampMs / 1000;
-    await waitForVideoEvent(video, "seeked");
+    await waitForVideoEvent(video, "seeked", run.signal);
     const frame = captureCanvasFrame(video, effect.maxLongEdgePx);
     await dispatchOne(effect.frameAction, {
       payload: frame.dataUrl,
@@ -1518,10 +1682,19 @@ export async function runTier2VideoFrames(video: HTMLVideoElement, effect: Reque
       height: frame.height,
       ...effect.args,
     });
+    run.frame(index + 1, total);
   }
+  run.signal.throwIfAborted();
   await dispatchOne(effect.doneAction, { name, durationMs, frameCount: total, sampledCount: total, width, height, codec: "unknown", ...effect.args });
 }
 //#endregion Tier2
+
+/** ⏹️ What a media-frames decode reports and obeys while it runs: each dispatched frame (`completed` of `total`) and the
+ * signal that stops it before the next frame. */
+export type MediaFramesRunV1 = { readonly signal: AbortSignal; readonly frame: (completed: number, total: number) => void };
+
+/** ⏹️ A run nothing cancels — a decode driven directly (tests, a tier on its own). */
+const MEDIA_FRAMES_UNCANCELLABLE_RUN_V1: MediaFramesRunV1 = { signal: new AbortController().signal, frame: () => {} };
 
 /** 🎞️ D5 `RequestMediaFrames` fields the two decode tiers need, decoupled from the raw `Effect`
  * union member shape so orchestration functions above take a plain, easily-constructed-in-tests object. */
@@ -1549,42 +1722,60 @@ function bytesToDataUrl(bytes: Uint8Array, mime: string): string {
   return `data:${mime};base64,${btoa(binary)}`;
 }
 
-/** 🎞️ D5 top-level: sources video bytes (`payload` data URL, or the native file picker when unset),
- * tries Tier 1 when WebCodecs is available and the demux finds a usable AVC track, otherwise Tier 2's
- * `<video>` seek-and-capture; on total failure (can't demux AND Tier 2 also throws, e.g. a corrupt
- * file) dispatches `fallbackAction` once with the raw original bytes as a data URL. */
-export async function runRequestMediaFrames(
+/** 🎞️ D5 source: the video a `RequestMediaFrames` decodes — its `payload` data URL already in hand (a drop zone; named
+ * `video`), else the one file the native picker returns; `null` when the person picks nothing. */
+export async function requestMediaFramesSourceV1(accept: string, payload: string | undefined): Promise<{ readonly bytes: Uint8Array; readonly name: string } | null> {
+  if (payload) return { bytes: bytesFromDataUrl(payload), name: "video" };
+  const opened = await requestFileOpen(accept || "video/*", "dataUrl", false);
+  return opened.length === 0 ? null : { bytes: bytesFromDataUrl(opened[0]!.contents), name: opened[0]!.name };
+}
+
+/** 🎞️ D5 as one cancellable task: tries Tier 1 when WebCodecs is available and the demux finds a usable AVC track, otherwise
+ * Tier 2's `<video>` seek-and-capture, reporting each dispatched frame to `progress`; on total failure (can't demux AND Tier 2
+ * also throws, e.g. a corrupt file) dispatches `fallbackAction` once with the raw original bytes as a data URL. `signal` stops it
+ * before the next frame: `"cancelled"`, no done or fallback dispatch, and — when a frame already reached the guest and the app
+ * declares {@link IMPORT_ABORT_ACTION_ID} — that abort, so the streamed import transaction leaves zero trace. */
+export async function runMediaFramesV1(
   effect: RequestMediaFramesArgs,
-  accept: string,
-  payload: string | undefined,
+  source: { readonly bytes: Uint8Array; readonly name: string },
   dispatchOne: EffectDispatchOne,
+  app: Pick<AppDefinition, "actions">,
+  signal: AbortSignal,
+  progress?: (completed: number, total: number) => void,
   createVideoElement: () => HTMLVideoElement = () => document.createElement("video"),
-): Promise<void> {
-  let bytes: Uint8Array;
-  let name = "video";
-  if (payload) {
-    bytes = bytesFromDataUrl(payload);
-  } else {
-    const opened = await requestFileOpen(accept || "video/*", "dataUrl", false);
-    if (opened.length === 0) return;
-    bytes = bytesFromDataUrl(opened[0]!.contents);
-    name = opened[0]!.name;
-  }
+): Promise<"done" | "cancelled"> {
+  const { bytes, name } = source;
+  let delivered = 0;
+  const run: MediaFramesRunV1 = {
+    signal,
+    frame: (completed, total) => {
+      delivered = completed;
+      progress?.(completed, total);
+    },
+  };
+  const cancelled = async (): Promise<"cancelled"> => {
+    if (delivered > 0 && app.actions.some((action) => action.id === IMPORT_ABORT_ACTION_ID)) await dispatchOne(IMPORT_ABORT_ACTION_ID, {});
+    return "cancelled";
+  };
   try {
-    if (webCodecsAvailable() && (await runTier1VideoFrames(bytes, effect, name, dispatchOne))) return;
+    signal.throwIfAborted();
+    if (webCodecsAvailable() && (await runTier1VideoFrames(bytes, effect, name, dispatchOne, run))) return "done";
     const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: "video/mp4" }));
     const video = createVideoElement();
     video.muted = true;
     video.playsInline = true;
     video.src = url;
     try {
-      await runTier2VideoFrames(video, effect, name, dispatchOne);
+      await runTier2VideoFrames(video, effect, name, dispatchOne, run);
     } finally {
       URL.revokeObjectURL(url);
     }
+    return "done";
   } catch (error) {
+    if (signal.aborted) return cancelled();
     console.error("[os-shell] requestMediaFrames: decode failed, falling back to raw bytes", error);
     await dispatchOne(effect.fallbackAction, { payload: bytesToDataUrl(bytes, "video/mp4"), name, ...effect.args });
+    return "done";
   }
 }
 //#endregion RequestMediaFrames
@@ -2320,6 +2511,39 @@ export function historyRefusalNoticeV1(code: HistoryRefusalCodeV1, severity: Sev
   return { text: String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[code])), kind: code.startsWith("history.") ? "error" : severity, code };
 }
 
+/** 📢️ The notice of a history-lane refusal a fault carries — its own code or a cause's — in the shell's language: the kernel's
+ * own en/de text (`historyNotice`: an open tool transaction, an exhausted or still replaying history, a document still
+ * loading), `{n}` the program's `editCount` (`HistoryPatch.editCount`, carried as data — never read from a message). A
+ * warning: waiting, finishing or cancelling resolves it. `null` for any other fault. */
+export function historyLaneNoticeV1(fault: { readonly code?: string; readonly causes?: readonly { readonly code?: string }[] }, editCount: number): ShellNoticeV1 | null {
+  const code = [fault.code, ...(fault.causes ?? []).map((cause) => cause.code)].find((candidate): candidate is string => candidate !== undefined && historyNotice(candidate) !== undefined);
+  const notice = code === undefined ? undefined : historyNotice(code);
+  return code === undefined || notice === undefined ? null : { text: notice[currentShellLocaleV1()].replace("{n}", String(editCount)), kind: "warning", code };
+}
+
+/** 🔕️ The notice a refused dispatch earns: a history-edit refusal ({@link historyRefusalNoticeV1}, keeping the fault's
+ * severity) or a history-lane refusal ({@link historyLaneNoticeV1}); `null` for any other fault — never a raw code. */
+export function historyFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[] }, editCount: number): ShellNoticeV1 | null {
+  const refusal = historyRefusalOfFaultV1(fault);
+  return refusal !== null ? historyRefusalNoticeV1(refusal, fault.severity ?? "warning") : historyLaneNoticeV1(fault, editCount);
+}
+
+/** 📣️ The notice of a refused dispatch an app declared (design §20.12): the kernel's `faultNotice` over the framework table and the
+ * refusing app's published `faultNotices`, in the shell's language and `terminology`, `{name}` filled from `fault.params` only, told
+ * with the fault's own severity. `null` for a code no table declares — the shell then shows its generic refusal, never a raw code. */
+export function appFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[]; readonly params?: Readonly<Record<string, string>> }, app: Pick<AppDefinition, "faultNotices"> | undefined, terminology: string): ShellNoticeV1 | null {
+  const notice = faultNotice(fault, app?.faultNotices ?? [], isShellTerminology(terminology) ? terminology : SHELL_TERMINOLOGIES[0], currentShellLocaleV1());
+  return notice === null ? null : { text: notice.text, kind: fault.severity ?? "error", code: notice.code };
+}
+
+/** 🔊️ The notice of a reserved verb's silent `{rejected: <code>}` result: a history-edit or a history-lane refusal, else `null`. */
+export function historyOutputNoticeV1(output: unknown, editCount: number): ShellNoticeV1 | null {
+  const refusal = historyRefusalOfOutputV1(output);
+  if (refusal !== null) return historyRefusalNoticeV1(refusal);
+  const rejected = typeof output === "object" && output !== null ? (output as { readonly rejected?: unknown }).rejected : undefined;
+  return typeof rejected === "string" ? historyLaneNoticeV1({ code: rejected }, editCount) : null;
+}
+
 /** 🚫️ The line and severity each local refusal (`CommandRejectionV1`'s `local.*` codes) is told with: a refusal the human
  * can wait out or cannot act on here is a warning, one that means this device produced a change it cannot send is an error. */
 export const LOCAL_COMMAND_REJECTION_NOTICES_V1 = {
@@ -2787,6 +3011,16 @@ export type TreeWindowHostV1 = {
   readonly reportWindows: (bodyKey: string, requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
 };
 
+/** 🌿️ Keeps a body's channel stable while reading the current host-owned disclosure map. */
+export function createTreeWindowContextV1(bodyKey: string, host: TreeWindowHostV1): TreeWindowContextValue {
+  return {
+    bodyKey,
+    get openStates() { return host.openStatesFor(bodyKey); },
+    setOpen: (nodeKey, open) => host.setOpen(bodyKey, nodeKey, open),
+    reportWindows: (requests, viewportRows) => host.reportWindows(bodyKey, requests, viewportRows),
+  };
+}
+
 /** 🪟️ The one line a body's open map is compared on for memo invalidation. */
 function treeWindowOpenSignatureV1(openStates: Readonly<Record<string, boolean>>): string {
   return Object.keys(openStates)
@@ -2874,14 +3108,7 @@ export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: Acti
 /** 🌲️ Hosts one retained panel store full-width in a tree leaf, with its tree-window context — shared by the
  * authored-body path ({@link uiNodeToTreePanelConfig}) and the actor-rendered path ({@link BrowserActorPanelHostV1}). */
 function interpretedTreePanelConfigV1(store: UiDocumentStore, boundaryKey: string, onAction: (action: ActionDescriptor) => void, onIntent: (intent: UiIntent) => void | Promise<void>, bodyKey: string, treeWindows?: TreeWindowHostV1 | null): TreePanelConfig {
-  const treeWindowContext: TreeWindowContextValue | null = treeWindows
-    ? {
-        bodyKey,
-        openStates: treeWindows.openStatesFor(bodyKey),
-        setOpen: (nodeKey, open) => treeWindows.setOpen(bodyKey, nodeKey, open),
-        reportWindows: (requests, viewportRows) => treeWindows.reportWindows(bodyKey, requests, viewportRows),
-      }
-    : null;
+  const treeWindowContext = treeWindows ? createTreeWindowContextV1(bodyKey, treeWindows) : null;
   // 🧭️ Never park the interpreted body on an empty-label `TreeDataItem.control` — property-layout rows
   // split every row into a wide label column plus a fixed value column, which parked the lone default
   // `file-text` icon in the left column and squeezed the whole inspector/document/catalogue tree into
@@ -2961,6 +3188,12 @@ export function syncShellLabelLocale(locale: Parameters<typeof uiI18n.changeLang
  * doc already demands for boot. */
 export function shellLabelLocale(): string {
   return uiI18n.resolvedLanguage ?? uiI18n.language ?? "";
+}
+
+/** 🌍️ {@link shellLabelLocale} as a {@link ShellLocale}: the language framework-owned en/de texts (kernel notices, number
+ * refusals) are read in — the first shell locale until the port stands at one. */
+export function currentShellLocaleV1(): ShellLocale {
+  return SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale()) ?? SHELL_LOCALES[0];
 }
 
 /** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`
@@ -3096,6 +3329,76 @@ export function documentArchiveFileNameV1(appId: string, at: Date): string {
   return `${kind}-${at.toISOString().replace(/[-:]/gu, "").replace(/\.\d{3}Z$/u, "Z")}${DOCUMENT_ARCHIVE_FILE_EXTENSION}`;
 }
 
+/** 📄️ `<kind>-<UTC stamp><extension>` for one declared natural representation. */
+export function naturalFileNameV1(appId: string, extension: string, at: Date): string {
+  const kind = /^s\.[^.]+\.([^@]+)@/u.exec(appId)?.[1] ?? (appId.replace(/[^A-Za-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "") || "document");
+  return `${kind}-${at.toISOString().replace(/[-:]/gu, "").replace(/\.\d{3}Z$/u, "Z")}${extension}`;
+}
+
+/** 📄️ Exact natural representation mounted by one editor definition. */
+export type NaturalFileFormatV1 = Readonly<{ formatKind: string; extension: string; mediaType: string; binary: boolean }>;
+
+/** 📄️ Reads a native codec only from the paired Open/Save action declaration and matching App I/O lists. */
+export function naturalFileFormatV1(app: AppDefinition): NaturalFileFormatV1 | null {
+  const actions = [...(app.actions ?? []), ...app.windowKinds.flatMap((kind) => kind.actions ?? [])];
+  const save = actions.find((candidate) => candidate.id === SAVE_ARTIFACT_FILE_ACTION_ID);
+  const open = actions.find((candidate) => candidate.id === OPEN_ARTIFACT_FILE_ACTION_ID);
+  if (save === undefined || open === undefined) return null;
+  const read = (action: ActionDefinition): NaturalFileFormatV1 | null => {
+    const defaults = new Map((action.args ?? []).map((argument) => [argument.id, argument.default]));
+    const formatKind = defaults.get("formatKind");
+    const extension = defaults.get("extension");
+    const mediaType = defaults.get("mediaType");
+    const binary = defaults.get("binary");
+    return typeof formatKind === "string" && typeof extension === "string" && /^\.[A-Za-z0-9]+$/u.test(extension) && typeof mediaType === "string" && typeof binary === "boolean"
+      ? { formatKind, extension, mediaType, binary }
+      : null;
+  };
+  const saveFormat = read(save);
+  const openFormat = read(open);
+  if (
+    saveFormat === null ||
+    openFormat === null ||
+    saveFormat.formatKind !== openFormat.formatKind ||
+    saveFormat.extension !== openFormat.extension ||
+    saveFormat.mediaType !== openFormat.mediaType ||
+    saveFormat.binary !== openFormat.binary
+  )
+    return null;
+  if (!app.io.exportFormats.includes(saveFormat.formatKind) || !app.io.importFormats.includes(saveFormat.formatKind)) return null;
+  return saveFormat;
+}
+
+/** 📄️ Checks the native producer's typed descriptor before bytes are offered as a natural file. */
+export function naturalMediaDescriptorMatchesV1(value: unknown, format: NaturalFileFormatV1): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const descriptor = value as Readonly<Record<string, unknown>>;
+  const wire = descriptor.wire;
+  if (typeof wire !== "object" || wire === null || Array.isArray(wire)) return false;
+  const encoded = wire as Readonly<Record<string, unknown>>;
+  return descriptor.portId === NATURAL_FILE_PORT_ID && descriptor.kindId === format.formatKind && encoded.kind === "binary" && encoded.format_kind === format.formatKind;
+}
+
+/** 📂️ Imports bytes into a newly created owner and retires that owner on every failed or cancelled path. */
+export async function openNaturalFileOwnerV1(input: Readonly<{
+  signal: AbortSignal;
+  create: () => Promise<number>;
+  importBytes: (instanceId: number) => Promise<void>;
+  retire: (instanceId: number) => Promise<void>;
+}>): Promise<number> {
+  if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
+  const instanceId = await input.create();
+  try {
+    if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
+    await input.importBytes(instanceId);
+    if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
+    return instanceId;
+  } catch (error) {
+    await input.retire(instanceId);
+    throw error;
+  }
+}
+
 /** 📦️ The bytes of a `readAs: "dataUrl"` pick (`data:<type>;base64,<payload>`). */
 export function bytesOfDataUrlV1(dataUrl: string): Uint8Array {
   const comma = dataUrl.indexOf(",");
@@ -3104,18 +3407,43 @@ export function bytesOfDataUrlV1(dataUrl: string): Uint8Array {
 }
 
 /** 🗣️ Every outcome of an export or import a person is told about. */
-export type DocumentTransferNoticeV1 = "exported" | "export-failed" | "no-document" | "import-unreadable" | "import-failed" | "import-cancelled" | "imported";
+export type DocumentTransferNoticeV1 =
+  | "exported"
+  | "export-failed"
+  | "file-saved"
+  | "file-save-failed"
+  | "file-opened"
+  | "file-open-failed"
+  | "no-document"
+  | "import-unreadable"
+  | "import-failed"
+  | "import-cancelled"
+  | "imported"
+  | "load-cancelled"
+  | "load-failed";
 
 /** 🗣️ Notice text per outcome, authored beside the code like `📣️replay-refusal`; `{file}` is the file name. */
 export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransferNoticeV1, { readonly en: string; readonly de: string }>> = {
   exported: { en: "Exported “{file}”.", de: "„{file}“ exportiert." },
   "export-failed": { en: "The document could not be exported.", de: "Das Dokument konnte nicht exportiert werden." },
+  "file-saved": { en: "Saved “{file}”.", de: "„{file}“ gespeichert." },
+  "file-save-failed": { en: "The file could not be saved.", de: "Die Datei konnte nicht gespeichert werden." },
+  "file-opened": { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
+  "file-open-failed": { en: "“{file}” could not be opened; the current document is unchanged.", de: "„{file}“ konnte nicht geöffnet werden; das aktuelle Dokument ist unverändert." },
   "no-document": { en: "Focus a document window first — the Home has no document to export or import into.", de: "Bitte zuerst ein Dokumentfenster wählen — die Startseite hat kein Dokument zum Exportieren oder Importieren." },
   "import-unreadable": { en: "“{file}” is not a document archive.", de: "„{file}“ ist kein Dokumentarchiv." },
   "import-failed": { en: "“{file}” could not be opened as a document.", de: "„{file}“ konnte nicht als Dokument geöffnet werden." },
   "import-cancelled": { en: "Import of “{file}” cancelled.", de: "Import von „{file}“ abgebrochen." },
   imported: { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
+  "load-cancelled": { en: "Loading “{file}” was cancelled; the previous document is unchanged.", de: "Laden von „{file}“ abgebrochen; das bisherige Dokument ist unverändert." },
+  "load-failed": { en: "“{file}” could not be loaded; the previous document is unchanged.", de: "„{file}“ konnte nicht geladen werden; das bisherige Dokument ist unverändert." },
 };
+
+/** ⏹️ Whether a whole-document load ended by a cancel: the caller's `signal`, or the guest's own (a person's Cancel in the
+ * history body), which the stepped archive load reports as an `AbortError`. */
+export function documentLoadCancelledV1(error: unknown, signal?: AbortSignal): boolean {
+  return signal?.aborted === true || (error instanceof DOMException && error.name === "AbortError");
+}
 
 /** 🗣️ The localized notice for one outcome; only an unknown locale falls back to English. */
 export function documentTransferNoticeTextV1(notice: DocumentTransferNoticeV1, file: string, locale: string): string {
@@ -4549,8 +4877,7 @@ export function stagedNumberDisplayText(value: number, facets: Pick<ActionArgNum
  * key range, step, look, axis, unit symbols, display factor, precision, admitted detents and the hard limits whose
  * refusals read in the shell's current language. */
 export function stagedNumberFacetsV1(def: ResolvedActionArgDef): ActionArgNumberFacets {
-  const locale = SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale()) ?? SHELL_LOCALES[0];
-  const facets = actionArgNumberFacets(def, locale);
+  const facets = actionArgNumberFacets(def, currentShellLocaleV1());
   if (facets === null) throw new Error(`Staged input ${def.id} has no number facets`);
   return facets;
 }
@@ -5078,6 +5405,7 @@ export function buildActionCategoryTree(
             icon: <Icon icon="check" size="small" />,
             text: shellLabel("ui.common.execute"),
             disabled: disabled || missing.length > 0,
+            reason: missing.map((id) => expandedAction.args.find((def) => def.id === id)!.label).join(", ") || undefined,
             onClick: () => { if (!disabled && missing.length === 0) onExecute({ controllerId, action: expandedAction.id, args: effective }); },
           },
           {
@@ -5619,6 +5947,7 @@ export function buildCommandCategoryTree(
           icon: <Icon icon="check" size="small" />,
           text: shellLabel("ui.common.execute"),
           disabled: missing.length > 0,
+          reason: missing.map((id) => expanded.definition.args.find((def) => def.id === id)!.label).join(", ") || undefined,
           onClick: () => { if (missing.length === 0) onExecute(expanded, effective); },
         },
         {

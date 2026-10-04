@@ -123,7 +123,7 @@ async fn process3d_op_text_round_trips_replace_stock_solid() {
 async fn inverse_of_create_step_is_delete_step() {
     let snapshot = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateStep(create_step::CreateStep { index: 0, step: cut_step("a") });
-    let inverse = mutation.inverse(&snapshot);
+    let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     match &inverse[0] {
         Process3dMutation::DeleteStep(payload) => assert_eq!(payload.id, "a"),
@@ -135,7 +135,7 @@ async fn inverse_of_create_step_is_delete_step() {
 async fn inverse_of_create_machine_is_delete_machine() {
     let snapshot = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateMachine(create_machine::CreateMachine { index: 0, machine: circular_saw_machine() });
-    let inverse = mutation.inverse(&snapshot);
+    let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     match &inverse[0] {
         Process3dMutation::DeleteMachine(payload) => assert_eq!(payload.id, "circularSaw"),

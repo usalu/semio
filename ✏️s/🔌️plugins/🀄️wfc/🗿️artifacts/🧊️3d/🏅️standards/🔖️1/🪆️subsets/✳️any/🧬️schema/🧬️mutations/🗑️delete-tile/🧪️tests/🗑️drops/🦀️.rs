@@ -17,15 +17,15 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-tile/🗑️drops/🎯️outcome/🔣️.json");
 
 fn before() -> Wfc3dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 
 fn expected_after() -> Wfc3dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 
 fn mutation() -> Wfc3dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -42,7 +42,7 @@ fn inverse_restores_before() {
     let base = before();
     let mut snapshot = base.clone();
     apply_wfc3d_mutation(&mut snapshot, &mutation()).expect("the committed mutation applies");
-    for back in <Wfc3dMutation as protocol::Mutation<Wfc3dSnapshot>>::inverse(&mutation(), &base) {
+    for back in <Wfc3dMutation as protocol::Mutation<Wfc3dSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
         apply_wfc3d_mutation(&mut snapshot, &back).expect("the inverse applies");
     }
     assert_eq!(snapshot, base, "🗑️drops: inverse() must restore the pre-mutation document");
@@ -53,7 +53,7 @@ fn inverse_restores_before() {
 fn committed_json_is_canonical() {
     for (label, text, snapshot) in [("⬅️before", BEFORE, before()), ("➡️after", AFTER, expected_after())] {
         let committed: serde_json::Value = serde_json::from_str(text).expect("committed snapshot decodes");
-        let printed: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&snapshot)).expect("snapshot encodes");
+        let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot encodes");
         assert_eq!(printed, committed, "🗑️drops: committed {label} is not canonical");
     }
 }
@@ -74,7 +74,7 @@ fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -98,7 +98,7 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let raised = <Wfc3dMutation as protocol::Mutation<Wfc3dSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "🗑️drops: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -106,8 +106,8 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: Wfc3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes to Wfc3dDiff");
-    let printed: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&decoded)).expect("diff encodes");
+    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes to Wfc3dDiff");
+    let printed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(printed, committed, "🗑️drops: the committed diff is not canonical");
 }
@@ -116,7 +116,7 @@ fn committed_diff_is_canonical() {
 /// COMPLETE description of what this mutation changed, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: Wfc3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: Wfc3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let applied = <Wfc3dDiff as protocol::MutationDiff<Wfc3dSnapshot>>::apply(&decoded, &before()).expect("the committed diff applies");
     assert_eq!(applied, expected_after(), "🗑️drops: the committed diff must be complete");
 }

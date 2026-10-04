@@ -3,8 +3,8 @@ use crate::standards::v1::subsets::any::schema::mutations::text::new_trinity_gra
 use crate::TRINITY_GRAPH_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
-async fn rename_op_binary_round_trips_and_agrees_with_text() {
-    let operation = rename_node("node-1".into(), "Renamed".into());
+async fn set_query_op_binary_round_trips_and_agrees_with_text() {
+    let operation = set_query("MATCH (a:Piece) RETURN a.name".into());
     ::store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -14,18 +14,14 @@ async fn rename_op_binary_round_trips_and_agrees_with_text() {
 async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     let envelope = create_document_envelope_for_test();
     let mut doc_store = new_trinity_graph_store(envelope).await.expect("valid artifact store fixture");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None, transaction: None }).await.expect("apply rename");
+    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![set_query("MATCH (a:Piece) RETURN a.name".into())], description: None, transaction: None }).await.expect("apply set-query");
     ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
 }
 
-/// 🧫️ The empty Nakagin-manifest document plus the one `node-1` Piece the round-trip laws rename —
-/// an empty scene would reject `rename-node` as `mutation.target-missing` before any wire is cut.
+/// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
 fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    let empty = crate::standards::v1::subsets::any::schema::empty_jack_document();
-    let node = crate::Node { id: "node-1".into(), kind: "Piece".into(), name: "node-1".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: crate::PropertyBag::new(), ports: Vec::new() };
-    let snapshot = JackSnapshot::with_content(empty.schema.clone(), empty.name.clone(), empty.manifest_id.clone(), empty.manifest.clone(), empty.camera.clone(), crate::JackWorkingScene { nodes: vec![node], edges: Vec::new() }, empty.root_node_id.clone());
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", snapshot, None)
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document(), None)
 }
 use store::create_document_envelope;
 
@@ -107,11 +103,11 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
 }
 
 #[test]
-fn jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant() {
-    let mut object = std::collections::BTreeMap::new();
+fn jack_nested_query_effect_retires_one_exact_owner_per_grant() {
+    let mut object = PropertyBag::new();
     object.insert("nested".repeat(32), PropertyValue::Array(vec![PropertyValue::String("payload".repeat(128)), PropertyValue::String("tail".into())]));
-    let mutation = TrinityGraphMutation::ChangeDataProperty(crate::standards::v1::subsets::any::schema::mutations::ChangeDataProperty { entity: EntityRef::Node("node".repeat(64)), key: "key".repeat(64), new_value: PropertyValue::Object(object) });
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, mutation);
+    let effect = GraphEffect::SetProperty { entity: EntityRef::Node("node".repeat(64)), key: "key".repeat(64), value: PropertyValue::Object(object) };
+    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, effect);
     for _ in 0..10_000 {
         let step = retirement.close_step(1, JACK_OWNED_FIELD_BYTES).expect("one nested Jack owner retires");
         match step {
@@ -171,14 +167,14 @@ fn drive_snapshot_retirement(value: JackSnapshot) -> usize {
 fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
     let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document();
     crate::materialize_jack_content(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
-    let source_owner = source.content.local_owner::<crate::JackWorkingScene>().expect("source scene owner");
+    let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
     let clone = drive_snapshot_clone(&source);
-    let clone_owner = clone.content.local_owner::<crate::JackWorkingScene>().expect("clone scene owner");
+    let clone_owner = clone.content.local_owner::<crate::JackContentOwner>().expect("clone content owner");
     assert!(std::sync::Arc::ptr_eq(&source_owner, &clone_owner));
     drop(source_owner);
     drop(clone_owner);
     let steps = drive_snapshot_retirement(clone);
-    assert_eq!(source.content.local_owner::<crate::JackWorkingScene>().expect("live source owner remains").nodes[0].id, "live");
+    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("live source owner remains").snapshot().nodes[0].id.value, "live");
     assert!(steps > 1);
     drive_snapshot_retirement(source);
 }
@@ -199,63 +195,8 @@ fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant()
 }
 
 #[semio_framework_async_macros::async_test]
-async fn rename_op_text_round_trips() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("node-1".into(), "Renamed".into()));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_create_node() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&create_node(Node {
-        id: "new".into(),
-        kind: "Piece".into(),
-        name: "new-piece".into(),
-        x: 200.0,
-        y: 40.0,
-        width: 80.0,
-        height: 40.0,
-        properties: PropertyBag::new(),
-        ports: vec![Port { id: "p1".into(), kind: "Connector".into(), direction: crate::PortDirection::Out, properties: PropertyBag::new() }],
-    }));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_delete_node() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&delete_node("root".into()));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_create_edge() {
-    let mut properties = PropertyBag::new();
-    properties.insert("u".into(), PropertyValue::Number(1.2));
-    let mut nested = std::collections::BTreeMap::new();
-    nested.insert("x".into(), PropertyValue::Number(0.0));
-    properties.insert("meta".into(), PropertyValue::Object(nested));
-    ::store::os_store::test_support::assert_op_line_round_trip(&create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::port_key("root", "out-a"), target: crate::port_key("child", "in-a"), properties }));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_delete_edge() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&delete_edge("e1".into()));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_rename_node() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&rename_node("root".into(), "renamed \"piece\"".into()));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_move_node() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&move_node("root".into(), 10.0, -20.5));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_change_data_property() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("hi 'there'".into())));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trip_remove_data_property() {
-    ::store::os_store::test_support::assert_op_line_round_trip(&remove_data_property(EntityRef::Edge("e1".into()), "u".into()));
+async fn set_query_op_text_round_trips() {
+    ::store::os_store::test_support::assert_op_line_round_trip(&set_query("MATCH (a:Piece) WHERE a.name = 'b' RETURN a".into()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -269,9 +210,101 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let mut store = new_trinity_graph_store(create_document_envelope_for_test()).await.expect("valid artifact store");
-    crate::standards::v1::subsets::any::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).await.unwrap_or(());
+    crate::standards::v1::subsets::any::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.unwrap_or(());
     if let Some(edit) = store.envelope().vcs.edits.last() {
         let edit: &Edit<TrinityGraphMutation> = edit;
         ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    }
+}
+
+
+struct JackCloseRefusalOwner {
+    kind: ValueRefusalKind,
+    message: Option<String>,
+}
+
+impl semio_framework_value::ErasedSnapshotRetirement for JackCloseRefusalOwner {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_value::SnapshotRetirementStep, ValueError> {
+        match self.message.take() {
+            Some(message) => Err(ValueError::new(self.kind, message)),
+            None => Ok(semio_framework_value::SnapshotRetirementStep::Complete),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.message.is_none()
+    }
+}
+
+fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
+    for _ in 0..100_000 {
+        match semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, 1, JACK_OWNED_FIELD_BYTES).expect("Jack initializer close") {
+            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= JACK_OWNED_FIELD_BYTES);
+            }
+            semio_framework_plugin::PluginCloseStep::Complete => {
+                assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(authority));
+                return;
+            }
+            step => panic!("Jack initializer unexpectedly stopped retirement: {step:?}"),
+        }
+    }
+    panic!("Jack initializer did not reach terminal-empty close")
+}
+
+fn jack_close_refusal_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
+}
+
+#[test]
+fn jack_initializer_close_preserves_typed_refusal_and_owned_message() {
+    use semio_framework_value::ToValue;
+
+    let fixture = jack_close_refusal_fixture();
+    for row in fixture["closeRefusals"].as_array().expect("close refusal cases") {
+        let kind = match row["kind"].as_str().expect("refusal kind") {
+            "invalidValue" => ValueRefusalKind::InvalidValue,
+            "canceled" => ValueRefusalKind::Canceled,
+            "ownershipLimit" => ValueRefusalKind::OwnershipLimit,
+            "allocationFailed" => ValueRefusalKind::AllocationFailed,
+            "workLimit" => ValueRefusalKind::WorkLimit,
+            "depthLimit" => ValueRefusalKind::DepthLimit,
+            "unsupportedOwner" => ValueRefusalKind::UnsupportedOwner,
+            "invariantViolated" => ValueRefusalKind::InvariantViolated,
+            other => panic!("unknown refusal kind: {other}"),
+        };
+        let mut authority = empty_jack_initializer(semio_framework_job::OperationId(503), semio_framework_job::Generation(17));
+        *authority.active = Some(Box::new(JackCloseRefusalOwner { kind, message: Some(row["message"].as_str().expect("refusal message").to_owned()) }));
+        let zero_grant = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, 0, JACK_OWNED_FIELD_BYTES);
+        let result = semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, 1, JACK_OWNED_FIELD_BYTES);
+        close_jack_initializer(&mut authority);
+        drop(authority);
+        assert!(matches!(zero_grant.expect("zero grant retains owner"), semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        let fault = result.expect_err("typed retirement refusal");
+        let oracle: serde_json::Value = serde_json::from_slice(&semio_framework_diagnostic::encode_fault_bytes(&fault)).expect("independent JSON fault oracle");
+        assert_eq!(oracle, row["expected"]);
+        assert_eq!(fault.to_value(), row["expected"]);
+        eprintln!("[DEBUG] Jack typed close refusal {} retains exact message and retires every owner", row["kind"]);
+    }
+}
+
+#[test]
+fn jack_initializer_fault_copies_short_borrow_into_owned_bytes() {
+    let fixture = jack_close_refusal_fixture();
+    for row in fixture["borrowedFaults"].as_array().expect("borrowed fault cases") {
+        let mut authority = empty_jack_initializer(semio_framework_job::OperationId(504), semio_framework_job::Generation(18));
+        {
+            let message = row["message"].as_str().expect("borrowed message").to_owned();
+            authority.fail(message.as_bytes());
+        }
+        let phase = authority.phase;
+        let actual = authority.fault.clone();
+        close_jack_initializer(&mut authority);
+        drop(authority);
+        assert_eq!(phase, JackStoreInitializationPhase::RetireFault);
+        let oracle: Vec<u8> = serde_json::from_value(row["expectedBytes"].clone()).expect("independent byte-array oracle");
+        assert_eq!(actual.as_deref(), Some(oracle.as_slice()));
+        eprintln!("[DEBUG] Jack borrowed fault retains {} exact owned bytes after source drops", oracle.len());
     }
 }

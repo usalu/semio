@@ -13,8 +13,6 @@ use crate::editor::remodeling::engine::{
 };
 
 // #region 🔖️Input
-use std::collections::VecDeque;
-
 const MAX_INTERACTIVE_IMAGE_PIXELS: usize = 262_144;
 const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
 
@@ -35,7 +33,7 @@ pub struct IngestParams {
 
 impl Default for IngestParams {
     fn default() -> Self {
-        Self { stride: 1, max_frames: 0, min_sharpness: 0.3, rolling_window: 15 }
+        Self { stride: 1, max_frames: 0, min_sharpness: 0.3, rolling_window: BLUR_GATE_ROLLING_WINDOW }
     }
 }
 
@@ -98,11 +96,14 @@ pub struct PushVideoReport {
     pub duration_ms: f64,
 }
 
+/// 📏️ How many recent accepted sharpness scores the relative blur gate compares a frame against by default.
+pub const BLUR_GATE_ROLLING_WINDOW: usize = 15;
+const BLUR_GATE_MIN_SAMPLES: usize = 3;
+
 /// 🧭️ Gradient-energy sharpness proxy (mean squared Scharr gradient magnitude): high for crisp edges,
 /// collapsing toward zero for a flat/blurred frame — the signal the relative blur gate thresholds
 /// against.
-#[cfg(test)]
-fn sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
+pub fn sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
     let gray = remodeling_image::ImageGray::from_rgba8_luma(image);
     let grad = remodeling_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -112,12 +113,23 @@ fn sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
     sum_sq / grad.gx.len() as f32
 }
 
-/// 📐️ Median of a rolling score window (odd or even length both handled by taking the middle element of
-/// the sorted copy — good enough for a soft gating threshold, no need for exact even-length averaging).
-fn rolling_median(scores: &VecDeque<f32>) -> f32 {
-    let mut v: Vec<f32> = scores.iter().copied().collect();
-    v.sort_by(f32::total_cmp);
-    v[v.len() / 2]
+/// 🚦️ The ONE relative blur gate every ingestion runs (the engine's [`FrameSource`], a streamed import's ticks, the
+/// in-process video sampler): once `rolling` holds [`BLUR_GATE_MIN_SAMPLES`] accepted scores, a frame whose `score`
+/// falls below `min_sharpness` × their median (the middle element of the sorted copy) is refused; an admitted score
+/// joins `rolling`, the oldest leaving past `window`. O(window) per frame, never a re-decode of an earlier frame.
+pub fn blur_gate_admits(rolling: &mut Vec<f32>, window: usize, score: f32, min_sharpness: f32) -> bool {
+    if rolling.len() >= BLUR_GATE_MIN_SAMPLES {
+        let mut sorted = rolling.clone();
+        sorted.sort_by(f32::total_cmp);
+        if score < min_sharpness * sorted[sorted.len() / 2] {
+            return false;
+        }
+    }
+    if rolling.len() >= window.max(1) {
+        rolling.remove(0);
+    }
+    rolling.push(score);
+    true
 }
 
 /// 🏷️ Codec, dimensions and duration from the owned provider record.
@@ -134,13 +146,13 @@ pub struct FrameSource {
     stream_id: u32,
     offered: u32,
     frames: Vec<AcceptedFrame>,
-    rolling_scores: VecDeque<f32>,
+    rolling_scores: Vec<f32>,
 }
 
 impl FrameSource {
     /// 🆕️ An empty frame source under the given ingestion policy.
     pub fn new(ingest: IngestParams) -> Self {
-        Self { ingest, stream_id: 0, offered: 0, frames: Vec::new(), rolling_scores: VecDeque::new() }
+        Self { ingest, stream_id: 0, offered: 0, frames: Vec::new(), rolling_scores: Vec::new() }
     }
 
     /// 🔍️ Every frame accepted so far, in ingestion order.
@@ -202,16 +214,9 @@ impl FrameSource {
         if self.ingest.max_frames != 0 && self.frames.len() as u32 >= self.ingest.max_frames {
             return FrameAcceptance::RejectedMaxFrames;
         }
-        if self.rolling_scores.len() >= 3 {
-            let median = rolling_median(&self.rolling_scores);
-            if score < self.ingest.min_sharpness * median {
-                return FrameAcceptance::RejectedBlur;
-            }
+        if !blur_gate_admits(&mut self.rolling_scores, self.ingest.rolling_window, score, self.ingest.min_sharpness) {
+            return FrameAcceptance::RejectedBlur;
         }
-        if self.rolling_scores.len() >= self.ingest.rolling_window.max(1) {
-            self.rolling_scores.pop_front();
-        }
-        self.rolling_scores.push_back(score);
         self.frames.push(AcceptedFrame { index, image, timestamp_ms, stream_id: self.stream_id, sharpness: score });
         FrameAcceptance::Accepted
     }

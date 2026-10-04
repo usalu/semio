@@ -57,7 +57,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 //#region 🔖️MeshComposition
 /// 🕸️ Deterministic content-addressed CHILD handle for the terrain's composed mesh — same
-/// `(child_id, target)` for identical `(exaggeration, imported_features_json)`, a different pair
+/// `(child_id, target)` for identical `(exaggeration, imported_map)`, a different pair
 /// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
 /// `cad_model_child_handle` (same `store::ArtifactChild::new` + `ArtifactDialect` shape).
 pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
@@ -68,8 +68,12 @@ pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<
 }
 
 /// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.
-pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_features_json: &str) -> String {
-    format!("{exaggeration}|{imported_features_json}")
+pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_map: Option<&crate::schema::ImportedMap>) -> String {
+    let identity = imported_map.map(|map| {
+        let bytes = store::pack_rt::encode_document(&crate::schema::ImportedMap::__dsl_spec(), &map.__dsl_to_record(), &store::PackEncodeOptions::default()).expect("authored imported map native record");
+        store::content_id("gisterrain-map", &bytes)
+    }).unwrap_or_default();
+    format!("{:016x}|{}", exaggeration.to_bits(), identity)
 }
 
 /// 🏔️ WRITE direction, real (not a stub): builds an actual `SemioMeshSnapshot` from the terrain

@@ -12,13 +12,13 @@ impl SetSurfaceCount {
     const TAG: u8 = 0x65;
 }
 impl OpText for SetSurfaceCount {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(Self {
             value: line
                 .strip_prefix("set-surface-count ")
-                .ok_or_else(|| store::TextError::new("expected set-surface-count", store::TextSpan::at(1, 1)))?
+                .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-surface-count", semio_framework_diagnostic::TextSpan::at(1, 1)))?
                 .parse()
-                .map_err(|_| store::TextError::new("surface count must be i32", store::TextSpan::at(1, 1)))?,
+                .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "surface count must be i32", semio_framework_diagnostic::TextSpan::at(1, 1)))?,
         })
     }
     fn print_op(&self) -> String {
@@ -43,10 +43,10 @@ impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     fn diff(&self, _: &SurfaceSnapshot) -> MutationOutcome<SurfaceDiff> {
         MutationOutcome::new(SurfaceDiff { count: Some(self.value) })
     }
-    fn inverse(&self, base: &SurfaceSnapshot) -> Vec<SurfaceMutation> {
-        vec![Self { value: base.count }.into()]
+    fn inverse(&self, base: &SurfaceSnapshot) -> Result<Vec<SurfaceMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { value: base.count }.into()])())
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
     }
 }

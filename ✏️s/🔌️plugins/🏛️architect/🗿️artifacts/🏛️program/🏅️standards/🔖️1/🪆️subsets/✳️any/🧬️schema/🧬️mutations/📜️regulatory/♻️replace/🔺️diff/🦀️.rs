@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceRegulatoryRequirement, base: &ProgramSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", "No regulatory requirement exists with this id.", [payload.regulatory_requirement.header.id.0.clone()]);
     };
     if existing == &payload.regulatory_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This regulatory requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This regulatory requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.regulatory_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { regulatory: Some(ProgramRegulatoryDelta { patched: vec![ProgramRegulatoryPatchEntry { id: payload.regulatory_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

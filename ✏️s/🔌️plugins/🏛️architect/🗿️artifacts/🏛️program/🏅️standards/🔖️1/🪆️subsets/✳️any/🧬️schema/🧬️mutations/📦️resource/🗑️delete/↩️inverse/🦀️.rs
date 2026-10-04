@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::DeleteResource, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::DeleteResource, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.resources.iter().find(|row| row.header.id == payload.id) {
         Some(existing) => vec![ProgramMutation::CreateResource(super::super::create_resource::CreateResource { resource: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

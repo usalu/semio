@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "constructorPolicy": {
+    "owners": [
+      "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"
+    ],
+    "cases": [
+      {
+        "id": "canonical-owner",
+        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+        "allowed": true
+      },
+      {
+        "id": "canonical-original-laws",
+        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
+        "allowed": true
+      },
+      {
+        "id": "retained-plugin-owner",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+        "allowed": true
+      },
+      {
+        "id": "retained-plugin-child",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+        "allowed": true
+      },
+      {
+        "id": "removed-os-owner",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs",
+        "allowed": false
+      },
+      {
+        "id": "canonical-sibling-prefix",
+        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute-foreign/🦀️.rs",
+        "allowed": false
+      },
+      {
+        "id": "plugin-sibling-prefix",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin-shadow/🦀️.rs",
+        "allowed": false
+      },
+      {
+        "id": "foreign-owner",
+        "path": "✏️s/🔌️plugins/🧩️puzzle/🦀️.rs",
+        "allowed": false
+      },
+      {
+        "id": "native-windows-owner",
+        "path": "🧰️framework\\🔨️modules\\◻️2d\\🧮️compute\\🦀️.rs",
+        "allowed": true
+      },
+      {
+        "id": "raw-parent-traversal",
+        "path": "🧰️framework/🔨️modules/◻️2d/🧮️compute/../foreign/🦀️.rs",
+        "allowed": false
+      },
+      {
+        "id": "legacy-rep-debt-path",
+        "path": "🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs",
+        "allowed": false
+      }
+    ]
+  }
+}

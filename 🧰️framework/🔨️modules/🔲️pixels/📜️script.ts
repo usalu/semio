@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import { runOwnedCommand } from "../🏃️process/🎛️owned-execution/🟦️.ts";
 import { cmdBudgetMs } from "../🏃️process/⏱️budget/🟦️.ts";
-import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 /** 🔲️ Pixel editing verification through the shared workspace task runner. */
 import { join } from "node:path";
+import taskDescriptor from "./🧪️testing/🧭️ownership/🔣️.json";
+import { readPixelsTaskDescriptorV1 } from "./🧪️testing/🧭️ownership/🟦️.ts";
 
 import { BundleScript, ScriptRouter } from "../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -13,12 +13,29 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const [language = "typescript", ...rest] = segments;
     if (language === "typescript") {
-      const host = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing");
-      await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(this.root,"✍️editing/🟦️.ts"),join(this.root,"🧩️compositing/🟦️.ts"),join(this.root,"🧩️compositing/📐️frames/🟦️.ts"),join(this.root,"🧩️compositing/🗂️layers/🟦️.ts"),join(host,"🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
-      await runOwnedCommand(process.execPath, ["test", join(this.root, "🧩️compositing/📐️frames/🧪️tests/🟦️.ts"), join(this.root, "✍️editing/🧪️tests/🟦️.ts"), join(this.root,"🧩️compositing/🧪️tests/🟦️.ts"),join(this.root,"🧩️compositing/🗂️layers/🧪️tests/🟦️.ts"), join(host,"🧪️tests/🟦️.ts"), ...rest], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
+      const affine = join(this.root,"🎨️sampling/↗️affine");
+      const png = join(this.root,"📷️png/📥️decode");
+      const image = join(this.root,"🖼️image/📥️decode");
+      if (rest[0] === "image-decoding") {
+        await runOwnedCommand(process.execPath, ["test",join(image,"🧪️tests/🟦️.ts"),...rest.slice(1)], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(image,"🟦️.ts")], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        return;
+      }
+      if (rest[0] === "png-decoding") {
+        await runOwnedCommand(process.execPath, ["test",join(png,"🧪️tests/🟦️.ts"),...rest.slice(1)], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(png,"🟦️.ts")], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        return;
+      }
+      if (rest[0] === "affine-sampling") {
+        await runOwnedCommand(process.execPath, ["test",join(affine,"🧪️tests/🟦️.ts"),...rest.slice(1)], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",join(affine,"🟦️.ts")], this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+        return;
+      }
+      const descriptor = readPixelsTaskDescriptorV1(taskDescriptor);
+      await runOwnedCommand(process.execPath, [join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",...descriptor.strictRoots.map(path => join(this.repoRoot,path))], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
+      await runOwnedCommand(process.execPath, ["test",...descriptor.testRoots.map(path => join(this.repoRoot,path)),...rest], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
     }
-    else if (language === "rust") await runCargoTestsV1({ manifestPath: resolve(this.root, "📦️packages/🦀️rust/Cargo.toml"), packages: ["semio-framework-pixels"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
-    else throw new Error("Expected test typescript or test rust");
+    else throw new Error("Expected test typescript");
   }
 }
 

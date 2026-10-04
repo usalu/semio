@@ -132,74 +132,12 @@
       "capability": "bmp-3-mutate",
       "standardDirectoryName": "🔖️v3",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "change-header-fields",
-          "sourceMutationDirectoryName": "📐️change-header-fields",
-          "mutationDirectoryName": "📐️change-header-fields",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "insert-palette-entry",
-          "sourceMutationDirectoryName": "📥️insert-palette-entry",
-          "mutationDirectoryName": "📥️insert-palette-entry",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-palette-entry",
-          "sourceMutationDirectoryName": "📤️remove-palette-entry",
-          "mutationDirectoryName": "📤️remove-palette-entry",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-palette-entry",
-          "sourceMutationDirectoryName": "🎨️replace-palette-entry",
-          "mutationDirectoryName": "🎨️replace-palette-entry",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            }
-          ]
-        },
-        {
-          "mutationId": "replace-pixel-data",
-          "sourceMutationDirectoryName": "🔲️replace-pixel-data",
-          "mutationDirectoryName": "🔲️replace-pixel-data",
-          "scenarios": [
-            {
-              "id": "direct-behavior",
-              "directoryName": "🎯️direct"
-            },
-            {
-              "id": "keeps-indexed-storage",
-              "directoryName": "🎨️keeps"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "change-header-fields",
-        "insert-palette-entry",
-        "remove-palette-entry",
-        "replace-palette-entry",
-        "replace-pixel-data",
-        "set-snapshot"
+        "set-snapshot",
+        "patch-snapshot",
+        "paint-indexed-region",
+        "paint-direct-region"
       ]
     }
   ],
@@ -531,111 +469,6 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-header-fields",
-          "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "change-header-fields",
-            "bridgeVersion": 1,
-            "variant": "ChangeHeaderFields"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bmp-3-mutate-header",
-              "qualifyingKind": "third-party-library",
-              "oracle": "pillow-bmp-v3-header-reader"
-            }
-          ]
-        },
-        {
-          "id": "insert-palette-entry",
-          "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "insert-palette-entry",
-            "bridgeVersion": 1,
-            "variant": "InsertPaletteEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bmp-3-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "image-bmp-3-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "remove-palette-entry",
-          "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "remove-palette-entry",
-            "bridgeVersion": 1,
-            "variant": "RemovePaletteEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bmp-3-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "image-bmp-3-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-palette-entry",
-          "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "replace-palette-entry",
-            "bridgeVersion": 1,
-            "variant": "ReplacePaletteEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bmp-3-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "image-bmp-3-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "replace-pixel-data",
-          "capability": "bmp-3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "replace-pixel-data",
-            "bridgeVersion": 1,
-            "variant": "ReplacePixelData"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "bmp-3-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "image-bmp-3-mutate-reader"
-            }
-          ]
-        },
-        {
           "id": "set-snapshot",
           "capability": "bmp-3-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -646,6 +479,69 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "paint-indexed-region",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "paint-indexed-region",
+            "bridgeVersion": 1,
+            "variant": "PaintIndexedRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "image-bmp-3-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "paint-direct-region",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "paint-direct-region",
+            "bridgeVersion": 1,
+            "variant": "PaintDirectRegion"
           },
           "oracleRequirements": [
             {
@@ -668,8 +564,6 @@
         "standard": "v3",
         "subset": "any"
       },
-      "mutation": "insert-palette-entry",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -719,8 +613,6 @@
         "standard": "v3",
         "subset": "any"
       },
-      "mutation": "remove-palette-entry",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -770,8 +662,6 @@
         "standard": "v3",
         "subset": "any"
       },
-      "mutation": "replace-palette-entry",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -821,8 +711,6 @@
         "standard": "v3",
         "subset": "any"
       },
-      "mutation": "replace-pixel-data",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -872,8 +760,6 @@
         "standard": "v3",
         "subset": "any"
       },
-      "mutation": "change-header-fields",
-      "outcome": "applied",
       "units": {
         "length": "unitless",
         "angle": "degree"
@@ -932,28 +818,192 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ff7f79eea104f4f461bf3f3e3c233fbf4f06e651783ce40df2ce1565e5d96f77",
-          "bytes": 594
+          "sha256": "sha256:518338357ce6a04c44edde9c5c4796bca312463b06015cb2cf273cf1069f7ee7",
+          "bytes": 754
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:df32f9ee3891344a95c57322ac0729d71a8773dd7cac5cd239dc63becaa03bf4",
-          "bytes": 594
+          "sha256": "sha256:62a545fb2504852a8c13fa3854d147048f6a522c26d04e7ceadf013e84f9bc54",
+          "bytes": 574
         }
       ],
       "provenance": {
         "source": "authored",
         "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "attribution": "Handcrafted before/after vector over committed BMP octets; every reading decodes through Pillow.",
         "security": "scanned-clean",
         "privacy": "no-personal-data"
       },
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "bmp-carrier",
-      "notes": "SetSnapshot replaces the whole document: the 2x2 indexed swatch's red and green pixels trade places, every one still an entry of its two-colour table."
+      "notes": "SetSnapshot replaces the committed small indexed document's octets with the committed 2x2 top-down direct-colour document's."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.bmp",
+        "standard": "v3",
+        "subset": "any"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:518338357ce6a04c44edde9c5c4796bca312463b06015cb2cf273cf1069f7ee7",
+          "bytes": 754
+        },
+        {
+          "role": "mutation-json",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/🦠️mutation.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:871fa9134b955b2313aa5eb4c339bbdc9619f0f93aeb52d7f2deada3cd3beef0",
+          "bytes": 146
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:dc91104dea037d766ef39362a48d4dd17a9cf2f672256df9e8ee8e141ba57256",
+          "bytes": 754
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector over committed BMP octets; every reading decodes through Pillow.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "bmp-carrier",
+      "notes": "One RFC 6901 set of octet 82 — the first stored pixel index of the small indexed document — from 2 to 5; the after-reading is the host's independent patched_snapshot, and Pillow decodes both."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "paint-indexed-region-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.bmp",
+        "standard": "v3",
+        "subset": "any"
+      },
+      "mutation": "paint-indexed-region",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
+          "mediaType": "text/plain",
+          "sha256": "sha256:dcca9a9cdd991869ad349ed2c9b75dac23821330afe8e60c07eb50420aed551f",
+          "bytes": 141
+        },
+        {
+          "role": "mutation-json",
+          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:af701575229fc4f7c1619eedc6fb1acbfc203f4b86a82b7dbe3633e0f0703a21",
+          "bytes": 176
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
+          "mediaType": "text/plain",
+          "sha256": "sha256:1307bb7498671fe4c47ca8ac70f5df8f90b411ff67f574140e1f6267331e7d7f",
+          "bytes": 141
+        },
+        {
+          "role": "outcome-json",
+          "path": "../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
+          "bytes": 26
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector over committed BMP octets; every reading decodes through Pillow.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "bmp-carrier",
+      "notes": "The committed revision-guarded paint-indexed-region history-edit vector: before and after as the snapshot's hex DSL, the guarded payload and its applied outcome."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "paint-direct-region-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.bmp",
+        "standard": "v3",
+        "subset": "any"
+      },
+      "mutation": "paint-direct-region",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio",
+          "mediaType": "text/plain",
+          "sha256": "sha256:e16ad03ff6e23d36b268264046dcab3e6adbd421d1786bdf5a4a7273fc53f5d1",
+          "bytes": 171
+        },
+        {
+          "role": "mutation-json",
+          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🦠️mutation/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0f99c6eff2f81367e7035279dba1671a76a0105661517684814d79193987f881",
+          "bytes": 218
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio",
+          "mediaType": "text/plain",
+          "sha256": "sha256:11b56c14ec1b4b2f1b4ed0360039de1341db0d494b126e80f951ea1334b4d63e",
+          "bytes": 171
+        },
+        {
+          "role": "outcome-json",
+          "path": "../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/🎯️outcome/🔣️.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
+          "bytes": 26
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector over committed BMP octets; every reading decodes through Pillow.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "bmp-carrier",
+      "notes": "The committed revision-guarded paint-direct-region history-edit vector: before and after as the snapshot's hex DSL, the guarded payload and its applied outcome."
     }
   ],
   "oracleHostPackages": []

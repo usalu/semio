@@ -1,5 +1,50 @@
-# 🧬️ XlsxDiff
+type XlsxStringModified { key: String!, diff: String! }
+type XlsxContentTypeEntriesDiff {
+  removed: [String!]
+  modified: [XlsxStringModified!]
+  added: [XlsxNameValue!]
+  order: [String!]
+}
+type XlsxOpcContentTypesDiff { defaults: XlsxContentTypeEntriesDiff, overrides: XlsxContentTypeEntriesDiff }
+type XlsxOpcPartDiff { contentType: String, bytes: [Int!] }
+type XlsxOpcPartModified { key: String!, diff: XlsxOpcPartDiff! }
+type XlsxOpcPartsDiff {
+  removed: [String!]
+  modified: [XlsxOpcPartModified!]
+  added: [XlsxOpcPart!]
+  order: [String!]
+}
+type XlsxOpcRelationshipDiff { relType: String, target: String, targetMode: XlsxOpcTargetMode }
+type XlsxOpcRelationshipModified { key: String!, diff: XlsxOpcRelationshipDiff! }
+type XlsxOpcRelationshipListDiff {
+  removed: [String!]
+  modified: [XlsxOpcRelationshipModified!]
+  added: [XlsxOpcRelationship!]
+  order: [String!]
+}
+type XlsxOpcRelationshipOwnerModified { key: String!, diff: XlsxOpcRelationshipListDiff! }
+type XlsxOpcRelationshipsDiff {
+  removed: [String!]
+  modified: [XlsxOpcRelationshipOwnerModified!]
+  added: [XlsxOpcRelationshipOwner!]
+  order: [String!]
+}
+type XlsxOpcDiff {
+  comment: String
+  contentTypes: XlsxOpcContentTypesDiff
+  parts: XlsxOpcPartsDiff
+  relationships: XlsxOpcRelationshipsDiff
+}
+scalar XlsxXmlDocumentDiff
+type XlsxXmlPartDiff { contentType: String, document: XlsxXmlDocumentDiff }
+type XlsxXmlPartModified { key: String!, diff: XlsxXmlPartDiff! }
+type XlsxXmlPartsDiff {
+  removed: [String!]
+  modified: [XlsxXmlPartModified!]
+  added: [XlsxXmlPart!]
+  order: [String!]
+}
 type XlsxDiff {
-  schema: String
-  bytes: String
+  opc: XlsxOpcDiff @state(class: ARTIFACT)
+  xmlParts: XlsxXmlPartsDiff @state(class: ARTIFACT)
 }

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "definingOwner": "semio-framework-pack-error",
+  "consumers": ["semio-framework-pack", "semio-framework-replication"],
+  "fault": {"origin":"Module","code":"module.pack","severity":"Error"},
+  "primitiveCases": [
+    {"id":"empty-varint","bytes":[],"position":0,"display":"truncated at offset 0","convertedKind":"invalidValue"},
+    {"id":"incomplete-varint","bytes":[128],"position":1,"display":"truncated at offset 1","convertedKind":"invalidValue"}
+  ],
+  "typedCause": {"valueVariant":"ValueRefusal","textVariant":"TextRefusal","convertedMessage":"exact-owned-cause","source":"exact-borrowed-cause","retiredVariant":"Schema"}
+}

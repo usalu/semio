@@ -1,0 +1,39 @@
+{
+  "production": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🛡️subset/🦀️.rs",
+      "line": 4,
+      "before": "use semio_framework_os_kernel::{NativeEncodeControl,sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "after": "use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase}};\nuse semio_framework_value::NativeEncodeControl;",
+      "scope": "production subset module",
+      "owner": "semio_framework_value"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🛡️subset/🦀️.rs",
+      "line": 8,
+      "before": "use semio_framework_os_kernel::{\n    sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase},\n    NativeEncodeControl,\n};",
+      "after": "use semio_framework_os_kernel::{\n    sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase},\n    \n};\nuse semio_framework_value::NativeEncodeControl;",
+      "scope": "production subset module",
+      "owner": "semio_framework_value"
+    }
+  ],
+  "conditional_own_package_tests": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 1036,
+      "before": "dsl::DslValue::String",
+      "after": "semio_framework_value::DslValue::String",
+      "scope": "own package cfg(test), not dependency library selected by Rewriting12",
+      "owner": "semio_framework_value"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 463,
+      "before": "dsl::DslValue::String",
+      "after": "semio_framework_value::DslValue::String",
+      "scope": "own package cfg(test), not dependency library selected by Rewriting12",
+      "owner": "semio_framework_value"
+    }
+  ],
+  "production_manifest_changes": []
+}

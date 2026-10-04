@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "receiver",
+          "member",
+          "expected"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "PackSource",
+              "PackSink"
+            ]
+          },
+          "receiver": {
+            "enum": [
+              "trait",
+              "&[u8]",
+              "Vec<u8>"
+            ]
+          },
+          "member": {
+            "enum": [
+              "read_at",
+              "read_exact_at",
+              "write_all",
+              "flush"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "Self::Error",
+              "PackRefusal"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

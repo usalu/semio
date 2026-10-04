@@ -1,0 +1,41 @@
+{
+  "forecast": "unpaidBorrowedBound",
+  "stages": [
+    "nativeInput",
+    "nativeFields",
+    "preflightFrontier",
+    "projectionFrontier",
+    "relationIndex",
+    "reconstructionFields",
+    "extrasOwnership"
+  ],
+  "allocation": "fullConcreteBufferBeforeConstruction",
+  "retirement": "noCumulativeRefund",
+  "cancellation": "retainAdmittedBytes",
+  "ledger": {
+    "requests": [
+      24,
+      48,
+      65536
+    ],
+    "expectedSpent": 65608,
+    "exact": 65608,
+    "refused": 65607
+  },
+  "literal": {
+    "unit": "quote\" slash\\ \u0000 世界😀",
+    "repeat": 4096
+  },
+  "limits": {
+    "semantic": "maxValueBytes",
+    "backing": "maxAllocationBytes",
+    "file": "maxFileBytes"
+  },
+  "relations": {
+    "tableCount": 57,
+    "identity": "positiveUnique",
+    "ordinal": "contiguousPerOwner",
+    "ownership": "exclusive",
+    "mapKeys": "orderedDuplicateLiteral"
+  }
+}

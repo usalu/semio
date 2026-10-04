@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.png.command.paint-native-region.v1",
+  "title": "Paint Native PNG Region",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["x", "y", "width", "height"],
+  "properties": {
+    "x": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "y": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "width": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+    "height": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+    "index": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "gray": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "red": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "green": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "blue": {"type": "integer", "minimum": 0, "maximum": 65535},
+    "alpha": {"type": "integer", "minimum": 0, "maximum": 65535}
+  }
+}

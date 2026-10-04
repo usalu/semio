@@ -73,10 +73,6 @@ pub const KINDS: &[&str] = &[
 
 impl En1999Mutation {
     /// 🔀 Raise the mutation sequence that turns `base` into `target` (B2 app-surface setField/insert/remove/remedy).
-    pub fn from_snapshot_replace(target: &En1999Snapshot) -> Vec<En1999Mutation> {
-        Self::from_snapshot(&En1999Snapshot::empty(), target)
-    }
-
     pub fn from_snapshot(base: &En1999Snapshot, target: &En1999Snapshot) -> Vec<En1999Mutation> {
         let mut out = Vec::new();
         if base.annex != target.annex {
@@ -109,7 +105,7 @@ impl En1999Mutation {
 mod tests;
 
 pub fn decode_en1999_mutation_json(text: &str) -> Result<En1999Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
@@ -119,8 +115,11 @@ pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -
     Ok((applied, messages))
 }
 
-pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot) -> Vec<En1999Mutation> {
-    <En1999Mutation as protocol::Mutation<En1999Snapshot>>::inverse(mutation, base)
+pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1999Mutation as protocol::Mutation<En1999Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 #[cfg(test)]

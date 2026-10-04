@@ -2,42 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutations.json",
   "title": "WiresMutation",
-  "oneOf": [
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/create-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/delete-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/resize-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-kind/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-shape/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/edit-node-text/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/set-node-root/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/connect-nodes/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/disconnect-nodes/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-nodes/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/set-node-positions/schema.json"
-    }
-  ]
+  "description": "The wires parent owns no mutation (design §20.15): its board lives in the composed content child (s.stdio.semio@v1/graph) and is edited only by that child's graph leaves, so no parent operation validates.",
+  "not": {}
 }

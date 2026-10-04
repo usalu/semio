@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_gltf::schema::snapshot::GltfSnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &GltfSnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize(from: &GltfSnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let mut parts = Vec::new();
     for (mesh_index, mesh) in from.document.meshes.iter().enumerate() {
         let name = mesh.name.clone().unwrap_or_else(|| format!("Mesh {mesh_index}"));
@@ -45,7 +45,7 @@ pub fn deserialize(from: &GltfSnapshot) -> Result<LowpolySnapshot, store::TextEr
     snapshot_from_parts("gltf", parts)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let snap = decode_glb(bytes).map_err(|e| text_error(format!("gltf->lowpoly: {e}")))?;
     deserialize(&snap)
 }

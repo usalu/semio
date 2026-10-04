@@ -1,0 +1,204 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "optionalPaths",
+    "extraPaths",
+    "nestedEdits",
+    "control",
+    "wordSchema",
+    "tableRowCounts",
+    "malformedSql"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "optionalPaths": {
+      "const": [
+        [
+          "nodeKind",
+          "variant"
+        ],
+        [
+          "nodeKind",
+          "icon"
+        ],
+        [
+          "nodeKind",
+          "unit"
+        ],
+        [
+          "attributes",
+          0,
+          "definition"
+        ],
+        [
+          "authors",
+          0,
+          "email"
+        ],
+        [
+          "presentation",
+          "shape"
+        ],
+        [
+          "presentation",
+          "radius"
+        ],
+        [
+          "presentation",
+          "width"
+        ],
+        [
+          "presentation",
+          "height"
+        ],
+        [
+          "presentation",
+          "color"
+        ],
+        [
+          "presentation",
+          "iconKind"
+        ]
+      ]
+    },
+    "extraPaths": {
+      "const": [
+        [],
+        [
+          "nodeKind"
+        ],
+        [
+          "attributes",
+          0
+        ],
+        [
+          "authors",
+          0
+        ],
+        [
+          "compatibility",
+          0
+        ],
+        [
+          "meta"
+        ],
+        [
+          "presentation"
+        ],
+        [
+          "handleKinds",
+          0
+        ],
+        [
+          "handles",
+          0
+        ],
+        [
+          "camera2d"
+        ],
+        [
+          "camera2d",
+          "x"
+        ]
+      ]
+    },
+    "nestedEdits": {
+      "const": [
+        {
+          "sql": "UPDATE block2_attribute SET value='nested independent' WHERE ordinal=0",
+          "path": [
+            "attributes",
+            0,
+            "value"
+          ],
+          "value": "nested independent"
+        },
+        {
+          "sql": "UPDATE block2_author SET email='' WHERE ordinal=0",
+          "path": [
+            "authors",
+            0,
+            "email"
+          ],
+          "value": ""
+        },
+        {
+          "sql": "UPDATE block2_compatibility SET bidirectional=0 WHERE ordinal=0",
+          "path": [
+            "compatibility",
+            0,
+            "bidirectional"
+          ],
+          "value": false
+        },
+        {
+          "sql": "UPDATE block2_handle SET handle_kind='independent unresolved'",
+          "path": [
+            "handles",
+            0,
+            "handleKind"
+          ],
+          "value": "independent unresolved"
+        }
+      ]
+    },
+    "control": {
+      "const": {
+        "repeat": 512,
+        "literal": "control 世界\u0000",
+        "minimumInterior": 1,
+        "requiredKind": "canceled"
+      }
+    },
+    "wordSchema": {
+      "const": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bits"
+        ],
+        "properties": {
+          "bits": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        }
+      }
+    },
+    "tableRowCounts": {
+      "const": {
+        "block2_document": 1,
+        "block2_kind": 1,
+        "block2_presentation": 1,
+        "block2_handle_kind": 1,
+        "block2_handle": 1,
+        "block2_compatibility": 1,
+        "block2_attribute": 1,
+        "block2_author": 1,
+        "block2_camera2d": 1,
+        "block2_meta": 1
+      }
+    },
+    "malformedSql": {
+      "const": [
+        "DELETE FROM block2_document",
+        "DELETE FROM block2_kind",
+        "DELETE FROM block2_meta",
+        "UPDATE block2_author SET document_id=999",
+        "UPDATE block2_author SET ordinal=-1",
+        "UPDATE block2_author SET ordinal=1",
+        "INSERT INTO block2_author SELECT 99,document_id,ordinal,native_id,name,email FROM block2_author",
+        "UPDATE block2_compatibility SET bidirectional=2",
+        "UPDATE block2_handle SET angle_numeric_class='foreign'",
+        "UPDATE block2_handle SET radius_ieee754_bits=0",
+        "UPDATE block2_presentation SET radius_ieee754_bits=NULL",
+        "DELETE FROM block2_camera2d"
+      ]
+    }
+  }
+}

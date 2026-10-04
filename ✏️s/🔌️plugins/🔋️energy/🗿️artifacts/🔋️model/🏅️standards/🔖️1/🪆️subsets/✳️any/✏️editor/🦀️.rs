@@ -177,7 +177,7 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
 /// ✏️ The editor's typed command channel. `SetStructureField`/`SetZoneCell` are the two generic
 /// window-kit edit targets; the ten authored document verbs address `crate::model::Model` entities
 /// by their own `EntityId`; `SetSimulationSettings` edits the config store's run settings.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-node")]
     SetStructureField { field: String, value: String },
@@ -285,21 +285,21 @@ impl EnergyModelEditorCommand {
 mod args_bridge {
     use super::{EnergyModelEditorCommand as Command, Fault, FaultCode, FaultOrigin};
 
-    fn field<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
+    fn field<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
         args?.get(key)
     }
 
-    fn text(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+    fn text(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<String> {
         let value = field(args, key)?;
         value.as_str().map(str::to_owned).or_else(|| value.as_u64().map(|number| number.to_string())).or_else(|| value.as_i64().map(|number| number.to_string())).or_else(|| value.as_f64().map(|number| number.to_string()))
     }
 
-    fn number(args: Option<&dsl::DslValue>, key: &str) -> Option<f64> {
+    fn number(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<f64> {
         let value = field(args, key)?;
         value.as_f64().or_else(|| value.as_str()?.parse().ok())
     }
 
-    fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
+    fn flag(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<bool> {
         let value = field(args, key)?;
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
     }
@@ -308,18 +308,18 @@ mod args_bridge {
     /// validated as a real pose and canonicalized back to the exact JSON string
     /// `World3dScene::camera_json` consumes. A malformed or non-finite pose answers `None`, which the
     /// bridge turns into an explicit refusal rather than a silently ignored gesture.
-    fn camera_pose_json(args: Option<&dsl::DslValue>) -> Option<String> {
+    fn camera_pose_json(args: Option<&semio_framework_value::DslValue>) -> Option<String> {
         let value = field(args, "camera")?;
-        let pose = <store::Viewport3dOrbit as dsl::FromValue>::from_value(value.clone()).ok()?;
+        let pose = <store::Viewport3dOrbit as semio_framework_value::FromValue>::from_value(value.clone()).ok()?;
         pose.validate().ok()?;
-        Some(dsl::json::to_json_string(&dsl::ToValue::to_value(&pose)))
+        Some(dsl::json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
     }
 
     fn unknown(action: &str) -> Fault {
         Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the energy model editor has no command for action '{action}'"))
     }
 
-    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Command, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Command, Fault> {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
@@ -414,11 +414,11 @@ mod args_bridge {
 /// handcrafted per artifact). Same shape as `📕️norm`'s `NormConfigMutation`/`🔱️trinity`'s
 /// `TrinityJackCommand`.
 impl protocol::OpText for EnergyModelEditorCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 
@@ -431,8 +431,8 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -450,12 +450,12 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -490,16 +490,16 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     let (was, now) = (&base.ground_temperature, &model.ground_temperature);
     for (month, (before, after)) in (1u8..).zip(was.building_surface_c.iter().zip(&now.building_surface_c)) {
         if before != after {
-            steps.push(mutations::change_ground_temperature_building_surface(month, *after));
+            steps.push(mutations::change_ground_building(month, *after));
         }
     }
     for (month, (before, after)) in (1u8..).zip(was.shallow_c.iter().zip(&now.shallow_c)) {
         if before != after {
-            steps.push(mutations::change_ground_temperature_shallow(month, *after));
+            steps.push(mutations::change_ground_shallow(month, *after));
         }
     }
     if was.deep_c != now.deep_c {
-        steps.push(mutations::change_ground_temperature_deep(now.deep_c));
+        steps.push(mutations::change_ground_deep(now.deep_c));
     }
     if base.airflow_network != model.airflow_network {
         steps.push(match &model.airflow_network {
@@ -583,11 +583,11 @@ fn run_period_steps(was: crate::calendar::RunPeriod, now: crate::calendar::RunPe
     order
         .into_iter()
         .map(|field| match field {
-            0 => mutations::change_run_period_start_month(now.start_month),
-            1 => mutations::change_run_period_start_day(now.start_day),
-            2 => mutations::change_run_period_end_month(now.end_month),
-            3 => mutations::change_run_period_end_day(now.end_day),
-            _ => mutations::change_run_period_year(now.year),
+            0 => mutations::change_run_start_month(now.start_month),
+            1 => mutations::change_run_start_day(now.start_day),
+            2 => mutations::change_run_end_month(now.end_month),
+            3 => mutations::change_run_end_day(now.end_day),
+            _ => mutations::change_run_year(now.year),
         })
         .collect()
 }
@@ -1081,7 +1081,7 @@ fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::
     let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
     let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = ::semio_framework_async::poll::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
 
@@ -1234,35 +1234,28 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         }
         EnergyModelEditorCommand::SetMaterialProperty { material, property, value } => {
             let target = model.materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;
-            let kind = set_material_property(target, property, value)?;
-            kind
+            set_material_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetConstructionProperty { construction, property, value } => {
-            let kind = set_construction_property(&mut model, *construction, property, value)?;
-            kind
+            set_construction_property(&mut model, *construction, property, value)?
         }
         EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => {
-            let kind = set_surface_property(&mut model, *surface, property, value, *partner_surface)?;
-            kind
+            set_surface_property(&mut model, *surface, property, value, *partner_surface)?
         }
         EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property, value } => {
-            let kind = set_fenestration_property(&mut model, *fenestration, property, value)?;
-            kind
+            set_fenestration_property(&mut model, *fenestration, property, value)?
         }
         EnergyModelEditorCommand::SetGlazingMaterialProperty { material, property, value } => {
             let target = model.glazing_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
-            let kind = set_glazing_material_property(target, property, value)?;
-            kind
+            set_glazing_material_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetGasMaterialProperty { material, property, value } => {
             let target = model.gas_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
-            let kind = set_gas_material_property(target, property, value)?;
-            kind
+            set_gas_material_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetZoneProperty { zone, property, value } => {
             let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
-            let kind = set_zone_property(target, property, value)?;
-            kind
+            set_zone_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
             let schedules = &model.schedules;
@@ -1358,8 +1351,8 @@ fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_fra
         if camera.is_empty() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
         }
-        let value = dsl::json::from_json_str::<dsl::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
-        let pose = <model_window::config::EnergyModelCameraPose as dsl::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
+        let value = dsl::json::from_json_str::<semio_framework_value::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
+        let pose = <model_window::config::EnergyModelCameraPose as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
         if !pose.is_valid() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
         }
@@ -1993,42 +1986,12 @@ struct EnergyModelStorePreparation {
     closing: bool,
 }
 
-/// 🧾️ One retained document edit, authored exactly as the store's live authority describes it.
-fn energy_model_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
-    let mutation_id = protocol::MutationId(format!("{id}#0"));
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id,
-        actor: Some(authority.actor().to_string()),
-        forwards,
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(mutation_id),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyModelMutation> for EnergyModelStorePreparationFactory {
-    fn preflight(&self, _mutation: &EnergyModelMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &EnergyModelMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("the energy model store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -2070,11 +2033,10 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
         }
         let base = self.base.as_ref().ok_or_else(|| "the energy model preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "the energy model preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "the energy model preparation lost its store authority".to_string())?;
-        let id = format!("energy-model-retained-{}", authority.next_sequence_number());
-        let edit = energy_model_retained_edit(id, authority, vec![mutation], inverse, self.description.take());
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -2101,7 +2063,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2110,7 +2072,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("the energy model preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "the energy model preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -2163,9 +2125,12 @@ impl ArtifactEditor for EnergyModelEditor {
     }
 
     /// 🌱️ Both composed children derive from the model — see `crate::energy_genesis_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::energy_genesis_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<EnergyModelEditor>,
@@ -2217,7 +2182,7 @@ impl ArtifactEditor for EnergyModelEditor {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.retained.tool-mismatch"), "the energy model command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the energy model command does not match its exact registered tool"));
         }
         if energy_model_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.retained.extent"), "the energy model bounded route exceeded its declared work extent"));
@@ -2321,7 +2286,7 @@ impl ArtifactEditor for EnergyModelEditor {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
 
@@ -2443,7 +2408,7 @@ pub fn examples() -> Vec<ExampleSource> {
         .into_iter()
         .map(|(id, label, model)| {
             let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
-            ExampleSource::new(id, LocalizedLabel::native(label, label), pack::json::to_json_string(&snapshot), "file")
+            ExampleSource::new(id, LocalizedLabel::native(label, label), semio_framework_pack_json::to_json_string(&snapshot), "file")
         })
         .collect()
 }

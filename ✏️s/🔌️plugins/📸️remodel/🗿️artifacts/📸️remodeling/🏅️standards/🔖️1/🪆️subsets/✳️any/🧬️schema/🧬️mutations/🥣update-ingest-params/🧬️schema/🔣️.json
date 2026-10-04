@@ -25,5 +25,14 @@
         "order": 10
       }
     }
-  }
+  },
+  "x-semio-invariant": [
+    {
+      "id": "positive-ingest-budget",
+      "description": {
+        "en": "Import takes at least one frame at a stride of at least one, with a finite, non-negative minimum sharpness.",
+        "de": "Der Import nimmt mindestens ein Bild mit einem Schritt von mindestens eins und einer endlichen, nicht negativen Mindestschärfe."
+      }
+    }
+  ]
 }

@@ -4,7 +4,7 @@ use protocol::DiffCodec;
 /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XlsxDiff` grammar — exercises every
 /// `XlsxCellValue` variant (incl. `Formula.cached` and a value containing raw `,`/`:`/`[`/`]`
 /// bytes-through-hex), the OPC content-types/parts/relationships triples (incl.
-/// `OpcTargetMode::External`), and both `opc`/`workbook` top-level tokens together and alone.
+/// `OpcTargetMode::External`), and both `opc`/`xmlParts` top-level tokens together and alone.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
     let a = snapshot_a();
@@ -33,7 +33,8 @@ async fn diff_codec_text_binary_roundtrip_law() {
 #[test]
 fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
     use crate::schema::mutations::{set_snapshot, XlsxMutation};
-    use protocol::{MutationDiff, OpBinary, OpText, ToValue};
+    use protocol::{MutationDiff, OpBinary, OpText};
+use semio_framework_value::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
     let mut before = XlsxSnapshot::default();
     before.opc.comment = fixture["before"].as_str().unwrap().into();
@@ -54,6 +55,6 @@ fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
     for replay in [XlsxMutation::parse_op(&mutation.print_op()).unwrap(), XlsxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap()] {
         assert_eq!(replay, mutation, "complete snapshot replay preserves the archive comment");
     }
-    let oracle: serde_json::Value = serde_json::from_str(&protocol::os_pack::json::to_json_string(&after.to_value())).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
 }

@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_ply::PlySnapshot;
 
 pub fn register() {}
 
-pub fn deserialize(from: &PlySnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn deserialize(from: &PlySnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     snapshot_from_ply_geometry(from)
 }
 
@@ -34,7 +34,7 @@ fn column(element: &PlyElement, names: &[&str]) -> Option<usize> {
 }
 
 /// 🕸️ Real-geometry import (see module docs).
-pub fn snapshot_from_ply_geometry(from: &PlySnapshot) -> Result<LowpolySnapshot, store::TextError> {
+pub fn snapshot_from_ply_geometry(from: &PlySnapshot) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
     let vertex = from.elements.iter().find(|e| e.name == "vertex").ok_or_else(|| text_error("ply->lowpoly: no `vertex` element"))?;
     let face = from.elements.iter().find(|e| e.name == "face").ok_or_else(|| text_error("ply->lowpoly: no `face` element (point clouds are not meshes)"))?;
     let (Some(x), Some(y), Some(z)) = (column(vertex, &["x"]), column(vertex, &["y"]), column(vertex, &["z"])) else {
@@ -63,7 +63,7 @@ pub fn snapshot_from_ply_geometry(from: &PlySnapshot) -> Result<LowpolySnapshot,
     snapshot_from_parts("ply", vec![part])
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
-    let snap = decode_ply(bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
+    let snap = decode_ply(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     deserialize(&snap)
 }

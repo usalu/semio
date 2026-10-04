@@ -4,9 +4,11 @@
 //! `AppChannelHost` — the exact `protocol::AppCommand`/`AppFrame` binary channel a live UI speaks, so
 //! a headless run never needs a UI-mock API — moves `Media` along edges, and skips any node whose
 //! inputs, document, and config are all unchanged since the last (sealed) run. Every node's frame
-//! script is `Hello → LoadConfig → LoadDocument → MediaIn* → (MediaOut+MediaFingerprint)* →
-//! ReadDocument → ReadConfig` (see `SpaceRunner::compute_node`); documents/configs are addressed by
-//! their node's own `artifact_ref`/`config_ref` string, never by a separate instance id.
+//! script is `SetMergePolicy → LoadConfig → LoadDocumentArchive`, then `PollDocumentArchiveLoad*` →
+//! `AcknowledgeDocumentArchiveLoad` (the stepped, cancellable whole-document load), then `MediaIn* →
+//! (MediaOut+MediaFingerprint)* → ReadDocument → ReadConfig` (see `SpaceRunner::compute_node`);
+//! documents/configs are addressed by their node's own `artifact_ref`/`config_ref` string, never by a
+//! separate instance id.
 //!
 //! 🔒️ W5 Lane A ("non-destructive `SpaceRunner` rework"): a run is READONLY over its source. The
 //! `documents`/`configs` maps `SpaceRunner::run` reads are NEVER written back — `ReadDocument`/
@@ -109,6 +111,16 @@ pub enum RunError {
     /// NEXT node rather than mid-exchange (an in-flight `exchange` future is not itself
     /// preemptible — same honest limitation `semio-framework-os-services::ComputePool` documents).
     Cancelled,
+}
+
+/// 📊️ One node's whole-document load progress as its guest polls it (`📓️api-stepped-document-load.md` §2.2): the
+/// operations folded so far of the operations the load folds, monotonic within one load. Ephemeral and local-only — handed
+/// to the observer [`SpaceRunner::with_document_load_progress`] installs, never recorded into the run document.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NodeDocumentLoadProgress {
+    pub node_id: String,
+    pub completed: u64,
+    pub total: u64,
 }
 
 impl std::fmt::Display for RunError {
@@ -298,6 +310,14 @@ impl BlobStore for InMemoryBlobStore {
 pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> Result<(Vec<u8>, Vec<u8>), RunError> {
     let (wire, blob_hash, data) = match &media.payload {
         MediaPayload::Structured { schema, json } => (MediaWireFormat::Document { schema: schema.clone() }, None, json.clone().into_bytes()),
+        MediaPayload::Intrinsic { schema, value } => {
+            let options=store::PackEncodeOptions::default();
+            let maximum=usize::try_from(options.limits.max_total_alloc).map_err(|_|RunError::Host("intrinsic media allocation ceiling exceeds address space".into()))?;
+            let mut accept=|_|true;
+            let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut accept);
+            let bytes=store::pack_rt::encode_wire_value_controlled(value,&options,&mut control).map_err(|error|RunError::Host(error.into_value_error().into_message()))?;
+            (MediaWireFormat::Intrinsic { schema:schema.clone() },None,bytes)
+        }
         MediaPayload::Binary { format_kind, blob_hash } => {
             let bytes = blob_store.get(blob_hash).await.map_err(|error| RunError::Host(error.to_string()))?.ok_or_else(|| RunError::Host(format!("blob not found: {blob_hash}")))?;
             (MediaWireFormat::Binary { format_kind: format_kind.clone() }, Some(blob_hash.clone()), bytes)
@@ -318,6 +338,14 @@ pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>,
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
+        MediaWireFormat::Intrinsic { schema } => {
+            let options=store::PackDecodeOptions::default();
+            let maximum=usize::try_from(options.limits.max_total_alloc).map_err(|_|RunError::Host("intrinsic media allocation ceiling exceeds address space".into()))?;
+            let mut accept=|_|true;
+            let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut accept);
+            let value=store::pack_rt::decode_wire_value_controlled(&data,&options,&mut control).map_err(|error|RunError::Host(error.into_value_error().into_message()))?;
+            MediaPayload::Intrinsic { schema,value }
+        }
         MediaWireFormat::Binary { format_kind } => {
             let mime = semio_framework::format_descriptor(&format_kind)
                 .map_err(|error| RunError::Host(error.to_string()))?
@@ -375,10 +403,32 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         // 🏁️ A terminal typed operation's completion correlates by its own operation id — the command
         // that started it resolved on an earlier turn, so there is no `AppCommand::seq` awaiting it.
         AppFrame::OperationCompleted { .. } => None,
-        AppFrame::DocumentIdentity { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::DocumentIdentity { in_reply_to, .. } | AppFrame::ChildHeads { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchive { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchiveLoad { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::MediaExportSubmitted { in_reply_to, .. } | AppFrame::MediaExportStatus { in_reply_to, .. } | AppFrame::MediaExportChunk { in_reply_to, .. } => Some(*in_reply_to),
+    }
+}
+
+/// 🎯️ The one frame of `frames` answering `seq`, else the node's typed "no reply" error.
+fn node_reply<'f>(frames: &'f [AppFrame], app_id: &str, seq: u64) -> Result<&'f AppFrame, RunError> {
+    frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{app_id}` sent no reply to seq {seq}")))
+}
+
+/// ✅️ A command that answers `Done`, else the node's refusal carrying the guest's own fault, else its protocol error.
+fn expect_done(app_id: &str, seq: u64, frame: &AppFrame) -> Result<(), RunError> {
+    match frame {
+        AppFrame::Done { .. } => Ok(()),
+        AppFrame::Error { fault, report, .. } => Err(RunError::Host(dispatch_error_message(app_id, &format!("rejected seq {seq}"), fault, report))),
+        other => Err(RunError::Host(format!("`{app_id}` sent an unexpected frame for seq {seq}: {other:?}"))),
+    }
+}
+
+/// 🚫️ An unsolicited `AppFrame::Error` among one exchange's frames is the node's rejection of that whole exchange.
+fn refuse_unsolicited(app_id: &str, frames: &[AppFrame]) -> Result<(), RunError> {
+    match frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
+        Some(AppFrame::Error { fault, report, .. }) => Err(RunError::Host(dispatch_error_message(app_id, "sent an unsolicited rejection", fault, report))),
+        _ => Ok(()),
     }
 }
 
@@ -430,7 +480,7 @@ fn dispatch_error_message(app_id: &str, verb: &str, fault: &[u8], report: &[u8])
 
 #[cfg(test)]
 fn run_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
-    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code.into()), message))
+    semio_framework_diagnostic::encode_fault_bytes(&semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Os, semio_framework_diagnostic::FaultCode::new(code.into()), message))
 }
 //#endregion 🔖️MediaArtifact
 
@@ -1039,11 +1089,13 @@ pub struct SpaceRunner<H: AppChannelHost, B: BlobStore + 'static = NoBlobStore> 
     /// builds — `None` (the default) means no deadline, matching every pre-async-rewrite caller's
     /// behavior exactly.
     deadline_ms: Option<u64>,
+    /// 📊️ Hears every node's polled whole-document load progress — see [`Self::with_document_load_progress`].
+    document_load_progress: Option<Box<dyn FnMut(&NodeDocumentLoadProgress) + Send>>,
 }
 
 impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     pub fn new(host: H, blob_store: Arc<B>, merge_policy: protocol::MergePolicy) -> Self {
-        Self { host, blob_store, merge_policy, cancel: CancelToken::root_now(), deadline_ms: None }
+        Self { host, blob_store, merge_policy, cancel: CancelToken::root_now(), deadline_ms: None, document_load_progress: None }
     }
 
     pub fn into_host(self) -> H {
@@ -1061,6 +1113,14 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     /// here on. Builder-style: `SpaceRunner::new(..).with_deadline_ms(..)`.
     pub fn with_deadline_ms(mut self, deadline_ms: Option<u64>) -> Self {
         self.deadline_ms = deadline_ms;
+        self
+    }
+
+    /// 📊️ Hands every node's polled whole-document load progress to `observer` — ephemeral and local-only
+    /// ([`NodeDocumentLoadProgress`]), never recorded into the run document. Builder-style, like
+    /// [`Self::with_deadline_ms`].
+    pub fn with_document_load_progress(mut self, observer: impl FnMut(&NodeDocumentLoadProgress) + Send + 'static) -> Self {
+        self.document_load_progress = Some(Box::new(observer));
         self
     }
 
@@ -1089,12 +1149,17 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     /// FIRST so the instance's local/authority policy is established before any other command
     /// reaches it — channel v12 retires `Hello`/`Welcome` entirely, `host.open` is what now
     /// establishes the instance, via `Event::InstanceOpen` on the reactor ABI, not a wire command),
-    /// `LoadConfig`, `LoadDocument`, one `MediaIn` per resolved input, one
-    /// `MediaOut`+`MediaFingerprint` pair per output port, then `ReadDocument` and finally
-    /// `ReadConfig` to persist whatever the imports mutated on either artifact (see this file's
-    /// header doc: "importing media is emitting operations") — as a single batched `host.exchange`
-    /// call. Returns the node's mutated document bytes, its mutated config bytes, and per output port
-    /// the exported `Media` plus its wire fingerprint string.
+    /// `LoadConfig` and the admission of the node's whole-document load in one batched exchange; the
+    /// load then runs to its acknowledged terminal one poll per exchange ([`Self::drive_document_load`]);
+    /// then one `MediaIn` per resolved input, one `MediaOut`+`MediaFingerprint` pair per output port,
+    /// `ReadDocument` and finally `ReadConfig` to persist whatever the imports mutated on either artifact
+    /// (see this file's header doc: "importing media is emitting operations") in a second batched
+    /// exchange. A structured (`Document` wire) input closes its own import batch
+    /// ([`Self::import_media_batch`]): a whole document of the node's schema loads as a stepped archive load
+    /// before anything after it is sent. A node with no stored document (`SpaceBundle::read_artifact` answers an empty pair)
+    /// loads nothing and runs on its app's genesis document. Returns the node's mutated document bytes,
+    /// its mutated config bytes, and per output port the exported `Media` plus its wire fingerprint
+    /// string.
     async fn compute_node(
         &mut self,
         live: &mut HashMap<String, u32>,
@@ -1125,15 +1190,34 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         let load_config_seq = next_seq();
         commands.push(AppCommand::LoadConfig { seq: load_config_seq, pack: config.0.clone(), spr: config.1.clone() });
 
-        let load_document_seq = next_seq();
-        commands.push(AppCommand::LoadDocument { seq: load_document_seq, pack: document.0.clone(), spr: document.1.clone() });
+        let mut document_load = (!document.0.is_empty() || !document.1.is_empty()).then(|| protocol::DocumentArchiveLoadHost::new(protocol::DocumentArchivePack { parent_pack: document.0.clone(), parent_spr: document.1.clone(), members: Vec::new() }));
+        let admission = match document_load.as_mut().map(|load| load.step(&mut next_seq)) {
+            Some(protocol::DocumentArchiveLoadStep::Send { seq, command }) => {
+                commands.push(command);
+                Some(seq)
+            }
+            _ => None,
+        };
 
+        let frames = self.host.exchange(&ctx, handle, commands).await?;
+        refuse_unsolicited(&node.app_id, &frames)?;
+        expect_done(&node.app_id, set_policy_seq, node_reply(&frames, &node.app_id, set_policy_seq)?)?;
+        expect_done(&node.app_id, load_config_seq, node_reply(&frames, &node.app_id, load_config_seq)?)?;
+        if let (Some(load), Some(admit_seq)) = (document_load.as_mut(), admission) {
+            let admitted = (admit_seq, node_reply(&frames, &node.app_id, admit_seq)?.clone());
+            self.drive_document_load(&ctx, handle, node, load, Some(admitted), &mut next_seq).await?;
+        }
+
+        let mut commands = Vec::new();
         let mut media_in_seqs = Vec::with_capacity(input_media.len());
         for (port, media) in input_media {
             let (descriptor, data) = media_to_artifact(media, self.blob_store.as_ref()).await?;
             let this_seq = next_seq();
             commands.push(AppCommand::MediaIn { seq: this_seq, port: port.clone(), descriptor, data });
             media_in_seqs.push(this_seq);
+            if matches!(media.payload, MediaPayload::Structured { .. }) {
+                self.import_media_batch(&ctx, handle, node, std::mem::take(&mut commands), std::mem::take(&mut media_in_seqs), &mut next_seq).await?;
+            }
         }
 
         let mut output_seqs = Vec::with_capacity(node.outputs.len());
@@ -1152,25 +1236,11 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         commands.push(AppCommand::ReadConfig { seq: read_config_seq });
 
         let frames = self.host.exchange(&ctx, handle, commands).await?;
+        refuse_unsolicited(&node.app_id, &frames)?;
 
-        if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
-            return Err(RunError::Host(dispatch_error_message(&node.app_id, "sent an unsolicited rejection", fault, report)));
-        }
-
-        let reply_to = |seq: u64| -> Result<&AppFrame, RunError> { frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{}` sent no reply to seq {seq}", node.app_id))) };
-        let expect_done = |seq: u64, frame: &AppFrame| -> Result<(), RunError> {
-            match frame {
-                AppFrame::Done { .. } => Ok(()),
-                AppFrame::Error { fault, report, .. } => Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("rejected seq {seq}"), fault, report))),
-                other => Err(RunError::Host(format!("`{}` sent an unexpected frame for seq {seq}: {other:?}", node.app_id))),
-            }
-        };
-
-        expect_done(set_policy_seq, reply_to(set_policy_seq)?)?;
-        expect_done(load_config_seq, reply_to(load_config_seq)?)?;
-        expect_done(load_document_seq, reply_to(load_document_seq)?)?;
+        let reply_to = |seq: u64| node_reply(&frames, &node.app_id, seq);
         for this_seq in &media_in_seqs {
-            expect_done(*this_seq, reply_to(*this_seq)?)?;
+            expect_done(&node.app_id, *this_seq, reply_to(*this_seq)?)?;
         }
 
         let mut outputs = BTreeMap::new();
@@ -1201,6 +1271,60 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         };
 
         Ok((mutated_document, mutated_config, outputs))
+    }
+
+    /// 🗃️ Drives one node's whole-document load, admitted in [`Self::compute_node`]'s first batch, to its acknowledged terminal
+    /// through the stepped archive load (`protocol::DocumentArchiveLoadHost`, `📓️api-stepped-document-load.md` §2): one command
+    /// per exchange, every polled status handed to the [`Self::with_document_load_progress`] observer, so a long history folds
+    /// over many guest turns. A cancelled run token cancels the load in the guest and keeps polling until the guest restored the
+    /// node's previous document with zero trace, then answers [`RunError::Cancelled`], as does a load the guest cancelled itself.
+    /// A guest fault, terminal or refused, is the node's host error carrying the guest's own fault code.
+    async fn drive_document_load(&mut self, ctx: &OperationContext, handle: u32, node: &WorkflowNode, load: &mut protocol::DocumentArchiveLoadHost, admitted: Option<(u64, AppFrame)>, next_seq: &mut impl FnMut() -> u64) -> Result<(), RunError> {
+        let mut answered = admitted;
+        loop {
+            if let Some((seq, frame)) = answered.take() {
+                match load.answer(seq, &frame) {
+                    Ok(Some(status)) => {
+                        if let Some(observer) = self.document_load_progress.as_mut() {
+                            observer(&NodeDocumentLoadProgress { node_id: node.id.clone(), completed: status.completed, total: status.total });
+                        }
+                    }
+                    Ok(None) => {}
+                    Err(protocol::DocumentArchiveLoadRefusal::Refused(fault)) => return Err(RunError::Host(dispatch_error_message(&node.app_id, "refused its document load", &fault, &[]))),
+                    Err(protocol::DocumentArchiveLoadRefusal::Unanswered) => return Err(RunError::Host(format!("`{}` answered document load seq {seq} with a frame that answers another command", node.app_id))),
+                }
+            }
+            if ctx.cancel.is_cancelled().await {
+                load.request_cancel();
+            }
+            let (seq, command) = match load.step(&mut *next_seq) {
+                protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Ready) => return Ok(()),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Cancelled) => return Err(RunError::Cancelled),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Fault(fault)) => return Err(RunError::Host(dispatch_error_message(&node.app_id, "failed to load its document", &fault, &[]))),
+            };
+            let frames = self.host.exchange(ctx, handle, vec![command]).await?;
+            refuse_unsolicited(&node.app_id, &frames)?;
+            answered = Some((seq, node_reply(&frames, &node.app_id, seq)?.clone()));
+        }
+    }
+
+    /// 🎞️ Sends one batch of media imports that ends in a structured (`Document` wire) input and answers once the node holds its
+    /// result: every earlier import answers `Done`; the last one either imported (`Done`) or carried a whole document of the
+    /// node's own schema, which the guest admitted as a stepped archive load under that import's own sequence
+    /// (`AppFrame::DocumentArchiveLoad`, `📓️api-stepped-document-load.md` §4) — driven here to its acknowledged terminal like the
+    /// node's own document, so no later import, export or read ever observes the document being replaced.
+    async fn import_media_batch(&mut self, ctx: &OperationContext, handle: u32, node: &WorkflowNode, commands: Vec<AppCommand>, seqs: Vec<u64>, next_seq: &mut impl FnMut() -> u64) -> Result<(), RunError> {
+        let frames = self.host.exchange(ctx, handle, commands).await?;
+        refuse_unsolicited(&node.app_id, &frames)?;
+        let Some((last, earlier)) = seqs.split_last() else { return Ok(()) };
+        for seq in earlier {
+            expect_done(&node.app_id, *seq, node_reply(&frames, &node.app_id, *seq)?)?;
+        }
+        match node_reply(&frames, &node.app_id, *last)? {
+            AppFrame::DocumentArchiveLoad { status, .. } if status.operation == *last => self.drive_document_load(ctx, handle, node, &mut protocol::DocumentArchiveLoadHost::admitted(*last), None, next_seq).await,
+            frame => expect_done(&node.app_id, *last, frame),
+        }
     }
 
     /// 🕸️ Runs every dirty node in `graph`'s topological order, importing media across each edge
@@ -1861,7 +1985,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
 
     /// 🎯️ Contract §5 end to end: `initiator_handle` must already have proposed (its own
     /// `dispatch_emit` stashed a `TransactionProposalDraft` instead of applying — the caller drains
-    /// it via `exchange` and passes `local_ops`/`description`/`foreign` straight through here).
+    /// it via `exchange` and passes `local_ops`/`foreign` straight through here).
     ///
     /// 🚧️ `exec`/`plan` always return `TransactionError` today — this struct's own doc comment
     /// explains why (a real per-command reply correlation / contributed-mutation-plan dispatch over
@@ -1870,7 +1994,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// (unlike deleting the method) so `TransactionCoordinator`'s own resolution/gating logic — which
     /// IS real and IS tested (`host_transaction_coordinator_tests`) — stays reachable from here the
     /// moment the two closures below get real bodies.
-    pub async fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, description: String, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
+    pub async fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
         let (plugin_id, instance_id) = self.instances.get(&initiator_handle).cloned().ok_or_else(|| semio_framework_plugin_host::TransactionError::Rejected { code: "transaction.unknown-target".into(), message: format!("unknown node handle {initiator_handle}") })?;
         let initiator = semio_framework_plugin_host::TransactionMember { plugin_id, instance_id };
         self.transaction_coordinator.run_transaction(
@@ -1887,7 +2011,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             },
             initiator,
             local_ops,
-            description,
             foreign,
         ).await
     }
@@ -2007,7 +2130,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         let instance_handle = self.next_handle;
         self.next_handle += 1;
         let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: app_id.to_string(), instance_id: instance_handle };
-        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(RunError::Host)?;
+        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(|refusal| RunError::Host(refusal.reason))?;
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
         let open_event = Event::InstanceOpen {
@@ -2046,19 +2169,19 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
                 AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
                     frames.push(match self.resolve_open_artifact(&artifact_ref, role, &plugin_id, &app_id).await {
                         Ok(_resolved) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: semio_framework_diagnostic::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
                     frames.push(match self.set_default_app(&artifact_kind, &standard, &subset, role, &plugin_id, &app_id).await {
                         Ok(()) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: semio_framework_diagnostic::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
                     frames.push(match self.clear_default_app(&artifact_kind, &standard, &subset, role) {
                         Ok(()) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: semio_framework_diagnostic::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 other => passthrough.push(other),
@@ -2144,7 +2267,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
                     match result {
                         RequestOutcome::Ok(bytes) => match protocol::decode_app_frame(&bytes).await {
                             Ok(frame) => frames.push(frame),
-                            Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(req.0), fault: dsl::encode_fault_bytes(&semio_framework::Fault::from(error.to_string())), report: Vec::new() }),
+                            Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(req.0), fault: semio_framework_diagnostic::encode_fault_bytes(&semio_framework::Fault::from(error.to_string())), report: Vec::new() }),
                         },
                         RequestOutcome::Err(bytes) => frames.push(AppFrame::Error { in_reply_to: Some(req.0), fault: bytes, report: Vec::new() }),
                     }
@@ -2177,7 +2300,6 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::LocalInteractionQuery { seq, .. }
         | AppCommand::ArtifactCommand { seq, .. }
         | AppCommand::ApplyEnvelopes { seq, .. }
-        | AppCommand::LoadDocument { seq, .. }
         | AppCommand::ReadDocument { seq }
         | AppCommand::LoadDocumentArchive { seq, .. }
         | AppCommand::ReadDocumentArchive { seq }
@@ -2211,6 +2333,7 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::PollMediaExport { seq, .. }
         | AppCommand::CancelMediaExport { seq, .. }
         | AppCommand::ReadDocumentIdentity { seq }
+        | AppCommand::ReadChildHeads { seq }
         | AppCommand::TakeMediaExportChunk { seq, .. } => *seq,
     }
 }

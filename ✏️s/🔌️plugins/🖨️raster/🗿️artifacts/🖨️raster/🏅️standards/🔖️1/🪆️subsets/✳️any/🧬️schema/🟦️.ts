@@ -1,6 +1,8 @@
 /** 🧬️ Raster artifact schema — every field with its state class. */
-import { parseDslValue, type DslValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import { parseDslValue, type DslValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+
+import {type Binary64,type Binary32,parseBinary64Transport,parseBinary32Transport,binary64,binary64Value,binary32Value} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 
 export interface RasterArtifact {
   schema: string;
@@ -18,7 +20,7 @@ export interface RasterLayerPixel {
   name: string;
   visible: boolean;
   locked: boolean;
-  opacity: number;
+  opacity: Binary32;
   blendMode: string;
   transform: RasterTransform;
   mask?: RasterLayerMask;
@@ -33,7 +35,7 @@ export interface RasterLayerGroup {
   name: string;
   visible: boolean;
   locked: boolean;
-  opacity: number;
+  opacity: Binary32;
   blendMode: string;
   transform: RasterTransform;
   mask?: RasterLayerMask;
@@ -46,20 +48,20 @@ export interface RasterLayerAdjustment {
   name: string;
   visible: boolean;
   locked: boolean;
-  opacity: number;
+  opacity: Binary32;
   blendMode: string;
   transform: RasterTransform;
   adjustmentKind: string;
-  params: Record<string, DslValue>;
+  params: Record<string, IntrinsicValue>;
 }
 
 export interface RasterTransform {
-  x: number;
-  y: number;
-  a: number;
-  b: number;
-  c: number;
-  d: number;
+  x: Binary64;
+  y: Binary64;
+  a: Binary64;
+  b: Binary64;
+  c: Binary64;
+  d: Binary64;
 }
 
 export interface RasterLayerMask {
@@ -159,7 +161,7 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
     name: rasterRasterArtifactGuardString(row["name"], `${at}.name`),
     visible: rasterRasterArtifactGuardBoolean(row["visible"], `${at}.visible`),
     locked: rasterRasterArtifactGuardBoolean(row["locked"], `${at}.locked`),
-    opacity: rasterRasterArtifactGuardNumber(row["opacity"], `${at}.opacity`),
+    opacity: parseBinary32Transport(row["opacity"]),
     blendMode: rasterRasterArtifactGuardString(row["blendMode"], `${at}.blendMode`),
     transform: parseRasterTransform(row["transform"], `${at}.transform`),
   };
@@ -168,8 +170,8 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
       kind,
       ...common,
       mask: row["mask"] == null ? undefined : parseRasterLayerMask(row["mask"], `${at}.mask`),
-      width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0 }),
-      height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
+      width: row["width"] == null ? undefined : rasterRasterArtifactGuardInteger(row["width"], `${at}.width`, { minimum: 0, maximum: 4294967295 }),
+      height: row["height"] == null ? undefined : rasterRasterArtifactGuardInteger(row["height"], `${at}.height`, { minimum: 0, maximum: 4294967295 }),
       imageKey: row["imageKey"] == null ? undefined : rasterRasterArtifactGuardString(row["imageKey"], `${at}.imageKey`),
     };
   }
@@ -187,7 +189,7 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
     adjustmentKind: rasterRasterArtifactGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
     params: Object.fromEntries(
       Object.entries(rasterRasterArtifactGuardObject(row["params"], `${at}.params`))
-        .map(([key, item]) => [key, parseDslValue(item)]),
+        .map(([key, item]) => [key, parseRasterParameter(item)]),
     ),
   };
 }
@@ -195,12 +197,12 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
 export function parseRasterTransform(value: unknown, at = "$"): RasterTransform {
   const row = rasterRasterArtifactGuardObject(value, at);
   return {
-    x: rasterRasterArtifactGuardNumber(row["x"], `${at}.x`),
-    y: rasterRasterArtifactGuardNumber(row["y"], `${at}.y`),
-    a: rasterRasterArtifactGuardNumber(row["a"], `${at}.a`),
-    b: rasterRasterArtifactGuardNumber(row["b"], `${at}.b`),
-    c: rasterRasterArtifactGuardNumber(row["c"], `${at}.c`),
-    d: rasterRasterArtifactGuardNumber(row["d"], `${at}.d`),
+    x: parseBinary64Transport(row["x"]),
+    y: parseBinary64Transport(row["y"]),
+    a: parseBinary64Transport(row["a"]),
+    b: parseBinary64Transport(row["b"]),
+    c: parseBinary64Transport(row["c"]),
+    d: parseBinary64Transport(row["d"]),
   };
 }
 
@@ -216,6 +218,81 @@ export function parseRasterLayerMask(value: unknown, at = "$"): RasterLayerMask 
     transform: parseRasterTransform(row["transform"], `${at}.transform`),
   };
 }
+
+//#region 🔖️JsonProjection
+/** 🔢️ A binary32 word as the JSON number the native printer writes: the shortest decimal that rounds back to the same binary32. */
+export function rasterBinary32Number(word: Binary32): number {
+  const value = binary32Value(word);
+  if (!Number.isFinite(value)) return value;
+  for (let digits = 1; digits <= 9; digits++) {
+    const candidate = Number(value.toPrecision(digits));
+    if (Math.fround(candidate) === value) return candidate;
+  }
+  return value;
+}
+
+/** 🔢️ The transform's derived numeric values — what compositing math and the JSON wire read; the exact identity stays the words. */
+export function rasterTransformNumbers(transform: RasterTransform): { x: number; y: number; a: number; b: number; c: number; d: number } {
+  return { x: binary64Value(transform.x), y: binary64Value(transform.y), a: binary64Value(transform.a), b: binary64Value(transform.b), c: binary64Value(transform.c), d: binary64Value(transform.d) };
+}
+
+/** 🌱️ Reads one adjustment parameter from its JSON wire (`DslValue` projection) into the owned intrinsic tree: integers become
+ * `unsigned`/`signed`, every other number a binary64 `float`, without recursive calls. */
+export function parseRasterParameter(value: unknown): IntrinsicValue {
+  const root = parseDslValue(value);
+  let result: IntrinsicValue | undefined;
+  const pending: { source: DslValue; put: (value: IntrinsicValue) => void }[] = [{ source: root, put: (value) => { result = value; } }];
+  while (pending.length) {
+    const { source, put } = pending.pop()!;
+    if (source === null) put({ kind: "null" });
+    else if (typeof source === "boolean") put({ kind: "boolean", value: source });
+    else if (typeof source === "number") put(Number.isSafeInteger(source) ? { kind: source < 0 ? "signed" : "unsigned", value: BigInt(source) } : { kind: "float", value: binary64(source) });
+    else if (typeof source === "string") put({ kind: "text", value: source });
+    else if (Array.isArray(source)) {
+      const items: IntrinsicValue[] = new Array(source.length);
+      put({ kind: "array", items });
+      source.forEach((item, index) => pending.push({ source: item, put: (value) => { items[index] = value; } }));
+    } else {
+      const entries = Object.entries(source), members: { name: string; value: IntrinsicValue }[] = entries.map(([name]) => ({ name, value: { kind: "null" } }));
+      put({ kind: "object", members });
+      entries.forEach(([, item], index) => pending.push({ source: item, put: (value) => { members[index]!.value = value; } }));
+    }
+  }
+  return result!;
+}
+
+/** 🌱️ Prints one owned intrinsic parameter as its JSON wire value (the inverse of `parseRasterParameter`); octets have no JSON projection. */
+export function printRasterParameter(value: IntrinsicValue): DslValue {
+  let result: DslValue = null;
+  const pending: { source: IntrinsicValue; put: (value: DslValue) => void }[] = [{ source: value, put: (value) => { result = value; } }];
+  while (pending.length) {
+    const { source, put } = pending.pop()!;
+    switch (source.kind) {
+      case "null": put(null); break;
+      case "boolean": case "text": put(source.value); break;
+      case "unsigned": case "signed": put(Number(source.value)); break;
+      case "float": put(binary64Value(source.value)); break;
+      case "bytes": throw new rasterRasterArtifactGuardRefusal("$", "octet parameters have no JSON projection");
+      case "array": { const items: DslValue[] = new Array(source.items.length); put(items); source.items.forEach((item, index) => pending.push({ source: item, put: (value) => { items[index] = value; } })); break; }
+      case "object": { const members: { [key: string]: DslValue } = {}; put(members); for (const member of source.members) pending.push({ source: member.value, put: (value) => { members[member.name] = value; } }); break; }
+    }
+  }
+  return result;
+}
+
+/** 🎭️ Prints a mask as its JSON wire object (absent extents and key omitted). */
+export function printRasterLayerMask(mask: RasterLayerMask): Record<string, unknown> {
+  return { enabled: mask.enabled, linked: mask.linked, invert: mask.invert, width: mask.width, height: mask.height, imageKey: mask.imageKey, transform: rasterTransformNumbers(mask.transform) };
+}
+
+/** 🧾️ Prints a layer node as its JSON wire object — the inverse of `parseRasterLayerNode`. */
+export function printRasterLayerNode(node: RasterLayerNode): Record<string, unknown> {
+  const common = { kind: node.kind, id: node.id, name: node.name, visible: node.visible, locked: node.locked, opacity: rasterBinary32Number(node.opacity), blendMode: node.blendMode, transform: rasterTransformNumbers(node.transform) };
+  if (node.kind === "pixel") return { ...common, mask: node.mask && printRasterLayerMask(node.mask), width: node.width, height: node.height, imageKey: node.imageKey };
+  if (node.kind === "group") return { ...common, mask: node.mask && printRasterLayerMask(node.mask), children: node.children.map(printRasterLayerNode) };
+  return { ...common, adjustmentKind: node.adjustmentKind, params: Object.fromEntries(Object.entries(node.params).map(([key, value]) => [key, printRasterParameter(value)])) };
+}
+//#endregion 🔖️JsonProjection
 
 export function parseRasterViewportSize(value: unknown, at = "$"): RasterViewportSize {
   const row = rasterRasterArtifactGuardObject(value, at);

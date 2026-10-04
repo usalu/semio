@@ -11,7 +11,19 @@
   "spreads": null,
   "pages": null,
   "printTarget": null,
-  "dataFieldsJson": "{\"client\":\"acme\"}",
   "backgroundDrawing": null,
-  "referencedModel": null
+  "referencedModel": null,
+  "dataFields": {
+    "dictionary": {
+      "entries": [
+        {
+          "questionId": "client",
+          "value": {
+            "kind": "text",
+            "value": "acme"
+          }
+        }
+      ]
+    }
+  }
 }

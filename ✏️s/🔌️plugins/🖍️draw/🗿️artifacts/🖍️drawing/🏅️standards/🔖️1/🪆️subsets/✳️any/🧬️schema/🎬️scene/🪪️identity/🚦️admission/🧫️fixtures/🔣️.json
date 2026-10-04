@@ -1,0 +1,20 @@
+{
+  "identity": {"instance": 710001, "base": "9007199254740993", "generation": "18446744073709551615", "revision": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]},
+  "cases": [
+    {"name": "complete exact source", "live": {}, "visual": {}, "preparing": false, "failed": false, "status": "ready"},
+    {"name": "complete empty scene is still ready", "live": {}, "visual": {}, "preparing": true, "failed": false, "status": "ready"},
+    {"name": "complete source survives unrelated failure observation", "live": {}, "visual": {}, "preparing": false, "failed": true, "status": "ready"},
+    {"name": "first source preparation", "live": {}, "visual": null, "preparing": true, "failed": false, "status": "pending"},
+    {"name": "old picture remains during replacement", "live": {}, "visual": {"base": "9007199254740992"}, "preparing": true, "failed": false, "status": "pending"},
+    {"name": "real source failure persists after cleanup", "live": {}, "visual": null, "preparing": false, "failed": true, "status": "failed"},
+    {"name": "old picture cannot mask current failure", "live": {}, "visual": {"generation": "18446744073709551614"}, "preparing": true, "failed": true, "status": "failed"},
+    {"name": "no admitted producer", "live": {}, "visual": null, "preparing": false, "failed": false, "status": "unavailable"},
+    {"name": "old picture without replacement", "live": {}, "visual": {"base": "9007199254740992"}, "preparing": false, "failed": false, "status": "unavailable"},
+    {"name": "adjacent full width live base invalidates captured source", "live": {"base": "9007199254740992"}, "visual": {}, "preparing": true, "failed": false, "status": "stale"},
+    {"name": "live generation invalidates captured source", "live": {"generation": "18446744073709551614"}, "visual": {}, "preparing": false, "failed": true, "status": "stale"},
+    {"name": "live hash invalidates captured source", "live": {"revision": [31,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}, "visual": {}, "preparing": false, "failed": false, "status": "stale"},
+    {"name": "other instance cannot borrow matching picture", "live": {"instance": 710002}, "visual": {}, "preparing": false, "failed": false, "status": "stale"},
+    {"name": "closed instance has no live authority", "live": null, "visual": {}, "preparing": false, "failed": false, "status": "stale"},
+    {"name": "different visual instance is never ready", "live": {}, "visual": {"instance": 710002}, "preparing": true, "failed": false, "status": "pending"}
+  ]
+}

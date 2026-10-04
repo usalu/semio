@@ -63,6 +63,7 @@
       "vectors": [],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "declare-doctype",
         "rename-document-element",
         "set-external-subset",
@@ -207,6 +208,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "xml-1-0-valid-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-xml-1-0-valid-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "xml-1-0-valid-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

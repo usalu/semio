@@ -9,5 +9,5 @@ fn removes_only_a_present_security_handler() {
     let outcome = <RemoveEncryptionDictionary as MutationKind<PdfSnapshot, PdfAMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::encryption_dictionary_with(&next, 2, 3).is_none());
-    assert_eq!(<RemoveEncryptionDictionary as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).len(), 1);
+    assert_eq!(<RemoveEncryptionDictionary as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }

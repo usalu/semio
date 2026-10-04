@@ -92,6 +92,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-main-header",
         "insert-stream",
         "remove-stream",
@@ -285,6 +286,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "avi-1-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "riff-avi-1-0-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "avi-1-0-mutate",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

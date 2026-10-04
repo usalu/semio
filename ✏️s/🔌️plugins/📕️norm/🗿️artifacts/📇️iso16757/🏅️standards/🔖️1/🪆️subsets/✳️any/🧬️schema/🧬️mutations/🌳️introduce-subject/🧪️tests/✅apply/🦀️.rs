@@ -5,8 +5,8 @@ const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutation
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🦠️mutation/🔣️.json");
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/✅apply/🎯️outcome/🔣️.json");
-fn before() -> Iso16757Snapshot { pack::json::from_json_str(BEFORE).expect("before") }
-fn mutation() -> Iso16757Mutation { pack::json::from_json_str(MUTATION).expect("mutation") }
+fn before() -> Iso16757Snapshot { semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before") }
+fn mutation() -> Iso16757Mutation { semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation") }
 fn apply(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Iso16757Snapshot {
     let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "introduce-subject raised {:?}", raised.messages());
@@ -20,15 +20,15 @@ fn mutation_is_the_canonical_wire() {
 fn applies_to_committed_after_and_diff() {
     let base = before();
     let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
-    assert_eq!(*raised.diff(), pack::json::from_json_str::<Iso16757Diff>(DIFF).expect("diff"));
+    assert_eq!(*raised.diff(), semio_framework_pack_json::from_json_str::<Iso16757Diff>(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff"));
     let after = apply(&mutation(), &base);
     assert_ne!(after, base, "introduce-subject must move the document");
-    assert_eq!(after, pack::json::from_json_str::<Iso16757Snapshot>(AFTER).expect("after"));
+    assert_eq!(after, semio_framework_pack_json::from_json_str::<Iso16757Snapshot>(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after"));
 }
 #[test]
 fn inverse_restores_before() {
     let base = before();
-    let inverse = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(&mutation(), &base);
+    let inverse = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "introduce-subject changes the document, so its inverse must not be empty");
     let restored = inverse.iter().fold(apply(&mutation(), &base), |snapshot, step| apply(step, &snapshot));
     assert_eq!(restored, base);

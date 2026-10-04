@@ -15,5 +15,14 @@
       "rust": "🖌️drawing-layers/🦀️.rs",
       "typescript": "🖌️drawing-layers/🟦️.ts"
     }
-  ]
+  ],
+  "policy": {
+    "excludedInputPaths": [],
+    "genericEmojiIdentities": [
+      "📁️",
+      "📂️",
+      "📄️"
+    ]
+  },
+  "contractId": "draw-drawing-graph"
 }

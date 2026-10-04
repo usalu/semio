@@ -56,11 +56,11 @@ pub mod derived_composition {
     pub struct SemioKitValidator;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn wrong_child<S>(field: &str, expected_subset: &str, child: &store::ArtifactChild<S>) -> Option<dsl::Diagnostic> {
+    fn wrong_child<S>(field: &str, expected_subset: &str, child: &store::ArtifactChild<S>) -> Option<semio_framework_diagnostic::Diagnostic> {
         if let Err(message) = crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&child.child_id, &child.target, expected_subset) {
-            Some(dsl::Diagnostic::error(
+            Some(semio_framework_diagnostic::Diagnostic::error(
                 "stdio.semio_kit.validate-child-identity-mismatch",
-                dsl::TextSpan::at(1, 1),
+                semio_framework_diagnostic::TextSpan::at(1, 1),
                 format!("SemioKitValidator: `{field}` {message}"),
             ))
         } else {
@@ -70,13 +70,13 @@ pub mod derived_composition {
 
     impl SubsetValidator for SemioKitValidator {
         const DIALECT: Dialect = DIALECT;
-        async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
+        async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             let Some(snapshot) = decoded else {
-                return vec![dsl::Diagnostic::error("stdio.semio_kit.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioKitValidator: payload did not decode as a SemioKitSnapshot".to_string())];
+                return vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_kit.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioKitValidator: payload did not decode as a SemioKitSnapshot".to_string())];
             };
             let mut diagnostics = Vec::new();
             for object in &snapshot.objects {

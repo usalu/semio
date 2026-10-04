@@ -90,6 +90,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/maintenanceVersion", "value": 7}} |
 
   @id-inverse
   @level-exhaustive
@@ -106,6 +107,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
       | id               | params |
       | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/maintenanceVersion", "value": 7}} |
 
   @id-refuse
   @level-exhaustive

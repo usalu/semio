@@ -1,8 +1,7 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{
-    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
-    PluginCommandHandler,
+    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
 };
 use semio_framework::{
     kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
@@ -388,11 +387,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         PA: From<crate::app::VcsArtifactApp<A>>,
     {
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-            resolve_ready(A::app_schema())
+            ::semio_framework_async::poll::resolve_ready(A::app_schema())
         }
         fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
+        let mut app = app;
+        crate::app::declarations::stamp_fault_notices::<A>(&mut app.definition);
         let definition = app.definition.clone();
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<A>() }));
         self.app_schema_descriptors.push(app_schema::<A>);
@@ -460,11 +461,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             V: crate::app::ArtifactViewer,
             PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
         {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
+        crate::app::declarations::stamp_fault_notices::<crate::app::ViewerApp<V>>(&mut def);
         let app = App { definition: def.clone(), examples: Vec::new() };
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
@@ -525,11 +527,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             E::app_schema()
         }
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
+            PA::from(::semio_framework_async::poll::resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         if def.io.artifact_schema.is_empty() {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
+        if let Some(codec) = E::natural_file_codec() {
+            crate::app::mount_natural_file_actions(&mut def, codec);
+        }
+        crate::app::declarations::stamp_fault_notices::<crate::app::EditorApp<E>>(&mut def);
         let app = App { definition: def.clone(), examples };
         self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: crate::app::artifact_codec_table::<crate::app::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);
@@ -711,7 +717,10 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         for (owner, documents) in &schema_documents {
             if owner.is_empty() || documents.scope.is_empty() || documents.scope.trim() != documents.scope || !(owner == &plugin_id || dependencies.iter().any(|dependency| &dependency.plugin_id == owner)) {
-                return Err(PluginAssemblyError::new("plugin-assembly.schema-documents-owner", format!("plugin {plugin_id:?} declares shared schema documents of {:?} without its own or a direct dependency's owner authority {owner:?}", documents.scope)));
+                return Err(PluginAssemblyError::new(
+                    "plugin-assembly.schema-documents-owner",
+                    format!("plugin {plugin_id:?} declares shared schema documents of {:?} without its own or a direct dependency's owner authority {owner:?}", documents.scope),
+                ));
             }
         }
         let document_app_ids: BTreeSet<_> = document_app_ids.into_iter().collect();

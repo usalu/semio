@@ -5,7 +5,8 @@ use crate::mutations::{commit_reconstruction, CommitReconstruction, Reconstructi
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
+pub fn inverse(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![commit_reconstruction(CommitReconstruction {
         sparse: base.results.sparse.clone(),
         trajectory: base.results.trajectory.clone(),
@@ -14,5 +15,7 @@ pub fn inverse(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Vec
         qc: base.results.qc.clone(),
         assets: payload.assets.iter().map(|binding| ReconstructionAssetCommit { id: binding.id.clone(), content_id: base.assets.get(&binding.id).map(|handle| handle.child_id.clone()) }).collect(),
     })]
+
+    })())
 }
 //#endregion 🔖️Inverse

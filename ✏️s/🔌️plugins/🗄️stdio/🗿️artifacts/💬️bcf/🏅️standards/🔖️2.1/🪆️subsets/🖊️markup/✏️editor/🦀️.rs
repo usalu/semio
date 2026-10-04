@@ -4,8 +4,9 @@
 
 use crate::editor::bcf::modes::edit;
 use crate::editor::bcf::modes::edit::windows::main;
-use crate::standards::v2_1::subsets::any::schema::mutations::{set_snapshot::SetSnapshot, set_topic_markup::SetTopicMarkup, BcfMutation};
+use crate::standards::v2_1::subsets::any::schema::mutations::{patch_snapshot::PatchSnapshot, set_snapshot::SetSnapshot, set_topic_markup::SetTopicMarkup, BcfMutation};
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -25,7 +26,6 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -41,9 +41,9 @@ use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_s_artifact_stdio_contract::pack;
-use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Dialect
 pub const BCF_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId::ANY };
@@ -52,7 +52,7 @@ pub const BCF_ANY_DOCUMENT_SCHEMA: &str = "stdio.bcf";
 
 //#region 🔖️Command
 /// ✏️ The standard table-cell edit, guarded by a whole-snapshot revision because BCF topics are
-/// stored positionally. The reducer publishes the artifact's existing `SetSnapshot` mutation after
+/// stored positionally. The reducer publishes the topic-markup leaf, or a path-scoped snapshot patch for the GUID, after
 /// changing exactly one modeled topic field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum BcfAnyEditCommand {
@@ -75,11 +75,11 @@ impl protocol::OpBinary for BcfAnyEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = BCF_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "bcf-edit-command", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "bcf-edit-command", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "bcf-edit-command", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "bcf-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -118,7 +118,7 @@ fn bcf_command_id(command: &BcfAnyEditCommand) -> &'static str {
     }
 }
 
-fn bcf_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<BcfAnyEditCommand, Fault> {
+fn bcf_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BcfAnyEditCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(BcfAnyEditCommand::EditSnapshot { event });
     }
@@ -142,9 +142,7 @@ fn bcf_emit(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot) -> Result<Emit<
 
 fn bcf_emit_at_revision(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot, canonical_revision: Option<&str>) -> Result<Emit<BcfMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        BcfAnyEditCommand::SetActiveExample { example_id } => {
-            Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bcf_example_snapshot(example_id), BCF_ANY_DOCUMENT_SCHEMA)], ..Default::default() })
-        }
+        BcfAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bcf_example_snapshot(example_id), BCF_ANY_DOCUMENT_SCHEMA)], ..Default::default() }),
         BcfAnyEditCommand::SetCell { row, column, revision, value } => {
             let current_revision = canonical_revision.map(str::to_owned).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot));
             if current_revision != *revision {
@@ -156,9 +154,7 @@ fn bcf_emit_at_revision(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot, can
                     if topic.guid == *value {
                         return Ok(Emit::default());
                     }
-                    let mut next = snapshot.clone();
-                    next.topics[*row as usize].guid = value.clone();
-                    BcfMutation::SetSnapshot(SetSnapshot { snapshot: next })
+                    BcfMutation::PatchSnapshot(PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: format!("/topics/{row}/guid"), value: semio_framework_value::DslValue::String(value.clone()) } })
                 }
                 1 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: Some(value.clone()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }),
                 2 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: None, description: None, status: Some(value.clone()), priority: None, labels: None, creation_date: None, creation_author: None }),
@@ -370,7 +366,7 @@ impl ArtifactEditor for BcfAnyEditor {
         bcf_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         bcf_command_from_action(action, args)
     }
 
@@ -393,9 +389,7 @@ impl ArtifactEditor for BcfAnyEditor {
                 bcf_emit_at_revision(command, doc.snapshot, revision.as_deref())
             }
             BcfAnyEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            BcfAnyEditCommand::SetActiveExample { example_id } => {
-                Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bcf_example_snapshot(example_id), BCF_ANY_DOCUMENT_SCHEMA)], ..Default::default() })
-            }
+            BcfAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bcf_example_snapshot(example_id), BCF_ANY_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 
@@ -406,10 +400,11 @@ impl ArtifactEditor for BcfAnyEditor {
                     .render_operation()
                     .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
                     .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
-                main::render_revisioned(doc.snapshot, &revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.bcf@2.1/*#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -429,7 +424,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BcfAnyE
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| BcfMutation::SetSnapshot(SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| BcfMutation::PatchSnapshot(PatchSnapshot { patch }), Some(|snapshot| BcfMutation::SetSnapshot(SetSnapshot { snapshot })))
     }
 }
 //#endregion 🔖️Editor

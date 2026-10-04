@@ -200,6 +200,16 @@ pub struct SemioMaterialDiff {
     pub metallic: Option<f32>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub roughness: Option<f32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub base_color_texture: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub metallic_roughness_texture: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub normal_texture: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub occlusion_texture: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub emissive_texture: Option<Option<String>>,
 }
 
 /// 🔺️ Per-texture sparse diff — `id` is the key.
@@ -330,6 +340,11 @@ fn apply_material(mat: &mut SemioMaterial, diff: &SemioMaterialDiff) {
     if let Some(v) = diff.roughness {
         mat.roughness = v;
     }
+    if let Some(value) = &diff.base_color_texture { mat.base_color_texture = value.clone(); }
+    if let Some(value) = &diff.metallic_roughness_texture { mat.metallic_roughness_texture = value.clone(); }
+    if let Some(value) = &diff.normal_texture { mat.normal_texture = value.clone(); }
+    if let Some(value) = &diff.occlusion_texture { mat.occlusion_texture = value.clone(); }
+    if let Some(value) = &diff.emissive_texture { mat.emissive_texture = value.clone(); }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -391,14 +406,17 @@ fn between_primitive(base: &SemioPrimitive, other: &SemioPrimitive) -> Option<Se
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_material(base: &SemioMaterial, other: &SemioMaterial) -> Option<SemioMaterialDiff> {
-    let base_color = if base.base_color != other.base_color { Some(other.base_color) } else { None };
-    let metallic = if base.metallic != other.metallic { Some(other.metallic) } else { None };
-    let roughness = if base.roughness != other.roughness { Some(other.roughness) } else { None };
-    if base_color.is_none() && metallic.is_none() && roughness.is_none() {
-        None
-    } else {
-        Some(SemioMaterialDiff { base_color, metallic, roughness })
-    }
+    let diff = SemioMaterialDiff {
+        base_color: (base.base_color != other.base_color).then_some(other.base_color),
+        metallic: (base.metallic != other.metallic).then_some(other.metallic),
+        roughness: (base.roughness != other.roughness).then_some(other.roughness),
+        base_color_texture: (base.base_color_texture != other.base_color_texture).then(|| other.base_color_texture.clone()),
+        metallic_roughness_texture: (base.metallic_roughness_texture != other.metallic_roughness_texture).then(|| other.metallic_roughness_texture.clone()),
+        normal_texture: (base.normal_texture != other.normal_texture).then(|| other.normal_texture.clone()),
+        occlusion_texture: (base.occlusion_texture != other.occlusion_texture).then(|| other.occlusion_texture.clone()),
+        emissive_texture: (base.emissive_texture != other.emissive_texture).then(|| other.emissive_texture.clone()),
+    };
+    (diff != SemioMaterialDiff::default()).then_some(diff)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -459,6 +477,11 @@ fn absorb_material_diff(mut a: SemioMaterialDiff, b: &SemioMaterialDiff) -> Semi
     if b.roughness.is_some() {
         a.roughness = b.roughness;
     }
+    if b.base_color_texture.is_some() { a.base_color_texture = b.base_color_texture.clone(); }
+    if b.metallic_roughness_texture.is_some() { a.metallic_roughness_texture = b.metallic_roughness_texture.clone(); }
+    if b.normal_texture.is_some() { a.normal_texture = b.normal_texture.clone(); }
+    if b.occlusion_texture.is_some() { a.occlusion_texture = b.occlusion_texture.clone(); }
+    if b.emissive_texture.is_some() { a.emissive_texture = b.emissive_texture.clone(); }
     a
 }
 
@@ -867,13 +890,13 @@ pub(crate) fn dec_mesh(s: &str) -> Result<SemioMesh, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_material(m: &SemioMaterial) -> String {
-    format!("[{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), m.metallic, m.roughness)
+    format!("[{},{},{},{},{},{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), m.metallic, m.roughness, encode_option(&m.base_color_texture, |v: &String| enc_str(v)), encode_option(&m.metallic_roughness_texture, |v: &String| enc_str(v)), encode_option(&m.normal_texture, |v: &String| enc_str(v)), encode_option(&m.occlusion_texture, |v: &String| enc_str(v)), encode_option(&m.emissive_texture, |v: &String| enc_str(v)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_material(s: &str) -> Result<SemioMaterial, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, base_color, metallic, roughness] = parts.as_slice() else { return Err(format!("material: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioMaterial { id: dec_str(id)?, base_color: dec_rgba(base_color)?, metallic: parse_f32(metallic)?, roughness: parse_f32(roughness)? })
+    let [id, base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture] = parts.as_slice() else { return Err(format!("material: expected 9 fields, got {}", parts.len())) };
+    Ok(SemioMaterial { id: dec_str(id)?, base_color: dec_rgba(base_color)?, metallic: parse_f32(metallic)?, roughness: parse_f32(roughness)?, base_color_texture: decode_option(base_color_texture, dec_str)?, metallic_roughness_texture: decode_option(metallic_roughness_texture, dec_str)?, normal_texture: decode_option(normal_texture, dec_str)?, occlusion_texture: decode_option(occlusion_texture, dec_str)?, emissive_texture: decode_option(emissive_texture, dec_str)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -974,13 +997,13 @@ pub(crate) fn dec_mesh_item_diff(s: &str) -> Result<SemioMeshItemDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_material_diff(d: &SemioMaterialDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.base_color, |v: &SemioRgba| enc_rgba(v)), encode_option(&d.metallic, |v: &f32| v.to_string()), encode_option(&d.roughness, |v: &f32| v.to_string()),)
+    format!("[{},{},{},{},{},{},{},{}]", encode_option(&d.base_color, enc_rgba), encode_option(&d.metallic, |v: &f32| v.to_string()), encode_option(&d.roughness, |v: &f32| v.to_string()), encode_option(&d.base_color_texture, |v| encode_option(v, |id| enc_str(id))), encode_option(&d.metallic_roughness_texture, |v| encode_option(v, |id| enc_str(id))), encode_option(&d.normal_texture, |v| encode_option(v, |id| enc_str(id))), encode_option(&d.occlusion_texture, |v| encode_option(v, |id| enc_str(id))), encode_option(&d.emissive_texture, |v| encode_option(v, |id| enc_str(id))))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_material_diff(s: &str) -> Result<SemioMaterialDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [base_color, metallic, roughness] = parts.as_slice() else { return Err(format!("material diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioMaterialDiff { base_color: decode_option(base_color, dec_rgba)?, metallic: decode_option(metallic, parse_f32)?, roughness: decode_option(roughness, parse_f32)? })
+    let [base_color, metallic, roughness, base_color_texture, metallic_roughness_texture, normal_texture, occlusion_texture, emissive_texture] = parts.as_slice() else { return Err(format!("material diff: expected 8 fields, got {}", parts.len())) };
+    Ok(SemioMaterialDiff { base_color: decode_option(base_color, dec_rgba)?, metallic: decode_option(metallic, parse_f32)?, roughness: decode_option(roughness, parse_f32)?, base_color_texture: decode_option(base_color_texture, |value| decode_option(value, dec_str))?, metallic_roughness_texture: decode_option(metallic_roughness_texture, |value| decode_option(value, dec_str))?, normal_texture: decode_option(normal_texture, |value| decode_option(value, dec_str))?, occlusion_texture: decode_option(occlusion_texture, |value| decode_option(value, dec_str))?, emissive_texture: decode_option(emissive_texture, |value| decode_option(value, dec_str))? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1059,8 +1082,8 @@ impl protocol::DiffCodec for SemioMeshDiff {
     fn print_diff(&self) -> String {
         print_mesh_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_mesh_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_mesh_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut (per this wave's brief item 5). `format u8` + `presence u8` (bit0 = `meshes`
@@ -1146,7 +1169,7 @@ fn demo_snapshot_a() -> SemioMeshSnapshot {
                 SemioPrimitive { id: "toModify".into(), topology: SemioTopology::Triangles, positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }], material_id: Some("mat-a".into()), ..Default::default() },
             ],
         }],
-        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 1.0 }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, metallic: 0.0, roughness: 1.0, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex-a".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
         ..Default::default()
     }
@@ -1162,7 +1185,7 @@ fn demo_snapshot_b() -> SemioMeshSnapshot {
                 SemioPrimitive { id: "added".into(), topology: SemioTopology::Points, ..Default::default() },
             ],
         }],
-        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 0.0 }],
+        materials: vec![SemioMaterial { id: "mat-a".into(), base_color: SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, metallic: 1.0, roughness: 0.0, ..Default::default() }],
         textures: vec![SemioTexture { id: "tex-a".into(), mime: "image/jpeg".into(), bytes: vec![4, 5] }],
         ..Default::default()
     }

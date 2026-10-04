@@ -52,14 +52,14 @@ mod tests {
     async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
         let mut p = WorldProjectionConfig::default();
         p.axonometric_angle_a = 22.0;
-        assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&store::json!({ "field": "obliqueVariant", "value": "military" }))));
+        assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&semio_framework_pack_json::object([("field".into(), semio_framework_pack_json::Value::from("obliqueVariant")), ("value".into(), semio_framework_pack_json::Value::from("military"))]))));
         assert_eq!(p.kind, "oblique");
         assert_eq!(p.oblique_variant, "military");
         assert_eq!(p.axonometric_angle_a, 22.0);
-        assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&store::json!({ "param": "obliqueAngle", "value": 30.0 }))));
+        assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&semio_framework_pack_json::object([("param".into(), semio_framework_pack_json::Value::from("obliqueAngle")), ("value".into(), semio_framework_pack_json::Value::from(30.0))]))));
         assert_eq!(p.oblique_angle, 30.0);
-        assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&store::json!({ "param": "obliqueAngle" }))));
-        assert!(world3d_projection_action_moves_pose("setProjection", Some(&store::json!({ "field": "obliqueVariant" }))));
+        assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&semio_framework_pack_json::object([("param".into(), semio_framework_pack_json::Value::from("obliqueAngle"))]))));
+        assert!(world3d_projection_action_moves_pose("setProjection", Some(&semio_framework_pack_json::object([("field".into(), semio_framework_pack_json::Value::from("obliqueVariant"))]))));
     }
 
     #[semio_framework_async_macros::async_test]

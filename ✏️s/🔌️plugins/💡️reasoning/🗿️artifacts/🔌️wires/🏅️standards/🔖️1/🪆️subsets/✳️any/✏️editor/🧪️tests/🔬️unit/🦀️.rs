@@ -64,8 +64,9 @@ pub(crate) mod context {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
-    
+    semio_framework_plugin::composed_reload_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, [("addNode", r#"{"kind":"identity"}"#)]);
+
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
     pub async fn app_with_registry() -> OwnedWiresApp {
@@ -80,7 +81,7 @@ pub(crate) mod context {
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
         retire_envelope(envelope);
-        app.load_document_pack(&files).await.expect("load metabolism");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load metabolism");
         app
     }
     
@@ -97,6 +98,51 @@ pub(crate) mod context {
     /// `InvocationResult` carries neither the mutations nor the effects the operation produces.
     pub async fn settle(app: &mut WiresApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation")
+    }
+
+    /// 🧪️ Reads the actual declared board member through its current Store lease.
+    pub fn board(app: &WiresApp) -> semio_framework_value::DslValue {
+        use store::SpaceMember;
+        let snapshot = app.snapshot().expect("current Wires parent");
+        let member = semio_framework_async::poll::resolve_ready(app.child_store(crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id)).expect("declared Wires child is registered");
+        assert_eq!(member.artifact_ref().as_ref(), Some(&snapshot.content.target), "registered child keeps the exact declared target");
+        let read = member.snapshot_read_erased_now().expect("current declared child read");
+        let content = read.get::<crate::SemioGraphSnapshot>().expect("exact graph child type");
+        crate::wires_composed(&snapshot, content).board
+    }
+
+    /// 📦️ Loads a parent and its explicit full graph child through the real recursive archive protocol.
+    pub async fn load_graph_fixture(app: &mut WiresApp, nodes: Vec<semio_framework_value::DslValue>, edges: Vec<semio_framework_value::DslValue>) -> Result<(), semio_framework_plugin::Fault> {
+        let content = crate::wires_content_snapshot(&nodes, &edges);
+        let snapshot = WiresSnapshot { content: crate::wires_content_handle(&content), ..crate::empty_wires_snapshot() };
+        let handle = snapshot.content.clone();
+        let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
+        envelope.dialect = Some(crate::WIRES_DIALECT.into());
+        let files = store::print_document_pack(&envelope).await.expect("graph fixture parent pack");
+        retire_envelope(envelope);
+        let mut archive = app.document_load_archive(&files)?;
+        let parent = store::os_io::ArtifactRef { artifact_id: app.document_identity().expect("live parent identity"), dialect: crate::WIRES_DIALECT.into() };
+        let owner = store::OwnerRef { parent: parent.clone(), slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id.clone() };
+        let child_pack = store::ArtifactPack::encode_pack(&content);
+        let envelope_pack = store::genesis_member_envelope_pack("stdio.semio", &handle.target, &owner, &child_pack).await.expect("full fixture child envelope");
+        archive.members.push(protocol::OwnedDocumentMemberPackEntry {
+            ordinal: 0,
+            reference: protocol::DocumentArchiveArtifactRef { artifact_id: handle.target.artifact_id, artifact_kind: handle.target.dialect.artifact_kind, standard: handle.target.dialect.standard, subset: handle.target.dialect.subset },
+            owner: protocol::DocumentArchiveOwnerRef { parent: protocol::DocumentArchiveArtifactRef { artifact_id: parent.artifact_id, artifact_kind: parent.dialect.artifact_kind, standard: parent.dialect.standard, subset: parent.dialect.subset }, slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id },
+            envelope_pack,
+        });
+        let operation = semio_framework_plugin::artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
+        app.begin_document_archive_load(operation, archive)?;
+        for _ in 0..100_000 {
+            let status = app.poll_document_archive_load(operation).await?;
+            if matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
+                continue;
+            }
+            app.acknowledge_document_archive_load(operation)?;
+            assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "explicit graph fixture archive fault: {:?}", status.fault);
+            return Ok(());
+        }
+        panic!("explicit graph fixture archive did not terminate");
     }
 
     /// 🎛️ Dispatches one typed command and settles its publication.
@@ -125,7 +171,6 @@ pub(crate) mod context {
 
 use super::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, new_app, render};
-use semio_framework_plugin::EditorApp;
 use serde_json::Value;
 
 const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
@@ -290,8 +335,8 @@ async fn wires_labels_resolve_native_by_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn metabolism_board_fixture_uses_mindmap_schema() {
-    let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-    let board = crate::wires_working_board(&document);
+    let app = metabolism_app().await;
+    let board = context::board(&app);
     assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::MINDMAP_BOARD_SCHEMA));
     assert_eq!(crate::schema::fixture_nodes(&board).len(), 7);
 }
@@ -308,40 +353,47 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
-        |app| crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
+        |app| crate::schema::fixture_nodes(&context::board(app)).len(),
         0,
         1,
     )
     .await;
 }
 
+/// 🔁️ LAW (design §20.15): a board edit is a child-lane leaf, so it reaches a peer on the content child's MEMBER lane (never as a
+/// parent `Mutations` batch); a peer folding that lane gets the edit, and the same lane redelivered folds nothing twice.
 #[semio_framework_async_macros::async_test]
-async fn ingest_operations_is_idempotent() {
+async fn a_redelivered_member_lane_is_idempotent() {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     use semio_framework_plugin::PluginApp;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
-    let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len();
+    let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::fixture_nodes(&context::board(app)).len();
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
     sender.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local")).await.expect("apply command");
     settle_registered_typed_operation(&mut *sender, meta("local").instance_id).await.expect("the edit publishes");
-    let mut envelopes = Vec::new();
-    for message in far.receive().await.expect("receive") {
-        if let BackboneMessage::Mutations { envelopes: operations } = message {
-            envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
-        }
-    }
-    assert!(!envelopes.is_empty(), "the applied edit must reach the channel as events");
-    let operations = protocol::encode_envelopes(&envelopes);
+    let received = far.receive().await.expect("receive");
+    assert!(!received.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a board edit never travels as a parent batch");
+    let lanes: Vec<BackboneMessage> = received.into_iter().filter(|message| matches!(message, BackboneMessage::Member { .. })).collect();
+    assert!(!lanes.is_empty(), "the board edit reaches the channel on the content child's member lane");
     let mut receiver = new_app().await;
+    let (inbound, mut peer) = MemoryBackbone::pair("mem://wires-idempotent-receiver", "mem://wires-idempotent-receiver").await;
+    receiver.attach_backbone(store::Backbones::Memory(inbound)).await.expect("attach receiver");
     let genesis = nodes(&receiver);
-    receiver.ingest_operations(&operations).await.expect("ingest once");
+    for message in &lanes {
+        peer.send(message.clone()).await.expect("deliver the member lane");
+    }
+    receiver.tick_backbone().await.expect("fold the member lane once");
     let once = nodes(&receiver);
-    assert_eq!(once, genesis + 1, "ingesting the events must materialize the edit");
-    receiver.ingest_operations(&operations).await.expect("ingest twice");
-    assert_eq!(nodes(&receiver), once, "feeding the same operation twice must not double-apply");
+    assert_eq!(once, genesis + 1, "folding the member lane materializes the edit");
+    for message in &lanes {
+        peer.send(message.clone()).await.expect("redeliver the member lane");
+    }
+    receiver.tick_backbone().await.expect("fold the member lane twice");
+    assert_eq!(nodes(&receiver), once, "the same member lane redelivered must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
+    receiver.detach_backbone().await.expect("receiver releases its backbone");
     crate::editor::wires::unit_tests::context::close(sender);
     crate::editor::wires::unit_tests::context::close(receiver);
 }
@@ -350,7 +402,7 @@ async fn ingest_operations_is_idempotent() {
 /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
-    use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+    use crate::schema::board_node;
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::PluginApp;
     use store::MemoryBackbone;
@@ -359,15 +411,12 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     let mut instance_b = new_app().await;
     // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
     // as edits) so the only edits on the channel are A's and B's disjoint ones.
-    let seed_node = |id: &str| semio_framework_value::ToValue::to_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }));
-    let mut base = crate::empty_wires_snapshot();
-    base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
-    base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
-    let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
-    let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
-    crate::editor::wires::unit_tests::context::retire_envelope(base_envelope);
-    instance_a.load_document_pack(&base_files).await.expect("load a");
-    instance_b.load_document_pack(&base_files).await.expect("load b");
+    let seed_node = |id: &str| semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(
+        &semio_framework_pack_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }).to_string(),
+        semio_framework_pack_json::JsonMemberPolicy::Reject,
+    ).expect("neutral graph seed node");
+    context::load_graph_fixture(&mut instance_a, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load a and its graph child");
+    context::load_graph_fixture(&mut instance_b, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load b and its graph child");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
@@ -382,12 +431,12 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
 
-    let projection_a = instance_a.snapshot().expect("projection a");
-    let projection_b = instance_b.snapshot().expect("projection b");
+    let projection_a = context::board(&instance_a);
+    let projection_b = context::board(&instance_b);
     // A's added node-3 survives on both.
-    assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
-    assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
-    let edges = |document: &WiresSnapshot| crate::schema::fixture_edges(&crate::wires_working_board(document)).len();
+    assert!(board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
+    assert!(board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
+    let edges = |board: &semio_framework_value::DslValue| crate::schema::fixture_edges(board).len();
     assert_eq!(edges(&projection_a), 1, "A converges on B's relationship");
     assert_eq!(edges(&projection_b), 1, "B keeps its own relationship");
     instance_a.detach_backbone().await.expect("a releases its backbone");
@@ -402,14 +451,47 @@ async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history
     use store::ArtifactPack;
     let expected: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
-    let before = serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap();
+    let before = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let Effect::LoadDocument { pack, spr } = reset_wires_document_effect(&source) else {
         panic!("reset must load a document");
     };
     let decoded = <WiresSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
-    assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&decoded)).unwrap(), before);
-    assert_eq!(serde_json::from_str::<Value>(&dsl::os_pack::json::to_json_string(&source)).unwrap(), before);
+    assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&decoded)).unwrap(), before);
+    assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap(), before);
     let history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
     let actual = serde_json::json!({ "documentId": history.doc_id, "schema": history.schema, "edits": history.edits.len(), "transitions": history.transitions.len(), "conflicts": history.conflicts.len() });
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn debug_child_seed_settles() {
+    semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(async {
+        use semio_framework_plugin::PluginApp;
+        let manifest = || semio_framework_plugin::App { definition: create_wires_app(), examples: Vec::new() };
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
+        let receiver = semio_framework_plugin::artifact_app_laws::meta("acceptance").instance_id;
+        app.bind_instance_id(receiver).await;
+        let args = semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String("identity".into()))]);
+        let meta = semio_framework_plugin::ActionMeta { view_state: Some(semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..semio_framework_plugin::artifact_app_laws::meta("acceptance") };
+        let result = app.handle_action("addNode", Some(&args), &meta).await;
+        eprintln!("[DEBUG] addNode admitted {:?} pending={}", result.as_ref().map(|result| result.output.clone()), app.has_pending_typed_operations());
+        for turn in 0..4000 {
+            if !app.has_pending_typed_operations() {
+                eprintln!("[DEBUG] settled at turn {turn}");
+                break;
+            }
+            app.advance_typed_operation_publication().await.expect("[DEBUG] advance");
+            while app.take_typed_operation_ui_progress().is_some() {}
+            if turn == 1000 || turn == 3999 {
+                let page = app.take_typed_operation_result_page(receiver);
+                eprintln!("[DEBUG] turn {turn} pending={} page={:?} effect={:?}", app.has_pending_typed_operations(), page.as_ref().map(|page| page.lane), app.take_typed_operation_effect().is_some());
+                if let Some(page) = page {
+                    eprintln!("[DEBUG] ack {:?}", app.acknowledge_typed_operation_result(page.token));
+                }
+            }
+        }
+        eprintln!("[DEBUG] final pending={}", app.has_pending_typed_operations());
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.map(|receipt| eprintln!("[DEBUG] settle receipt lanes {:?}", receipt.lanes)).unwrap_or_else(|fault| eprintln!("[DEBUG] settle fault {fault:?}"));
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    });
 }

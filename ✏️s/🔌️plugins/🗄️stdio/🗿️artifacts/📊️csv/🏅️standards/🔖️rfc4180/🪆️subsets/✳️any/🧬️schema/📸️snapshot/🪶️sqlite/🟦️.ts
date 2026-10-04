@@ -62,7 +62,7 @@ export async function csvSnapshotToSqliteDatabase(snapshot: CsvSnapshot, options
       if (++completed % 256 === 0) await artifactSqliteCheckpoint(options, "projectSnapshot", completed, total);
     }
   }
-  const database = artifactSqliteDatabase(CSV_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, BigInt(Number(snapshot.hasHeader))] }], records, fields], options);
+  const database = await artifactSqliteDatabase(CSV_SQLITE_SCHEMA, [[{ rowid: 1n, values: [1n, snapshot.schema, BigInt(Number(snapshot.hasHeader))] }], records, fields], options);
   await artifactSqliteCheckpoint(options, "projectSnapshot", total, total);
   return database;
 }

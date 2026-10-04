@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-dsl-record"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "dsl-record"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_dsl_record"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
+
+[[test]]
+name = "field_refusal_public"
+path = "../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs"

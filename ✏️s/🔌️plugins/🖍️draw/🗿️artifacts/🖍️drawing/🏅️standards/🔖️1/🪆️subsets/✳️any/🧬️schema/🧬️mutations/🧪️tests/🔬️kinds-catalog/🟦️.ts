@@ -28,10 +28,11 @@ import diffSchema from "../../../🔺️diff/🔣️.json";
 import fieldCases from "../../🧫️fixtures/🎛️field-patch/🔣️.json";
 import blendSchema from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json";
 import {diff as blendDiff} from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {parseDrawingLayerNode} from "../../../🟦️.ts";
 import {parseDrawingLayerPatch} from "../../../🔺️diff/🟦️.ts";
 
-it("refuses invalid blend vocabulary at mutation, patch and nested document boundaries", () => {
+it("mutation blend vocabulary is strict while owned layer blend identifiers are literal strings", () => {
   const ajv = semioSchemaAjvV1({allErrors:true});
   const validateMutation = ajv.compile(blendSchema);
   const validateDocument = ajv.compile(documentSchema);
@@ -41,19 +42,21 @@ it("refuses invalid blend vocabulary at mutation, patch and nested document boun
   expect(parseDrawingLayerPatch({blendMode:null}).blendMode).toBeUndefined();
   for (const {patch,accepted} of fieldCases.filter(({patch}) => patch.field === "blendMode")) {
     const mutation = {mutation:"setLayerBlendMode",layerId:"shape",blendMode:patch.value};
-    const leaf = {kind:"shape",blendMode:patch.value};
-    const root = {kind:"group",children:[{kind:"group",children:[leaf]}]};
+    const base={id:"layer",name:"Layer",visible:true,locked:false,opacity:binary64(1),blendMode:"normal",transform:{x:binary64(0),y:binary64(0),scaleX:binary64(1),scaleY:binary64(1),shear:binary64(0),rotation:binary64(0)},attributes:{fillRule:"evenodd"}};
+    const leaf = {...base,kind:"shape",shapeKind:"owner-defined",blendMode:patch.value};
+    const root = {...base,kind:"group",isolation:false,children:[{...base,kind:"group",isolation:false,children:[leaf]}]};
     const document = {schema:"drawing.document",id:"blend",assets:{},layers:[root]};
     expect(validateMutation(mutation)).toBe(accepted);
     expect(validateMutation({layerId:"shape",blendMode:patch.value})).toBe(false);
     expect(validatePatch({blendMode:patch.value})).toBe(accepted);
-    expect(validateDocument(document)).toBe(accepted);
+    expect(validateDocument({schema:document.schema,id:document.id,assets:{},layers:[{kind:"group",children:[{kind:"shape",blendMode:patch.value}]}]})).toBe(typeof patch.value==="string");
+    if(typeof patch.value==="string")expect(parseDrawingLayerNode(root)).toEqual(root);
+    else expect(()=>parseDrawingLayerNode(root)).toThrow();
     if (accepted) {
       expect(parseDrawingLayerNode(root)).toEqual(root);
       expect(parseDrawingLayerPatch({blendMode:patch.value}).blendMode).toBe(patch.value);
       expect(blendDiff(mutation as never).layers.patched[0]!.patch.blendMode).toBe(patch.value);
     } else {
-      expect(() => parseDrawingLayerNode(root)).toThrow();
       expect(() => parseDrawingLayerPatch({blendMode:patch.value})).toThrow();
       expect(() => blendDiff(mutation as never)).toThrow();
     }

@@ -17,9 +17,12 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for In
     fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::Diff> {
         agg_diff(&SemioDocumentMutation::InsertStyle(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
-        agg_inverse(&SemioDocumentMutation::InsertStyle(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioDocumentMutation::InsertStyle(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Stil einfügen")
     }

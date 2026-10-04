@@ -1,0 +1,219 @@
+{
+  "schema": "space-history.sqlite-fixture/v1",
+  "dialect": "os.space.history@1/*",
+  "cancelAt": 256,
+  "identityOffset": 1000,
+  "interiorControl": {
+    "textUnit": "日本𐀀",
+    "repeat": 32768,
+    "utf8Bytes": 327680,
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  },
+  "nativeSnapshot": {
+    "checkpoints": [
+      {
+        "id": "duplicate",
+        "parentId": "unknown\u0000",
+        "message": "世界",
+        "authors": [
+          {
+            "id": "a",
+            "name": "",
+            "avatar": null
+          },
+          {
+            "id": "a",
+            "name": "二",
+            "avatar": ""
+          }
+        ],
+        "timestamp": {
+          "actor": 0,
+          "physical_ms": 0,
+          "logical": 0
+        },
+        "members": [
+          {
+            "documentId": "independent\u0000",
+            "checkpointId": "unresolved",
+            "alternativeId": ""
+          },
+          {
+            "documentId": "independent\u0000",
+            "checkpointId": "",
+            "alternativeId": "missing"
+          }
+        ]
+      },
+      {
+        "id": "duplicate",
+        "message": "",
+        "authors": [],
+        "timestamp": {
+          "actor": 0,
+          "physical_ms": 0,
+          "logical": 0
+        },
+        "members": []
+      }
+    ],
+    "alternatives": [
+      {
+        "id": "z",
+        "name": "first in typed order",
+        "checkpointIds": [
+          "unknown",
+          "unknown",
+          ""
+        ]
+      },
+      {
+        "id": "a",
+        "name": "",
+        "checkpointIds": []
+      }
+    ],
+    "activeAlternativeId": "not an existing id\u0000"
+  },
+  "clocks": [
+    {
+      "actor": "18446744073709551615",
+      "physicalMs": "9007199254740993",
+      "logical": "18446744073709551615"
+    },
+    {
+      "actor": "0",
+      "physicalMs": "18446744073709551615",
+      "logical": "1"
+    }
+  ],
+  "rows": {
+    "space_history_document": [
+      [
+        1,
+        "not an existing id\u0000"
+      ]
+    ],
+    "space_history_checkpoint": [
+      [
+        1,
+        1,
+        0,
+        "duplicate",
+        "unknown\u0000",
+        "世界"
+      ],
+      [
+        2,
+        1,
+        1,
+        "duplicate",
+        null,
+        ""
+      ]
+    ],
+    "space_history_timestamp": [
+      [
+        1,
+        4294967295,
+        4294967295,
+        2097152,
+        1,
+        4294967295,
+        4294967295
+      ],
+      [
+        2,
+        0,
+        0,
+        4294967295,
+        4294967295,
+        0,
+        1
+      ]
+    ],
+    "space_history_author": [
+      [
+        1,
+        1,
+        0,
+        "a",
+        "",
+        null
+      ],
+      [
+        2,
+        1,
+        1,
+        "a",
+        "二",
+        ""
+      ]
+    ],
+    "space_history_member_pin": [
+      [
+        1,
+        1,
+        0,
+        "independent\u0000",
+        "unresolved",
+        ""
+      ],
+      [
+        2,
+        1,
+        1,
+        "independent\u0000",
+        "",
+        "missing"
+      ]
+    ],
+    "space_history_alternative": [
+      [
+        1,
+        1,
+        0,
+        "z",
+        "first in typed order"
+      ],
+      [
+        2,
+        1,
+        1,
+        "a",
+        ""
+      ]
+    ],
+    "space_history_alternative_checkpoint": [
+      [
+        1,
+        1,
+        0,
+        "unknown"
+      ],
+      [
+        2,
+        1,
+        1,
+        "unknown"
+      ],
+      [
+        3,
+        1,
+        2,
+        ""
+      ]
+    ]
+  },
+  "edit": {
+    "table": "space_history_checkpoint",
+    "column": "message",
+    "value": "edited checkpoint 日本"
+  },
+  "rowsTotal": 14,
+  "nativeRetention": {
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  }
+}

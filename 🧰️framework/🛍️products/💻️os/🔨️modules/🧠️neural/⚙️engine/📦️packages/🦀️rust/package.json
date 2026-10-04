@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/neural-engine-rs",
+  "private": true,
+  "scripts": {
+    "test-type-ownership": "bun nx run @semio-tech/neural-engine-rs:test-type-ownership"
+  },
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  }
+}

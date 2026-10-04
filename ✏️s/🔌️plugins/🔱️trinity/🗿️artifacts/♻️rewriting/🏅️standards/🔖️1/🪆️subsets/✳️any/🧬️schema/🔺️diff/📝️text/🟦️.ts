@@ -49,5 +49,5 @@ export const trinityRewritingDiffTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseRewritingDiffText(value: unknown, at = "$"): RewritingDiffText {
-  return trinityRewritingDiffTextGuardObject(value, `${at}`);
+  return trinityRewritingDiffTextGuardString(value, `${at}`);
 }

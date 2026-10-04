@@ -1,0 +1,206 @@
+{
+  "retained": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "3784bea87647cd9fcda11d09c15e7b2420ca390b6410e950cfb60605695cff0e",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.ts",
+      "sha256": "b6a4e4513ade124120b022dca06b64f0a5fb8ff7e219857405728fab65912334",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts",
+      "sha256": "abe4d7d5d9f59583a1bc8aba111b52fb28cb2ca8b8d333c4c4c21e1b0549024d",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+      "sha256": "95c6be9e2e39ba7c9dc9da515ecb5d8a079c88fd88b950cce5e253d91ee17133",
+      "unchanged": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🎭️mask-stroke/🔣️.json",
+      "sha256": "b8194c5e82b43eb87b5f6a33c9a1ec46d64877d839523a2e00c55d8b0de3e1aa",
+      "unchanged": true
+    }
+  ],
+  "logs": [
+    {
+      "name": "red.log",
+      "sha256": "5dacdcf997dbe4771046ffeef1f13b3e78f49d88ddb7847d020f46a3bf4fddc0",
+      "bytes": 3400,
+      "counts": [
+        [
+          "5",
+          "pass"
+        ],
+        [
+          "2",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": false
+    },
+    {
+      "name": "native-split-red.log",
+      "sha256": "d21ca0c003253eb471ba63ef6dd9d793875fd9bc935ff5f3ecbefdc062afbab7",
+      "bytes": 1508,
+      "counts": [
+        [
+          "7",
+          "pass"
+        ],
+        [
+          "1",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": false
+    },
+    {
+      "name": "path-boundaries-red.log",
+      "sha256": "0c6dba328ad49ab6ce37ce4d05dc5402cf9411231a604fdcf36b1b81300d9317",
+      "bytes": 5550,
+      "counts": [
+        [
+          "8",
+          "pass"
+        ],
+        [
+          "3",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": false
+    },
+    {
+      "name": "neutral-nx-final.log",
+      "sha256": "d45177b6dfe08ccb4eea3801a0517ced7d17fa6415dee61971f404c4ea756db6",
+      "bytes": 57306,
+      "counts": [
+        [
+          "384",
+          "pass"
+        ],
+        [
+          "0",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": true
+    },
+    {
+      "name": "os-ownership-red.log",
+      "sha256": "f1e814d1d09646d901683676a7f65ebb86f82e0f22a59f347e5a9ba874a7f662",
+      "bytes": 1904,
+      "counts": [
+        [
+          "3",
+          "pass"
+        ],
+        [
+          "1",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": false
+    },
+    {
+      "name": "os-nx-final.log",
+      "sha256": "180b9db3a21ecd6b30a9ad3c5102d14b75aa770d21e410cca14ba557d8ba9f7a",
+      "bytes": 7907,
+      "counts": [
+        [
+          "66",
+          "pass"
+        ],
+        [
+          "0",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": true
+    },
+    {
+      "name": "ownership-strict.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "counts": [],
+      "nxSucceeded": false
+    },
+    {
+      "name": "deletion.log",
+      "sha256": "32f4598c92ce0c8e2411527bb4ba9f0292040a157d8c5dce6e82ba01905f7445",
+      "bytes": 996,
+      "counts": [],
+      "nxSucceeded": false
+    },
+    {
+      "name": "deletion-stderr.log",
+      "sha256": "db3a6afdeb1a04b0758b4bccf0423ffb8cd8ae2adbd83696024005a6906d9d92",
+      "bytes": 38432,
+      "counts": [
+        [
+          "384",
+          "pass"
+        ],
+        [
+          "0",
+          "fail"
+        ]
+      ],
+      "nxSucceeded": false
+    }
+  ],
+  "changedSourcePaths": [
+    "🧰️framework/🔨️modules/🔲️pixels/📜️script.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    ".vscode/launch.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🧫️fixtures/🔣️.json"
+  ],
+  "newPaths": [
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📋️project.json",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🧫️fixtures/🔣️.json"
+  ],
+  "sourceRows": 23,
+  "cargoExecuted": false,
+  "rustExecuted": false,
+  "sourceAuthoritySha256": "0521efcca32b7e5fe824061395cc89f6f1795cde431ec58cb4d9254ec593efd4",
+  "evidencePaths": [
+    "pixels-task-owner-execution-inputs/deletion-result.json",
+    "pixels-task-owner-execution-inputs/deletion-source-closure.json",
+    "pixels-task-owner-execution-inputs/full-current-inverse.json",
+    "pixels-task-owner-execution-inputs/full-pre-current-inverse.json",
+    "pixels-task-owner-execution-inputs/missing-owned-file-result.json",
+    "pixels-task-owner-execution-inputs/native-task-observation.json",
+    "pixels-task-owner-execution-inputs/registered-task-ownership-law.json",
+    "pixels-task-owner-execution-inputs/📜️script.ts",
+    "PIXELS-TASK-OWNERSHIP-REFACTOR.md"
+  ]
+}

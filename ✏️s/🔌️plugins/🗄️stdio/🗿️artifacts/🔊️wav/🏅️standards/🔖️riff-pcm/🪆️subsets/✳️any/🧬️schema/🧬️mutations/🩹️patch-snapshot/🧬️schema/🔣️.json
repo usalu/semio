@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/patch-snapshot/schema.json",
   "title": "PatchSnapshot",
+  "x-semio-inverse-rows": { "bounded": 128 },
   "type": "object",
   "additionalProperties": false,
   "required": ["mutation","patch"],

@@ -7,7 +7,7 @@
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Matrix4, Quaternion, Vector3, type InstancedMesh, type PerspectiveCamera } from "three";
+import { BufferGeometry, Float32BufferAttribute, Matrix4, Quaternion, Vector3, type InstancedMesh, type PerspectiveCamera } from "three";
 import fixture from "../../🧫️fixtures/⏯️tool-run-trace-mount.json" with { type: "json" };
 import { base64UrlEncode } from "../../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "../../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
@@ -67,7 +67,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 });
 
 import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
-import { WindowInstanceIdContext, World3dHost } from "../../🟦️.tsx";
+import { WindowInstanceIdContext, World3dHost, world3dComponentInteractionTarget } from "../../🟦️.tsx";
 
 type Batch = { readonly mesh: number; readonly verdict: string; readonly count: number };
 
@@ -197,5 +197,23 @@ describe("🎬️ world 3d host tool run trace mount", () => {
       for (const [counter, value] of Object.entries(step.counters)) expect(host().getAttribute(`data-tool-run-${counter}`), counter).toBe(String(value));
       expect(host().getAttribute("data-tool-run-page")).toBe(String(delta.next));
     }
+  });
+});
+
+
+describe("exact analytic component interaction targets", () => {
+  it("reads an already mapped group exactly once and preserves uint64 labels", async () => {
+    const fixture = (await import("../../🧫️fixtures/🎯️analytic-component-target.json")).default;
+    const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(fixture.meshes[0].data.positions, 3)).setIndex(fixture.meshes[0].data.indices);
+    geometry.addGroup(0, 3, 0);
+    expect(geometry.groups[0].count / 3).toBe(1);
+    for (const row of fixture.cases) expect(world3dComponentInteractionTarget(fixture.instances, fixture.meshes, fixture.instances[0].id, row.mode, row.group)).toEqual({ granularity: row.mode, id: row.target });
+    for (const row of fixture.invalid) expect(world3dComponentInteractionTarget(fixture.instances, fixture.meshes, fixture.instances[0].id, row.mode, row.group)).toBeUndefined();
+    expect(world3dComponentInteractionTarget(fixture.instances, [], fixture.instances[0].id, "edge", 1)).toBeUndefined();
+    const duplicate = [{ ...fixture.meshes[0], data: { ...fixture.meshes[0].data, componentReferences: { edge: ["9007199254740993", "9007199254740993"] } } }];
+    expect(world3dComponentInteractionTarget(fixture.instances, duplicate, fixture.instances[0].id, "edge", 1)).toBeUndefined();
+    for (const source of fixture.invalidSources) expect(world3dComponentInteractionTarget([{ ...fixture.instances[0], componentSource: source }], fixture.meshes, fixture.instances[0].id, "edge", 1)).toBeUndefined();
+    for (const label of fixture.invalidLabels) expect(world3dComponentInteractionTarget(fixture.instances, [{ ...fixture.meshes[0], data: { ...fixture.meshes[0].data, componentReferences: { edge: ["1", label] } } }], fixture.instances[0].id, "edge", 1)).toBeUndefined();
+    geometry.dispose();
   });
 });

@@ -117,3 +117,43 @@ Native core7 actually ran20 tests and failed4; core8 is active after repair. XLS
 ## Current Execution Cut — 28 September
 
 DOCX addressed text/format/style/table/structural commands reached a coherent source checkpoint; all eight public leaf schemas and TypeScript variants passed Office current18. Native DOCX7 remains pending. The Office Sol executor is now implementing XLSX canonical XML authority against five rich custom-path fidelity fixtures. Media Sol owns the shared media props, resumable AppCommand/AppFrame exposure, and real playback export port registrations; the renderer chat owns matching TypeScript/React/WGPU integration. Core Sol owns bounded retained snapshot runtime repairs and the next first-party page-owned XML/OPC foundation. Full-catalog18, XML6, DOCX7, core8 and CSV7 are active; no fresh browser acceptance or completion claim is available.
+
+## Current Fleet — 3 October 2026
+
+Root owns DOCX namespace/formatting verification and XML/native integration; Sol office_execution_oct03 owns the canonical XLSX completion; Sol media_execution_oct03 owns genuinely incremental media serialization and viewer/editor playback ports; Terra audit_current_oct03 audits the current Store ownership architecture and actual shipped editor coverage. The shared checkout is authoritative after the interruption. The complete end-user editing objective remains active; catalog exposure, large-document ownership, natural controls, fidelity and browser acceptance remain required.
+
+## October 3 Ownership Execution Rotation
+
+Terra current-readiness audit completed with current source evidence. Its slot now runs Sol bounded_ownership_execution_oct03: Store cursor handoff under grants, paged text/map retained wiring, then OPC/DOCX owner integration. Root continues XML/DOCX native fidelity and CSV browser acceptance; the Office and Media Sol lanes remain active. The four-worker fleet is full. The audit establishes that current Hub shipping still exposes only seven formats, not the complete semantic catalog.
+
+## October 3 Architecture Correction and Next UI Cut
+
+Current Hub composition has base plus nine artifact-family extensions; Office source registers DOCX/PPTX/XLSX editors and viewers. The earlier seven-format observation concerned only the base descriptor and is not a statement that Office routes are absent. Actual current component links/publication/browser activation remain to verify. Office worker now owns accessible run-formatting controls across the three DOCX subsets; root owns empty-paragraph projection/preparation and neutral oracle law. Media and retained-ownership workers continue their assigned production integration.
+
+## October 3 Natural Workbook Grid
+
+After canonical XLSX authority, the Office executor owns replacing the flat sheet/row/column/value record list with a sheet grid. Empty cells require explicit revision-guarded vacancy authority and exact insertion inverses, because current SetCell only addresses existing canonical cells. The implementation must preserve unrelated worksheet XML and use sparse storage; no complete dense worksheet allocation or semantic workbook replacement. Neutral fixtures cover existing cells, blank cells, blank sheets, formulas, save/reopen, and stale edits, with independent Calamine comparison. Root retains browser acceptance and DOCX/XML validation.
+
+## October 3 Presentation Fidelity and Next Audit Rotation
+
+Office worker reached a sparse XLSX editor/viewer grid source checkpoint with 10/10 TypeScript tests and Ajv fixtures. Native grid, vacancy, Calamine and history proof is queued for the next coherent native cut. The worker now prepares schema-first PPTX canonical-authority migration, replacing duplicated semantic presentation state and literal-prefix projections while preserving custom part paths, shapes and unknown XML. Root owns current literal XML serializer/order regressions and fixes.
+
+Media worker owns GIF/JPG/WAV/AVI/MP4 typed error integration exposed by the live component build, then incremental playback. Bounded ownership worker is validating retained OPC and will checkpoint actual production wiring for an independent Terra audit. Root continues DOCX18, EPW1, PPTX regression and browser activation gates; broad queued builds are held while another chat’s healthy shared Cargo job compiles.
+
+## October 3 Current Runtime Cut and Bitmap Follow-Up
+
+Shared editor contract native13 passed89/89; the current catalog source contract passed88 editors across10 packages. Retained OPC64-byte copy/cancel/materialize/retire law passed1/1 after generic owner-adoption repair. Sol bounded execution now owns the DOCX-only retained package migration, with paged XML and streaming-save integration explicitly still outstanding. Sol Office owns PPTX canonical XML authority after the sparse XLSX grid; XLSX native4 reached link but disk exhaustion prevented execution. Sol media owns MP4 retry after AVI52/52 and independent MP3 oracle8/8; the zero-test guard is now exercised.
+
+Root owns native integration, browser activation and the BMP source parser defect. BMP source-hex red1 observed two accepted odd tails and two Unicode panics; repair is authored and native green3 is running after disk and shared-iterator failures. BMP natural editing and complete representation fidelity remain subsequent work, documented in its dedicated report. Twelve verified inactive ticket-generated directories were removed to recover4.68GiB without touching source inputs, evidence logs, reports, shared cache or other chats. Browser preview19 and family component21 wait for coherent DOCX/PPTX production boundaries. None of these partial checks completes the end-user task.
+
+## October 3 Raster Contract, Semantic Limits and Preview20
+
+BMP source-hex native green3 passed 1/1. Root extracted shared RGBA region geometry into Rust and TypeScript with neutral schema, fixtures and PNG integration; source 97/97 is green, native1 is active. Root repaired BCF native semantic byte/row omission after native6 passed 69/71; the exact 394-byte frontier law uses independent JSON counting, and native7 is queued. Media checkpoint confirms MP4 native 65/65, MP3 independent oracle 8/8 and AVI native 52/52. Media execution finished its current checkpoint; Terra raster/fidelity audit occupies that slot alongside Office Sol and bounded-ownership Sol.
+
+Office PPTX canonical source is coherent; source check and 14 TypeScript/Ajv tests passed. Preview19 caught an empty Vec type inference error, and PPTX native3 caught a transient shared paged-owner borrow error; both are source-fixed. Preview20 and shared raster native1 are active, then PPTX4, BCF7, full BMP and PNG follow. XLSX native5 ran 139 passing and six failing tests; Office owns missing labels, Strict/Transitional history fixtures and a 546-byte reconstruction allocation undercharge. Bounded DOCX Store publication exposed per-byte scaffold work requiring millions of turns. Its worker is repairing a batched PagedBytes path while preserving the 64-byte grant law. Paged XML and streaming save remain open. Root native queue and browser acceptance continue; family component21 remains pending.
+
+Launch entries now live in the authoritative hand-authored `.vscode/🧩️launch.seed.jsonc` and survive registered generation into launch.json. This corrects earlier assumptions that disappearing launch rows necessarily meant another agent deleted them. No ticket or goal completion is justified.
+
+## October3 Cancellation and Explicit Owner Integration
+
+Terra raster audit completed; Media Sol resumed incremental MP4/AVI live export. Office Sol adapts actual Office/Semio consumers to the foreign flat OPC relationship owner, preserving the concurrent SQL authority. Bounded Sol current OPC64 law is green and its DOCX Store lifecycle replay is active. Root current PNG cancellation law includes runtime16KiB close credits and registered factory wire dispatch while keeping128patch admission; preview21 and PNGnative2 are active. Root continues BCF native frontier verification and actual browser acceptance. Once Office native gates settle, its execution slot takes the BMP canonical byte/profile representation and natural controls described in the raster audit.

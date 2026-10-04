@@ -31,7 +31,7 @@ impl semio_framework_value::ToValue for IconName {
 impl semio_framework_value::FromValue for IconName {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let json = serde_json::Value::from(value);
-        serde_json::from_value(json).map_err(|error| semio_framework_value::ValueError::new(error.to_string()))
+        serde_json::from_value(json).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 

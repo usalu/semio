@@ -8,7 +8,8 @@
     "childId",
     "id",
     "meshWorkspace",
-    "target"
+    "target",
+    "meshState"
   ],
   "properties": {
     "id": {
@@ -164,7 +165,9 @@
           "en": "Initial mesh content as JSON text; the authoring session replays it.",
           "de": "Anfänglicher Netzinhalt als JSON-Text; die erstellende Sitzung spielt ihn nach."
         }
-      }
-    }
+      },
+      "description": "Independent literal source text."
+    },
+    "meshState": null
   }
 }

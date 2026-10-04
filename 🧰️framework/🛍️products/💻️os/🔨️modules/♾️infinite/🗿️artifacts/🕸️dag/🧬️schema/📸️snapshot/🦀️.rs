@@ -1,9 +1,15 @@
 //! 🕸️ Persisted DAG nodes, ports, document fixtures, and presentation values.
 use crate::vcs::*;
 use ::graph::manifest::PropertyBag;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeSet;
+#[path="🗂️expanded/🦀️.rs"]
+mod expanded;
+pub use expanded::DagExpandedPaths;
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[path="🪆️binding/🦀️.rs"]
+mod native_binding;
 
 // #region 🔖️IoNode
 const EMPTY_PORTS: &[IoPortSpec] = &[];
@@ -39,7 +45,7 @@ pub fn default_node_height() -> f64 {
 pub const DAG_CHANNEL_ROW_HEIGHT: f64 = ui_styling::metrics::dag::CHANNEL_ROW_HEIGHT;
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
@@ -48,7 +54,7 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
@@ -57,7 +63,7 @@ pub enum EdgeRouteStyle {
 }
 
 /// 🪝️ Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
@@ -72,8 +78,10 @@ pub struct IoPortSpec {
     #[dsl(key = "type")]
     pub value_type: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
+    #[value(deserialize_controlled_with = "native_binding::decode_present_port_intrinsic")]
     pub default: Option<DslValue>,
     #[value(skip_serializing_if = "Option::is_none")]
+    #[value(deserialize_controlled_with = "native_binding::decode_present_port_intrinsic")]
     pub value: Option<DslValue>,
     #[value(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
@@ -154,7 +162,7 @@ impl IoPortSpec {
 }
 
 /// 🖼️ Screen media payload for output nodes.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DagMedia {
     pub kind: DagMediaKind,
@@ -162,7 +170,7 @@ pub struct DagMedia {
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,
@@ -173,7 +181,7 @@ pub enum DagMediaKind {
 // #endregion 🔖️Media
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
@@ -190,11 +198,13 @@ pub enum DagPreviewContent {
 }
 
 /// 🧩️ Tagged node kind: computation, slider, select, or screen.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
     Computation {
+        #[dsl(table)]
         inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
         outputs: Vec<IoPortSpec>,
         #[value(default, rename = "variadic_inputs")]
         variadic_inputs: bool,
@@ -232,7 +242,7 @@ pub enum DagNodeKind {
         #[value(default)]
         content: DagPreviewContent,
         #[value(default)]
-        expanded: BTreeSet<String>,
+        expanded: DagExpandedPaths,
         input: IoPortSpec,
     },
     Action {
@@ -245,7 +255,9 @@ pub enum DagNodeKind {
         input: IoPortSpec,
     },
     Cluster {
+        #[dsl(table)]
         inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
         outputs: Vec<IoPortSpec>,
     },
     AppInstance {
@@ -257,7 +269,9 @@ pub enum DagNodeKind {
         app_id: String,
         #[value(rename = "appIcon", default)]
         icon: String,
+        #[dsl(table)]
         inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
         outputs: Vec<IoPortSpec>,
     },
 }
@@ -282,7 +296,7 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
 /// 📦️ DAG node with shared layout fields and a tagged kind.
 // 🔀️ `ToValue`/`FromValue` are HAND-WRITTEN below, not derived: `kind` is `#[serde(flatten)]` and the
 // derive has no `flatten`, so only a hand-written impl reproduces serde's shape.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 pub struct DagNodeSpec {
     pub id: String,
     pub name: String,
@@ -325,74 +339,78 @@ impl Default for DagNodeSpec {
 /// directly into this struct's own entries on encode, and by handing the FULL decoded entries back to
 /// `DagNodeKind::from_value` on decode — its internally-tagged decoder already reads only the keys it
 /// needs from that object and ignores the rest, exactly like serde's own flatten.
-impl ::semio_framework_os_kernel::ToValue for DagNodeSpec {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        let mut entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = vec![
-            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
-            ("name".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.name)),
-            ("abbreviation".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.abbreviation)),
-            ("icon".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.icon)),
-            ("x".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.x)),
-            ("y".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.y)),
-            ("width".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.width)),
-            ("height".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.height)),
+impl semio_framework_value::ToValue for DagNodeSpec {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<DslValue,semio_framework_value::ValueError>{native_binding::encode_node(self,control)}
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let mut entries: Vec<(String, semio_framework_value::DslValue)> = vec![
+            ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+            ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
+            ("abbreviation".to_string(), semio_framework_value::ToValue::to_value(&self.abbreviation)),
+            ("icon".to_string(), semio_framework_value::ToValue::to_value(&self.icon)),
+            ("x".to_string(), semio_framework_value::ToValue::to_value(&self.x)),
+            ("y".to_string(), semio_framework_value::ToValue::to_value(&self.y)),
+            ("width".to_string(), semio_framework_value::ToValue::to_value(&self.width)),
+            ("height".to_string(), semio_framework_value::ToValue::to_value(&self.height)),
         ];
         if let Some(operator_kind) = &self.operator_kind {
-            entries.push(("operatorKind".to_string(), ::semio_framework_os_kernel::ToValue::to_value(operator_kind)));
+            entries.push(("operatorKind".to_string(), semio_framework_value::ToValue::to_value(operator_kind)));
         }
-        entries.push(("properties".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.properties)));
-        match ::semio_framework_os_kernel::ToValue::to_value(&self.kind) {
-            ::semio_framework_os_kernel::DslValue::Object(kind_entries) => entries.extend(kind_entries),
+        entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(&self.properties)));
+        match semio_framework_value::ToValue::to_value(&self.kind) {
+            semio_framework_value::DslValue::Object(kind_entries) => entries.extend(kind_entries),
             other => entries.push(("kind".to_string(), other)),
         }
-        ::semio_framework_os_kernel::DslValue::Object(entries)
+        semio_framework_value::DslValue::Object(entries)
     }
 }
-impl ::semio_framework_os_kernel::FromValue for DagNodeSpec {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
-        let entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+impl semio_framework_value::FromValue for DagNodeSpec {
+    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_binding::decode_node(value,control)}
+    fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::default())}
+    fn retire_decoded(self){native_binding::retire_node(self)}
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let entries = semio_framework_value::DslValue::into_object(value)?;
         let find = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let id = match find("id") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("id"))?,
-            None => return Err(::semio_framework_os_kernel::ValueError::new("missing field `id`")),
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("id"))?,
+            None => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing field `id`")),
         };
         let name = match find("name") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("name"))?,
-            None => return Err(::semio_framework_os_kernel::ValueError::new("missing field `name`")),
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("name"))?,
+            None => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"missing field `name`")),
         };
         let abbreviation = match find("abbreviation") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("abbreviation"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("abbreviation"))?,
             None => ::std::default::Default::default(),
         };
         let icon = match find("icon") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("icon"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("icon"))?,
             None => ::std::default::Default::default(),
         };
         let x = match find("x") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("x"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("x"))?,
             None => ::std::default::Default::default(),
         };
         let y = match find("y") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("y"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("y"))?,
             None => ::std::default::Default::default(),
         };
         let width = match find("width") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("width"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("width"))?,
             None => default_node_width(),
         };
         let height = match find("height") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("height"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("height"))?,
             None => default_node_height(),
         };
         let operator_kind = match find("operatorKind") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("operatorKind"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("operatorKind"))?,
             None => ::std::default::Default::default(),
         };
         let properties = match find("properties") {
-            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("properties"))?,
+            Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("properties"))?,
             None => ::std::default::Default::default(),
         };
-        let kind = ::semio_framework_os_kernel::FromValue::from_value(::semio_framework_os_kernel::DslValue::Object(entries))?;
+        let kind = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::Object(entries))?;
         Ok(Self { id, name, abbreviation, icon, x, y, width, height, operator_kind, properties, kind })
     }
 }
@@ -611,7 +629,7 @@ pub struct DagCamera {
 }
 
 /// 🔗️ Edge between port handles.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DagHostSnapshotEdge {
     pub id: String,

@@ -20,7 +20,7 @@ pub fn diff(payload: &ChangeReferenceWidth, base: &CadSnapshot) -> protocol::Mut
         );
     }
     if existing.width_world == payload.new_width_world {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Reference \"{}\" already has width {}.", payload.reference_id, payload.new_width_world));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Reference \"{}\" already has width {}.", payload.reference_id, payload.new_width_world));
     }
     let patch = CadReferencePatch { width_world: Some(payload.new_width_world), ..Default::default() };
     let next = references

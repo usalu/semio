@@ -7,7 +7,7 @@ use axum::http::{HeaderMap, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use futures::{SinkExt, StreamExt};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use std::sync::Arc;
 
 #[derive(Clone)]

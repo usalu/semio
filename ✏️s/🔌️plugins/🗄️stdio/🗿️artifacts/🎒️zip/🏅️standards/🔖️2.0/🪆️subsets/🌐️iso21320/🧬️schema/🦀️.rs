@@ -22,7 +22,8 @@ pub mod derived_construction {
     use crate::standards::v2_0::subsets::base::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
     use crate::standards::v2_0::subsets::iso21320::schema::mutations::{add_deflated_entry, add_stored_entry, apply_zip_iso21320_mutation, ZipIso21320Mutation};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -72,7 +73,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -113,7 +114,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot;
     use crate::standards::v2_0::subsets::base::schema::{ZipAnalyzer as ZipAnyAnalyzer, ZipParts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -197,7 +202,7 @@ pub mod derived_analysis {
     }
 
     /// 🛡️ Bounds cancellation while checking explicit typed header policy.
-    pub fn check_iso21320_conformance_controlled(snapshot:&ZipSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
+    pub fn check_iso21320_conformance_controlled(snapshot:&ZipSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,store::sqlite_snapshot::ValueError>{
         use store::sqlite_snapshot::SqliteSnapshotPhase;
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,snapshot.entries.len())?;
         let mut out=Vec::new();

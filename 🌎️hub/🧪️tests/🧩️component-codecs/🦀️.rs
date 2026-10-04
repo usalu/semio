@@ -62,8 +62,8 @@ use super::*;
 async fn actual_component_codec_exports_preserve_owner_resolver_and_identity() {
     let source=include_str!("🧫️fixtures/🔣️.json");
     let fixture:serde_json::Value=serde_json::from_str(source).unwrap();
-    let firstparty:directory::DslValue=directory::os_pack::json::from_json_str(source).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&directory::os_pack::json::to_json_string(&firstparty)).unwrap(),fixture);
+    let firstparty:directory::DslValue=semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&firstparty)).unwrap(),fixture);
     let mut failures=Vec::new();
     for row in fixture["components"].as_array().unwrap() {
         let runtime=match row["runtime"].as_str().unwrap() {"owned"=>CodecSweepRuntime::Owned,"wasmtime"=>CodecSweepRuntime::Jit,_=>panic!("unknown authored runtime")};

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owner",
+    "baseRevision",
+    "firstRevision",
+    "secondRevision",
+    "foreignRevision",
+    "fields",
+    "expected"
+  ],
+  "properties": {
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseRevision": {
+      "$ref": "#/$defs/revision"
+    },
+    "firstRevision": {
+      "$ref": "#/$defs/revision"
+    },
+    "secondRevision": {
+      "$ref": "#/$defs/revision"
+    },
+    "foreignRevision": {
+      "$ref": "#/$defs/revision"
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "label",
+          "base",
+          "draft"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "draft": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pending",
+        "complete",
+        "foreign",
+        "retired",
+        "maxPending",
+        "cancelled"
+      ],
+      "properties": {
+        "pending": {
+          "const": 1
+        },
+        "complete": {
+          "const": 2
+        },
+        "foreign": {
+          "const": 1
+        },
+        "retired": {
+          "const": 1
+        },
+        "maxPending": {
+          "const": 64
+        },
+        "cancelled": {
+          "const": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    }
+  }
+}

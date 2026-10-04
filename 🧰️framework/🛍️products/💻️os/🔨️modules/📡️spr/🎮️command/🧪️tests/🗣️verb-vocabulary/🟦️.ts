@@ -20,8 +20,8 @@ export async function checkMutationVerbVocabulary(repoRoot: string, segments: st
   }
   assert(!validate({ verb: "paint", record: "Changed" }));
   assert(!validate({ verb: "paint", record: "Painted", authority: true }));
-  console.log(`[DEBUG] mutation-verb-vocabulary: pairs=${ontology.length} vectors=${fixture.cases.length} Ajv/source parity=green`);
+  console.log(`mutation-verb-vocabulary: pairs=${ontology.length} vectors=${fixture.cases.length} Ajv/source parity=green`);
   if (segments.includes("--oracle-only")) return;
-  const laws = await runRepositoryExactCargoLaws({ cwd: repoRoot, progress: (event) => console.log(`[DEBUG] mutation-verb-native ${event.stage} ${event.law ?? event.package}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: ["os_spr::command::tests::space_history_verbs_match_the_language_neutral_contract", "os_spr::command::tests::approved_verbs_match_closed_schema"] }] });
-  console.log(`[DEBUG] mutation-verb-native: exact=${laws.length} passed`);
+  const laws = await runRepositoryExactCargoLaws({ cwd: repoRoot, progress: (event) => console.log(`mutation-verb-native ${event.stage} ${event.law ?? event.package}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: ["os_spr::command::tests::space_history_verbs_match_the_language_neutral_contract", "os_spr::command::tests::approved_verbs_match_closed_schema"] }] });
+  console.log(`mutation-verb-native: exact=${laws.length} passed`);
 }

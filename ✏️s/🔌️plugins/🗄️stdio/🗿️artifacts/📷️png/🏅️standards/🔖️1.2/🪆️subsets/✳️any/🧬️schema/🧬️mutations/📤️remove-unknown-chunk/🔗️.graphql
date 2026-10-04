@@ -1,3 +1,0 @@
-# 🧬️ remove-unknown-chunk/RemoveUnknownChunk
-scalar RemoveUnknownChunkMutationValue
-input RemoveUnknownChunkMutation { index: Int! }

@@ -3,7 +3,7 @@ scalar Bytes
 
 input RenameLayout { newName: String! }
 input ChangePrintTarget { newPrintTarget: String }
-input ChangeDataFields { newJson: String }
+input ChangeDataFields { newFields: FormDictionaryInput }
 input CreatePage { page: Bytes! index: Float }
 input DeletePage { id: String! }
 input RenamePage { id: String! newName: String! }

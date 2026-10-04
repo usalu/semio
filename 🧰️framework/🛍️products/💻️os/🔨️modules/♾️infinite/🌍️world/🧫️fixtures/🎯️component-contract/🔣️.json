@@ -1,0 +1,39 @@
+{
+  "schema": "world.component-contract.v1",
+  "marquee": [
+    {
+      "slot": 0,
+      "group": 0
+    },
+    {
+      "slot": 1,
+      "group": 0
+    },
+    {
+      "slot": 0,
+      "group": 1
+    },
+    {
+      "slot": 1,
+      "group": 1
+    }
+  ],
+  "granularities": [
+    "surface",
+    "item",
+    "vertex",
+    "edge",
+    "face"
+  ],
+  "methods": [
+    "pick",
+    "rectangle",
+    "lasso"
+  ],
+  "merges": [
+    "replace",
+    "additive",
+    "subtractive",
+    "invertive"
+  ]
+}

@@ -29,3 +29,5 @@ record remove-row tag=7
 field payload bytes
 record set-row-property tag=8
 field payload bytes
+record patch-snapshot tag=9
+field payload bytes

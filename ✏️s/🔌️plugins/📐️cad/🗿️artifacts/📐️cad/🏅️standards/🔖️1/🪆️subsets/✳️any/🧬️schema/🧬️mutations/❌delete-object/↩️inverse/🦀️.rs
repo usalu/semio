@@ -4,7 +4,8 @@ use crate::mutations::{cad_object_primitives_of, cad_object_spec_of, create_obje
 use crate::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteObject, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &DeleteObject, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(scene) = crate::cad_pane_local_scene(base, payload.pane) else {
         return Vec::new();
     };
@@ -13,5 +14,7 @@ pub fn inverse(payload: &DeleteObject, base: &CadSnapshot) -> Vec<CadMutation> {
         return Vec::new();
     };
     vec![CadMutation::CreateObject(create_object::CreateObject { pane: payload.pane, index: index as u32, object: cad_object_spec_of(&objects[index]), primitives: cad_object_primitives_of(&objects[index]) })]
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -1,19 +1,30 @@
-/** 🧬️ Equation artifact carries composed children and its authored expression. */
-import { parseDslValue, type DslValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+/** 📸️ Persisted Equation state: the parent-owned graph and point cloud, their derived child handles and the explicitly labeled expression vocabulary. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-
-export interface EquationArtifact {
-  /** @state artifact */ notation: ArtifactChild;
-  /** @state artifact */ results: ArtifactChild;
-  /** @state artifact */ computed: ArtifactChild;
-  /** @state artifact */ equation: DslValue;
-}
-
-/** 🪪️ Validates the exact authored Equation document boundary. */
-export function parseEquationArtifact(value: unknown, at = "$" ): EquationArtifact {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: Equation artifact must be an object`);
-  const row = value as Record<string, unknown>;
-  const keys = ["notation", "results", "computed", "equation"];
-  if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: Equation artifact fields do not match its schema`);
-  return { notation: parseArtifactChild(row.notation), results: parseArtifactChild(row.results), computed: parseArtifactChild(row.computed), equation: parseDslValue(row.equation) };
-}
+export type EquationNodeKind = { kind:"integer";lexeme:string } | {kind:"rational";numer:string;denom:string} | {kind:"symbol";name:string} | {kind:"add";terms:EquationNode[]} | {kind:"mul";factors:EquationNode[]} | {kind:"pow";base:EquationNode;exponent:EquationNode};
+export interface EquationNode { label:bigint;kind:EquationNodeKind }
+export interface EquationExprSnapshot { expr:EquationNode;nextLabel:bigint }
+/** 🔵️ One graph-playground node — mirrors the Rust `EquationNode` graph record. */
+export interface EquationGraphNode { id:string;label:string;x:number;y:number }
+/** 🔌️ One graph-playground edge — mirrors `EquationEdge`. */
+export interface EquationEdge { id:string;source:string;target:string }
+/** 🕸️ The parent-owned graph playground — mirrors `EquationGraph`; `algorithmSeed` wires `null` when unset. */
+export interface EquationGraph { directed:boolean;nodes:EquationGraphNode[];edges:EquationEdge[];algorithm:string;algorithmSeed:string|null }
+/** 📍️ One geometry-playground point — mirrors `EquationPoint`. */
+export interface EquationPoint { x:number;y:number }
+/** 📐️ The parent-owned point cloud — mirrors `EquationGeometry`. */
+export interface EquationGeometry { points:EquationPoint[] }
+export interface EquationArtifact { graph:EquationGraph;geometry:EquationGeometry;notation:ArtifactChild;results:ArtifactChild;computed:ArtifactChild;equation:EquationExprSnapshot }
+function row(value:unknown,keys:readonly string[]):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Equation object required");const result=value as Record<string,unknown>;if(Object.keys(result).length!==keys.length||keys.some(key=>!Object.hasOwn(result,key)))throw Error("Equation fields differ");return result;}
+function fields(value:unknown,required:readonly string[],optional:readonly string[]=[]):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Equation object required");const result=value as Record<string,unknown>;if(required.some(key=>!Object.hasOwn(result,key))||Object.keys(result).some(key=>!required.includes(key)&&!optional.includes(key)))throw Error("Equation fields differ");return result;}
+function finite(value:unknown):number{if(typeof value!=="number"||!Number.isFinite(value))throw Error("Equation finite number required");return value;}
+function list(value:unknown):unknown[]{if(!Array.isArray(value))throw Error("Equation list required");return value;}
+function word(value:unknown):bigint{if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)throw Error("Equation label requires u64 bigint");return value;}
+function text(value:unknown):string{if(typeof value!=="string"||/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value))throw Error("Equation native UTF8 string required");return value;}
+/** 🪪️ Validate the six owned variants iteratively without CAS normalization. */
+export function parseEquationExprSnapshot(value:unknown):EquationExprSnapshot{const expression=row(value,["expr","nextLabel"]);const nextLabel=word(expression.nextLabel),pending:unknown[]=[expression.expr],seen=new Set<object>();while(pending.length){const node=row(pending.pop(),["label","kind"]);if(seen.has(node))throw Error("Equation node ownership repeats");seen.add(node);word(node.label);const k=node.kind as Record<string,unknown>;switch(k?.kind){case"integer":row(k,["kind","lexeme"]);text(k.lexeme);break;case"rational":row(k,["kind","numer","denom"]);text(k.numer);text(k.denom);break;case"symbol":row(k,["kind","name"]);text(k.name);break;case"add":row(k,["kind","terms"]);if(!Array.isArray(k.terms))throw Error("Equation terms required");for(const child of k.terms)pending.push(child);break;case"mul":row(k,["kind","factors"]);if(!Array.isArray(k.factors))throw Error("Equation factors required");for(const child of k.factors)pending.push(child);break;case"pow":row(k,["kind","base","exponent"]);pending.push(k.base,k.exponent);break;default:throw Error("Equation variant differs");}}return{expr:expression.expr as EquationNode,nextLabel};}
+/** 🕸️ Validate the parent-owned graph playground. */
+export function parseEquationGraph(value:unknown):EquationGraph{const graph=fields(value,["directed","nodes","edges","algorithm"],["algorithmSeed"]);if(typeof graph.directed!=="boolean")throw Error("Equation direction requires boolean");const seed=graph.algorithmSeed??null;return{directed:graph.directed,nodes:list(graph.nodes).map(entry=>{const node=row(entry,["id","label","x","y"]);return{id:text(node.id),label:text(node.label),x:finite(node.x),y:finite(node.y)};}),edges:list(graph.edges).map(entry=>{const edge=row(entry,["id","source","target"]);return{id:text(edge.id),source:text(edge.source),target:text(edge.target)};}),algorithm:text(graph.algorithm),algorithmSeed:seed===null?null:text(seed)};}
+/** 📐️ Validate the parent-owned point cloud. */
+export function parseEquationGeometry(value:unknown):EquationGeometry{const geometry=row(value,["points"]);return{points:list(geometry.points).map(entry=>{const point=row(entry,["x","y"]);return{x:finite(point.x),y:finite(point.y)};})};}
+/** 🪪️ Bind the exact persisted Equation fields through their owning schemas. */
+export function parseEquationArtifact(value:unknown,at="$"):EquationArtifact{const input=row(value,["graph","geometry","notation","results","computed","equation"]);const notation=parseArtifactChild(input.notation),results=parseArtifactChild(input.results),computed=parseArtifactChild(input.computed);for(const child of[notation,results,computed])for(const value of[child.childId,child.target.artifactId,child.target.dialect.artifactKind,child.target.dialect.standard,child.target.dialect.subset])text(value);return{graph:parseEquationGraph(input.graph),geometry:parseEquationGeometry(input.geometry),notation,results,computed,equation:parseEquationExprSnapshot(input.equation)};}

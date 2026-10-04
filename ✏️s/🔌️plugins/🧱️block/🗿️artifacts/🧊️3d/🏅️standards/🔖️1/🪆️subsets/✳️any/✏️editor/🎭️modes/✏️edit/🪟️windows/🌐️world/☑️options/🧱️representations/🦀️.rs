@@ -19,10 +19,10 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: 
             text: None,
             on_change: crate::editor::block3d::block3d_window_action(
                 "toggleWindowRepresentation",
-                Some(dsl::DslValue::object([
-                    ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
-                    ("representationId".to_string(), dsl::DslValue::String(representation.id.clone())),
-                    ("visible".to_string(), dsl::DslValue::Bool(!visible_set.contains(representation.id.as_str()))),
+                Some(semio_framework_value::DslValue::object([
+                    ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+                    ("representationId".to_string(), semio_framework_value::DslValue::String(representation.id.clone())),
+                    ("visible".to_string(), semio_framework_value::DslValue::Bool(!visible_set.contains(representation.id.as_str()))),
                 ])),
             ),
         })

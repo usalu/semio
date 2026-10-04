@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "actual IO caller 0",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "file_source_sink_write_then_read_back",
+      "callee": "FilePackSink::create",
+      "mode": "owned",
+      "beforeArguments": 1,
+      "afterArguments": 2,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 1",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "file_source_sink_write_then_read_back",
+      "callee": "FilePackSource::open",
+      "mode": "owned",
+      "beforeArguments": 1,
+      "afterArguments": 2,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 2",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "write_atomic_produces_full_content_and_no_stray_tmp_file",
+      "callee": "write_atomic",
+      "mode": "borrowed",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 3",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "write_atomic_never_exposes_a_partial_target_from_a_simulated_interrupted_write",
+      "callee": "write_atomic",
+      "mode": "borrowed",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 4",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "write_atomic_never_exposes_a_partial_target_from_a_simulated_interrupted_write",
+      "callee": "write_atomic",
+      "mode": "borrowed",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 5",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips",
+      "callee": "StreamingPackWriter::create",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 6",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips",
+      "callee": "FilePackSource::open",
+      "mode": "owned",
+      "beforeArguments": 1,
+      "afterArguments": 2,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 7",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips",
+      "callee": "recover_file",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 8",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "build_valid_session_file",
+      "callee": "StreamingPackWriter::create",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 9",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "recover_file_with_footer_stripped_still_recovers_every_body_segment",
+      "callee": "FilePackSource::open",
+      "mode": "owned",
+      "beforeArguments": 1,
+      "afterArguments": 2,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 10",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "recover_file_with_footer_stripped_still_recovers_every_body_segment",
+      "callee": "recover_file",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 11",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking",
+      "callee": "recover_file",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 12",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🔬️native-unit/🦀️.rs",
+      "owner": "recover_file_on_a_file_too_short_for_a_header_errors_never_panics",
+      "callee": "recover_file",
+      "mode": "owned",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    },
+    {
+      "name": "actual IO caller 13",
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🧪️tests/🧭️producer-authority/🦀️.rs",
+      "owner": "actual_atomic_writer_missing_filename_retains_invalid_value_authority",
+      "callee": "write_atomic",
+      "mode": "borrowed",
+      "beforeArguments": 2,
+      "afterArguments": 3,
+      "maximumBytes": 1048576,
+      "cancellation": "caller-owned AtomicBool checked before every checkpoint",
+      "progress": "caller-owned AtomicUsize receives every progress event"
+    }
+  ]
+}

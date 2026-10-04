@@ -10,14 +10,14 @@ fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
         let mut document=semio_fixture_snapshot();
         let mask=serde_json::json!({"enabled":true,"linked":true,"invert":false,"width":4,"height":4,"imageKey":"semio-emblem","transform":{"x":0.0,"y":0.0,"a":1.0,"b":1.0,"c":-1.0,"d":1.0}});
         let layers=serde_json::json!([{"kind":"group","id":"group","name":"Group","visible":true,"locked":false,"opacity":1.0,"blendMode":"normal","transform":{"x":3.0,"y":2.0,"a":1.0,"b":0.5,"c":0.0,"d":1.0},"mask":if owner=="group" {mask.clone()}else{serde_json::Value::Null},"children":[{"kind":"pixel","id":"paint","name":"Paint","visible":true,"locked":false,"opacity":1.0,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":2.0,"b":0.0,"c":0.0,"d":1.0},"width":2,"height":2,"imageKey":"semio-emblem","mask":if owner=="paint" {mask.clone()}else{serde_json::Value::Null}}]}]);
-        crate::retire_raster_layers(std::mem::replace(&mut document.layers,dsl::json::from_json_str(&layers.to_string()).unwrap()));
+        crate::retire_raster_layers(std::mem::replace(&mut document.layers,semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));
         let render=|snapshot:&RasterSnapshot| {
             let mut job=crate::io::raster_composite_job(snapshot).unwrap();while !job.advance(17).unwrap().done {}
             let output=job.into_result().unwrap();(output.origin,output.image)
         };
         let before=render(&document);assert!(before.1.pixels.chunks_exact(4).any(|pixel|pixel[3]>0));
         let operation=raster_patch_layer_operations(&document,&[owner.into()],"maskLinked",&Value::Bool(false)).unwrap().remove(0);
-        let inverse=operation.inverse(&document).remove(0);let (diff,_)=operation.diff(&document).into_parts();let unlinked=diff.apply(&document).unwrap();
+        let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let unlinked=diff.apply(&document).unwrap();
         assert_eq!(render(&unlinked),before);
         let packed=unlinked.encode_pack();let restored=RasterSnapshot::decode_pack(&packed).unwrap();assert_eq!(restored,unlinked);
         let (undo,_)=inverse.diff(&unlinked).into_parts();let undone=undo.apply(&unlinked).unwrap();assert_eq!(undone,document);
@@ -39,7 +39,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
             for key in ["width", "height", "imageKey"] { layer.remove(key); }
             layer.insert("kind".into(), serde_json::json!("group"));layer.insert("children".into(), serde_json::json!([]));
         }
-        let mut document: RasterSnapshot = dsl::json::from_json_str(&expected.to_string()).unwrap();
+        let mut document: RasterSnapshot = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for step in fixture["steps"].as_array().unwrap() {
             if expected["layers"][0]["mask"].is_object() { for invalid in fixture["invalid"].as_array().unwrap() {
                 assert!(raster_patch_layer_operations(&document, &["paint".into()], invalid["field"].as_str().unwrap(), &patch_value_json(invalid["field"].as_str().unwrap(), &invalid["value"].to_string())).is_err(), "invalid mask property {invalid}");
@@ -48,12 +48,12 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
             let value = patch_value_json(field, &step["value"].to_string());
             let operation = raster_patch_layer_operations(&document, &["paint".into()], field, &value).unwrap().remove(0);
             assert!(matches!(operation, RasterMutation::ChangeLayerMask(_)));
-            let inverse = operation.inverse(&document).remove(0);
+            let inverse = operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);
             let (diff, _) = operation.diff(&document).into_parts();
             let next = diff.apply(&document).unwrap();
             if let Some(mask) = step.get("mask") { expected["layers"][0]["mask"] = mask.clone(); }
             if let Some(changes) = step["change"].as_object() { for (key,value) in changes { expected["layers"][0]["mask"][key] = value.clone(); } }
-            let mut reference: RasterSnapshot = dsl::json::from_json_str(&expected.to_string()).unwrap();
+            let mut reference: RasterSnapshot = semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let actual_mask=match &next.layers[0] {RasterLayerNode::Pixel {mask,..}|RasterLayerNode::Group {mask,..}=>mask.as_ref(),_=>None};
             let reference_mask=match &mut reference.layers[0] {RasterLayerNode::Pixel {mask,..}|RasterLayerNode::Group {mask,..}=>mask.as_mut(),_=>None};
             if let (Some(actual),Some(reference))=(actual_mask,reference_mask) {
@@ -75,7 +75,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
 #[test]
 fn property_commands_enforce_neutral_protection_capabilities() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let id=case["id"].as_str().unwrap();
         for (field,value,capability) in [("name",Value::String("Updated".into()),"editable"),("locked",Value::Bool(false),"canChangeLock"),("visible",Value::Bool(false),"visible")] {
@@ -103,7 +103,7 @@ fn layer_transform_controls_apply_neutral_vectors_and_restore_exact_history(){
         for row in fixture["controls"].as_array().unwrap(){
             let field=row["field"].as_str().unwrap();let operation=raster_patch_layer_operations(&document,&[id.clone()],field,&patch_value_json(field,&row["value"].to_string())).unwrap().remove(0);
             assert!(matches!(operation,RasterMutation::ChangeLayerTransform(_)));
-            let inverse=operation.inverse(&document).remove(0);let (diff,_)=operation.diff(&document).into_parts();let next=diff.apply(&document).unwrap();
+            let inverse=operation.inverse(&document).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&document).into_parts();let next=diff.apply(&document).unwrap();
             for (actual,expected) in layer_transform(&next.layers[0]).as_affine().into_iter().zip(row["matrix"].as_array().unwrap()){assert!((actual-expected.as_f64().unwrap()).abs()<1e-12);}
             let (undo,_)=inverse.diff(&next).into_parts();let restored=undo.apply(&next).unwrap();assert_eq!(restored,document);retire_raster_snapshot(restored);retire_raster_snapshot(std::mem::replace(&mut document,next));
             for value in [operation,inverse]{value.retire_cold();}for value in [diff,undo]{value.retire_cold();}
@@ -123,7 +123,7 @@ async fn layer_transform_controls_publish_independent_reversible_edits(){
         let mut source=empty_raster_snapshot();source.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&source.layers[0]).to_owned();
         let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None);
         let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-        let mut app=context::app().await;app.load_document_pack(&files).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
+        let mut app=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
         for row in fixture["controls"].as_array().unwrap(){
             context::dispatch(&mut app,RasterCommand::PatchLayer(PatchLayer {layer_id:id.clone(),field:row["field"].as_str().unwrap().into(),value:row["value"].to_string()})).await;
             let next=app.snapshot().unwrap();

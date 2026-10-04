@@ -11,7 +11,7 @@ pub fn diff(payload: &RenameSavedCamera, base: &ShootingSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Saved camera \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Saved camera \"{}\" already has label \"{}\".", payload.id, payload.new_label));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Saved camera \"{}\" already has label \"{}\".", payload.id, payload.new_label));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         saved_cameras: Some(ShootingSavedCamerasDelta { patched: vec![ShootingSavedCameraPatchEntry { id: payload.id.clone(), patch: ShootingSavedCameraPatch { label: Some(payload.new_label.clone()), camera: None } }], ..Default::default() }),

@@ -18,9 +18,12 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetMetad
     fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<<SemioImageMutation as Mutation<SemioImageSnapshot>>::Diff> {
         agg_diff(&SemioImageMutation::SetMetadataEntry(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
-        agg_inverse(&SemioImageMutation::SetMetadataEntry(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioImageMutation::SetMetadataEntry(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set metadata entry", "Metadateneintrag setzen")
     }

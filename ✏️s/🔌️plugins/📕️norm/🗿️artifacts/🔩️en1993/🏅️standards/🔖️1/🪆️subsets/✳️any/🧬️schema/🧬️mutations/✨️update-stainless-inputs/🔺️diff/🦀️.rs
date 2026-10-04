@@ -9,7 +9,7 @@ pub fn diff(payload: &UpdateStainlessInputs, base: &En1993Snapshot) -> protocol:
     let mut values = base.materials.clone();
     if let Some(idx) = values.iter().position(|x| x.id == payload.material.id) {
         if values[idx] == payload.material {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", "Entity already has this value.");
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "Entity already has this value.");
         }
         values[idx] = payload.material.clone();
     } else {

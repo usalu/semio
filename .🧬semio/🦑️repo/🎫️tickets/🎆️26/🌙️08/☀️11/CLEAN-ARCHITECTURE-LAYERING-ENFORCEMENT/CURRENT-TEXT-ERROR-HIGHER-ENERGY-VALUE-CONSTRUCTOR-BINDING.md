@@ -1,0 +1,1267 @@
+# Energy Model Owned Value Constructor Binding
+
+Actual FixedTable shape admission contains two handwritten one-argument ValueError constructors. Both actual failures are slot value schema mismatches, so explicit InvalidValue is authored at those origins with original dotted paths/messages retained. The four owned Value imports now name canonical Value directly. Controlled FixedTable methods remain a separate missing-owner frontier: this source binding does not establish controlled Model construction or retire unchecked Value traits. Existing schema-first eight-kind owner proof is retained; higher native replay is pending.
+
+Complete immediate source text, inverse, authored full text, byte counts, hashes and exact per-site decisions are retained in generated/value-refusal/text-error-higher-energy-value-constructor-authored-1.json. Native admission is pending.
+
+## ✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️.rs
+
+```rust
+//! 🏗️ Typed building energy model entities, validation, and cross-references.
+
+use crate::error::{Diagnostics, Error, Severity};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+
+// #region 🔖️Ids
+/// 🆔️ Stable internal entity identifier.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct EntityId(pub u32);
+
+// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports named-field
+// structs, not a tuple struct like this one (see `semio-framework-value-derive`'s own docstring).
+impl ToValue for EntityId {
+    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for EntityId {
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u32::from_value(value).map(EntityId)
+    }
+}
+
+impl EntityId {
+    pub fn new(id: u32) -> Self {
+        Self(id)
+    }
+}
+
+/// 🔗️ `EntityId` as a mutation-payload field — a bare unsigned number on every surface, so an
+/// `id`-addressed mutation leaf can carry it directly instead of flattening it to `u32` by hand.
+/// Hand-written for the same tuple-struct reason as the `ToValue` pair above.
+impl dsl::DslField for EntityId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::UInt
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::UInt(u64::from(self.0))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <u32 as dsl::DslField>::from_value(value).map(EntityId)
+    }
+}
+// #endregion 🔖️Ids
+
+// #region 🔖️FixedTable
+/// 🧺️ One-time admitted stable table with sorted deterministic lookup and no post-admission growth.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub(crate) struct FixedTable<K, V> {
+    slots: Box<[Option<(K, V)>]>,
+    len: usize,
+    admitted: bool,
+    faulted: bool,
+}
+
+impl<K, V> Default for FixedTable<K, V> {
+    fn default() -> Self {
+        Self { slots: Box::default(), len: 0, admitted: false, faulted: false }
+    }
+}
+
+// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` does not auto-infer
+// per-type-parameter bounds (unlike `serde_derive`), so a generic struct like this one needs its
+// bound spelled out explicitly; hand-writing is simpler here than threading a `#[value(bound =
+// "…")]` container attribute through. Mirrors every field verbatim, `slots` as a JSON-like array
+// of either `null` (an unoccupied slot) or a 2-element `[key, value]` pair.
+impl<K: ToValue, V: ToValue> ToValue for FixedTable<K, V> {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            (
+                "slots".to_string(),
+                DslValue::Array(
+                    self.slots
+                        .iter()
+                        .map(|slot| match slot {
+                            Some((key, value)) => DslValue::Array(vec![key.to_value(), value.to_value()]),
+                            None => DslValue::Null,
+                        })
+                        .collect(),
+                ),
+            ),
+            ("len".to_string(), self.len.to_value()),
+            ("admitted".to_string(), self.admitted.to_value()),
+            ("faulted".to_string(), self.faulted.to_value()),
+        ])
+    }
+}
+impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
+        let slots_array = match field("slots") {
+            DslValue::Array(items) => items,
+            other => return Err(ValueError::new(format!("expected an array, found {other:?}")).under("slots")),
+        };
+        let slots: Vec<Option<(K, V)>> = slots_array
+            .into_iter()
+            .enumerate()
+            .map(|(index, item)| -> Result<Option<(K, V)>, ValueError> {
+                match item {
+                    DslValue::Null => Ok(None),
+                    DslValue::Array(pair) if pair.len() == 2 => {
+                        let mut iter = pair.into_iter();
+                        let key = K::from_value(iter.next().expect("checked len == 2")).map_err(|error| error.under("0"))?;
+                        let value = V::from_value(iter.next().expect("checked len == 2")).map_err(|error| error.under("1"))?;
+                        Ok(Some((key, value)))
+                    }
+                    other => Err(ValueError::new(format!("expected null or a 2-element array, found {other:?}"))),
+                }
+                .map_err(|error| error.under(index))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self {
+            slots: slots.into_boxed_slice(),
+            len: usize::from_value(field("len")).map_err(|error| error.under("len"))?,
+            admitted: bool::from_value(field("admitted")).map_err(|error| error.under("admitted"))?,
+            faulted: bool::from_value(field("faulted")).map_err(|error| error.under("faulted"))?,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FixedTableError {
+    AlreadyAdmitted,
+    Allocation,
+    Overflow,
+    Unordered,
+}
+
+impl<K: Ord, V> FixedTable<K, V> {
+    pub(crate) fn admit(&mut self, observed_capacity: usize) -> Result<(), FixedTableError> {
+        if self.admitted {
+            self.faulted = true;
+            return Err(FixedTableError::AlreadyAdmitted);
+        }
+        let mut slots = Vec::new();
+        if slots.try_reserve_exact(observed_capacity).is_err() {
+            self.faulted = true;
+            return Err(FixedTableError::Allocation);
+        }
+        slots.resize_with(observed_capacity, || None);
+        self.slots = slots.into_boxed_slice();
+        self.admitted = true;
+        Ok(())
+    }
+
+    pub(crate) fn insert(&mut self, key: K, value: V) -> Result<Option<V>, FixedTableError> {
+        if !self.admitted {
+            self.faulted = true;
+            return Err(FixedTableError::Overflow);
+        }
+        match self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(&key)) {
+            Ok(index) => Ok(Some(std::mem::replace(&mut self.slots[index].as_mut().expect("occupied fixed slot").1, value))),
+            Err(index) if index == self.len && self.len < self.slots.len() => {
+                self.slots[index] = Some((key, value));
+                self.len += 1;
+                Ok(None)
+            }
+            Err(_) => {
+                self.faulted = true;
+                Err(FixedTableError::Unordered)
+            }
+        }
+    }
+
+    pub(crate) fn insert_stable(&mut self, key: K, value: V) -> Result<(), FixedTableError> {
+        if !self.admitted || self.len >= self.slots.len() {
+            self.faulted = true;
+            return Err(FixedTableError::Overflow);
+        }
+        self.slots[self.len] = Some((key, value));
+        self.len += 1;
+        Ok(())
+    }
+
+    pub(crate) fn get(&self, key: &K) -> Option<&V> {
+        self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok().map(|index| &self.slots[index].as_ref().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn get_mut(&mut self, key: &K) -> Option<&mut V> {
+        let index = self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok()?;
+        Some(&mut self.slots[index].as_mut().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn contains_key(&self, key: &K) -> bool {
+        self.get(key).is_some()
+    }
+
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
+        self.slots[..self.len].iter().map(|slot| {
+            let (key, value) = slot.as_ref().expect("occupied fixed slot");
+            (key, value)
+        })
+    }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
+        self.slots[..self.len].iter().map(|slot| &slot.as_ref().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
+
+    pub(crate) fn capacity(&self) -> usize {
+        self.slots.len()
+    }
+
+    pub(crate) fn faulted(&self) -> bool {
+        self.faulted
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub(crate) fn pop(&mut self) -> Option<(K, V)> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        self.slots[self.len].take()
+    }
+
+    pub(crate) fn last_mut(&mut self) -> Option<(&mut K, &mut V)> {
+        let (key, value) = self.slots.get_mut(self.len.checked_sub(1)?)?.as_mut()?;
+        Some((key, value))
+    }
+
+    pub(crate) fn get_index(&self, index: usize) -> Option<&V> {
+        self.slots.get(index)?.as_ref().map(|(_, value)| value)
+    }
+
+    pub(crate) fn get_index_mut(&mut self, index: usize) -> Option<&mut V> {
+        self.slots.get_mut(index)?.as_mut().map(|(_, value)| value)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_index_of(&self, predicate: impl Fn(&K) -> bool) -> Option<usize> {
+        self.iter().position(|(key, _)| predicate(key))
+    }
+
+    fn occupied(&self) -> &[Option<(K, V)>] {
+        &self.slots[..self.len]
+    }
+}
+// #endregion 🔖️FixedTable
+
+// #region 🔖️Site
+/// 🌍️ Site location and orientation.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Site {
+    pub latitude_deg: f64,
+    pub longitude_deg: f64,
+    pub elevation_m: f64,
+    pub time_zone_hours: f64,
+    pub north_axis_deg: f64,
+}
+// #endregion 🔖️Site
+
+// #region 🔖️Zone
+/// 🏠️ Thermal zone with volume and conditioning flags.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Zone {
+    pub id: EntityId,
+    pub name: String,
+    pub volume_m3: f64,
+    pub multiplier: u32,
+    pub conditioned: bool,
+    pub part_of_total_floor_area: bool,
+}
+
+/// 🪑️ Space within a zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Space {
+    pub id: EntityId,
+    pub name: String,
+    pub zone_id: EntityId,
+    pub floor_area_m2: f64,
+}
+// #endregion 🔖️Zone
+
+// #region 🔖️Surface
+/// 🧱️ Surface boundary type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum SurfaceClass {
+    ExteriorWall,
+    InteriorWall,
+    Roof,
+    Ceiling,
+    Floor,
+    Interzone,
+    Adiabatic,
+    Ground,
+}
+
+/// 📐️ Planar polygon surface.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Surface {
+    pub id: EntityId,
+    pub name: String,
+    pub zone_id: EntityId,
+    pub class: SurfaceClass,
+    pub vertices_m: Vec<[f64; 3]>,
+    pub construction_id: EntityId,
+    pub outside_boundary_condition: OutsideBoundary,
+    pub sun_exposed: bool,
+    pub wind_exposed: bool,
+    pub multiplier: u32,
+}
+
+/// 🌡️ Exterior boundary condition for surfaces.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub enum OutsideBoundary {
+    OutdoorAir,
+    Ground,
+    OtherSideTemperature,
+    Adiabatic,
+    Interzone(EntityId),
+}
+
+/// 🚧️ Discriminator half of [`OutsideBoundary`]. The union's `Interzone` arm carries the partner
+/// surface, and `dsl::DslScalar` binds unit variants only, so a mutation payload names the boundary
+/// through this scalar and carries the partner in its own optional `EntityId` field — the same
+/// parallel-field shape `replace-airflow-network` uses for its `(zone, node)` pairs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum OutsideBoundaryKind {
+    OutdoorAir,
+    Ground,
+    OtherSideTemperature,
+    Adiabatic,
+    Interzone,
+}
+
+impl OutsideBoundary {
+    /// 🚧️ The union's tag, without its payload.
+    pub fn kind(self) -> OutsideBoundaryKind {
+        match self {
+            OutsideBoundary::OutdoorAir => OutsideBoundaryKind::OutdoorAir,
+            OutsideBoundary::Ground => OutsideBoundaryKind::Ground,
+            OutsideBoundary::OtherSideTemperature => OutsideBoundaryKind::OtherSideTemperature,
+            OutsideBoundary::Adiabatic => OutsideBoundaryKind::Adiabatic,
+            OutsideBoundary::Interzone(_) => OutsideBoundaryKind::Interzone,
+        }
+    }
+
+    /// 🔗️ The partner surface an `Interzone` boundary is paired with, `None` for every other arm.
+    pub fn interzone_partner(self) -> Option<EntityId> {
+        match self {
+            OutsideBoundary::Interzone(other) => Some(other),
+            _ => None,
+        }
+    }
+
+    /// 🏗️ Rebuilds the union from its two payload halves; `None` when the halves disagree — an
+    /// `Interzone` without a partner, or a partner offered to an arm that has no room for one.
+    pub fn from_parts(kind: OutsideBoundaryKind, partner: Option<EntityId>) -> Option<OutsideBoundary> {
+        match (kind, partner) {
+            (OutsideBoundaryKind::Interzone, Some(other)) => Some(OutsideBoundary::Interzone(other)),
+            (OutsideBoundaryKind::Interzone, None) => None,
+            (_, Some(_)) => None,
+            (OutsideBoundaryKind::OutdoorAir, None) => Some(OutsideBoundary::OutdoorAir),
+            (OutsideBoundaryKind::Ground, None) => Some(OutsideBoundary::Ground),
+            (OutsideBoundaryKind::OtherSideTemperature, None) => Some(OutsideBoundary::OtherSideTemperature),
+            (OutsideBoundaryKind::Adiabatic, None) => Some(OutsideBoundary::Adiabatic),
+        }
+    }
+}
+
+/// 🪟️ Fenestration (window, skylight, door) with its attached solar shading projections.
+///
+/// `height_m`/`sill_height_m` and the four shading fields are the window-attached analogue of
+/// EnergyPlus `Shading:Overhang:Projection` and `Shading:Fin:Projection` — a horizontal projection
+/// above the head and two vertical projections beside the jambs, both measured from the glazing
+/// plane. They are zero for an unshaded window, which is why every existing model keeps its
+/// behaviour. Free-standing site obstructions stay [`ShadingSurface`]'s job.
+///
+/// `glazing_construction_id` is the optional escape from the single-pane simplification the three
+/// scalar optics fields impose: when it names a [`Construction`], that layered stack IS the glazing
+/// and `u_value_w_m2k`/`shgc`/`vlt` are the fallback the kernel and every translator use only while
+/// it is `None`. Ticket 26/09/06/ENERGY-PLUGIN-END-TO-END measured what the simplification costs —
+/// a semio→EnergyPlus translation can only emit `WindowMaterial:SimpleGlazingSystem`, worth +5.7 to
+/// +8.1 % of annual cooling on ANSI/ASHRAE 140 cases 600/900 against the standard's own two-pane
+/// stack — so the slot exists to carry the real stack once a caller has one.
+///
+/// 🔶️ How far a [`Fenestration::vertices_m`] corner may sit off its host surface's plane [m]
+/// before [`Model::validate`] calls the aperture misplaced. One millimetre — the same order as the
+/// coordinates an epJSON document round-trips through.
+pub const FENESTRATION_PLANE_TOLERANCE_M: f64 = 1e-3;
+
+/// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Fenestration {
+    pub id: EntityId,
+    pub name: String,
+    pub surface_id: EntityId,
+    pub u_value_w_m2k: f64,
+    pub shgc: f64,
+    pub vlt: f64,
+    pub area_m2: f64,
+    pub height_m: f64,
+    pub sill_height_m: f64,
+    pub frame_conductance_w_k: f64,
+    pub divider_conductance_w_k: f64,
+    pub overhang_depth_m: f64,
+    pub overhang_offset_m: f64,
+    pub fin_depth_m: f64,
+    pub fin_offset_m: f64,
+    pub glazing_construction_id: Option<EntityId>,
+    /// 🔶️ The aperture's own polygon, in the host [`Surface`]'s plane, world metres, wound the
+    /// same way the host is (counter-clockwise seen from outside).
+    ///
+    /// EMPTY — the zero value, which every document written before ticket
+    /// 26/09/16/ENERGY-3D-MODEL-TREE-INSPECTOR carries — means "derive the rectangle from
+    /// `area_m2`/`height_m`/`sill_height_m` on the host surface exactly as before"
+    /// ([`crate::precompute::fenestration_polygon`]). NON-EMPTY means the polygon IS the
+    /// aperture: an arbitrary planar ring of three or more vertices, and the three scalars become
+    /// display/physics-only (the U-value and SHGC heat balance never needs a shape).
+    #[serde(default)]
+    #[value(default)]
+    pub vertices_m: Vec<[f64; 3]>,
+}
+// #endregion 🔖️Surface
+
+// #region 🔖️Material
+/// 🪨️ Surface roughness class of an exterior face, which scales the forced part of its outside
+/// convection (EnergyPlus `Material` roughness keys).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum SurfaceRoughness {
+    VeryRough,
+    Rough,
+    MediumRough,
+    MediumSmooth,
+    Smooth,
+    VerySmooth,
+}
+
+impl SurfaceRoughness {
+    /// 🌬️ Multiplier of the smooth-surface forced convection excess.
+    pub fn forced_convection_multiplier(self) -> f64 {
+        match self {
+            Self::VeryRough => 2.17,
+            Self::Rough => 1.67,
+            Self::MediumRough => 1.52,
+            Self::MediumSmooth => 1.13,
+            Self::Smooth => 1.11,
+            Self::VerySmooth => 1.0,
+        }
+    }
+}
+
+/// 🧱️ Opaque material layer.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Material {
+    pub id: EntityId,
+    pub name: String,
+    pub roughness: SurfaceRoughness,
+    pub thickness_m: f64,
+    pub conductivity_w_m_k: f64,
+    pub density_kg_m3: f64,
+    pub specific_heat_j_kg_k: f64,
+    pub thermal_absorptance: f64,
+    pub solar_absorptance: f64,
+    pub visible_absorptance: f64,
+}
+
+/// 🪟️ One glass pane of a layered glazing construction, by its normal-incidence spectral averages.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct GlazingMaterial {
+    pub id: EntityId,
+    pub name: String,
+    pub thickness_m: f64,
+    pub conductivity_w_m_k: f64,
+    pub solar_transmittance: f64,
+    pub solar_reflectance_front: f64,
+    pub solar_reflectance_back: f64,
+    pub visible_transmittance: f64,
+    pub visible_reflectance_front: f64,
+    pub visible_reflectance_back: f64,
+    pub infrared_transmittance: f64,
+    pub infrared_emissivity_front: f64,
+    pub infrared_emissivity_back: f64,
+}
+
+/// 🌫️ Fill gas of a glazing gap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum GasKind {
+    Air,
+    Argon,
+    Krypton,
+    Xenon,
+}
+
+/// 🌫️ Gas-filled gap between two panes of a layered glazing construction.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct GasMaterial {
+    pub id: EntityId,
+    pub name: String,
+    pub thickness_m: f64,
+    pub gas: GasKind,
+}
+
+/// 🧱️ Layered construction. An opaque construction names [`Material`]s outside first; a glazing
+/// construction alternates [`GlazingMaterial`] panes and [`GasMaterial`] gaps, outside pane first.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Construction {
+    pub id: EntityId,
+    pub name: String,
+    pub layer_material_ids: Vec<EntityId>,
+}
+// #endregion 🔖️Material
+
+// #region 🔖️Schedule
+/// 📅️ Schedule reference by id.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ScheduleId(pub u32);
+
+// 🌱️ Hand-written, not derived — same tuple-struct reason as `EntityId` above.
+impl ToValue for ScheduleId {
+    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for ScheduleId {
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u32::from_value(value).map(ScheduleId)
+    }
+}
+
+/// 🔗️ `ScheduleId` as a mutation-payload field — the schedule-reference slots every thermostat,
+/// humidistat, gain and setpoint-manager mutation addresses. Hand-written, same reason as above.
+impl dsl::DslField for ScheduleId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::UInt
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::UInt(u64::from(self.0))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <u32 as dsl::DslField>::from_value(value).map(ScheduleId)
+    }
+}
+// #endregion 🔖️Schedule
+
+// #region 🔖️Gains
+/// 👤️ People internal gain object.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct PeopleGain {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub activity_schedule_id: ScheduleId,
+    pub people_per_area: f64,
+    pub sensible_fraction: f64,
+    pub latent_fraction: f64,
+    pub radiant_fraction: f64,
+}
+
+/// 💡️ Lighting internal gain.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct LightingGain {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub watts_per_area: f64,
+    pub radiant_fraction: f64,
+    pub visible_fraction: f64,
+    pub return_air_fraction: f64,
+}
+
+/// 🔌️ Electric equipment gain.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct EquipmentGain {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub watts_per_area: f64,
+    pub radiant_fraction: f64,
+    pub latent_fraction: f64,
+}
+// #endregion 🔖️Gains
+
+// #region 🔖️Hvac
+/// 🌡️ Thermostat setpoint control.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Thermostat {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub heating_setpoint_schedule_id: ScheduleId,
+    pub cooling_setpoint_schedule_id: ScheduleId,
+    pub heating_throttle_range_k: f64,
+    pub cooling_throttle_range_k: f64,
+}
+
+/// ❄️ Ideal loads air system for a zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct IdealLoadsSystem {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub max_heating_supply_air_temp_c: f64,
+    pub min_cooling_supply_air_temp_c: f64,
+    pub max_heating_capacity_w: Option<f64>,
+    pub max_cooling_capacity_w: Option<f64>,
+    pub outdoor_air_per_person_m3_s: f64,
+    pub outdoor_air_per_area_m3_s_m2: f64,
+}
+
+/// 💧️ Humidistat control for a zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Humidistat {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub humidifying_setpoint_schedule_id: ScheduleId,
+    pub dehumidifying_setpoint_schedule_id: ScheduleId,
+    pub humidifying_throttle_range: f64,
+    pub dehumidifying_throttle_range: f64,
+}
+
+/// 🎛️ Setpoint manager type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub enum SetpointManagerKind {
+    Scheduled,
+    OutdoorAirReset { low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64 },
+    WarmestZone,
+    ColdestZone,
+}
+
+/// 🎛️ Setpoint manager for air/plant loops.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct SetpointManager {
+    pub id: EntityId,
+    pub name: String,
+    pub kind: SetpointManagerKind,
+    pub schedule_id: Option<ScheduleId>,
+}
+
+/// 🏠️ Zone equipment assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ZoneEquipmentAssignment {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub equipment_type: ZoneEquipmentType,
+    pub priority: u8,
+    pub heating_capacity_w: f64,
+    pub cooling_capacity_w: f64,
+}
+
+/// 🏠️ Zone equipment catalog reference.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum ZoneEquipmentType {
+    Baseboard,
+    Radiant,
+    FanCoil,
+    Ptac,
+    VrfTerminal,
+    Erv,
+    UnitHeater,
+    WaterToAirHp,
+}
+
+/// 🌀️ Air loop configuration reference in model.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ModelAirLoop {
+    pub id: EntityId,
+    pub name: String,
+    pub supply_node_id: u32,
+    pub return_node_id: u32,
+    pub design_supply_air_flow_m3_s: f64,
+    pub terminal_zone_ids: Vec<EntityId>,
+}
+
+/// 🏭️ Plant loop configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct PlantLoopConfig {
+    pub id: EntityId,
+    pub name: String,
+    pub loop_type: PlantLoopType,
+    pub supply_temperature_c: f64,
+    pub return_temperature_c: f64,
+    pub design_flow_kg_s: f64,
+    pub equipment_ids: Vec<EntityId>,
+}
+
+/// 🏭️ Plant loop fluid type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum PlantLoopType {
+    Heating,
+    Cooling,
+    Condenser,
+}
+
+/// 🌬️ Outdoor air system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct OutdoorAirSystem {
+    pub id: EntityId,
+    pub air_loop_id: EntityId,
+    pub min_oa_flow_m3_s: f64,
+    pub economizer_enabled: bool,
+}
+
+/// 🌳️ Shading surface for solar obstruction.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ShadingSurface {
+    pub id: EntityId,
+    pub name: String,
+    pub vertices_m: Vec<[f64; 3]>,
+    pub transmittance_schedule_id: Option<ScheduleId>,
+}
+
+/// 📋️ Space list grouping.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct SpaceList {
+    pub id: EntityId,
+    pub name: String,
+    pub space_ids: Vec<EntityId>,
+}
+
+/// 🏠️ Thermal enclosure grouping zones.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ThermalEnclosure {
+    pub id: EntityId,
+    pub name: String,
+    pub zone_ids: Vec<EntityId>,
+}
+
+/// 🔗️ Surface adjacency pair.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct AdjacencyPair {
+    pub surface_a_id: EntityId,
+    pub surface_b_id: EntityId,
+}
+
+/// 💨️ Mechanical ventilation specification.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct MechanicalVentilation {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub design_flow_m3_s: f64,
+    pub fan_total_efficiency: f64,
+    pub fan_delta_pressure_pa: f64,
+}
+
+/// 🌐️ Airflow network definition in model.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct AirflowNetworkDefinition {
+    pub zone_node_ids: Vec<(EntityId, u32)>,
+    pub outdoor_node_id: u32,
+    pub link_ids: Vec<u32>,
+}
+
+/// ⚡️ Electrical load center.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ElectricalLoadCenter {
+    pub id: EntityId,
+    pub name: String,
+    pub generator_ids: Vec<EntityId>,
+    pub pv_ids: Vec<EntityId>,
+    pub battery_ids: Vec<EntityId>,
+}
+
+/// ☀️ PV system assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct PvSystemAssignment {
+    pub id: EntityId,
+    pub dc_capacity_w: f64,
+    pub area_m2: f64,
+    pub tilt_deg: f64,
+    pub azimuth_deg: f64,
+    pub module_efficiency: f64,
+    pub inverter_efficiency: f64,
+}
+
+/// 🔋️ Battery storage assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct BatteryAssignment {
+    pub id: EntityId,
+    pub capacity_kwh: f64,
+    pub max_charge_w: f64,
+    pub max_discharge_w: f64,
+    pub round_trip_efficiency: f64,
+}
+
+/// 🚿️ Service hot water system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct ShwSystemConfig {
+    pub id: EntityId,
+    pub heater_capacity_w: f64,
+    pub storage_volume_m3: f64,
+    pub setpoint_c: f64,
+    pub schedule_id: ScheduleId,
+}
+
+/// ☀️ Solar thermal collector system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct SolarThermalConfig {
+    pub id: EntityId,
+    pub collector_area_m2: f64,
+    pub efficiency: f64,
+    pub storage_volume_m3: f64,
+    pub tilt_deg: f64,
+    pub azimuth_deg: f64,
+}
+
+/// ❄️ Refrigeration system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct RefrigerationConfig {
+    pub id: EntityId,
+    pub case_count: u32,
+    pub design_load_w: f64,
+    pub defrost_schedule_id: ScheduleId,
+}
+
+/// 💧️ Water use system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct WaterSystemConfig {
+    pub id: EntityId,
+    pub fixture_count: u32,
+    pub peak_flow_l_s: f64,
+    pub schedule_id: ScheduleId,
+}
+
+/// ⚠️ Fault definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct FaultDefinition {
+    pub id: EntityId,
+    pub target_equipment_id: EntityId,
+    pub fault_type: FaultType,
+    pub severity: f64,
+    pub start_schedule_id: ScheduleId,
+}
+
+/// ⚠️ Fault type catalog.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum FaultType {
+    SensorBias,
+    CoilFouling,
+    DamperStuck,
+    ChillerFouling,
+    BoilerEfficiencyDegradation,
+}
+
+/// 📊️ Output variable registration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct OutputVariableSpec {
+    pub name: String,
+    pub key: String,
+    pub reporting_frequency: OutputReportFrequency,
+}
+
+/// 📊️ Output reporting frequency.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum OutputReportFrequency {
+    Timestep,
+    Hourly,
+    Daily,
+    Monthly,
+    RunPeriod,
+}
+
+/// 📐️ Sizing object for design-day autosize.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct SizingObject {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub sizing_type: SizingType,
+    pub design_day_type: DesignDayType,
+}
+
+/// 📐️ Sizing type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum SizingType {
+    Heating,
+    Cooling,
+    OutdoorAir,
+}
+
+/// 📐️ Design day type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum DesignDayType {
+    Heating,
+    Cooling,
+}
+
+/// 💡️ Daylight zone configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct DaylightZoneConfig {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub illuminance_target_lux: f64,
+    pub glare_limit: f64,
+    pub window_transmittance: f64,
+}
+
+/// 🌡️ Room air model selection per zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct RoomAirModelAssignment {
+    pub zone_id: EntityId,
+    pub model: RoomAirModelType,
+}
+
+/// 🌡️ Room air model type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslScalar)]
+pub enum RoomAirModelType {
+    WellMixed,
+    OneNodeDisplacement,
+    TwoNodeBuoyancy,
+    UnderFloorAirDistribution,
+}
+
+/// 🌡️ Ground temperature configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct GroundTemperatureConfig {
+    pub building_surface_c: [f64; 12],
+    pub shallow_c: [f64; 12],
+    pub deep_c: f64,
+}
+
+impl Default for GroundTemperatureConfig {
+    fn default() -> Self {
+        Self { building_surface_c: [18.0; 12], shallow_c: [18.0; 12], deep_c: 18.0 }
+    }
+}
+// #endregion 🔖️Hvac
+
+// #region 🔖️Infiltration
+/// 💨️ Zone infiltration specification — a full [`crate::air_exchange::InfiltrationMethod`]
+/// selection plus every parameter each method needs, so the kernel maps this entity onto
+/// [`crate::air_exchange::InfiltrationSpec`] one-to-one instead of pinning one method and
+/// smuggling the flow through a coefficient field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Infiltration {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub method: crate::air_exchange::InfiltrationMethod,
+    pub design_flow_ach: f64,
+    pub flow_per_exterior_area_m3_s_m2: f64,
+    pub effective_leakage_area_m2: f64,
+    pub discharge_coefficient: f64,
+    pub stack_height_m: f64,
+    pub constant_term_coefficient: f64,
+    pub temperature_term_coefficient: f64,
+    pub velocity_term_coefficient: f64,
+    pub velocity_squared_term_coefficient: f64,
+}
+// #endregion 🔖️Infiltration
+
+// #region 🔖️Model
+/// 🏢️ Complete building energy model (single native representation). `run_period` and `schedules`
+/// are persisted model data, not per-run session state: every `ScheduleId` reference in this
+/// document resolves inside `schedules`, and [`crate::kernel::SimulationConfig`] reads both out of
+/// the model at run time (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+pub struct Model {
+    pub name: String,
+    pub version: String,
+    pub site: Site,
+    pub zones: Vec<Zone>,
+    pub spaces: Vec<Space>,
+    pub surfaces: Vec<Surface>,
+    pub fenestrations: Vec<Fenestration>,
+    pub materials: Vec<Material>,
+    pub glazing_materials: Vec<GlazingMaterial>,
+    pub gas_materials: Vec<GasMaterial>,
+    pub constructions: Vec<Construction>,
+    pub people: Vec<PeopleGain>,
+    pub lighting: Vec<LightingGain>,
+    pub equipment: Vec<EquipmentGain>,
+    pub thermostats: Vec<Thermostat>,
+    pub humidistats: Vec<Humidistat>,
+    pub setpoint_managers: Vec<SetpointManager>,
+    pub ideal_loads: Vec<IdealLoadsSystem>,
+    pub zone_equipment: Vec<ZoneEquipmentAssignment>,
+    pub air_loops: Vec<ModelAirLoop>,
+    pub plant_loops: Vec<PlantLoopConfig>,
+    pub outdoor_air_systems: Vec<OutdoorAirSystem>,
+    pub infiltrations: Vec<Infiltration>,
+    pub mechanical_ventilations: Vec<MechanicalVentilation>,
+    pub shading_surfaces: Vec<ShadingSurface>,
+    pub space_lists: Vec<SpaceList>,
+    pub thermal_enclosures: Vec<ThermalEnclosure>,
+    pub adjacency_pairs: Vec<AdjacencyPair>,
+    pub airflow_network: Option<AirflowNetworkDefinition>,
+    pub electrical_load_centers: Vec<ElectricalLoadCenter>,
+    pub pv_systems: Vec<PvSystemAssignment>,
+    pub battery_storage: Vec<BatteryAssignment>,
+    pub shw_systems: Vec<ShwSystemConfig>,
+    pub solar_thermal_systems: Vec<SolarThermalConfig>,
+    pub refrigeration_systems: Vec<RefrigerationConfig>,
+    pub water_systems: Vec<WaterSystemConfig>,
+    pub faults: Vec<FaultDefinition>,
+    pub output_variables: Vec<OutputVariableSpec>,
+    pub sizing_objects: Vec<SizingObject>,
+    pub daylight_zones: Vec<DaylightZoneConfig>,
+    pub room_air_models: Vec<RoomAirModelAssignment>,
+    pub ground_temperature: GroundTemperatureConfig,
+    pub run_period: crate::calendar::RunPeriod,
+    pub schedules: crate::schedule::ScheduleSet,
+}
+
+impl Model {
+    /// ✅️ Validate model topology, references, and SI ranges — a pure, allocation-only pre-flight
+    /// check every caller (not only this crate's own tests) can run before handing a model to
+    /// [`crate::sim::Engine::run`], which performs its own incremental, cursor-owned validation
+    /// pass but only reports it as a job fault rather than as addressable diagnostics.
+    pub fn validate(&self) -> Result<(), Diagnostics> {
+        let mut diag = Diagnostics::default();
+        let zone_ids: HashSet<_> = self.zones.iter().map(|z| z.id).collect();
+        let surface_ids: HashSet<_> = self.surfaces.iter().map(|s| s.id).collect();
+        let material_ids: HashSet<_> = self.materials.iter().map(|m| m.id).collect();
+        let construction_ids: HashSet<_> = self.constructions.iter().map(|c| c.id).collect();
+
+        if self.zones.is_empty() {
+            diag.push(Error::fatal("model must contain at least one zone"));
+        }
+
+        let mut names = HashSet::new();
+        for zone in &self.zones {
+            if zone.volume_m3 <= 0.0 {
+                diag.push(Error::severe(format!("zone {} has non-positive volume", zone.name)));
+            }
+            if !names.insert(zone.name.clone()) {
+                diag.push(Error::severe(format!("duplicate zone name: {}", zone.name)));
+            }
+        }
+
+        for space in &self.spaces {
+            if !zone_ids.contains(&space.zone_id) {
+                diag.push(Error::severe(format!("space {} references unknown zone", space.name)));
+            }
+        }
+
+        for surface in &self.surfaces {
+            if !zone_ids.contains(&surface.zone_id) {
+                diag.push(Error::severe(format!("surface {} references unknown zone", surface.name)));
+            }
+            if !construction_ids.contains(&surface.construction_id) {
+                diag.push(Error::severe(format!("surface {} references unknown construction", surface.name)));
+            }
+            if surface.vertices_m.len() < 3 {
+                diag.push(Error::severe(format!("surface {} has fewer than 3 vertices", surface.name)));
+            }
+            if let OutsideBoundary::Interzone(other) = surface.outside_boundary_condition {
+                if !surface_ids.contains(&other) {
+                    diag.push(Error::severe(format!("surface {} interzone pair missing", surface.name)));
+                }
+            }
+        }
+
+        for fen in &self.fenestrations {
+            if let Some(glazing) = fen.glazing_construction_id {
+                if !construction_ids.contains(&glazing) {
+                    diag.push(Error::severe(format!("fenestration {} references unknown glazing construction", fen.name)));
+                }
+            }
+            if !surface_ids.contains(&fen.surface_id) {
+                diag.push(Error::severe(format!("fenestration {} references unknown surface", fen.name)));
+            }
+        }
+
+        let glazing_ids: HashSet<_> = self.glazing_materials.iter().map(|m| m.id).collect();
+        let gas_ids: HashSet<_> = self.gas_materials.iter().map(|m| m.id).collect();
+        let glazing_construction_ids: HashSet<_> = self.fenestrations.iter().filter_map(|fen| fen.glazing_construction_id).collect();
+        for construction in &self.constructions {
+            if construction.layer_material_ids.is_empty() {
+                diag.push(Error::severe(format!("construction {} has no layers", construction.name)));
+            }
+            // 🪟️ A construction is glazing when a fenestration binds it OR when every layer is a pane
+            // or a gas gap — a layered glazing construction re-imported from epJSON (`WindowMaterial:
+            // Glazing`/`:Gas`) is not yet bound by any fenestration and must not be judged as opaque.
+            let all_glazing_layers = !construction.layer_material_ids.is_empty() && construction.layer_material_ids.iter().all(|id| glazing_ids.contains(id) || gas_ids.contains(id));
+            if glazing_construction_ids.contains(&construction.id) || all_glazing_layers {
+                let alternates = construction.layer_material_ids.iter().enumerate().all(|(index, id)| if index % 2 == 0 { glazing_ids.contains(id) } else { gas_ids.contains(id) });
+                if !alternates || construction.layer_material_ids.len() % 2 == 0 || construction.layer_material_ids.len() > 2 * crate::fenestration::MAX_PANES - 1 {
+                    diag.push(Error::severe(format!("glazing construction {} must alternate one to {} glazing panes with gas gaps", construction.name, crate::fenestration::MAX_PANES)));
+                }
+            } else {
+                for mid in &construction.layer_material_ids {
+                    if !material_ids.contains(mid) {
+                        diag.push(Error::severe(format!("construction {} references unknown material", construction.name)));
+                    }
+                }
+            }
+        }
+
+        for material in &self.materials {
+            if material.thickness_m <= 0.0 || material.conductivity_w_m_k <= 0.0 {
+                diag.push(Error::severe(format!("material {} has invalid thermal properties", material.name)));
+            }
+        }
+
+        for glazing in &self.glazing_materials {
+            let optics = [glazing.solar_transmittance, glazing.solar_reflectance_front, glazing.solar_reflectance_back, glazing.infrared_transmittance, glazing.infrared_emissivity_front, glazing.infrared_emissivity_back];
+            if glazing.thickness_m <= 0.0 || glazing.conductivity_w_m_k <= 0.0 || optics.iter().any(|value| !(0.0..=1.0).contains(value)) || glazing.solar_transmittance + glazing.solar_reflectance_front > 1.0 || glazing.solar_transmittance + glazing.solar_reflectance_back > 1.0 {
+                diag.push(Error::severe(format!("glazing material {} has invalid thermal or optical properties", glazing.name)));
+            }
+        }
+
+        for gas in &self.gas_materials {
+            if gas.thickness_m <= 0.0 {
+                diag.push(Error::severe(format!("gas material {} has non-positive thickness", gas.name)));
+            }
+        }
+
+        for thermostat in &self.thermostats {
+            if !zone_ids.contains(&thermostat.zone_id) {
+                diag.push(Error::severe("thermostat references unknown zone"));
+            }
+        }
+
+        for ils in &self.ideal_loads {
+            if !zone_ids.contains(&ils.zone_id) {
+                diag.push(Error::severe("ideal loads system references unknown zone"));
+            }
+        }
+
+        for hv in &self.humidistats {
+            if !zone_ids.contains(&hv.zone_id) {
+                diag.push(Error::severe("humidistat references unknown zone"));
+            }
+        }
+
+        for ze in &self.zone_equipment {
+            if !zone_ids.contains(&ze.zone_id) {
+                diag.push(Error::severe("zone equipment references unknown zone"));
+            }
+        }
+
+        for mv in &self.mechanical_ventilations {
+            if !zone_ids.contains(&mv.zone_id) {
+                diag.push(Error::severe("mechanical ventilation references unknown zone"));
+            }
+        }
+
+        for al in &self.air_loops {
+            for zid in &al.terminal_zone_ids {
+                if !zone_ids.contains(zid) {
+                    diag.push(Error::severe(format!("air loop {} references unknown zone", al.name)));
+                }
+            }
+        }
+
+        for dz in &self.daylight_zones {
+            if !zone_ids.contains(&dz.zone_id) {
+                diag.push(Error::severe("daylight zone references unknown zone"));
+            }
+        }
+
+        for pair in &self.adjacency_pairs {
+            if !surface_ids.contains(&pair.surface_a_id) || !surface_ids.contains(&pair.surface_b_id) {
+                diag.push(Error::severe("adjacency pair references unknown surface"));
+            }
+        }
+
+        let schedule_ids: HashSet<_> = self
+            .schedules
+            .constants
+            .iter()
+            .map(|s| s.id)
+            .chain(self.schedules.daily.iter().map(|s| s.id))
+            .chain(self.schedules.weekly.iter().map(|s| s.id))
+            .chain(self.schedules.annual.iter().map(|s| s.id))
+            .chain(self.schedules.time_series.iter().map(|s| s.id))
+            .collect();
+        let mut require_schedule = |id: ScheduleId, owner: &str| {
+            if !schedule_ids.contains(&id) {
+                diag.push(Error::severe(format!("{owner} references schedule {} which the model does not define", id.0)));
+            }
+        };
+        for person in &self.people {
+            require_schedule(person.schedule_id, "people gain");
+            require_schedule(person.activity_schedule_id, "people activity");
+        }
+        for light in &self.lighting {
+            require_schedule(light.schedule_id, "lighting gain");
+        }
+        for equipment in &self.equipment {
+            require_schedule(equipment.schedule_id, "equipment gain");
+        }
+        for infiltration in &self.infiltrations {
+            require_schedule(infiltration.schedule_id, "infiltration");
+        }
+        for ventilation in &self.mechanical_ventilations {
+            require_schedule(ventilation.schedule_id, "mechanical ventilation");
+        }
+        for thermostat in &self.thermostats {
+            require_schedule(thermostat.heating_setpoint_schedule_id, "thermostat heating setpoint");
+            require_schedule(thermostat.cooling_setpoint_schedule_id, "thermostat cooling setpoint");
+        }
+
+        for fen in &self.fenestrations {
+            if fen.area_m2 <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive area", fen.name)));
+            }
+            if fen.height_m <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive height", fen.name)));
+            }
+            if fen.u_value_w_m2k <= 0.0 {
+                diag.push(Error::severe(format!("fenestration {} has non-positive U-value", fen.name)));
+            }
+            if !(0.0..=1.0).contains(&fen.shgc) {
+                diag.push(Error::severe(format!("fenestration {} has an SHGC outside 0..1", fen.name)));
+            }
+            // 🔶️ An aperture that carries its own polygon must be a real planar ring in its host's
+            // plane — otherwise the solar code would shade against a shape the envelope does not have.
+            if !fen.vertices_m.is_empty() {
+                if fen.vertices_m.len() < 3 {
+                    diag.push(Error::severe(format!("fenestration {} has fewer than 3 vertices", fen.name)));
+                } else if let Some(host) = self.surfaces.iter().find(|surface| surface.id == fen.surface_id) {
+                    if !crate::geometry::polygon_lies_on_plane(&fen.vertices_m, &host.vertices_m, FENESTRATION_PLANE_TOLERANCE_M) {
+                        diag.push(Error::severe(format!("fenestration {} has a polygon outside its host surface's plane", fen.name)));
+                    }
+                }
+            }
+        }
+
+        if diag.has_fatal() || diag.messages.iter().any(|m| m.severity == Severity::Severe) {
+            Err(diag)
+        } else {
+            Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn zone_by_id(&self, id: EntityId) -> Option<&Zone> {
+        self.zones.iter().find(|z| z.id == id)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn construction_by_id(&self, id: EntityId) -> Option<&Construction> {
+        self.constructions.iter().find(|c| c.id == id)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn material_by_id(&self, id: EntityId) -> Option<&Material> {
+        self.materials.iter().find(|m| m.id == id)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn surfaces_for_zone(&self, zone_id: EntityId) -> Vec<&Surface> {
+        self.surfaces.iter().filter(|s| s.zone_id == zone_id).collect()
+    }
+}
+// #endregion 🔖️Model
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+```
+

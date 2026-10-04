@@ -38,14 +38,17 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation
         }
     }
 
-    fn inverse(&self, base: &XmlSnapshot) -> Vec<super::XmlMutation> {
+    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
         if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
             return Vec::new();
         }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
         vec![super::XmlMutation::SetText(Self::Restore(Box::new(inverse)))]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")

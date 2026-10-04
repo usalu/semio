@@ -42,7 +42,8 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(transient: &FlowWindowTransient) -> UiAssemblyResult<BuiltNode> {
-    let generation = transient.generation();
+    let mut generation_owner = transient.generation().map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview", error.into_message()))?;
+    let generation = generation_owner.as_mut();
     let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(FLOW_PLAY_PREVIEW_PLACEHOLDER);
     let scene = TextEditorScene::base(text.to_string(), Some("json".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, ContractSurfaceKind::TextEditor, &scene)

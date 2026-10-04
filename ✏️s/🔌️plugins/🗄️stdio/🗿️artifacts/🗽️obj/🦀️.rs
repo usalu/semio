@@ -95,60 +95,60 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// verbatim (five `LanguageSpec` rows, one per role) from `crate::standards::v3_0::
 /// engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.obj",
                     extension: Some("obj"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.obj"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.obj.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.obj.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.obj.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("stdio.obj.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.obj.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.obj.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "stdio.obj.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("stdio.obj.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.spr"),
                 },
             ]
         })
@@ -192,7 +192,7 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
         let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ObjComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        semio_framework_plugin::resolve_ready((entry.compose)(sources))
+        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

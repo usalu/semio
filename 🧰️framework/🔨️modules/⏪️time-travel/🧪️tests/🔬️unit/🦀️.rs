@@ -3,7 +3,10 @@
 
 use super::*;
 use protocol::value::{DslValue, FromValue, ToValue};
-use protocol::{FaultCode, MutationMessage, MutationReplayOutcome, Severity};
+use semio_framework_diagnostic::FaultCode;
+use protocol::MutationMessage;
+use protocol::MutationReplayOutcome;
+use semio_framework_diagnostic::Severity;
 use serde_json::Value;
 
 const LAW: &str = include_str!("../../🧫️fixtures/🧫️lifecycle-law/🔣️.json");

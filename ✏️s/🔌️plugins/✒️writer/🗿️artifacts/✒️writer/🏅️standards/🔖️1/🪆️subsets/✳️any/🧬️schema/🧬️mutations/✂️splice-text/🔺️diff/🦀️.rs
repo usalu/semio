@@ -11,11 +11,11 @@ pub fn diff(payload: &SpliceText, base: &WriterSnapshot) -> protocol::MutationOu
     let current = crate::writer_text(base);
     let applied = payload.splice().apply(&current, semio_framework_plugin::TEXT_SPLICE_CONTEXT_SCALARS);
     if applied.text == current {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Document text is unchanged.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Document text is unchanged.".to_string());
     }
     let outcome = protocol::MutationOutcome::new(crate::standards::v1::subsets::any::io::diff::text::diff_set_text(&applied.text, &base.id, &base.language_id));
     if applied.located.clamped {
-        return outcome.warn("mutation.clamped", "The text this edit replaced had already changed; nothing was deleted.".to_string());
+        return outcome.warning("mutation.clamped", "The text this edit replaced had already changed; nothing was deleted.".to_string());
     }
     outcome
 }

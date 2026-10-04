@@ -60,8 +60,9 @@
           "en": "Gap",
           "de": "Abstand"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
         "group": "geometry",
         "order": 20
       }
@@ -75,8 +76,9 @@
           "en": "Shift",
           "de": "Versatz"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
         "group": "geometry",
         "order": 30
       }
@@ -90,8 +92,9 @@
           "en": "Rise",
           "de": "Anhebung"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
         "group": "geometry",
         "order": 40
       }
@@ -99,14 +102,24 @@
     "newRotation": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "dial",
         "role": "value",
         "label": {
           "en": "Rotation",
           "de": "Drehung"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
         "group": "geometry",
         "order": 50
       }
@@ -114,14 +127,24 @@
     "newTurn": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "dial",
         "role": "value",
         "label": {
           "en": "Turn",
           "de": "Wendung"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
         "group": "geometry",
         "order": 60
       }
@@ -129,14 +152,24 @@
     "newTilt": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "dial",
         "role": "value",
         "label": {
           "en": "Tilt",
           "de": "Neigung"
         },
-        "step": 0.1,
-        "precision": 2,
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": -180,
+        "softMax": 180,
+        "snaps": [
+          -180,
+          -90,
+          0,
+          90,
+          180
+        ],
         "group": "geometry",
         "order": 70
       }

@@ -1,0 +1,11 @@
+{
+  "authority": "hostContinuations",
+  "unit": "文🌠",
+  "repeat": 10000,
+  "utf8Bytes": 70000,
+  "checkpointSources": [
+    "schema",
+    "native",
+    "artifact"
+  ]
+}

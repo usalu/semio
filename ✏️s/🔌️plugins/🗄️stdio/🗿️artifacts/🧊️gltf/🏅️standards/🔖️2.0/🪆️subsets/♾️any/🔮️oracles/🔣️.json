@@ -144,7 +144,8 @@
         "create-scene",
         "unbind-node-child",
         "unbind-scene-root-node",
-        "set-snapshot"
+        "set-snapshot",
+        "patch-snapshot"
       ]
     }
   ],

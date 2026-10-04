@@ -1,0 +1,11 @@
+# Global Child Read Alias Canonical Retirement Boundary
+
+The actual Store `♻️retirement/🦀️.rs` implements `RetireOwned` for `ArtifactChild<S>` by retaining only `child_id` and `target` in the retirement sequence. The held typed owner introduces `read_owner`; applying that existing implementation unchanged would ordinary-drop the read alias before the metadata cursor is returned. This is a concrete required integration join, not evidence that the held global pair is ready.
+
+The adjacent read-release cursor currently drops its captured capability after an inline-size debit. That does not prove the last capability alias releases its ten owned metadata strings under their actual backing grants. A retained read can outlive the original parent/root, so relying on the root to remain the final alias is unsound. The actual `ErasedSnapshotRead` destructor returns its authentic lease through `return_snapshot_read`, with pending owners retained by the existing registry; it does not by itself retain the surrounding captured metadata for a separate bounded cursor.
+
+The canonical shared `RetireOwned` interface returns an infallible `RetirementCursor`, whereas the held captured-member retirement requires actual member identity and preserves `Identity`, `Control`, `Grant`, `Terminal` and `Member` refusals. An adapter that calls that cursor with no member and drops its refusal, panics, or wraps it in an inline-size drop would not close ownership. No such adapter or production change has been mounted.
+
+The coherent completion must give the last captured capability owner a genuine retained retirement destination, or carry its full metadata and authentic read lease in the already owned caller retirement cursor. Shared aliases may release independently; the last alias must retain the full captured owner until actual bounded retirement can advance. The complete root/member/command retirement caller set must be paired with this choice. Physical Arc and cursor scaffold backing remains separately unproved.
+
+This source readback is qualified independently from the authentic Rewriting12 result (11 passes, one real-command materialization failure) and the compiler-only ChildEmit attempt. No additional runtime result is claimed.

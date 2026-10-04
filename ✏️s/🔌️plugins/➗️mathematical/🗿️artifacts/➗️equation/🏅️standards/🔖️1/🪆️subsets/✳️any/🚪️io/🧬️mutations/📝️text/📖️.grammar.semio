@@ -16,26 +16,36 @@ line = change-graph-directed
      / replace-points
      / insert-point
      / remove-point
-     / move-point
+     / move-points
+     / change-coefficient
+     / move-nodes
+     / set-node-positions
+     / set-point-positions
 
-change-graph-directed = "change-graph-directed" SP boolean
-update-graph-algorithm = "update-graph-algorithm" SP text SP text?
-replace-graph = "replace-graph" SP block
-create-node = "create-node" SP id SP text SP number SP number (SP index)?
-delete-node = "delete-node" SP id
-delete-nodes = "delete-nodes" SP block
-change-node-label = "change-node-label" SP id SP text
-move-node = "move-node" SP id SP number SP number
-connect-nodes = "connect-nodes" SP id SP text SP text (SP index)?
-disconnect-nodes = "disconnect-nodes" SP id
-replace-points = "replace-points" SP block
-insert-point = "insert-point" SP number SP number SP number
-remove-point = "remove-point" SP number
-move-point = "move-point" SP number SP number SP number
+change-graph-directed = "change-graph-directed" SP "new-directed=" boolean
+update-graph-algorithm = "update-graph-algorithm" SP "new-algorithm=" quoted SP "new-algorithm-seed=" optional-quoted
+replace-graph = "replace-graph" SP "graph=" quoted
+create-node = "create-node" SP "id=" quoted SP "label=" quoted SP "x=" number SP "y=" number (SP "index=" count)?
+delete-node = "delete-node" SP "id=" quoted
+delete-nodes = "delete-nodes" SP "ids=" quoted
+change-node-label = "change-node-label" SP "id=" quoted SP "new-label=" quoted
+move-node = "move-node" SP "id=" quoted SP "x=" number SP "y=" number
+connect-nodes = "connect-nodes" SP "id=" quoted SP "source=" quoted SP "target=" quoted (SP "index=" count)?
+disconnect-nodes = "disconnect-nodes" SP "id=" quoted
+replace-points = "replace-points" SP "points=" points
+insert-point = "insert-point" SP "index=" count SP "x=" number SP "y=" number
+remove-point = "remove-point" SP "index=" count
+move-points = "move-points" SP "indices=" quoted SP "dx=" number SP "dy=" number
+change-coefficient = "change-coefficient" SP "label=" count SP "numer=" quoted SP "denom=" quoted
+move-nodes = "move-nodes" SP "ids=" quoted SP "dx=" number SP "dy=" number
+set-node-positions = "set-node-positions" SP "positions=" quoted
+set-point-positions = "set-point-positions" SP "positions=" quoted
 
-id = OCTET+
+quoted = DQUOTE (escaped / OCTET)* DQUOTE
+escaped = "\\" ("\\" / DQUOTE)
+optional-quoted = quoted / "-"
 number = OCTET+
-index = "index=" number
-text = OCTET+
+count = DIGIT+
 boolean = "true" / "false"
-block = "{" NL OCTET+ "}"
+points = "[" (pair (";" pair)*)? "]"
+pair = number "," number

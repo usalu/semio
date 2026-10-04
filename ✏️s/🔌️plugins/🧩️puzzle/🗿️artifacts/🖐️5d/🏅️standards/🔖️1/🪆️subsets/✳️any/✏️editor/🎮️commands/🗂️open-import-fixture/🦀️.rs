@@ -16,6 +16,6 @@ pub fn open_import_fixture(ctx: &mut Puzzle5dActionCtx<'_>) {
         read_as: Some("text".into()),
         import_action: "importFixture".into(),
         multiple: false,
-    });
+    args: None, });
     ctx.abort = true;
 }

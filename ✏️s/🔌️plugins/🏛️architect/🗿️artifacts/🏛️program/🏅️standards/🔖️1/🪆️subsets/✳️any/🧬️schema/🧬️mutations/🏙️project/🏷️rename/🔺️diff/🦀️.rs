@@ -9,7 +9,7 @@ use crate::ProgramSnapshot;
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the code is unchanged.
 pub fn diff(payload: &RenameProject, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     if base.project.code == payload.new_code {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "Project already has this code.").at([base.project.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "Project already has this code.").at([base.project.id.0.clone()])]);
     }
     let mut value = base.project.clone();
     value.code = payload.new_code.clone();

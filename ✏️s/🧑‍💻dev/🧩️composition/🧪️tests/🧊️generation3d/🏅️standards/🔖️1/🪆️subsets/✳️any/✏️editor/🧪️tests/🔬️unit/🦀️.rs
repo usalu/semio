@@ -114,7 +114,7 @@ pub(crate) mod context {
     pub async fn select_domain(app: &mut Generation3dApp, domain: &str, granularity: &str, ids: &[&str]) -> semio_framework_plugin::InvocationResult {
         let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
-        let args: dsl::DslValue = serde_json::json!({ "domainId": domain, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
+        let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": domain, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
         let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
     }
@@ -136,7 +136,7 @@ pub(crate) mod context {
     /// ladder: the door a continuous control's press (`gesture`/`commit`/`abort`) takes into the framework scrub machine.
     pub async fn act_with_view(app: &mut Generation3dApp, action: &str, args: serde_json::Value, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let args: dsl::DslValue = args.into();
+        let args: semio_framework_value::DslValue = args.into();
         app.handle_action(action, Some(&args), &action_meta).await?;
         settle_registered_typed_operation(app, action_meta.instance_id).await
     }
@@ -200,7 +200,7 @@ pub(crate) mod context {
     /// command channel with the shell's own live view attached, never the scoped action channel — which
     /// is why `handle_action("flowEvalTick", …)` is answered with `interactive-job.unknown-key`
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub async fn dispatch_effect_command(app: &mut Generation3dApp, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
+    pub async fn dispatch_effect_command(app: &mut Generation3dApp, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
         crate::brep_extension::dispatch_effect_command(app, command_id, args, action_meta).await
     }
     
@@ -286,20 +286,20 @@ pub(crate) mod context {
     pub const CONTRIBUTIONS_WITNESS_PLUGIN_ID: &str = "flow-extension-contributions-delivery-witness";
     
     pub fn contributions_witness_manifest_json() -> String {
-        protocol::json::to_json_string(&dsl::DslValue::object([
-            ("schema".to_string(), dsl::DslValue::String("flow.extension".into())),
-            ("id".to_string(), dsl::DslValue::String(CONTRIBUTIONS_WITNESS_EXTENSION_ID.into())),
-            ("name".to_string(), dsl::DslValue::String("Contributions Delivery Witness".into())),
-            ("version".to_string(), dsl::DslValue::String("1.0.0".into())),
-            ("activationEvents".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::String("onStartup".into())])),
+        semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+            ("schema".to_string(), semio_framework_value::DslValue::String("flow.extension".into())),
+            ("id".to_string(), semio_framework_value::DslValue::String(CONTRIBUTIONS_WITNESS_EXTENSION_ID.into())),
+            ("name".to_string(), semio_framework_value::DslValue::String("Contributions Delivery Witness".into())),
+            ("version".to_string(), semio_framework_value::DslValue::String("1.0.0".into())),
+            ("activationEvents".to_string(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("onStartup".into())])),
             (
                 "contributes".to_string(),
-                dsl::DslValue::object([
-                    ("schemas".to_string(), dsl::DslValue::Array(Vec::new())),
-                    ("operators".to_string(), dsl::DslValue::Array(Vec::new())),
-                    ("widgets".to_string(), dsl::DslValue::Array(Vec::new())),
-                    ("commands".to_string(), dsl::DslValue::Array(Vec::new())),
-                    ("settings".to_string(), dsl::DslValue::Array(Vec::new())),
+                semio_framework_value::DslValue::object([
+                    ("schemas".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                    ("operators".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                    ("widgets".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                    ("commands".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+                    ("settings".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
                 ]),
             ),
         ]))
@@ -378,7 +378,7 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     drain_flow_eval_ticks_with_view(&mut app, &right).await;
     assert!(app.window_transient_snapshot(&right).expect("right evaluated snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_some()));
     let document = app.document_pack().await.expect("Generation3d document before reload");
-    app.load_document_pack(&document).await.expect("same document reload resets preview window transient");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("same document reload resets preview window transient");
     for view in [&left, &right] {
         assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
     }
@@ -563,7 +563,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::AddGeneration(add_generation::AddGeneration {}),
         Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
         Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
-        Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
+        Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
         Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
         Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
         Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
@@ -579,9 +579,9 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::FlowEvalRelease(flow_eval_release::FlowEvalRelease { window_id: "w1".into(), window_kind_id: "procedural-preview".into() }),
         Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve { window_id: "w1".into(), window_kind_id: "procedural-preview".into(), output_json: "{\"ok\":true,\"retired\":1}".into(), ok: true }),
         Generation3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
-        Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest {}),
-        Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "cube.stl".into(), payload: "data:model/stl;base64,aGVsbG8=".into() }),
-        Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "stl".into() }),
+        Generation3dCommand::ImportDocumentRequest(import_document_request::ImportDocumentRequest { widget_id: None, channel: None, texture_id: None }),
+        Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "cube.stl".into(), payload: "data:model/stl;base64,aGVsbG8=".into(), widget_id: None, channel: None, texture_id: None }),
+        Generation3dCommand::ExportDocument(export_document::ExportDocument { format: "stl".into(), widget_id: None }),
         Generation3dCommand::CycleShowMode(cycle_show_mode::CycleShowMode {}),
         Generation3dCommand::CycleLodMode(cycle_lod_mode::CycleLodMode {}),
         Generation3dCommand::SelectNextNode(select_next_node::SelectNextNode {}),
@@ -589,9 +589,9 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SelectUpstreamNode(select_upstream_node::SelectUpstreamNode {}),
         Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {}),
         Generation3dCommand::ActivateSelection(activate_selection::ActivateSelection {}),
-        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "extrude".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
+        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "extrude".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0, ..Default::default() }),
         Generation3dCommand::KnifeMeshSelection(knife_mesh_selection::KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] }),
-        Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput { widget_id: "shape".into(), channel: "width".into(), value: "2".into(), component: None }),
+        Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput { widget_id: "shape".into(), channel: "width".into(), value: "2".into(), component: None, ..Default::default() }),
     ]
 }
 
@@ -839,15 +839,15 @@ async fn declared_actions_bridge_to_commands() {
 #[test]
 fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let decode = |args: dsl::DslValue| <Generation3dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let decode = |args: semio_framework_value::DslValue| <Generation3dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
     let identity = semio_framework_os_kernel::Viewport2d::default();
-    assert_eq!(decode(dsl::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
+    assert_eq!(decode(semio_framework_value::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
     let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
     assert_eq!(
-        decode(dsl::DslValue::object([("viewport".into(), protocol::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
+        decode(semio_framework_value::DslValue::object([("viewport".into(), semio_framework_value::ToValue::to_value(&authored))])).expect("an authored viewport bridges"),
         Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: authored })
     );
-    let refused = decode(dsl::DslValue::object([("viewport".into(), dsl::DslValue::object([("x".into(), dsl::DslValue::float(1.0)), ("y".into(), dsl::DslValue::float(2.0)), ("zoom".into(), dsl::DslValue::float(0.0))]))]));
+    let refused = decode(semio_framework_value::DslValue::object([("viewport".into(), semio_framework_value::DslValue::object([("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("zoom".into(), semio_framework_value::DslValue::float(0.0))]))]));
     assert!(refused.is_err(), "a zoom the graph cannot express must fault instead of being replaced by the identity camera");
 }
 
@@ -909,7 +909,7 @@ async fn refresh_pending_effects_starts_the_preview_eval_run() {
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let effects = app.pending_effects(Some(&preview_view)).await;
-    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(dsl::DslValue::as_str) == Some(semio_s_artifact_procedural_generation3d::preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
+    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(semio_framework_value::DslValue::as_str) == Some(semio_s_artifact_procedural_generation3d::preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
     let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
     assert_eq!(receipt.state.as_deref(), Some("finalized"), "the read-only run settles and finalizes itself: {receipt:?}");
 }
@@ -1055,7 +1055,7 @@ fn graph_selection_splits_into_node_and_edge_domains() {
     let mut fixture = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
     fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "n".into() });
     fixture.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "note".into(), to: "note".into(), from_port: String::new(), to_port: String::new() });
-    let marks = PreviewInteractionMarks { components: Default::default(), hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
     assert_eq!(marks.graph_selection_domains(&fixture), (vec!["note".to_string()], vec!["wire".to_string()]));
 }
 
@@ -1194,10 +1194,10 @@ fn test_serial() -> crate::test_serial::TestSerialGuard {
 /// derives `serde::Deserialize` in a non-`#[cfg(test)]` build of its own crate (`🏗️mesh-engine/🦀️.rs`'s
 /// `#[cfg_attr(test, derive(Serialize, Deserialize))]` only activates inside that crate's OWN test
 /// build, never for a downstream consumer like this one), so `serde_json::from_value` cannot reach
-/// it here; round-trip through the wire text and `dsl::json::from_json_str` instead, exactly like
+/// it here; round-trip through the wire text and `semio_framework_pack_json::from_json_str` instead, exactly like
 /// production's `mesh_data_for_preview_handle` (above) does.
 fn mesh_data_from_json(value: &Value) -> semio_framework_plugin::MeshData {
-    dsl::json::from_json_str(&serde_json::to_string(value).expect("mesh data json text")).expect("mesh data")
+    semio_framework_pack_json::from_json_str(&serde_json::to_string(value).expect("mesh data json text"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mesh data")
 }
 
 /// 🌉️ `Mesh3d` (a plain positions/normals/indices struct) no longer exists —
@@ -1239,7 +1239,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
         ..Default::default()
     };
     let document = generation3d_document_from_mesh(&source).expect("an imported tetrahedron document");
-    let projection = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).expect("the actual imported graph");
+    let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).expect("the actual imported graph");
     let owner = context::instance_operation_owner();
     let eval_json = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates"));
     owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -1259,7 +1259,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
     assert_eq!(media.media_type.form, MediaForm::Mesh);
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("geometry export must carry a structured mesh"); };
     assert_eq!(schema, "3d.mesh");
-    let mesh: semio_framework_plugin::MeshData = dsl::json::from_json_str(&json).expect("the exported actual geometry");
+    let mesh: semio_framework_plugin::MeshData = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the exported actual geometry");
     assert!(mesh.positions.len() >= 12);
     assert_eq!(mesh.indices.len() / 3, fixture["expected"]["faces"].as_u64().unwrap() as usize);
     assert_eq!(mesh.indices.len(), source.indices.len());
@@ -1277,7 +1277,7 @@ fn prepared_document_mesh(projection: &Generation3dSnapshot) -> semio_framework_
     let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &Generation3dConfig::default());
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("prepared document meshes");
     let meshes = meshes.iter().map(|mesh| mesh_data_from_json(&mesh["data"])).collect::<Vec<_>>();
-    merge_meshes(&meshes)
+    merge_meshes(&meshes).expect("prepared document fixtures contain compatible surfaces")
 }
 
 #[test]
@@ -1380,7 +1380,7 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
         let indices = source["faces"].as_array().unwrap().iter().flat_map(|face| face.as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32)).collect::<Vec<_>>();
         let mesh = semio_framework_plugin::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
         let document = generation3d_document_from_mesh(&mesh).unwrap();
-        let projection = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).unwrap();
+        let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).unwrap();
         let source_fields = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::imported_source(&projection).map(|(kind, data)| (kind.to_owned(), data.to_owned()));
         let has_mesh_output = projection.host_snapshot.synapses.iter().any(|wire| wire.from_port == "meshOut");
         let prepared = prepared_document_mesh(&projection);
@@ -1392,7 +1392,7 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
         let imported_positions = imported["vertices"].as_array().unwrap().iter().flat_map(|point| point.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect::<Vec<_>>();
         assert_eq!(imported_positions, positions);
         assert!(has_mesh_output);
-        let result = generation3d_mesh_from_document(&protocol::json::to_dsl_value(&document), &prepared).unwrap();
+        let result = generation3d_mesh_from_document(&semio_framework_pack_json::to_dsl_value(&document), &prepared).unwrap();
         assert_eq!(result.indices.len(), indices.len());
         for (actual, expected) in result.indices.iter().zip(&indices) {
             assert_eq!(&result.positions[*actual as usize * 3..*actual as usize * 3 + 3], &positions[*expected as usize * 3..*expected as usize * 3 + 3]);
@@ -1405,26 +1405,26 @@ fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
     let _serial = test_serial();
     use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
     let default_projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
-    let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&default_projection)).expect("projection json");
+    let document_json: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&default_projection)).expect("projection json");
     let prepared = prepared_document_mesh(&default_projection);
     default_projection.retire_cold();
-    let mesh = generation3d_mesh_from_document(&dsl::DslValue::from(&document_json), &prepared).expect("mesh from document");
+    let mesh = generation3d_mesh_from_document(&semio_framework_value::DslValue::from(&document_json), &prepared).expect("mesh from document");
     assert!(!mesh.positions.is_empty());
 
     let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
     let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
     let obj_document = generation3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&obj_document)).expect("parseable obj projection").retire_cold();
+    <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&obj_document)).expect("parseable obj projection").retire_cold();
 
     let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
     let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
     let glb_document = generation3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&glb_document)).expect("parseable glb projection").retire_cold();
+    <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&glb_document)).expect("parseable glb projection").retire_cold();
 
     let stl_bytes = StlExporter.export(&mesh).expect("stl export");
     let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
     let stl_document = generation3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-    <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&stl_document)).expect("parseable stl projection").retire_cold();
+    <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&stl_document)).expect("parseable stl projection").retire_cold();
 }
 
 #[test]
@@ -1491,7 +1491,7 @@ fn wireframe_show_mode_strips_shaded_triangles() {
 
 #[test]
 fn generation3d_io_declares_the_params_and_geometry_ports() {
-    let io = semio_framework::io::resolve_ready(generation3d_io());
+    let io = ::semio_framework_async::poll::resolve_ready(generation3d_io());
     assert_eq!(io.artifact_schema, "generation.3d");
     assert_eq!(io.artifact.id, "3d.generation");
     let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
@@ -1611,15 +1611,15 @@ fn preview_payload_emits_no_instance_for_a_pure_data_channel() {
 /// own channel, and an instance-level mark covers only itself.
 #[test]
 fn preview_marks_resolve_node_channel_and_instance_ids() {
-    let node = PreviewInteractionMarks { components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
+    let node = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(node.hovers("multi", "a", 0) && node.hovers("multi", "b", 3));
     assert!(!node.hovers("other", "a", 0));
 
-    let channel = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+    let channel = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(channel.hovers("multi", "b", 0) && channel.hovers("multi", "b", 7));
     assert!(!channel.hovers("multi", "a", 0));
 
-    let instance = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
+    let instance = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
     assert!(instance.hovers("multi", "b", 2));
     assert!(!instance.hovers("multi", "b", 1));
 }
@@ -1635,7 +1635,7 @@ fn preview_payload_marks_every_channel_of_a_hovered_node() {
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
     let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
     let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
     assert_eq!(instances.len(), 2);
@@ -1654,7 +1654,7 @@ fn preview_payload_marks_only_the_hovered_channel() {
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
+    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
     let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
     let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
     let hovered: Vec<&str> = instances.iter().filter(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)).filter_map(|entry| entry.get("id").and_then(Value::as_str)).collect();
@@ -1666,7 +1666,7 @@ fn preview_payload_marks_only_the_hovered_channel() {
 /// and its port, which is what the node-graph window paints.
 #[test]
 fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
-    let marks = PreviewInteractionMarks { components: Default::default(), hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
     assert_eq!(marks.hovered_graph_target(), Some(("multi".to_string(), Some("b".to_string()))));
     assert!(marks.graph_highlight_ids().contains(&"multi".to_string()));
     assert_eq!(marks.graph_selection_ids(), vec!["multi".to_string()]);
@@ -1851,7 +1851,7 @@ async fn hex_column_evaluates_end_to_end_through_the_extension_round_trip() {
     drain_flow_eval_ticks(&mut app).await;
 
     let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
     let status_json = scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status");
     for widget_id in ["height", "radius", "sides", "profile", "extrusion-axis", "extrude", "column-preview"] {
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating: {status_json}");
@@ -1898,10 +1898,10 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
     }
     let decoded = <Generation3dPlayApp as ArtifactEditor>::command_from_action(
         "setContributions",
-        Some(&dsl::DslValue::object([
-            ("json".to_string(), dsl::DslValue::String(pages[0].clone())),
-            ("page".to_string(), dsl::DslValue::uint(0)),
-            ("pageCount".to_string(), dsl::DslValue::uint(pages.len() as u64)),
+        Some(&semio_framework_value::DslValue::object([
+            ("json".to_string(), semio_framework_value::DslValue::String(pages[0].clone())),
+            ("page".to_string(), semio_framework_value::DslValue::uint(0)),
+            ("pageCount".to_string(), semio_framework_value::DslValue::uint(pages.len() as u64)),
         ])),
     )
     .expect("the host's own argument shape decodes into the typed command");
@@ -1936,7 +1936,7 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
     drain_flow_eval_ticks(&mut app).await;
     let (after_eval, _) = context::heap_probe("after first eval");
     let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).expect("node-graph scene decodes off the rendered flow surface");
     let status_json = scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status");
     for widget_id in ["profile", "extrusion-axis", "extrude", "column-preview"] {
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating under a host-pushed registry: {status_json}");
@@ -2303,7 +2303,7 @@ fn preview_mesh_count(preview_body_json: &str) -> usize {
 
 /// 🚦 The flow window's per-widget evaluation status object.
 fn flow_status_json(flow_body_json: &str) -> String {
-    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(flow_body_json).expect("node-graph scene decodes off the rendered flow surface");
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(flow_body_json).expect("node-graph scene decodes off the rendered flow surface");
     scene.status_json.clone().expect("the flow window publishes a per-widget evaluation status")
 }
 //#endregion 🔁️ExtensionRoundTripTests
@@ -2346,7 +2346,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semi
         }
         let answered = crate::brep_extension::settle(app, action_meta.instance_id, &action_meta).await.answered;
         budget.round_trips += answered;
-        let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut owed).into_iter().filter_map(|effect| match effect {
+        let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut owed).into_iter().filter_map(|effect| match effect {
             Effect::DispatchAction { action, args, .. } => Some((action, args)),
             _ => None,
         }).collect();
@@ -2711,17 +2711,37 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
     }
 }
 
+fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
+    let mut snapshot = Generation3dSnapshot::default();
+    let graph = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+        let kind = if operation == "dissolveVertices" { "brep.mesh.construct" } else { "brep.mesh.box" };
+        host.add_widget(&serde_json::json!({"kind":"neuron","id":"extrude","neuronKind":kind}).to_string(), 0.0, 0.0).unwrap();
+        host.add_widget(r#"{"kind":"neuron","id":"analysis","neuronKind":"brep.mesh.analyze"}"#, 220.0, 0.0).unwrap();
+        host.connect_ports("extrude", "meshOut", "analysis", "mesh").unwrap();
+        host.host_snapshot.clone()
+    });
+    let empty = std::mem::replace(&mut snapshot.host_snapshot, graph);
+    empty.retire_cold();
+    if operation == "dissolveVertices" {
+        let data = serde_json::json!({"vertices":[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0.5,0.5,0]],"faces":[[0,1,4],[1,2,4],[2,3,4],[3,0,4]]}).to_string();
+        let input = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::change_widget_input("extrude", "data", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::Text(data));
+        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut snapshot, &input).unwrap();
+        input.retire_cold();
+    }
+    snapshot
+}
+
 #[test]
 fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
     let _serial = test_serial();
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧫️fixtures/🔣️.json")).unwrap();
-    for operation in ["extrude", "inset", "subdivide", "flip", "deleteFaces", "moveVertices", "loopCut"] {
-        let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-        let group = &fixture["groups"][match operation { "moveVertices" => 1, "loopCut" => 6, _ => 0 }];
-        let ids = group["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().replace("box@", "extrude@")).collect::<Vec<_>>();
-        let payload = edit_mesh_selection::EditMeshSelection { cuts: 1, operation: operation.into(), amount: 0.05, dx: 0.01, dy: 0.0, dz: 0.0 };
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["valid"].as_array().unwrap() {
+        let operation = case["name"].as_str().unwrap();
+        let snapshot = mesh_selection_fixture_snapshot(operation);
+        let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
+        let payload: edit_mesh_selection::EditMeshSelection = semio_framework_pack_json::from_json_str(&case["payload"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let (id, rows) = edit_mesh_selection::edit_rows(&payload, &snapshot.host_snapshot, &ids).unwrap();
-        let field = match operation { "moveVertices" => "vertices", "loopCut" => "edges", _ => "faces" };
+        let field = match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" => "selection", _ => "faces" };
         let inputs: Vec<&semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput> = rows.iter().filter_map(|row| match row { semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(input) => Some(input), _ => None }).collect();
         assert!(inputs.iter().all(|input| input.id == id) && inputs[0].channel == field, "{operation}: the user's inputs are absolute leaves on the inserted operator: {inputs:?}");
         assert!(rows.iter().rev().take(inputs.len()).all(|row| matches!(row, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(_))), "{operation}: the splice precedes the inputs");
@@ -2731,21 +2751,25 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
             row.retire_cold();
         }
         let outcome = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&landed.host_snapshot, |host| {
-            let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id: widget_id, params, preview: true, .. } if widget_id == &id => Some(dsl::json::to_json_string(params)), _ => None });
+            let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id: widget_id, params, preview: true, .. } if widget_id == &id => Some(semio_framework_pack_json::to_json_string(params)), _ => None });
             let feeds_analysis = host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh");
             let evaluation = host.evaluate().map_err(|error| error.to_string())?;
-            Ok::<_, String>((params, feeds_analysis, evaluation))
+            Ok::<_, String>((params, feeds_analysis, evaluation, semio_framework_pack_json::to_json_string(&host.host_snapshot.synapses)))
         });
         landed.retire_cold();
         snapshot.retire_cold();
-        let (params, feeds_analysis, evaluation) = outcome.unwrap();
+        let (params, feeds_analysis, evaluation, wires) = outcome.unwrap();
         let params: Value = serde_json::from_str(&params.unwrap()).unwrap();
         let indices: Value = serde_json::from_str(params[field]["value"].as_str().unwrap()).unwrap();
-        assert_eq!(indices, group["components"]);
-        if operation == "loopCut" { assert_eq!(params["cuts"]["value"].as_f64(), Some(1.0)); }
-        assert!(feeds_analysis);
+        assert_eq!(indices, serde_json::from_str::<Value>(case["inputs"][field].as_str().unwrap()).unwrap());
+        for (channel, expected) in case["inputs"].as_object().unwrap() {
+            let actual = if expected.is_array() { serde_json::json!([params[channel]["x"], params[channel]["y"], params[channel]["z"]]) } else { params[channel]["value"].clone() };
+            assert_eq!(&actual, expected, "{operation}/{channel}");
+        }
+        assert!(feeds_analysis, "{operation}: {id} must feed downstream analysis: {wires}");
         let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
         assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{operation}: {evaluation}");
+        assert_eq!(evaluation["analysis"]["out"]["vertices"]["$schema"], "number", "{operation}: downstream analysis evaluated");
     }
 }
 
@@ -2764,11 +2788,21 @@ fn mesh_component_gumball_pins_the_complete_component_set() {
         let mut selected = pinned.clone();
         for operation in ["translate", "rotate", "scale"] {
             let (id, mode, components) = transform_commands::ensure_component_node(host, &selected, operation).unwrap();
+            land_component_inputs(host, &id, &mode, &components, operation);
             selected = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
             assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &pinned, &selected).is_ok());
         }
     });
     snapshot.retire_cold();
+}
+
+/// 🎛️ Lands a component gesture's channels on the operator `ensure_component_node` inserted with its default params, the way
+/// the gesture's appended `change-widget-input` leaves do (design §19.4).
+fn land_component_inputs(host: &mut semio_framework_os_flow::FlowHost, id: &str, mode: &str, components: &[u32], operation: &str) {
+    for (channel, value) in transform_commands::component_gesture_inputs(mode, components, operation) {
+        let patch = semio_framework_value::DslValue::object([(channel.to_string(), value.literal())]);
+        host.set_neuron_params(id, &semio_framework_pack_json::to_json_string(&patch)).expect("the inserted record declares the channel");
+    }
 }
 
 #[test]
@@ -2781,6 +2815,7 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
             let (id, mode, components) = transform_commands::ensure_component_node(host, &ids, operation).unwrap();
             assert_eq!(mode, "face");
             assert_eq!(components, vec![0]);
+            land_component_inputs(host, &id, &mode, &components, operation);
             let selected = [format!("{id}@meshOut#0.face.0")];
             assert_eq!(transform_commands::ensure_component_node(host, &selected, operation).unwrap().0, id);
             assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &["extrude@meshOut#0.face.0".into()], &selected).is_ok());
@@ -2788,13 +2823,48 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.to == id && wire.to_port == "mesh" && wire.from_port == "meshOut"));
             let changed = [format!("{id}@meshOut#0.face.1")];
             assert!(transform_commands::validate_component_gesture(&host.host_snapshot, &["extrude@meshOut#0.face.0".into()], &changed).is_err());
-            let (next, _, _) = transform_commands::ensure_component_node(host, &changed, operation).unwrap();
+            let (next, next_mode, next_components) = transform_commands::ensure_component_node(host, &changed, operation).unwrap();
+            land_component_inputs(host, &next, &next_mode, &next_components, operation);
             assert_ne!(next, id);
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.to == next && wire.from == id));
             assert!(transform_commands::ensure_component_node(host, &["extrude@meshOut#1.face.0".into()], operation).is_err());
         }
     });
     snapshot.retire_cold();
+}
+
+/// ⚖️ LAW (design §19.4, §20.9): a component gumball's first grab inserts its operator with the kind's DEFAULT params and
+/// sets every channel the gesture chooses — granularity, component set, pivot, the transform identity — as its own appended
+/// `change-widget-input`, each individually editable in history; the folded rows hold the gesture's channels, and a re-grab
+/// of that operator appends no row.
+#[test]
+fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, change_widget_input::WidgetInputValue, Generation3dMutation};
+    let _serial = test_serial();
+    let committed = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let (rows, targets, _) = transform_commands::gumball_splice(&committed.host_snapshot, &["extrude@meshOut#0.face.1".into()], "translate").expect("the first grab splices");
+    let operator = targets[0].clone();
+    let literal = |widget: &semio_framework_artifact_flow_flow::Widget, key: &str| match widget {
+        semio_framework_artifact_flow_flow::Widget::Neuron { params, .. } => params.get(key).and_then(|value| WidgetInputValue::of_literal(&semio_framework_value::ToValue::to_value(value))),
+        _ => None,
+    };
+    let inserted = rows.iter().find_map(|row| match row { Generation3dMutation::CreateWidget(create) if semio_s_artifact_procedural_generation3d::widget_id(&create.widget) == operator => Some(create.widget.clone()), _ => None }).expect("the operator is inserted");
+    assert_eq!(literal(&inserted, "mode"), Some(WidgetInputValue::Text("vertex".into())), "inserted with the kind's default, never the gesture's channel");
+    let channels: Vec<(String, WidgetInputValue)> = rows.iter().filter_map(|row| match row { Generation3dMutation::ChangeWidgetInput(input) if input.id == operator => Some((input.channel.clone(), input.input.clone())), _ => None }).collect();
+    assert_eq!(channels, vec![("mode".to_string(), WidgetInputValue::Text("face".into())), ("selection".to_string(), WidgetInputValue::Text("[1]".into())), ("offset".to_string(), WidgetInputValue::Vector([0.0; 3]))], "one input per chosen channel, after the insert");
+    let mut landed = committed.clone();
+    for row in rows {
+        apply_generation3d_mutation(&mut landed, &row).expect("the splice folds");
+        row.retire_cold();
+    }
+    let record = landed.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == operator).expect("the operator landed").clone();
+    assert_eq!((literal(&record, "mode"), literal(&record, "selection")), (Some(WidgetInputValue::Text("face".into())), Some(WidgetInputValue::Text("[1]".into()))));
+    let (again, _, _) = transform_commands::gumball_splice(&landed.host_snapshot, &[format!("{operator}@meshOut#0.face.1")], "translate").expect("a re-grab reuses the operator");
+    assert!(again.is_empty(), "a re-grab appends no row: {again:?}");
+    record.retire_cold();
+    for snapshot in [landed, committed] {
+        snapshot.retire_cold();
+    }
 }
 
 #[test]
@@ -2827,22 +2897,125 @@ fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connections() {
     let _serial = test_serial();
-    for (operation, granularity) in [("extrude", "face"), ("loopCut", "edge")] {
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["valid"].as_array().unwrap() {
+        let operation = case["name"].as_str().unwrap();
+        let granularity = case["granularity"].as_str().unwrap();
         let mut app = app().await;
-        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        let snapshot = mesh_selection_fixture_snapshot(operation);
+        let payload = semio_framework_pack_json::to_json_string(&snapshot);
+        snapshot.retire_cold();
+        context::dispatch(&mut app, Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "mesh-selection.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
         context::drain_flow_eval_ticks(&mut app).await;
-        context::select_domain(&mut app, selection::DOMAIN, granularity, &[&format!("extrude@meshOut#0.{granularity}.0")]).await;
+        let selected: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
+        context::select_domain(&mut app, selection::DOMAIN, granularity, &selected.iter().map(String::as_str).collect::<Vec<_>>()).await;
         let probe = |app: &context::Generation3dApp| {
             let snapshot = context::snapshot(app);
             (snapshot.host_snapshot.widgets.len(), snapshot.host_snapshot.synapses.iter().find(|wire| wire.to == "analysis" && wire.to_port == "mesh").unwrap().from.clone())
         };
         let before = probe(&app);
+        let before_preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+        let before_world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&before_preview).unwrap();
+        let before_meshes: Value = serde_json::from_str(&before_world.meshes_json).unwrap();
         let after = (before.0 + 1, format!("extrude__{operation}"));
-        semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
-            &mut app,
-            Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: operation.into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
-            probe, before, after,
-        ).await;
+        let change = context::act_with_view(&mut app, "editMeshSelection", case["payload"].clone(), context::preview_views("procedural-preview-test", "procedural-preview-test-other").0).await.unwrap();
+        assert_eq!(probe(&app), after);
+        let row = semio_framework_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).max_by_key(|entry| entry.seq).expect("the mesh edit's row");
+        assert_eq!(row.transaction.as_ref().map(|transaction| transaction.tool.as_str()), Some("s.procedural.generation3d@1/*#editor#editMeshSelection"), "{operation}: the edit is ONE tool transaction (audit P4)");
+        let label = row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
+        assert!(label.starts_with("Insert \"") && label.contains(&format!("({})", after.1)), "{operation}: the row reads the operator it inserts, never its splice: {label}");
+        let selected = app.interaction_state().await;
+        assert!(selected.selection.get(selection::DOMAIN).unwrap().ids.is_empty(), "{operation}: invalidated mesh components are cleared");
+        assert_eq!(selected.selection.get("graph").unwrap().ids, vec![after.1.clone()]);
+        context::drive_preview_run(&mut app, &context::preview_views("procedural-preview-test", "procedural-preview-test-other").0, &change.effects).await;
+        let after_preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+        let after_world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&after_preview).unwrap();
+        let after_meshes: Value = serde_json::from_str(&after_world.meshes_json).unwrap();
+        assert!(!after_meshes.as_array().unwrap().is_empty(), "{operation}: the edit renders geometry before history traversal");
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+        assert_eq!(probe(&app), before);
+        context::drain_flow_eval_ticks(&mut app).await;
+        let undo_preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+        let undo_world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&undo_preview).unwrap();
+        assert_eq!(serde_json::from_str::<Value>(&undo_world.meshes_json).unwrap(), before_meshes, "{operation}: undo restores actual viewport geometry");
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+        assert_eq!(probe(&app), after);
+        context::drain_flow_eval_ticks(&mut app).await;
+        let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+        let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+        let status = scene.status_json.unwrap();
+        assert_eq!(node_eval_status(&status, &after.1), "ok", "{operation}: {status}");
+        assert_eq!(node_eval_status(&status, "analysis"), "ok", "{operation}: {status}");
+        let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+        let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).unwrap();
+        let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
+        assert!(!meshes.as_array().unwrap().is_empty(), "{operation}: the new mesh reaches the runtime viewport");
+        assert_eq!(meshes, after_meshes, "{operation}: redo restores actual viewport geometry");
+        let expected_area = serde_json::from_str::<Value>(scene.eval_json.as_ref().unwrap()).unwrap()["analysis"]["out"]["area"]["value"].as_f64().expect("evaluated analysis area").to_string();
+        let committed = context::snapshot(&app);
+        context::select_graph(&mut app, "node", &["analysis"]).await;
+        for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
+            let view = semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+            let rendered = context::render_with_view(&mut app, semio_s_artifact_procedural_generation3d::editor::generation3d::panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION, &view).await;
+            fn output<'a>(node: &'a Value) -> Option<&'a Value> { if node["key"] == "procedural-play-inspector.output.area" { return Some(node); } node["children"].as_array()?.iter().find_map(output) }
+            let tree: Value = serde_json::from_str(&rendered).unwrap(); let row = output(&tree).unwrap_or_else(|| panic!("{operation}: missing selected analysis: {rendered}"));
+            assert!(row.to_string().contains(&expected_area), "{operation}: selected analysis area reflects existing evaluation"); assert!(!row.to_string().contains("setWidgetInput"));
+            assert_eq!(context::snapshot(&app), committed, "selected output inspection preserves the document");
+        }
+        println!("[DEBUG] retained mesh edit {operation}: geometry and selected analysis evaluated, selection cleared, undo/redo restored graph");
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_quick_actions_execute_through_the_registered_preview_app() {
+    let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥽️edit-mesh-selection/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["valid"].as_array().unwrap() {
+        let operation = case["name"].as_str().unwrap();
+        let granularity = case["granularity"].as_str().unwrap();
+        let mut app = app().await;
+        let snapshot = mesh_selection_fixture_snapshot(operation);
+        let payload = semio_framework_pack_json::to_json_string(&snapshot);
+        snapshot.retire_cold();
+        context::dispatch(&mut app, Generation3dCommand::ImportDocument(import_document::ImportDocument { name: "mesh-quick-action.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
+        context::drain_flow_eval_ticks(&mut app).await;
+        let args: semio_framework_value::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":granularity}).into();
+        let admitted = app.handle_action("setInteractionGranularity", Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.unwrap();
+        let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
+        let before = context::snapshot(&app).host_snapshot.widgets.len();
+        for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
+            context::select_domain(&mut app, selection::DOMAIN, granularity, &ids.iter().map(String::as_str).collect::<Vec<_>>()).await;
+            let mut view = context::preview_views("procedural-preview-test", "procedural-preview-test-other").0;
+            view.locale = locale;
+            let engagements = app.window_engagements(&view).await;
+            let action = engagements.get(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW).unwrap().possible_engagements.as_ref().unwrap().iter().find(|action| action.id == format!("procedural.mesh-{operation}")).unwrap();
+            assert!(!action.label.is_empty());
+            let descriptor = action.action.as_ref().unwrap();
+            assert_eq!(descriptor.action, "editMeshSelection");
+            let args = descriptor.args.as_ref().unwrap();
+            for key in case["payload"].as_object().unwrap().keys() { assert!(args.get(key).is_some(), "{operation}: quick action declares {key}"); }
+            let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+            app.handle_action(&descriptor.action, descriptor.args.as_ref(), &meta).await.unwrap();
+            let change = context::settle(&mut app).await;
+            let snapshot = context::snapshot(&app);
+            let id = format!("extrude__{operation}");
+            assert_eq!(snapshot.host_snapshot.widgets.len(), before + 1);
+            assert!(snapshot.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.to == "analysis" && wire.to_port == "mesh"));
+            drop(snapshot);
+            assert!(app.interaction_state().await.selection.get(selection::DOMAIN).unwrap().ids.is_empty());
+            context::drive_preview_run(&mut app, &context::preview_views("procedural-preview-test", "procedural-preview-test-other").0, &change.effects).await;
+            let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+            let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).unwrap();
+            assert!(!serde_json::from_str::<Value>(&world.meshes_json).unwrap().as_array().unwrap().is_empty());
+            semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+            assert_eq!(context::snapshot(&app).host_snapshot.widgets.len(), before);
+            context::drain_flow_eval_ticks(&mut app).await;
+            println!("[DEBUG] retained mesh quick action {operation}/{locale:?}: emitted args executed, viewport rendered, selection cleared, undo restored source");
+        }
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
@@ -2850,30 +3023,32 @@ async fn mesh_component_edit_undo_redo_restores_geometry_and_analysis_connection
 #[semio_framework_async_macros::async_test]
 async fn mesh_component_commands_reject_stale_topology_before_publication() {
     let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let mut app = app().await;
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
     context::drain_flow_eval_ticks(&mut app).await;
     context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.999999"]).await;
-    let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+    let before = semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot);
     let (view, _) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let (flow_view, _) = context::shell_views("procedural-main-test", "procedural-preview-test");
     for command in [
-        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "inset".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0 }),
+        Generation3dCommand::EditMeshSelection(edit_mesh_selection::EditMeshSelection { cuts: 1, operation: "inset".into(), amount: 0.1, dx: 0.0, dy: 0.0, dz: 0.0, ..Default::default() }),
         Generation3dCommand::KnifeMeshSelection(knife_mesh_selection::KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] }),
     ] {
         let result = context::dispatch_with_view(&mut app, command, view.clone()).await;
         assert!(result.is_err(), "stale topology must reject the command");
-        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+        assert_eq!(semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot), before);
     }
     let command = Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude@meshOut#0.vertex.999999".into()], dx: 1.0, dy: 0.0, dz: 0.0, phase: None, reason: None, window_id: None });
     assert!(context::dispatch_with_view(&mut app, command, flow_view).await.is_err());
-    assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+    assert_eq!(semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot), before);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag() {
     let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     for operation in ["translate", "rotate", "scale"] {
         let mut app = app().await;
         context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
@@ -2883,21 +3058,21 @@ async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag
             "rotate" => Generation3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None, window_id: None }),
             _ => Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], sx: 1.1, sy: 1.0, sz: 1.0, phase: None, reason: None, window_id: None }),
         };
-        let view = context::preview_views("mesh-edit", "second").0;
-        let args: dsl::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
+        let view = context::preview_views("procedural-preview-test", "procedural-preview-test-other").0;
+        let args: semio_framework_value::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
         let admitted = app.handle_action("setInteractionGranularity", Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.unwrap();
         context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.1"]).await;
-        let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+        let before = semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot);
         assert!(context::dispatch_with_view(&mut app, command(), view.clone()).await.is_err());
-        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+        assert_eq!(semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot), before);
         context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
         context::dispatch_with_view(&mut app, command(), view.clone()).await.unwrap();
         let id = format!("extrude__{operation}Components");
         context::select_domain(&mut app, selection::DOMAIN, "face", &[&format!("{id}@meshOut#0.face.1")]).await;
-        let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
+        let before = semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot);
         assert!(context::dispatch_with_view(&mut app, command(), view).await.is_err());
-        assert_eq!(dsl::json::to_json_string(&context::snapshot(&app).host_snapshot), before);
+        assert_eq!(semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot), before);
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }
@@ -2906,11 +3081,12 @@ async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag
 async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trips_history() {
     use semio_framework_plugin::artifact_app_laws::meta;
     let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     for operation in ["translate", "rotate", "scale"] {
         let mut app = app().await;
         context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
         context::drain_flow_eval_ticks(&mut app).await;
-        let args: dsl::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
+        let args: semio_framework_value::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
         let admitted = app.handle_action("setInteractionGranularity", Some(&args), &meta("local")).await.unwrap();
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.unwrap();
         context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
@@ -2925,13 +3101,16 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
             "rotate" => Generation3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None, window_id: None }),
             _ => Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], sx: 1.1, sy: 1.0, sz: 1.0, phase: None, reason: None, window_id: None }),
         };
+        let view = context::preview_views("procedural-preview-test", "procedural-preview-test-other").0;
+        let mut preview_effects = Vec::new();
         for _ in 0..2 {
-            context::dispatch_with_view(&mut app, command(), context::preview_views("mesh-edit", "second").0).await.unwrap();
+            let change = context::dispatch_with_view(&mut app, command(), view.clone()).await.unwrap();
+            preview_effects.extend(change.effects);
             assert_eq!(probe(&app), (before.0 + 1, id.clone()));
             assert_eq!(app.interaction_state().await.selection.get(selection::DOMAIN).unwrap().ids, vec![format!("{id}@meshOut#0.face.0")]);
         }
         let snapshot = context::snapshot(&app);
-        let evaluation = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
             let widget = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::gumball_widget_json(host, &id).unwrap();
             let params = widget.get("params").unwrap();
             let actual = match operation {
@@ -2940,9 +3119,11 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
                 _ => params.get("factor").unwrap().get("x").unwrap().as_f64().unwrap(),
             };
             assert!((actual - if operation == "scale" { 1.21 } else { 0.2 }).abs() < 1e-9);
-            host.evaluate().unwrap()
         });
-        let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
+        context::drive_preview_run(&mut app, &view, &preview_effects).await;
+        let graph = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+        let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+        let evaluation: Value = serde_json::from_str(scene.eval_json.as_ref().unwrap()).unwrap();
         assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{evaluation}");
         semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
         assert_eq!(probe(&app), before);
@@ -3011,3 +3192,146 @@ async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
     snapshot.retire_cold();
 }
 //#endregion 🌱️HubGenesis
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() {
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
+    let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let publication = &fixture["measurementPublication"];
+    let mut app = app().await;
+    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let projected = with_host(&snapshot.host_snapshot, |host| {
+        host.add_widget(&json!({"kind":"neuron","id":"solid","neuronKind":publication["kind"]}).to_string(), 0.0, 0.0).unwrap();
+        let params: serde_json::Map<String, Value> = publication["params"].as_object().unwrap().iter().map(|(name, value)| (name.clone(), json!({"$schema":"number","value":value}))).collect();
+        host.set_neuron_params("solid", &Value::Object(params).to_string()).unwrap();
+        for (index, row) in publication["cases"].as_array().unwrap().iter().enumerate() {
+            let id = row["output"].as_str().unwrap();
+            host.add_widget(&json!({"kind":"neuron","id":id,"neuronKind":row["kind"]}).to_string(), 220.0, index as f64 * 100.0).unwrap();
+            host.connect_ports("solid", publication["output"].as_str().unwrap(), id, "geometry").unwrap();
+        }
+        host.host_snapshot.clone()
+    });
+    std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
+    let payload = semio_framework_pack_json::to_json_string(&snapshot);
+    snapshot.retire_cold();
+    context::dispatch(&mut app, Generation3dCommand::ImportDocument(import_document::ImportDocument { name:"measurements.json".into(), payload, widget_id:None, channel:None, texture_id:None })).await;
+    context::drain_flow_eval_ticks(&mut app).await;
+    let rendered = context::render(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&rendered).unwrap();
+    let evaluation: Value = serde_json::from_str(scene.eval_json.as_ref().unwrap()).unwrap();
+    let status = scene.status_json.as_ref().unwrap();
+    let committed = context::snapshot(&app);
+    for row in publication["cases"].as_array().unwrap() {
+        let id = row["output"].as_str().unwrap();
+        assert_eq!(node_eval_status(status,id),"ok","{id}: {status}");
+        let value = evaluation[id]["out"][id]["value"].as_f64().expect("the real query publishes its numeric result");
+        assert!((value-row["value"].as_f64().unwrap()).abs()<1e-10,"{id}: {evaluation}");
+        context::select_graph(&mut app,"node",&[id]).await;
+        for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De] {
+            let view = semio_framework_plugin::ViewModel::new(locale,semio_framework_ui_locale::Terminology::Native);
+            let rendered = context::render_with_view(&mut app,semio_s_artifact_procedural_generation3d::editor::generation3d::panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION,&view).await;
+            fn output<'a>(node:&'a Value,key:&str)->Option<&'a Value> { if node["key"]==key { return Some(node); } node["children"].as_array()?.iter().find_map(|child|output(child,key)) }
+            let tree: Value = serde_json::from_str(&rendered).unwrap();
+            let output = output(&tree,&format!("procedural-play-inspector.output.{id}")).unwrap_or_else(||panic!("{id}: {rendered}"));
+            assert!(output.to_string().contains(&value.to_string()));
+            assert!(!output.to_string().contains("setWidgetInput"));
+            assert_eq!(context::snapshot(&app),committed,"{id}: reading the query preserves the document");
+        }
+        println!("[DEBUG] BRep query {id}={value} selected read-only in EN/DE through the registered app");
+    }
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_history() {
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+    let _serial = test_serial();
+    let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧫️fixtures/🔣️.json")).unwrap();
+    let publication = &fixture["measurementPublication"];
+    let live = &fixture["liveAnalyticPublication"];
+    let source = live["source"].as_str().unwrap();
+    let consumer = live["consumer"].as_str().unwrap();
+    let feature = live["feature"].as_str().unwrap();
+    let selector = live["selector"].as_str().unwrap();
+    let mut app = app().await;
+    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let projected = with_host(&snapshot.host_snapshot, |host| {
+        host.add_widget(&json!({"kind":"neuron","id":source,"neuronKind":publication["kind"]}).to_string(),0.0,0.0).unwrap();
+        for widget in &mut host.host_snapshot.widgets {
+            if let semio_framework_artifact_flow_flow::Widget::Neuron { id,preview,.. } = widget { if id==source { *preview=true; } }
+        }
+        let params: serde_json::Map<String,Value> = publication["params"].as_object().unwrap().iter().map(|(name,value)|(name.clone(),json!({"$schema":"number","value":value}))).collect();
+        host.set_neuron_params(source,&Value::Object(params).to_string()).unwrap();
+        let measurement = publication["cases"].as_array().unwrap().iter().find(|row|row["output"]==consumer).unwrap();
+        host.add_widget(&json!({"kind":"neuron","id":consumer,"neuronKind":measurement["kind"]}).to_string(),600.0,0.0).unwrap();
+        host.connect_ports(source,publication["output"].as_str().unwrap(),consumer,"geometry").unwrap();
+        host.host_snapshot.clone()
+    });
+    std::mem::replace(&mut snapshot.host_snapshot,projected).retire_cold();
+    let payload = semio_framework_pack_json::to_json_string(&snapshot);
+    snapshot.retire_cold();
+    context::dispatch(&mut app,Generation3dCommand::ImportDocument(import_document::ImportDocument { name:"live-brep-selection.json".into(),payload,widget_id:None,channel:None,texture_id:None })).await;
+    context::drain_flow_eval_ticks(&mut app).await;
+    let before = context::snapshot(&app);
+    let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+    let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+    assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),source),"ok");
+    let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
+    let original = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
+    let expected = publication["cases"].as_array().unwrap().iter().find(|row|row["output"]==consumer).unwrap()["value"].as_f64().unwrap();
+    assert!((original-expected).abs()<1e-10,"the admitted source matches the independent box oracle");
+    let preview = context::render(&mut app,edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
+    let world = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui::wgpu::World3dScene>(&preview).unwrap();
+    let instances: Value = serde_json::from_str(&world.instances_json).unwrap();
+    let meshes: Value = serde_json::from_str(&world.meshes_json).unwrap();
+    let instance = instances.as_array().unwrap().iter().find(|instance|instance["id"].as_str().is_some_and(|id|id.starts_with(&format!("{source}@")))).expect("the evaluated source reaches the viewport");
+    let mesh = meshes.as_array().unwrap().iter().find(|mesh|mesh["id"]==instance["meshId"]).unwrap();
+    let granularity = live["componentGranularity"].as_str().unwrap();
+    let group = live["group"].as_u64().unwrap();
+    let label = mesh["data"]["componentReferences"][granularity][group as usize].as_str().expect("the real tessellation supplies its exact topology label");
+    let handle = instance["componentSource"]["handle"].as_str().unwrap();
+    let revision = instance["componentSource"]["revision"].as_str().unwrap();
+    let selected = format!("{}.{granularity}.{group}~{handle}~{label}~{revision}",instance["id"].as_str().unwrap());
+    assert!(selection::ComponentTarget::parse(&selected).is_some());
+    context::select_domain(&mut app,selection::DOMAIN,granularity,&[&selected]).await;
+    let view = context::preview_views("procedural-preview-test","procedural-preview-test-other").0;
+    let change = context::act_with_view(&mut app,"editMeshSelection",json!({"operation":live["operation"],"amount":live["amount"]}),view.clone()).await.unwrap();
+    let committed = context::snapshot(&app);
+    assert_eq!(committed.host_snapshot.widgets.len(),before.host_snapshot.widgets.len()+2);
+    let source_row = committed.host_snapshot.widgets.iter().find(|widget|semio_s_artifact_procedural_generation3d::widget_id(widget)==selector).unwrap();
+    let literal = |widget: &semio_framework_artifact_flow_flow::Widget,key: &str| match widget {
+        semio_framework_artifact_flow_flow::Widget::Neuron { params,.. } => params.get(key).and_then(|value|WidgetInputValue::of_literal(&semio_framework_value::ToValue::to_value(value))),
+        _ => None,
+    };
+    assert_eq!(literal(source_row,"sourceHandle"),Some(WidgetInputValue::Text(handle.into())));
+    assert_eq!(literal(source_row,"faceLabels"),Some(WidgetInputValue::Text(json!([label]).to_string())));
+    assert!(committed.host_snapshot.synapses.iter().any(|wire|wire.from==selector&&wire.from_port=="selectedFaces"&&wire.to==feature&&wire.to_port=="openFaces"));
+    assert!(committed.host_snapshot.synapses.iter().any(|wire|wire.from==feature&&wire.to==consumer&&wire.to_port=="geometry"));
+    let run = context::drive_preview_run(&mut app,&view,&change.effects).await;
+    assert!(run.answered>0,"the selected edit crosses the packaged inference route");
+    let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+    let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+    for id in [selector,feature,consumer] { assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),id),"ok","{id}: {:?}",graph.eval_json); }
+    let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
+    let edited = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
+    assert!(edited.is_finite()&&edited>0.0&&edited<original,"the physical shell changes the downstream solid volume: {evaluation}");
+    for verb in live["history"].as_array().unwrap() {
+        let verb = verb.as_str().unwrap();
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app,verb,semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+        let restored = context::snapshot(&app);
+        assert_eq!(&restored,if verb=="undo" { &before } else { &committed });
+        context::drain_flow_eval_ticks(&mut app).await;
+        let graph = context::render(&mut app,flow_window::GENERATION_3D_PLAY_BODY_MAIN).await;
+        let graph = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
+        assert_eq!(node_eval_status(graph.status_json.as_ref().unwrap(),consumer),"ok");
+        let evaluation: Value = serde_json::from_str(graph.eval_json.as_ref().unwrap()).unwrap();
+        let actual = evaluation[consumer]["out"][consumer]["value"].as_f64().unwrap();
+        assert!((actual-if verb=="undo" { original } else { edited }).abs()<1e-10,"{verb}: evaluated geometry and consumer restore together");
+    }
+    println!("[DEBUG] live BRep selected shell label={label} handle={handle} revision={revision} volume={original}->{edited} history=undo/redo");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+}

@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeSceneMaterialRoughness, base: &ShootingSnapshot) -> 
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material roughness must be between 0 and 1, got {}.", payload.new_roughness), Vec::<String>::new());
     }
     if base.scene.material.roughness == payload.new_roughness {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material roughness is already {}.", payload.new_roughness));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material roughness is already {}.", payload.new_roughness));
     }
     let mut scene = base.scene.clone();
     scene.material.roughness = payload.new_roughness;

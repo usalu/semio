@@ -146,13 +146,16 @@ pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::Mut
 /// ↩️ A real per-axis inverse read off the base wherever this class owns a verb for it, and an
 /// explicit whole-snapshot restore where it does not.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc6Mutation> {
+pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Result<Vec<StepCc6Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
         Some(ClassEdit::FileSchema { schemas }) => vec![StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
         Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
         Some(ClassEdit::Representation { id, row }) => vec![StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id, representation: row })],
         _ => vec![StepCc6Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
     }
+
+    })())
 }
 //#endregion 🔖️ClassEdit
 

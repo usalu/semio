@@ -33,7 +33,7 @@ fn cursor_emit(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, P
 pub mod set_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "cursor")]
     pub struct SetCursor {
         pub value: Option<u64>,
@@ -49,7 +49,7 @@ pub mod set_cursor {
 pub mod step_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "step-cursor")]
     pub struct StepCursor {
         pub delta: i64,
@@ -66,7 +66,7 @@ pub mod step_cursor {
 pub mod step_cursor_back {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
@@ -85,7 +85,7 @@ pub mod step_cursor_back {
 pub mod step_cursor_forward {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 

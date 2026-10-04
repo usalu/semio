@@ -5,6 +5,7 @@ import { admitWgpuPluginModules } from "../🧩️plugin-modules/🛂️admissio
 
 import { resolveWgpuBootDescriptor, type WgpuBootDefaults, type WgpuBootHub, type WgpuBootLocks } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost, type WgpuBrowserMount, type WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";
+import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/🟦️.ts";
 
 /** 🧊️ The embeddable wgpu boot door. Field-for-field React's `FrameworkOsBootOptions`
  * (`🧱️elements/🐚️Shell/🟦️.tsx`), so one call site can swap renderers without dropping options: it
@@ -28,6 +29,10 @@ export type FrameworkOsWgpuBootOptions = {
   readonly brand?: string;
   readonly hub?: WgpuBootHub;
   readonly rendererModuleUrl?: string;
+};
+
+/** 🎬️ Owns host resource loading and lifecycle capabilities for one renderer mount. */
+export type FrameworkOsWgpuBootExecution = {
   readonly rendererWasmUrl?: string;
   readonly frameWorkerUrl?: string;
   readonly suppressAutoIntroduction?: boolean;
@@ -41,7 +46,7 @@ const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio-framework-os-r
 const DEFAULT_EMBEDDED_VARIANT = "s";
 
 /** 🪆️ Boots one independently rooted frame Worker and retires only that mount. */
-export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<WgpuBrowserMount> {
+export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}, execution: FrameworkOsWgpuBootExecution = {}): Promise<WgpuBrowserMount> {
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error("missing #" + rootId);
@@ -51,9 +56,9 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
     overrides: { plugin: options.plugin, appId: options.appId, appRole: options.appRole, appMode: options.appMode, appExample: options.appExample, brandId: options.brand, locks: options.locks, defaults: options.defaults, hub: options.hub },
   });
   const moduleUrl = new URL(options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL, window.location.href).href;
-  const wasmUrl = options.rendererWasmUrl ?? moduleUrl.replace(/\.js(?=[?#]|$)/u, "_bg.wasm");
-  const locale = descriptor.locks.locale === "de" ? "de" : descriptor.locks.locale === "en" ? "en" : navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
-  return mountWgpuBrowserHost(root, { descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection: options.plugin === undefined ? "all" : "variant", frameWorkerUrl: options.frameWorkerUrl, suppressAutoIntroduction: options.suppressAutoIntroduction, signal: options.signal, onProgress: options.onProgress });
+  const wasmUrl = execution.rendererWasmUrl ?? moduleUrl.replace(/\.js(?=[?#]|$)/u, "_bg.wasm");
+  const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
+  return mountWgpuBrowserHost(root, { descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection: options.plugin === undefined ? "all" : "variant", frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
 }
 
 export type { WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";

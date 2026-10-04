@@ -29,7 +29,7 @@ use protocol::OpText;
 /// triads' own doc comments); `ReplaceStockSolid.new_solid` is now a real
 /// `store::ArtifactChild<SemioBrepSnapshot>` handle, JSON-encoded the same way (it already derives
 /// `Serialize`/`Deserialize` regardless of `S`).
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 enum Process3dMutationDsl {
     CreateStep {
         index: usize,
@@ -93,11 +93,11 @@ enum Process3dMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for Process3dMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        dsl::variants_text::parse_op(line)
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        dsl::variants_text::print_op(self)
+        semio_framework_dsl_record::variants_text::print_op(self)
     }
 }
 
@@ -113,12 +113,12 @@ impl protocol::OpBinary for Process3dMutationDsl {
 
 fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
     match mutation {
-        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: semio_framework_os_kernel::json::to_json_string(&payload.step) },
+        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: semio_framework_pack_json::to_json_string(&payload.step) },
         Process3dMutation::DeleteStep(payload) => Process3dMutationDsl::DeleteStep { id: payload.id.clone() },
         Process3dMutation::RenameStep(payload) => Process3dMutationDsl::RenameStep { id: payload.id.clone(), new_label: payload.new_label.clone() },
         Process3dMutation::ChangeStepEnabled(payload) => Process3dMutationDsl::ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.new_enabled },
         Process3dMutation::ChangeStepOrigin(payload) => Process3dMutationDsl::ChangeStepOrigin { id: payload.id.clone(), new_origin: payload.new_origin.clone() },
-        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure_json: semio_framework_os_kernel::json::to_json_string(&payload.new_measure) },
+        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure_json: semio_framework_pack_json::to_json_string(&payload.new_measure) },
         Process3dMutation::ReorderSteps(payload) => Process3dMutationDsl::ReorderSteps { id: payload.id.clone(), to_index: payload.to_index },
         Process3dMutation::CreateMachine(payload) => Process3dMutationDsl::CreateMachine { index: payload.index, machine: payload.machine.clone() },
         Process3dMutation::DeleteMachine(payload) => Process3dMutationDsl::DeleteMachine { id: payload.id.clone() },
@@ -127,19 +127,19 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
         Process3dMutation::ReplaceMachineCapabilities(payload) => Process3dMutationDsl::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: payload.new_capabilities.clone() },
         Process3dMutation::MoveStock(payload) => Process3dMutationDsl::MoveStock { new_pose: payload.new_pose.clone() },
         Process3dMutation::ChangeStockLabel(payload) => Process3dMutationDsl::ChangeStockLabel { new_label: payload.new_label.clone() },
-        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: semio_framework_os_kernel::json::to_json_string(&payload.new_solid) },
+        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: semio_framework_pack_json::to_json_string(&payload.new_solid) },
     }
 }
 
 fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
-        Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::CreateStep { index, step: semio_framework_os_kernel::json::from_json_str(&step_json).expect("valid ProcessStep json") }),
+        Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::CreateStep { index, step: semio_framework_pack_json::from_json_str(&step_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid ProcessStep json") }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::DeleteStep { id }),
         Process3dMutationDsl::RenameStep { id, new_label } => Process3dMutation::RenameStep(rename_step::RenameStep { id, new_label }),
         Process3dMutationDsl::ChangeStepEnabled { id, new_enabled } => Process3dMutation::ChangeStepEnabled(change_step_enabled::ChangeStepEnabled { id, new_enabled }),
         Process3dMutationDsl::ChangeStepOrigin { id, new_origin } => Process3dMutation::ChangeStepOrigin(change_step_origin::ChangeStepOrigin { id, new_origin }),
         Process3dMutationDsl::ReplaceStepMeasure { id, new_measure_json } => {
-            Process3dMutation::ReplaceStepMeasure(replace_step_measure::ReplaceStepMeasure { id, new_measure: semio_framework_os_kernel::json::from_json_str(&new_measure_json).expect("valid ProcessMeasure json") })
+            Process3dMutation::ReplaceStepMeasure(replace_step_measure::ReplaceStepMeasure { id, new_measure: semio_framework_pack_json::from_json_str(&new_measure_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid ProcessMeasure json") })
         }
         Process3dMutationDsl::ReorderSteps { id, to_index } => Process3dMutation::ReorderSteps(reorder_steps::ReorderSteps { id, to_index }),
         Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(create_machine::CreateMachine { index, machine }),
@@ -150,13 +150,13 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label }),
         Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => {
-            Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_os_kernel::json::from_json_str(&new_solid_json).expect("valid ArtifactChild json") })
+            Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_pack_json::from_json_str(&new_solid_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid ArtifactChild json") })
         }
     }
 }
 
 impl OpText for Process3dMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(process3d_mutation_from_dsl(<Process3dMutationDsl as OpText>::parse_op(line)?))
     }
 

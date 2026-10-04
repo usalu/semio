@@ -1,0 +1,92 @@
+{
+  "format": 1,
+  "package": "semio-framework-pack-error",
+  "dependencies": [
+    "semio-framework-diagnostic",
+    "semio-framework-value"
+  ],
+  "variant": "ValueRefusal",
+  "retiredVariant": "Schema",
+  "cases": [
+    {
+      "id": "InvalidValue",
+      "kind": "InvalidValue",
+      "message": "refusal-0",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-0"
+    },
+    {
+      "id": "Canceled",
+      "kind": "Canceled",
+      "message": "refusal-1",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-1"
+    },
+    {
+      "id": "OwnershipLimit",
+      "kind": "OwnershipLimit",
+      "message": "refusal-2",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-2"
+    },
+    {
+      "id": "AllocationFailed",
+      "kind": "AllocationFailed",
+      "message": "refusal-3",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-3"
+    },
+    {
+      "id": "WorkLimit",
+      "kind": "WorkLimit",
+      "message": "refusal-4",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-4"
+    },
+    {
+      "id": "DepthLimit",
+      "kind": "DepthLimit",
+      "message": "refusal-5",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-5"
+    },
+    {
+      "id": "UnsupportedOwner",
+      "kind": "UnsupportedOwner",
+      "message": "refusal-6",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-6"
+    },
+    {
+      "id": "InvariantViolated",
+      "kind": "InvariantViolated",
+      "message": "refusal-7",
+      "path": [
+        "scope",
+        "items"
+      ],
+      "display": "schema error: items.scope.refusal-7"
+    }
+  ]
+}

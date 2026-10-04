@@ -523,6 +523,7 @@ export const TIME_TRAVEL_LABELS = {
   commitFailed: { en: "Finalizing failed: the history is unchanged", de: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert" },
   outcomeIntroduced: { en: "New since this edit", de: "Neu durch diese Bearbeitung" },
   refusalMemberGone: { en: "The part this history edit targets was closed", de: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen" },
+  memberEdited: { en: "History of a composed part edited", de: "Verlauf eines eingebetteten Teils bearbeitet" },
 } as const satisfies Record<string, { en: string; de: string }>;
 export type TimeTravelLabelKey = keyof typeof TIME_TRAVEL_LABELS;
 

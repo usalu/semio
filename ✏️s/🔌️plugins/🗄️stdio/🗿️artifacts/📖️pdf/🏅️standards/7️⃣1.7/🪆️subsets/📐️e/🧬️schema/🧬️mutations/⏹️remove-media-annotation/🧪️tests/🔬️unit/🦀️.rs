@@ -9,5 +9,5 @@ fn removes_only_the_matching_media_annotation() {
     let outcome = <RemoveMediaAnnotation as MutationKind<PdfSnapshot, PdfEMutation>>::diff(&mutation, &base);
     let next = outcome.diff().apply(&base).unwrap();
     assert!(support::media_annotation(&next, &mutation.subtype, &mutation.title).is_none());
-    assert_eq!(<RemoveMediaAnnotation as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).len(), 1);
+    assert_eq!(<RemoveMediaAnnotation as MutationKind<PdfSnapshot, PdfEMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }

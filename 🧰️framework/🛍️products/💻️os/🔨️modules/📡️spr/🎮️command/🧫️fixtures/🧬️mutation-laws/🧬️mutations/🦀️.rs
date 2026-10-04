@@ -18,7 +18,7 @@ pub use add_counter_then_notify_foreign::AddCounterThenNotifyForeign;
 mod add_counter_sequence;
 pub use add_counter_sequence::AddCounterSequence;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, dsl_derive::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl_derive::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = Counter, diff = CounterDiff, schema = "command.test.counter")]
@@ -32,27 +32,27 @@ pub enum CounterMutation {
 }
 
 impl OpText for CounterMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-        for (keyword, spec_fn) in <Self as crate::os_dsl::DslVariants>::variants() {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        for (keyword, spec_fn) in <Self as semio_framework_dsl_record::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(&keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(&keyword, &record);
             }
         }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("owned variant schema");
-        crate::os_dsl::print(&record, &spec, crate::os_dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 impl OpBinary for CounterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(name, _)| name == &keyword).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 0, detail: "unknown owned variant".into() })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).map_err(ProtocolError::from)?;
@@ -67,9 +67,9 @@ impl OpBinary for CounterMutation {
             return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: "unsupported counter op format".into() });
         }
         let ordinal = usize::try_from(reader.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds platform width".into() })?;
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index out of range".into() })?;
         let (record, _) = crate::os_pack::decode_record_body(&bytes[reader.position()..], &(spec_fn.ordinary)(), &crate::os_pack::DecodeOptions::default()).map_err(ProtocolError::from)?;
-        <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: 2, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: 2, detail: error.to_string() })
     }
 }

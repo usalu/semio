@@ -37,7 +37,7 @@ fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
     let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    let topology = <semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg);
+    let topology = <semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg).expect("the valid example fixture admits interaction topology");
     let ids = topology.domains.get("graph").expect("graph domain").ordered.iter().filter(|node| node.granularity == "node" && node.parent.is_none()).map(|node| node.id.clone()).collect();
     snapshot.retire_cold();
     ids
@@ -52,19 +52,19 @@ fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
 #[test]
 fn the_no_example_row_clears_the_viewed_document_and_never_picking_does_not() {
     let _serial = context::lock();
-    let fixture = dsl::json::parse(EXAMPLE_SWITCH_FIXTURE_JSON).expect("the example-switch fixture parses");
+    let fixture = semio_framework_pack_json::parse(EXAMPLE_SWITCH_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the example-switch fixture parses");
     let viewer = fixture.get("viewer").cloned().expect("the fixture declares the viewer's picker states");
-    assert_eq!(viewer.get("windowKind").and_then(dsl::json::Value::as_str), Some(preview::WINDOW_KIND_ID));
+    assert_eq!(viewer.get("windowKind").and_then(semio_framework_pack_json::Value::as_str), Some(preview::WINDOW_KIND_ID));
     let states = viewer.get("states").cloned().expect("states");
     let states = states.as_array().expect("states is a table");
     assert_eq!(states.len(), 3, "the picker has three states, not two");
     let opened = viewed_node_ids(None);
     for state in states {
-        let id = state.get("id").and_then(dsl::json::Value::as_str).expect("state id");
-        let picked = state.get("activeExampleId").and_then(dsl::json::Value::as_str);
+        let id = state.get("id").and_then(semio_framework_pack_json::Value::as_str).expect("state id");
+        let picked = state.get("activeExampleId").and_then(semio_framework_pack_json::Value::as_str);
         let nodes = viewed_node_ids(picked);
         println!("[STATS] viewer picker state {id} activeExampleId={picked:?} nodes={nodes:?}");
-        match state.get("viewed").and_then(dsl::json::Value::as_str).expect("viewed") {
+        match state.get("viewed").and_then(semio_framework_pack_json::Value::as_str).expect("viewed") {
             "opened" => assert_eq!(nodes, opened, "{id}: never picking anything keeps showing the opened document"),
             "empty" => assert!(nodes.is_empty(), "{id}: the `No example` row must clear the viewed document, not load one"),
             example_id => {

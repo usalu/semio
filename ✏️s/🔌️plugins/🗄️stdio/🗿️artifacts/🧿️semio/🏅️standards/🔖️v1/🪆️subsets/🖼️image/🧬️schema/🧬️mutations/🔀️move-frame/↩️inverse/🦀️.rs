@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::move_frame;
 
 /// ↩️ Inverse of move-frame — swaps `from`/`to` (structural, base-content-independent).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, from: usize, to: usize) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }), base)
+pub fn inverse(base: &SemioImageSnapshot, from: usize, to: usize) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }), base)?
+
+    })
 }

@@ -86,7 +86,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
+    use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3, Mp3EncodeAdvance, Mp3EncodeCursor};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp3::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
@@ -119,7 +119,7 @@ mod subject {
         let forward = mutation_of(&spec)?;
         let mut snapshot = base.clone();
         apply_mp3_mutation(&mut snapshot, &forward);
-        for backward in mutation_inverse(&forward, &base) {
+        for backward in mutation_inverse(&forward, &base).expect("valid retained mutation inverse fixture") {
             apply_mp3_mutation(&mut snapshot, &backward);
         }
         let bytes = encode_mp3(&snapshot);
@@ -139,7 +139,15 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_mp3(&input).map_err(|error| format!("decode_mp3 failed: {error}"))?;
-        let bytes = encode_mp3(&snapshot);
+        let mut cursor = Mp3EncodeCursor::new(&snapshot);
+        let mut bytes = Vec::new();
+        loop {
+            match cursor.advance(&snapshot, 257)? {
+                Mp3EncodeAdvance::Progress => {}
+                Mp3EncodeAdvance::Chunk(chunk) => bytes.extend_from_slice(&chunk),
+                Mp3EncodeAdvance::Complete => break,
+            }
+        }
         carrier_is_exact(&bytes, &input)?;
         let projection = project_mp3(&bytes)?;
         round_trip_preserves_within(&projection, &project_mp3(&input)?, MP3_WRITER_FREEDOM, MP3_TOLERANCE)?;

@@ -42,7 +42,7 @@ fn sample_snapshot() -> NoteSnapshot {
 fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
     let forward = apply_note_mutation(snapshot, mutation).expect("valid mutation diff");
     let mut restored = forward.clone();
-    for back in mutation.inverse(snapshot) {
+    for back in mutation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
         restored = apply_note_mutation(&restored, &back).expect("valid inverse mutation diff");
     }
     assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot for {mutation:?}");
@@ -203,7 +203,7 @@ async fn create_block_duplicate_id_is_fatal() {
     };
     let outcome = create_block(existing, None, None).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -241,7 +241,7 @@ async fn move_block_non_finite_is_fatal() {
     let base = sample_snapshot();
     let outcome = move_block("b1".into(), f64::NAN, 0.0).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -308,7 +308,7 @@ async fn create_asset_duplicate_id_is_fatal() {
     let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
     let outcome = create_asset("asset-1".into(), asset).diff(&base);
     assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -338,7 +338,7 @@ async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: u
     let report = store.replay_report(&result).expect("report");
     let fresh = log.iter().enumerate().fold(base.clone(), |snapshot, (position, mutation)| {
         let mutation = if position == index { edited } else { mutation };
-        if mutation.diff(&snapshot).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) { snapshot } else { apply_note_mutation(&snapshot, mutation).expect("the edited log folds") }
+        if mutation.diff(&snapshot).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) { snapshot } else { apply_note_mutation(&snapshot, mutation).expect("the edited log folds") }
     });
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     if !report.blocks_finalize() {
@@ -374,7 +374,7 @@ async fn a_block_drag_retargeted_onto_a_missing_block_blocks_finalizing() {
 /// 🗣️ The drag's history row label reads the block count and the offset in English and German.
 #[test]
 fn a_block_drag_label_reads_the_count_and_offset() {
-    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_owned(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()) };
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_owned(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()) };
     assert_eq!(label(drag_blocks(vec!["b1".into()], 2.5, -10.0)), ("Drag 1 block by (2.5, -10)".to_string(), "1 Block um (2,5; -10) ziehen".to_string()));
     assert_eq!(label(drag_blocks(vec!["b1".into(), "b2".into()], 0.0, 3.0)), ("Drag 2 blocks by (0, 3)".to_string(), "2 Blöcke um (0; 3) ziehen".to_string()));
 }
@@ -383,7 +383,7 @@ fn a_block_drag_label_reads_the_count_and_offset() {
 /// as verbs), an unset value reads as a reset, and no label leaks a Rust `Option` debug form.
 #[test]
 fn document_setting_labels_read_the_value_not_a_debug_option() {
-    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_owned(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()) };
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_owned(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()) };
     let pair = |en: &str, de: &str| (en.to_string(), de.to_string());
     assert_eq!(label(change_grid_opacity(Some(0.76))), pair("Change grid opacity to 76%", "Rasterdeckkraft auf 76 % ändern"));
     assert_eq!(label(change_grid_opacity(None)), pair("Reset grid opacity", "Rasterdeckkraft zurücksetzen"));
@@ -405,7 +405,7 @@ fn document_setting_labels_read_the_value_not_a_debug_option() {
 fn block_references_read_their_name_and_take_the_block_selection() {
     let snapshot = sample_snapshot();
     let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&snapshot), &["b1"].into_iter().collect());
-    assert_eq!(names.get("b1").map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()).as_deref(), Some("Text"));
+    assert_eq!(names.get("b1").map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_owned()).as_deref(), Some("Text"));
     let schema: serde_json::Value = serde_json::from_str(<DragBlocks as protocol::MutationLeaf>::PAYLOAD_SCHEMA).expect("leaf schema");
     let reference = &schema["properties"]["ids"]["x-semio-ui"]["ref"];
     assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::note::NOTE_INTERACTION_BLOCKS), Some(crate::editor::note::NOTE_INTERACTION_GRANULARITY)), "{reference}");

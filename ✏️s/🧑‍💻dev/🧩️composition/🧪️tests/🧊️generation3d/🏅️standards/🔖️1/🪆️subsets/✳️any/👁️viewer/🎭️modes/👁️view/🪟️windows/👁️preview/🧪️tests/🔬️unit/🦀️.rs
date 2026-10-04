@@ -1,5 +1,5 @@
 use super::*;
-use dsl::json::Value;
+use semio_framework_pack_json::Value;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewCamera;
 
 fn default_document() -> Generation3dSnapshot {
@@ -44,7 +44,7 @@ fn every_instance_carries_a_channel_qualified_interaction_id() {
     let config = Generation3dViewConfig::default();
     let (eval, session) = evaluated_preview_fixture(&document.host_snapshot);
     let payload = preview_payload(&eval, &document.host_snapshot, &config, Some(&session), &Generation3dViewMarks::default());
-    let instances = dsl::json::parse(&payload.instances_json).expect("instances json");
+    let instances = semio_framework_pack_json::parse(&payload.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json");
     let instances = instances.as_array().expect("instances array").clone();
     assert!(!instances.is_empty());
     for instance in &instances {
@@ -65,14 +65,14 @@ fn marks_paint_hover_and_selection_from_a_bare_widget_id() {
     let config = Generation3dViewConfig::default();
     let (eval, session) = evaluated_preview_fixture(&document.host_snapshot);
     let bare = preview_payload(&eval, &document.host_snapshot, &config, Some(&session), &Generation3dViewMarks::default());
-    let instances = dsl::json::parse(&bare.instances_json).expect("instances json");
+    let instances = semio_framework_pack_json::parse(&bare.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json");
     let first = instances.as_array().expect("instances array").first().cloned().expect("at least one instance");
     let interaction_id = first.get("interactionId").and_then(Value::as_str).expect("interactionId").to_string();
     let widget_id = interaction_id.split('@').next().expect("widget id").to_string();
 
     let marks = Generation3dViewMarks { hovered: std::iter::once(widget_id.clone()).collect(), selected: std::iter::once(widget_id).collect() };
     let marked = preview_payload(&eval, &document.host_snapshot, &config, Some(&session), &marks);
-    let marked_instances = dsl::json::parse(&marked.instances_json).expect("instances json");
+    let marked_instances = semio_framework_pack_json::parse(&marked.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json");
     let marked_instances = marked_instances.as_array().expect("instances array").clone();
     let any_marked = marked_instances.iter().any(|instance| instance.get("selected").and_then(Value::as_bool) == Some(true) && instance.get("hovered").and_then(Value::as_bool) == Some(true));
     assert!(any_marked, "a bare widget id must mark every instance of that widget");
@@ -169,7 +169,7 @@ fn a_hover_only_re_render_tessellates_nothing() {
     assert_eq!(preview_tessellation_count(), after_cold, "an identical re-render must not tessellate again");
     assert_eq!(warm.meshes_json, cold.meshes_json, "the reused mesh table must be byte-identical");
 
-    let instances = dsl::json::parse(&cold.instances_json).expect("instances json");
+    let instances = semio_framework_pack_json::parse(&cold.instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json");
     let first = instances.as_array().expect("instances array").first().cloned().expect("at least one instance");
     let interaction_id = first.get("interactionId").and_then(Value::as_str).expect("interactionId").to_string();
     let hovered_marks = Generation3dViewMarks { hovered: [interaction_id].into_iter().collect(), selected: std::collections::BTreeSet::new() };
@@ -209,7 +209,7 @@ fn every_published_mesh_declares_its_role() {
     let config = Generation3dViewConfig::default();
     let (eval, session) = evaluated_preview_fixture(&document.host_snapshot);
     let payload = preview_payload(&eval, &document.host_snapshot, &config, Some(&session), &Generation3dViewMarks::default());
-    let meshes = dsl::json::parse(&payload.meshes_json).expect("meshes json");
+    let meshes = semio_framework_pack_json::parse(&payload.meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("meshes json");
     let meshes = meshes.as_array().expect("meshes array").clone();
     assert!(!meshes.is_empty(), "the default fixture publishes at least one mesh");
     for mesh in &meshes {

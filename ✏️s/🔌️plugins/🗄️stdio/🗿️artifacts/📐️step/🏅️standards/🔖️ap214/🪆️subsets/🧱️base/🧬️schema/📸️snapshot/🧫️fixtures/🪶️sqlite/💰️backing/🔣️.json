@@ -1,0 +1,76 @@
+{
+  "forecast": "unpaidBorrowedBound",
+  "stages": [
+    "nativeInput",
+    "nativeFields",
+    "preflightFrontier",
+    "projectionFrontier",
+    "relationIndex",
+    "reconstructionFields",
+    "valueOwnership"
+  ],
+  "allocation": "fullConcreteBufferBeforeConstruction",
+  "retirement": "noCumulativeRefund",
+  "cancellation": "retainAdmittedBytes",
+  "ledger": {
+    "requests": [
+      24,
+      48,
+      65536
+    ],
+    "expectedSpent": 65608,
+    "exact": 65608,
+    "refused": 65607
+  },
+  "literal": {
+    "unit": "quote\" slash\\ \u0000 世界😀",
+    "repeat": 4096,
+    "instanceWord": "18446744073709551615",
+    "binary64Words": [
+      "8000000000000000",
+      "7ff8000000000042",
+      "7ff0000000001234",
+      "7ff0000000000000",
+      "fff0000000000000",
+      "0000000000000001"
+    ],
+    "binary64Classes": [
+      "negativeZero",
+      "nan",
+      "nan",
+      "positiveInfinity",
+      "negativeInfinity",
+      "finite"
+    ]
+  },
+  "limits": {
+    "semantic": "maxValueBytes",
+    "backing": "maxAllocationBytes",
+    "file": "maxFileBytes"
+  },
+  "relations": {
+    "tableCount": 12,
+    "identity": "positiveUniqueSurrogate",
+    "ordinal": "contiguousPerOwner",
+    "ownership": "exclusive",
+    "externalWord": "literalUnsigned64"
+  },
+  "nativeRoles": {
+    "owned": "maxAllocationBytes",
+    "semantic": "maxValueBytes",
+    "preflight": "paidFrontiersOnly",
+    "nonfinite": "retainedBinary64"
+  },
+  "typedConstruction": {
+    "inlineRoot": "noBackingRequest",
+    "typedBox": "onePaidSlot"
+  },
+  "preflightFrontierSlots": [
+    1,
+    2,
+    4,
+    1,
+    2,
+    1
+  ]
+}

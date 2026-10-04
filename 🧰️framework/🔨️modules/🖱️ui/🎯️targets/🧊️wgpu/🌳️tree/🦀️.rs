@@ -553,8 +553,7 @@ impl UiTree {
         if let Some(section) = self.authored_tree_section(id) {
             return Some(node.state.disclosure_open.unwrap_or_else(|| crate::wgpu::layout::tree_section_default_open(section)));
         }
-        let item = self.authored_tree_item(id)?;
-        item.items.as_deref().filter(|items| !items.is_empty())?;
+        let item = self.authored_tree_item(id).filter(|item| item.has_rows())?;
         Some(node.state.disclosure_open.unwrap_or(item.default_open.unwrap_or(false)))
     }
 
@@ -566,7 +565,7 @@ impl UiTree {
         if self.authored_tree_section(id).is_some_and(|section| section.label.is_some()) {
             return true;
         }
-        self.authored_tree_item(id).and_then(|item| item.items.as_deref()).is_some_and(|items| !items.is_empty())
+        self.authored_tree_item(id).is_some_and(UiTreeItemNode::has_rows)
     }
 
     pub(crate) fn toggle_disclosure(&mut self, id: NodeId) -> Option<bool> {

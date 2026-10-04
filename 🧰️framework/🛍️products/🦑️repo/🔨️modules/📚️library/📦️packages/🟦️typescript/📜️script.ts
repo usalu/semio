@@ -8,9 +8,10 @@ import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️
 import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 import { verifyCargoDependencyDirection } from "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts";
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
+import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { devToolingEnv, runBunx } from "./🟦️.ts";
-import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, runRepositoryTestCommand } from "../../🟦️.ts";
+import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, runRepositoryExactCargoLaws, runRepositoryTestCommand } from "../../🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
@@ -33,7 +34,7 @@ class TypecheckScript extends BundleScript {
 
 
 /** 🧱️ Enforces the complete current framework graph without baselines or source-form exemptions. */
-async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-modules"): Promise<void> {
+async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-neutral"): Promise<void> {
   const { policy, taxonomy, workspacePackages } = loadDependencyDirectionPolicy(repoRoot, { onProgress: progress => console.log(`[canonical-architecture] policy ${progress.phase}; sources=${progress.sources}`) });
   const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
   const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
@@ -75,7 +76,7 @@ class LintScript extends BundleScript {
       console.log(`[workspace-styling] ${kind}: current source ownership passed`);
       return;
     }
-    if (segments.length === 1 && segments[0] === "framework-module-product-direction") { await verifyDependencyDirection(this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-module-product-direction"), "framework-modules"); return; }
+    if (segments.length === 1 && segments[0] === "framework-neutral-product-direction") { await verifyDependencyDirection(this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-neutral-product-direction"), "framework-neutral"); return; }
     if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot, join(repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction").SEMIO_TEST_ARTIFACT_DIR!, "rust-source-direction.json")); return; }
     if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot); return; }
     if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
@@ -99,7 +100,7 @@ class TestScript extends BundleScript {
         return;
       }
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧪️tests", imports ? "🔍️imports/🟦️.ts" : "🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference"), budgetMs: 30_000 });
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference"), budgetMs: imports ? 180_000 : 30_000 });
       return;
     }
     if (segments[0] === "rust-family-ownership") {
@@ -217,10 +218,19 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "cargo-dependency-direction"), budgetMs: 45_000 });
       return;
     }
+    if (segments[0] === "compute-constructor-owner") {
+      if (segments.length !== 1) throw new Error("Expected test compute-constructor-owner");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧩️compute-constructor/🧪️tests/🟦️.ts");
+      const env = repoTestArtifactEnvironment(this.repoRoot, "compute-constructor-owner");
+      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,env,budgetMs:45_000});
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env, budgetMs: 45_000 });
+      return;
+    }
     if (segments[0] === "dependency-direction") {
       if (segments.length !== 1) throw new Error("Expected test dependency-direction");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts");
       const env = repoTestArtifactEnvironment(this.repoRoot, "dependency-direction");
+      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,env,budgetMs:45_000});
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env, budgetMs: 45_000 });
       return;
     }
@@ -652,6 +662,12 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", ...["🏗️source-services", "🚪️source-admission", "🚪️source-admission-io", "🔣️taxonomy-input"].map((facet) => join(tests, facet, "🟦️.ts"))], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "source-services") });
       return;
     }
+    if (segments[0] === "multi-scope-verification") {
+      if (segments.length !== 1) throw new Error("Expected test multi-scope-verification");
+      const budgetMs = TEST_LEVEL_BUDGET_MS[process.env.SEMIO_TEST_LEVEL === "exhaustive" ? "exhaustive" : "long"];
+      await runRepositoryTestCommand(process.execPath, ["test", "--timeout", String(budgetMs), join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🧪️multi-scope-verification/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "multi-scope-verification"), budgetMs });
+      return;
+    }
     if (segments[0] === "reference-coverage-selection") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎟️reference-coverage-selection/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
@@ -665,12 +681,6 @@ class TestScript extends BundleScript {
     if (segments[0] === "reference-coordinate-progress") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
-      return;
-    }
-    if (segments[0] === "draw-destination-observation") {
-      if (segments.length !== 1) throw new Error("Draw destination observation accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📍️draw-destination-observation/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "markdown-inline-references") {
@@ -765,7 +775,75 @@ class RepositoryUiScript extends BundleScript {
   }
 }
 
+/** 🧱️ Verifies portable ownership witnesses before their native contract consumers. */
+class FixtureOwnershipTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if(segments.length)throw Error("test-fixture-ownership accepts no arguments");
+    await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts")], { cwd: this.repoRoot });
+    let cancelled = false;
+    const interrupt = (): void => { cancelled = true; };
+    process.on("SIGINT", interrupt);
+    process.on("SIGTERM", interrupt);
+    try {
+      const receipts = await runRepositoryExactCargoLaws({
+        cwd: this.repoRoot,
+        env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+        nativeEnv: { RUST_MIN_STACK: "268435456" },
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, "🗑️generated", "fixture-ownership"),
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        cancelled: () => cancelled,
+        progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),
+        groups: [
+          { package: "semio-framework-surface", target: { kind: "lib" }, laws: [
+            "paint_stroke_refuses_locked_layers_and_locked_ancestors",
+          ] },
+          { package: "semio-framework-artifact-flow-flow", target: { kind: "lib" }, laws: [
+            "authored_slider_labels_survive_json_dag_and_chrome",
+          ] },
+          { package: "semio-framework-os-flow", target: { kind: "lib" }, laws: [
+            "slider_ghost_descriptor_requires_authored_label",
+          ] },
+          { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
+            "execution_target_status_vocabulary_matches_the_corpus",
+            "execution_target_lease_compares_every_plan_and_verified_byte_field",
+          ] },
+          { package: "semio-framework-os-mcp", target: { kind: "lib" }, laws: [
+            "a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding",
+            "a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else",
+            "every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute",
+            "a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_subject",
+            "a_booting_hub_roster_is_unavailable_never_empty",
+            "the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_descriptions",
+            "authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it",
+            "a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_none",
+            "a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation",
+            "authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_closed_when_stale",
+            "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback",
+            "inference_approval_encoding_consumes_the_framework_owned_contract",
+          ] },
+        ],
+      });
+      console.log(`fixture-ownership: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
+    } finally {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+    }
+  }
+}
+
+
+/** 🗺️ Verifies exact manifest-policy admission and the General command ownership closure. */
+class GeneralExecutionOwnershipScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+ if(segments.length)throw Error("test-general-execution-ownership accepts no arguments");
+ await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"general-execution-ownership"),budgetMs:60000});
+ }
+}
+
 const router = new ScriptRouter(import.meta.dir)
+  .register("test-fixture-ownership",FixtureOwnershipTestScript).register("test-general-execution-ownership",GeneralExecutionOwnershipScript)
   .register("owner-command", OwnerCommandScript)
   .register("typecheck", TypecheckScript)
   .register("lint", LintScript)

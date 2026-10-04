@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumSlots",
+    "maximumHalfLoadEntries",
+    "firstImpossibleEntries",
+    "slotBytes",
+    "refusal",
+    "expectedOwnedBytes",
+    "expectedTraversal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumSlots": {
+      "const": 2147483648
+    },
+    "maximumHalfLoadEntries": {
+      "const": 1073741824
+    },
+    "firstImpossibleEntries": {
+      "const": 1073741825
+    },
+    "slotBytes": {
+      "const": 4
+    },
+    "refusal": {
+      "const": "workLimit"
+    },
+    "expectedOwnedBytes": {
+      "const": 0
+    },
+    "expectedTraversal": {
+      "const": false
+    }
+  }
+}

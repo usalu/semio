@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeBlockVisible, base: &NoteSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if crate::schema::block_visible(block) == payload.new_visible {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" visible is already {}.", payload.id, payload.new_visible));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" visible is already {}.", payload.id, payload.new_visible));
     }
     let mut updated = block.clone();
     match &mut updated {

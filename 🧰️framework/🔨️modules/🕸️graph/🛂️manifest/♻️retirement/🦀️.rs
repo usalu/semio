@@ -23,3 +23,8 @@ impl Drop for PropertyRetirement {
 impl RetireOwned for PropertyValue {
     fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(PropertyRetirement(std::mem::ManuallyDrop::new(Some(self)))) }
 }
+
+semio_framework_value::artifact_retire_struct!(super::PropertyDef {name,kind,value_type,expr});
+semio_framework_value::artifact_retire_leaf!(super::PropertyKind);
+
+semio_framework_value::artifact_retire_leaf!(super::PortDirection);

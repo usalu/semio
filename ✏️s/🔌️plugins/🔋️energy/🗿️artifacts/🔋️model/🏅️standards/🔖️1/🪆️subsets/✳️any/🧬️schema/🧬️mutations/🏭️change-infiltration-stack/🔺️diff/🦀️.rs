@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeInfiltrationStackHeight, base: &EnergyModelSn
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Infiltration {}: stack height (m) must be a finite non-negative value, got {}.", payload.id.0, payload.new_stack_height_m), [payload.id.0.to_string()]);
     }
     if existing.stack_height_m == payload.new_stack_height_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this stack height (m): {}.", payload.id.0, payload.new_stack_height_m));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this stack height (m): {}.", payload.id.0, payload.new_stack_height_m));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

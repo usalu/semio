@@ -1,7 +1,5 @@
-//! 🔺️ `update-climate` sparse diff construction — mints a fresh content-addressed child handle
-//! from the payload's literal `MonthlyClimate` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
-//! round 2; the payload itself is unchanged — it still carries the real climate data, never a
-//! handle).
+//! 🔺️ `update-climate` sparse diff construction — sets the parent-owned climate and re-mints the derived
+//! `climateTable` handle from it (design §20.15 model (a); no child content is read).
 
 use crate::diff::Din18599Diff;
 use crate::mutations::update_climate::UpdateClimate;
@@ -12,9 +10,9 @@ pub fn diff(payload: &UpdateClimate, base: &Din18599Snapshot) -> protocol::Mutat
     if payload.new_climate.theta_e_c.iter().any(|v| !v.is_finite()) || payload.new_climate.g_h_w_m2.iter().any(|v| !v.is_finite() || *v < 0.0) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Monthly climate values must be finite, and irradiance must be non-negative.", Vec::<String>::new());
     }
-    if crate::din18599_climate(base) == payload.new_climate {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Climate profile is already this value.");
+    if base.climate == payload.new_climate {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Climate profile is already this value.");
     }
-    protocol::MutationOutcome::new(Din18599Diff { climate: Some(crate::din18599_climate_child_from_data(&payload.new_climate)), ..Default::default() })
+    protocol::MutationOutcome::new(Din18599Diff { climate: Some(payload.new_climate.clone()), climate_table: Some(crate::din18599_climate_table_child(&payload.new_climate)), ..Default::default() })
 }
 //#endregion 🔖️Diff

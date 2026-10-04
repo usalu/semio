@@ -10,7 +10,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
     let initial = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "gestures".into(), "1".into(), None, &steps);
     let mut app = context::forms_app().await;
     context::dispatch(&mut app, FormsCommand::SetSpecJson(crate::editor::forms::commands::set_spec_json::SetSpecJson {
-        json: dsl::json::to_json_string(&dsl::ToValue::to_value(&initial)),
+        json: semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&initial)),
     })).await;
     let definition = crate::editor::forms::create_forms_app();
     let view = ViewModel {
@@ -39,7 +39,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
         app.handle_action_invocation(&invocation, Some(&definition.default_mode_id), &meta).await.expect("manifest admits scene gesture");
         context::settle(&mut app).await;
         let snapshot = app.snapshot().unwrap();
-        let projected = dsl::json::to_json_string(&dsl::ToValue::to_value(&snapshot.definition));
+        let projected = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.definition));
         let oracle = serde_json::json!({ "steps": snapshot.definition.steps });
         assert_eq!(serde_json::from_str::<serde_json::Value>(&projected).unwrap(), oracle, "independent JSON serializer");
         let kinds: Vec<Vec<&str>> = snapshot.definition.steps.iter().map(|step| step.blocks.iter().map(|question| question.kind.as_str()).collect()).collect();

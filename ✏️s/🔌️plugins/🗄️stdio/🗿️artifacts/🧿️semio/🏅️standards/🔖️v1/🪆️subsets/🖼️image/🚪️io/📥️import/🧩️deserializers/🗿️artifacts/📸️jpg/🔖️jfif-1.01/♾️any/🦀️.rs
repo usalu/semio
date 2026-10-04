@@ -33,7 +33,7 @@ impl ArtifactDeserializer for SemioImageFromJpg {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.pixels.len() != (from.width as usize) * (from.height as usize) * 4 {
-            return Err(store::PackError::Schema("jpg→semio/image: pixels length does not match width*height*4".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "jpg→semio/image: pixels length does not match width*height*4")));
         }
         let bit_depth = from.frame.as_ref().map_or(8, |f| f.precision);
         let metadata = from.other_segments.iter().filter(|s: &&JpgSegment| s.marker == COM_MARKER).map(|s| SemioImageMetadataEntry { key: "comment".into(), value: String::from_utf8_lossy(&s.data).into_owned() }).collect();

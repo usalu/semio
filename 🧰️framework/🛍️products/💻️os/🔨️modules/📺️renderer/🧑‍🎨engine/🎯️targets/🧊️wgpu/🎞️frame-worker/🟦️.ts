@@ -90,6 +90,9 @@ type RendererBindings = {
   /** 🫥️ The hidden-page door (`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostPageHidden`): the page was hidden or left, so
    * every open text-editor typing run ends (`hidden`) on the next frame turn. */
   semioWgpuHostPageHidden?: () => void;
+  /** 🫥️ The window-blur door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostWindowBlur`): the page's `window` lost focus, so
+   * every open typing run ends (`blur`) and the shell blurs the focused pane for its program on the next frame turn. */
+  semioWgpuHostWindowBlur?: () => void;
   /** 🛰️ The agent-bridge door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuSetAgentBridgeConfig`): the page's discovered
    * offer; an empty url clears it and parks the bridge in `Disabled`. */
   semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
@@ -403,6 +406,11 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   if (closed || closing || failed || quarantined) return;
   if (message.kind === "host-page-hidden") {
     ownedStep("host-page-hidden", () => bindings?.semioWgpuHostPageHidden?.());
+    frameTurns?.request();
+    return;
+  }
+  if (message.kind === "host-window-blur") {
+    ownedStep("host-window-blur", () => bindings?.semioWgpuHostWindowBlur?.());
     frameTurns?.request();
     return;
   }

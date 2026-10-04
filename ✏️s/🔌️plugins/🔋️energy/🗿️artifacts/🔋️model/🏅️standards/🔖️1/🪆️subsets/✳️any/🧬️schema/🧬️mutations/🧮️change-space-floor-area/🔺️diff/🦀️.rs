@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeSpaceFloorArea, base: &EnergyModelSnapshot) -
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Space {} needs a non-negative finite floor area, got {}.", payload.id.0, payload.new_floor_area_m2), [payload.id.0.to_string()]);
     }
     if existing.floor_area_m2 == payload.new_floor_area_m2 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Space {} already has this floor area.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Space {} already has this floor area.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.spaces.iter_mut().find(|item| item.id == payload.id) {

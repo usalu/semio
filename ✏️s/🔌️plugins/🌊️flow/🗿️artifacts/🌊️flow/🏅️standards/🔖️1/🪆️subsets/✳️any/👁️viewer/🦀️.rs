@@ -4,10 +4,9 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling mutation-capable module (`policyViewerPurityBreaches`).
 
-use crate::op::FlowMutation;
 use crate::viewer::flow::modes::view;
 use crate::viewer::flow::modes::view::windows::main;
-use crate::{FlowSnapshot, FLOW_DIALECT, FLOW_DOCUMENT_SCHEMA};
+use crate::{FlowMutation, FlowSnapshot, FLOW_DIALECT, FLOW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -115,9 +114,12 @@ impl ArtifactViewer for FlowViewer {
 
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
     /// child that every `Child`-lane verb reads — see [`crate::flow_genesis_content_pack`].
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::flow_genesis_content_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 👁️ Structurally read-only: the sole `FlowViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

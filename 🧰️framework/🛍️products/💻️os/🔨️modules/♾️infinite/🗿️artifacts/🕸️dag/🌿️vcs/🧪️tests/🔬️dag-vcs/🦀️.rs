@@ -8,7 +8,7 @@ fn sample_node(id: &str) -> DagNodeSpec {
 fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
     let forward = operation.diff(document).diff().apply(document).expect("valid DAG diff");
     let mut restored = forward.clone();
-    for back in operation.inverse(document).into_iter().rev() {
+    for back in operation.inverse(document).expect("valid retained mutation inverse fixture").into_iter().rev() {
         restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse DAG diff");
     }
     assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
@@ -111,7 +111,7 @@ fn diff_and_inverse_are_deterministic() {
     let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 12.0, y: 34.0 });
     assert_eq!(Mutation::diff(&mutation, &document), Mutation::diff(&mutation, &document), "diff(payload, base) must be a pure function of its inputs");
-    assert_eq!(mutation.inverse(&document), mutation.inverse(&document), "inverse(payload, base) must be a pure function of its inputs");
+    assert_eq!(mutation.inverse(&document).expect("valid retained mutation inverse fixture"), mutation.inverse(&document).expect("valid retained mutation inverse fixture"), "inverse(payload, base) must be a pure function of its inputs");
 }
 
 #[test]
@@ -141,9 +141,9 @@ fn move_node_diff_absorb_law_holds() {
 fn missing_target_inverse_and_diff_are_no_ops() {
     let document = empty_dag_document();
     assert_eq!(Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }), &document).diff(), &DagDiff::default());
-    assert!(DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }).inverse(&document).is_empty());
-    assert!(DagMutation::DeleteNode(DeleteNode { id: "ghost".into() }).inverse(&document).is_empty());
-    assert!(DagMutation::DisconnectNodes(DisconnectNodes { id: "ghost".into() }).inverse(&document).is_empty());
+    assert!(DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(DagMutation::DeleteNode(DeleteNode { id: "ghost".into() }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
+    assert!(DagMutation::DisconnectNodes(DisconnectNodes { id: "ghost".into() }).inverse(&document).expect("valid retained mutation inverse fixture").is_empty());
 }
 //#endregion 🔖️MutationLaws
 
@@ -194,7 +194,7 @@ fn kitchen_sink_snapshot() -> DagSnapshot {
             name: "Preview2".into(),
             x: 0.0,
             y: 320.0,
-            kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "42".into() }, expanded: BTreeSet::from(["a.b".to_string()]), input: port("in", "value") },
+            kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "42".into() }, expanded: DagExpandedPaths::from(["a.b".to_string()]), input: port("in", "value") },
             ..Default::default()
         },
         DagNodeSpec { id: "action".into(), name: "Action".into(), x: 0.0, y: 380.0, kind: DagNodeKind::Action { label: "Run".into(), input: port("in", "trigger") }, ..Default::default() },
@@ -345,7 +345,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 fn dag_demo_ownership_matches_neutral_graph_identity() {
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
     let document = default_dag_document();
-    let encoded: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&document)).unwrap();
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     assert_eq!(encoded["schema"], expected["schema"]);
     assert_eq!(encoded["nodes"].as_array().unwrap().iter().map(|node| node["id"].clone()).collect::<Vec<_>>(), *expected["nodeIds"].as_array().unwrap());
     assert_eq!(encoded["edges"].as_array().unwrap().iter().map(|edge| edge["id"].clone()).collect::<Vec<_>>(), *expected["edgeIds"].as_array().unwrap());

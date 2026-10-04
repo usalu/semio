@@ -90,7 +90,7 @@ pub fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
 //#region 🔖️AccessorModel
 /// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(dsl::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfComponentType {
     Byte,
     UnsignedByte,
@@ -154,7 +154,7 @@ impl GltfComponentType {
 
 /// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(dsl::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAccessorType {
     Scalar,
     Vec2,
@@ -252,26 +252,28 @@ impl<'de> Deserialize<'de> for GltfAccessorType {
 /// `GltfSparseIndices`/`GltfAccessor` etc. need these two leaf types to implement `ToValue`/
 /// `FromValue` too, for the SAME numeric-code / spec-string wire shape (never the bare Rust
 /// variant name).
-impl dsl::ToValue for GltfComponentType {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&self.code())
+impl semio_framework_value::ToValue for GltfComponentType {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(&self.code(), control) }
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.code())
     }
 }
-impl dsl::FromValue for GltfComponentType {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let code = <u64 as dsl::FromValue>::from_value(value)?;
-        Self::from_code(code).map_err(dsl::ValueError::new)
+impl semio_framework_value::FromValue for GltfComponentType {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let code = <u64 as semio_framework_value::FromValue>::from_value(value)?;
+        Self::from_code(code).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))
     }
 }
-impl dsl::ToValue for GltfAccessorType {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&self.as_str().to_string())
+impl semio_framework_value::ToValue for GltfAccessorType {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { control.copy_text(self.as_str()).map(semio_framework_value::DslValue::String) }
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.as_str().to_string())
     }
 }
-impl dsl::FromValue for GltfAccessorType {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let s = <String as dsl::FromValue>::from_value(value)?;
-        s.parse::<Self>().map_err(dsl::ValueError::new)
+impl semio_framework_value::FromValue for GltfAccessorType {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let s = <String as semio_framework_value::FromValue>::from_value(value)?;
+        s.parse::<Self>().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))
     }
 }
 //#endregion 🔖️AccessorModelSerde
@@ -419,8 +421,8 @@ fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<&[u8]>
 /// is used directly at other call sites in this file; this is the one spot needing the pretty
 /// variant, so it stays local rather than growing `pack`'s own public surface.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn to_json_string_pretty<T: dsl::ToValue>(value: &T) -> String {
-    pack::json_to_string_pretty(&pack::json_from_dsl_value(&value.to_value()))
+fn to_json_string_pretty<T: semio_framework_value::ToValue>(value: &T) -> String {
+    semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value.to_value()))
 }
 
 /// 📥️ Parses `.gltf` JSON text bytes into a typed snapshot (lenient: no POSITION/mesh
@@ -430,7 +432,7 @@ fn to_json_string_pretty<T: dsl::ToValue>(value: &T) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("gltf json is not valid utf-8: {e}"))?;
-    let document: GltfDocument = pack::from_json_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
+    let document: GltfDocument = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| format!("gltf json parse error: {e}"))?;
     validate_document(&document)?;
     let buffers = resolve_document_buffers(&document, None);
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers, source_form: GltfSourceForm::Json })
@@ -453,6 +455,35 @@ pub fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
         }
     }
     to_json_string_pretty(&document).into_bytes()
+}
+
+/// 🚦️ Moves prepared document ownership through bounded data URIs and the existing controlled JSON writer.
+pub fn serialize_gltf_document_owned_controlled(mut snapshot: GltfSnapshot, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Vec<u8>, semio_framework_value::ValueError> {
+    for (index, buffer) in snapshot.document.buffers.iter_mut().enumerate() {
+        control.checkpoint()?;
+        if buffer.uri.is_none() {
+            if let Some(bytes) = snapshot.buffers.get(index) { buffer.uri = Some(encode_data_uri_controlled("application/octet-stream", bytes, control)?); }
+        }
+    }
+    let output = semio_framework_pack_json::to_json_string_controlled(&snapshot.document, control)?;
+    control.checkpoint()?;
+    Ok(output.into_bytes())
+}
+
+/// 🔤️ Admits one data URI and encodes at most4095 input bytes between checkpoints.
+fn encode_data_uri_controlled(mime: &str, bytes: &[u8], control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, semio_framework_value::ValueError> {
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    control.scoped_stage(|control| {
+        let length = bytes.len().div_ceil(3).checked_mul(4).and_then(|length| length.checked_add(mime.len() + 13)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "glTF data URI size overflow"))?;
+        control.begin_stage(bytes.len())?;
+        control.charge(length)?;
+        control.charge(bytes.len().min(4095).div_ceil(3) * 4)?;
+        let mut output = String::new();
+        output.try_reserve_exact(length).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "glTF data URI allocation failed"))?;
+        output.push_str("data:"); output.push_str(mime); output.push_str(";base64,");
+        for chunk in bytes.chunks(4095) { output.push_str(&b64_encode(chunk)); control.advance(chunk.len())?; }
+        Ok(output)
+    })
 }
 //#endregion 🔖️DocumentCodec
 
@@ -488,7 +519,7 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
         }
     }
 
-    let json = pack::to_json_string(&document).into_bytes();
+    let json = semio_framework_pack_json::to_json_string(&document).into_bytes();
     let json_padded_len = align4(json.len());
 
     let mut out = Vec::new();
@@ -551,7 +582,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     // Real-world encoders pad the JSON chunk with spaces (per spec) but some historical writers
     // used NUL or trimmed whitespace -- trim both so lenient real-world files still parse.
     let json_text = std::str::from_utf8(json_chunk).map_err(|e| format!("glb: JSON chunk is not valid utf-8: {e}"))?;
-    let document: GltfDocument = pack::from_json_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
+    let document: GltfDocument = semio_framework_pack_json::from_json_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r']), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
     validate_document(&document)?;
 
     // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is

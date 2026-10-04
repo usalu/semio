@@ -32,30 +32,30 @@ mod tests;
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn s_space_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<SSpaceSnapshot, String> {
-        let decoded: SSpaceSnapshot = pack::from_json_str(text).map_err(|error| error.to_string())?;
+        let decoded: SSpaceSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: SSpaceMutation = pack::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: SSpaceMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation, &base);
+    let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
         let outcome = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = pack::json!({
-        "base": pack::json_from_dsl_value(&dsl::ToValue::to_value(&base)),
-        "expectedSnapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&expected)),
-        "snapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&applied)),
-        "diff": pack::json_from_dsl_value(&dsl::ToValue::to_value(forward.diff())),
-        "messages": pack::json_from_dsl_value(&dsl::ToValue::to_value(&forward.messages().to_vec())),
-        "inverseSteps": pack::json_from_dsl_value(&dsl::ToValue::to_value(&inverse)),
-        "inverseSnapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&undone)),
-        "inverseMessages": pack::json_from_dsl_value(&dsl::ToValue::to_value(&inverse_messages)),
+    let report = semio_framework_pack_json::json!({
+        "base": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&base)),
+        "expectedSnapshot": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&expected)),
+        "snapshot": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&applied)),
+        "diff": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(forward.diff())),
+        "messages": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&forward.messages().to_vec())),
+        "inverseSteps": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&inverse)),
+        "inverseSnapshot": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&undone)),
+        "inverseMessages": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&inverse_messages)),
     });
     Ok(report.to_string())
 }

@@ -1,0 +1,154 @@
+{
+  "fields": [
+    "schema",
+    "opc",
+    "xmlParts"
+  ],
+  "derived": [
+    "presentation"
+  ],
+  "tableNames": [
+    "pptx_document",
+    "pptx_package",
+    "pptx_binary_part",
+    "pptx_default_content_type",
+    "pptx_override_content_type",
+    "pptx_relationship_owner",
+    "pptx_relationship",
+    "pptx_xml_part",
+    "pptx_xml_document",
+    "pptx_xml_node",
+    "pptx_xml_element",
+    "pptx_xml_text",
+    "pptx_xml_cdata",
+    "pptx_xml_comment",
+    "pptx_xml_processing_instruction",
+    "pptx_xml_attribute",
+    "pptx_xml_child",
+    "pptx_xml_document_misc",
+    "pptx_xml_declaration",
+    "pptx_xml_doctype",
+    "pptx_xml_entity"
+  ],
+  "snapshot": {
+    "schema": "PPTX owned\u0000世界",
+    "opc": {
+      "parts": [
+        {
+          "path": "",
+          "contentType": "unknown\u0000",
+          "bytes": [
+            0,
+            255,
+            7
+          ]
+        }
+      ],
+      "contentTypes": {
+        "defaults": [
+          [
+            "xml",
+            "literal"
+          ],
+          [
+            "xml",
+            "duplicate"
+          ]
+        ],
+        "overrides": [
+          [
+            "/ppt/slides/slide1.xml",
+            ""
+          ]
+        ]
+      },
+      "relationships": {
+        "": [
+          {
+            "id": "",
+            "relType": "literal\u0000",
+            "target": "ppt/slides/slide1.xml",
+            "targetMode": "internal"
+          }
+        ]
+      },
+      "comment": "Grüße\u0000世界"
+    },
+    "xmlParts": [
+      {
+        "path": "ppt/slides/slide1.xml",
+        "contentType": "literal\u0000",
+        "document": {
+          "root": {
+            "kind": "element",
+            "name": "p:sld",
+            "attrs": [
+              {
+                "name": "xmlns:p",
+                "value": "literal namespace"
+              }
+            ],
+            "children": [
+              {
+                "kind": "element",
+                "name": "p:spTree",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "element",
+                    "name": "p:sp",
+                    "attrs": [],
+                    "children": [
+                      {
+                        "kind": "element",
+                        "name": "a:xfrm",
+                        "attrs": [
+                          {
+                            "name": "x",
+                            "value": "-9223372036854775808"
+                          },
+                          {
+                            "name": "y",
+                            "value": "9223372036854775807"
+                          },
+                          {
+                            "name": "cx",
+                            "value": "9007199254740993"
+                          },
+                          {
+                            "name": "cy",
+                            "value": "-9007199254740993"
+                          }
+                        ],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "declaration": {
+            "version": "任意\u0000version",
+            "encoding": "literal\u0000encoding",
+            "standalone": false,
+            "quote": "double"
+          },
+          "prolog": [
+            {
+              "kind": "comment",
+              "text": "literal prolog\u0000"
+            }
+          ],
+          "epilog": [
+            {
+              "kind": "processingInstruction",
+              "target": "literal",
+              "data": "世界\u0000"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

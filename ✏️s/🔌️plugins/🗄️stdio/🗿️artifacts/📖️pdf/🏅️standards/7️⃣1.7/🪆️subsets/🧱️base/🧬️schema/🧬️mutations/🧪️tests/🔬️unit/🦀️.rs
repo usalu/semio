@@ -19,13 +19,14 @@ fn samples() -> Vec<PdfMutation> {
         PdfMutation::SetCatalogEntry(set_catalog_entry::SetCatalogEntry { key: "Marker".into(), value: PdfObject::Int(7) }),
         PdfMutation::SetTrailerEntry(SetTrailerEntry { key: "Marker".into(), value: PdfObject::Bool(true) }),
         PdfMutation::SetSnapshot(SetSnapshot { snapshot: text_document(&[(120.0, 80.0, "Replaced")]) }),
+        PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
     ]
 }
 
 #[test]
 fn every_kind_is_declared_once_in_declaration_order() {
     let kinds = pdf_mutation_kinds();
-    assert_eq!(kinds.len(), 61);
+    assert_eq!(kinds.len(), 62);
     assert_eq!(kinds.len(), binary::BINARY_TAG_REGISTRY.len());
     assert_eq!(kinds.len(), text::TEXT_OPCODE_REGISTRY.len());
     let mut seen = std::collections::HashSet::new();
@@ -63,7 +64,7 @@ fn samples_apply_and_invert_on_a_real_document() {
         let mut working = base.clone();
         let _outcome = apply_pdf_mutation(&mut working, &mutation);
         let mut restored = working.clone();
-        for inverse in crate::mutation_inverse(&mutation, &base) {
+        for inverse in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_pdf_mutation(&mut restored, &inverse);
         }
         assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));

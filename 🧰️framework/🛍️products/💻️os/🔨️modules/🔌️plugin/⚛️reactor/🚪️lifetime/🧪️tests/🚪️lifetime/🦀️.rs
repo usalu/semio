@@ -27,7 +27,7 @@ fn fixture() -> serde_json::Value {
 
 fn open() -> ActorInstanceOpenRequest {
     let fixture = fixture();
-    <ActorInstanceOpenRequest as dsl::FromValue>::from_value(dsl::DslValue::from(&fixture["open"])).unwrap()
+    <ActorInstanceOpenRequest as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&fixture["open"])).unwrap()
 }
 
 fn captured() -> GuestLifecycleCell<Owner> {

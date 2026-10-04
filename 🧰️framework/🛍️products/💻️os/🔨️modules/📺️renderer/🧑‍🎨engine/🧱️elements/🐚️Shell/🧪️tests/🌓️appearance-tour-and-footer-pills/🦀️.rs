@@ -158,6 +158,7 @@ pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinit
         config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
         command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
         io: semio_framework::AppIo::default(),
+        fault_notices: Vec::new(),
     }
 }
 

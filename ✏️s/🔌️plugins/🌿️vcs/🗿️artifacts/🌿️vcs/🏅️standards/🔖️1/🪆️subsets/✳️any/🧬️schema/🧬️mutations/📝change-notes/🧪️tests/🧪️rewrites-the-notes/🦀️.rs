@@ -52,7 +52,7 @@ async fn notes_are_replaced_wholesale() {
 async fn inverse_restores_the_previous_notes() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_vcs_mutation(&base, &mutation);
+    let inverse = inverse_vcs_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-notes undoes with exactly one counter-write");
     let mut snapshot = base.clone();
     apply_vcs_mutation(&mut snapshot, &mutation).expect("forward applies");

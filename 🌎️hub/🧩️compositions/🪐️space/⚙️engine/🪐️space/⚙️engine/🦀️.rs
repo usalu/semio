@@ -6,7 +6,7 @@
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_to_wire_literal, DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
-use pack::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_os::workflow::{AddNode, AddParameter, ChangeParameter};
 use semio_framework_os::{
     create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
@@ -342,7 +342,7 @@ struct AppRegistrationRow {
 /// `PluginHost::load_plugin`'s `register_app_io`, so `workflow_palette()` and the catalogue see the
 /// host's live roster.
 pub async fn apply_app_registrations(json: &str) -> Result<(), semio_framework_plugin::Fault> {
-    let rows: Vec<AppRegistrationRow> = pack::from_json_str(json).map_err(|_| semio_framework_plugin::Fault::from("s.space.app-registrations-malformed"))?;
+    let rows: Vec<AppRegistrationRow> = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| semio_framework_plugin::Fault::from("s.space.app-registrations-malformed"))?;
     for row in &rows {
         semio_framework_os::register_app_io(&row.plugin_id, &row.app);
     }

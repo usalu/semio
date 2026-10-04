@@ -775,12 +775,12 @@ fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackError> {
+fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackRefusal> {
     let mut d = CsvFieldDiff::default();
     if r.read_u8()? == 1 {
         let len = r.read_varint_u64()? as usize;
         let bytes = r.read_bytes(len)?;
-        d.value = Some(String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv diff field value utf8", offset: 0, detail: e.to_string() })?);
+        d.value = Some(String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackRefusal::Malformed { kind:semio_framework_value::ValueRefusalKind::InvalidValue, what: "csv diff field value utf8", offset: 0, detail: e.to_string() })?);
     }
     if r.read_u8()? == 1 {
         d.quoted = Some(r.read_u8()? != 0);
@@ -807,7 +807,7 @@ fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackError> {
+fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackRefusal> {
     let fields = if r.read_u8()? == 1 {
         let n = r.read_varint_u64()? as usize;
         let mut items = Vec::with_capacity(n);
@@ -838,7 +838,7 @@ fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackError> {
+fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackRefusal> {
     let removed_n = r.read_varint_u64()? as usize;
     let mut removed = Vec::with_capacity(removed_n);
     for _ in 0..removed_n {
@@ -861,16 +861,13 @@ fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, 
     Ok(CsvRecordsDiff { removed, modified, added })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "csv diff binary", offset: 0, detail: e.to_string() }
-}
 
 impl DiffCodec for CsvDiff {
     fn print_diff(&self) -> String {
         print_csv_diff(self)
     }
-    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_csv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_csv_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
@@ -892,10 +889,10 @@ impl DiffCodec for CsvDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let hh_flag = r.read_u8().map_err(|error| diff_pack_err(&error))?;
-        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(|error| diff_pack_err(&error))? != 0) } else { None };
-        let rec_flag = r.read_u8().map_err(|error| diff_pack_err(&error))?;
-        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(|error| diff_pack_err(&error))?) } else { None };
+        let hh_flag = r.read_u8().map_err(protocol::ProtocolError::from)?;
+        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(protocol::ProtocolError::from)? != 0) } else { None };
+        let rec_flag = r.read_u8().map_err(protocol::ProtocolError::from)?;
+        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(protocol::ProtocolError::from)?) } else { None };
         Ok(CsvDiff { has_header, records })
     }
 }

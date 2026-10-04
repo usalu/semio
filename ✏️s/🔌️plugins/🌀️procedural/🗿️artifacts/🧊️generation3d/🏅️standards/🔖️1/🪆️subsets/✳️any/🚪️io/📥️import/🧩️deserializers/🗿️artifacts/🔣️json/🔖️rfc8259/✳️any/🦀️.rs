@@ -1,23 +1,17 @@
-//! generation3d <- json
-//!
-//! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see the paired export
-//! leaf's doc comment and w5b-close-report.md): `JsonSnapshot::to_serde_value`/stdio's own real
-//! `parse_json_text` do the structural conversion — no hand-rolled bridge needed here.
+//! 🔣️ Restores graph documents through the owning JSON grammar and first-party value protocol.
 use crate::Generation3dSnapshot;
+use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
 use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
-use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 
-pub fn deserialize(from: &JsonSnapshot) -> Result<Generation3dSnapshot, store::TextError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let snap = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::DslValue::from(from.to_serde_value())).map_err(|e| store::TextError::new(format!("generation3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
-
-    Ok(snap)
+pub fn deserialize(from: &JsonSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
+    <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&from.to_pack_value()))
+        .map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error.under("generation3d←json"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, store::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    let value = parse_json_text(text).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| io_error(format!("generation3d←json: invalid UTF-8: {error}")))?;
+    let value = parse_json_text(text).map_err(|mut error| { error.message = format!("generation3d←json: {}", error.message); error })?;
     deserialize(&JsonSnapshot::from_value(value))
 }

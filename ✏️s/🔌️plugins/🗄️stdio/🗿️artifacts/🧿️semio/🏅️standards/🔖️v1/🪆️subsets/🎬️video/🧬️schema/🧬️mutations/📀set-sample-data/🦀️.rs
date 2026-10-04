@@ -21,9 +21,12 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetSampl
     fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::Diff> {
         agg_diff(&SemioVideoMutation::SetSampleData(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
-        agg_inverse(&SemioVideoMutation::SetSampleData(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioVideoSnapshot) -> Result<Vec<SemioVideoMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioVideoMutation::SetSampleData(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set sample data", "Sample-Daten setzen")
     }

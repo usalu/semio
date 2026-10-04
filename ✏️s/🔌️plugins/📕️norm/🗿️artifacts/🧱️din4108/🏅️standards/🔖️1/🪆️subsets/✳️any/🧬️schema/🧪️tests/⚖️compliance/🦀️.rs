@@ -8,7 +8,8 @@ use crate::standards::v1::subsets::any::schema::{
     layer_resistance, part_2, part_3, part_4, part_6, part_7, total_resistance, u_value, F_RSI_MINIMUM, R_SE, R_SI_WALL,
 };
 use crate::{Din4108Snapshot, EnvelopeElement, LayerDocument, LayerSegment};
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -176,29 +177,29 @@ async fn committed_demo_and_failing_assets_match_regenerated_dsl() {
     assert_eq!(fail_committed, fail_regen, "failing DSL drifted from failing_thin_insulation()");
 }
 
-fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>) {
+fn collect_leaf_paths(value: &semio_framework_value::DslValue, prefix: &str, out: &mut Vec<String>) {
     match value {
-        dsl::DslValue::Object(fields) => {
+        semio_framework_value::DslValue::Object(fields) => {
             for (key, child) in fields {
                 let next = if prefix.is_empty() { key.clone() } else { format!("{prefix}.{key}") };
                 match child {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(child, &next, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(child, &next, out),
                     _ => out.push(next),
                 }
             }
         }
-        dsl::DslValue::Array(items) => {
+        semio_framework_value::DslValue::Array(items) => {
             if items.is_empty() {
                 out.push(format!("{prefix}[]"));
                 return;
             }
             for (i, item) in items.iter().enumerate() {
                 let selector = match item {
-                    dsl::DslValue::Object(fields) => fields
+                    semio_framework_value::DslValue::Object(fields) => fields
                         .iter()
                         .find(|(k, _)| k == "id")
                         .and_then(|(_, v)| match v {
-                            dsl::DslValue::String(s) => Some(format!("[id={s}]")),
+                            semio_framework_value::DslValue::String(s) => Some(format!("[id={s}]")),
                             _ => None,
                         })
                         .unwrap_or_else(|| format!("[{i}]")),
@@ -206,7 +207,7 @@ fn collect_leaf_paths(value: &dsl::DslValue, prefix: &str, out: &mut Vec<String>
                 };
                 let next = format!("{prefix}{selector}");
                 match item {
-                    dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => collect_leaf_paths(item, &next, out),
+                    semio_framework_value::DslValue::Object(_) | semio_framework_value::DslValue::Array(_) => collect_leaf_paths(item, &next, out),
                     _ => out.push(next),
                 }
             }
@@ -236,7 +237,7 @@ fn meta_path_for_leaf(path: &str) -> String {
 #[semio_framework_async_macros::async_test]
 async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
     let doc = Din4108Snapshot::default();
-    let root = ToValue::to_value(&doc);
+    let root = semio_framework_value::ToValue::to_value(&doc);
     let mut paths = Vec::new();
     collect_leaf_paths(&root, "", &mut paths);
     assert!(!paths.is_empty());
@@ -290,7 +291,7 @@ async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
 async fn every_emitted_subject_path_resolves_on_default_and_failing() {
     for (label, doc) in [("default", Din4108Snapshot::default()), ("failing", Din4108Snapshot::failing_thin_insulation())] {
         let report = evaluate(&doc);
-        let root = ToValue::to_value(&doc);
+        let root = semio_framework_value::ToValue::to_value(&doc);
         let mut seen = 0usize;
         for check in &report.checks {
             for path in std::iter::once(check.subject.path.as_str()).chain(check.remedies.iter().map(|r| r.target.path.as_str())) {
@@ -310,9 +311,9 @@ async fn every_emitted_subject_path_resolves_on_default_and_failing() {
 }
 
 fn apply_numeric_remedy(snap: &mut Din4108Snapshot, path: &str, value: f64) {
-    let mut root = ToValue::to_value(&*snap);
-    crate::app_surface::set_value_at_path(&mut root, path, dsl::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
-    *snap = dsl::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
+    let mut root = semio_framework_value::ToValue::to_value(&*snap);
+    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
+    *snap = semio_framework_value::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -346,7 +347,7 @@ async fn remedy_law_shading_fc_fixes_summer() {
     let mut snap = Din4108Snapshot::failing_thin_insulation();
     let report = evaluate(&snap);
     let fail = report.failing().find(|c| c.id.contains("summer") && c.id.contains("zone-living")).expect("summer fail");
-    let mut root = ToValue::to_value(&snap);
+    let mut root = semio_framework_value::ToValue::to_value(&snap);
     for (index, remedy) in fail.remedies.iter().enumerate() {
         if !remedy.applicable {
             continue;
@@ -358,7 +359,7 @@ async fn remedy_law_shading_fc_fixes_summer() {
         crate::app_surface::apply_remedy_edit(&report, &fail.id, index, 0, &mut root)
             .unwrap_or_else(|e| panic!("apply summer remedy[{index}] {path}: {e:?}"));
     }
-    snap = dsl::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
+    snap = semio_framework_value::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
     let after = evaluate(&snap);
     let again = after.checks.iter().find(|c| c.id == fail.id).unwrap();
     assert_ne!(again.status, CheckStatus::Fail, "summer remedies must clear Fail, got {:?} util={}", again.status, again.utilization);
@@ -508,7 +509,7 @@ async fn every_editable_leaf_perturbation_changes_some_check_on_default_snapshot
     ] {
         let baseline = evaluate(&snap);
         let baseline_sig = check_signature(&baseline);
-        let root = ToValue::to_value(&snap);
+        let root = semio_framework_value::ToValue::to_value(&snap);
         let mut paths = Vec::new();
         collect_leaf_paths(&root, "", &mut paths);
         let mut failures = Vec::new();
@@ -747,11 +748,11 @@ fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
 
     let mut cleared = false;
     for &(index, _) in &applicables {
-        let mut tree = ToValue::to_value(snap);
+        let mut tree = semio_framework_value::ToValue::to_value(snap);
         if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
             continue;
         }
-        let Ok(fixed) = FromValue::from_value(tree) else {
+        let Ok(fixed) = semio_framework_value::FromValue::from_value(tree) else {
             continue;
         };
         let after = evaluate(&fixed);
@@ -768,7 +769,7 @@ fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
         }
     }
     if !cleared && applicables.len() > 1 {
-        let mut tree = ToValue::to_value(snap);
+        let mut tree = semio_framework_value::ToValue::to_value(snap);
         let mut ok = true;
         for &(index, _) in &applicables {
             if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
@@ -777,7 +778,7 @@ fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
             }
         }
         if ok {
-            if let Ok(fixed) = FromValue::from_value(tree) {
+            if let Ok(fixed) = semio_framework_value::FromValue::from_value(tree) {
                 let after = evaluate(&fixed);
                 match after.checks.iter().find(|c| c.id == check_id) {
                     None => cleared = true,
@@ -816,10 +817,10 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
 
     // Option index 0 on the first applicable (gate's first probe).
     {
-        let mut tree = ToValue::to_value(&snap0);
+        let mut tree = semio_framework_value::ToValue::to_value(&snap0);
         crate::app_surface::apply_remedy_edit(&report0, ht_id, applicables[0], 0, &mut tree)
             .expect("apply zone-ht first applicable option 0");
-        let flipped: Din4108Snapshot = FromValue::from_value(tree).expect("decode after zone-ht option0");
+        let flipped: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after zone-ht option0");
         let targets = [
             "din4108-6.u-prime.wall-north",
             "din4108-6.u-prime.roof",
@@ -834,12 +835,12 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
 
     // Sequential applicables (gate's multi-remedy fallback).
     {
-        let mut tree = ToValue::to_value(&snap0);
+        let mut tree = semio_framework_value::ToValue::to_value(&snap0);
         for index in &applicables {
             crate::app_surface::apply_remedy_edit(&report0, ht_id, *index, 0, &mut tree)
                 .unwrap_or_else(|e| panic!("sequential zone-ht remedy[{index}]: {e:?}"));
         }
-        let flipped: Din4108Snapshot = FromValue::from_value(tree).expect("decode after zone-ht sequential");
+        let flipped: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after zone-ht sequential");
         let targets = [
             "din4108-6.u-prime.wall-north",
             "din4108-6.u-prime.roof",
@@ -864,9 +865,9 @@ async fn failing_thin_u_prime_option0_clears_wall_north() {
     assert_eq!(check.status, CheckStatus::Fail, "fixture must fail u-prime");
     assert!(!check.remedies.is_empty(), "Fail must carry remedies");
     assert!(check.remedies[0].applicable, "remedy[0] must be applicable");
-    let mut tree = ToValue::to_value(&snap);
+    let mut tree = semio_framework_value::ToValue::to_value(&snap);
     crate::app_surface::apply_remedy_edit(&report, id, 0, 0, &mut tree).expect("apply remedy[0] option 0");
-    let fixed: Din4108Snapshot = FromValue::from_value(tree).expect("decode after remedy[0]");
+    let fixed: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after remedy[0]");
     let after = evaluate(&fixed);
     let updated = after.checks.iter().find(|c| c.id == id).expect("u-prime after");
     assert_ne!(

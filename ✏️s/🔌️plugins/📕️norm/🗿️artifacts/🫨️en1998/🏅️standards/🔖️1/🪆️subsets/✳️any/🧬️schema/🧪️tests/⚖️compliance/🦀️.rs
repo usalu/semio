@@ -135,7 +135,7 @@ async fn emitted_remedy_paths_use_id_selectors_and_resolve() {
             if path.contains("buildings[") || path.contains("systems[") || path.contains("storeys[") || path.contains("members[") {
                 assert!(path.contains("[id="), "expected id selector in {path}");
                 saw_id = true;
-                let tree = dsl::ToValue::to_value(&En1998Snapshot::noncompliant_de_office());
+                let tree = semio_framework_value::ToValue::to_value(&En1998Snapshot::noncompliant_de_office());
                 crate::app_surface::get_value_at_path(&tree, path).unwrap_or_else(|e| panic!("path {path} must resolve: {e}"));
             }
         }
@@ -145,17 +145,17 @@ async fn emitted_remedy_paths_use_id_selectors_and_resolve() {
 
 #[semio_framework_async_macros::async_test]
 async fn field_meta_covers_every_editable_leaf_of_default_snapshot() {
-    let tree = dsl::ToValue::to_value(&En1998Snapshot::default());
+    let tree = semio_framework_value::ToValue::to_value(&En1998Snapshot::default());
     let mut missing = Vec::new();
-    fn walk(prefix: &str, value: &dsl::DslValue, missing: &mut Vec<String>) {
+    fn walk(prefix: &str, value: &semio_framework_value::DslValue, missing: &mut Vec<String>) {
         match value {
-            dsl::DslValue::Object(entries) => {
+            semio_framework_value::DslValue::Object(entries) => {
                 for (k, v) in entries {
                     let p = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
                     walk(&p, v, missing);
                 }
             }
-            dsl::DslValue::Array(items) => {
+            semio_framework_value::DslValue::Array(items) => {
                 for (i, item) in items.iter().enumerate() {
                     let p = format!("{prefix}[{i}]");
                     walk(&p, item, missing);

@@ -13,7 +13,7 @@ use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, Result
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers_with, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
 use crate::{element_id, Fem2dSnapshot, Viewport2d};
-use dsl::json::Value;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::built_text_node;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
@@ -31,7 +31,7 @@ pub const BODY_KEY: &str = "fem2d.play.results";
 /// for the exact JSON shape this mirrors.
 fn filled_triangle_layer(id: &str, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
-    dsl::json!({
+    semio_framework_pack_json::json!({
         "id": id,
         "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         "segments": [
@@ -51,10 +51,10 @@ fn filled_polygon_layer(id: &str, points: &[(f64, f64)], color: &str, alpha: f64
     let (r, g, b) = hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (i, &(x, y)) in points.iter().enumerate() {
-        segments.push(if i == 0 { dsl::json!({ "kind": "move", "to": [x, y] }) } else { dsl::json!({ "kind": "line", "to": [x, y] }) });
+        segments.push(if i == 0 { semio_framework_pack_json::json!({ "kind": "move", "to": [x, y] }) } else { semio_framework_pack_json::json!({ "kind": "line", "to": [x, y] }) });
     }
-    segments.push(dsl::json!({ "kind": "close" }));
-    dsl::json!({
+    segments.push(semio_framework_pack_json::json!({ "kind": "close" }));
+    semio_framework_pack_json::json!({
         "id": id,
         "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         "segments": segments,
@@ -108,12 +108,12 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
         layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
         layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
     }
-    layers.push(dsl::json!({
+    layers.push(semio_framework_pack_json::json!({
         "id": "legend-label-min",
         "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0],
         "text": { "content": format!("{min:.1} Pa"), "size": 11.0 },
     }));
-    layers.push(dsl::json!({
+    layers.push(semio_framework_pack_json::json!({
         "id": "legend-label-max",
         "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 28.0],
         "text": { "content": format!("{max:.1} Pa"), "size": 11.0 },
@@ -268,9 +268,9 @@ pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
 
 /// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
 /// still results window looks exactly as it always did.
-fn playback_caption_layer(animation: &config::Fem2dResultsAnimation) -> Option<Value> {
+fn playback_caption_layer(animation: &crate::app_surface::FemResultsAnimation) -> Option<Value> {
     animation.playing.then(|| {
-        dsl::json!({
+        semio_framework_pack_json::json!({
             "id": "playback-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 36.0],
             "text": { "content": format!("phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed), "size": 11.0 },
@@ -340,7 +340,7 @@ fn render_static(
     source_id: Option<&str>,
     camera: &Viewport2d,
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    animation: &config::Fem2dResultsAnimation,
+    animation: &crate::app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
@@ -373,7 +373,7 @@ fn static_layers(
     case_id: &str,
     result: &crate::model::StaticResult,
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    animation: &config::Fem2dResultsAnimation,
+    animation: &crate::app_surface::FemResultsAnimation,
     amplitude: f64,
 ) -> Vec<Value> {
     let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
@@ -403,7 +403,7 @@ fn static_layers(
         };
         let content = format!("{:?}: {:.0} N", reaction.dof, reaction.value * amplitude);
         let (label_x, label_y) = place_reaction_label(sx, sy, stack_index, &content, &mut placed_reaction_labels);
-        layers.push(dsl::json!({
+        layers.push(semio_framework_pack_json::json!({
             "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
             "transform": [1.0, 0.0, 0.0, 1.0, label_x, label_y],
             "text": { "content": content, "size": REACTION_LABEL_SIZE },
@@ -431,7 +431,7 @@ fn static_layers(
                     [bx + px * s.m * MOMENT_SCALE_2D * amplitude, by + py * s.m * MOMENT_SCALE_2D * amplitude]
                 })
                 .collect();
-            layers.push(dsl::json!({
+            layers.push(semio_framework_pack_json::json!({
                 "kind": "polyline",
                 "id": format!("moment-{}", element_id(element)),
                 "points": points,
@@ -486,7 +486,7 @@ fn render_modal(
     mode_index: usize,
     camera: &Viewport2d,
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    animation: &config::Fem2dResultsAnimation,
+    animation: &crate::app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
@@ -495,7 +495,7 @@ fn render_modal(
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(dsl::json!({
+        layers.push(semio_framework_pack_json::json!({
             "id": "modal-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
             "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
@@ -521,7 +521,7 @@ fn render_buckling(
     mode_index: usize,
     camera: &Viewport2d,
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
-    animation: &config::Fem2dResultsAnimation,
+    animation: &crate::app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
@@ -533,7 +533,7 @@ fn render_buckling(
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(dsl::json!({
+        layers.push(semio_framework_pack_json::json!({
             "id": "buckling-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
             "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },

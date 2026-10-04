@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_dsl::FromValue as _;
+use semio_framework_value::FromValue as _;
 
 fn close(retirement: &mut dyn ErasedSnapshotRetirement) {
     for _ in 0..100_000 {
@@ -22,11 +22,11 @@ fn close(retirement: &mut dyn ErasedSnapshotRetirement) {
 fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_owners() {
     let source = include_str!("../../../🌿️vcs/🧫️fixtures/🔣️mutations.json");
     let oracle: serde_json::Value = serde_json::from_str(source).expect("serde oracle");
-    let fixture = crate::os_pack::json::parse(source).expect("first-party fixture parser");
-    let first_party_oracle: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&fixture)).expect("first-party fixture as serde oracle");
+    let fixture = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party fixture parser");
+    let first_party_oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&fixture)).expect("first-party fixture as serde oracle");
     assert_eq!(first_party_oracle, oracle);
-    let witness = crate::os_pack::json::parse(include_str!("../../../🌿️vcs/🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json")).expect("committed create-node wire witness");
-    let mutation = DagMutation::from_value(crate::os_pack::json::to_dsl_value(&witness)).expect("fixture mutation");
+    let witness = semio_framework_pack_json::parse(include_str!("../../../🌿️vcs/🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-node wire witness");
+    let mutation = DagMutation::from_value(semio_framework_pack_json::to_dsl_value(&witness)).expect("fixture mutation");
     let mut mutation_retirement = DagMutationRetirementFactory.retire_owned(mutation);
     assert_eq!(mutation_retirement.close_step(0, 7).unwrap(), SnapshotRetirementStep::Blocked);
     assert_eq!(mutation_retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked);

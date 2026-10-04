@@ -38,7 +38,7 @@ fn press(doc: &Fem2dSnapshot, kind: &str, x: f64, y: f64, button: u32, shift: bo
     handle_window(&CanvasPointerDown { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, button, shift, ctrl, meta, alt: false }, &view, &cfg, &addressed(kind)).expect("pointer down")
 }
 
-fn replay(emit: &Emit<Fem2dMutation, NoConfigMutation>) -> (&str, &dsl::DslValue) {
+fn replay(emit: &Emit<Fem2dMutation, NoConfigMutation>) -> (&str, &semio_framework_value::DslValue) {
     let Some(Effect::ReplayShellCommand { action_id, args }) = emit.effects.first() else { panic!("a pointer command requests exactly one shell replay") };
     (action_id.as_str(), args.as_ref().expect("replay args"))
 }
@@ -51,10 +51,10 @@ async fn canvas_pointer_down_on_a_node_requests_interaction_select() {
     assert!(emit.artifact_mutations.is_empty() && emit.window_config_mutations.is_empty(), "a pick never writes a store lane");
     let (action_id, args) = replay(&emit);
     assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
-    assert_eq!(args.get("domainId").and_then(dsl::DslValue::as_str), Some(FEM2D_INTERACTION_DOMAIN));
-    assert_eq!(args.get("merge").and_then(dsl::DslValue::as_str), Some("replace"));
-    assert_eq!(args.get("method").and_then(dsl::DslValue::as_str), Some("pick"));
-    let targets = args.get("targets").and_then(dsl::DslValue::as_str).expect("targets");
+    assert_eq!(args.get("domainId").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_INTERACTION_DOMAIN));
+    assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("replace"));
+    assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("pick"));
+    let targets = args.get("targets").and_then(semio_framework_value::DslValue::as_str).expect("targets");
     assert!(targets.contains("\"id\":\"n1\"") && targets.contains("\"granularity\":\"node\""), "{targets}");
 }
 
@@ -64,7 +64,7 @@ async fn canvas_pointer_down_modifiers_choose_the_merge_mode() {
     let (x, y) = node_pixel(&doc, "n1");
     for (shift, ctrl, meta, merge) in [(true, false, false, "additive"), (false, true, false, "subtractive"), (false, false, true, "subtractive"), (true, true, false, "invertive")] {
         let emit = press(&doc, model_window::WINDOW_KIND_ID, x, y, 0, shift, ctrl, meta);
-        assert_eq!(replay(&emit).1.get("merge").and_then(dsl::DslValue::as_str), Some(merge), "shift={shift} ctrl={ctrl} meta={meta}");
+        assert_eq!(replay(&emit).1.get("merge").and_then(semio_framework_value::DslValue::as_str), Some(merge), "shift={shift} ctrl={ctrl} meta={meta}");
     }
 }
 
@@ -73,8 +73,8 @@ async fn canvas_pointer_down_on_empty_space_clears_the_selection() {
     let doc = demo();
     let emit = press(&doc, model_window::WINDOW_KIND_ID, CANVAS_WIDTH - 4.0, 4.0, 0, true, false, false);
     let (_, args) = replay(&emit);
-    assert_eq!(args.get("targets").and_then(dsl::DslValue::as_str), Some("[]"));
-    assert_eq!(args.get("merge").and_then(dsl::DslValue::as_str), Some("replace"), "a background click always replaces, whatever the modifiers");
+    assert_eq!(args.get("targets").and_then(semio_framework_value::DslValue::as_str), Some("[]"));
+    assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some("replace"), "a background click always replaces, whatever the modifiers");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -90,7 +90,7 @@ async fn the_results_window_picks_with_its_own_camera() {
     let doc = demo();
     let (x, y) = node_pixel(&doc, "p8");
     let emit = press(&doc, results_window::WINDOW_KIND_ID, x, y, 0, false, false, false);
-    assert!(replay(&emit).1.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"p8\"")));
+    assert!(replay(&emit).1.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"p8\"")));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -116,8 +116,8 @@ async fn canvas_pointer_move_requests_hover_and_pointer_up_refreshes_the_window(
     let emit = canvas_pointer_move::handle_window(&canvas_pointer_move::CanvasPointerMove { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, samples: Vec::new() }, &view, &cfg, &addressed(model_window::WINDOW_KIND_ID)).expect("hover");
     let (action_id, args) = replay(&emit);
     assert_eq!(action_id, semio_framework::INTERACTION_HOVER_ACTION_ID);
-    assert_eq!(args.get("channel").and_then(dsl::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
-    assert!(args.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n2\"")));
+    assert_eq!(args.get("channel").and_then(semio_framework_value::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n2\"")));
 
     let released = canvas_pointer_up::handle_window(
         &canvas_pointer_up::CanvasPointerUp { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, shift: false, ctrl: false, meta: false, alt: false, cancelled: false },

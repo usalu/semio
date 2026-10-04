@@ -105,6 +105,13 @@ mod live {
     fn entry_of(entry: &Json) -> MutationEntry {
         MutationEntry { name: entry.str("name"), data: bytes_of(entry, "data") }
     }
+
+    /// 🩹️ The reference's own `ZipSnapshot` reading of an archive (members as `{name, data}`, the comment) that a
+    /// `patch-snapshot` row's pointer operation addresses.
+    fn snapshot_wire(archive: &MutationArchive) -> Json {
+        let entry = |entry: &MutationEntry| Json::Object(vec![("name".to_string(), Json::String(entry.name.clone())), ("data".to_string(), Json::Array(entry.data.iter().map(|byte| Json::Number(f64::from(*byte))).collect()))]);
+        Json::Object(vec![("schema".to_string(), Json::String("stdio.zip".to_string())), ("entries".to_string(), Json::Array(archive.entries.iter().map(entry).collect())), ("comment".to_string(), Json::String(archive.comment.clone()))])
+    }
     //#endregion 🔖️Wire
 
     //#region 🔖️Forward
@@ -119,6 +126,10 @@ mod live {
                 archive.entries = snapshot.array("entries").iter().map(entry_of).collect();
                 archive.comment = snapshot.str("comment");
                 Ok(archive)
+            }
+            "patch-snapshot" => {
+                let patched = semio_repo_test_host::law::patched_snapshot(&snapshot_wire(&archive), params.get("patch").ok_or("patch-snapshot requires a `patch` field")?)?;
+                apply(archive, &Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), Json::Object(vec![("snapshot".to_string(), patched)]))]))
             }
             "set-archive-comment" => {
                 archive.comment = params.str("comment");
@@ -182,7 +193,7 @@ mod live {
     pub fn invert(original: &MutationArchive, mutated: MutationArchive, spec: &Json) -> Result<MutationArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(original.clone()),
+            "set-snapshot" | "patch-snapshot" => Ok(original.clone()),
             "set-archive-comment" => Ok(MutationArchive { comment: original.comment.clone(), ..mutated }),
             "add-entry" => {
                 let name = params.get("entry").map(|entry| entry.str("name")).unwrap_or_default();

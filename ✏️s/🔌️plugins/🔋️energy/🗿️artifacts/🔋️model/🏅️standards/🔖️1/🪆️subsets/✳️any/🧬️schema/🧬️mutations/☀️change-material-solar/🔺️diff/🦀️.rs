@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeMaterialSolarAbsorptance, base: &EnergyModelS
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: solar absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_solar_absorptance), [payload.id.0.to_string()]);
     }
     if existing.solar_absorptance == payload.new_solar_absorptance {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this solar absorptance: {}.", payload.id.0, payload.new_solar_absorptance));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this solar absorptance: {}.", payload.id.0, payload.new_solar_absorptance));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

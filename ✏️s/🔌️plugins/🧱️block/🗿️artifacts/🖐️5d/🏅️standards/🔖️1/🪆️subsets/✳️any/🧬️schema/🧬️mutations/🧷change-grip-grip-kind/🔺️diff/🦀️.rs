@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeGripGripKind, base: &Block5dSnapshot) -> prot
     };
     let replacement = Block5dGripTemplate { grip_kind: payload.new_grip_kind.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block5dDiff {
         grips: Some(Block5dGripsDelta { patched: vec![Block5dGripsPatchEntry { id: payload.id.clone(), patch: Block5dGripsPatch { replacement: Some(replacement) } }], ..Default::default() }),

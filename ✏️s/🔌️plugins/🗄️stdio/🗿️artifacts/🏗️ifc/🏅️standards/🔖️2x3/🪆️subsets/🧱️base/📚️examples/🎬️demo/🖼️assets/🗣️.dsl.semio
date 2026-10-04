@@ -1,12 +1,2 @@
-semio stdio.ifc.dsl v1
-ISO-10303-21;
-HEADER;
-FILE_DESCRIPTION((''),'2;1');
-FILE_NAME('semio.ifc','2026-08-11T00:00:00',('Ueli'),('semio'),'semio','','');
-FILE_SCHEMA(('IFC4'));
-ENDSEC;
-DATA;
-#1=IFCPROJECT('gid-project',#2,'Demo Project');
-#2=IFCOWNERHISTORY($,0);
-ENDSEC;
-END-ISO-10303-21;
+semio stdio.ifc.2x3.dsl v1
+schema=stdio.ifc.2x3 file-description=[ 0 2 ] file-name=[ 3 4 5 7 9 10 11 ] file-schema=[ 12 ] instances=[ { id=1 entities=[ { name=IFCPROJECT arguments=[ 14 15 16 ] } ] } { id=2 entities=[ { name=IFCOWNERHISTORY arguments=[ 17 18 ] } ] } ] values=[ { kind=list children=[ 1 ] } { kind=string text="" children=[ ] } { kind=string text="2;1" children=[ ] } { kind=string text=semio.ifc children=[ ] } { kind=string text="2026-08-11T00:00:00" children=[ ] } { kind=list children=[ 6 ] } { kind=string text=Ueli children=[ ] } { kind=list children=[ 8 ] } { kind=string text=semio children=[ ] } { kind=string text=semio children=[ ] } { kind=string text="" children=[ ] } { kind=string text="" children=[ ] } { kind=list children=[ 13 ] } { kind=string text=IFC2X3 children=[ ] } { kind=string text=gid-project children=[ ] } { kind=reference reference=2 children=[ ] } { kind=string text="Demo Project" children=[ ] } { kind=unset children=[ ] } { kind=integer integer=0 children=[ ] } ]

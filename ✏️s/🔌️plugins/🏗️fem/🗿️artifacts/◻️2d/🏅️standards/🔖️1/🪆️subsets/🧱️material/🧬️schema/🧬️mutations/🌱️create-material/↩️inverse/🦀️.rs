@@ -4,7 +4,10 @@ use crate::standards::v1::subsets::any::schema::mutations::{delete_material, Fem
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateMaterial, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+pub fn inverse(payload: &CreateMaterial, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: payload.material.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

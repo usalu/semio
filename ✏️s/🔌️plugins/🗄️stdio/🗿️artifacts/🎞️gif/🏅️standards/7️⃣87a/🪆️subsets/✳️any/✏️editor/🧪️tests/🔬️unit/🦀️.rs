@@ -11,3 +11,5 @@ async fn create_editor_builds_a_definition_for_the_editor_role() {
 async fn editor_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<Gif87aEditor as ArtifactEditor>::DIALECT, GIF_87A_DIALECT);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Gif87aEditor, || semio_framework_plugin::App { definition: super::create_gif_87a_editor(), examples: Vec::new() }, "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any");

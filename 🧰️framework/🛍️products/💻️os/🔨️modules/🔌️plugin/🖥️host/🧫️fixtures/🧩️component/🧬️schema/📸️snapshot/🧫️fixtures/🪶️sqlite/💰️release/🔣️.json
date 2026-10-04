@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "owner": "fixture.neutral-host-fixture.counter",
+  "counts": [-2147483648, -1, 0, 1, 2147483647],
+  "encodings": ["binary", "text"],
+  "directions": ["export", "import"],
+  "cases": ["success", "zero", "exact", "short", "cumulative", "start", "materializedInterior"],
+  "requests": "fullSystemAllocatorRequests",
+  "incoming": "validatedCompleteBorrowedCapacityCensus",
+  "diagnostic": "actualCompleteReturnedIoErrorBacking",
+  "released": "requestsPlusConsumedIncomingBacking",
+  "caller": "sameCallerMonotonicNoRefund",
+  "cancellation": "positiveObservedRequestsBeforeMaterializedBoundary",
+  "census": [
+    {"message": "", "requested": 128, "admitted": 128, "diagnostic": 0, "incoming": 256, "released": 384},
+    {"message": "canceled", "requested": 8, "admitted": 0, "diagnostic": 8, "incoming": 256, "released": 264},
+    {"message": "拒否", "requested": 6, "admitted": 0, "diagnostic": 6, "incoming": 128, "released": 134},
+    {"message": "canceled", "requested": 136, "admitted": 192, "diagnostic": 8, "incoming": 256, "released": 392}
+  ]
+}

@@ -6,7 +6,7 @@
 // of this crate. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 #[path = "🛠️modeling/🦀️.rs"]
 mod modeling;
@@ -22,6 +22,19 @@ mod u32_hashset_bridge {
     }
     pub fn from_value(value: dsl_core::value::DslValue) -> Result<super::HashSet<u32>, dsl_core::value::ValueError> {
         <Vec<u32> as dsl_core::value::FromValue>::from_value(value).map(|items| items.into_iter().collect())
+    }
+}
+
+#[cfg(test)]
+mod attribute_serde_bridge {
+    use protocol::value::{FromValue, ToValue};
+    use serde::{Deserialize, Serialize};
+    pub fn serialize<T:ToValue,S: serde::Serializer>(value: &T, serializer: S) -> Result<S::Ok,S::Error> {
+        serde_json::Value::from(value.to_value()).serialize(serializer)
+    }
+    pub fn deserialize<'de,T:FromValue,D:serde::Deserializer<'de>>(deserializer:D)->Result<T,D::Error> {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        T::from_value(protocol::value::DslValue::from(value)).map_err(serde::de::Error::custom)
     }
 }
 
@@ -62,9 +75,7 @@ impl Vec3 {
         Self([self.x() - o.x(), self.y() - o.y(), self.z() - o.z()])
     }
 
-    pub fn scale(self, s: f32) -> Self {
-        Self([self.x() * s, self.y() * s, self.z() * s])
-    }
+    pub fn scale(self, s: f32) -> Self { Self(self.0.map(|value|value*s)) }
 
     pub fn dot(self, o: Self) -> f32 {
         self.x() * o.x() + self.y() * o.y() + self.z() * o.z()
@@ -122,6 +133,8 @@ pub enum WeldMode {
     ByDistance,
 }
 
+pub use semio_framework_mesh_engine::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 pub enum MirrorAxis {
@@ -167,7 +180,7 @@ pub type MeshResult<T> = Result<T, MeshKernelError>;
 pub struct MeshVertex {
     pub position: [f32; 3],
     pub normal: Option<[f32; 3]>,
-    halfedge: Option<u32>,
+    pub halfedge: Option<u32>,
 }
 
 // 🚫️async: E4 fn-pointer slot — serde's `#[serde(default = "...")]` calls this by path as a plain
@@ -179,31 +192,43 @@ fn default_uv() -> [f32; 2] {
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
-struct HalfEdge {
-    vertex: u32,
-    twin: Option<u32>,
-    next: u32,
-    face: Option<u32>,
+pub struct HalfEdge {
+    pub vertex: u32,
+    pub twin: Option<u32>,
+    pub next: u32,
+    pub face: Option<u32>,
     #[cfg_attr(test, serde(default = "default_uv"))]
     #[value(default = "default_uv")]
-    uv: [f32; 2],
+    pub uv: [f32; 2],
 }
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
-struct MeshFace {
-    halfedge: u32,
-    smooth: bool,
+pub struct MeshFace {
+    pub halfedge: u32,
+    pub smooth: bool,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
-    flipped: bool,
+    pub flipped: bool,
 }
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct MeshTransfer {
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub colors: Vec<f32>,
+    #[value(default)]
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    pub attributes: std::collections::BTreeMap<String,MeshAttribute>,
+    #[value(default)]
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    pub materials: std::collections::BTreeMap<String,protocol::value::DslValue>,
+    #[value(default)]
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    pub textures: std::collections::BTreeMap<String,MeshTexture>,
     pub positions: Vec<f32>,
     pub normals: Vec<f32>,
     pub indices: Vec<u32>,
@@ -242,11 +267,67 @@ pub struct HalfedgeMesh {
     #[cfg_attr(test, serde(default))]
     #[value(default, with = "u32_hashset_bridge")]
     uv_seams: HashSet<u32>,
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    #[value(default)]
+    attributes: BTreeMap<String, MeshAttribute>,
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    #[value(default)]
+    materials: BTreeMap<String,protocol::value::DslValue>,
+    #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
+    #[value(default)]
+    textures: BTreeMap<String,MeshTexture>,
+}
+
+impl protocol::value::retirement::RetireOwned for Vec3 {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::RetireOwned::retirement(self.0)}
+}
+impl protocol::value::retirement::RetireOwned for HalfedgeMesh {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures]}
+}
+impl protocol::value::retirement::RetireOwned for MeshVertex {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.position,self.normal,self.halfedge]}
+}
+impl protocol::value::retirement::RetireOwned for HalfEdge {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.vertex,self.twin,self.next,self.face,self.uv]}
+}
+impl protocol::value::retirement::RetireOwned for MeshFace {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.halfedge,self.smooth,self.flipped]}
+}
+impl protocol::value::retirement::RetireOwned for MeshTransfer {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.positions,self.normals,self.colors,self.indices,self.uvs,self.face_ids,self.vertex_ids,self.edge_positions,self.edge_ids,self.edge_uvs,self.edge_is_seam,self.attributes,self.materials,self.textures]}
 }
 
 impl HalfedgeMesh {
+    /// 🧩️ Transfer all seven kernel owners directly to an individually typed persisted model.
+    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HashSet<u32>,BTreeMap<String,MeshAttribute>,BTreeMap<String,protocol::value::DslValue>,BTreeMap<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
+    /// 🥽️ Editable literal topology enters the kernel without a serialized mesh document.
+    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HashSet<u32>,attributes:BTreeMap<String,MeshAttribute>,materials:BTreeMap<String,protocol::value::DslValue>,textures:BTreeMap<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
     pub fn empty() -> Self {
-        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new() }
+        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new(), attributes: BTreeMap::new(), materials:BTreeMap::new(),textures:BTreeMap::new() }
+    }
+
+    /// 🏷️ Authored channels are read from the same mesh value consumed by retained jobs.
+    pub fn attributes(&self) -> &BTreeMap<String, MeshAttribute> { &self.attributes }
+
+    /// 🎨️ Material references and texture bytes belong to this same owned mesh payload.
+    pub fn materials(&self)->&BTreeMap<String,protocol::value::DslValue> { &self.materials }
+    /// 🖼️ Authored texture records are retained without external resource ownership.
+    pub fn textures(&self)->&BTreeMap<String,MeshTexture> { &self.textures }
+
+    /// 📦️ Admits material and texture records before dependent face channels.
+    pub fn set_surface_assets(&mut self,materials:BTreeMap<String,protocol::value::DslValue>,textures:BTreeMap<String,MeshTexture>)->MeshResult<()> {
+        semio_framework_mesh_engine::validate_mesh_surface_assets(&materials,&textures).map_err(MeshKernelError::InvalidInput)?;
+        if self.attributes.values().filter(|attribute|attribute.semantic==MeshAttributeSemantic::Material).flat_map(|attribute|&attribute.values).any(|value|value.as_str().is_none_or(|name|!materials.contains_key(name))) { return Err(MeshKernelError::InvalidInput("undefined mesh face material".into())); }
+        self.materials=materials;self.textures=textures;
+        Ok(())
+    }
+
+    /// ✅️ Admits a channel atomically after checking its domain and interpolation shape.
+    pub fn set_attribute(&mut self, name: String, attribute: MeshAttribute) -> MeshResult<()> {
+        if !self.attributes.contains_key(&name) && self.attributes.len()>=64 {return Err(MeshKernelError::InvalidInput("mesh attribute declaration limit exceeded".into()));}
+        semio_framework_mesh_engine::validate_mesh_attribute(&name,&attribute,self.vertex_count(),self.face_count(),self.halfedge_count(),&self.materials).map_err(MeshKernelError::InvalidInput)?;
+        self.attributes.insert(name, attribute);
+        Ok(())
     }
 
     pub fn vertex_count(&self) -> usize {
@@ -329,16 +410,8 @@ impl HalfedgeMesh {
         Ok(out)
     }
 
-    pub fn flip_faces(&mut self, faces: &[FaceId]) -> MeshResult<()> {
-        if faces.is_empty() {
-            return Err(MeshKernelError::EmptySelection);
-        }
-        for face in faces {
-            let entry = self.faces.get_mut(face.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            entry.flipped = !entry.flipped;
-        }
-        self.recompute_normals()
-    }
+    /// 🔄 Drains selected winding work through the shared retained orientation owner.
+    pub fn flip_faces(&mut self,faces:&[FaceId])->MeshResult<()> {*self=self.flip_faces_job(faces)?.finish_with_progress(|_|true)?;Ok(())}
 
     pub fn from_indexed_triangles(positions: &[f32], indices: &[u32]) -> MeshResult<Self> {
         if !positions.len().is_multiple_of(3) {
@@ -456,7 +529,8 @@ impl HalfedgeMesh {
     }
 
     fn rebuild_from_polygon_soup(&mut self, positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<()> {
-        *self = Self::from_faces(positions, faces)?;
+        self.require_topology_source_remap("topology reconstruction")?;
+        let mut mesh=Self::from_faces(positions,faces)?;mesh.materials=std::mem::take(&mut self.materials);mesh.textures=std::mem::take(&mut self.textures);*self=mesh;
         Ok(())
     }
 
@@ -477,117 +551,17 @@ impl HalfedgeMesh {
 //#region Primitives
 
 impl HalfedgeMesh {
-    pub fn box_prim(width: f32, height: f32, depth: f32) -> MeshResult<Self> {
-        let hw = width * 0.5;
-        let hh = height * 0.5;
-        let hd = depth * 0.5;
-        let positions = [[-hw, -hh, -hd], [hw, -hh, -hd], [hw, hh, -hd], [-hw, hh, -hd], [-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]];
-        let faces = vec![vec![3, 2, 1, 0], vec![5, 6, 7, 4], vec![1, 5, 4, 0], vec![2, 6, 5, 1], vec![3, 7, 6, 2], vec![0, 4, 7, 3]];
-        Self::from_faces(&positions, &faces)
-    }
+    /// 🧊 Drains the canonical retained box constructor.
+    pub fn box_prim(width:f32,height:f32,depth:f32)->MeshResult<Self> {Self::box_primitive_job(width,height,depth)?.finish_with_progress(|_|true)}
+    /// 🔳 Drains the canonical retained plane constructor.
+    pub fn plane_prim(width:f32,depth:f32)->MeshResult<Self> {Self::plane_primitive_job(width,depth)?.finish_with_progress(|_|true)}
+    /// 🥫 Drains the canonical retained cylinder constructor.
+    pub fn cylinder_prim(radius:f32,height:f32,segments:u32)->MeshResult<Self> {Self::cylinder_primitive_job(radius,height,segments)?.finish_with_progress(|_|true)}
+    /// 📐 Drains the canonical retained cone constructor.
+    pub fn cone_prim(radius:f32,height:f32,segments:u32)->MeshResult<Self> {Self::cone_primitive_job(radius,height,segments)?.finish_with_progress(|_|true)}
+    /// 🌐 Drains the canonical retained spherical subdivision constructor.
+    pub fn ico_sphere_prim(radius:f32,subdivisions:u32)->MeshResult<Self> {Self::sphere_primitive_job(radius,subdivisions)?.finish_with_progress(|_|true)}
 
-    pub fn plane_prim(width: f32, depth: f32) -> MeshResult<Self> {
-        let hw = width * 0.5;
-        let hd = depth * 0.5;
-        Self::from_faces(&[[-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]], &[vec![0, 1, 2, 3]])
-    }
-
-    pub fn cylinder_prim(radius: f32, height: f32, segments: u32) -> MeshResult<Self> {
-        if !radius.is_finite() || !height.is_finite() || radius <= 0.0 || height <= 0.0 || !(3..=100_000).contains(&segments) {
-            return Err(MeshKernelError::InvalidInput("positive dimensions and 3..100000 segments required".into()));
-        }
-        let mut positions = Vec::with_capacity(segments as usize * 2);
-        for y in [-height * 0.5, height * 0.5] {
-            for i in 0..segments {
-                let angle = i as f32 / segments as f32 * std::f32::consts::TAU;
-                positions.push([radius * angle.cos(), y, radius * angle.sin()]);
-            }
-        }
-        let mut faces = vec![(0..segments).collect(), (segments..segments * 2).rev().collect()];
-        for i in 0..segments { let next = (i + 1) % segments; faces.push(vec![i, i + segments, next + segments, next]); }
-        Self::from_faces(&positions, &faces)
-    }
-
-    pub fn cone_prim(radius: f32, height: f32, segments: u32) -> MeshResult<Self> {
-        if !radius.is_finite() || !height.is_finite() || radius <= 0.0 || height <= 0.0 || !(3..=100_000).contains(&segments) {
-            return Err(MeshKernelError::InvalidInput("positive dimensions and 3..100000 segments required".into()));
-        }
-        let mut positions = Vec::with_capacity(segments as usize + 1);
-        for i in 0..segments {
-            let angle = i as f32 / segments as f32 * std::f32::consts::TAU;
-            positions.push([radius * angle.cos(), -height * 0.5, radius * angle.sin()]);
-        }
-        positions.push([0.0, height * 0.5, 0.0]);
-        let mut faces = vec![(0..segments).collect()];
-        for i in 0..segments { faces.push(vec![i, segments, (i + 1) % segments]); }
-        Self::from_faces(&positions, &faces)
-    }
-
-    pub fn ico_sphere_prim(radius: f32, subdivisions: u32) -> MeshResult<Self> {
-        if !radius.is_finite() || radius <= 0.0 || subdivisions > 5 { return Err(MeshKernelError::InvalidInput("positive finite radius and 0..5 subdivisions required".into())); }
-        let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
-        let mut positions = vec![[-1.0, t, 0.0], [1.0, t, 0.0], [-1.0, -t, 0.0], [1.0, -t, 0.0], [0.0, -1.0, t], [0.0, 1.0, t], [0.0, -1.0, -t], [0.0, 1.0, -t], [t, 0.0, -1.0], [t, 0.0, 1.0], [-t, 0.0, -1.0], [-t, 0.0, 1.0]];
-        for p in &mut positions {
-            let v = Vec3(*p).normalize();
-            *p = v.0;
-        }
-        let mut faces = vec![
-            vec![0, 11, 5],
-            vec![0, 5, 1],
-            vec![0, 1, 7],
-            vec![0, 7, 10],
-            vec![0, 10, 11],
-            vec![1, 5, 9],
-            vec![5, 11, 4],
-            vec![11, 10, 2],
-            vec![10, 7, 6],
-            vec![7, 1, 8],
-            vec![3, 9, 4],
-            vec![3, 4, 2],
-            vec![3, 2, 6],
-            vec![3, 6, 8],
-            vec![3, 8, 9],
-            vec![4, 9, 5],
-            vec![2, 4, 11],
-            vec![6, 2, 10],
-            vec![8, 6, 7],
-            vec![9, 8, 1],
-        ];
-        for _ in 0..subdivisions {
-            let mut new_faces = Vec::new();
-            let mut midpoint_cache: HashMap<(u32, u32), u32> = HashMap::new();
-            for face in &faces {
-                let mut mids = Vec::new();
-                for i in 0..face.len() {
-                    let a = face[i];
-                    let b = face[(i + 1) % face.len()];
-                    let key = if a < b { (a, b) } else { (b, a) };
-                    let mid = if let Some(&existing) = midpoint_cache.get(&key) {
-                        existing
-                    } else {
-                        let pa = Vec3(positions[a as usize]);
-                        let pb = Vec3(positions[b as usize]);
-                        let m = pa.lerp(pb, 0.5).normalize();
-                        let id = positions.len() as u32;
-                        positions.push(m.0);
-                        midpoint_cache.insert(key, id);
-                        id
-                    };
-                    mids.push(mid);
-                }
-                for i in 0..face.len() {
-                    let v = face[i];
-                    let m0 = mids[i];
-                    let m1 = mids[(i + face.len() - 1) % face.len()];
-                    new_faces.push(vec![v, m0, m1]);
-                }
-                new_faces.push(mids);
-            }
-            faces = new_faces;
-        }
-        for point in &mut positions { *point = point.map(|coordinate| coordinate * radius); }
-        Self::from_faces(&positions, &faces)
-    }
 }
 
 //#endregion Primitives
@@ -596,40 +570,20 @@ impl HalfedgeMesh {
 
 impl HalfedgeMesh {
     pub fn translate(&mut self, delta: Vec3) -> MeshResult<()> {
-        for v in &mut self.vertices {
-            v.position = Vec3(v.position).add(delta).0;
-        }
-        Ok(())
+        let mesh=self.translate_job(delta)?.finish_with_progress(|_|true)?;*self=mesh;Ok(())
     }
 
     pub fn rotate(&mut self, axis: Vec3, angle_rad: f32) -> MeshResult<()> {
-        let ax = axis.normalize();
-        let (x, y, z) = (ax.x(), ax.y(), ax.z());
-        let c = angle_rad.cos();
-        let s = angle_rad.sin();
-        let t = 1.0 - c;
-        for v in &mut self.vertices {
-            let p = Vec3(v.position);
-            let (px, py, pz) = (p.x(), p.y(), p.z());
-            let rx = (t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz;
-            let ry = (t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz;
-            let rz = (t * x * z - s * y) * px + (t * y * z + s * x) * py + (t * z * z + c) * pz;
-            v.position = [rx, ry, rz];
-        }
-        self.recompute_normals()
+        let mesh=self.rotate_job(axis,angle_rad)?.finish_with_progress(|_|true)?;*self=mesh;Ok(())
     }
 
     pub fn scale(&mut self, factor: Vec3) -> MeshResult<()> {
-        let (fx, fy, fz) = (factor.x(), factor.y(), factor.z());
-        for v in &mut self.vertices {
-            v.position = [v.position[0] * fx, v.position[1] * fy, v.position[2] * fz];
-        }
-        self.recompute_normals()
+        let mesh=self.scale_job(factor,false)?.finish_with_progress(|_|true)?;*self=mesh;Ok(())
     }
 
     pub fn move_vertices(&mut self, verts: &[VertexId], delta: Vec3) -> MeshResult<()> {
         if delta.0.iter().any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
-        self.map_vertices(verts, |point| std::array::from_fn(|axis| point[axis] + delta.0[axis] as f64))
+        self.map_vertices(verts, None, |point| std::array::from_fn(|axis| point[axis] + delta.0[axis] as f64))
     }
 
     pub fn rotate_vertices(&mut self, verts: &[VertexId], axis: Vec3, angle_rad: f32, pivot: Vec3) -> MeshResult<()> {
@@ -642,7 +596,7 @@ impl HalfedgeMesh {
         let c = (angle_rad as f64).cos();
         let s = (angle_rad as f64).sin();
         let t = 1.0 - c;
-        self.map_vertices(verts, |point| {
+        self.map_vertices(verts, Some([[t*x*x+c,t*x*y-s*z,t*x*z+s*y],[t*x*y+s*z,t*y*y+c,t*y*z-s*x],[t*x*z-s*y,t*y*z+s*x,t*z*z+c]]), |point| {
             let [px, py, pz] = std::array::from_fn::<_, 3, _>(|axis| point[axis] - pivot[axis]);
             let rx = (t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz;
             let ry = (t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz;
@@ -653,10 +607,10 @@ impl HalfedgeMesh {
 
     pub fn scale_vertices(&mut self, verts: &[VertexId], factor: Vec3, pivot: Vec3) -> MeshResult<()> {
         if factor.0.iter().chain(pivot.0.iter()).any(|value| !value.is_finite()) || factor.0.contains(&0.0) { return Err(MeshKernelError::DegenerateOperation); }
-        self.map_vertices(verts, |point| std::array::from_fn(|axis| pivot.0[axis] as f64 + (point[axis] - pivot.0[axis] as f64) * factor.0[axis] as f64))
+        self.map_vertices(verts, Some([[1.0/factor.x() as f64,0.0,0.0],[0.0,1.0/factor.y() as f64,0.0],[0.0,0.0,1.0/factor.z() as f64]]), |point| std::array::from_fn(|axis| pivot.0[axis] as f64 + (point[axis] - pivot.0[axis] as f64) * factor.0[axis] as f64))
     }
 
-    fn map_vertices(&mut self, verts: &[VertexId], transform: impl Fn([f64; 3]) -> [f64; 3]) -> MeshResult<()> {
+    fn map_vertices(&mut self, verts: &[VertexId], normal_matrix:Option<[[f64;3];3]>, transform: impl Fn([f64; 3]) -> [f64; 3]) -> MeshResult<()> {
         if verts.is_empty() { return Err(MeshKernelError::EmptySelection); }
         let mut ids = verts.iter().map(|vertex| vertex.0 as usize).collect::<Vec<_>>();
         ids.sort_unstable();
@@ -667,29 +621,36 @@ impl HalfedgeMesh {
             if result.iter().any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
             Ok(result)
         }).collect::<MeshResult<Vec<_>>>()?;
+        let mut normal_channels=std::collections::BTreeMap::new();
+        if let Some(matrix)=normal_matrix {
+            for (name,attribute) in &self.attributes {
+                if attribute.semantic!=MeshAttributeSemantic::Normal {continue;}
+                let mut values=Vec::new();let mut indices=Vec::new();let mut samples=std::collections::HashMap::new();
+                for domain in 0..attribute.domain_len() {
+                    let vertex=if attribute.domain==MeshAttributeDomain::Corner {self.halfedges[domain].vertex as usize}else {domain};
+                    let affected=ids.binary_search(&vertex).is_ok();let source=attribute.indices.as_ref().map_or(domain as u32,|indices|indices[domain]);
+                    let sample=if let Some(sample)=samples.get(&(source,affected)) {*sample}else {
+                        let original=attribute.values[source as usize].as_array().unwrap();let mut normal=[0,1,2].map(|axis|original[axis].as_f64().unwrap());
+                        if affected {normal=[0,1,2].map(|axis|matrix[axis][0]*normal[0]+matrix[axis][1]*normal[1]+matrix[axis][2]*normal[2]);let length=normal[0].hypot(normal[1]).hypot(normal[2]);normal=normal.map(|value|value/length);if normal.iter().any(|value|!value.is_finite() || !(*value as f32).is_finite()) {return Err(MeshKernelError::DegenerateOperation);}}
+                        let sample=values.len() as u32;values.push(protocol::value::DslValue::Array(normal.into_iter().map(protocol::value::DslValue::float).collect()));samples.insert((source,affected),sample);sample
+                    };indices.push(sample);
+                }
+                normal_channels.insert(name.clone(),MeshAttribute {domain:attribute.domain,semantic:attribute.semantic,interpolation:attribute.interpolation,values,indices:Some(indices)});
+            }
+        }
         for (id, position) in ids.into_iter().zip(positions) { self.vertices[id].position = position; }
+        self.attributes.extend(normal_channels);
         self.recompute_normals()
     }
 
     /// 🌊 Moves the selection fully and nearby vertices with linear radial falloff.
-    pub fn move_vertices_proportional(&mut self, verts: &[VertexId], delta: Vec3, pivot: Vec3, radius: f32) -> MeshResult<()> {
-        if verts.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        if !radius.is_finite() || radius <= 0.0 || delta.0.iter().chain(pivot.0.iter()).any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
-        for &vertex in verts { self.vertex_position(vertex)?; }
-        let selected = verts.iter().copied().collect::<HashSet<_>>();
-        let all = (0..self.vertex_count()).map(|id| VertexId(id as u32)).collect::<Vec<_>>();
-        let weights = all.iter().map(|id| {
-            if selected.contains(id) { 1.0 } else { (1.0 - self.vertex_position(*id).unwrap().sub(pivot).length() / radius).max(0.0) }
-        }).collect::<Vec<_>>();
-        let positions = self.vertices.iter().zip(weights).map(|(vertex, weight)| Vec3(vertex.position).add(delta.scale(weight)).0).collect::<Vec<_>>();
-        if positions.iter().flatten().any(|value| !value.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
-        for (vertex, position) in self.vertices.iter_mut().zip(positions) { vertex.position = position; }
-        self.recompute_normals()
+    pub fn move_vertices_proportional(&mut self,verts:&[VertexId],delta:Vec3,pivot:Vec3,radius:f32)->MeshResult<()> {
+        *self=self.move_proportional_job(verts.to_vec(),delta,pivot,radius)?.finish_with_progress(|_|true)?;Ok(())
     }
 
-    pub fn snap_vertices_to_grid(&mut self, verts: &[VertexId], grid: f32) -> MeshResult<()> {
-        if !grid.is_finite() || grid <= 0.0 { return Err(MeshKernelError::InvalidInput("grid must be finite and positive".into())); }
-        self.map_vertices(verts, |point| point.map(|coordinate| (coordinate / grid as f64).round() * grid as f64))
+    /// 🧲️ Applies selected grid rounding through the retained transform owner.
+    pub fn snap_vertices_to_grid(&mut self,verts:&[VertexId],grid:f32)->MeshResult<()> {
+        *self=self.snap_vertices_job(verts.to_vec(),grid)?.finish_with_progress(|_|true)?;Ok(())
     }
 
 }
@@ -700,74 +661,11 @@ impl HalfedgeMesh {
 
 impl HalfedgeMesh {
     pub fn extrude_faces(&mut self, faces: &[FaceId], distance: f32) -> MeshResult<()> {
-        if faces.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        if !distance.is_finite() || distance == 0.0 { return Err(MeshKernelError::DegenerateOperation); }
-        let selected: HashSet<u32> = faces.iter().map(|face| face.0).collect();
-        if selected.len() != faces.len() { return Err(MeshKernelError::InvalidInput("duplicate selected face".into())); }
-        let mut normals = HashMap::<u32, Vec3>::new();
-        let mut boundary = HashMap::<(u32, u32), (u32, u32, usize)>::new();
-        for &face in faces {
-            let vertices = self.face_vertex_ids(face)?;
-            let normal = self.face_normal(face)?;
-            for i in 0..vertices.len() {
-                let a = vertices[i].0;
-                let b = vertices[(i + 1) % vertices.len()].0;
-                normals.entry(a).and_modify(|sum| *sum = sum.add(normal)).or_insert(normal);
-                boundary.entry((a.min(b), a.max(b))).and_modify(|edge| edge.2 += 1).or_insert((a, b, 1));
-            }
-        }
-        let (mut positions, original) = self.polygon_soup();
-        let mut displaced = HashMap::new();
-        let mut ids: Vec<u32> = normals.keys().copied().collect();
-        ids.sort_unstable();
-        for id in ids {
-            let normal = normals[&id].normalize();
-            if normal.length() < 1e-6 { return Err(MeshKernelError::DegenerateOperation); }
-            displaced.insert(id, positions.len() as u32);
-            positions.push(Vec3(positions[id as usize]).add(normal.scale(distance)).0);
-        }
-        let mut result = Vec::new();
-        for (index, face) in original.iter().enumerate() {
-            result.push(if selected.contains(&(index as u32)) { face.iter().map(|id| displaced[id]).collect() } else { face.clone() });
-        }
-        let mut edges: Vec<_> = boundary.into_values().filter(|edge| edge.2 == 1).collect();
-        edges.sort_unstable();
-        for (a, b, _) in edges { result.push(vec![a, b, displaced[&b], displaced[&a]]); }
-        self.rebuild_from_polygon_soup(&positions, &result)
+        *self=self.extrude_faces_job(faces,distance)?.finish_with_progress(|_|true)?;Ok(())
     }
 
     pub fn inset_faces(&mut self, faces: &[FaceId], amount: f32) -> MeshResult<()> {
-        if faces.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        if !amount.is_finite() || amount <= 0.0 { return Err(MeshKernelError::DegenerateOperation); }
-        let selected: HashSet<u32> = faces.iter().map(|face| face.0).collect();
-        if selected.len() != faces.len() { return Err(MeshKernelError::InvalidInput("duplicate selected face".into())); }
-        let (mut positions, mut result) = self.polygon_soup();
-        for &face in faces {
-            let vertices = self.face_vertex_ids(face)?;
-            let normal = self.face_normal(face)?;
-            let mut inner = Vec::new();
-            for i in 0..vertices.len() {
-                let previous = self.vertex_position(vertices[(i + vertices.len() - 1) % vertices.len()])?;
-                let current = self.vertex_position(vertices[i])?;
-                let next = self.vertex_position(vertices[(i + 1) % vertices.len()])?;
-                let a = normal.cross(current.sub(previous).normalize());
-                let b = normal.cross(next.sub(current).normalize());
-                let denominator = 1.0 + a.dot(b);
-                if denominator <= 1e-6 { return Err(MeshKernelError::DegenerateOperation); }
-                let offset = a.add(b).scale(amount / denominator);
-                if offset.length() >= current.sub(previous).length().min(next.sub(current).length()) * 0.5 {
-                    return Err(MeshKernelError::InvalidInput("inset exceeds local edge clearance".into()));
-                }
-                inner.push(positions.len() as u32);
-                positions.push(current.add(offset).0);
-            }
-            result[face.0 as usize] = inner.clone();
-            for i in 0..vertices.len() {
-                let next = (i + 1) % vertices.len();
-                result.push(vec![vertices[i].0, vertices[next].0, inner[next], inner[i]]);
-            }
-        }
-        self.rebuild_from_polygon_soup(&positions, &result)
+        *self=self.inset_faces_job(faces,amount)?.finish_with_progress(|_|true)?;Ok(())
     }
 
     /// 🪚 Bevels convex closed meshes with a segmented circular profile and mitered corners.
@@ -782,488 +680,57 @@ impl HalfedgeMesh {
     }
 
     /// ✂️ Splits connected quad strips, sharing cut vertices across adjacent faces.
-    pub fn loop_cut(&mut self, edges: &[EdgeId], cuts: u32) -> MeshResult<()> {
-        if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        if !(1..=256).contains(&cuts) { return Err(MeshKernelError::InvalidInput("cuts must be in 1..=256".into())); }
-        let key = |a: u32, b: u32| (a.min(b), a.max(b));
-        let (mut positions, faces) = self.polygon_soup();
-        let mut incidence = HashMap::<(u32, u32), Vec<(usize, usize)>>::new();
-        for (fi, face) in faces.iter().enumerate() {
-            for i in 0..face.len() { incidence.entry(key(face[i], face[(i + 1) % face.len()])).or_default().push((fi, i)); }
-        }
-        let mut marked = HashSet::new();
-        let mut pending = Vec::new();
-        for &edge in edges {
-            let (a, b) = self.edge_endpoints(edge)?;
-            let edge = key(a.0, b.0);
-            if !incidence[&edge].iter().any(|&(fi, _)| faces[fi].len() == 4) {
-                return Err(MeshKernelError::InvalidInput("selected edges must touch a quad".into()));
-            }
-            if marked.insert(edge) { pending.push(edge); }
-        }
-        let mut cursor = 0;
-        while cursor < pending.len() {
-            let edge = pending[cursor];
-            cursor += 1;
-            if incidence[&edge].len() > 2 { return Err(MeshKernelError::InvalidInput("loop cut crosses a nonmanifold edge".into())); }
-            for &(fi, i) in &incidence[&edge] {
-                let face = &faces[fi];
-                if face.len() == 4 {
-                    let opposite = key(face[(i + 2) % 4], face[(i + 3) % 4]);
-                    if marked.insert(opposite) { pending.push(opposite); }
-                }
-            }
-        }
-        let dimensions = |face: &[u32]| {
-            let nx = if marked.contains(&key(face[0], face[1])) { cuts as usize + 1 } else { 1 };
-            let ny = if marked.contains(&key(face[1], face[2])) { cuts as usize + 1 } else { 1 };
-            (nx, ny)
-        };
-        let mut vertices = positions.len() as u64 + marked.len() as u64 * cuts as u64;
-        let mut face_count = 0u64;
-        let mut corner_count = 0u64;
-        for face in &faces {
-            if face.len() == 4 {
-                let (nx, ny) = dimensions(face);
-                vertices += ((nx - 1) * (ny - 1)) as u64;
-                face_count += (nx * ny) as u64;
-                corner_count += (nx * ny * 4) as u64;
-            } else {
-                face_count += 1;
-                corner_count += face.len() as u64 + (0..face.len()).filter(|&i| marked.contains(&key(face[i], face[(i + 1) % face.len()]))).count() as u64 * cuts as u64;
-            }
-        }
-        if vertices > 100_000 || face_count > 100_000 || corner_count > 600_000 {
-            return Err(MeshKernelError::InvalidInput("loop cut exceeds mesh capacity".into()));
-        }
-        let mut cut_vertices = HashMap::new();
-        pending.sort_unstable();
-        for (a, b) in pending {
-            let mut ids = Vec::new();
-            let mut previous = positions[a as usize];
-            for step in 1..=cuts {
-                let t = step as f64 / (cuts + 1) as f64;
-                let point = [0, 1, 2].map(|axis| (positions[a as usize][axis] as f64 * (1.0 - t) + positions[b as usize][axis] as f64 * t) as f32);
-                if point.iter().any(|coordinate| !coordinate.is_finite()) || point == previous || point == positions[b as usize] { return Err(MeshKernelError::DegenerateOperation); }
-                ids.push(positions.len() as u32);
-                positions.push(point);
-                previous = point;
-            }
-            cut_vertices.insert((a, b), ids);
-        }
-        let on_edge = |a: u32, b: u32, step: usize, segments: usize| {
-            if step == 0 { a } else if step == segments { b } else { cut_vertices[&key(a, b)][if a < b { step - 1 } else { segments - step - 1 }] }
-        };
-        let mut result = Vec::with_capacity(face_count as usize);
-        for face in &faces {
-            if face.len() == 4 {
-                let (nx, ny) = dimensions(face);
-                let mut grid = vec![0; (nx + 1) * (ny + 1)];
-                for y in 0..=ny {
-                    for x in 0..=nx {
-                        grid[y * (nx + 1) + x] = if y == 0 { on_edge(face[0], face[1], x, nx) }
-                        else if y == ny { on_edge(face[3], face[2], x, nx) }
-                        else if x == 0 { on_edge(face[0], face[3], y, ny) }
-                        else if x == nx { on_edge(face[1], face[2], y, ny) }
-                        else {
-                            let (u, v) = (x as f64 / nx as f64, y as f64 / ny as f64);
-                            let weights = [(1.0 - u) * (1.0 - v), u * (1.0 - v), u * v, (1.0 - u) * v];
-                            let point = [0, 1, 2].map(|axis| face.iter().zip(weights).map(|(&id, weight)| positions[id as usize][axis] as f64 * weight).sum::<f64>() as f32);
-                            if point.iter().any(|coordinate| !coordinate.is_finite()) { return Err(MeshKernelError::DegenerateOperation); }
-                            let id = positions.len() as u32;
-                            positions.push(point);
-                            id
-                        };
-                    }
-                }
-                for y in 0..ny {
-                    for x in 0..nx {
-                        let i = y * (nx + 1) + x;
-                        result.push(vec![grid[i], grid[i + 1], grid[i + nx + 2], grid[i + nx + 1]]);
-                    }
-                }
-            } else {
-                let mut boundary = Vec::new();
-                for i in 0..face.len() {
-                    let (a, b) = (face[i], face[(i + 1) % face.len()]);
-                    boundary.push(a);
-                    if marked.contains(&key(a, b)) { boundary.extend((1..=cuts as usize).map(|step| on_edge(a, b, step, cuts as usize + 1))); }
-                }
-                result.push(boundary);
-            }
-        }
-        self.rebuild_from_polygon_soup(&positions, &result)
+    pub fn loop_cut(&mut self,edges:&[EdgeId],cuts:u32)->MeshResult<()> {
+        *self=self.loop_cut_job(edges,cuts)?.finish_with_progress(|_|true)?;Ok(())
     }
 
     /// ✂️ Splits a face by a projected line and reuses boundary intersections in neighboring polygons.
-    pub fn knife_cut(&mut self, face: FaceId, cut_a: Vec3, cut_b: Vec3) -> MeshResult<()> {
-        let ids = self.face_vertex_ids(face)?;
-        if ids.len() < 3 { return Err(MeshKernelError::InvalidInput("knife face must have at least three vertices".into())); }
-        if cut_a.0.iter().chain(&cut_b.0).any(|value| !value.is_finite()) { return Err(MeshKernelError::InvalidInput("knife points must be finite".into())); }
-        let (mut positions, faces) = self.polygon_soup();
-        let polygon = &faces[face.0 as usize];
-        let points = ids.iter().map(|id| Vec3(self.vertices[id.0 as usize].position)).collect::<Vec<_>>();
-        let tuple = |p: [f32; 3]| (p[0] as f64, p[1] as f64, p[2] as f64);
-        let normal = tuple(newell_normal(&points).0);
-        let direction = sub3(tuple(cut_b.0), tuple(cut_a.0));
-        let plane = cross3(direction, normal);
-        let length = length3(plane);
-        if length == 0.0 || length <= length3(direction) * 1e-7 { return Err(MeshKernelError::InvalidInput("knife direction must project onto a nondegenerate face".into())); }
-        let plane = (plane.0 / length, plane.1 / length, plane.2 / length);
-        let origin = tuple(points[0].0);
-        let scale = points.iter().map(|p| length3(sub3(tuple(p.0), origin))).fold(0.0f64, f64::max);
-        let tolerance = scale * 1e-7;
-        let distances = positions.iter().map(|p| {
-            let d = dot3(sub3(tuple(*p), tuple(cut_a.0)), plane);
-            if d.abs() <= tolerance { 0.0 } else { d }
-        }).collect::<Vec<_>>();
-        if !polygon.iter().any(|&id| distances[id as usize] > 0.0) || !polygon.iter().any(|&id| distances[id as usize] < 0.0) { return Err(MeshKernelError::InvalidInput("knife line must cross the face interior".into())); }
-        let planar = points.iter().all(|p| dot3(sub3(tuple(p.0), origin), normal).abs() <= tolerance);
-        let convex = (0..points.len()).all(|i| {
-            let a = tuple(points[i].0);
-            let b = tuple(points[(i + 1) % points.len()].0);
-            let c = tuple(points[(i + 2) % points.len()].0);
-            dot3(cross3(sub3(b, a), sub3(c, b)), normal) >= -scale * tolerance
-        });
-        let pieces = if planar && convex { vec![polygon.clone()] } else {
-            triangulate_polygon(&points).into_iter().map(|triangle| triangle.into_iter().map(|id| polygon[id]).collect()).collect()
-        };
-        let key = |a: u32, b: u32| (a.min(b), a.max(b));
-        let mut intersections = HashMap::<(u32, u32), u32>::new();
-        let mut split = Vec::new();
-        for piece in pieces {
-            let positive = piece.iter().any(|&id| distances[id as usize] > 0.0);
-            let negative = piece.iter().any(|&id| distances[id as usize] < 0.0);
-            if !positive || !negative { split.push(piece); continue; }
-            for sign in [1.0, -1.0] {
-                let mut clipped = Vec::new();
-                for i in 0..piece.len() {
-                    let (a, b) = (piece[i], piece[(i + 1) % piece.len()]);
-                    let (da, db) = (distances[a as usize], distances[b as usize]);
-                    if da * sign >= 0.0 { clipped.push(a); }
-                    if (da > 0.0 && db < 0.0) || (da < 0.0 && db > 0.0) {
-                        let edge = key(a, b);
-                        let id = if let Some(&id) = intersections.get(&edge) { id } else {
-                            let (a, b) = (edge.0 as usize, edge.1 as usize);
-                            let t = distances[a] / (distances[a] - distances[b]);
-                            let point = [0, 1, 2].map(|axis| ((1.0 - t) * positions[a][axis] as f64 + t * positions[b][axis] as f64) as f32);
-                            if point.iter().any(|value| !value.is_finite()) || point == positions[a] || point == positions[b] { return Err(MeshKernelError::InvalidInput("knife intersection collapses at this precision".into())); }
-                            if positions.len() >= 100_000 { return Err(MeshKernelError::InvalidInput("knife cut exceeds mesh capacity".into())); }
-                            let id = positions.len() as u32;
-                            positions.push(point); intersections.insert(edge, id); id
-                        };
-                        clipped.push(id);
-                    }
-                }
-                clipped.dedup();
-                if clipped.first() == clipped.last() { clipped.pop(); }
-                if clipped.len() < 3 { return Err(MeshKernelError::InvalidInput("knife cut produces a degenerate piece".into())); }
-                split.push(clipped);
-            }
-        }
-        let mut result = Vec::new();
-        for (index, polygon) in faces.iter().enumerate() {
-            if index == face.0 as usize { result.append(&mut split); continue; }
-            let mut boundary = Vec::new();
-            for i in 0..polygon.len() {
-                let (a, b) = (polygon[i], polygon[(i + 1) % polygon.len()]);
-                boundary.push(a);
-                if let Some(&id) = intersections.get(&key(a, b)) { boundary.push(id); }
-            }
-            result.push(boundary);
-        }
-        if result.len() > 100_000 || result.iter().map(Vec::len).sum::<usize>() > 600_000 { return Err(MeshKernelError::InvalidInput("knife cut exceeds mesh capacity".into())); }
-        self.rebuild_from_polygon_soup(&positions, &result)
+    pub fn knife_cut(&mut self,face:FaceId,cut_a:Vec3,cut_b:Vec3)->MeshResult<()> {
+        *self=self.knife_cut_job(face,cut_a,cut_b)?.finish_with_progress(|_|true)?;Ok(())
     }
 
     pub fn merge_vertices(&mut self, verts: &[VertexId], mode: WeldMode, threshold: f32) -> MeshResult<()> {
-        let mut selected = Vec::new();
-        for &vertex in verts { self.vertex_position(vertex)?; if !selected.contains(&vertex.0) { selected.push(vertex.0); } }
-        if selected.len() < 2 { return Err(MeshKernelError::EmptySelection); }
-        if mode == WeldMode::ByDistance && (!threshold.is_finite() || threshold < 0.0) { return Err(MeshKernelError::DegenerateOperation); }
-        if selected.len().saturating_mul(selected.len()) > 4_000_000 { return Err(MeshKernelError::InvalidInput("merge work budget exceeded".into())); }
-        let (mut positions, faces) = self.polygon_soup();
-        let mut roots = (0..selected.len()).collect::<Vec<_>>();
-        if mode == WeldMode::ByDistance {
-            for i in 0..selected.len() {
-                for j in 0..i {
-                    if Vec3(positions[selected[i] as usize]).sub(Vec3(positions[selected[j] as usize])).length() <= threshold {
-                        let mut a = i; while roots[a] != a { a = roots[a]; }
-                        let mut b = j; while roots[b] != b { b = roots[b]; }
-                        roots[a.max(b)] = a.min(b);
-                    }
-                }
-            }
-        } else { roots.fill(0); }
-        let mut remap = (0..positions.len() as u32).collect::<Vec<_>>();
-        for i in 0..selected.len() {
-            let mut root = i; while roots[root] != root { root = roots[root]; }
-            remap[selected[i] as usize] = selected[root];
-        }
-        if mode == WeldMode::Center {
-            let mut center = [0.0f64; 3];
-            for &id in &selected { for (axis, coordinate) in center.iter_mut().enumerate() { *coordinate += positions[id as usize][axis] as f64 / selected.len() as f64; } }
-            positions[selected[0] as usize] = center.map(|value| value as f32);
-        }
-        let mut cleaned = Vec::new();
-        for face in faces {
-            let mut face = face.into_iter().map(|id| remap[id as usize]).collect::<Vec<_>>();
-            face.dedup();
-            if face.first() == face.last() { face.pop(); }
-            if face.len() < 3 { continue; }
-            if face.iter().copied().collect::<HashSet<_>>().len() != face.len() { return Err(MeshKernelError::NonManifold); }
-            cleaned.push(face);
-        }
-        let mut result = Self::from_faces(&positions, &cleaned)?;
-        result.drop_unreferenced_vertices()?;
-        *self = result;
+        *self = self.merge_vertices_job(verts,mode,threshold)?.finish_with_progress(|_| true)?;
         Ok(())
     }
 
-    pub fn dissolve_edges(&mut self, edges: &[EdgeId]) -> MeshResult<()> {
-        if edges.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        let selected = edges.iter().map(|edge| self.edge_endpoints(*edge).map(|(a,b)| (a.0,b.0))).collect::<MeshResult<Vec<_>>>()?;
-        let (positions, mut faces) = self.polygon_soup();
-        let mut done = HashSet::new();
-        for (a,b) in selected {
-            if !done.insert((a.min(b), a.max(b))) { continue; }
-            let ai = faces.iter().position(|face| find_edge_position(face,a,b).is_some()).ok_or(MeshKernelError::DegenerateOperation)?;
-            let bi = faces.iter().position(|face| find_edge_position(face,b,a).is_some()).ok_or(MeshKernelError::DegenerateOperation)?;
-            let merged = merge_face_loops(&faces[ai], &faces[bi]).ok_or(MeshKernelError::NonManifold)?;
-            if merged.iter().copied().collect::<HashSet<_>>().len() != merged.len() { return Err(MeshKernelError::NonManifold); }
-            faces[ai.min(bi)] = merged;
-            faces.remove(ai.max(bi));
-        }
-        let mut result = Self::from_faces(&positions, &faces)?;
-        result.drop_unreferenced_vertices()?;
-        *self = result;
-        Ok(())
-    }
+    /// ✂️ Drains the retained explicit-edge merge without changing the source on refusal.
+    pub fn dissolve_edges(&mut self,edges:&[EdgeId])->MeshResult<()> {*self=self.dissolve_edges_job(edges)?.finish_with_progress(|_|true)?;Ok(())}
 
-    /// 🧵 Dissolves planar vertex stars into their oriented outer boundary.
-    pub fn dissolve_vertices(&mut self, verts: &[VertexId]) -> MeshResult<()> {
-        if verts.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        for &vertex in verts { self.vertex_position(vertex)?; }
-        let (positions, mut faces) = self.polygon_soup();
-        let mut selected = verts.iter().map(|vertex| vertex.0).collect::<Vec<_>>();
-        selected.sort_unstable(); selected.dedup();
-        for vertex in selected {
-            let incident = faces.iter().enumerate().filter_map(|(id, face)| face.contains(&vertex).then_some(id)).collect::<Vec<_>>();
-            if incident.is_empty() { return Err(MeshKernelError::DegenerateOperation); }
-            let points = faces[incident[0]].iter().map(|&id| Vec3(positions[id as usize])).collect::<Vec<_>>();
-            let normal = newell_normal(&points).normalize();
-            let origin = points[0];
-            let extent = points.iter().map(|point| point.sub(origin).length()).fold(0.0f32, f32::max);
-            if normal.length() == 0.0 || incident.iter().flat_map(|&id| faces[id].iter()).any(|&id| Vec3(positions[id as usize]).sub(origin).dot(normal).abs() > extent * 1e-5) { return Err(MeshKernelError::InvalidInput("vertex dissolution requires a planar star".into())); }
-            let mut boundary = HashMap::new();
-            for &id in &incident {
-                let face = &faces[id];
-                for i in 0..face.len() {
-                    let (a,b) = (face[i], face[(i+1)%face.len()]);
-                    if boundary.remove(&(b,a)).is_none() && boundary.insert((a,b),()).is_some() { return Err(MeshKernelError::NonManifold); }
-                }
-            }
-            let mut next = HashMap::new();
-            for &(a,b) in boundary.keys() { if next.insert(a,b).is_some() { return Err(MeshKernelError::NonManifold); } }
-            let start = *next.keys().min().ok_or(MeshKernelError::DegenerateOperation)?;
-            let mut merged = Vec::new();
-            let mut cursor = start;
-            loop {
-                if cursor != vertex { merged.push(cursor); }
-                cursor = next.remove(&cursor).ok_or(MeshKernelError::NonManifold)?;
-                if cursor == start { break; }
-                if merged.len() > boundary.len() { return Err(MeshKernelError::NonManifold); }
-            }
-            if !next.is_empty() || merged.len() < 3 { return Err(MeshKernelError::NonManifold); }
-            let incident = incident.into_iter().collect::<HashSet<_>>();
-            faces = faces.into_iter().enumerate().filter_map(|(id,face)| (!incident.contains(&id)).then_some(face)).collect();
-            faces.push(merged);
-        }
-        let mut result = Self::from_faces(&positions, &faces)?;
-        result.drop_unreferenced_vertices()?;
-        *self = result;
-        Ok(())
-    }
+    /// 🧵 Drains retained planar-star dissolution, preserving source ownership on refusal.
+    pub fn dissolve_vertices(&mut self,vertices:&[VertexId])->MeshResult<()> {*self=self.dissolve_vertices_job(vertices)?.finish_with_progress(|_|true)?;Ok(())}
+
+    fn require_topology_source_remap(&self,operation:&str)->MeshResult<()> {if let Some((name,_))=self.attributes.first_key_value() {return Err(MeshKernelError::InvalidInput(format!("mesh attribute '{name}' requires declared source remapping for {operation}")));}if !self.uv_seams.is_empty() {return Err(MeshKernelError::InvalidInput(format!("mesh UV seams require declared source remapping for {operation}")));}Ok(())}
+
+    /// 🧹️ Preserves source channels while removing selected face domains.
+    pub fn delete_faces(&mut self,faces:&[FaceId])->MeshResult<()> {*self=self.delete_faces_job(faces)?.finish_with_progress(|_|true)?;Ok(())}
 
     pub fn subdivide_faces(&mut self, faces: &[FaceId]) -> MeshResult<()> {
-        if faces.is_empty() { return Err(MeshKernelError::EmptySelection); }
-        let selected: HashSet<u32> = faces.iter().map(|face| face.0).collect();
-        if selected.len() != faces.len() { return Err(MeshKernelError::InvalidInput("duplicate face selection".into())); }
-        for &face in faces { self.face_vertex_ids(face)?; }
-        let (mut positions, original) = self.polygon_soup();
-        let mut result = Vec::new();
-        for (index, face) in original.iter().enumerate() {
-            if !selected.contains(&(index as u32)) { result.push(face.clone()); continue; }
-            let points: Vec<_> = face.iter().map(|id| Vec3(positions[*id as usize])).collect();
-            let normal = newell_normal(&points);
-            let convex = (0..points.len()).all(|i| points[(i + 1) % points.len()].sub(points[i]).cross(points[(i + 2) % points.len()].sub(points[(i + 1) % points.len()])).dot(normal) > 0.0);
-            let polygons = if convex { vec![face.clone()] } else { triangulate_polygon(&points).into_iter().map(|triangle| triangle.into_iter().map(|i| face[i]).collect()).collect() };
-            for polygon in polygons {
-                let center = polygon.iter().fold(Vec3::ZERO, |sum, id| sum.add(Vec3(positions[*id as usize]))).scale(1.0 / polygon.len() as f32);
-                let center_id = positions.len() as u32;
-                positions.push(center.0);
-                for i in 0..polygon.len() { result.push(vec![polygon[i], polygon[(i + 1) % polygon.len()], center_id]); }
-            }
-        }
-        self.rebuild_from_polygon_soup(&positions, &result)
+        *self = self.subdivide_faces_job(faces)?.finish_with_progress(|_| true)?;
+        Ok(())
     }
 
-    pub fn triangulate(&mut self) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
-        let mut new_faces = Vec::new();
-        for face in face_list {
-            if face.len() <= 3 {
-                new_faces.push(face);
-                continue;
-            }
-            let face_positions: Vec<Vec3> = face.iter().map(|&vi| Vec3(positions[vi as usize])).collect();
-            for tri in triangulate_polygon(&face_positions) {
-                new_faces.push(vec![face[tri[0]], face[tri[1]], face[tri[2]]]);
-            }
-        }
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+    pub fn triangulate(&mut self)->MeshResult<()> {
+        *self=self.triangulate_job()?.finish_with_progress(|_|true)?;Ok(())
     }
 
-    /// Merges every pair of adjacent faces whose normals are parallel and whose union is planar (within kernel
-    /// tolerances) into a single n-gon, then drops resulting straight-pass-through (collinear) vertices. Returns
-    /// the number of merges performed.
     pub fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
-        let (positions, mut face_list) = self.polygon_soup();
-        let mut merge_count = 0usize;
-        loop {
-            let mut merged_this_round = false;
-            'search: for ai in 0..face_list.len() {
-                let a_len = face_list[ai].len();
-                for i in 0..a_len {
-                    let u = face_list[ai][i];
-                    let v = face_list[ai][(i + 1) % a_len];
-                    let mut bi_found = None;
-                    for (bi, f) in face_list.iter().enumerate() {
-                        if bi != ai && find_edge_position(f, v, u).is_some() {
-                            bi_found = Some(bi);
-                            break;
-                        }
-                    }
-                    let Some(bi) = bi_found else { continue };
-                    if !faces_coplanar(&positions, &face_list[ai], &face_list[bi]) {
-                        continue;
-                    }
-                    if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
-                        let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
-                        face_list[keep] = merged;
-                        face_list.remove(remove);
-                        merge_count += 1;
-                        merged_this_round = true;
-                        break 'search;
-                    }
-                }
-            }
-            if !merged_this_round {
-                break;
-            }
-        }
-        let cleaned = collinear_cleanup(&positions, &face_list);
-        self.rebuild_from_polygon_soup(&positions, &cleaned)?;
-        Ok(merge_count)
+        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
     }
 
     /// Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
     /// that tessellate adjacent source faces independently, leaving duplicate, non-shared vertex ids along
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
-    pub fn weld_coincident_vertices(&mut self, precision: f32) -> MeshResult<usize> {
-        let (positions, face_list) = self.polygon_soup();
-        let scale = 1.0 / precision.max(1e-9);
-        let mut groups: HashMap<(i64, i64, i64), u32> = HashMap::new();
-        let mut compacted_positions: Vec<[f32; 3]> = Vec::new();
-        let mut remap: Vec<u32> = Vec::with_capacity(positions.len());
-        for p in &positions {
-            let key = ((p[0] as f64 * scale as f64).round() as i64, (p[1] as f64 * scale as f64).round() as i64, (p[2] as f64 * scale as f64).round() as i64);
-            let canonical = *groups.entry(key).or_insert_with(|| {
-                compacted_positions.push(*p);
-                (compacted_positions.len() - 1) as u32
-            });
-            remap.push(canonical);
-        }
-        let removed = positions.len() - compacted_positions.len();
-        if removed == 0 {
-            return Ok(0);
-        }
-        let new_faces: Vec<Vec<u32>> = face_list
-            .into_iter()
-            .map(|f| f.into_iter().map(|vi| remap[vi as usize]).collect::<Vec<u32>>())
-            .filter(|f| {
-                let mut unique = f.clone();
-                unique.sort();
-                unique.dedup();
-                unique.len() >= 3
-            })
-            .collect();
-        self.rebuild_from_polygon_soup(&compacted_positions, &new_faces)?;
-        Ok(removed)
+    pub fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize> {
+        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
     }
 
     /// Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     pub fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
-        let (positions, mut face_list) = self.polygon_soup();
-        if face_list.is_empty() {
-            return Ok(0);
-        }
-        let mut edge_faces: HashMap<(u32, u32), Vec<(usize, bool)>> = HashMap::new();
-        for (fi, face) in face_list.iter().enumerate() {
-            let n = face.len();
-            for i in 0..n {
-                let a = face[i];
-                let b = face[(i + 1) % n];
-                let key = if a < b { (a, b) } else { (b, a) };
-                let forward = a < b;
-                edge_faces.entry(key).or_default().push((fi, forward));
-            }
-        }
-        let mut adjacency: Vec<Vec<(usize, bool)>> = vec![Vec::new(); face_list.len()];
-        for owners in edge_faces.values() {
-            if owners.len() != 2 {
-                continue;
-            }
-            let (a, a_forward) = owners[0];
-            let (b, b_forward) = owners[1];
-            // Same directed sense on a shared undirected edge ⇒ neighbor needs a relative flip.
-            let needs_relative_flip = a_forward == b_forward;
-            adjacency[a].push((b, needs_relative_flip));
-            adjacency[b].push((a, needs_relative_flip));
-        }
-        let mut oriented = vec![false; face_list.len()];
-        let mut flip = vec![false; face_list.len()];
-        let mut flips = 0usize;
-        for start in 0..face_list.len() {
-            if oriented[start] {
-                continue;
-            }
-            let mut stack = vec![start];
-            oriented[start] = true;
-            while let Some(fi) = stack.pop() {
-                for &(neighbor, needs_relative_flip) in &adjacency[fi] {
-                    let neighbor_flip = flip[fi] ^ needs_relative_flip;
-                    if !oriented[neighbor] {
-                        oriented[neighbor] = true;
-                        flip[neighbor] = neighbor_flip;
-                        if neighbor_flip {
-                            flips += 1;
-                        }
-                        stack.push(neighbor);
-                    }
-                }
-            }
-        }
-        for (fi, face) in face_list.iter_mut().enumerate() {
-            if flip[fi] {
-                face.reverse();
-            }
-        }
-        self.rebuild_from_polygon_soup(&positions, &face_list)?;
-        Ok(flips)
+        let mut job=self.orient_faces_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
     }
 
     /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
@@ -1272,93 +739,12 @@ impl HalfedgeMesh {
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
     /// Returns the number of holes filled.
     pub fn fill_holes(&mut self) -> MeshResult<usize> {
-        // Proper half-edge boundary walk: from a boundary half-edge (twin=None), the next boundary
-        // half-edge of the SAME hole loop is found by rotating around its destination vertex via
-        // next/twin jumps until another twin-less half-edge is hit. This correctly disambiguates separate
-        // holes that happen to share a corner vertex (a vertex-only "next" map cannot).
-        let he_count = self.halfedges.len() as u32;
-        let mut visited: HashSet<u32> = HashSet::new();
-        let mut new_loops: Vec<Vec<u32>> = Vec::new();
-        for start in 0..he_count {
-            if self.halfedges[start as usize].twin.is_some() || visited.contains(&start) {
-                continue;
-            }
-            let mut loop_he_ids = vec![start];
-            visited.insert(start);
-            let mut current = start;
-            let mut closed = false;
-            loop {
-                let mut probe = self.halfedges[current as usize].next;
-                let mut guard = 0usize;
-                let next_boundary = loop {
-                    let Some(twin) = self.halfedges[probe as usize].twin else {
-                        break Some(probe);
-                    };
-                    probe = self.halfedges[twin as usize].next;
-                    guard += 1;
-                    if guard > self.halfedges.len() + 4 {
-                        break None;
-                    }
-                };
-                let Some(next_he) = next_boundary else { break };
-                if next_he == start {
-                    closed = true;
-                    break;
-                }
-                if visited.contains(&next_he) {
-                    break;
-                }
-                visited.insert(next_he);
-                loop_he_ids.push(next_he);
-                current = next_he;
-            }
-            if closed && loop_he_ids.len() >= 3 {
-                new_loops.push(loop_he_ids.iter().map(|&he| self.halfedges[he as usize].vertex).collect());
-            }
-        }
-        if new_loops.is_empty() {
-            return Ok(0);
-        }
-        let filled = new_loops.len();
-        let (positions, face_list) = self.polygon_soup();
-        let mut all_faces = face_list;
-        for mut loop_verts in new_loops {
-            // Boundary loops are traced in the "hole" direction (following existing faces' own winding
-            // around the missing area); the cap face must have the opposite winding to be consistent.
-            loop_verts.reverse();
-            all_faces.push(loop_verts);
-        }
-        self.rebuild_from_polygon_soup(&positions, &all_faces)?;
-        Ok(filled)
+        let mut job=self.fill_holes_job()?;loop {match job.step(256)? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
     }
 
     /// 🪞 Reflects geometry on one side of the axis plane and welds its seam.
     pub fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {
-        if !weld_threshold.is_finite() || weld_threshold < 0.0 { return Err(MeshKernelError::DegenerateOperation); }
-        let axis = match axis { MirrorAxis::X => 0, MirrorAxis::Y => 1, MirrorAxis::Z => 2 };
-        let (mut positions, faces) = self.polygon_soup();
-        let tolerance = weld_threshold * 0.5;
-        if positions.iter().any(|point| point[axis] > tolerance) && positions.iter().any(|point| point[axis] < -tolerance) { return Err(MeshKernelError::InvalidInput("mirror geometry must lie on one side of its plane".into())); }
-        let count = positions.len();
-        let mut reflected = Vec::with_capacity(count);
-        for id in 0..count {
-            if positions[id][axis].abs() <= tolerance {
-                positions[id][axis] = 0.0;
-                reflected.push(id as u32);
-            } else {
-                let mut point = positions[id]; point[axis] = -point[axis];
-                reflected.push(positions.len() as u32); positions.push(point);
-            }
-        }
-        let mut result_faces = Vec::new();
-        for face in faces {
-            if face.iter().all(|&id| positions[id as usize][axis] == 0.0) { continue; }
-            let mirrored = face.iter().rev().map(|&id| reflected[id as usize]).collect();
-            result_faces.push(face); result_faces.push(mirrored);
-        }
-        let mut result = Self::from_faces(&positions, &result_faces)?;
-        result.drop_unreferenced_vertices()?;
-        *self = result;
+        *self = self.mirror_job(axis,weld_threshold)?.finish_with_progress(|_| true)?;
         Ok(())
     }
 
@@ -1914,230 +1300,227 @@ fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
     triangles
 }
 
-fn find_edge_position(loop_verts: &[u32], from: u32, to: u32) -> Option<usize> {
-    let n = loop_verts.len();
-    (0..n).find(|&i| loop_verts[i] == from && loop_verts[(i + 1) % n] == to)
-}
+fn find_edge_position(vertices:&[u32],from:u32,to:u32)->Option<usize> {(0..vertices.len()).find(|&index|vertices[index]==from && vertices[(index+1)%vertices.len()]==to)}
 
-/// Merges two face loops that share exactly one boundary edge (in opposite winding, as guaranteed by a
-/// consistently-oriented manifold) into a single n-gon loop. Returns `None` if the faces do not share exactly
-/// one edge, or if splicing would produce a loop with a repeated vertex (non-simple / holed result).
-fn merge_face_loops(a: &[u32], b: &[u32]) -> Option<Vec<u32>> {
-    let n = a.len();
-    let m = b.len();
-    if n < 3 || m < 3 {
-        return None;
-    }
-    let mut shared_a_pos = None;
-    for i in 0..n {
-        let u = a[i];
-        let v = a[(i + 1) % n];
-        if find_edge_position(b, v, u).is_some() {
-            shared_a_pos = Some(i);
-            break;
-        }
-    }
-    let a_pos = shared_a_pos?;
-    let u = a[a_pos];
-    let v = a[(a_pos + 1) % n];
-    let b_pos = find_edge_position(b, v, u)?;
-    for i in 0..n {
-        if i == a_pos {
-            continue;
-        }
-        let uu = a[i];
-        let vv = a[(i + 1) % n];
-        if find_edge_position(b, vv, uu).is_some() {
-            return None;
-        }
-    }
-    let a_rot: Vec<u32> = (0..n).map(|k| a[(a_pos + k) % n]).collect();
-    let b_rot: Vec<u32> = (0..m).map(|k| b[(b_pos + k) % m]).collect();
-    let mut merged = Vec::with_capacity(n + m - 2);
-    merged.push(a_rot[0]);
-    merged.extend_from_slice(&b_rot[2..]);
-    merged.extend_from_slice(&a_rot[1..]);
-    let mut seen = HashSet::new();
-    for &vid in &merged {
-        if !seen.insert(vid) {
-            return None;
-        }
-    }
-    Some(merged)
-}
-
-const COPLANAR_NORMAL_DOT_MIN: f32 = 1.0 - 1e-4;
-const COPLANAR_DISTANCE_REL_TOL: f32 = 1e-4;
-
-fn faces_coplanar(positions: &[[f32; 3]], a: &[u32], b: &[u32]) -> bool {
-    let pos = |vi: u32| Vec3(positions[vi as usize]);
-    let a_pts: Vec<Vec3> = a.iter().map(|&vi| pos(vi)).collect();
-    let b_pts: Vec<Vec3> = b.iter().map(|&vi| pos(vi)).collect();
-    let na = newell_normal(&a_pts);
-    let la = na.length();
-    if la < 1e-10 {
-        return false;
-    }
-    let na_n = na.scale(1.0 / la);
-    let nb = newell_normal(&b_pts);
-    let lb = nb.length();
-    if lb < 1e-10 {
-        return false;
-    }
-    let nb_n = nb.scale(1.0 / lb);
-    if na_n.dot(nb_n) < COPLANAR_NORMAL_DOT_MIN {
-        return false;
-    }
-    let origin = a_pts[0];
-    let mut min = a_pts[0];
-    let mut max = a_pts[0];
-    for &p in a_pts.iter().chain(b_pts.iter()) {
-        min = Vec3::new(min.x().min(p.x()), min.y().min(p.y()), min.z().min(p.z()));
-        max = Vec3::new(max.x().max(p.x()), max.y().max(p.y()), max.z().max(p.z()));
-    }
-    let diag = max.sub(min).length();
-    let tol = (COPLANAR_DISTANCE_REL_TOL * diag).max(1e-6);
-    for &p in b_pts.iter() {
-        if p.sub(origin).dot(na_n).abs() > tol {
-            return false;
-        }
-    }
-    true
-}
-
-/// Drops vertices that are a straight (~180°) pass-through in *every* face loop that references them, i.e. whose
-/// loop-neighbors are identical across all incident faces. Turns merged coplanar-face borders into clean n-gon
-/// corners instead of chains of collinear vertices left over from the original triangulation.
-fn collinear_cleanup(positions: &[[f32; 3]], face_list: &[Vec<u32>]) -> Vec<Vec<u32>> {
-    let pos = |vi: u32| Vec3(positions[vi as usize]);
-    let mut neighbor_pairs: HashMap<u32, HashSet<(u32, u32)>> = HashMap::new();
-    for face in face_list {
-        let n = face.len();
-        for i in 0..n {
-            let prev = face[(i + n - 1) % n];
-            let curr = face[i];
-            let next = face[(i + 1) % n];
-            neighbor_pairs.entry(curr).or_default().insert((prev, next));
-        }
-    }
-    let mut removable: HashSet<u32> = HashSet::new();
-    for (&vid, pairs) in &neighbor_pairs {
-        if pairs.len() != 1 {
-            continue;
-        }
-        let Some(&(prev, next)) = pairs.iter().next() else { continue };
-        if prev == next || prev == vid || next == vid {
-            continue;
-        }
-        let d1 = pos(vid).sub(pos(prev));
-        let d2 = pos(next).sub(pos(vid));
-        if d1.length() < 1e-9 || d2.length() < 1e-9 {
-            continue;
-        }
-        if d1.normalize().dot(d2.normalize()) > 1.0 - 1e-4 {
-            removable.insert(vid);
-        }
-    }
-    face_list.iter().map(|face| face.iter().copied().filter(|v| !removable.contains(v)).collect::<Vec<u32>>()).filter(|face: &Vec<u32>| face.len() >= 3).collect()
+fn merge_face_loops(a:&[u32],b:&[u32])->Option<Vec<u32>> {
+    if a.len()<3 || b.len()<3 {return None;}
+    let ai=(0..a.len()).find(|&index|find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some())?;let bi=find_edge_position(b,a[(ai+1)%a.len()],a[ai])?;
+    if (0..a.len()).any(|index|index!=ai && find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some()) {return None;}
+    let mut merged=vec![a[ai]];merged.extend((2..b.len()).map(|index|b[(bi+index)%b.len()]));merged.extend((1..a.len()).map(|index|a[(ai+index)%a.len()]));let mut seen=HashSet::new();if merged.iter().any(|&id|!seen.insert(id)) {None}else {Some(merged)}
 }
 
 //#endregion Polygon
 
 //#region Export
 
-impl HalfedgeMesh {
-    pub fn tessellate(&self) -> MeshResult<MeshTransfer> {
-        let mut positions = Vec::new();
-        let mut normals = Vec::new();
-        let mut indices = Vec::new();
-        let mut edge_positions = Vec::new();
-        let mut face_ids = Vec::new();
-        let mut vertex_ids = Vec::new();
-        let mut edge_ids = Vec::new();
-        let mut uvs = Vec::new();
-        let mut edge_uvs = Vec::new();
-        let mut edge_is_seam = Vec::new();
-        let mut edge_seen: HashMap<(u32, u32), bool> = HashMap::new();
+/// ⏱️ Retained corner, ear-test and preview emission cursor; each unit visits at most one corner.
+pub struct MeshTessellationJob {
+    mesh: HalfedgeMesh,
+    output: Option<MeshTransfer>,
+    face: usize,
+    phase: u8,
+    cursor: usize,
+    start: u32,
+    next_he: u32,
+    hes: Vec<u32>,
+    points: Vec<Vec3>,
+    normal_sum: [f64; 3],
+    normal: Vec3,
+    basis: (Vec3f64, Vec3f64),
+    projected: Vec<(f64, f64)>,
+    scale: f64,
+    area: f64,
+    links: Vec<(usize, usize)>,
+    head: usize,
+    remaining: usize,
+    ear: usize,
+    probe: usize,
+    candidates: usize,
+    base: u32,
+    edge_seen: HashSet<(u32, u32)>,
+    done: usize,
+    cancelled: bool,
+    maximum_preview_bytes: usize,
+    selected_faces: Option<HashSet<u32>>,
+    corner_ids:Vec<u32>,
+    attribute_name:Option<String>,
+    attribute_indices:Vec<u32>,
+    attribute_cursor:usize,
+    metadata_done:bool,
+}
 
-        for fi in 0..self.faces.len() {
-            let face = &self.faces[fi];
-            let smooth = face.smooth;
-            let topology_hes = self.face_halfedge_ids(FaceId(fi as u32))?;
-            let topology_verts: Vec<VertexId> = topology_hes.iter().map(|halfedge| VertexId(self.halfedges[*halfedge as usize].vertex)).collect();
-            let mut hes = topology_hes.clone();
-            if face.flipped {
-                hes.reverse();
-            }
-            let verts = self.face_vertex_ids(FaceId(fi as u32))?;
-            if verts.len() < 3 {
-                continue;
-            }
-            let face_normal = self.face_normal(FaceId(fi as u32))?;
-            let base = positions.len() as u32 / 3;
+/// 🧵️ Tessellation yields retain ownership; completed buffers transfer once.
+pub enum MeshTessellationStep { Working(MeshModelingProgress), Done(MeshTransfer), Cancelled(MeshModelingProgress) }
 
-            let push_corner = |he_id: u32, positions: &mut Vec<f32>, normals: &mut Vec<f32>, vertex_ids: &mut Vec<u32>, uvs: &mut Vec<f32>, normal: Vec3| {
-                let he = &self.halfedges[he_id as usize];
-                let vert = &self.vertices[he.vertex as usize];
-                let n = if smooth { vert.normal.map_or(normal, Vec3) } else { normal };
-                positions.extend_from_slice(&vert.position);
-                normals.extend_from_slice(&n.0);
-                vertex_ids.push(he.vertex);
-                uvs.push(he.uv[0]);
-                uvs.push(he.uv[1]);
-            };
-
-            let face_positions: Vec<Vec3> = verts.iter().map(|v| Vec3(self.vertices[v.0 as usize].position)).collect();
-            let triangles = triangulate_polygon(&face_positions);
-
-            if smooth {
-                for &he_id in &hes {
-                    push_corner(he_id, &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
-                }
-                for tri in &triangles {
-                    indices.push(base + tri[0] as u32);
-                    indices.push(base + tri[1] as u32);
-                    indices.push(base + tri[2] as u32);
-                    face_ids.push(fi as u32);
-                }
-            } else {
-                for tri in &triangles {
-                    for &local in tri {
-                        push_corner(hes[local], &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
-                    }
-                    let tri_base = (positions.len() / 3 - 3) as u32;
-                    indices.push(tri_base);
-                    indices.push(tri_base + 1);
-                    indices.push(tri_base + 2);
-                    face_ids.push(fi as u32);
-                }
-            }
-
-            for i in 0..topology_verts.len() {
-                let v0 = topology_verts[i].0;
-                let v1 = topology_verts[(i + 1) % topology_verts.len()].0;
-                let key = if v0 < v1 { (v0, v1) } else { (v1, v0) };
-                if edge_seen.contains_key(&key) {
-                    continue;
-                }
-                edge_seen.insert(key, true);
-                let p0 = self.vertices[v0 as usize].position;
-                let p1 = self.vertices[v1 as usize].position;
-                edge_positions.extend_from_slice(&p0);
-                edge_positions.extend_from_slice(&p1);
-                let he_id = topology_hes[i];
-                let he = &self.halfedges[he_id as usize];
-                let he_next = &self.halfedges[he.next as usize];
-                edge_ids.push(he_id);
-                edge_uvs.push(he.uv[0]);
-                edge_uvs.push(he.uv[1]);
-                edge_uvs.push(he_next.uv[0]);
-                edge_uvs.push(he_next.uv[1]);
-                edge_is_seam.push(if self.uv_seams.contains(&he_id) { 1 } else { 0 });
-            }
-        }
-
-        Ok(MeshTransfer { positions, normals, indices, edge_positions, face_ids, vertex_ids, edge_ids, uvs, edge_uvs, edge_is_seam })
+impl MeshTessellationJob {
+    pub fn new(mesh: HalfedgeMesh) -> Self {
+        Self { mesh, output: Some(MeshTransfer { colors:Vec::new(),attributes:Default::default(),materials:Default::default(),textures:Default::default(),positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), edge_positions: Vec::new(), face_ids: Vec::new(), vertex_ids: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), edge_uvs: Vec::new(), edge_is_seam: Vec::new() }), face: 0, phase: 0, cursor: 0, start: 0, next_he: 0, hes: Vec::new(), points: Vec::new(), normal_sum: [0.0; 3], normal: Vec3::ZERO, basis: ((0.0,0.0,0.0),(0.0,0.0,0.0)), projected: Vec::new(), scale: 0.0, area: 0.0, links: Vec::new(), head: 0, remaining: 0, ear: 0, probe: 0, candidates: 0, base: 0, edge_seen: HashSet::new(), done: 0, cancelled: false, maximum_preview_bytes: usize::MAX, selected_faces: None,corner_ids:Vec::new(),attribute_name:None,attribute_indices:Vec::new(),attribute_cursor:0,metadata_done:false }
     }
+    pub fn with_preview_capacity(mesh: HalfedgeMesh, maximum_preview_bytes: usize) -> Self { let mut job = Self::new(mesh); job.maximum_preview_bytes = maximum_preview_bytes; job }
+    pub(super) fn selected(mesh: HalfedgeMesh, faces: HashSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
+    /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
+    pub fn into_retirement(self)->Box<dyn protocol::value::ErasedSnapshotRetirement> {
+        protocol::value::retirement::owned_retirement(self)
+    }
+    pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
+    pub(super) fn into_source(self)->HalfedgeMesh { self.mesh }
+    pub fn progress(&self) -> MeshModelingProgress { MeshModelingProgress { units_done: self.done, units_total: self.done.saturating_add(self.mesh.face_count().saturating_sub(self.face)), phase: if self.face==self.mesh.face_count() {"tessellate-attributes"} else {"tessellate"} } }
+    pub fn cancel(&mut self) { self.cancelled = true; self.output = None; }
+    fn halfedge(&self, local: usize) -> u32 { self.hes[if self.mesh.faces[self.face].flipped { self.hes.len() - 1 - local } else { local }] }
+    fn corner_uv(&self,id:u32)->[f64;2] {
+        let edge=&self.mesh.halfedges[id as usize];
+        self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>id as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>edge.vertex as usize,MeshAttributeDomain::Edge=>id as usize})).and_then(protocol::value::DslValue::as_array).map_or(edge.uv.map(f64::from),|value|[0,1].map(|axis|value[axis].as_f64().unwrap()))
+    }
+    fn corner(&mut self, local: usize) {
+        let he = &self.mesh.halfedges[self.halfedge(local) as usize];
+        let vertex = &self.mesh.vertices[he.vertex as usize];
+        let sample=|semantic|self.mesh.attributes.values().find(|attribute|attribute.semantic==semantic).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>self.halfedge(local) as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>he.vertex as usize,MeshAttributeDomain::Edge=>self.halfedge(local) as usize})).and_then(protocol::value::DslValue::as_array);
+        let normal=sample(MeshAttributeSemantic::Normal).map(|value|Vec3([0,1,2].map(|axis|value[axis].as_f64().unwrap() as f32))).unwrap_or_else(||if self.mesh.faces[self.face].smooth {vertex.normal.map(Vec3).unwrap_or(self.normal)}else {self.normal});
+        let uv=sample(MeshAttributeSemantic::Uv).map(|value|[0,1].map(|axis|value[axis].as_f64().unwrap() as f32)).unwrap_or(he.uv);
+        let color=sample(MeshAttributeSemantic::Color).map(|value|[0,1,2,3].map(|axis|value[axis].as_f64().unwrap() as f32));
+        self.corner_ids.push(self.halfedge(local));
+        let out = self.output.as_mut().unwrap();
+        out.positions.extend_from_slice(&vertex.position); out.normals.extend_from_slice(&normal.0); out.vertex_ids.push(he.vertex); out.uvs.extend_from_slice(&uv);if let Some(color)=color {out.colors.extend_from_slice(&color);}
+    }
+    fn triangle(&mut self, triangle: [usize; 3]) {
+        let indices = if self.mesh.faces[self.face].smooth { triangle.map(|local| self.base + local as u32) } else {
+            let base = self.output.as_ref().unwrap().positions.len() as u32 / 3;
+            for local in triangle { self.corner(local); }
+            [base, base + 1, base + 2]
+        };
+        let out = self.output.as_mut().unwrap(); out.indices.extend_from_slice(&indices); out.face_ids.push(self.face as u32);
+    }
+    fn advance(&mut self) -> MeshResult<()> {
+        let n = self.hes.len();
+        match self.phase {
+            0 => {
+                if self.selected_faces.as_ref().is_some_and(|faces| !faces.contains(&(self.face as u32))) { self.face += 1; return Ok(()); }
+                self.start = self.mesh.faces[self.face].halfedge; self.next_he = self.start; self.cursor = 0; self.phase = 1;
+            }
+            1 => {
+                self.hes.push(self.next_he); self.next_he = self.mesh.halfedges[self.next_he as usize].next;
+                if self.hes.len() > self.mesh.halfedges.len() { return Err(MeshKernelError::InvalidHandle); }
+                if self.next_he == self.start { self.phase = 2; self.cursor = 0; }
+            }
+            2 => {
+                self.points.push(Vec3(self.mesh.vertices[self.mesh.halfedges[self.halfedge(self.cursor) as usize].vertex as usize].position));
+                self.cursor += 1; if self.cursor == n { self.phase = 3; self.cursor = 0; }
+            }
+            3 => {
+                let origin = self.points[0].0.map(f64::from);
+                let a = self.points[self.cursor].0.map(f64::from); let b = self.points[(self.cursor + 1) % n].0.map(f64::from);
+                let a = [a[0]-origin[0],a[1]-origin[1],a[2]-origin[2]]; let b = [b[0]-origin[0],b[1]-origin[1],b[2]-origin[2]];
+                for (axis, (u,v)) in [(1,2),(2,0),(0,1)].into_iter().enumerate() { self.normal_sum[axis] += (a[u]-b[u])*(a[v]+b[v]); }
+                self.cursor += 1;
+                if self.cursor == n {
+                    let length = self.normal_sum[0].hypot(self.normal_sum[1]).hypot(self.normal_sum[2]);
+                    self.normal = if length == 0.0 { Vec3::ZERO } else { Vec3(self.normal_sum.map(|value| (value/length) as f32)) };
+                    self.basis = plane_basis(normalize3((self.normal.x() as f64,self.normal.y() as f64,self.normal.z() as f64)));
+                    self.normal = self.normal.normalize();
+                    self.phase = 4; self.cursor = 0;
+                }
+            }
+            4 => {
+                let origin = self.points[0]; let point = self.points[self.cursor]; let local = sub3((point.x() as f64,point.y() as f64,point.z() as f64),(origin.x() as f64,origin.y() as f64,origin.z() as f64));
+                let projected = (dot3(local,self.basis.0),dot3(local,self.basis.1)); self.scale = self.scale.max(projected.0.abs()).max(projected.1.abs()); self.projected.push(projected);
+                self.links.push(((self.cursor+n-1)%n,(self.cursor+1)%n)); self.cursor += 1;
+                if self.cursor == n { self.phase = 5; self.cursor = 0; self.remaining = n; }
+            }
+            5 => {
+                if self.scale != 0.0 { self.projected[self.cursor].0 /= self.scale; self.projected[self.cursor].1 /= self.scale; }
+                self.cursor += 1; if self.cursor == n { self.phase = 6; self.cursor = 0; }
+            }
+            6 => {
+                let a = self.projected[self.cursor]; let b = self.projected[(self.cursor+1)%n]; self.area += a.0*b.1-b.0*a.1;
+                self.cursor += 1;
+                if self.cursor == n { self.phase = 7; self.cursor = 0; self.base = self.output.as_ref().unwrap().positions.len() as u32 / 3; }
+            }
+            7 => {
+                if self.mesh.faces[self.face].smooth { self.corner(self.cursor); self.cursor += 1; }
+                if !self.mesh.faces[self.face].smooth || self.cursor == n { self.phase = if n == 3 || self.normal.length() < 1e-8 || self.scale == 0.0 || self.area.abs() < 1e-14 { 10 } else { 8 }; self.ear = self.head; self.cursor = self.links[self.head].1; }
+            }
+            8 => {
+                if self.remaining == 3 { self.triangle([self.head,self.links[self.head].1,self.links[self.head].0]); self.phase = 11; self.cursor = 0; }
+                else {
+                    let (prev,next) = self.links[self.ear]; let cross = cross2(self.projected[prev],self.projected[self.ear],self.projected[next]);
+                    if if self.area > 0.0 { cross > 1e-14 } else { cross < -1e-14 } { self.probe = self.head; self.phase = 9; }
+                    else { self.reject_ear(); }
+                }
+            }
+            9 => {
+                let (prev,next) = self.links[self.ear]; let k = self.probe;
+                if k != prev && k != self.ear && k != next && point_in_triangle(self.projected[k],self.projected[prev],self.projected[self.ear],self.projected[next]) { self.reject_ear(); }
+                else {
+                    self.probe = self.links[k].1;
+                    if self.probe == self.head {
+                        self.triangle([prev,self.ear,next]); self.links[prev].1 = next; self.links[next].0 = prev;
+                        if self.ear == self.head { self.head = next; }
+                        self.remaining -= 1; self.ear = self.head; self.candidates = 0; self.phase = 8;
+                    }
+                }
+            }
+            10 => {
+                let next = self.links[self.cursor].1; self.triangle([self.head,self.cursor,next]); self.cursor = next;
+                if self.links[self.cursor].1 == self.head { self.phase = 11; self.cursor = 0; }
+            }
+            11 => {
+                let he_id = self.hes[self.cursor]; let he = &self.mesh.halfedges[he_id as usize]; let next = &self.mesh.halfedges[he.next as usize];
+                let key = (he.vertex.min(next.vertex),he.vertex.max(next.vertex));
+                if self.edge_seen.insert(key) {
+                    let (a,b)=(self.corner_uv(he_id),self.corner_uv(he.next));
+                    let seam=self.mesh.uv_seams.contains(&he_id) || he.twin.is_some_and(|twin|self.mesh.uv_seams.contains(&twin) || a!=self.corner_uv(self.mesh.halfedges[twin as usize].next) || b!=self.corner_uv(twin));
+                    let out = self.output.as_mut().unwrap(); out.edge_positions.extend_from_slice(&self.mesh.vertices[he.vertex as usize].position); out.edge_positions.extend_from_slice(&self.mesh.vertices[next.vertex as usize].position); out.edge_ids.push(he_id); out.edge_uvs.extend_from_slice(&a.map(|value|value as f32)); out.edge_uvs.extend_from_slice(&b.map(|value|value as f32)); out.edge_is_seam.push(u8::from(seam));
+                }
+                self.cursor += 1;
+                if self.cursor == n {
+                    self.face += 1; self.phase = 0; self.hes.clear(); self.points.clear(); self.projected.clear(); self.links.clear(); self.normal_sum = [0.0;3]; self.scale = 0.0; self.area = 0.0; self.head = 0; self.candidates = 0;
+                }
+            }
+            _ => unreachable!(),
+        }
+        Ok(())
+    }
+    fn advance_attributes(&mut self)->MeshResult<()> {
+        if self.selected_faces.is_some() {self.metadata_done=true;return Ok(());}
+        let next=if let Some(name)=&self.attribute_name {self.mesh.attributes.range((std::ops::Bound::Included(name.clone()),std::ops::Bound::Unbounded)).next()}else {self.mesh.attributes.first_key_value()};
+        let Some((name,attribute))=next else {let out=self.output.as_mut().unwrap();out.materials=std::mem::take(&mut self.mesh.materials);out.textures=std::mem::take(&mut self.mesh.textures);self.metadata_done=true;return Ok(());};
+        if self.attribute_name.is_none() {self.attribute_name=Some(name.clone());}
+        let out=self.output.as_ref().unwrap();
+        let (domain,ids)=match attribute.domain {MeshAttributeDomain::Vertex=>(MeshAttributeDomain::Vertex,&out.vertex_ids),MeshAttributeDomain::Corner=>(MeshAttributeDomain::Vertex,&self.corner_ids),MeshAttributeDomain::Face=>(MeshAttributeDomain::Face,&out.face_ids),MeshAttributeDomain::Edge=>(MeshAttributeDomain::Edge,&out.edge_ids)};
+        if self.attribute_cursor<ids.len() {let id=ids[self.attribute_cursor] as usize;let sample=attribute.indices.as_ref().map_or(id as u32,|indices|indices[id]);self.attribute_indices.push(sample);self.attribute_cursor+=1;}
+        else {let name=self.attribute_name.take().unwrap();let mut attribute=self.mesh.attributes.remove(&name).unwrap();attribute.domain=domain;attribute.indices=Some(std::mem::take(&mut self.attribute_indices));self.output.as_mut().unwrap().attributes.insert(name,attribute);self.attribute_cursor=0;}
+        Ok(())
+    }
+    fn reject_ear(&mut self) {
+        self.candidates += 1; self.ear = self.links[self.ear].1;
+        self.phase = if self.candidates == self.remaining { self.cursor = self.links[self.head].1; 10 } else { 8 };
+    }
+    pub fn step(&mut self, budget: usize) -> MeshResult<MeshTessellationStep> {
+        if self.cancelled { return Ok(MeshTessellationStep::Cancelled(self.progress())); }
+        if self.output.is_none() { return Err(MeshKernelError::InvalidInput("tessellation job is retired".into())); }
+        for _ in 0..budget {
+            if self.metadata_done {return Ok(MeshTessellationStep::Done(self.output.take().unwrap()));}
+            let next = self.done.checked_add(1).ok_or_else(|| MeshKernelError::InvalidInput("tessellation progress overflow".into()))?; if self.face==self.mesh.face_count() {self.advance_attributes()?;}else {self.advance()?;} self.done = next;
+            let out = self.output.as_ref().unwrap();
+            let scalars = out.colors.len().saturating_add(out.attributes.values().map(|attribute|attribute.indices.as_ref().map_or(0,Vec::len)).sum::<usize>()).saturating_add(out.positions.len()).saturating_add(out.normals.len()).saturating_add(out.indices.len()).saturating_add(out.edge_positions.len()).saturating_add(out.face_ids.len()).saturating_add(out.vertex_ids.len()).saturating_add(out.edge_ids.len()).saturating_add(out.uvs.len()).saturating_add(out.edge_uvs.len());
+            if scalars.saturating_mul(4).saturating_add(out.edge_is_seam.len()) > self.maximum_preview_bytes { return Err(MeshKernelError::InvalidInput(format!("mesh preview exceeds {} bytes",self.maximum_preview_bytes))); }
+        }
+        if budget > 0 && self.metadata_done { Ok(MeshTessellationStep::Done(self.output.take().unwrap())) } else { Ok(MeshTessellationStep::Working(self.progress())) }
+    }
+}
+
+impl HalfedgeMesh {
+    /// 🪢️ One boundary link for retained traversal without collecting a polygon.
+    pub fn face_boundary(&self, face: FaceId) -> MeshResult<(EdgeId, bool)> { let face = self.faces.get(face.0 as usize).ok_or(MeshKernelError::InvalidHandle)?; Ok((EdgeId(face.halfedge), face.flipped)) }
+    /// 🔗️ Constant-time corner identity and successor for a boundary cursor.
+    pub fn boundary_corner(&self, edge: EdgeId) -> MeshResult<(VertexId, EdgeId)> { let edge = self.halfedges.get(edge.0 as usize).ok_or(MeshKernelError::InvalidHandle)?; Ok((VertexId(edge.vertex), EdgeId(edge.next))) }
+    pub fn tessellate(&self) -> MeshResult<MeshTransfer> {
+        let mut job=MeshTessellationJob::new(self.clone());
+        loop {match job.step(4096)? {MeshTessellationStep::Done(transfer)=>return Ok(transfer),MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh tessellation cancelled".into()))}}
+    }
+
+    /// 🧵 Reads one authored UV sample through its canonical corner identity.
+    pub fn corner_uv(&self,corner:EdgeId)->MeshResult<[f32;2]> {let edge=self.halfedges.get(corner.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;if let Some(attribute)=self.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv) {let id=match attribute.domain {MeshAttributeDomain::Vertex=>edge.vertex,MeshAttributeDomain::Face=>edge.face.ok_or(MeshKernelError::InvalidHandle)?,_=>corner.0};let value=attribute.value_at(id as usize).and_then(protocol::value::DslValue::as_array).ok_or(MeshKernelError::InvalidHandle)?;return Ok([value[0].as_f64().unwrap()as f32,value[1].as_f64().unwrap()as f32]);}Ok(edge.uv)}
 
     pub fn to_obj(&self) -> MeshResult<String> {
         let mut out = String::from("# kernel_3d_mesh OBJ export\n");
@@ -2176,11 +1559,11 @@ impl HalfedgeMesh {
     }
 
     pub fn to_json(&self) -> MeshResult<String> {
-        Ok(pack::json::to_json_string(self))
+        Ok(semio_framework_pack_json::to_json_string(self))
     }
 
     pub fn from_json(json: &str) -> MeshResult<Self> {
-        pack::json::from_json_str(json).map_err(|e| MeshKernelError::InvalidInput(e.to_string()))
+        semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| MeshKernelError::InvalidInput(e.to_string()))
     }
 }
 
@@ -2197,3 +1580,8 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️modeling/🦀️.rs"]
 mod modeling_tests;
+
+protocol::value::artifact_retire_leaf!(VertexId,EdgeId,FaceId);
+impl protocol::value::retirement::RetireOwned for MeshTessellationJob {
+    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::artifact_retirement_sequence![self.mesh,self.output,self.hes,self.points,self.projected,self.links,self.edge_seen,self.selected_faces,self.corner_ids,self.attribute_name,self.attribute_indices]}
+}

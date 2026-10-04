@@ -3,7 +3,10 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn inverse(_payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![crate::standards::v1::subsets::any::schema::mutations::change_domain::mutation::change_domain(base.domain.clone())]
+
+    })())
 }
 //#endregion 🔖️Inverse

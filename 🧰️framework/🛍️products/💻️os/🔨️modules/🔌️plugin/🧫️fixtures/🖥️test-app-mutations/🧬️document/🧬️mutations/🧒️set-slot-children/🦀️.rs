@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactRef` uris. Registering a member is the runtime's job; DECLARING it on the parent
 /// snapshot is the app's, and only a declared member is admitted back by `ChildRestoreProjection`
 /// when the parent document is reloaded.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -22,12 +22,12 @@ impl MutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
         MutationOutcome::new(TestDiff { count: None, label: None, slot: Some(self.children.clone()) })
     }
 
-    fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
-        vec![Self { children: base.slot.iter().map(|child| child.target.to_uri()).collect() }.into()]
+    fn inverse(&self, base: &TestSnapshot) -> Result<Vec<TestMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![Self { children: base.slot.iter().map(|child| child.target.to_uri()).collect() }.into()])())
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &match self.children.len() {
                 0 => "Clear the declared slot children".to_string(),
                 1 => "Set 1 slot child reference".to_string(),

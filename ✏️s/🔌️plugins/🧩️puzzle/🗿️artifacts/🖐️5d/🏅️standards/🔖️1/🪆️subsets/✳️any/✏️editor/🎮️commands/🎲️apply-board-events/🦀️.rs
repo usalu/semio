@@ -4,7 +4,7 @@ use crate::editor::puzzle5d::commands::add_brush_part::puzzle5d_place_brush_part
 use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::{Puzzle5dSelectionMotion, Puzzle5dSelectionRecord};
 use crate::editor::puzzle5d::{remove_parts, Puzzle5dActionCtx, Puzzle5dFastener, Puzzle5dFreshIds};
-use dsl::os_pack::json::{parse, Value};
+use semio_framework_pack_json::{parse, Value};
 
 fn payload_str<'a>(payload: &'a Value, key: &str) -> Option<&'a str> {
     payload.get(key).and_then(Value::as_str)
@@ -14,7 +14,7 @@ fn payload_str<'a>(payload: &'a Value, key: &str) -> Option<&'a str> {
 /// placement, edge creates and deletes, node deletes. Selection events are framework-owned. Every drag gesture
 /// record is one `drag-selection2d` leaf of ONE transform-tool transaction over the committed document.
 pub fn apply_board_events(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
-    let Some(events) = args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).and_then(|text| parse(text).ok()).and_then(|value| value.as_array().cloned()) else {
+    let Some(events) = args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).and_then(|text| parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|value| value.as_array().cloned()) else {
         return;
     };
     let mut drags = Vec::new();
@@ -23,7 +23,7 @@ pub fn apply_board_events(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>)
         let payload = event.get("payload").cloned().unwrap_or(Value::Null);
         match name {
             "camera" => {
-                if let Ok(camera) = <Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)) {
+                if let Ok(camera) = <Puzzle5dCamera2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&payload)) {
                     ctx.scene.runtime.camera2d = camera;
                 }
             }

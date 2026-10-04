@@ -1,2 +1,0 @@
-# ✂️ Relative delete-working-nodes / DeleteWorkingNodes payload.
-input DeleteWorkingNodesInput { targets: [String!]! }

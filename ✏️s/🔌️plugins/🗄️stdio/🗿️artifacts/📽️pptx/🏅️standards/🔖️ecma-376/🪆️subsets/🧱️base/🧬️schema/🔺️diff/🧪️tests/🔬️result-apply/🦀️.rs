@@ -1,10 +1,12 @@
 use super::*;
+use protocol::{command::DiffAlgebra, MutationDiff};
 
-#[semio_framework_async_macros::async_test]
-async fn rejects_missing_slide_target_without_mutating_base() {
-    let base = PptxSnapshot::default();
-    let diff = PptxDiff { presentation: Some(PptxPresentationDiff { slides: Some(PptxSlidesDiff { modified: vec![IndexModified { index: 0, diff: PptxSlideDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
-    let result = diff.apply(&base);
-    assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
-    assert_eq!(base, PptxSnapshot::default());
+#[test]
+fn stale_semantic_projection_is_not_a_diff_authority() {
+    let before = demo_snapshot_a();
+    let after = demo_snapshot_b();
+    let diff = PptxDiff::between(&before, &after);
+    assert!(diff.schema.is_none());
+    assert!(diff.opc.is_some() || diff.xml_parts.is_some());
+    assert_eq!(diff.apply(&before).unwrap(), after);
 }

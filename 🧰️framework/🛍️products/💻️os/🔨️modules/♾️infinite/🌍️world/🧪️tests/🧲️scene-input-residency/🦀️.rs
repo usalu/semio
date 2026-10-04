@@ -21,7 +21,7 @@ fn scene(references: serde_json::Value) -> ui_wgpu::wgpu::World3dScene {
 
 fn pointer_for(state: &World3dState, world: [f64; 3]) -> (f32, f32) {
     let camera = state.orbit.to_camera();
-    let local = ui_wgpu::wgpu::project_point(camera.view_proj(state.bounds.w, state.bounds.h), Vec3::new(world[0] as f32, world[1] as f32, world[2] as f32), state.bounds.w, state.bounds.h).expect("point projects into the fixture camera");
+    let local = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, state.bounds.w, state.bounds.h), Vec3::new(world[0] as f32, world[1] as f32, world[2] as f32), state.bounds.w, state.bounds.h).expect("point projects into the fixture camera");
     (state.bounds.x + local[0], state.bounds.y + local[1])
 }
 
@@ -55,6 +55,7 @@ fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
         projection: CameraProjection3d::Orthographic,
         zoom: 20.0,
     });
+    state.projection_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
     state.lod.grid_factor = factor;
     let (x, y) = pointer_for(&state, target);
 

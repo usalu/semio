@@ -1,0 +1,5 @@
+# OS Native Test Fixture Typed Refusal Joins
+
+The retained authentic Native compile census identifies old direct PackError::Schema constructors in three existing fixture implementation files: DSL unit, Store unit and Store Sync unit. Original tests and assertion conditions are preserved. Their actual semantic envelope errors already expose SemioError::into_value_error; the corrected fixture implementations transfer that original cause into PackError. Explicit envelope identity mismatches author UnsupportedOwner in PackRefusal::Schema while retaining their complete expected/actual detail. RetainedTextSnapshot keeps the actual FromValue error via PackError::from. DemoSnapshot keeps positioned TextError via the existing text_error_to_pack_error source-preserving boundary.
+
+This is a typed prerequisite repair in original test fixture producers, with no legacy PackError variant, assertion deletion, external transport-to-text fallback, or runtime pass inferred from syntax. Saved exact current pairs are captured by the test-fixture-joins phase in the ticket input producer; original before compiler logs remain retained. Actual Native replay is pending.

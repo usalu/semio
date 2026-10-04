@@ -1,0 +1,10 @@
+{
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+      "before": "start_vertex_native_id=start.id JOIN semio_brep_vertex AS end ON end_vertex_native_id=end.id",
+      "after": "start_vertex_native_id=start.native_id JOIN semio_brep_vertex AS end ON end_vertex_native_id=end.native_id"
+    }
+  ],
+  "reason": "Correct actual start/end aliases after measured semantic cutover; no codec or production behavior change."
+}

@@ -3,12 +3,13 @@
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
 /// 🪪️ The OS-wide signed-in session.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct Identity {
@@ -28,13 +29,13 @@ pub struct IdentitySetting(pub Option<Identity>);
 /// `#[derive(ToValue, FromValue)]`'s supported shapes (named-field structs and internally-/
 /// adjacently-tagged enums only) — see the fan-out playbook's attribute-coverage table.
 impl ToValue for IdentitySetting {
-    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
-        ::semio_framework_os_kernel::ToValue::to_value(&self.0)
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 impl FromValue for IdentitySetting {
-    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
-        Ok(Self(::semio_framework_os_kernel::FromValue::from_value(value)?))
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
     }
 }
 
@@ -54,7 +55,7 @@ impl MutationDiff<IdentitySetting> for IdentitySetting {
 
 //#region 🔖️Mutation
 /// 🪪️ Establishes or replaces the OS-wide signed-in session.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -90,12 +91,15 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
         MutationOutcome::new(IdentitySetting(Some(self.into())))
     }
 
-    fn inverse(&self, base: &IdentitySetting) -> Vec<IdentityConfigMutation> {
+    fn inverse(&self, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match &base.0 {
             Some(identity) => vec![sign_in(identity.clone())],
             None => vec![IdentityConfigMutation::SignOut(SignOut {})],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("Als \"{}\" anmelden", self.email))
@@ -116,9 +120,12 @@ pub fn apply_identity_config_mutation(snapshot: &mut IdentitySetting, mutation: 
 }
 
 /// ↩️ Computes the mutation's inverse steps from the pre-mutation session.
-pub fn inverse_identity_config_mutation(snapshot: &IdentitySetting, mutation: &IdentityConfigMutation) -> Vec<IdentityConfigMutation> {
+pub fn inverse_identity_config_mutation(snapshot: &IdentitySetting, mutation: &IdentityConfigMutation) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(snapshot)
+    mutation.inverse(snapshot)?
+
+    })
 }
 
 /// 📥️ Decodes the internally tagged identity mutation JSON projection.
@@ -145,9 +152,12 @@ pub fn apply_identity_config_mutation_reporting(snapshot: &mut IdentitySetting, 
 }
 
 /// ↩️ Returns the mutation's own inverse steps for an external fixture adapter.
-pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation, base: &IdentitySetting) -> Vec<IdentityConfigMutation> {
+pub fn inverse_identity_config_mutation_steps(mutation: &IdentityConfigMutation, base: &IdentitySetting) -> Result<Vec<IdentityConfigMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation as _;
-    mutation.inverse(base)
+    mutation.inverse(base)?
+
+    })
 }
 //#endregion 🌉️MutationCodecBridge
 

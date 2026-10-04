@@ -13,6 +13,7 @@
  * leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { BrepVertex, SemioPoint3, BrepCurve, BrepSurface, BrepShellFace, BrepSolidShell } from "../📸️snapshot/🟦️.ts";
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export interface CreateVertex {
   id: string;
@@ -96,4 +97,5 @@ export type SemioBrepMutation =
   | { ReplaceCurve: ReplaceCurve }
   | { ReplaceSurface: ReplaceSurface }
   | { MoveVertex: MoveVertex }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
+  | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } };

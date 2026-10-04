@@ -2,7 +2,7 @@
 
 use super::{Wfc3dConfig, Wfc3dConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-camera")]
 #[mutation_leaf(contract = ::protocol)]
@@ -17,9 +17,12 @@ impl protocol::MutationKind<Wfc3dConfig, Wfc3dConfigMutation> for ChangeCamera {
     fn diff(&self, base: &Wfc3dConfig) -> protocol::MutationOutcome<Wfc3dConfig> {
         protocol::MutationOutcome::new(Wfc3dConfig { camera_x: self.x, camera_y: self.y, camera_zoom: self.zoom, ..base.clone() })
     }
-    fn inverse(&self, base: &Wfc3dConfig) -> Vec<Wfc3dConfigMutation> {
+    fn inverse(&self, base: &Wfc3dConfig) -> Result<Vec<Wfc3dConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Wfc3dConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Camera", "Kamera ändern")
     }

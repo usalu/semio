@@ -299,14 +299,14 @@ pub use super::change_site_longitude::{change_site_longitude, ChangeSiteLongitud
 pub use super::change_site_elevation::{change_site_elevation, ChangeSiteElevation};
 pub use super::change_site_time_zone::{change_site_time_zone, ChangeSiteTimeZone};
 pub use super::change_site_north_axis::{change_site_north_axis, ChangeSiteNorthAxis};
-pub use super::change_ground_temperature_building_surface::{change_ground_temperature_building_surface, ChangeGroundTemperatureBuildingSurface};
-pub use super::change_ground_temperature_shallow::{change_ground_temperature_shallow, ChangeGroundTemperatureShallow};
-pub use super::change_ground_temperature_deep::{change_ground_temperature_deep, ChangeGroundTemperatureDeep};
-pub use super::change_run_period_start_month::{change_run_period_start_month, ChangeRunPeriodStartMonth};
-pub use super::change_run_period_start_day::{change_run_period_start_day, ChangeRunPeriodStartDay};
-pub use super::change_run_period_end_month::{change_run_period_end_month, ChangeRunPeriodEndMonth};
-pub use super::change_run_period_end_day::{change_run_period_end_day, ChangeRunPeriodEndDay};
-pub use super::change_run_period_year::{change_run_period_year, ChangeRunPeriodYear};
+pub use super::change_ground_building::{change_ground_building, ChangeGroundBuilding};
+pub use super::change_ground_shallow::{change_ground_shallow, ChangeGroundShallow};
+pub use super::change_ground_deep::{change_ground_deep, ChangeGroundDeep};
+pub use super::change_run_start_month::{change_run_start_month, ChangeRunStartMonth};
+pub use super::change_run_start_day::{change_run_start_day, ChangeRunStartDay};
+pub use super::change_run_end_month::{change_run_end_month, ChangeRunEndMonth};
+pub use super::change_run_end_day::{change_run_end_day, ChangeRunEndDay};
+pub use super::change_run_year::{change_run_year, ChangeRunYear};
 pub use super::replace_fenestration_vertices::{replace_fenestration_vertices, ReplaceFenestrationVertices};
 pub use super::change_glazing_material_thickness::{change_glazing_material_thickness, ChangeGlazingMaterialThickness};
 pub use super::change_glazing_material_conductivity::{change_glazing_material_conductivity, ChangeGlazingMaterialConductivity};
@@ -322,7 +322,7 @@ pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for an energy model.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model")]
 pub enum EnergyModelMutation {
@@ -333,14 +333,14 @@ pub enum EnergyModelMutation {
     ChangeSiteElevation(ChangeSiteElevation),
     ChangeSiteTimeZone(ChangeSiteTimeZone),
     ChangeSiteNorthAxis(ChangeSiteNorthAxis),
-    ChangeGroundTemperatureBuildingSurface(ChangeGroundTemperatureBuildingSurface),
-    ChangeGroundTemperatureShallow(ChangeGroundTemperatureShallow),
-    ChangeGroundTemperatureDeep(ChangeGroundTemperatureDeep),
-    ChangeRunPeriodStartMonth(ChangeRunPeriodStartMonth),
-    ChangeRunPeriodStartDay(ChangeRunPeriodStartDay),
-    ChangeRunPeriodEndMonth(ChangeRunPeriodEndMonth),
-    ChangeRunPeriodEndDay(ChangeRunPeriodEndDay),
-    ChangeRunPeriodYear(ChangeRunPeriodYear),
+    ChangeGroundBuilding(ChangeGroundBuilding),
+    ChangeGroundShallow(ChangeGroundShallow),
+    ChangeGroundDeep(ChangeGroundDeep),
+    ChangeRunStartMonth(ChangeRunStartMonth),
+    ChangeRunStartDay(ChangeRunStartDay),
+    ChangeRunEndMonth(ChangeRunEndMonth),
+    ChangeRunEndDay(ChangeRunEndDay),
+    ChangeRunYear(ChangeRunYear),
     ReplaceAirflowNetwork(ReplaceAirflowNetwork),
     AddOutputVariable(AddOutputVariable),
     RemoveOutputVariable(RemoveOutputVariable),
@@ -635,14 +635,14 @@ pub const KINDS: &[&str] = &[
     "change-site-elevation",
     "change-site-time-zone",
     "change-site-north-axis",
-    "change-ground-temperature-building-surface",
-    "change-ground-temperature-shallow",
-    "change-ground-temperature-deep",
-    "change-run-period-start-month",
-    "change-run-period-start-day",
-    "change-run-period-end-month",
-    "change-run-period-end-day",
-    "change-run-period-year",
+    "change-ground-building",
+    "change-ground-shallow",
+    "change-ground-deep",
+    "change-run-start-month",
+    "change-run-start-day",
+    "change-run-end-month",
+    "change-run-end-day",
+    "change-run-year",
     "replace-airflow-network",
     "add-output-variable",
     "remove-output-variable",
@@ -937,14 +937,14 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("change-site-elevation", "⛰️change-site-elevation"),
     ("change-site-time-zone", "🕰️change-site-time-zone"),
     ("change-site-north-axis", "🔝️change-site-north-axis"),
-    ("change-ground-temperature-building-surface", "🌡️change-ground-temperature"),
-    ("change-ground-temperature-shallow", "🌱️change-ground-temperature"),
-    ("change-ground-temperature-deep", "⛏️change-ground-temperature"),
-    ("change-run-period-start-month", "🛫️change-run-period-start"),
-    ("change-run-period-start-day", "▶️change-run-period-start"),
-    ("change-run-period-end-month", "🛬️change-run-period-end"),
-    ("change-run-period-end-day", "⏹️change-run-period-end"),
-    ("change-run-period-year", "📅️change-run-period-year"),
+    ("change-ground-building", "🌡️change-ground-building"),
+    ("change-ground-shallow", "🌱️change-ground-shallow"),
+    ("change-ground-deep", "⛏️change-ground-deep"),
+    ("change-run-start-month", "🛫️change-run-start-month"),
+    ("change-run-start-day", "▶️change-run-start-day"),
+    ("change-run-end-month", "🛬️change-run-end-month"),
+    ("change-run-end-day", "⏹️change-run-end-day"),
+    ("change-run-year", "📅️change-run-year"),
     ("replace-airflow-network", "🫧️replace-airflow-network"),
     ("add-output-variable", "📊️add-output-variable"),
     ("remove-output-variable", "📉️remove-output-variable"),
@@ -1233,14 +1233,14 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
 //#region 🌉️TestBridge
 /// 🔮️ Reports the forward and inverse behavior of one committed language-neutral vector.
 pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    use semio_framework_os_kernel::ToValue;
-    let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { pack::json::from_json_str::<EnergyModelSnapshot>(text).map_err(|error| error.to_string()) };
+    use semio_framework_value::ToValue;
+    let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { semio_framework_pack_json::from_json_str::<EnergyModelSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: EnergyModelMutation = pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base);
+    let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     // ↩️ Reversed, as the store replays an inverse (`ArtifactStore::replay_mutations`).
@@ -1248,19 +1248,19 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
         let outcome = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let messages_json = pack::json::from_dsl_value(&forward.messages().to_value());
-    let inverse_messages_json = pack::json::from_dsl_value(&inverse_messages.to_value());
-    let report = pack::json::object([
-        ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
-        ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
-        ("snapshot".to_string(), pack::json::from_dsl_value(&applied.to_value())),
-        ("diff".to_string(), pack::json::from_dsl_value(&forward.diff().to_value())),
+    let messages_json = semio_framework_pack_json::from_dsl_value(&forward.messages().to_value());
+    let inverse_messages_json = semio_framework_pack_json::from_dsl_value(&inverse_messages.to_value());
+    let report = semio_framework_pack_json::object([
+        ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), semio_framework_pack_json::from_dsl_value(&forward.diff().to_value())),
         ("messages".to_string(), messages_json),
-        ("inverseSteps".to_string(), pack::json::from_dsl_value(&inverse.to_value())),
-        ("inverseSnapshot".to_string(), pack::json::from_dsl_value(&undone.to_value())),
+        ("inverseSteps".to_string(), semio_framework_pack_json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&undone.to_value())),
         ("inverseMessages".to_string(), inverse_messages_json),
     ]);
-    Ok(pack::json::to_string(&report))
+    Ok(semio_framework_pack_json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 
@@ -1277,14 +1277,14 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_site_elevation(55.0),
         change_site_time_zone(1.0),
         change_site_north_axis(15.0),
-        change_ground_temperature_building_surface(7, 21.5),
-        change_ground_temperature_shallow(7, 21.5),
-        change_ground_temperature_deep(8.0),
-        change_run_period_start_month(2),
-        change_run_period_start_day(3),
-        change_run_period_end_month(11),
-        change_run_period_end_day(30),
-        change_run_period_year(2027),
+        change_ground_building(7, 21.5),
+        change_ground_shallow(7, 21.5),
+        change_ground_deep(8.0),
+        change_run_start_month(2),
+        change_run_start_day(3),
+        change_run_end_month(11),
+        change_run_end_day(30),
+        change_run_year(2027),
         replace_airflow_network(true, vec![1], vec![1], 0, vec![7]),
         add_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string(), crate::model::OutputReportFrequency::Hourly),
         remove_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string()),

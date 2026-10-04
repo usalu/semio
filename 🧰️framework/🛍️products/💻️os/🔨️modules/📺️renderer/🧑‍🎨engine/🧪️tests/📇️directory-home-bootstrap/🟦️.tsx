@@ -42,7 +42,7 @@ const page = {
 
 /** 🎟️ What the migrated guest really answers a dispatched `applyDirectoryEventPage` with: the typed
  * operation's `{ operationId, generation }` handle, both decimal strings, and NOT the verb's result. */
-const ADMISSION_OPERATION = 64;
+const ADMISSION_OPERATION = 64n;
 const ADMISSION = { operationId: String(ADMISSION_OPERATION), generation: "0" };
 
 function terminal(output: unknown) {
@@ -61,7 +61,7 @@ async function flush(): Promise<void> {
 
 type HomeHandleV1 = Readonly<{
   plugin: PluginWasmHandle;
-  publish(completion: Readonly<{ operation?: number; terminalOutput: unknown }>): void;
+  publish(completion: Readonly<{ operation?: bigint; terminalOutput: unknown }>): void;
   subscribers(): number;
 }>;
 
@@ -238,7 +238,7 @@ describe("retained visible Home directory bootstrap", () => {
     expect(viewStates).toHaveLength(1);
     expect(viewStates[0]?.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
     // 🧾️ A completion for ANOTHER operation on the same instance settles nothing.
-    home.publish({ operation: ADMISSION_OPERATION + 1, terminalOutput: fixture.receipt });
+    home.publish({ operation: ADMISSION_OPERATION + 1n, terminalOutput: fixture.receipt });
     await flush();
     expect(posts).toEqual([]);
     home.publish({ terminalOutput: fixture.receipt });

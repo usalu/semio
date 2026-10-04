@@ -15,7 +15,7 @@ fn sample_semio() -> SemioFlowSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_nodes_and_edges_to_json() {
-    let json = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
+    let json = ::semio_framework_async::poll::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
     let root = match &json.value {
         JsonValue::Object { members } => members,
         other => panic!("expected object, got {other:?}"),
@@ -32,7 +32,7 @@ async fn maps_nodes_and_edges_to_json() {
 /// is not just structurally right but genuinely re-parseable RFC8259 text.
 #[semio_framework_async_macros::async_test]
 async fn serialized_json_round_trips_through_the_real_json_text_codec() {
-    let json1 = semio_framework_plugin::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
+    let json1 = ::semio_framework_async::poll::resolve_ready(SemioFlowToJson::serialize(&sample_semio())).expect("serialize");
     let text = semio_s_artifact_stdio_json::schema::snapshot::write_json_text(&json1.value);
     let reparsed = semio_s_artifact_stdio_json::schema::snapshot::parse_json_text(&text).expect("re-parse emitted json text");
     assert_eq!(reparsed, json1.value);

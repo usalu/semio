@@ -124,7 +124,8 @@ pub(crate) fn agg_diff(this: &MdMutation, base: &MdSnapshot) -> protocol::Mutati
 /// dropped by this migration, used to carry this case as a no-op sentinel; there is nothing to
 /// undo, so there is nothing to return).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_inverse(this: &MdMutation, base: &MdSnapshot) -> Vec<MdMutation> {
+pub(crate) fn agg_inverse(this: &MdMutation, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         MdMutation::SetSnapshot(_) => vec![MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         MdMutation::InsertBlock(insert_block::InsertBlock { path, index, .. }) => vec![MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone(), index: *index })],
@@ -148,6 +149,8 @@ pub(crate) fn agg_inverse(this: &MdMutation, base: &MdSnapshot) -> Vec<MdMutatio
             }
         }
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 
@@ -230,8 +233,8 @@ impl OpText for MdMutation {
     fn print_op(&self) -> String {
         print_md_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_md_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_md_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 

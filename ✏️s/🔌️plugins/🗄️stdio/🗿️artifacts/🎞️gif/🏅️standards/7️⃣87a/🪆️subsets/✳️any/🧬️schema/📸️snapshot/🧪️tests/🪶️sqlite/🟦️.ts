@@ -1,3 +1,5 @@
+import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧫️fixtures/🔣️.json";
+const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import owned from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";
 import ownedSchema from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🧬️schema/🔣️.json";
@@ -36,5 +38,5 @@ test("GIF87 exact option presence, sequence invariants and bounded cancellation"
  for(const change of ["UPDATE gif87_pixel SET image_id=999 WHERE id=1","UPDATE gif87_pixel SET ordinal=0 WHERE image_id=1","UPDATE gif87_pixel SET ordinal=999 WHERE id=1","UPDATE gif87_image SET ordinal=0 WHERE ordinal=1","UPDATE gif87_local_color SET palette_id=999","UPDATE gif87_global_color SET red=256 WHERE ordinal=0","UPDATE gif87_image SET interlace=2 WHERE ordinal=0"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(change);if(change.includes("local_color"))db.run("INSERT INTO gif87_local_color VALUES(1,999,0,0,0,0)");await expect(gifSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}
  for(const gct of [null,{sorted:false,colors:[]}]){const value:GifSnapshot={schema:"custom 世界",width:4294967295,height:0,gct,backgroundColorIndex:255,pixelAspectRatio:255,images:[]};expect(await gifSnapshotFromSqliteDatabase(await gifSnapshotToSqliteDatabase(value))).toEqual(value);}
  await expect(gifSnapshotToSqliteDatabase(snapshot,{maxRows:1})).rejects.toThrow();await expect(gifSnapshotFromSqliteDatabase(database,{maxValueBytes:0})).rejects.toThrow();
- const controller=new AbortController();snapshot.images[0]!.width=2000;snapshot.images[0]!.indices=new Array<number>(2000).fill(1);await expect(gifSnapshotToSqliteDatabase(snapshot,{signal:controller.signal,onProgress:event=>{if(event.completed>=256)controller.abort();}})).rejects.toHaveProperty("name","AbortError");
+ const controller=new AbortController();snapshot.images[0]!.width=2000;snapshot.images[0]!.indices=new Array<number>(2000).fill(1);await expect(gifSnapshotToSqliteDatabase(snapshot,{signal:controller.signal,onProgress:event=>{if(event.completed>=256)controller.abort();}})).rejects.toHaveProperty("kind",canceledKind);
 });

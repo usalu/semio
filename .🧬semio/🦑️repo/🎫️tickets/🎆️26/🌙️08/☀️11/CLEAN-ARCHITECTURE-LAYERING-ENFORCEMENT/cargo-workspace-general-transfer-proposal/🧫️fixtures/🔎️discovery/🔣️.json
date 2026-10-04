@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "mixed exact owner declaration refuses missing owner",
+      "operation": "owners",
+      "patterns": [
+        "valid/Cargo.toml",
+        "missing/Cargo.toml"
+      ],
+      "present": [
+        "valid/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "name": "mixed exact member declaration refuses missing member",
+      "operation": "members",
+      "patterns": [
+        "valid/Cargo.toml",
+        "missing/Cargo.toml"
+      ],
+      "present": [
+        "valid/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "refused": true
+      }
+    },
+    {
+      "name": "caller declares compose owner",
+      "operation": "owners",
+      "patterns": [
+        "compose/Cargo.toml"
+      ],
+      "present": [
+        "compose/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "Cargo.toml",
+          "compose/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "caller declares hidden owner",
+      "operation": "owners",
+      "patterns": [
+        ".owned/Cargo.toml"
+      ],
+      "present": [
+        ".owned/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          ".owned/Cargo.toml",
+          "Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "caller declares compose member",
+      "operation": "members",
+      "patterns": [
+        "compose/Cargo.toml"
+      ],
+      "present": [
+        "compose/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "compose/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "caller declares hidden member",
+      "operation": "members",
+      "patterns": [
+        ".owned/Cargo.toml"
+      ],
+      "present": [
+        ".owned/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          ".owned/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "caller declares all reserved-looking owners",
+      "operation": "owners",
+      "patterns": [
+        "target/Cargo.toml",
+        "build/Cargo.toml",
+        "dist/Cargo.toml",
+        "temp/Cargo.toml",
+        "coverage/Cargo.toml",
+        "node_modules/Cargo.toml",
+        "🤖️generated/Cargo.toml",
+        "🗑️generated/Cargo.toml"
+      ],
+      "present": [
+        "target/Cargo.toml",
+        "build/Cargo.toml",
+        "dist/Cargo.toml",
+        "temp/Cargo.toml",
+        "coverage/Cargo.toml",
+        "node_modules/Cargo.toml",
+        "🤖️generated/Cargo.toml",
+        "🗑️generated/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "Cargo.toml",
+          "build/Cargo.toml",
+          "coverage/Cargo.toml",
+          "dist/Cargo.toml",
+          "node_modules/Cargo.toml",
+          "target/Cargo.toml",
+          "temp/Cargo.toml",
+          "🗑️generated/Cargo.toml",
+          "🤖️generated/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "caller declares all reserved-looking members",
+      "operation": "members",
+      "patterns": [
+        "target/Cargo.toml",
+        "build/Cargo.toml",
+        "dist/Cargo.toml",
+        "temp/Cargo.toml",
+        "coverage/Cargo.toml",
+        "node_modules/Cargo.toml",
+        "🤖️generated/Cargo.toml",
+        "🗑️generated/Cargo.toml"
+      ],
+      "present": [
+        "target/Cargo.toml",
+        "build/Cargo.toml",
+        "dist/Cargo.toml",
+        "temp/Cargo.toml",
+        "coverage/Cargo.toml",
+        "node_modules/Cargo.toml",
+        "🤖️generated/Cargo.toml",
+        "🗑️generated/Cargo.toml"
+      ],
+      "ghosts": [],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "build/Cargo.toml",
+          "coverage/Cargo.toml",
+          "dist/Cargo.toml",
+          "node_modules/Cargo.toml",
+          "target/Cargo.toml",
+          "temp/Cargo.toml",
+          "🗑️generated/Cargo.toml",
+          "🤖️generated/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "wildcard owner ignores deleted ghost",
+      "operation": "owners",
+      "patterns": [
+        "owners/*/Cargo.toml"
+      ],
+      "present": [
+        "owners/live/Cargo.toml"
+      ],
+      "ghosts": [
+        "owners/deleted"
+      ],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "Cargo.toml",
+          "owners/live/Cargo.toml"
+        ]
+      }
+    },
+    {
+      "name": "wildcard member ignores deleted ghost",
+      "operation": "members",
+      "patterns": [
+        "packages/*/Cargo.toml"
+      ],
+      "present": [
+        "packages/live/Cargo.toml"
+      ],
+      "ghosts": [
+        "packages/deleted"
+      ],
+      "exclude": [],
+      "expected": {
+        "manifests": [
+          "packages/live/Cargo.toml"
+        ]
+      }
+    }
+  ]
+}

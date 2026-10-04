@@ -1,0 +1,9 @@
+{
+  "state": "mountedAfterAuthenticHistory14TextFullRequestRed",
+  "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs",
+  "nativeReceipt": "root-space-history-fourteen-constant-cleanup-native-replay.log",
+  "before": "semio_framework_pack_json::to_json_string_controlled(value.get(), &mut c)?",
+  "after": "write_json(value.get(), &mut c)?",
+  "helpers": "struct BorrowedJson<'a>(&'a DslValue);\nimpl semio_framework_pack_json::JsonWriteSource for BorrowedJson<'_> {\n    fn node_at_path(&self, path: &[usize]) -> Result<semio_framework_pack_json::JsonWriteNode<'_>, ValueError> {\n        semio_framework_pack_json::JsonWriteSource::node_at_path(self.0, path)\n    }\n    fn object_key_at_path(&self, path: &[usize], index: usize) -> Result<&str, ValueError> {\n        semio_framework_pack_json::JsonWriteSource::object_key_at_path(self.0, path, index)\n    }\n}\nfn write_json(value: &DslValue, control: &mut NativeEncodeControl<'_>) -> Result<String, ValueError> {\n    control.scoped_stage(|control| {\n        control.begin_stage(0)?;\n        let mut writer = semio_framework_pack_json::JsonWriteCursor::new(BorrowedJson(value));\n        loop {\n            if let Some(output) = writer.step(256, control)? { return Ok(output); }\n        }\n    })\n}\n",
+  "scope": "same existing paid History projected owner borrowed by actual first-party JSON cursor; no second native projection; paid cursor frames/path/output; original guard releases source on every outcome"
+}

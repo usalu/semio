@@ -20,7 +20,7 @@ async fn delete_selection_removes_the_live_selected_node() {
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");
     let before = app.snapshot().expect("snapshot");
     let node_id = before.graph.nodes.first().expect("spawned node").id.clone();
-    let targets = pack::to_json_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]);
+    let targets = semio_framework_pack_json::to_json_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]);
     let args = semio_framework::DslValue::object(vec![
         ("domainId".to_string(), semio_framework::DslValue::String("graph".into())),
         ("targets".to_string(), semio_framework::DslValue::String(targets)),

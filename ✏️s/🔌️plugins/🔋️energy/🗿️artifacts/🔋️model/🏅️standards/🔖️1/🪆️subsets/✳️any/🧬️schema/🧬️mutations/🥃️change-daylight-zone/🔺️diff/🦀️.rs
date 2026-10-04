@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeDaylightZoneWindowTransmittance, base: &Energ
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A window transmittance must lie between 0.0 and 1.0, got {}.", payload.new_window_transmittance), [payload.id.0.to_string()]);
     }
     if existing.window_transmittance == payload.new_window_transmittance {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daylight zone {} already has that window transmittance.", payload.id.0));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Daylight zone {} already has that window transmittance.", payload.id.0));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.daylight_zones.iter_mut().find(|item| item.id == payload.id) {

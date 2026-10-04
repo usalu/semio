@@ -8,7 +8,6 @@
 
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_dxf_bounds;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct DxfInference {
 }
 
 impl protocol::Inference<DxfSnapshot> for DxfInference {
-    fn infer(snapshot: &DxfSnapshot) -> Self {
+    fn infer(snapshot: &DxfSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_dxf_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<DxfSnapshot> for DxfInference {
 /// `DxfSnapshot::default()`'s `entities`/`blocks` ever stop being empty.
 impl Default for DxfInference {
     fn default() -> Self {
-        <Self as protocol::Inference<DxfSnapshot>>::infer(&DxfSnapshot::default())
+        let snapshot = &DxfSnapshot::default();
+
+        Self { bounds: compute_dxf_bounds(snapshot) }
     }
 }
 
@@ -48,18 +52,6 @@ impl protocol::InferenceSpec<DxfSnapshot> for DxfInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every entity's own
-/// point fields (top-level `entities` plus every block's nested `entities`), already O(n) in
-/// total entity count with no honest per-entity incremental decomposition (a merkle dep-chain
-/// over this flat entity list costs more than the fold it would cache) — the default
-/// `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v_r12::subsets::any::schema::DxfBuilder {
-    type Snapshot = DxfSnapshot;
-    type Inference = DxfInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.dxf.inference`'s facet leaves into the OS-wide inference catalog —

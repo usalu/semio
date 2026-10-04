@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceServiceRequirement, base: &ProgramSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", "No service requirement exists with this id.", [payload.service_requirement.header.id.0.clone()]);
     };
     if existing == &payload.service_requirement {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This service requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This service requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.service_requirement).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { services: Some(ProgramServicesDelta { patched: vec![ProgramServicesPatchEntry { id: payload.service_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

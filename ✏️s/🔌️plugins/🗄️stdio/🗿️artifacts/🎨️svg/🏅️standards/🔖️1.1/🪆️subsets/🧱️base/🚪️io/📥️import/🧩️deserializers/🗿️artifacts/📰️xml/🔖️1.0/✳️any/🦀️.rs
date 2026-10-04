@@ -8,9 +8,9 @@ use semio_s_artifact_stdio_xml::XmlSnapshot;
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn deserialize(from: &XmlSnapshot) -> Result<SvgSnapshot, store::TextError> {
+pub fn deserialize(from: &XmlSnapshot) -> Result<SvgSnapshot, semio_framework_diagnostic::TextError> {
     match &from.doc.root {
         Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: from.doc.clone() }),
-        _ => Err(store::TextError::new("root element must be svg", dsl::TextSpan::at(1, 1))),
+        _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "root element must be svg", semio_framework_diagnostic::TextSpan::at(1, 1))),
     }
 }

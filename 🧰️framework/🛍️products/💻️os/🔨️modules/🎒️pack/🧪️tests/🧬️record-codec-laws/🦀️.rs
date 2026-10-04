@@ -1,5 +1,5 @@
 //! 📦️ Record codec laws for the OS pack surface: a
-//! deterministic seeded `RecordValueGen` that fabricates `crate::os_dsl::schema::RecordValue`s from any
+//! deterministic seeded `RecordValueGen` that fabricates `semio_framework_dsl_record::RecordValue`s from any
 //! `RecordSpec`, the cross-crate round-trip/determinism/preservation LAWS every encoder/decoder
 //! pair must satisfy, a panic-safe truncation/bit-flip corruption harness, and a golden-hash
 //! helper for committing expected byte-content as a text constant.
@@ -17,7 +17,15 @@
 pub use pack::corruption_testing::*;
 //#endregion 🔖️Corrupt
 
-use crate::os_dsl::schema::{DslValue, ExprValue, FieldValue, RecordSpec, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
+use semio_framework_value::DslValue;
+use semio_framework_dsl_record::ExprValue;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
+use semio_framework_dsl_record::WireEdgeLabel;
+use semio_framework_dsl_record::WireNode;
+use semio_framework_dsl_record::WireValue;
 use std::collections::HashMap;
 
 //#region 🔖️Arbitrary
@@ -86,7 +94,7 @@ impl RecordValueGen {
         let magnitude = self.next_range(1_000_000) as f64 / 100.0;
         let sign = if self.next_bool() { -1.0 } else { 1.0 };
         let raw = sign * magnitude;
-        crate::os_dsl::parse_f64(&crate::os_dsl::format_f64(raw)).unwrap_or(raw)
+        semio_framework_dsl::parse_f64(&semio_framework_dsl::format_f64(raw)).unwrap_or(raw)
     }
 
     const ALPHABET: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ";
@@ -119,9 +127,9 @@ impl RecordValueGen {
     // `fn`'s own opaque `Future` type cannot embed itself or a cycle-partner's opaque type at
     // an unboxed, unbounded size (R10 residue shape 3).
     fn generate_record(&mut self, spec: &RecordSpec, depth: u16, max_depth: u16) -> RecordValue {
-        let mut fields = HashMap::with_capacity(spec.fields.len());
+        let mut fields = semio_framework_dsl_record::RecordValue::default().fields;
         for field in &spec.fields {
-            let value = if field.optional && self.next_range(4) == 0 { FieldValue::Absent } else { self.generate_value(&field.shape, depth, max_depth) };
+            let value = if field.optional && self.next_range(4) == 0 { semio_framework_dsl_record::FieldValue::Absent } else { self.generate_value(&field.shape, depth, max_depth) };
             fields.insert(field.id, value);
         }
         RecordValue { fields }
@@ -136,24 +144,24 @@ impl RecordValueGen {
             return self.shallow_value(shape);
         }
         match shape {
-            Shape::Bool => FieldValue::Bool(self.next_bool()),
-            Shape::Int => FieldValue::Int(self.next_int()),
-            Shape::UInt => FieldValue::UInt(self.next_uint()),
-            Shape::Float => FieldValue::Float(self.next_f64()),
-            Shape::Text => FieldValue::Text(self.next_string(12)),
-            Shape::Bytes64 => FieldValue::Bytes64(self.next_bytes(16)),
-            Shape::Enum(variants) => {
+            semio_framework_dsl_record::Shape::Bool => semio_framework_dsl_record::FieldValue::Bool(self.next_bool()),
+            semio_framework_dsl_record::Shape::Int => semio_framework_dsl_record::FieldValue::Int(self.next_int()),
+            semio_framework_dsl_record::Shape::UInt => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
+            semio_framework_dsl_record::Shape::Float => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
+            semio_framework_dsl_record::Shape::Text => semio_framework_dsl_record::FieldValue::Text(self.next_string(12)),
+            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(self.next_bytes(16)),
+            semio_framework_dsl_record::Shape::Enum(variants) => {
                 if variants.is_empty() {
-                    FieldValue::Enum(0)
+                    semio_framework_dsl_record::FieldValue::Enum(0)
                 } else {
                     let idx = self.next_range(variants.len() as u64) as usize;
-                    FieldValue::Enum(variants[idx].1)
+                    semio_framework_dsl_record::FieldValue::Enum(variants[idx].1)
                 }
             }
             // 🔁️ Every arm below that used to be `.map(|_| self.generate_value(...)).collect()`
             // is rewritten as an explicit loop: the closure would need to `` a `&mut self`
             // draw, and `Iterator::map`'s closure is sync (R10 residue shape 1).
-            Shape::Tuple(elem, len) => {
+            semio_framework_dsl_record::Shape::Tuple(elem, len) => {
                 let n = match len {
                     Some(n) => *n,
                     None => 1 + self.next_range(3) as usize,
@@ -162,21 +170,21 @@ impl RecordValueGen {
                 for _ in 0..n {
                     items.push(self.generate_value(elem, depth + 1, max_depth));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::List(elem) => {
+            semio_framework_dsl_record::Shape::List(elem) => {
                 let n = self.next_range(4) as usize;
                 let mut items = Vec::with_capacity(n);
                 for _ in 0..n {
                     items.push(self.generate_value(elem, depth + 1, max_depth));
                 }
-                FieldValue::List(items)
+                semio_framework_dsl_record::FieldValue::List(items)
             }
-            Shape::Record(spec_fn) => FieldValue::Record(self.generate_record(&(spec_fn.ordinary)(), depth + 1, max_depth)),
-            Shape::Block(inner) => FieldValue::Block(Box::new(self.generate_value(inner, depth + 1, max_depth))),
-            Shape::Statements(variants) => {
+            semio_framework_dsl_record::Shape::Record(spec_fn) => semio_framework_dsl_record::FieldValue::Record(self.generate_record(&(spec_fn.ordinary)(), depth + 1, max_depth)),
+            semio_framework_dsl_record::Shape::Block(inner) => semio_framework_dsl_record::FieldValue::Block(Box::new(self.generate_value(inner, depth + 1, max_depth))),
+            semio_framework_dsl_record::Shape::Statements(variants) => {
                 if variants.is_empty() {
-                    FieldValue::Statements(Vec::new())
+                    semio_framework_dsl_record::FieldValue::Statements(Vec::new())
                 } else {
                     let n = self.next_range(3) as usize;
                     let mut items = Vec::with_capacity(n);
@@ -187,10 +195,10 @@ impl RecordValueGen {
                         let record = self.generate_record(&(spec_fn.ordinary)(), depth + 1, max_depth);
                         items.push((keyword, record));
                     }
-                    FieldValue::Statements(items)
+                    semio_framework_dsl_record::FieldValue::Statements(items)
                 }
             }
-            Shape::Map(inner) => {
+            semio_framework_dsl_record::Shape::Map(inner) => {
                 let n = self.next_range(3) as usize;
                 let mut entries = Vec::with_capacity(n);
                 for _ in 0..n {
@@ -198,47 +206,47 @@ impl RecordValueGen {
                     let value = self.generate_value(inner, depth + 1, max_depth);
                     entries.push((key, value));
                 }
-                FieldValue::Map(entries)
+                semio_framework_dsl_record::FieldValue::Map(entries)
             }
-            Shape::Value => FieldValue::Value(self.generate_dsl_value(depth + 1, max_depth)),
-            Shape::Table(spec_fn) => {
+            semio_framework_dsl_record::Shape::Value => semio_framework_dsl_record::FieldValue::Value(self.generate_dsl_value(depth + 1, max_depth)),
+            semio_framework_dsl_record::Shape::Table(spec_fn) => {
                 let row_spec = (spec_fn.ordinary)();
                 let n = self.next_range(3) as usize;
                 let mut rows = Vec::with_capacity(n);
                 for _ in 0..n {
-                    rows.push(FieldValue::Record(self.generate_record(&row_spec, depth + 1, max_depth)));
+                    rows.push(semio_framework_dsl_record::FieldValue::Record(self.generate_record(&row_spec, depth + 1, max_depth)));
                 }
-                FieldValue::List(rows)
+                semio_framework_dsl_record::FieldValue::List(rows)
             }
-            Shape::Wire => FieldValue::Wire(self.generate_wire(depth + 1, max_depth)),
-            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
-            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
-            Shape::Coord(dims) => {
+            semio_framework_dsl_record::Shape::Wire => semio_framework_dsl_record::FieldValue::Wire(self.generate_wire(depth + 1, max_depth)),
+            semio_framework_dsl_record::Shape::Quantity(_) | semio_framework_dsl_record::Shape::Angle(_) => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
+            semio_framework_dsl_record::Shape::Ref(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(6)),
+            semio_framework_dsl_record::Shape::Coord(dims) => {
                 let mut items = Vec::new();
                 for _ in 0..*dims {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Dir => {
+            semio_framework_dsl_record::Shape::Dir => {
                 let mut items = Vec::new();
                 for _ in 0..3 {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Dim(dims) => {
+            semio_framework_dsl_record::Shape::Dim(dims) => {
                 let mut items = Vec::new();
                 for _ in 0..*dims {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
-            Shape::Count => FieldValue::UInt(self.next_uint()),
-            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
-            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
-            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
+            semio_framework_dsl_record::Shape::Range => semio_framework_dsl_record::FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
+            semio_framework_dsl_record::Shape::Count => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
+            semio_framework_dsl_record::Shape::Expr => semio_framework_dsl_record::FieldValue::Expr(semio_framework_dsl_record::ExprValue::Num(self.next_f64())),
+            semio_framework_dsl_record::Shape::Embed(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(8)),
+            semio_framework_dsl_record::Shape::EmbedFrom(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(8)),
         }
     }
 
@@ -248,78 +256,78 @@ impl RecordValueGen {
     /// self-referential shapes — need the empty/default fallback rather than real recursion.
     fn shallow_value(&mut self, shape: &Shape) -> FieldValue {
         match shape {
-            Shape::Bool => FieldValue::Bool(self.next_bool()),
-            Shape::Int => FieldValue::Int(self.next_int()),
-            Shape::UInt => FieldValue::UInt(self.next_uint()),
-            Shape::Float => FieldValue::Float(self.next_f64()),
-            Shape::Text => FieldValue::Text(self.next_string(6)),
-            Shape::Bytes64 => FieldValue::Bytes64(Vec::new()),
-            Shape::Enum(variants) => FieldValue::Enum(variants.first().map_or(0, |(_, ordinal)| *ordinal)),
-            Shape::Tuple(_, _) => FieldValue::Tuple(Vec::new()),
-            Shape::List(_) => FieldValue::List(Vec::new()),
-            Shape::Record(_) => FieldValue::Record(RecordValue::default()),
-            Shape::Block(inner) => FieldValue::Block(Box::new(self.shallow_value(inner))),
-            Shape::Statements(_) => FieldValue::Statements(Vec::new()),
-            Shape::Map(_) => FieldValue::Map(Vec::new()),
-            Shape::Value => FieldValue::Value(DslValue::Null),
-            Shape::Table(_) => FieldValue::List(Vec::new()),
-            Shape::Wire => FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, edge_label: WireEdgeLabel::default(), properties: DslValue::Null }),
-            Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
-            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
-            Shape::Coord(dims) => {
+            semio_framework_dsl_record::Shape::Bool => semio_framework_dsl_record::FieldValue::Bool(self.next_bool()),
+            semio_framework_dsl_record::Shape::Int => semio_framework_dsl_record::FieldValue::Int(self.next_int()),
+            semio_framework_dsl_record::Shape::UInt => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
+            semio_framework_dsl_record::Shape::Float => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
+            semio_framework_dsl_record::Shape::Text => semio_framework_dsl_record::FieldValue::Text(self.next_string(6)),
+            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(Vec::new()),
+            semio_framework_dsl_record::Shape::Enum(variants) => semio_framework_dsl_record::FieldValue::Enum(variants.first().map_or(0, |(_, ordinal)| *ordinal)),
+            semio_framework_dsl_record::Shape::Tuple(_, _) => semio_framework_dsl_record::FieldValue::Tuple(Vec::new()),
+            semio_framework_dsl_record::Shape::List(_) => semio_framework_dsl_record::FieldValue::List(Vec::new()),
+            semio_framework_dsl_record::Shape::Record(_) => semio_framework_dsl_record::FieldValue::Record(semio_framework_dsl_record::RecordValue::default()),
+            semio_framework_dsl_record::Shape::Block(inner) => semio_framework_dsl_record::FieldValue::Block(Box::new(self.shallow_value(inner))),
+            semio_framework_dsl_record::Shape::Statements(_) => semio_framework_dsl_record::FieldValue::Statements(Vec::new()),
+            semio_framework_dsl_record::Shape::Map(_) => semio_framework_dsl_record::FieldValue::Map(Vec::new()),
+            semio_framework_dsl_record::Shape::Value => semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Null),
+            semio_framework_dsl_record::Shape::Table(_) => semio_framework_dsl_record::FieldValue::List(Vec::new()),
+            semio_framework_dsl_record::Shape::Wire => semio_framework_dsl_record::FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: semio_framework_value::DslValue::Null }),
+            semio_framework_dsl_record::Shape::Quantity(_) | semio_framework_dsl_record::Shape::Angle(_) => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
+            semio_framework_dsl_record::Shape::Ref(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(6)),
+            semio_framework_dsl_record::Shape::Coord(dims) => {
                 let mut items = Vec::new();
                 for _ in 0..*dims {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Dir => {
+            semio_framework_dsl_record::Shape::Dir => {
                 let mut items = Vec::new();
                 for _ in 0..3 {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Dim(dims) => {
+            semio_framework_dsl_record::Shape::Dim(dims) => {
                 let mut items = Vec::new();
                 for _ in 0..*dims {
-                    items.push(FieldValue::Float(self.next_f64()));
+                    items.push(semio_framework_dsl_record::FieldValue::Float(self.next_f64()));
                 }
-                FieldValue::Tuple(items)
+                semio_framework_dsl_record::FieldValue::Tuple(items)
             }
-            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
-            Shape::Count => FieldValue::UInt(self.next_uint()),
-            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
-            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
-            Shape::EmbedFrom(_) => FieldValue::Text(self.next_string(8)),
+            semio_framework_dsl_record::Shape::Range => semio_framework_dsl_record::FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
+            semio_framework_dsl_record::Shape::Count => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
+            semio_framework_dsl_record::Shape::Expr => semio_framework_dsl_record::FieldValue::Expr(semio_framework_dsl_record::ExprValue::Num(self.next_f64())),
+            semio_framework_dsl_record::Shape::Embed(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(8)),
+            semio_framework_dsl_record::Shape::EmbedFrom(_) => semio_framework_dsl_record::FieldValue::Text(self.next_string(8)),
         }
     }
 
     // 🔁️ Self-recursive (`Array`/`Object` arms) — boxed for the same reason as `generate_value`.
     fn generate_dsl_value(&mut self, depth: u16, max_depth: u16) -> DslValue {
         if depth > max_depth {
-            return DslValue::Null;
+            return semio_framework_value::DslValue::Null;
         }
         match self.next_range(6) {
-            0 => DslValue::Null,
-            1 => DslValue::Bool(self.next_bool()),
+            0 => semio_framework_value::DslValue::Null,
+            1 => semio_framework_value::DslValue::Bool(self.next_bool()),
             // 🌉️ All three `Number` variants, matching `encode_dsl_value`/`decode_dsl_value`'s
             // `TAG_INT`/`TAG_UINT`/`TAG_F64` grammar — a generated `UInt`/`Int` now survives the
             // round trip as its own variant, so restricting this arm to `Float` would leave two
             // thirds of the dynamic numeric grammar unexercised.
             2 => match self.next_range(3) {
-                0 => DslValue::float(self.next_f64()),
-                1 => DslValue::uint(self.next_uint()),
-                _ => DslValue::int(self.next_uint() as i64),
+                0 => semio_framework_value::DslValue::float(self.next_f64()),
+                1 => semio_framework_value::DslValue::uint(self.next_uint()),
+                _ => semio_framework_value::DslValue::int(self.next_uint() as i64),
             },
-            3 => DslValue::String(self.next_string(8)),
+            3 => semio_framework_value::DslValue::String(self.next_string(8)),
             4 => {
                 let n = self.next_range(3) as usize;
                 let mut items = Vec::with_capacity(n);
                 for _ in 0..n {
                     items.push(self.generate_dsl_value(depth + 1, max_depth));
                 }
-                DslValue::Array(items)
+                semio_framework_value::DslValue::Array(items)
             }
             _ => {
                 let n = self.next_range(3) as usize;
@@ -329,7 +337,7 @@ impl RecordValueGen {
                     let value = self.generate_dsl_value(depth + 1, max_depth);
                     entries.push((key, value));
                 }
-                DslValue::Object(entries)
+                semio_framework_value::DslValue::Object(entries)
             }
         }
     }
@@ -350,7 +358,7 @@ impl RecordValueGen {
             None
         };
         let properties = self.generate_dsl_value(depth, max_depth);
-        WireValue { from, edge, edge_label: WireEdgeLabel::default(), properties }
+        WireValue { from, edge, edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties }
     }
     //#endregion 🔖️Shapes
 }
@@ -369,7 +377,7 @@ impl RecordValueGen {
 // shape 3), and the `.iter().map(normalize_value).collect()` shapes are rewritten as loops since
 // `Iterator::map`'s closure can't `` (R10 residue shape 1).
 fn normalize_record(record: &RecordValue) -> RecordValue {
-    let mut fields = HashMap::with_capacity(record.fields.len());
+    let mut fields = semio_framework_dsl_record::RecordValue::default().fields;
     for (id, value) in &record.fields {
         if matches!(value, FieldValue::Absent) {
             continue;
@@ -381,36 +389,36 @@ fn normalize_record(record: &RecordValue) -> RecordValue {
 
 fn normalize_value(value: &FieldValue) -> FieldValue {
     match value {
-        FieldValue::Record(r) => FieldValue::Record(normalize_record(r)),
-        FieldValue::Tuple(items) => {
+        semio_framework_dsl_record::FieldValue::Record(r) => semio_framework_dsl_record::FieldValue::Record(normalize_record(r)),
+        semio_framework_dsl_record::FieldValue::Tuple(items) => {
             let mut out = Vec::with_capacity(items.len());
             for item in items {
                 out.push(normalize_value(item));
             }
-            FieldValue::Tuple(out)
+            semio_framework_dsl_record::FieldValue::Tuple(out)
         }
-        FieldValue::List(items) => {
+        semio_framework_dsl_record::FieldValue::List(items) => {
             let mut out = Vec::with_capacity(items.len());
             for item in items {
                 out.push(normalize_value(item));
             }
-            FieldValue::List(out)
+            semio_framework_dsl_record::FieldValue::List(out)
         }
-        FieldValue::Block(inner) => FieldValue::Block(Box::new(normalize_value(inner))),
-        FieldValue::Statements(items) => {
+        semio_framework_dsl_record::FieldValue::Block(inner) => semio_framework_dsl_record::FieldValue::Block(Box::new(normalize_value(inner))),
+        semio_framework_dsl_record::FieldValue::Statements(items) => {
             let mut out = Vec::with_capacity(items.len());
             for (k, r) in items {
                 out.push((k.clone(), normalize_record(r)));
             }
-            FieldValue::Statements(out)
+            semio_framework_dsl_record::FieldValue::Statements(out)
         }
-        FieldValue::Map(entries) => {
+        semio_framework_dsl_record::FieldValue::Map(entries) => {
             let mut sorted: Vec<(String, FieldValue)> = Vec::with_capacity(entries.len());
             for (k, v) in entries {
                 sorted.push((k.clone(), normalize_value(v)));
             }
             sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-            FieldValue::Map(sorted)
+            semio_framework_dsl_record::FieldValue::Map(sorted)
         }
         other => other.clone(),
     }

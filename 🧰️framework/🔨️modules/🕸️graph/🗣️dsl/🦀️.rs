@@ -12,7 +12,7 @@
 #[derive(Debug)]
 pub enum GraphDslError {
     /// 🧾️ Fixture or query-result JSON failed to parse or serialize.
-    Json(dsl_core::json::JsonError),
+    Json(semio_framework_pack_json::JsonError),
     /// 🔤️ A string literal was never closed (Jack's own dual-quote pre-scan, `dsl_core` only
     /// natively lexes `"..."`).
     UnterminatedString,
@@ -42,7 +42,7 @@ pub enum GraphDslError {
     /// 🔡️ A lexical/grammar error surfaced verbatim by the unified `dsl_core`/`dsl_schema` engine —
     /// used by both the wire-literal delegate (`dsl_core::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
-    Lex(dsl_core::os_dsl::TextError),
+    Lex(semio_framework_diagnostic::TextError),
 }
 
 impl std::fmt::Display for GraphDslError {
@@ -75,8 +75,8 @@ impl std::error::Error for GraphDslError {
     }
 }
 
-impl From<dsl_core::json::JsonError> for GraphDslError {
-    fn from(error: dsl_core::json::JsonError) -> Self {
+impl From<semio_framework_pack_json::JsonError> for GraphDslError {
+    fn from(error: semio_framework_pack_json::JsonError) -> Self {
         Self::Json(error)
     }
 }
@@ -87,8 +87,8 @@ impl From<std::num::ParseFloatError> for GraphDslError {
     }
 }
 
-impl From<dsl_core::os_dsl::TextError> for GraphDslError {
-    fn from(error: dsl_core::os_dsl::TextError) -> Self {
+impl From<semio_framework_diagnostic::TextError> for GraphDslError {
+    fn from(error: semio_framework_diagnostic::TextError) -> Self {
         Self::Lex(error)
     }
 }
@@ -100,7 +100,7 @@ pub mod queryable {
 
     use crate::dsl::GraphDslError;
     use crate::manifest::{GraphManifest, PropertyBag, PropertyValue};
-    use dsl_core::json::Value;
+    use semio_framework_pack_json::Value;
     use std::collections::{BTreeMap, BTreeSet};
 
     // #region 🔖️QueryableEdge
@@ -195,10 +195,10 @@ pub mod queryable {
 
     // #region 🔖️BoardQueryableGraph
     fn json_to_property_bag(value: &Value) -> PropertyBag {
-        let dsl_core::DslValue::Object(entries) = dsl_core::json::to_dsl_value(value) else {
+        let semio_framework_value::DslValue::Object(entries) = semio_framework_pack_json::to_dsl_value(value) else {
             return PropertyBag::default();
         };
-        entries.into_iter().filter_map(|(k, v)| dsl_core::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
+        entries.into_iter().filter_map(|(k, v)| semio_framework_value::FromValue::from_value(v).ok().map(|pv| (k, pv))).collect()
     }
 
     fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
@@ -232,7 +232,7 @@ pub mod queryable {
 
     impl BoardQueryableGraph {
         pub fn from_host_snapshot_json(json: &str, manifest: Option<GraphManifest>) -> Result<Self, GraphDslError> {
-            let raw: Value = dsl_core::json::parse(json)?;
+            let raw: Value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
             if let (Some(manifest), Some(id)) = (&manifest, raw.get("manifestId").and_then(Value::as_str)) {
                 if manifest.id != id {
                     return Err(GraphDslError::ManifestIdentity { expected: manifest.id.clone(), actual: id.to_string() });
@@ -254,7 +254,7 @@ pub mod queryable {
                         if matches!(key, "id" | "nodeKind" | "node_kind" | "kind" | "text" | "name" | "label" | "handles" | "x" | "y" | "shape" | "radius" | "width" | "height" | "userData" | "user_data") {
                             continue;
                         }
-                        if let Ok(prop) = <PropertyValue as dsl_core::FromValue>::from_value(dsl_core::json::to_dsl_value(value)) {
+                        if let Ok(prop) = <PropertyValue as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)) {
                             properties.insert(key.to_string(), prop);
                         }
                     }
@@ -289,7 +289,7 @@ pub mod queryable {
         }
 
         pub fn from_object_snapshot_json(json: &str, manifest: Option<GraphManifest>) -> Result<Self, GraphDslError> {
-            let raw: Value = dsl_core::json::parse(json)?;
+            let raw: Value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
             let mut fixture = raw.clone();
             if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
                 if let Some(objects) = raw.get("objects").and_then(|v| v.as_array()) {
@@ -300,7 +300,7 @@ pub mod queryable {
                             let id = obj.get("id").and_then(|v| v.as_str())?;
                             let kind = obj.get("objectKind").or_else(|| obj.get("kind")).and_then(|v| v.as_str()).unwrap_or("Object");
                             let name = obj.get("name").or_else(|| obj.get("label")).and_then(|v| v.as_str()).unwrap_or(id);
-                            Some(Value::Object(dsl_core::json::Object::from_iter([("id".to_string(), Value::from(id)), ("nodeKind".to_string(), Value::from(kind)), ("text".to_string(), Value::from(name))])))
+                            Some(Value::Object(semio_framework_pack_json::Object::from_iter([("id".to_string(), Value::from(id)), ("nodeKind".to_string(), Value::from(kind)), ("text".to_string(), Value::from(name))])))
                         })
                         .collect();
                     if let Some(object) = fixture.as_object_mut() {
@@ -308,7 +308,7 @@ pub mod queryable {
                     }
                 }
             }
-            Self::from_host_snapshot_json(&dsl_core::json::to_string(&fixture), manifest)
+            Self::from_host_snapshot_json(&semio_framework_pack_json::to_string(&fixture), manifest)
         }
 
 
@@ -354,7 +354,7 @@ pub mod queryable {
             if let Some(edges) = fixture.get_mut("edges").and_then(|v| v.as_array_mut()) {
                 edges.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| edge_ids.contains(id)));
             }
-            Some(dsl_core::json::to_string(&fixture))
+            Some(semio_framework_pack_json::to_string(&fixture))
         }
     }
     // #endregion 🔖️BoardQueryableGraph
@@ -398,45 +398,45 @@ pub mod wire {
     // #region 🔖️PropertyBridge
     /// 🌉️ `crate::manifest::PropertyValue` <-> `dsl_core::DslValue` — the two crates'
     /// dynamic-JSON-equivalent literal types are structurally identical, so this is a pure reshape.
-    fn dsl_value_from_property_value(value: &PropertyValue) -> dsl_core::DslValue {
+    fn dsl_value_from_property_value(value: &PropertyValue) -> semio_framework_value::DslValue {
         match value {
-            PropertyValue::Null => dsl_core::DslValue::Null,
-            PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
-            PropertyValue::Number(n) => dsl_core::DslValue::float(*n),
-            PropertyValue::String(s) => dsl_core::DslValue::String(s.clone()),
+            PropertyValue::Null => semio_framework_value::DslValue::Null,
+            PropertyValue::Bool(b) => semio_framework_value::DslValue::Bool(*b),
+            PropertyValue::Number(n) => semio_framework_value::DslValue::float(*n),
+            PropertyValue::String(s) => semio_framework_value::DslValue::String(s.clone()),
             PropertyValue::Array(items) => {
                 let mut out = Vec::with_capacity(items.len());
                 for item in items {
                     out.push(dsl_value_from_property_value(item));
                 }
-                dsl_core::DslValue::Array(out)
+                semio_framework_value::DslValue::Array(out)
             }
             PropertyValue::Object(map) => {
                 let mut out = Vec::with_capacity(map.len());
                 for (k, v) in map {
                     out.push((k.clone(), dsl_value_from_property_value(v)));
                 }
-                dsl_core::DslValue::Object(out)
+                semio_framework_value::DslValue::Object(out)
             }
         }
     }
 
-    fn property_value_from_dsl_value(value: &dsl_core::DslValue) -> PropertyValue {
+    fn property_value_from_dsl_value(value: &semio_framework_value::DslValue) -> PropertyValue {
         match value {
-            dsl_core::DslValue::Null => PropertyValue::Null,
-            dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
-            dsl_core::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
-            dsl_core::DslValue::String(s) => PropertyValue::String(s.clone()),
-            dsl_core::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
-            dsl_core::DslValue::Array(items) => {
+            semio_framework_value::DslValue::Null => PropertyValue::Null,
+            semio_framework_value::DslValue::Bool(b) => PropertyValue::Bool(*b),
+            semio_framework_value::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
+            semio_framework_value::DslValue::String(s) => PropertyValue::String(s.clone()),
+            semio_framework_value::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
+            semio_framework_value::DslValue::Array(items) => {
                 let mut out = Vec::with_capacity(items.len());
                 for item in items {
                     out.push(property_value_from_dsl_value(item));
                 }
                 PropertyValue::Array(out)
             }
-            dsl_core::DslValue::Object(entries) => {
-                let mut out = std::collections::BTreeMap::new();
+            semio_framework_value::DslValue::Object(entries) => {
+                let mut out = PropertyBag::new();
                 for (k, v) in entries {
                     out.insert(k.clone(), property_value_from_dsl_value(v));
                 }
@@ -445,17 +445,17 @@ pub mod wire {
         }
     }
 
-    fn properties_to_dsl_object(properties: &PropertyBag) -> dsl_core::DslValue {
+    fn properties_to_dsl_object(properties: &PropertyBag) -> semio_framework_value::DslValue {
         let mut out = Vec::with_capacity(properties.len());
         for (k, v) in properties {
             out.push((k.clone(), dsl_value_from_property_value(v)));
         }
-        dsl_core::DslValue::Object(out)
+        semio_framework_value::DslValue::Object(out)
     }
 
-    fn properties_from_dsl_value(value: &dsl_core::DslValue) -> PropertyBag {
+    fn properties_from_dsl_value(value: &semio_framework_value::DslValue) -> PropertyBag {
         match value {
-            dsl_core::DslValue::Object(entries) => {
+            semio_framework_value::DslValue::Object(entries) => {
                 let mut out = PropertyBag::new();
                 for (k, v) in entries {
                     out.insert(k.clone(), property_value_from_dsl_value(v));
@@ -468,12 +468,12 @@ pub mod wire {
     // #endregion 🔖️PropertyBridge
 
     // #region 🔖️WireLiteral
-    fn render_wire_line(value: &dsl_core::WireValue) -> String {
+    fn render_wire_line(value: &semio_framework_dsl_record::WireValue) -> String {
         // 🚨️ `dsl_core::Writer::new`/`print_shape`/`Writer::render` are all sync in `dsl_core` —
         // none of them suspend, so no `.await` belongs on any of them.
-        let mut writer = dsl_core::Writer::new();
-        dsl_core::print_shape(&dsl_core::FieldValue::Wire(value.clone()), &dsl_core::Shape::Wire, &mut writer);
-        writer.render(dsl_core::JoinMode::Inline)
+        let mut writer = semio_framework_dsl_record::Writer::new();
+        semio_framework_dsl_record::print_shape(&semio_framework_dsl_record::FieldValue::Wire(value.clone()), &semio_framework_dsl_record::Shape::Wire, &mut writer);
+        writer.render(semio_framework_dsl_record::JoinMode::Inline)
     }
 
     /// 📝️ Render wire-literal text from neutral node/edge rows, one unified `dsl_core::Wire`
@@ -481,10 +481,10 @@ pub mod wire {
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
         for node in nodes {
-            let value = dsl_core::WireValue {
-                from: dsl_core::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() },
+            let value = semio_framework_dsl_record::WireValue {
+                from: semio_framework_dsl_record::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() },
                 edge: None,
-                edge_label: dsl_core::WireEdgeLabel::default(),
+                edge_label: semio_framework_dsl_record::WireEdgeLabel::default(),
                 properties: properties_to_dsl_object(&node.properties),
             };
             lines.push(render_wire_line(&value));
@@ -492,10 +492,10 @@ pub mod wire {
         for edge in edges {
             let from_kind = nodes.iter().find(|n| n.id == edge.from).map_or("node", |n| n.kind.as_str());
             let to_kind = nodes.iter().find(|n| n.id == edge.to).map_or("node", |n| n.kind.as_str());
-            let value = dsl_core::WireValue {
-                from: dsl_core::WireNode { id: edge.from.clone(), kind: Some(from_kind.to_string()), port: Some(edge.from_port.clone()) },
-                edge: Some((edge.directed, dsl_core::WireNode { id: edge.to.clone(), kind: Some(to_kind.to_string()), port: Some(edge.to_port.clone()) })),
-                edge_label: dsl_core::WireEdgeLabel::default(),
+            let value = semio_framework_dsl_record::WireValue {
+                from: semio_framework_dsl_record::WireNode { id: edge.from.clone(), kind: Some(from_kind.to_string()), port: Some(edge.from_port.clone()) },
+                edge: Some((edge.directed, semio_framework_dsl_record::WireNode { id: edge.to.clone(), kind: Some(to_kind.to_string()), port: Some(edge.to_port.clone()) })),
+                edge_label: semio_framework_dsl_record::WireEdgeLabel::default(),
                 properties: properties_to_dsl_object(&edge.properties),
             };
             lines.push(render_wire_line(&value));
@@ -517,7 +517,7 @@ pub mod wire {
             if line.is_empty() {
                 continue;
             }
-            let value = dsl_core::parse_wire_text(line)?;
+            let value = semio_framework_dsl_record::parse_wire_text(line)?;
             match value.edge {
                 None => nodes.push(WireNode { id: value.from.id, kind: value.from.kind.unwrap_or_else(|| "node".to_string()), port: value.from.port, properties: properties_from_dsl_value(&value.properties) }),
                 Some((directed, to)) => {
@@ -788,71 +788,71 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
     if segment.is_empty() {
         return Ok(());
     }
-    let raw = dsl_core::os_dsl::lex(segment, &dsl_core::os_dsl::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
+    let raw = semio_framework_dsl::lex(segment, &semio_framework_diagnostic::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
     for token in raw {
-        if token.kind.is_trivia() || token.kind == dsl_core::os_dsl::TokenKind::Eof {
+        if token.kind.is_trivia() || token.kind == semio_framework_dsl::TokenKind::Eof {
             continue;
         }
         let start = base_offset + token.byte_range.0 as usize;
         let end = base_offset + token.byte_range.1 as usize;
         let text = token.text.as_str().to_string();
         match token.kind {
-            dsl_core::os_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
+            semio_framework_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
             // A lone `_` is `dsl_core`'s placeholder sigil; Jack has no placeholder concept of its
             // own, so it round-trips as an ordinary one-character identifier.
-            dsl_core::os_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
-            dsl_core::os_dsl::TokenKind::Int | dsl_core::os_dsl::TokenKind::Float => {
+            semio_framework_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
+            semio_framework_dsl::TokenKind::Int | semio_framework_dsl::TokenKind::Float => {
                 let n: f64 = text.parse().map_err(GraphDslError::NumberFormat)?;
                 push_spanned(out, Token::Number(n), start, end);
             }
-            dsl_core::os_dsl::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
-            dsl_core::os_dsl::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
-            dsl_core::os_dsl::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
-            dsl_core::os_dsl::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
-            dsl_core::os_dsl::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
-            dsl_core::os_dsl::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
-            dsl_core::os_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
-            dsl_core::os_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
-            dsl_core::os_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
+            semio_framework_dsl::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
+            semio_framework_dsl::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
+            semio_framework_dsl::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
+            semio_framework_dsl::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
+            semio_framework_dsl::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
+            semio_framework_dsl::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
+            semio_framework_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
+            semio_framework_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
+            semio_framework_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
             // ➖️ A bare `-` is the pattern connector every Cypher-shaped query writes
             // (`(a)-[r:Kind]->(b)`), which is also what this dialect's own executor parser accepts
             // and what every committed example query in the repo uses. It used to fall into the
             // stray-character bucket below and every such query was reported
             // `unexpected character '-'` by lint/complete/hover/format while running perfectly.
-            dsl_core::os_dsl::TokenKind::Minus => push_spanned(out, Token::Dash, start, end),
-            dsl_core::os_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
-            dsl_core::os_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
+            semio_framework_dsl::TokenKind::Minus => push_spanned(out, Token::Dash, start, end),
+            semio_framework_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
+            semio_framework_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
             // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
             // since `lex_spanned` pre-scans and consumes every quote itself before ever
             // delegating a segment, kept only for defensive completeness.
-            dsl_core::os_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
+            semio_framework_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
             // character" treatment as an outright `os_dsl::TokenKind::Error` below. P2-M1's
             // promoted `< > & $ ;` tokens and STEP's `DotEnum` literal join this bucket too —
             // Jack has no grammar concept for any of them either.
-            dsl_core::os_dsl::TokenKind::EdgeArrow
-            | dsl_core::os_dsl::TokenKind::LBrace
-            | dsl_core::os_dsl::TokenKind::RBrace
-            | dsl_core::os_dsl::TokenKind::Caret
-            | dsl_core::os_dsl::TokenKind::DotDot
-            | dsl_core::os_dsl::TokenKind::Plus
-            | dsl_core::os_dsl::TokenKind::Star
-            | dsl_core::os_dsl::TokenKind::Slash
-            | dsl_core::os_dsl::TokenKind::Fence
-            | dsl_core::os_dsl::TokenKind::Lt
-            | dsl_core::os_dsl::TokenKind::Gt
-            | dsl_core::os_dsl::TokenKind::Amp
-            | dsl_core::os_dsl::TokenKind::Dollar
-            | dsl_core::os_dsl::TokenKind::Semicolon
-            | dsl_core::os_dsl::TokenKind::DotEnum
-            | dsl_core::os_dsl::TokenKind::Error => {
+            semio_framework_dsl::TokenKind::EdgeArrow
+            | semio_framework_dsl::TokenKind::LBrace
+            | semio_framework_dsl::TokenKind::RBrace
+            | semio_framework_dsl::TokenKind::Caret
+            | semio_framework_dsl::TokenKind::DotDot
+            | semio_framework_dsl::TokenKind::Plus
+            | semio_framework_dsl::TokenKind::Star
+            | semio_framework_dsl::TokenKind::Slash
+            | semio_framework_dsl::TokenKind::Fence
+            | semio_framework_dsl::TokenKind::Lt
+            | semio_framework_dsl::TokenKind::Gt
+            | semio_framework_dsl::TokenKind::Amp
+            | semio_framework_dsl::TokenKind::Dollar
+            | semio_framework_dsl::TokenKind::Semicolon
+            | semio_framework_dsl::TokenKind::DotEnum
+            | semio_framework_dsl::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);
                 } else {
                     return Err(GraphDslError::UnexpectedChar(text.chars().next().unwrap_or('?')));
                 }
             }
-            dsl_core::os_dsl::TokenKind::Whitespace | dsl_core::os_dsl::TokenKind::Newline | dsl_core::os_dsl::TokenKind::Comment | dsl_core::os_dsl::TokenKind::Eof => {
+            semio_framework_dsl::TokenKind::Whitespace | semio_framework_dsl::TokenKind::Newline | semio_framework_dsl::TokenKind::Comment | semio_framework_dsl::TokenKind::Eof => {
                 unreachable!("trivia/Eof filtered above")
             }
         }
@@ -903,7 +903,7 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphD
                 return Err(GraphDslError::UnterminatedString);
             }
             i += 1;
-            let text = dsl_core::os_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
+            let text = semio_framework_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
             push_spanned(&mut tokens, Token::StringLit(text), start, i);
             seg_start = i;
             continue;
@@ -1390,7 +1390,7 @@ fn format_token(tok: &Token) -> String {
         }
         // 🩹️ unified syntax law: strings always PRINT double-quoted with `dsl_core`'s canonical
         // escape, regardless of which quote style the source used.
-        Token::StringLit(s) => format!("\"{}\"", dsl_core::os_dsl::escape_text(s)),
+        Token::StringLit(s) => format!("\"{}\"", semio_framework_dsl::escape_text(s)),
         Token::LParen => "(".into(),
         Token::RParen => ")".into(),
         Token::LBracket => "[".into(),
@@ -1544,38 +1544,38 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 // #endregion 🔖️LanguageService
 
 // #region 🔖️DslIdiom
-/// 🔌️ Registers Jack as a `dsl_core::IdiomHooks` entry (the `DslIdiom` seam's Route B — an EMBEDDED
+/// 🔌️ Registers Jack as a `semio_framework_dsl::IdiomHooks` entry (the `DslIdiom` seam's Route B — an EMBEDDED
 /// idiom hosted inside another document's `Shape::Embed("jack")` field) so `canonicalize`
 /// normalizes embedded Jack text through this crate's own `format`/`tokenize`. Hand-built rather
-/// than `dsl_core::hooks_for::<I: DslIdiom>()`: that helper needs `DslIdiom::print(ast) -> String`, and
+/// than `semio_framework_dsl::hooks_for::<I: DslIdiom>()`: that helper needs `DslIdiom::print(ast) -> String`, and
 /// Jack has no AST-to-text printer (`format` re-derives canonical text token-by-token from SOURCE,
 /// not from a `Query`) — `IdiomHooks` itself only needs function pointers, so it's built directly
 /// from the language-service surface Jack already has, no printer required.
 // 🚫️async: E4 fn-pointer slot — builds an `IdiomHooks` whose fields are plain `fn` pointers; an
 // `async fn`'s value cannot coerce to `fn`, so this stays sync. See R2 E4, mirrors
-// `dsl_core::hooks_for`/`dsl_core::passthrough_hooks`.
-pub fn idiom_hooks() -> dsl_core::IdiomHooks {
-    dsl_core::IdiomHooks { lang: "jack", canonicalize: idiom_canonicalize, classify: idiom_classify, complete: idiom_complete }
+// `semio_framework_dsl::hooks_for`/`semio_framework_dsl::passthrough_hooks`.
+pub fn idiom_hooks() -> semio_framework_dsl::IdiomHooks {
+    semio_framework_dsl::IdiomHooks { lang: "jack", canonicalize: idiom_canonicalize, classify: idiom_classify, complete: idiom_complete }
 }
 
 // 🚫️async: E4 fn-pointer slot (`IdiomHooks.canonicalize`) — see R2 E4.
-fn idiom_canonicalize(text: &str) -> Result<String, dsl_core::TextError> {
-    format(text).map_err(|e| dsl_core::TextError::new(e.to_string(), dsl_core::TextSpan::at(1, 1)))
+fn idiom_canonicalize(text: &str) -> Result<String, semio_framework_diagnostic::TextError> {
+    format(text).map_err(|error|match error{GraphDslError::Lex(error)=>error,GraphDslError::Json(error)=>semio_framework_diagnostic::TextError::new(error.kind(),error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)),GraphDslError::UnsupportedMutation=>semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"mutating jack clauses are not supported on this graph domain",semio_framework_diagnostic::TextSpan::at(1,1)),error @ (GraphDslError::UnterminatedString|GraphDslError::UnexpectedChar(_)|GraphDslError::NumberFormat(_)|GraphDslError::UnexpectedToken{..}|GraphDslError::EdgeTargetMissingPort|GraphDslError::EmptyPattern|GraphDslError::UnknownProcedure(_)|GraphDslError::ProcedureArity{..}|GraphDslError::ManifestIdentity{..})=>semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1))})
 }
 
 // 🚫️async: E4 fn-pointer slot (`IdiomHooks.classify`) — see R2 E4.
-fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::TextSpan)> {
+fn idiom_classify(text: &str) -> Vec<(semio_framework_dsl::TokenClass, semio_framework_diagnostic::TextSpan)> {
     tokenize(text)
         .into_iter()
         .map(|span| {
             let class = match span.class {
-                TokenClass::Keyword => dsl_core::TokenClass::Keyword,
-                TokenClass::Ident => dsl_core::TokenClass::Ident,
-                TokenClass::Number => dsl_core::TokenClass::Number,
-                TokenClass::String => dsl_core::TokenClass::String,
-                TokenClass::Operator => dsl_core::TokenClass::Operator,
-                TokenClass::Punctuation => dsl_core::TokenClass::Punctuation,
-                TokenClass::Error => dsl_core::TokenClass::Error,
+                TokenClass::Keyword => semio_framework_dsl::TokenClass::Keyword,
+                TokenClass::Ident => semio_framework_dsl::TokenClass::Ident,
+                TokenClass::Number => semio_framework_dsl::TokenClass::Number,
+                TokenClass::String => semio_framework_dsl::TokenClass::String,
+                TokenClass::Operator => semio_framework_dsl::TokenClass::Operator,
+                TokenClass::Punctuation => semio_framework_dsl::TokenClass::Punctuation,
+                TokenClass::Error => semio_framework_dsl::TokenClass::Error,
             };
             (class, byte_range_to_span(text, span.start, span.end))
         })
@@ -1583,7 +1583,7 @@ fn idiom_classify(text: &str) -> Vec<(dsl_core::TokenClass, dsl_core::TextSpan)>
 }
 
 // 🚫️async: E4 fn-pointer slot (`IdiomHooks.complete`) — see R2 E4.
-fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
+fn idiom_complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::CompletionItem> {
     // Jack's own `complete` needs a `QueryableGraph`-bounded generic for schema-aware suggestions
     // (node/edge kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to
     // supply — an empty graph still exercises the syntax-only completions (clause/logic keywords).
@@ -1611,13 +1611,13 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<dsl_core::CompletionItem> {
             None
         }
     }
-    complete(&EmptyGraph, text, offset).into_iter().map(|c| dsl_core::CompletionItem { label: c.label, detail: c.detail }).collect()
+    complete(&EmptyGraph, text, offset).into_iter().map(|c| semio_framework_dsl::CompletionItem { label: c.label, detail: c.detail }).collect()
 }
 
 /// 📍️ Converts a byte-offset half-open range into `os_dsl::TextSpan`'s 1-based line/column/
 /// length form — Jack's own spans are byte offsets (`TokenSpan`/`SemanticToken`), `dsl_core`'s are
 /// line/column, so this is the one place that needs the source text to translate between them.
-fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl_core::TextSpan {
+fn byte_range_to_span(text: &str, start: usize, end: usize) -> semio_framework_diagnostic::TextSpan {
     let mut line = 1u32;
     let mut column = 1u32;
     for (i, ch) in text.char_indices() {
@@ -1632,7 +1632,7 @@ fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl_core::TextSpa
         }
     }
     let length = text.get(start..end).map_or(0, |s| s.chars().count()) as u32;
-    dsl_core::TextSpan::with_length(line, column, length)
+    semio_framework_diagnostic::TextSpan::with_length(line, column, length)
 }
 // #endregion 🔖️DslIdiom
 
@@ -2013,7 +2013,7 @@ pub fn run_query<G: QueryableGraph>(graph: &G, source: &str) -> Result<QueryResu
 
 /// ▶️ Execute jack and return JSON result.
 pub fn run_query_json<G: QueryableGraph>(graph: &G, source: &str) -> Result<String, GraphDslError> {
-    Ok(dsl_core::json::to_json_string(&run_query(graph, source)?))
+    Ok(semio_framework_pack_json::to_json_string(&run_query(graph, source)?))
 }
 
 fn match_patterns<G: QueryableGraph>(graph: &G, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {

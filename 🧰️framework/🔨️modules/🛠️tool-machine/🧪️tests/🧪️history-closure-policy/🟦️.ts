@@ -29,8 +29,8 @@ const NEGATIVE = "🧰️framework/🔨️modules/🛂️manifest/🧫️fixture
 /** 🧫️ A closure-conforming miniature repo: a plugin editor minting edits through the Store authority with a derived footprint, its test building an edit literally, the Store owning the footprint type, a TS twin, a fixture, an actor mailbox key and the bracket negative case. */
 const CLEAN: Readonly<Record<string, string>> = {
   [EDITOR]: `//! 🧹️ Sweep editor; the transaction's open edit amends nothing but its own ticks.
-pub fn sweep_edit(forward: SweepMutation, inverse: Vec<SweepMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SweepMutation> {
-    authority.next_edit(forward, inverse, description)
+pub fn sweep_edit(forward: SweepMutation, inverse: Vec<SweepMutation>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SweepMutation> {
+    authority.next_edit(forward, inverse)
 }
 
 pub fn sweep_footprint(mutation: &SweepMutation, retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
@@ -94,13 +94,19 @@ const CASES: readonly Case[] = [
   { name: "descriptor-transform-bracket", expect: "report", rule: "bracket-verb", file: DESCRIPTOR, edits: [[DESCRIPTOR, `{ "id": "translateSelection" }`, `{ "id": "${BEGIN}" }`]] },
   { name: "negative-bracket-fixture-is-silent", expect: "silent", edits: [[NEGATIVE, `"verbs": [`, `"verbs": ["${STROKE_END}", `]] },
   { name: "host-snapshot-row", expect: "report", rule: "host-snapshot-bracket", file: EDITOR, edits: [[EDITOR, "pub fn sweep_camera", `const ROW: &str = "${HOST_SNAPSHOT}";\npub fn sweep_camera`]] },
-  { name: "plugin-edit-literal", expect: "report", rule: "edit-literal", file: EDITOR, edits: [[EDITOR, "authority.next_edit(forward, inverse, description)", `${EDIT} line: None, id: "e".into(), forwards: vec![forward], inverse, description, ..Default::default() }`]] },
-  { name: "imported-edit-literal", expect: "report", rule: "edit-literal", file: EDITOR, edits: [[EDITOR, "authority.next_edit(forward, inverse, description)", "Edit { line: authority.line_id().map(str::to_owned), forwards: vec![forward], inverse, description, ..Default::default() }"]] },
+  { name: "release-plain-commit", expect: "report", rule: "release-plain-commit", file: EDITOR, edits: [[EDITOR, "pub fn sweep_camera", "pub fn canvas_pointer_up(ops: Vec<SweepMutation>) -> Emit {\n    Emit::mutations(ops)\n}\n\npub fn sweep_camera"]] },
+  { name: "release-through-its-transaction-is-silent", expect: "silent", edits: [[EDITOR, "pub fn sweep_camera", "pub fn canvas_pointer_up(transaction: protocol::TransactionRef, ops: Vec<SweepMutation>, cancelled: bool) -> Emit {\n    if cancelled { return Emit::mutations(Vec::new()); }\n    Emit::commit_transaction(transaction, ops)\n}\n\npub fn sweep_camera"]] },
+  { name: "host-snapshot-refusal-law-is-silent", expect: "silent", edits: [[EDITOR_TEST, "//! 🧪️ Sweep tests.", `//! 🧪️ Sweep tests.\nconst REFUSED: &str = "${HOST_SNAPSHOT}";`]] },
+  { name: "plugin-edit-literal", expect: "report", rule: "edit-literal", file: EDITOR, edits: [[EDITOR, "authority.next_edit(forward, inverse)", `${EDIT} line: None, id: "e".into(), forwards: vec![forward], inverse, description, ..Default::default() }`]] },
+  { name: "imported-edit-literal", expect: "report", rule: "edit-literal", file: EDITOR, edits: [[EDITOR, "authority.next_edit(forward, inverse)", "Edit { line: authority.line_id().map(str::to_owned), forwards: vec![forward], inverse, description, ..Default::default() }"]] },
   { name: "store-and-test-edit-literals-are-silent", expect: "silent", edits: [[STORE, "pub fn empty()", "pub fn other() -> Edit<M> { Edit { line: Some(\"main\".into()), id: String::new() } }\npub fn empty()"]] },
   { name: "invertible-footprint", expect: "report", rule: "footprint-hand", file: EDITOR, edits: [[EDITOR, "store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes)", `store::ArtifactStoreOneItemFootprint::${INVERTIBLE}(retained_bytes)`]] },
   { name: "counted-footprint", expect: "report", rule: "footprint-hand", file: EDITOR, edits: [[EDITOR, "store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes)", `store::ArtifactStoreOneItemFootprint::${t("for_one", "_item")}(targets.len(), retained_bytes)`]] },
   { name: "literal-footprint", expect: "report", rule: "footprint-hand", file: EDITOR, edits: [[EDITOR, "store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes)", `store::${FOOTPRINT} work_items: 1, retained_bytes }`]] },
   { name: "test-footprint-is-silent", expect: "silent", edits: [[EDITOR_TEST, "//! 🧪️ Sweep tests.", `//! 🧪️ Sweep tests.\nconst F: ArtifactStoreOneItemFootprint = ArtifactStoreOneItemFootprint::${INVERTIBLE}(8);`]] },
+  { name: "schema-bridge-default-rows", expect: "report", rule: "footprint-default", file: EDITOR, edits: [[EDITOR, "pub fn sweep_camera", `impl Mutation<Value> for SweepMutation {\n    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Sweep>>::INPUT_SCHEMAS;\n    fn inverse(&self, base: &Value) -> Result<Vec<Self>, ValueError> { Ok(vec![self.clone()]) }\n}\n\npub fn sweep_camera`]] },
+  { name: "schema-bridge-forwarding-rows-is-silent", expect: "silent", edits: [[EDITOR, "pub fn sweep_camera", `impl protocol::Mutation<Value> for SweepMutation {\n    const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Sweep>>::INPUT_SCHEMAS;\n    fn inverse_rows(&self) -> usize {\n        <Self as Mutation<Sweep>>::inverse_rows(self)\n    }\n}\n\npub fn sweep_camera`]] },
+  { name: "trait-schema-default-is-silent", expect: "silent", edits: [[ACTOR, "pub struct CoalesceKey(pub String);", "pub struct CoalesceKey(pub String);\npub trait Mutation<P> {\n    const INPUT_SCHEMAS: &'static [&'static str] = &[];\n}"]] },
   {
     name: "declared-intent-function-is-silent",
     expect: "silent",

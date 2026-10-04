@@ -3,16 +3,17 @@
 use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
 use crate::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 //#region 🔖️Artifact
-/// 🧬️ Full equation artifact across the artifact and config lanes. `notation`/`results`/
-/// `computed` mirror `EquationSnapshot`'s own composed-child slots (ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `equation→C:text,table,value`); `equation`
-/// mirrors its plain (non-`#[child]`) persistent sibling added in wave M3a of
-/// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS.
+/// 🧬️ Full equation artifact across the artifact and config lanes, mirroring `EquationSnapshot`: the parent-owned `graph`
+/// and `geometry`, their derived composed-child handles and the authored `equation`.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.mathematical.equation")]
 pub struct EquationArtifact {
+    #[state(artifact)]
+    pub graph: EquationGraph,
+    #[state(artifact)]
+    pub geometry: EquationGeometry,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub notation: EquationNotationChild,
@@ -26,13 +27,13 @@ pub struct EquationArtifact {
     pub equation: EquationExprSnapshot,
 }
 
-// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
-// (fan-out playbook trap #3, same shape as `📸️snapshot/🦀️.rs`'s `EquationSnapshot`
-// impl). Bridged per composed field through the PRE-EXISTING `to_dsl_value`/`from_dsl_value` serde
-// bridge (framework-internal, exempt); every other field goes through `ToValue`/`FromValue` directly.
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>` (fan-out playbook trap #3,
+// same shape as `📸️snapshot/🦀️.rs`'s `EquationSnapshot` impl); every other field goes through `ToValue`/`FromValue`.
 impl ToValue for EquationArtifact {
     fn to_value(&self) -> DslValue {
         DslValue::object([
+            ("graph".to_string(), self.graph.to_value()),
+            ("geometry".to_string(), self.geometry.to_value()),
             ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
             ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
             ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
@@ -45,6 +46,8 @@ impl FromValue for EquationArtifact {
         let entries = DslValue::into_object(value)?;
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
+            graph: EquationGraph::from_value(field("graph"))?,
+            geometry: EquationGeometry::from_value(field("geometry"))?,
             notation: semio_framework_value::FromValue::from_value(field("notation"))?,
             results: semio_framework_value::FromValue::from_value(field("results"))?,
             computed: semio_framework_value::FromValue::from_value(field("computed"))?,
@@ -64,17 +67,18 @@ impl Default for EquationArtifact {
 impl EquationArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::EquationSnapshot {
-        crate::EquationSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
+        crate::EquationSnapshot { graph: self.graph.clone(), geometry: self.geometry.clone(), notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::EquationSnapshot) -> Self {
-        Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation }
+        Self { graph: snapshot.graph, geometry: snapshot.geometry, notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation }
     }
-
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::EquationSnapshot) {
+        self.graph = snapshot.graph;
+        self.geometry = snapshot.geometry;
         self.notation = snapshot.notation;
         self.results = snapshot.results;
         self.computed = snapshot.computed;
@@ -115,7 +119,6 @@ pub fn equation_artifact_schema_descriptor() -> semio_framework_schema_registry:
 //#endregion 🔖️Descriptor
 
 //#region 🔁️Re-exports
-pub use crate::EquationGeometry;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::EquationGraph;
+pub use crate::{EquationGeometry, EquationGraph};
 //#endregion 🔁️Re-exports

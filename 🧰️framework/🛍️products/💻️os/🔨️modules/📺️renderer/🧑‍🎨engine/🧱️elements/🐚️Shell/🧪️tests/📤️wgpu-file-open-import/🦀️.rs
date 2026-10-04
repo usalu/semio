@@ -65,7 +65,7 @@ fn one_picked_file_becomes_the_fixture_import_actions() {
     for case in &fixture.argument_cases {
         let opened = vec![OpenedFile { name: case.name.clone(), contents: case.chunk.payload.clone() }];
         let multiple = case.fan_out.is_some();
-        let actions = file_open_import_actions("procedural", "importDocument", opened, multiple);
+        let actions = file_open_import_actions("procedural", "importDocument", opened, multiple, None);
         assert_eq!(actions.len(), 1, "{}: a payload under the extent is one chunk", case.id);
         let action = &actions[0];
         assert_eq!(action.controller_id, "procedural", "{}", case.id);
@@ -84,7 +84,7 @@ fn one_picked_file_becomes_the_fixture_import_actions() {
 #[test]
 fn a_large_file_fans_out_into_ordered_bounded_chunks() {
     let payload = "s".repeat(semio_framework::kernel::IMPORT_CHUNK_BYTES * 2 + 11);
-    let actions = file_open_import_actions("procedural", "importDocument", vec![OpenedFile { name: "big.stl".into(), contents: payload.clone() }], false);
+    let actions = file_open_import_actions("procedural", "importDocument", vec![OpenedFile { name: "big.stl".into(), contents: payload.clone() }], false, None);
     assert_eq!(actions.len(), 3, "two full chunks and a remainder");
     let mut reassembled = String::new();
     for (position, action) in actions.iter().enumerate() {
@@ -92,8 +92,8 @@ fn a_large_file_fans_out_into_ordered_bounded_chunks() {
         let read = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone()).unwrap_or(DslValue::Null);
         let DslValue::String(chunk_payload) = read(semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD) else { panic!("payload") };
         assert!(chunk_payload.len() <= semio_framework::kernel::IMPORT_CHUNK_BYTES, "chunk {position} is {} B", chunk_payload.len());
-        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_CHUNK), DslValue::Number(dsl::os_dsl::schema::Number::UInt(position as u64)), "chunk {position} names its position");
-        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_CHUNK_COUNT), DslValue::Number(dsl::os_dsl::schema::Number::UInt(3)), "chunk {position} names its run length");
+        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_CHUNK), DslValue::Number(semio_framework_value::Number::UInt(position as u64)), "chunk {position} names its position");
+        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_CHUNK_COUNT), DslValue::Number(semio_framework_value::Number::UInt(3)), "chunk {position} names its run length");
         assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_NAME), DslValue::String("big.stl".into()), "chunk {position} carries the file name the format is resolved from");
         reassembled.push_str(&chunk_payload);
     }
@@ -104,26 +104,26 @@ fn a_large_file_fans_out_into_ordered_bounded_chunks() {
 #[test]
 fn a_multi_file_pick_fans_out_per_file_with_its_position() {
     let opened = vec![OpenedFile { name: "a.stl".into(), contents: "solid a\n".into() }, OpenedFile { name: "b.stl".into(), contents: "solid b\n".into() }];
-    let actions = file_open_import_actions("procedural", "importDocument", opened, true);
+    let actions = file_open_import_actions("procedural", "importDocument", opened, true, None);
     assert_eq!(actions.len(), 2);
     for (position, action) in actions.iter().enumerate() {
         let Some(DslValue::Object(entries)) = action.args.as_ref() else { panic!("object args") };
         let read = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone()).unwrap_or(DslValue::Null);
-        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_INDEX), DslValue::Number(dsl::os_dsl::schema::Number::UInt(position as u64)));
-        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_TOTAL), DslValue::Number(dsl::os_dsl::schema::Number::UInt(2)));
+        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_INDEX), DslValue::Number(semio_framework_value::Number::UInt(position as u64)));
+        assert_eq!(read(semio_framework::kernel::IMPORT_ARGUMENT_TOTAL), DslValue::Number(semio_framework_value::Number::UInt(2)));
     }
 }
 
 /// 🕳️ A cancelled picker dispatches nothing — never an import of zero files reported as a document.
 #[test]
 fn a_cancelled_pick_dispatches_nothing() {
-    assert!(file_open_import_actions("procedural", "importDocument", Vec::new(), false).is_empty());
+    assert!(file_open_import_actions("procedural", "importDocument", Vec::new(), false, None).is_empty());
 }
 
 /// 📤️ The host-effect funnel names the import effect, and the picker it reaches is a real one.
 #[test]
 fn the_host_effect_funnel_owns_request_file_open() {
-    assert!(WGPU_SHELL_SOURCE.contains("Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {"), "queue_host_effects must own RequestFileOpen");
+    assert!(WGPU_SHELL_SOURCE.contains("Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, .. } => {"), "queue_host_effects must own RequestFileOpen");
     assert!(WGPU_SHELL_SOURCE.contains(r#""op": "request-file-open""#), "the browser half must ask the page for a real picker");
     assert!(!WGPU_SHELL_SOURCE.contains("fn request_file_open(_accept: &str"), "a stubbed picker means Import Document… opens nothing at all");
 }
@@ -174,4 +174,23 @@ fn both_dispatch_paths_answer_through_the_one_host_effect_funnel() {
     assert!(!WGPU_SHELL_SOURCE.contains("for effect in &result.requested_effects {\n            match effect {"), "a second, partial effect fold drops every effect it does not name");
     assert!(WGPU_SHELL_SOURCE.contains("self.queue_host_effects(&action.controller_id.clone(), queued);"), "the action path must feed the funnel");
     assert!(WGPU_SHELL_SOURCE.contains("self.queue_host_effects(&session.app.controller_id.clone(), queued);"), "the command path must feed the funnel");
+}
+
+#[test]
+fn file_open_import_retains_texture_target_without_overriding_chunk_envelope() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📤️file-open-import/🔣️.json")).unwrap();
+    let target = &fixture["targetArguments"];
+    let mut fields: Vec<_> = target.as_object().unwrap().iter().map(|(name, value)| (name.clone(), DslValue::String(value.as_str().unwrap().into()))).collect();
+    fields.push(("payload".into(), DslValue::String("invalid envelope override".into())));
+    let args = DslValue::Object(fields);
+    let text = "x".repeat(semio_framework::kernel::IMPORT_CHUNK_BYTES + 3);
+    let actions = file_open_import_actions("procedural", "importDocument", vec![OpenedFile { name: "paint.png".into(), contents: text.clone() }], false, Some(&args));
+    assert_eq!(actions.len(), 2);
+    for action in &actions {
+        let retained = action.args.as_ref().unwrap();
+        for (name, expected) in target.as_object().unwrap() { assert_eq!(retained.get(name).and_then(DslValue::as_str), expected.as_str()); }
+        assert_ne!(retained.get("payload").and_then(DslValue::as_str), Some("invalid envelope override"));
+    }
+    assert!(file_open_import_actions("procedural", "importDocument", Vec::new(), false, Some(&args)).is_empty());
+    println!("[DEBUG] file-open target arguments retained in both bounded chunks and canceled picker emitted no import");
 }

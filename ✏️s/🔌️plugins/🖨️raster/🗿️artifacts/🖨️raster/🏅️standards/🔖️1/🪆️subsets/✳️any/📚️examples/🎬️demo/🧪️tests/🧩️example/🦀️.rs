@@ -10,7 +10,7 @@ async fn inference_determinism_law() {
     use crate::RasterSnapshot;
     use protocol::Inference;
     let snapshot = RasterSnapshot::default();
-    assert_eq!(RasterInference::infer(&snapshot), RasterInference::infer(&snapshot));
+    assert_eq!(RasterInference::infer(&snapshot).expect("valid materialized inference fixture"), RasterInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -18,5 +18,5 @@ async fn inference_default_law() {
     use crate::standards::v1::subsets::any::schema::inferences::RasterInference;
     use crate::RasterSnapshot;
     use protocol::Inference;
-    assert_eq!(RasterInference::infer(&RasterSnapshot::default()), RasterInference::default());
+    assert_eq!(RasterInference::infer(&RasterSnapshot::default()).expect("valid materialized inference fixture"), RasterInference::default());
 }

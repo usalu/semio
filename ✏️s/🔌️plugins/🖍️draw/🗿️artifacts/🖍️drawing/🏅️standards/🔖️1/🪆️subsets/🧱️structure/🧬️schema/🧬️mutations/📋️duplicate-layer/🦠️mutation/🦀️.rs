@@ -8,7 +8,7 @@ use crate::DrawingSnapshot;
 /// 🧬️ `duplicate-layer` payload — source address only; the duplicate's id is deterministic
 /// (content-addressed from the source, see `engine::clone_drawing_layer_node`), so `diff`/`inverse`
 /// recompute it from BASE rather than carrying it.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -29,9 +29,12 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DuplicateLayer
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" duplizieren", self.layer_id))
     }

@@ -1,0 +1,5 @@
+# Authenticated Count Lease Canonical Value Prerequisite
+
+Root actual registered authenticated Hublease selection failed before assertions at one primary E0432: PPTX native module imported DecodedValue from the kernel root. UncachedNx9m47exit1, no lease1 runtime result. The actual canonical compiler authority is semio_framework_value::DecodedValue, already an explicitly declared direct dependency and already imported for ValueError/ValueRefusalKind in the same file.
+
+Root mounted exactly one full-body guarded consumer import join, preserving all native bodies, shared paid OPC/XML producer, factories, fixtures and law selectors. No kernel alias/legacy API/dependency was added. Full before/after/SHA are retained in the ticket input pair. Emit-only syntax and actual owning/lease runtime replays remain separate required receipts; no feature behavior or passing runtime is inferred. Root current Space14/Collection13 baseline runs first, then queued CAD14/Layout9/Rewriting12 and corrected truelease1 retry.

@@ -9,7 +9,7 @@ import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️pro
 /** 🛂️ Checks the actual Hub credential provider. */
 class CheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Credential provider check accepts no arguments");
+    if (args.length) throw new Error("Credential provider check accepts no arguments");
     await runRepositoryCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")], this.repoRoot, "hub-auth-client:check");
   }
 }
@@ -25,7 +25,7 @@ class TestScript extends BundleScript {
 /** 🧬️ Proves portable protocol selection and independent schema admission. */
 class SourceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Credential source law accepts no arguments");
+    if (args.length) throw new Error("Credential source law accepts no arguments");
     const { testCredentialProtocolSourceV1 } = await import("../../🧪️tests/🧬️source/🟦️.ts");
     await testCredentialProtocolSourceV1(this.repoRoot);
   }

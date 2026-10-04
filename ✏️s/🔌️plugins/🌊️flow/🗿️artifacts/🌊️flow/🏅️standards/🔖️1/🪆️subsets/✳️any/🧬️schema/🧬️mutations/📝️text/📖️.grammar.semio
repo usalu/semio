@@ -1,9 +1,0 @@
-dialect grammar
-grammar flow.mutations
-extension flow
-start document
-
-document = header body
-header = "schema" SP "flow.flow.mutations" NL
-body = payload NL?
-payload = OCTET+

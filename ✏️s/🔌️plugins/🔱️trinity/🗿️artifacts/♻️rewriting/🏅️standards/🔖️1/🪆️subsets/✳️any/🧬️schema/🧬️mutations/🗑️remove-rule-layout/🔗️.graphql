@@ -1,2 +1,2 @@
-# 🗑️ Direct remove-rule-layout-point / RemoveRuleLayoutPoint payload.
+# 🧬️ RemoveRuleLayoutPointInput owns its declared typed payload.
 input RemoveRuleLayoutPointInput { key: String! }

@@ -431,55 +431,55 @@ pub fn register_artifact_inferences() {
 /// binary form is exercised directly by `protocol_walk_law` below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a",
         extension: Some("gif"),
-        role: dsl::LanguageRole::Document,
+        role: semio_framework_dsl::LanguageRole::Document,
         grammar: Some(crate::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.gif.89a"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.op",
         extension: None,
-        role: dsl::LanguageRole::Ops,
+        role: semio_framework_dsl::LanguageRole::Ops,
         grammar: Some(crate::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::standards::v89a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
         protocol: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.gif.89a.op"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.op"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.diff",
         extension: None,
-        role: dsl::LanguageRole::Diff,
+        role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(crate::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(crate::standards::v89a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
-        hooks: dsl::passthrough_hooks("stdio.gif.89a.diff"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.diff"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.pack",
         extension: None,
-        role: dsl::LanguageRole::Pack,
+        role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::standards::v89a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.gif.89a.pack"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.pack"),
     });
-    dsl::register_language(dsl::LanguageSpec {
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.spr",
         extension: None,
-        role: dsl::LanguageRole::Spr,
+        role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
         protocol: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
         protocol_path: Some(crate::standards::v89a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-        hooks: dsl::passthrough_hooks("stdio.gif.89a.spr"),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.spr"),
     });
 }
 
@@ -493,7 +493,7 @@ pub fn register_pilot_languages() {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.gif.89a", GifSnapshot::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.gif.89a", GifSnapshot::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

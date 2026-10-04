@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭️ Sequence's step-DAG topology — see module doc for the Kahn's-algorithm derivation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SequenceTopology {
@@ -26,17 +26,24 @@ pub struct SequenceTopology {
     pub node_count: u32,
 }
 
-/// 🧮️ Computes [`SequenceTopology`] via Kahn's algorithm over `steps`/`edges` (read off the
-/// composed content child's working scene — see `sequence_working_scene`'s doc comment). Edges
-/// referencing a missing step id are ignored (dangling refs never a source of truth for topology).
+/// 🧮️ [`SequenceTopology`] of a document: its `content` child's derivable scene (`crate::sequence_derivable_scene`), or the
+/// empty topology when the child is not derivable here — total for every parent, decoded or reloaded ones included.
 pub fn compute_sequence_topology(snapshot: &SequenceSnapshot) -> SequenceTopology {
-    let scene = crate::sequence_working_scene(snapshot);
-    let ids: Vec<String> = scene.steps.iter().map(|step| step.id.clone()).collect();
+    match crate::sequence_derivable_scene(snapshot) {
+        Some(scene) => compute_scene_topology(&scene.steps, &scene.edges),
+        None => compute_scene_topology(&[], &[]),
+    }
+}
+
+/// 🧮️ Computes [`SequenceTopology`] via Kahn's algorithm over one scene's `steps`/`edges`. Edges referencing a missing step id
+/// are ignored (dangling refs never a source of truth for topology).
+pub fn compute_scene_topology(steps: &[crate::SequenceStep], edges: &[crate::SequenceEdge]) -> SequenceTopology {
+    let ids: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();
     let known: std::collections::BTreeSet<&String> = ids.iter().collect();
 
     let mut adjacency: BTreeMap<String, Vec<String>> = ids.iter().map(|id| (id.clone(), Vec::new())).collect();
     let mut in_degree: BTreeMap<String, u32> = ids.iter().map(|id| (id.clone(), 0)).collect();
-    for edge in &scene.edges {
+    for edge in edges {
         if known.contains(&edge.from) && known.contains(&edge.to) {
             adjacency.get_mut(&edge.from).expect("from is known").push(edge.to.clone());
             *in_degree.get_mut(&edge.to).expect("to is known") += 1;

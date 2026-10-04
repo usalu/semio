@@ -47,7 +47,7 @@ const ORACLE_ID = "image-tiff-6-0-mutate-reader";
 const ENGINE_FAMILY = "tiff";
 const ENGINE_VERSION = "0.11.3";
 
-type Recipe = Readonly<{ id: string; mutation: string; notes: string }>;
+type Recipe = Readonly<{ id: string; mutation?: string; notes: string }>;
 
 /** 🍳️ Mirrors `RECIPE_IDS`/`recipe()` in `🔁️codec/🦀️.rs` verbatim, minus
  *  `change-byte-order-applied` (the codec refuses to build it — see this file's own header). One
@@ -58,7 +58,7 @@ const RECIPES: readonly Recipe[] = [
   { id: "remove-ifd-applied", mutation: "remove-ifd", notes: "The second IFD of a two-IFD document is dropped — ifdCount 2 -> 1." },
   { id: "replace-tag-applied", mutation: "replace-tag", notes: "IFD 0's ImageDescription tag value changes; every other tag and the raster are untouched." },
   { id: "remove-tag-applied", mutation: "remove-tag", notes: "IFD 0's ImageDescription tag is omitted entirely on encode." },
-  { id: "replace-pixels-applied", mutation: "replace-pixels", notes: "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different." },
+  { id: "replace-pixels-applied", notes: "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different." },
 ];
 //#endregion 🧬️Contract
 
@@ -100,8 +100,7 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.tiff", standard: "6.0", subset: "document" },
-    mutation: recipe.mutation,
-    outcome: "applied",
+    ...(recipe.mutation ? { mutation: recipe.mutation, outcome: "applied" } : {}),
     units: { length: "unitless", angle: "degree" },
     files,
     generator: {
@@ -226,7 +225,7 @@ print(kind + ': written')
   for (const recipe of recipes) {
     try {
       manifests.push(generateOne(recipe, outDir));
-      console.error(`[tiff generator] ${recipe.id} (${recipe.mutation}/applied)`);
+      console.error(`[tiff generator] ${recipe.id}${recipe.mutation ? ` (${recipe.mutation}/applied)` : ""}`);
     } catch (error) {
       // 🧭️A recipe the codec refuses is REPORTED, never dropped — see the sibling avi generator's
       // own identical rationale. (change-byte-order-applied is never even attempted here — see

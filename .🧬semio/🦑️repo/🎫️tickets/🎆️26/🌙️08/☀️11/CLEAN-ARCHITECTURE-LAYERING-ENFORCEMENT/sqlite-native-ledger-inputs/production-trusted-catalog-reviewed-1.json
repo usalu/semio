@@ -1,0 +1,596 @@
+{
+  "at": "2026-10-03T10:37:02.773Z",
+  "nativePair": {
+    "at": "2026-10-03T10:29:57.977Z",
+    "stage": "Before compiler launch guard rejection",
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/trusted-stdio-catalog.json",
+    "previousAt": "2026-10-03T10:26:19.460Z",
+    "attemptAt": "2026-10-03T10:29:04.683Z",
+    "before": {
+      "source": "{\n  \"schemaVersion\": 1,\n  \"pluginId\": \"stdio\",\n  \"packageId\": \"semio:stdio\",\n  \"version\": \"0.1.0\",\n  \"nativeCodecs\": [\n    {\n      \"artifactKind\": \"s.stdio.avi\",\n      \"artifactSchema\": \"stdio.avi\",\n      \"packSchemaHash\": \"9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640\",\n      \"factoryId\": \"stdio.native.avi.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.bcf\",\n      \"artifactSchema\": \"stdio.bcf\",\n      \"packSchemaHash\": \"3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0\",\n      \"factoryId\": \"stdio.native.bcf.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.csv\",\n      \"artifactSchema\": \"stdio.csv\",\n      \"packSchemaHash\": \"a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17\",\n      \"factoryId\": \"stdio.native.csv.v1\",\n      \"extension\": \"csv\",\n      \"protocolSourceSha256\": \"a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.deflate\",\n      \"artifactSchema\": \"stdio.deflate\",\n      \"packSchemaHash\": \"09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea\",\n      \"factoryId\": \"stdio.native.deflate.v1\",\n      \"extension\": \"zz\",\n      \"protocolSourceSha256\": \"09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.docx\",\n      \"artifactSchema\": \"stdio.docx\",\n      \"packSchemaHash\": \"8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c\",\n      \"factoryId\": \"stdio.native.docx.v1\",\n      \"extension\": \"docx\",\n      \"protocolSourceSha256\": \"8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.dwg\",\n      \"artifactSchema\": \"stdio.dwg\",\n      \"packSchemaHash\": \"29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5\",\n      \"factoryId\": \"stdio.native.dwg.v1\",\n      \"extension\": \"dwg\",\n      \"protocolSourceSha256\": \"29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.dxf\",\n      \"artifactSchema\": \"stdio.dxf\",\n      \"packSchemaHash\": \"08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018\",\n      \"factoryId\": \"stdio.native.dxf.v1\",\n      \"extension\": \"dxf\",\n      \"protocolSourceSha256\": \"98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.gltf\",\n      \"artifactSchema\": \"stdio.gltf\",\n      \"packSchemaHash\": \"f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f\",\n      \"factoryId\": \"stdio.native.gltf.v1\",\n      \"extension\": \"gltf\",\n      \"protocolSourceSha256\": \"61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.html\",\n      \"artifactSchema\": \"stdio.html\",\n      \"packSchemaHash\": \"563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d\",\n      \"factoryId\": \"stdio.native.html.v1\",\n      \"extension\": \"html\",\n      \"protocolSourceSha256\": \"563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.jpg\",\n      \"artifactSchema\": \"stdio.jpg\",\n      \"packSchemaHash\": \"bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c\",\n      \"factoryId\": \"stdio.native.jpg.v1\",\n      \"extension\": \"jpg\",\n      \"protocolSourceSha256\": \"d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.json\",\n      \"artifactSchema\": \"stdio.json\",\n      \"packSchemaHash\": \"d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a\",\n      \"factoryId\": \"stdio.native.json.v1\",\n      \"extension\": \"json\",\n      \"protocolSourceSha256\": \"6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.las\",\n      \"artifactSchema\": \"stdio.las\",\n      \"packSchemaHash\": \"d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d\",\n      \"factoryId\": \"stdio.native.las.v1\",\n      \"extension\": \"las\",\n      \"protocolSourceSha256\": \"3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.md\",\n      \"artifactSchema\": \"stdio.md\",\n      \"packSchemaHash\": \"b1abe95d764849c42fc6c74af61b4efccbaf64881007bf05094c887643a0bbbe\",\n      \"factoryId\": \"stdio.native.md.v1\",\n      \"extension\": \"md\",\n      \"protocolSourceSha256\": \"2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.mp3\",\n      \"artifactSchema\": \"stdio.mp3\",\n      \"packSchemaHash\": \"ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0\",\n      \"factoryId\": \"stdio.native.mp3.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.mp4\",\n      \"artifactSchema\": \"stdio.mp4\",\n      \"packSchemaHash\": \"9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d\",\n      \"factoryId\": \"stdio.native.mp4.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.obj\",\n      \"artifactSchema\": \"stdio.obj\",\n      \"packSchemaHash\": \"beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d\",\n      \"factoryId\": \"stdio.native.obj.v1\",\n      \"extension\": \"obj\",\n      \"protocolSourceSha256\": \"bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pdf\",\n      \"artifactSchema\": \"stdio.pdf\",\n      \"packSchemaHash\": \"b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9\",\n      \"factoryId\": \"stdio.native.pdf.v1\",\n      \"extension\": \"pdf\",\n      \"protocolSourceSha256\": \"5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pdf\",\n      \"artifactSchema\": \"stdio.pdf.1.7\",\n      \"packSchemaHash\": \"a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e\",\n      \"factoryId\": \"stdio.native.pdf17.v1\",\n      \"extension\": \"pdf\",\n      \"protocolSourceSha256\": \"b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.ply\",\n      \"artifactSchema\": \"stdio.ply\",\n      \"packSchemaHash\": \"b68749fcf458b876c161121f83e4fddda3adea098a3d3defd280711c7bacb2ce\",\n      \"factoryId\": \"stdio.native.ply.v1\",\n      \"extension\": \"ply\",\n      \"protocolSourceSha256\": \"d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.png\",\n      \"artifactSchema\": \"stdio.png\",\n      \"packSchemaHash\": \"fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0\",\n      \"factoryId\": \"stdio.native.png.v1\",\n      \"extension\": \"png\",\n      \"protocolSourceSha256\": \"fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pptx\",\n      \"artifactSchema\": \"stdio.pptx\",\n      \"packSchemaHash\": \"a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668\",\n      \"factoryId\": \"stdio.native.pptx.v1\",\n      \"extension\": \"pptx\",\n      \"protocolSourceSha256\": \"a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.step\",\n      \"artifactSchema\": \"stdio.step\",\n      \"packSchemaHash\": \"7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5\",\n      \"factoryId\": \"stdio.native.step.v1\",\n      \"extension\": \"step\",\n      \"protocolSourceSha256\": \"7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.stl\",\n      \"artifactSchema\": \"stdio.stl\",\n      \"packSchemaHash\": \"7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa\",\n      \"factoryId\": \"stdio.native.stl.v1\",\n      \"extension\": \"stl\",\n      \"protocolSourceSha256\": \"cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.svg\",\n      \"artifactSchema\": \"stdio.svg\",\n      \"packSchemaHash\": \"964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9\",\n      \"factoryId\": \"stdio.native.svg.v1\",\n      \"extension\": \"svg\",\n      \"protocolSourceSha256\": \"964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.tiff\",\n      \"artifactSchema\": \"stdio.tiff\",\n      \"packSchemaHash\": \"498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a\",\n      \"factoryId\": \"stdio.native.tiff.v1\",\n      \"extension\": \"tiff\",\n      \"protocolSourceSha256\": \"498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.tsv\",\n      \"artifactSchema\": \"stdio.tsv\",\n      \"packSchemaHash\": \"8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989\",\n      \"factoryId\": \"stdio.native.tsv.v1\",\n      \"extension\": \"tsv\",\n      \"protocolSourceSha256\": \"8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.txt\",\n      \"artifactSchema\": \"stdio.txt\",\n      \"packSchemaHash\": \"d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536\",\n      \"factoryId\": \"stdio.native.txt.v1\",\n      \"extension\": \"txt\",\n      \"protocolSourceSha256\": \"d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.xlsx\",\n      \"artifactSchema\": \"stdio.xlsx\",\n      \"packSchemaHash\": \"b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17\",\n      \"factoryId\": \"stdio.native.xlsx.v1\",\n      \"extension\": \"xlsx\",\n      \"protocolSourceSha256\": \"b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.xml\",\n      \"artifactSchema\": \"stdio.xml\",\n      \"packSchemaHash\": \"874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08\",\n      \"factoryId\": \"stdio.native.xml.v1\",\n      \"extension\": \"xml\",\n      \"protocolSourceSha256\": \"874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.zip\",\n      \"artifactSchema\": \"stdio.zip\",\n      \"packSchemaHash\": \"1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8\",\n      \"factoryId\": \"stdio.native.zip.v1\",\n      \"extension\": \"zip\",\n      \"protocolSourceSha256\": \"451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e\"\n    }\n  ],\n  \"openTargets\": [\n    {\n      \"artifactKind\": \"s.stdio.json\",\n      \"artifactSchema\": \"stdio.json\",\n      \"packSchemaHash\": \"d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a\",\n      \"factoryId\": \"stdio.native.json.v1\",\n      \"extension\": \"json\",\n      \"role\": \"editor\",\n      \"surfaceId\": \"stdio.json.editor\",\n      \"protocolSourceSha256\": \"6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5\"\n    }\n  ],\n  \"publication\": \"committed\",\n  \"hubBundle\": \"withheld\",\n  \"componentAdmission\": {\n    \"status\": \"absent\",\n    \"limitBytes\": 67108864\n  }\n}\n",
+      "sha256": "a93616da6bd4e14dbe3c312859d925fc47be5e9658096bedac4af64cad53b184"
+    },
+    "current": {
+      "source": "{\n  \"schemaVersion\": 1,\n  \"pluginId\": \"stdio\",\n  \"packageId\": \"semio:stdio\",\n  \"version\": \"0.1.0\",\n  \"nativeCodecs\": [\n    {\n      \"artifactKind\": \"s.stdio.avi\",\n      \"artifactSchema\": \"stdio.avi\",\n      \"packSchemaHash\": \"9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640\",\n      \"factoryId\": \"stdio.native.avi.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.bcf\",\n      \"artifactSchema\": \"stdio.bcf\",\n      \"packSchemaHash\": \"3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0\",\n      \"factoryId\": \"stdio.native.bcf.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.csv\",\n      \"artifactSchema\": \"stdio.csv\",\n      \"packSchemaHash\": \"a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17\",\n      \"factoryId\": \"stdio.native.csv.v1\",\n      \"extension\": \"csv\",\n      \"protocolSourceSha256\": \"a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.deflate\",\n      \"artifactSchema\": \"stdio.deflate\",\n      \"packSchemaHash\": \"09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea\",\n      \"factoryId\": \"stdio.native.deflate.v1\",\n      \"extension\": \"zz\",\n      \"protocolSourceSha256\": \"09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.docx\",\n      \"artifactSchema\": \"stdio.docx\",\n      \"packSchemaHash\": \"8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c\",\n      \"factoryId\": \"stdio.native.docx.v1\",\n      \"extension\": \"docx\",\n      \"protocolSourceSha256\": \"8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.dwg\",\n      \"artifactSchema\": \"stdio.dwg\",\n      \"packSchemaHash\": \"29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5\",\n      \"factoryId\": \"stdio.native.dwg.v1\",\n      \"extension\": \"dwg\",\n      \"protocolSourceSha256\": \"29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.dxf\",\n      \"artifactSchema\": \"stdio.dxf\",\n      \"packSchemaHash\": \"08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018\",\n      \"factoryId\": \"stdio.native.dxf.v1\",\n      \"extension\": \"dxf\",\n      \"protocolSourceSha256\": \"98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.gltf\",\n      \"artifactSchema\": \"stdio.gltf\",\n      \"packSchemaHash\": \"f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f\",\n      \"factoryId\": \"stdio.native.gltf.v1\",\n      \"extension\": \"gltf\",\n      \"protocolSourceSha256\": \"61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.html\",\n      \"artifactSchema\": \"stdio.html\",\n      \"packSchemaHash\": \"563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d\",\n      \"factoryId\": \"stdio.native.html.v1\",\n      \"extension\": \"html\",\n      \"protocolSourceSha256\": \"563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.jpg\",\n      \"artifactSchema\": \"stdio.jpg\",\n      \"packSchemaHash\": \"bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c\",\n      \"factoryId\": \"stdio.native.jpg.v1\",\n      \"extension\": \"jpg\",\n      \"protocolSourceSha256\": \"d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.json\",\n      \"artifactSchema\": \"stdio.json\",\n      \"packSchemaHash\": \"d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a\",\n      \"factoryId\": \"stdio.native.json.v1\",\n      \"extension\": \"json\",\n      \"protocolSourceSha256\": \"6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.las\",\n      \"artifactSchema\": \"stdio.las\",\n      \"packSchemaHash\": \"d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d\",\n      \"factoryId\": \"stdio.native.las.v1\",\n      \"extension\": \"las\",\n      \"protocolSourceSha256\": \"3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.md\",\n      \"artifactSchema\": \"stdio.md\",\n      \"packSchemaHash\": \"b1abe95d764849c42fc6c74af61b4efccbaf64881007bf05094c887643a0bbbe\",\n      \"factoryId\": \"stdio.native.md.v1\",\n      \"extension\": \"md\",\n      \"protocolSourceSha256\": \"2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.mp3\",\n      \"artifactSchema\": \"stdio.mp3\",\n      \"packSchemaHash\": \"ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0\",\n      \"factoryId\": \"stdio.native.mp3.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.mp4\",\n      \"artifactSchema\": \"stdio.mp4\",\n      \"packSchemaHash\": \"9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d\",\n      \"factoryId\": \"stdio.native.mp4.v1\",\n      \"extension\": \"semio\",\n      \"protocolSourceSha256\": \"abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.obj\",\n      \"artifactSchema\": \"stdio.obj\",\n      \"packSchemaHash\": \"beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d\",\n      \"factoryId\": \"stdio.native.obj.v1\",\n      \"extension\": \"obj\",\n      \"protocolSourceSha256\": \"bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pdf\",\n      \"artifactSchema\": \"stdio.pdf\",\n      \"packSchemaHash\": \"b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9\",\n      \"factoryId\": \"stdio.native.pdf.v1\",\n      \"extension\": \"pdf\",\n      \"protocolSourceSha256\": \"5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pdf\",\n      \"artifactSchema\": \"stdio.pdf.1.7\",\n      \"packSchemaHash\": \"a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e\",\n      \"factoryId\": \"stdio.native.pdf17.v1\",\n      \"extension\": \"pdf\",\n      \"protocolSourceSha256\": \"b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.ply\",\n      \"artifactSchema\": \"stdio.ply\",\n      \"packSchemaHash\": \"b68749fcf458b876c161121f83e4fddda3adea098a3d3defd280711c7bacb2ce\",\n      \"factoryId\": \"stdio.native.ply.v1\",\n      \"extension\": \"ply\",\n      \"protocolSourceSha256\": \"d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.png\",\n      \"artifactSchema\": \"stdio.png\",\n      \"packSchemaHash\": \"fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0\",\n      \"factoryId\": \"stdio.native.png.v1\",\n      \"extension\": \"png\",\n      \"protocolSourceSha256\": \"fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.pptx\",\n      \"artifactSchema\": \"stdio.pptx\",\n      \"packSchemaHash\": \"a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668\",\n      \"factoryId\": \"stdio.native.pptx.v1\",\n      \"extension\": \"pptx\",\n      \"protocolSourceSha256\": \"a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.step\",\n      \"artifactSchema\": \"stdio.step\",\n      \"packSchemaHash\": \"7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5\",\n      \"factoryId\": \"stdio.native.step.v1\",\n      \"extension\": \"step\",\n      \"protocolSourceSha256\": \"d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.stl\",\n      \"artifactSchema\": \"stdio.stl\",\n      \"packSchemaHash\": \"7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa\",\n      \"factoryId\": \"stdio.native.stl.v1\",\n      \"extension\": \"stl\",\n      \"protocolSourceSha256\": \"cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.svg\",\n      \"artifactSchema\": \"stdio.svg\",\n      \"packSchemaHash\": \"964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9\",\n      \"factoryId\": \"stdio.native.svg.v1\",\n      \"extension\": \"svg\",\n      \"protocolSourceSha256\": \"964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.tiff\",\n      \"artifactSchema\": \"stdio.tiff\",\n      \"packSchemaHash\": \"498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a\",\n      \"factoryId\": \"stdio.native.tiff.v1\",\n      \"extension\": \"tiff\",\n      \"protocolSourceSha256\": \"498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.tsv\",\n      \"artifactSchema\": \"stdio.tsv\",\n      \"packSchemaHash\": \"8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989\",\n      \"factoryId\": \"stdio.native.tsv.v1\",\n      \"extension\": \"tsv\",\n      \"protocolSourceSha256\": \"8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.txt\",\n      \"artifactSchema\": \"stdio.txt\",\n      \"packSchemaHash\": \"d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536\",\n      \"factoryId\": \"stdio.native.txt.v1\",\n      \"extension\": \"txt\",\n      \"protocolSourceSha256\": \"d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.xlsx\",\n      \"artifactSchema\": \"stdio.xlsx\",\n      \"packSchemaHash\": \"b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17\",\n      \"factoryId\": \"stdio.native.xlsx.v1\",\n      \"extension\": \"xlsx\",\n      \"protocolSourceSha256\": \"b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.xml\",\n      \"artifactSchema\": \"stdio.xml\",\n      \"packSchemaHash\": \"874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08\",\n      \"factoryId\": \"stdio.native.xml.v1\",\n      \"extension\": \"xml\",\n      \"protocolSourceSha256\": \"874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08\"\n    },\n    {\n      \"artifactKind\": \"s.stdio.zip\",\n      \"artifactSchema\": \"stdio.zip\",\n      \"packSchemaHash\": \"1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8\",\n      \"factoryId\": \"stdio.native.zip.v1\",\n      \"extension\": \"zip\",\n      \"protocolSourceSha256\": \"451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e\"\n    }\n  ],\n  \"openTargets\": [\n    {\n      \"artifactKind\": \"s.stdio.json\",\n      \"artifactSchema\": \"stdio.json\",\n      \"packSchemaHash\": \"d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a\",\n      \"factoryId\": \"stdio.native.json.v1\",\n      \"extension\": \"json\",\n      \"role\": \"editor\",\n      \"surfaceId\": \"stdio.json.editor\",\n      \"protocolSourceSha256\": \"6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5\"\n    }\n  ],\n  \"publication\": \"committed\",\n  \"hubBundle\": \"withheld\",\n  \"componentAdmission\": {\n    \"status\": \"absent\",\n    \"limitBytes\": 67108864\n  }\n}\n",
+      "sha256": "109519699b2e953172680b3c96ab19b25087e9ce2ed02d783c2dc80bc7f0a72f"
+    },
+    "edit": {
+      "start": 7659,
+      "removed": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+      "inserted": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92"
+    },
+    "inverse": {
+      "start": 7659,
+      "removed": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92",
+      "inserted": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5"
+    },
+    "forwardExact": true,
+    "inverseExact": true,
+    "deltas": [
+      {
+        "path": [
+          "nativeCodecs"
+        ],
+        "before": [
+          {
+            "artifactKind": "s.stdio.avi",
+            "artifactSchema": "stdio.avi",
+            "packSchemaHash": "9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640",
+            "factoryId": "stdio.native.avi.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4"
+          },
+          {
+            "artifactKind": "s.stdio.bcf",
+            "artifactSchema": "stdio.bcf",
+            "packSchemaHash": "3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0",
+            "factoryId": "stdio.native.bcf.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d"
+          },
+          {
+            "artifactKind": "s.stdio.csv",
+            "artifactSchema": "stdio.csv",
+            "packSchemaHash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+            "factoryId": "stdio.native.csv.v1",
+            "extension": "csv",
+            "protocolSourceSha256": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17"
+          },
+          {
+            "artifactKind": "s.stdio.deflate",
+            "artifactSchema": "stdio.deflate",
+            "packSchemaHash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+            "factoryId": "stdio.native.deflate.v1",
+            "extension": "zz",
+            "protocolSourceSha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea"
+          },
+          {
+            "artifactKind": "s.stdio.docx",
+            "artifactSchema": "stdio.docx",
+            "packSchemaHash": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c",
+            "factoryId": "stdio.native.docx.v1",
+            "extension": "docx",
+            "protocolSourceSha256": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c"
+          },
+          {
+            "artifactKind": "s.stdio.dwg",
+            "artifactSchema": "stdio.dwg",
+            "packSchemaHash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+            "factoryId": "stdio.native.dwg.v1",
+            "extension": "dwg",
+            "protocolSourceSha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5"
+          },
+          {
+            "artifactKind": "s.stdio.dxf",
+            "artifactSchema": "stdio.dxf",
+            "packSchemaHash": "08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018",
+            "factoryId": "stdio.native.dxf.v1",
+            "extension": "dxf",
+            "protocolSourceSha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d"
+          },
+          {
+            "artifactKind": "s.stdio.gltf",
+            "artifactSchema": "stdio.gltf",
+            "packSchemaHash": "f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f",
+            "factoryId": "stdio.native.gltf.v1",
+            "extension": "gltf",
+            "protocolSourceSha256": "61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb"
+          },
+          {
+            "artifactKind": "s.stdio.html",
+            "artifactSchema": "stdio.html",
+            "packSchemaHash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+            "factoryId": "stdio.native.html.v1",
+            "extension": "html",
+            "protocolSourceSha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d"
+          },
+          {
+            "artifactKind": "s.stdio.jpg",
+            "artifactSchema": "stdio.jpg",
+            "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
+            "factoryId": "stdio.native.jpg.v1",
+            "extension": "jpg",
+            "protocolSourceSha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "artifactSchema": "stdio.json",
+            "packSchemaHash": "d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a",
+            "factoryId": "stdio.native.json.v1",
+            "extension": "json",
+            "protocolSourceSha256": "6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5"
+          },
+          {
+            "artifactKind": "s.stdio.las",
+            "artifactSchema": "stdio.las",
+            "packSchemaHash": "d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d",
+            "factoryId": "stdio.native.las.v1",
+            "extension": "las",
+            "protocolSourceSha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195"
+          },
+          {
+            "artifactKind": "s.stdio.md",
+            "artifactSchema": "stdio.md",
+            "packSchemaHash": "b1abe95d764849c42fc6c74af61b4efccbaf64881007bf05094c887643a0bbbe",
+            "factoryId": "stdio.native.md.v1",
+            "extension": "md",
+            "protocolSourceSha256": "2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05"
+          },
+          {
+            "artifactKind": "s.stdio.mp3",
+            "artifactSchema": "stdio.mp3",
+            "packSchemaHash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
+            "factoryId": "stdio.native.mp3.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0"
+          },
+          {
+            "artifactKind": "s.stdio.mp4",
+            "artifactSchema": "stdio.mp4",
+            "packSchemaHash": "9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d",
+            "factoryId": "stdio.native.mp4.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c"
+          },
+          {
+            "artifactKind": "s.stdio.obj",
+            "artifactSchema": "stdio.obj",
+            "packSchemaHash": "beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d",
+            "factoryId": "stdio.native.obj.v1",
+            "extension": "obj",
+            "protocolSourceSha256": "bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "artifactSchema": "stdio.pdf",
+            "packSchemaHash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
+            "factoryId": "stdio.native.pdf.v1",
+            "extension": "pdf",
+            "protocolSourceSha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "artifactSchema": "stdio.pdf.1.7",
+            "packSchemaHash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+            "factoryId": "stdio.native.pdf17.v1",
+            "extension": "pdf",
+            "protocolSourceSha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355"
+          },
+          {
+            "artifactKind": "s.stdio.ply",
+            "artifactSchema": "stdio.ply",
+            "packSchemaHash": "b68749fcf458b876c161121f83e4fddda3adea098a3d3defd280711c7bacb2ce",
+            "factoryId": "stdio.native.ply.v1",
+            "extension": "ply",
+            "protocolSourceSha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8"
+          },
+          {
+            "artifactKind": "s.stdio.png",
+            "artifactSchema": "stdio.png",
+            "packSchemaHash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+            "factoryId": "stdio.native.png.v1",
+            "extension": "png",
+            "protocolSourceSha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0"
+          },
+          {
+            "artifactKind": "s.stdio.pptx",
+            "artifactSchema": "stdio.pptx",
+            "packSchemaHash": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668",
+            "factoryId": "stdio.native.pptx.v1",
+            "extension": "pptx",
+            "protocolSourceSha256": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668"
+          },
+          {
+            "artifactKind": "s.stdio.step",
+            "artifactSchema": "stdio.step",
+            "packSchemaHash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+            "factoryId": "stdio.native.step.v1",
+            "extension": "step",
+            "protocolSourceSha256": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5"
+          },
+          {
+            "artifactKind": "s.stdio.stl",
+            "artifactSchema": "stdio.stl",
+            "packSchemaHash": "7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa",
+            "factoryId": "stdio.native.stl.v1",
+            "extension": "stl",
+            "protocolSourceSha256": "cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7"
+          },
+          {
+            "artifactKind": "s.stdio.svg",
+            "artifactSchema": "stdio.svg",
+            "packSchemaHash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
+            "factoryId": "stdio.native.svg.v1",
+            "extension": "svg",
+            "protocolSourceSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9"
+          },
+          {
+            "artifactKind": "s.stdio.tiff",
+            "artifactSchema": "stdio.tiff",
+            "packSchemaHash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+            "factoryId": "stdio.native.tiff.v1",
+            "extension": "tiff",
+            "protocolSourceSha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a"
+          },
+          {
+            "artifactKind": "s.stdio.tsv",
+            "artifactSchema": "stdio.tsv",
+            "packSchemaHash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+            "factoryId": "stdio.native.tsv.v1",
+            "extension": "tsv",
+            "protocolSourceSha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "artifactSchema": "stdio.txt",
+            "packSchemaHash": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+            "factoryId": "stdio.native.txt.v1",
+            "extension": "txt",
+            "protocolSourceSha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536"
+          },
+          {
+            "artifactKind": "s.stdio.xlsx",
+            "artifactSchema": "stdio.xlsx",
+            "packSchemaHash": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",
+            "factoryId": "stdio.native.xlsx.v1",
+            "extension": "xlsx",
+            "protocolSourceSha256": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17"
+          },
+          {
+            "artifactKind": "s.stdio.xml",
+            "artifactSchema": "stdio.xml",
+            "packSchemaHash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+            "factoryId": "stdio.native.xml.v1",
+            "extension": "xml",
+            "protocolSourceSha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08"
+          },
+          {
+            "artifactKind": "s.stdio.zip",
+            "artifactSchema": "stdio.zip",
+            "packSchemaHash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
+            "factoryId": "stdio.native.zip.v1",
+            "extension": "zip",
+            "protocolSourceSha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e"
+          }
+        ],
+        "current": [
+          {
+            "artifactKind": "s.stdio.avi",
+            "artifactSchema": "stdio.avi",
+            "packSchemaHash": "9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640",
+            "factoryId": "stdio.native.avi.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4"
+          },
+          {
+            "artifactKind": "s.stdio.bcf",
+            "artifactSchema": "stdio.bcf",
+            "packSchemaHash": "3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0",
+            "factoryId": "stdio.native.bcf.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d"
+          },
+          {
+            "artifactKind": "s.stdio.csv",
+            "artifactSchema": "stdio.csv",
+            "packSchemaHash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
+            "factoryId": "stdio.native.csv.v1",
+            "extension": "csv",
+            "protocolSourceSha256": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17"
+          },
+          {
+            "artifactKind": "s.stdio.deflate",
+            "artifactSchema": "stdio.deflate",
+            "packSchemaHash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
+            "factoryId": "stdio.native.deflate.v1",
+            "extension": "zz",
+            "protocolSourceSha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea"
+          },
+          {
+            "artifactKind": "s.stdio.docx",
+            "artifactSchema": "stdio.docx",
+            "packSchemaHash": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c",
+            "factoryId": "stdio.native.docx.v1",
+            "extension": "docx",
+            "protocolSourceSha256": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c"
+          },
+          {
+            "artifactKind": "s.stdio.dwg",
+            "artifactSchema": "stdio.dwg",
+            "packSchemaHash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
+            "factoryId": "stdio.native.dwg.v1",
+            "extension": "dwg",
+            "protocolSourceSha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5"
+          },
+          {
+            "artifactKind": "s.stdio.dxf",
+            "artifactSchema": "stdio.dxf",
+            "packSchemaHash": "08a20dae60b12a9e0efa0a57df68b65791d368d2ca17c26c4cf88e1b0b4c3018",
+            "factoryId": "stdio.native.dxf.v1",
+            "extension": "dxf",
+            "protocolSourceSha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d"
+          },
+          {
+            "artifactKind": "s.stdio.gltf",
+            "artifactSchema": "stdio.gltf",
+            "packSchemaHash": "f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f",
+            "factoryId": "stdio.native.gltf.v1",
+            "extension": "gltf",
+            "protocolSourceSha256": "61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb"
+          },
+          {
+            "artifactKind": "s.stdio.html",
+            "artifactSchema": "stdio.html",
+            "packSchemaHash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
+            "factoryId": "stdio.native.html.v1",
+            "extension": "html",
+            "protocolSourceSha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d"
+          },
+          {
+            "artifactKind": "s.stdio.jpg",
+            "artifactSchema": "stdio.jpg",
+            "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
+            "factoryId": "stdio.native.jpg.v1",
+            "extension": "jpg",
+            "protocolSourceSha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22"
+          },
+          {
+            "artifactKind": "s.stdio.json",
+            "artifactSchema": "stdio.json",
+            "packSchemaHash": "d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a",
+            "factoryId": "stdio.native.json.v1",
+            "extension": "json",
+            "protocolSourceSha256": "6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5"
+          },
+          {
+            "artifactKind": "s.stdio.las",
+            "artifactSchema": "stdio.las",
+            "packSchemaHash": "d87bca2d5758e45c87c770de1997f5d92e2b5a080e8ed3802dca83dfa78d404d",
+            "factoryId": "stdio.native.las.v1",
+            "extension": "las",
+            "protocolSourceSha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195"
+          },
+          {
+            "artifactKind": "s.stdio.md",
+            "artifactSchema": "stdio.md",
+            "packSchemaHash": "b1abe95d764849c42fc6c74af61b4efccbaf64881007bf05094c887643a0bbbe",
+            "factoryId": "stdio.native.md.v1",
+            "extension": "md",
+            "protocolSourceSha256": "2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05"
+          },
+          {
+            "artifactKind": "s.stdio.mp3",
+            "artifactSchema": "stdio.mp3",
+            "packSchemaHash": "ae9079830ec7750ec2b14255aee530d3ff3b6529e9a07f96289c7118ccb297d0",
+            "factoryId": "stdio.native.mp3.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0"
+          },
+          {
+            "artifactKind": "s.stdio.mp4",
+            "artifactSchema": "stdio.mp4",
+            "packSchemaHash": "9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d",
+            "factoryId": "stdio.native.mp4.v1",
+            "extension": "semio",
+            "protocolSourceSha256": "abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c"
+          },
+          {
+            "artifactKind": "s.stdio.obj",
+            "artifactSchema": "stdio.obj",
+            "packSchemaHash": "beaa2742cc2a1451a46a0e3fe32b8eb26e214724cfaa64b0691499963ba1415d",
+            "factoryId": "stdio.native.obj.v1",
+            "extension": "obj",
+            "protocolSourceSha256": "bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "artifactSchema": "stdio.pdf",
+            "packSchemaHash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
+            "factoryId": "stdio.native.pdf.v1",
+            "extension": "pdf",
+            "protocolSourceSha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "artifactSchema": "stdio.pdf.1.7",
+            "packSchemaHash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
+            "factoryId": "stdio.native.pdf17.v1",
+            "extension": "pdf",
+            "protocolSourceSha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355"
+          },
+          {
+            "artifactKind": "s.stdio.ply",
+            "artifactSchema": "stdio.ply",
+            "packSchemaHash": "b68749fcf458b876c161121f83e4fddda3adea098a3d3defd280711c7bacb2ce",
+            "factoryId": "stdio.native.ply.v1",
+            "extension": "ply",
+            "protocolSourceSha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8"
+          },
+          {
+            "artifactKind": "s.stdio.png",
+            "artifactSchema": "stdio.png",
+            "packSchemaHash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
+            "factoryId": "stdio.native.png.v1",
+            "extension": "png",
+            "protocolSourceSha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0"
+          },
+          {
+            "artifactKind": "s.stdio.pptx",
+            "artifactSchema": "stdio.pptx",
+            "packSchemaHash": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668",
+            "factoryId": "stdio.native.pptx.v1",
+            "extension": "pptx",
+            "protocolSourceSha256": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668"
+          },
+          {
+            "artifactKind": "s.stdio.step",
+            "artifactSchema": "stdio.step",
+            "packSchemaHash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+            "factoryId": "stdio.native.step.v1",
+            "extension": "step",
+            "protocolSourceSha256": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92"
+          },
+          {
+            "artifactKind": "s.stdio.stl",
+            "artifactSchema": "stdio.stl",
+            "packSchemaHash": "7cf1c0c897c63144f82cf57d1fa56a101698b8d0e29f66ce2bb49dd10835dbaa",
+            "factoryId": "stdio.native.stl.v1",
+            "extension": "stl",
+            "protocolSourceSha256": "cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7"
+          },
+          {
+            "artifactKind": "s.stdio.svg",
+            "artifactSchema": "stdio.svg",
+            "packSchemaHash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
+            "factoryId": "stdio.native.svg.v1",
+            "extension": "svg",
+            "protocolSourceSha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9"
+          },
+          {
+            "artifactKind": "s.stdio.tiff",
+            "artifactSchema": "stdio.tiff",
+            "packSchemaHash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+            "factoryId": "stdio.native.tiff.v1",
+            "extension": "tiff",
+            "protocolSourceSha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a"
+          },
+          {
+            "artifactKind": "s.stdio.tsv",
+            "artifactSchema": "stdio.tsv",
+            "packSchemaHash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
+            "factoryId": "stdio.native.tsv.v1",
+            "extension": "tsv",
+            "protocolSourceSha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989"
+          },
+          {
+            "artifactKind": "s.stdio.txt",
+            "artifactSchema": "stdio.txt",
+            "packSchemaHash": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
+            "factoryId": "stdio.native.txt.v1",
+            "extension": "txt",
+            "protocolSourceSha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536"
+          },
+          {
+            "artifactKind": "s.stdio.xlsx",
+            "artifactSchema": "stdio.xlsx",
+            "packSchemaHash": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",
+            "factoryId": "stdio.native.xlsx.v1",
+            "extension": "xlsx",
+            "protocolSourceSha256": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17"
+          },
+          {
+            "artifactKind": "s.stdio.xml",
+            "artifactSchema": "stdio.xml",
+            "packSchemaHash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+            "factoryId": "stdio.native.xml.v1",
+            "extension": "xml",
+            "protocolSourceSha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08"
+          },
+          {
+            "artifactKind": "s.stdio.zip",
+            "artifactSchema": "stdio.zip",
+            "packSchemaHash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
+            "factoryId": "stdio.native.zip.v1",
+            "extension": "zip",
+            "protocolSourceSha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e"
+          }
+        ]
+      }
+    ],
+    "authorship": "Observed after normal managed preparation; generator/foreign authorship not attributed without producer proof",
+    "rejectedAttempt": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-worker/sqlite-native-ledger-production-renderer-1-immediate-pre-native-attempt-1791023344683.json",
+    "noCompilerLaunch": true,
+    "sourceRepairPerformed": false,
+    "parsedLeafDeltas": [
+      {
+        "path": [
+          "nativeCodecs",
+          "21",
+          "protocolSourceSha256"
+        ],
+        "before": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+        "current": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92"
+      }
+    ]
+  },
+  "parsedLeaf": {
+    "path": [
+      "nativeCodecs",
+      21,
+      "protocolSourceSha256"
+    ],
+    "before": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
+    "current": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92",
+    "artifactSchema": "stdio.step"
+  },
+  "allOtherParsedAuthorityExact": true,
+  "protectedChecks": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🧬️schema/🧮️ownership/🔣️.json",
+      "expected": "4164d4390c4b4f0794c7b54e2816332b98ba6d53f08a57a9d251e419b4a0512c",
+      "actual": "4164d4390c4b4f0794c7b54e2816332b98ba6d53f08a57a9d251e419b4a0512c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧮️ownership/🔣️.json",
+      "expected": "10722fcea603b2496f6bfbdbdfdd4e98b84d02bb58407779b66d30c3600af1fa",
+      "actual": "10722fcea603b2496f6bfbdbdfdd4e98b84d02bb58407779b66d30c3600af1fa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "expected": "6fcf50146507cd2965fb14a473d1f4fe57aa2de375dfef3070d494e1a2eb73e9",
+      "actual": "6fcf50146507cd2965fb14a473d1f4fe57aa2de375dfef3070d494e1a2eb73e9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+      "expected": "5b9f5848bf3100a45cf1f5a5468948f01e190c8b487578c3bda102de481f6301",
+      "actual": "5b9f5848bf3100a45cf1f5a5468948f01e190c8b487578c3bda102de481f6301"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+      "expected": "3d5329dad7c12cf1e89b5c8f52d184e012aee8981d77cbdd3bb611639ff98f53",
+      "actual": "3d5329dad7c12cf1e89b5c8f52d184e012aee8981d77cbdd3bb611639ff98f53"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs",
+      "expected": "65984505dfbeb7ececd01e7e5360ab988c2e2ecccd8633d20460b7ab553bca15",
+      "actual": "65984505dfbeb7ececd01e7e5360ab988c2e2ecccd8633d20460b7ab553bca15"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🪶️sqlite/🦀️.rs",
+      "expected": "c3372482d7830d61cf8df0caf1d2e37a6d6fd51161d15a5e60ba529eec95c627",
+      "actual": "c3372482d7830d61cf8df0caf1d2e37a6d6fd51161d15a5e60ba529eec95c627"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "expected": "0894b12882096b6300fe5c2efcea4bf0415f0d2a63696648cdb76b7838427a3a",
+      "actual": "0894b12882096b6300fe5c2efcea4bf0415f0d2a63696648cdb76b7838427a3a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs",
+      "expected": "930f5eed97c1e699300ce06c2448d67ac4c6d5365e321fa6efc3b1e9a59bef01",
+      "actual": "930f5eed97c1e699300ce06c2448d67ac4c6d5365e321fa6efc3b1e9a59bef01"
+    }
+  ],
+  "sourceWrittenByRoot": false,
+  "sourceSemanticEquivalenceClaimed": false
+}

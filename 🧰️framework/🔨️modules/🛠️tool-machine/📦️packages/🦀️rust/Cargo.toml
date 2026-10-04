@@ -21,6 +21,7 @@ path = "🦀️.rs"
 # 🎰️ `statechart!` expansions name the kernel `machine::…`, so the dependency carries that name.
 machine = { path = "../../../🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-replication = { workspace = true }
+semio-framework-job = { workspace = true }
 
 [dev-dependencies]
 # 🔏️ Third-party oracle for the transaction id minting pinned by the transaction-law fixture.

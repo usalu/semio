@@ -9,6 +9,6 @@ export function widgetId(widget: Widget): string {
 
 /** ➕ generation3d direct `create-widget` payload mirror of `CreateWidget`. */
 export interface CreateWidget {
-  index: number;
+  index: bigint;
   widget: Widget;
 }

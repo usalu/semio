@@ -28,7 +28,7 @@ fn sample_dxf() -> DxfSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_layers_blocks_and_entities() {
-    let cad = semio_framework_plugin::resolve_ready(SemioCadFromDxf::deserialize(&sample_dxf())).expect("deserialize");
+    let cad = ::semio_framework_async::poll::resolve_ready(SemioCadFromDxf::deserialize(&sample_dxf())).expect("deserialize");
     assert_eq!(cad.layers.len(), 1);
     assert_eq!(cad.layers[0].visible, true);
     assert_eq!(cad.blocks.len(), 1);

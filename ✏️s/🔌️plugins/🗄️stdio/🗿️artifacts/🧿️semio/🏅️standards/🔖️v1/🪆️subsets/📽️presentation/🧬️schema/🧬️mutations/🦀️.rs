@@ -46,6 +46,8 @@ pub mod set_slide_notes;
 /// needed (unlike docx's nested-table `DocxBlockPath`) since a shape tree here is exactly two
 /// levels deep. Masters/layouts are addressed by their own `id`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "✍️set-text-box-blocks/🦀️.rs"]
@@ -66,6 +68,7 @@ pub mod set_textbox_blocks;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ➕️ Inserts `🎞️slide` at `index` (FINAL-state index).
     InsertSlide(insert_slide::InsertSlide),
     /// ➖️ Removes the slide at `index` (BASE-state index).
@@ -99,7 +102,7 @@ pub enum SemioPresentationMutation {
 /// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). 
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
 /// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master", "patch-snapshot"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -118,8 +121,11 @@ pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapsho
 /// wrapper's signature names only types this subset already exports (`kit`'s precedent for the same
 /// structural gap).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
-    Mutation::inverse(mutation, base)
+pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
+    Mutation::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🔖️Apply
 
@@ -143,6 +149,7 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 pub(crate) fn agg_diff(this: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
     protocol::MutationOutcome::new(match this {
         SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
+        SemioPresentationMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation>>::diff(patch, base),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => diff_insert_slide(*index, slide.clone()),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => diff_remove_slide(*index),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => diff_set_slide_layout(base, *index, layout_id.clone()),
@@ -164,9 +171,11 @@ pub(crate) fn agg_diff(this: &SemioPresentationMutation, base: &SemioPresentatio
 /// the convention this migration's fleet coordinator ruled on, since `NoMutation` is no longer a
 /// constructible variant.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
+pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         SemioPresentationMutation::SetSnapshot(_) => vec![SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        SemioPresentationMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation>>::inverse(patch, base)?),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, .. }) => vec![SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: *index })],
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => match base.slides.get(*index) {
             Some(slide) => vec![SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: *index, slide: slide.clone() })],
@@ -212,6 +221,8 @@ pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresenta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -227,6 +238,7 @@ pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresenta
 fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
         SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
+        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => format!("remove-slide index={index}"),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
@@ -246,6 +258,10 @@ fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioPresentationMutation::PatchSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> =
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
@@ -274,8 +290,8 @@ impl OpText for SemioPresentationMutation {
     fn print_op(&self) -> String {
         print_presentation_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_presentation_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_presentation_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -283,6 +299,7 @@ impl OpText for SemioPresentationMutation {
 /// 🏷️ Op tags of `SemioPresentationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-slide");
 const TAG_REMOVE_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-slide");
 const TAG_SET_SLIDE_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-slide-layout");
@@ -302,6 +319,7 @@ const TAG_SET_LAYOUT_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "s
 fn wire_tag(m: &SemioPresentationMutation) -> u8 {
     match m {
         SemioPresentationMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
+        SemioPresentationMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         SemioPresentationMutation::InsertSlide(_) => TAG_INSERT_SLIDE,
         SemioPresentationMutation::RemoveSlide(_) => TAG_REMOVE_SLIDE,
         SemioPresentationMutation::SetSlideLayout(_) => TAG_SET_SLIDE_LAYOUT,
@@ -339,6 +357,11 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 /// 📡️.protocol.semio` uses).
 impl OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        if let Self::PatchSnapshot(payload) = self {
+            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
+            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
+            return Ok(out);
+        }
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
         out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
@@ -351,6 +374,9 @@ impl OpBinary for SemioPresentationMutation {
         }
         if bytes[0] != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
+        }
+        if bytes[1] == TAG_PATCH_SNAPSHOT {
+            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
         }
         let tag = bytes[1];
         let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
@@ -373,6 +399,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
 
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
     vec![
+        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::snapshot_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide {
             index: 1,

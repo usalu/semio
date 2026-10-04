@@ -61,7 +61,14 @@ pub fn render(document: &XmlSnapshot, windows: &TreeWindows<'_>) -> semio_framew
 }
 
 /// 📝️ Adds the natural XML source draft to the structured tree for editor hosts.
-pub fn render_editor(document: &XmlSnapshot, locale: Locale, windows: &TreeWindows<'_>, controller_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_editor(
+    document: &XmlSnapshot,
+    locale: Locale,
+    windows: &TreeWindows<'_>,
+    controller_id: &str,
+    revision: &str,
+    publication_revision: semio_framework_plugin::UiPublicationRevision,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(XML_ROOT_NODE_ID.to_string(), node),
         None => TreeNodeView { id: XML_ROOT_NODE_ID.to_string(), label: "(empty document)".to_string(), children: Vec::new() },
@@ -75,7 +82,7 @@ pub fn render_editor(document: &XmlSnapshot, locale: Locale, windows: &TreeWindo
         Some(EditableTreeNode::new(text, "set-node", UiValue::Map(arguments.finish())))
     })?;
     let source = xml_document_to_text_checked(&document.doc).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.xml.invalid-document", message))?;
-    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-xml-valid-source", source, "xml", "set-node", XML_ROOT_NODE_ID, revision, locale, tree)
+    semio_s_artifact_stdio_contract::editing::render_file_source_editor("stdio-xml-valid-source", source, "xml", "set-node", XML_ROOT_NODE_ID, revision, publication_revision, locale, tree)
 }
 
 fn node_at_path<'a>(root: &'a XmlNode, node_id: &str) -> Option<&'a XmlNode> {

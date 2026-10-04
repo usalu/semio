@@ -18,7 +18,7 @@ fn label(value: &Value) -> LocalizedLabel {
 }
 
 fn resolved(label: &LocalizedLabel) -> (String, String) {
-    (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string())
+    (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string())
 }
 
 /// 🧩️ One fixture history as the member history visitor reads it.

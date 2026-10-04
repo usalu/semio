@@ -1,0 +1,7 @@
+# Raster Map Rejection Cause Proposal
+
+Mandatory Value-owned kind on RasterOwnedMapRejected preserves its exact candidate key/value and original reason. Full fixed64 owner and page/backing ceiling own OwnershipLimit, duplicate key owns InvalidValue, and insertion without admitted page violates its caller contract and owns InvariantViolated. Dynamic FromValue consumes rejected.kind directly; no reason classifier. The private preflight/admission String methods remain a separate typed producer frontier, so this proposal does not claim the whole Raster control floor is complete.
+
+Four closed language-neutral cases and one actual native law are authored under raster-map-refusal-proposal, with full production before/inverse/authored source in generated/value-refusal/raster-map-refusal-proposal-full-before-1.json. Executed strict Ajv4 cases, independent Node Map duplicate/full-owner witness, and third-party Rust grammar2 clean. No actual source mounted and no native RED/GREEN claimed. Mount test-only after the held Semio epoch, then canonical kind production after genuine interface RED.
+
+Prepared exact test-only4 prospective input plan with absence/full-before inverses; existing unit bodies retained byte-for-byte, new module registration sibling path independently resolved before mounting. Exact owner route @semio-tech/raster-raster-rs:test is registered in its existing package script/router; Native must admit unchanged full selectors before launching. No actual test/owner file mutated.

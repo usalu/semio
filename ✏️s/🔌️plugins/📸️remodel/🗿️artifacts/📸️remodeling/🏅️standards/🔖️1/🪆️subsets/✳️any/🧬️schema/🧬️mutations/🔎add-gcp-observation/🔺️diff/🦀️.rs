@@ -15,7 +15,7 @@ pub fn diff(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("GCP \"{}\" cannot be observed in unknown stream \"{}\".", payload.id, payload.observation.stream_id), [payload.observation.stream_id.clone()]);
     }
     if gcp.observations.contains(&payload.observation) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("GCP \"{}\" already has this observation.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("GCP \"{}\" already has this observation.", payload.id));
     }
     let mut gcps = base.gcps.clone();
     if let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.id) {

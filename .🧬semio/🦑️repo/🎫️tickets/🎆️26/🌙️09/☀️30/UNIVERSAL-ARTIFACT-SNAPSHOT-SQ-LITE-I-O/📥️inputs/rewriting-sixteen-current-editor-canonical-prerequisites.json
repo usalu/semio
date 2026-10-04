@@ -1,0 +1,93 @@
+{
+  "scope": "held input only; no source edit or runtime receipt",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "dsl::json::to_json_string(other)",
+      "after": "semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(other))",
+      "occurrences": 1,
+      "authority": "Pack JSON root559/1031"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "schema::topology::compute_topology",
+      "after": "schema::inferences::topology::compute_topology",
+      "occurrences": 1,
+      "authority": "Jack root697–700 mounted inferences topology"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️.rs",
+      "sha256": "8773d2f4769af60bb15b8ab4b8daea9448fe4800e42c481572feb4feb8ec60bf",
+      "before": "protocol::DslValue::object",
+      "after": "semio_framework_value::DslValue::object",
+      "occurrences": 1,
+      "authority": "public Value owner"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs",
+      "sha256": "b535270e7a9a2552a845ab4bb340f0c73721467c6a39afbedc67c696c808e8f5",
+      "before": "let projection_nodes = projection.nodes();",
+      "after": "let projection_nodes = projection.nodes()?;",
+      "occurrences": 1,
+      "authority": "Jack root292 Result<Vec<Node>,ValueError>; Rewriting root84 From<ValueError>"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ef360b3a65acf3140baff19c17257518d94ed65234e30abbaa6a0b9a56d4ace9",
+      "before": "let flat = semio_s_artifact_trinity_jack::compute_flat_position(&g.to_snapshot());",
+      "after": "let flat = semio_s_artifact_trinity_jack::compute_flat_position(&g.to_snapshot()).expect(\"valid authored Nakagin graph flat position\");",
+      "occurrences": 1,
+      "authority": "Jack root32 actual Result producer; preserve original position assertions"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "id:node.id.clone()",
+      "after": "id:node.id.value.clone()",
+      "occurrences": 3,
+      "authority": "Actual SemioGraphNode GraphNodeId.value and label; working mutation helper17 name→label"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "parent_of.get(&node.id)",
+      "after": "parent_of.get(&node.id.value)",
+      "occurrences": 2,
+      "authority": "Actual SemioGraphNode GraphNodeId.value and label; working mutation helper17 name→label"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "var_from_node_name(&node.name)",
+      "after": "var_from_node_name(&node.label)",
+      "occurrences": 1,
+      "authority": "Actual SemioGraphNode GraphNodeId.value and label; working mutation helper17 name→label"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "sha256": "f7a81789d26e84cf14babbaef8e2c2301bdfea3e46c2a438a562880b4308ad77",
+      "before": "parent:Some(node.id.clone())",
+      "after": "parent:Some(node.id.value.clone())",
+      "occurrences": 1,
+      "authority": "Actual SemioGraphNode GraphNodeId.value and label; working mutation helper17 name→label"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🦀️.rs",
+      "sha256": "e39afd9337360e77af7ab83cb228171e8f42e4ef66ed94d87a4af326684b40ef",
+      "before": "verb: \"patch\", entity: \"working-nodes\", kind: \"patch-working-nodes\", record: \"PatchedWorkingNodes\"",
+      "after": "verb: \"change\", entity: \"working-nodes\", kind: \"patch-working-nodes\", record: \"ChangedWorkingNodes\"",
+      "occurrences": 1,
+      "authority": "Canonical approved verb change/Changed in OS SPR command115; mutation changes authored name/kind fields"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🧪️tests/🩹️renames/🦀️.rs",
+      "sha256": "a6e12ad7fdfba66dffa78b076f3ae55cb66d57c59e74b058f6cf7a2bf17a3df8",
+      "before": "(\"patch\", \"working-nodes\", \"patch-working-nodes\", \"PatchedWorkingNodes\")",
+      "after": "(\"change\", \"working-nodes\", \"patch-working-nodes\", \"ChangedWorkingNodes\")",
+      "occurrences": 1,
+      "authority": "Full4-component descriptor assertion retained; paired authored semantic descriptor"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[dsl(keyword = "set-payload")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetPayload {
@@ -15,9 +15,12 @@ impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetP
     fn diff(&self, _base: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> {
         protocol::MutationOutcome::new(ModulePayloadDiff { payload: Some(self.payload.clone()) })
     }
-    fn inverse(&self, base: &ModuleRenderPayload) -> Vec<ModulePayloadMutation> {
+    fn inverse(&self, base: &ModuleRenderPayload) -> Result<Vec<ModulePayloadMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![ModulePayloadMutation::SetPayload(SetPayload { payload: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
     }

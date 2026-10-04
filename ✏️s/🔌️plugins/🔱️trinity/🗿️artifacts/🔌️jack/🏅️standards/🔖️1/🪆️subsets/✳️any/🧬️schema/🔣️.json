@@ -4,80 +4,295 @@
   "title": "JackArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "name", "manifest", "camera", "content", "query"],
+  "required": [
+    "schema",
+    "name",
+    "manifest",
+    "camera",
+    "content",
+    "query"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "name": { "type": "string", "x-semio-state": "artifact" },
-    "manifestId": { "type": "string", "x-semio-state": "artifact" },
-    "manifest": { "$ref": "#/$defs/Manifest", "x-semio-state": "artifact" },
-    "camera": { "$ref": "#/$defs/Camera", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "name": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "manifestId": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "manifest": {
+      "$ref": "#/$defs/Manifest",
+      "x-semio-state": "artifact"
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera",
+      "x-semio-state": "artifact"
+    },
     "content": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
-    "rootNodeId": { "type": "string", "x-semio-state": "artifact" },
-    "query": { "type": "string", "x-semio-state": "artifact" }
+    "rootNodeId": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "query": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    }
   },
   "$defs": {
     "Camera": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "zoom"],
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "zoom": { "type": "number" }
+        "x": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
+        },
+        "y": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
+        },
+        "zoom": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
+        }
       }
     },
     "Manifest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["nodeKinds", "edgeKinds", "portKinds"],
+      "required": [
+        "nodeKinds",
+        "edgeKinds",
+        "portKinds"
+      ],
       "properties": {
-        "nodeKinds": { "type": "array", "items": { "$ref": "#/$defs/ManifestKind" } },
-        "edgeKinds": { "type": "array", "items": { "$ref": "#/$defs/ManifestKind" } },
-        "portKinds": { "type": "array", "items": { "$ref": "#/$defs/ManifestPortKind" } }
-      }
-    },
-    "ManifestKind": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name"],
-      "properties": { "name": { "type": "string" } }
-    },
-    "ManifestPortKind": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "direction"],
-      "properties": {
-        "name": { "type": "string" },
-        "direction": { "type": "string" }
+        "nodeKinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeKindDef"
+          }
+        },
+        "edgeKinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EdgeKindDef"
+          }
+        },
+        "portKinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PortKindDef"
+          }
+        }
       }
     },
     "QueryResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "columns", "rows"],
+      "required": [
+        "kind",
+        "columns",
+        "rows"
+      ],
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["table", "graph"],
-          "x-semio-ui": { "widget": "segmented", "role": "value", "label": { "en": "Result Kind", "de": "Ergebnisart" }, "options": { "table": { "en": "Table", "de": "Tabelle" }, "graph": { "en": "Graph", "de": "Graph" } } }
+          "enum": [
+            "table",
+            "graph"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Result Kind",
+              "de": "Ergebnisart"
+            },
+            "options": {
+              "table": {
+                "en": "Table",
+                "de": "Tabelle"
+              },
+              "graph": {
+                "en": "Graph",
+                "de": "Graph"
+              }
+            }
+          }
         },
         "columns": {
           "type": "array",
-          "items": { "type": "string" },
-          "x-semio-ui": { "role": "value", "label": { "en": "Columns", "de": "Spalten" }, "description": { "en": "Column names of the result table, in order.", "de": "Spaltennamen der Ergebnistabelle in Reihenfolge." } }
+          "items": {
+            "type": "string"
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Columns",
+              "de": "Spalten"
+            },
+            "description": {
+              "en": "Column names of the result table, in order.",
+              "de": "Spaltennamen der Ergebnistabelle in Reihenfolge."
+            }
+          }
         },
         "rows": {
           "type": "array",
-          "items": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue" } },
-          "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Rows", "de": "Zeilen" }, "description": { "en": "One value per column in every row.", "de": "Ein Wert je Spalte in jeder Zeile." } }
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
+            }
+          },
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Rows",
+              "de": "Zeilen"
+            },
+            "description": {
+              "en": "One value per column in every row.",
+              "de": "Ein Wert je Spalte in jeder Zeile."
+            }
+          }
         },
         "graphFixture": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/snapshot.json",
-          "x-semio-ui": { "widget": "hidden", "role": "value", "label": { "en": "Result Graph", "de": "Ergebnisgraph" }, "description": { "en": "Graph a graph query returned; absent for a table.", "de": "Graph, den eine Graphabfrage liefert; fehlt bei einer Tabelle." } }
+          "x-semio-ui": {
+            "widget": "hidden",
+            "role": "value",
+            "label": {
+              "en": "Result Graph",
+              "de": "Ergebnisgraph"
+            },
+            "description": {
+              "en": "Graph a graph query returned; absent for a table.",
+              "de": "Graph, den eine Graphabfrage liefert; fehlt bei einer Tabelle."
+            }
+          }
+        }
+      }
+    },
+    "Binary64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      }
+    },
+    "PropertyDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "valueType"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "data",
+            "derived"
+          ]
+        },
+        "valueType": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json#/$defs/valueType"
+        },
+        "expr": {
+          "type": "string"
+        }
+      }
+    },
+    "NodeKindDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "properties",
+        "portKinds"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyDef"
+          }
+        },
+        "portKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EdgeKindDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "properties"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyDef"
+          }
+        }
+      }
+    },
+    "PortKindDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "direction",
+        "properties"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out"
+          ]
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PropertyDef"
+          }
         }
       }
     }

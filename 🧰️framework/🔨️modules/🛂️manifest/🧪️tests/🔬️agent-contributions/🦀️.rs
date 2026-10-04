@@ -20,10 +20,10 @@ async fn promoted_subset_of_capabilities_holds_and_is_violated_correctly() {
 #[semio_framework_async_macros::async_test]
 async fn canonical_json_round_trip_uses_camel_case_and_skips_empty_promoted() {
     let contributions = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
-    let text = dsl::os_pack::json::to_json_string(&contributions);
+    let text = semio_framework_pack_json::to_json_string(&contributions);
     let json: serde_json::Value = serde_json::from_str(&text).unwrap();
     assert_eq!(json, serde_json::json!({ "capabilities": ["note.editor.deleteSelection"] }));
-    let round_tripped: AgentContributions = dsl::os_pack::json::from_json_str(&text).unwrap();
+    let round_tripped: AgentContributions = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(round_tripped, contributions);
 }
 

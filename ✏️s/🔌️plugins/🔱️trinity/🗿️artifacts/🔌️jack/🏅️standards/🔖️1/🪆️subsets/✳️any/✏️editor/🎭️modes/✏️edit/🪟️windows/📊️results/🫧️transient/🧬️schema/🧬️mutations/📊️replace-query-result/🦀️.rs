@@ -3,7 +3,7 @@
 use super::{JackResultsWindowTransient, JackResultsWindowTransientMutation};
 use crate::ast::QueryResult;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-query-result")]
 #[mutation_leaf(contract = ::protocol)]
@@ -22,9 +22,12 @@ impl protocol::MutationKind<JackResultsWindowTransient, JackResultsWindowTransie
         next.query_error.clone_from(&self.error);
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &JackResultsWindowTransient) -> Vec<JackResultsWindowTransientMutation> {
+    fn inverse(&self, base: &JackResultsWindowTransient) -> Result<Vec<JackResultsWindowTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { execution_id: base.query_execution_id.clone(), result: base.result.clone(), error: base.query_error.clone() }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace Results Window Query Output", "Abfrageausgabe des Ergebnisfensters ersetzen")
     }

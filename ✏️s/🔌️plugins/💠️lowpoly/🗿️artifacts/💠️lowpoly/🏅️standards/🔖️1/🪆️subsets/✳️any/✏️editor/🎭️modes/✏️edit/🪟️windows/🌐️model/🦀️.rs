@@ -108,58 +108,58 @@ fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, act
     let granularity = selection.granularity.as_str();
     let object_level = granularity == MESH_GRANULARITY_OBJECT;
     let host_mode = if object_level { "mesh" } else { granularity };
-    let targets = dsl::DslValue::object([
-        ("mesh".to_string(), dsl::DslValue::Bool(object_level)),
-        ("vertex".to_string(), dsl::DslValue::Bool(granularity == "vertex")),
-        ("edge".to_string(), dsl::DslValue::Bool(granularity == "edge")),
-        ("face".to_string(), dsl::DslValue::Bool(granularity == "face")),
+    let targets = semio_framework_value::DslValue::object([
+        ("mesh".to_string(), semio_framework_value::DslValue::Bool(object_level)),
+        ("vertex".to_string(), semio_framework_value::DslValue::Bool(granularity == "vertex")),
+        ("edge".to_string(), semio_framework_value::DslValue::Bool(granularity == "edge")),
+        ("face".to_string(), semio_framework_value::DslValue::Bool(granularity == "face")),
     ]);
     let pivot = gumball_pivot(view, loaded, selection);
     let mut entries = vec![
-        ("transformMode".to_string(), dsl::DslValue::String(active_utility.to_string())),
-        ("interactionMode".to_string(), dsl::DslValue::String(interaction_mode.to_string())),
-        ("activeObjectId".to_string(), dsl::DslValue::String(selection.active_object_id.clone())),
-        ("showEdges".to_string(), dsl::DslValue::Bool(config.show_edges)),
+        ("transformMode".to_string(), semio_framework_value::DslValue::String(active_utility.to_string())),
+        ("interactionMode".to_string(), semio_framework_value::DslValue::String(interaction_mode.to_string())),
+        ("activeObjectId".to_string(), semio_framework_value::DslValue::String(selection.active_object_id.clone())),
+        ("showEdges".to_string(), semio_framework_value::DslValue::Bool(config.show_edges)),
         ("targets".to_string(), targets),
-        ("selectionMode".to_string(), dsl::DslValue::String(host_mode.to_string())),
-        ("granularity".to_string(), dsl::DslValue::String(host_mode.to_string())),
-        ("ids".to_string(), dsl::DslValue::Array(selection.object_ids.iter().cloned().map(dsl::DslValue::String).collect())),
-        ("componentIds".to_string(), dsl::DslValue::Array(selection.component_ids.iter().map(|id| dsl::DslValue::Number(dsl::Number::UInt(u64::from(*id)))).collect())),
-        ("gumballActive".to_string(), dsl::DslValue::Bool(!paint && pivot.is_some())),
+        ("selectionMode".to_string(), semio_framework_value::DslValue::String(host_mode.to_string())),
+        ("granularity".to_string(), semio_framework_value::DslValue::String(host_mode.to_string())),
+        ("ids".to_string(), semio_framework_value::DslValue::Array(selection.object_ids.iter().cloned().map(semio_framework_value::DslValue::String).collect())),
+        ("componentIds".to_string(), semio_framework_value::DslValue::Array(selection.component_ids.iter().map(|id| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::from(*id)))).collect())),
+        ("gumballActive".to_string(), semio_framework_value::DslValue::Bool(!paint && pivot.is_some())),
     ];
     if let Some(pivot) = pivot {
-        entries.push(("gumballTarget".to_string(), dsl::ToValue::to_value(&pivot)));
+        entries.push(("gumballTarget".to_string(), semio_framework_value::ToValue::to_value(&pivot)));
     }
     // 🧲️ The composable gumball: every handle group the window toggles left on shows at once
     // (`UnifiedGumball` reads `gumballConfig` over the single-mode `transformMode` fallback).
     let handles = crate::editor::lowpoly::options::gumball::GumballHandles::from_config(config);
     entries.push((
         "gumballConfig".to_string(),
-        dsl::DslValue::object([
-            ("moveAxes".to_string(), dsl::DslValue::Bool(handles.r#move)),
-            ("movePlanes".to_string(), dsl::DslValue::Bool(handles.r#move)),
-            ("rotate".to_string(), dsl::DslValue::Bool(handles.rotate)),
-            ("scaleAxes".to_string(), dsl::DslValue::Bool(handles.scale)),
-            ("scalePlanes".to_string(), dsl::DslValue::Bool(handles.scale)),
-            ("scaleUniform".to_string(), dsl::DslValue::Bool(handles.scale)),
+        semio_framework_value::DslValue::object([
+            ("moveAxes".to_string(), semio_framework_value::DslValue::Bool(handles.r#move)),
+            ("movePlanes".to_string(), semio_framework_value::DslValue::Bool(handles.r#move)),
+            ("rotate".to_string(), semio_framework_value::DslValue::Bool(handles.rotate)),
+            ("scaleAxes".to_string(), semio_framework_value::DslValue::Bool(handles.scale)),
+            ("scalePlanes".to_string(), semio_framework_value::DslValue::Bool(handles.scale)),
+            ("scaleUniform".to_string(), semio_framework_value::DslValue::Bool(handles.scale)),
         ]),
     ));
     // 🖱️ The mesh domain's pointer hover, echoed for the host's overlays: the hovered instance and,
     // when the pointer is over a component, `{objectId, mode, id}` for its vertex/edge/face highlight.
     if let Some(hovered) = &selection.hovered_object_id {
-        entries.push(("hoveredId".to_string(), dsl::DslValue::String(hovered.clone())));
+        entries.push(("hoveredId".to_string(), semio_framework_value::DslValue::String(hovered.clone())));
     }
     if let Some(component) = &selection.hovered_component {
         entries.push((
             "hoveredComponent".to_string(),
-            dsl::DslValue::object([
-                ("objectId".to_string(), dsl::DslValue::String(component.object_id.clone())),
-                ("mode".to_string(), dsl::DslValue::String(component.mode.clone())),
-                ("id".to_string(), dsl::DslValue::Number(dsl::Number::UInt(u64::from(component.id)))),
+            semio_framework_value::DslValue::object([
+                ("objectId".to_string(), semio_framework_value::DslValue::String(component.object_id.clone())),
+                ("mode".to_string(), semio_framework_value::DslValue::String(component.mode.clone())),
+                ("id".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(u64::from(component.id)))),
             ]),
         ));
     }
-    dsl::json::to_json_string(&dsl::DslValue::Object(entries))
+    semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(entries))
 }
 
 /// 🧲️ World-space centroid of the current selection (selected components on the active object, else
@@ -213,23 +213,23 @@ fn rotate(q: [f64; 4], v: [f64; 3]) -> [f64; 3] {
 }
 
 fn world_meshes_json(doc: &LowpolyDocument, texture_cache: &HashMap<String, String>) -> String {
-    let items: Vec<dsl::DslValue> = dsl::json::from_json_str(&doc.tessellate_all_json().unwrap_or_else(|_| "[]".into())).unwrap_or_default();
-    let meshes: Vec<dsl::DslValue> = items
+    let items: Vec<semio_framework_value::DslValue> = semio_framework_pack_json::from_json_str(&doc.tessellate_all_json().unwrap_or_else(|_| "[]".into()), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default();
+    let meshes: Vec<semio_framework_value::DslValue> = items
         .iter()
         .filter_map(|item| {
             let id = item.get("id")?.as_str()?;
             let tessellation = item.get("tessellation")?;
             let texture = texture_cache.get(id).cloned();
-            Some(dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh_data_from_transfer(tessellation, texture)))]))
+            Some(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(id.to_string())), ("data".to_string(), semio_framework_value::ToValue::to_value(&mesh_data_from_transfer(tessellation, texture)))]))
         })
         .collect();
-    dsl::json::to_json_string(&meshes)
+    semio_framework_pack_json::to_json_string(&meshes)
 }
 
 /// 🕹️ `selected`/`hovered` per-instance flags are DELETED — see `world_selection_json_for`'s doc: the
 /// shell overlays the mesh domain's live selection/hover generically now.
 fn world_instances_json(view: LowpolyView<'_>) -> String {
-    let instances: Vec<dsl::DslValue> = view
+    let instances: Vec<semio_framework_value::DslValue> = view
         .snapshot
         .objects
         .iter()
@@ -237,20 +237,20 @@ fn world_instances_json(view: LowpolyView<'_>) -> String {
             let rotation = euler_degrees_to_quaternion(object.transform.rotation);
             let position: [f64; 3] = [object.transform.position[0] as f64, object.transform.position[1] as f64, object.transform.position[2] as f64];
             let scale: [f64; 3] = [object.transform.scale[0] as f64, object.transform.scale[1] as f64, object.transform.scale[2] as f64];
-            dsl::DslValue::object([
-                ("id".to_string(), dsl::DslValue::String(object.id.clone())),
-                ("meshId".to_string(), dsl::DslValue::String(object.id.clone())),
-                ("interactionId".to_string(), dsl::DslValue::String(document_object_row_id(&object.id))),
-                ("interactionGranularityId".to_string(), dsl::DslValue::String(MESH_GRANULARITY_OBJECT.to_string())),
-                ("position".to_string(), dsl::ToValue::to_value(&position)),
-                ("rotation".to_string(), dsl::ToValue::to_value(&rotation)),
-                ("scale".to_string(), dsl::ToValue::to_value(&scale)),
-                ("label".to_string(), dsl::DslValue::String(object.name.clone())),
-                ("smoothShading".to_string(), dsl::DslValue::Bool(object.smooth_shading)),
+            semio_framework_value::DslValue::object([
+                ("id".to_string(), semio_framework_value::DslValue::String(object.id.clone())),
+                ("meshId".to_string(), semio_framework_value::DslValue::String(object.id.clone())),
+                ("interactionId".to_string(), semio_framework_value::DslValue::String(document_object_row_id(&object.id))),
+                ("interactionGranularityId".to_string(), semio_framework_value::DslValue::String(MESH_GRANULARITY_OBJECT.to_string())),
+                ("position".to_string(), semio_framework_value::ToValue::to_value(&position)),
+                ("rotation".to_string(), semio_framework_value::ToValue::to_value(&rotation)),
+                ("scale".to_string(), semio_framework_value::ToValue::to_value(&scale)),
+                ("label".to_string(), semio_framework_value::DslValue::String(object.name.clone())),
+                ("smoothShading".to_string(), semio_framework_value::DslValue::Bool(object.smooth_shading)),
             ])
         })
         .collect();
-    dsl::json::to_json_string(&instances)
+    semio_framework_pack_json::to_json_string(&instances)
 }
 
 pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_utility: &str, texture_cache: &HashMap<String, String>, selection: &LowpolyWorldSelection) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

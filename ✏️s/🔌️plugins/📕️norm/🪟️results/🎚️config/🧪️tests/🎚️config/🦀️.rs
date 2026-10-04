@@ -23,14 +23,14 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
     for case in fixture["cases"].as_array().unwrap() {
         let payload: OraclePayload = serde_json::from_value(case["payload"].clone()).unwrap();
         let wire = serde_json::json!({ "ChangeSelectedCheckIndex": case["payload"] });
-        let mutation: NormResultsWindowConfigMutation = pack::json::from_json_str(&wire.to_string()).unwrap();
+        let mutation: NormResultsWindowConfigMutation = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let base = NormResultsWindowConfig { selected_check_index: serde_json::from_value(case["before"].clone()).unwrap() };
         let outcome = mutation.diff(&base);
         assert_eq!(!outcome.messages().is_empty(), case["warning"].as_bool().unwrap());
         let next = outcome.diff().apply(&base).unwrap();
         assert_eq!(next.selected_check_index, payload.index, "{}", case["id"]);
         assert_eq!(serde_json::to_value(next.selected_check_index).unwrap(), case["after"]);
-        let backwards = mutation.inverse(&base);
+        let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(backwards.len(), 1);
         assert_eq!(backwards[0].diff(&next).diff().apply(&next).unwrap(), base);
         assert_eq!(NormResultsWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
@@ -39,13 +39,13 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
     for payload in fixture["invalid"].as_array().unwrap() {
         assert!(serde_json::from_value::<OraclePayload>(payload.clone()).is_err());
         let wire = serde_json::json!({ "ChangeSelectedCheckIndex": payload });
-        assert!(pack::json::from_json_str::<NormResultsWindowConfigMutation>(&wire.to_string()).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<NormResultsWindowConfigMutation>(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
     for text in ["snapshot", "selected-check index=5", "unknown-operation"] {
         assert!(NormResultsWindowConfigMutation::parse_op(text).is_err());
     }
     for wire in ["{}", r#"{"Snapshot":{}}"#, r#"{"SetSelectedCheckIndex":{"index":1}}"#, r#"{"ChangeSelectedCheckIndex":{},"unknown":true}"#] {
-        assert!(pack::json::from_json_str::<NormResultsWindowConfigMutation>(wire).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<NormResultsWindowConfigMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
     for bytes in [&[][..], &[0][..], &[1][..], &[1, 1][..]] {
         assert!(NormResultsWindowConfigMutation::decode_op(bytes).is_err());
@@ -81,7 +81,7 @@ fn assert_wire_transition(mutation: &NormResultsWindowConfigMutation, expected: 
     let base = NormResultsWindowConfig { selected_check_index: Some(17) };
     let next = mutation.diff(&base).diff().apply(&base).unwrap();
     assert_eq!(serde_json::to_value(next.selected_check_index).unwrap(), *expected);
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     assert_eq!(inverse[0].diff(&next).diff().apply(&next).unwrap(), base);
 }

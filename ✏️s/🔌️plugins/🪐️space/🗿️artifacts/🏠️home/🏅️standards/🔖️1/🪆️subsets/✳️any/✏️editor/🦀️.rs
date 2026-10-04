@@ -314,7 +314,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         home_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
         require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
         self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
     }
@@ -449,10 +449,10 @@ impl ArtifactEditor for HomeApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("space-home-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "space home command does not match its exact registered tool"));
         }
         if home_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::from("space-home-command-payload-too-large"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "space home command payload exceeds its bounded retained extent"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.as_ref() {

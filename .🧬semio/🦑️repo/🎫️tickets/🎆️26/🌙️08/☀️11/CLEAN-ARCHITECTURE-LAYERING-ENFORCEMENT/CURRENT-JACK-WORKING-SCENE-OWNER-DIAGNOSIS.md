@@ -1,0 +1,7 @@
+# Current Jack Working Scene Owner Diagnosis
+
+Current source explains the sole mismatched witness before serialization: `jack_content_child_with_owner` delegates to `jack_content_child_with_snapshot`, which attaches `Arc<JackContentOwner>`. The original law instead calls `local_owner::<JackWorkingScene>()`. Store uses an exact `Arc::downcast::<T>`; these are different concrete types, so the lookup returns None. `jack_content_for_handle` requires the actual `JackContentOwner`; `jack_working_scene_for_handle` computes a separate scene projection from its retained Semio snapshot.
+
+Expected witness remains ownedHasScene=true, wireIdentityMatches=true, wireHasScene=false. The observed ownedHasScene=false does not show wire scene loss: wireHasScene=false is deliberately expected. No missing canonical Record field binding is established by this failure. Original assertions and fixtures were untouched. Product ownership contract and original language-neutral ownership law need a coherent schema-first decision, rather than changing the assertion or introducing a second retained scene cache.
+
+Full four current source/fixture bodies, SHA256 and identity inverses: `🗑️generated/graph-os-record-cut/independent-working-scene-typed-owner-observation-1.json`. Native 14503 actual library roster is running; terminal/post and runtime acceptance remain pending. This is a current source observation, not failed-input byte provenance or native success.

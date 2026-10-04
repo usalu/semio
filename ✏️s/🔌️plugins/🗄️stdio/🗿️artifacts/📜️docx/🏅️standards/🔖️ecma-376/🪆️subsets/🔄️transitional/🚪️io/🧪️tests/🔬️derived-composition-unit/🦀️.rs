@@ -20,9 +20,9 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
-        )
+        ).expect("bounded test OPC converts to retained ownership")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -48,15 +48,15 @@ mod tests {
                 DocxXmlPart {
                     path: "word/document.xml".into(),
                     content_type: content_type.into(),
-                    document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{TRANSITIONAL_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
                 },
                 DocxXmlPart {
                     path: "word/styles.xml".into(),
                     content_type: "application/xml".into(),
-                    document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap(),
+                    document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
                 },
             ],
-        );
+        ).expect("bounded test OPC converts to retained ownership");
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxTransitionalComposerComposition::compose(&sources).expect_err("mixed-in strict namespace must not stamp transitional");

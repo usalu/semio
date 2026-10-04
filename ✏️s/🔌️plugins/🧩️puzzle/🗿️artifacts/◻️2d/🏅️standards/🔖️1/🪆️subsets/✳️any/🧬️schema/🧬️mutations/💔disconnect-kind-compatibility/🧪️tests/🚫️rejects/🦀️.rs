@@ -50,7 +50,7 @@ fn the_refusal_is_the_declared_one() {
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: the refusal code is fixed by this vector");
-    assert_eq!(messages[0].level, protocol::Severity::Error, "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: the refusal level is fixed by this vector");
+    assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: the refusal level is fixed by this vector");
     assert_eq!(
         messages[0].target,
         vec!["roof circular bottom".to_string(), "core circular top".to_string()],
@@ -61,7 +61,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ A verb that could not find its target has nothing to undo, so its inverse is empty.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation());
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 0, "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: got {inverse:?}");
 }
 

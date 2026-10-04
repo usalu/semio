@@ -6,9 +6,12 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
-pub fn inverse(payload: &super::ReplaceUserProfile, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(payload: &super::ReplaceUserProfile, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.users.iter().find(|row| row.header.id == payload.user_profile.header.id) {
         Some(existing) => vec![ProgramMutation::ReplaceUserProfile(super::ReplaceUserProfile { user_profile: existing.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

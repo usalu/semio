@@ -1,45 +1,45 @@
 //! 🔣️ Literal Program JSON scalar fields preserve their complete owned words.
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value::Number;
-fn field<'a>(value:&'a mut DslValue,key:&str)->Result<&'a mut DslValue,String>{match value{DslValue::Object(entries)=>entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value).ok_or_else(||format!("Program JSON field {key} is absent")),_=>Err("Program JSON row requires an object".into())}}
+fn field<'a>(value:&'a mut DslValue,key:&str)->Result<&'a mut DslValue,String>{match value{semio_framework_value::DslValue::Object(entries)=>entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value).ok_or_else(||format!("Program JSON field {key} is absent")),_=>Err("Program JSON row requires an object".into())}}
 fn float(value:&mut DslValue,decode:bool)->Result<(),String>{
  if decode {
   let number=match value {
-   DslValue::Number(value)=>{let number=value.as_f64();if !number.is_finite(){return Err("Program JSON numeric transport requires a finite double".into())}number},
-   DslValue::Object(entries)=>{if entries.len()!=1||entries[0].0!="bits"{return Err("Program JSON binary64 object differs".into())}let text=entries[0].1.as_str().ok_or("Program JSON binary64 word requires text")?;if text.len()!=16||!text.bytes().all(|b|b.is_ascii_digit()||(b'a'..=b'f').contains(&b)){return Err("Program JSON binary64 word requires sixteen lowercase hexadecimal digits".into())}f64::from_bits(u64::from_str_radix(text,16).map_err(|e|e.to_string())?)},
+   semio_framework_value::DslValue::Number(value)=>{let number=value.as_f64();if !number.is_finite(){return Err("Program JSON numeric transport requires a finite double".into())}number},
+   semio_framework_value::DslValue::Object(entries)=>{if entries.len()!=1||entries[0].0!="bits"{return Err("Program JSON binary64 object differs".into())}let text=entries[0].1.as_str().ok_or("Program JSON binary64 word requires text")?;if text.len()!=16||!text.bytes().all(|b|b.is_ascii_digit()||(b'a'..=b'f').contains(&b)){return Err("Program JSON binary64 word requires sixteen lowercase hexadecimal digits".into())}f64::from_bits(u64::from_str_radix(text,16).map_err(|e|e.to_string())?)},
    _=>return Err("Program JSON binary64 scalar differs".into())
-  };*value=DslValue::float(number);
- }else{let number=value.as_f64().ok_or("Program JSON native binary64 is absent")?;*value=DslValue::object([("bits".into(),DslValue::String(format!("{:016x}",number.to_bits())))]);}
+  };*value=semio_framework_value::DslValue::float(number);
+ }else{let number=value.as_f64().ok_or("Program JSON native binary64 is absent")?;*value=semio_framework_value::DslValue::object([("bits".into(),semio_framework_value::DslValue::String(format!("{:016x}",number.to_bits())))]);}
  Ok(())
 }
-fn member<'a>(value:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match value{DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value)),_=>Err("Program JSON row requires an object".into())}}
+fn member<'a>(value:&'a mut DslValue,key:&str)->Result<Option<&'a mut DslValue>,String>{match value{semio_framework_value::DslValue::Object(entries)=>Ok(entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|value)),_=>Err("Program JSON row requires an object".into())}}
 fn optional_field(value:&mut DslValue,key:&str,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{if let Some(value)=member(value,key)?{if !matches!(value,DslValue::Null){convert(value,decode)?;}}Ok(())}
 fn optional_float_field(value:&mut DslValue,key:&str,decode:bool)->Result<(),String>{optional_field(value,key,float,decode)}
 fn optional_float(value:&mut DslValue,decode:bool)->Result<(),String>{if matches!(value,DslValue::Null){Ok(())}else{float(value,decode)}}
 fn unsigned(value:&mut DslValue,decode:bool)->Result<(),String>{
  if decode {
   let word=match value{
-   DslValue::String(text)=>{if text.is_empty()||text.len()>20||!text.bytes().all(|b|b.is_ascii_digit())||(text.len()>1&&text.starts_with('0')){return Err("Program JSON unsigned64 requires canonical decimal text".into())}text.parse::<u64>().map_err(|e|e.to_string())?},
-   DslValue::Number(Number::UInt(word)) if *word<=9007199254740991=>*word,
-   DslValue::Number(Number::Int(word)) if *word>=0&&*word<=9007199254740991=>*word as u64,
-   DslValue::Number(Number::Float(word)) if word.is_finite()&&*word>=0.0&&*word<=9007199254740991.0&&word.fract()==0.0=>*word as u64,
+   semio_framework_value::DslValue::String(text)=>{if text.is_empty()||text.len()>20||!text.bytes().all(|b|b.is_ascii_digit())||(text.len()>1&&text.starts_with('0')){return Err("Program JSON unsigned64 requires canonical decimal text".into())}text.parse::<u64>().map_err(|e|e.to_string())?},
+   semio_framework_value::DslValue::Number(Number::UInt(word)) if *word<=9007199254740991=>*word,
+   semio_framework_value::DslValue::Number(Number::Int(word)) if *word>=0&&*word<=9007199254740991=>*word as u64,
+   semio_framework_value::DslValue::Number(Number::Float(word)) if word.is_finite()&&*word>=0.0&&*word<=9007199254740991.0&&word.fract()==0.0=>*word as u64,
    _=>return Err("Program JSON numeric unsigned64 requires a safe unsigned integer".into())
-  };*value=DslValue::uint(word);
- }else{let word=value.as_u64().ok_or("Program JSON native unsigned64 is absent")?;*value=DslValue::String(word.to_string());}
+  };*value=semio_framework_value::DslValue::uint(word);
+ }else{let word=value.as_u64().ok_or("Program JSON native unsigned64 is absent")?;*value=semio_framework_value::DslValue::String(word.to_string());}
  Ok(())
 }
 fn quantity(value:&mut DslValue,decode:bool)->Result<(),String>{
  if !matches!(value,DslValue::Object(_)){return Err("Program JSON quantity requires an object".into())}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="min"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="max"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="target"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="current"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="forecast"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="peak"){optional_float(value,decode)?;}}
- if let DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="average"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="min"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="max"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="target"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="current"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="forecast"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="peak"){optional_float(value,decode)?;}}
+ if let semio_framework_value::DslValue::Object(entries)=value{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name=="average"){optional_float(value,decode)?;}}
  Ok(())
 }
-fn rows(value:&mut DslValue,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match value{DslValue::Array(values)=>{for value in values{convert(value,decode)?}Ok(())},_=>Err("Program JSON register requires an array".into())}}
+fn rows(value:&mut DslValue,convert:fn(&mut DslValue,bool)->Result<(),String>,decode:bool)->Result<(),String>{match value{semio_framework_value::DslValue::Array(values)=>{for value in values{convert(value,decode)?}Ok(())},_=>Err("Program JSON register requires an array".into())}}
 fn _accessibility_requirement(value:&mut DslValue,decode:bool)->Result<(),String>{
  optional_float_field(value,"clearWidthM",decode)?;
  optional_float_field(value,"clearHeightM",decode)?;

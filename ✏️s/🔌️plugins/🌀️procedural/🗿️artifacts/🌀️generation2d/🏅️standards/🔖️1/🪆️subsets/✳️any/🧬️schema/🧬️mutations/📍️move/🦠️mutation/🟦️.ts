@@ -1,8 +1,6 @@
 /** 📍 generation2d move-widget payload — mirrors `MoveWidget` (…/📍️move/🦠️mutation/🦀️.rs:16-19). */
-export interface WidgetLayout {
-  x: number;
-  y: number;
-}
+import type{WidgetLayout}from"../../../🟦️.ts";
+export type{WidgetLayout};
 
 export interface MoveWidget {
   id: string;

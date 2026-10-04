@@ -1,12 +1,12 @@
 //! 🎥️ Routes one canvas viewport into its concrete window configuration owner.
 
-use crate::op::WiresMutation;
+use crate::WiresMutation;
 use crate::WiresSnapshot;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "node-graph-viewport")]
 pub struct NodeGraphViewport {
     #[dsl(block)]

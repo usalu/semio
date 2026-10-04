@@ -4,12 +4,11 @@
 //! family-root assembly (never mod's/includes the slug dirs directly — `🦀️.rs` is the sole
 //! mounting mechanism, same as mutations); each named inference gets its own `<emoji><slug>/` child
 //! (currently: `📦bounds/`, the only positioned data this rule-editing artifact's snapshot carries
-//! a typed shape for — `before_fixture_json`/`lhs_json`/`rhs_json` are opaque JSON blobs, not
+//! a typed shape for — `working_graph`/`lhs`/`rhs` are opaque JSON blobs, not
 //! structured graph data this artifact's own snapshot exposes).
 
 use crate::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_bounds;
 //#region 🔖️Inference
@@ -24,8 +23,11 @@ pub struct RewritingInference {
 }
 
 impl protocol::Inference<RewritingSnapshot> for RewritingInference {
-    fn infer(snapshot: &RewritingSnapshot) -> Self {
+    fn infer(snapshot: &RewritingSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -41,15 +43,6 @@ impl protocol::InferenceSpec<RewritingSnapshot> for RewritingInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🧠️ Uncached: a handful of `{x, y}` points recomputed in one pass — the default `infer_cached`
-/// passthrough (just calls `infer`) is exactly right here, no `InferredField` chain needed.
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RewritingBuilder {
-    type Snapshot = RewritingSnapshot;
-    type Inference = RewritingInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.rewriting.inference`'s facet leaves into the OS-wide inference catalog —

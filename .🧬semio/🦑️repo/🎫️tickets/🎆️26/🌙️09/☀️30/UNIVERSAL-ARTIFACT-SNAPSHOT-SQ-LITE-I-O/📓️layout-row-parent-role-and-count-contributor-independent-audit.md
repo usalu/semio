@@ -1,0 +1,21 @@
+# Layout Row Parent Role and Count Contributor Independent Audit
+
+Read-only source/capsule inspection. No Source, parser, Native, build or production edits by this lane. Current RowIndex still has grouped(table,parent,ordinal=2) at53; High's parentColumn fourth-argument repair was forthcoming at this readback.
+
+## Layout relationship authority
+
+Actual Layout authored SQL17/19 has layout_layer and layout_frame cells id0,page_id1,parent_id2,ordinal3, followed by owned fields. page_id/parent_id are nullable with XOR CHECK. Current handwritten consumer56 calls parent-page groups with parentColumn2/ordinal3 and57 calls page groups with parentColumn1/ordinal3. Other ordinary child tables use parent1/ordinal2. This is actual domain authority, not a inferred uniform layout.
+
+A coherent generic ParentIndex must skip rows whose selected parent column is NULL when indexing that role, while the Layout owner verifies XOR and later consumed/orphan invariants. Refusing every NULL selected parent would reject valid mixed page+parent-page rows. It must preserve full bigint keys/captured cells, and cache identity includes both parentColumn and ordinal role (null ordinal distinct from all nonnegative columns). A cache keyed only ordinal would cross-bind page versus parent-page groups and can return the wrong owned row. The paid slots/count/offset/positions buffers must operate on that selected-role census; offsets must not create holes for skipped NULL rows. Finish still detects every unconsumed row. Null-skipping alone must not silently accept non-bigint non-null keys.
+
+The existing complete43 Layout table domain and composed Drawing suffix remain owner-controlled. Raw scalar word/ordered/variant/Forms dictionary rows cannot be replaced by a summary or hidden carrier. Source exact/short/cumulative/interior cancel must observe these actual buffers; Map identity/group metadata is still separate JavaScript allocation qualification. Shared typed backing and full JavaScript heap are not equivalent.
+
+## Held Count20 contributor audit
+
+Current held `📥️inputs/count-compiled-eight-cause-complete-contributor-pairs.json` contains one real required i32 value owner, individually handwritten singleton fixture_refusal SQL and eight explicit kebab-case subsets with sixteen concrete app variants. Module nesting reaches refusal::KIND through sqlite's super::super; descriptor facets, native bare codec and editor/viewer associated snapshot are the same new owner. CounterApp and Count native/SQL ownership remain separate. Branches are in the component assembly outside cfg(test); parser readiness is not WASIp2 runtime evidence.
+
+Provider uses actual controlled strict JSON and raw Record Pack factories; malformed native/schema/row/id/value errors occur before selected subset refusal. Actual default erased Store codec invokes semantic validator in both directions. Explicit Err(IoError) preserves selected full8 cause/message and complete diagnostics; no runtime message classifier or ABI alias. Span explicitly includes length4 and all ExpectedSet/FaultScope NUL/Unicode fields match the compiled3 neutral witness. There is no `Ok(error diagnostics)` path that would force InvalidValue.
+
+One concrete held namespace blocker was reported and High corrected before mount: provider aliased os_store as store then referenced store::io_schema. Fresh capsule now aliases canonical Kernel root as store, matching existing Count provider and real io_schema public authority. No new framework phase is needed: subset validation uses ProjectSnapshot. Remaining module/trait/type correctness requires the authentic compiled3 build/replay; no blanket compile readiness claim is made from six syntax checks.
+
+Returned diagnostic strings/vectors are independent owned error output. Their capacities need complete later failure/drop observation; not an invented scratch debit. Current compiled witness exercises Text refusals in both directions; Binary native provider grammar is authored but needs separate direct or compiled coverage before claiming both-format refusal transport. Count i32 both-format success witness remains unchanged. Unknown kind/subset refusal is explicit UnsupportedOwner; it is not one of the eight selected authored cases and cannot default into any selected cause. Test-role contributor publication is separate from production117.

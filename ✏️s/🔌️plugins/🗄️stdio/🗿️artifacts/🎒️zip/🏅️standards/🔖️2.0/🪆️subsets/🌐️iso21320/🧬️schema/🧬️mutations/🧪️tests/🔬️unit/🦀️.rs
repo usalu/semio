@@ -48,7 +48,7 @@ fn every_declared_kind_is_invertible_against_the_real_base() {
     for mutation in every_kind() {
         let base = base_snapshot();
         let mut snapshot = base.clone();
-        let undo = mutation.inverse(&base);
+        let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         apply_zip_iso21320_mutation(&mut snapshot, &mutation);
         for step in &undo {
             apply_zip_iso21320_mutation(&mut snapshot, step);
@@ -76,7 +76,7 @@ fn deleting_the_first_iso_member_restores_its_original_position() {
     let snapshot = base_snapshot();
     let mutation = ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: snapshot.entries[0].name.clone() });
     let next = mutation.diff(&snapshot).diff().apply(&snapshot).unwrap();
-    let inverse = mutation.inverse(&snapshot);
+    let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     assert_eq!(inverse[0].diff(&next).diff().apply(&next).unwrap(), snapshot);
 }

@@ -31,12 +31,13 @@ pub struct GisMapInference {
     pub bounds: Option<GisMapBounds>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GisMapProposalError {
     Identity,
     Stale,
     Bounds,
     Composition,
+    InverseRefused(semio_framework_value::ValueError),
 }
 
 /// 🧩️ One bounded typed parent+drawing+value work owner prepared from an immutable Map base.
@@ -81,8 +82,8 @@ impl GisMapInference {
             return Err(GisMapProposalError::Bounds);
         }
         let ring = [[bounds.lon_min, bounds.lat_min], [bounds.lon_max, bounds.lat_min], [bounds.lon_max, bounds.lat_max], [bounds.lon_min, bounds.lat_max], [bounds.lon_min, bounds.lat_min]]
-            .map(|point| dsl::DslValue::Array(point.map(dsl::DslValue::float).into()));
-        let data = dsl::DslValue::object([("id".into(), dsl::DslValue::String(id.clone())), ("kind".into(), dsl::DslValue::String("inference-bounds".into())), ("ring".into(), dsl::DslValue::Array(ring.into()))]);
+            .map(|point| semio_framework_value::DslValue::Array(point.map(semio_framework_value::DslValue::float).into()));
+        let data = semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(id.clone())), ("kind".into(), semio_framework_value::DslValue::String("inference-bounds".into())), ("ring".into(), semio_framework_value::DslValue::Array(ring.into()))]);
         Ok(GisMapMutation::CreateRegion(CreateRegion { index: snapshot.regions.len(), item: MapFeature { id, data } }))
     }
 
@@ -90,7 +91,8 @@ impl GisMapInference {
     pub fn create_region_group_work(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, GisMapProposalError> {
         use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
         use crate::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
-        use dsl::{FromValue, ToValue};
+        use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
         use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
         use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
@@ -99,7 +101,7 @@ impl GisMapInference {
         if snapshot.image.is_some() || snapshot.drawing.child_id != "gismap-drawing" || snapshot.value.child_id != "gismap-value" {
             return Err(GisMapProposalError::Composition);
         }
-        let parent_inverse = inverse_gis_map_mutation(snapshot, &parent);
+        let parent_inverse = inverse_gis_map_mutation(snapshot, &parent).map_err(GisMapProposalError::InverseRefused)?;
         let mut after = snapshot.clone();
         apply_gis_map_mutation(&mut after, &parent).map_err(|_| GisMapProposalError::Composition)?;
         if after.drawing != snapshot.drawing || after.value != snapshot.value || after.image != snapshot.image {
@@ -126,7 +128,7 @@ impl GisMapInference {
             return Err(GisMapProposalError::Composition);
         }
         let drawing = SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: NodePath { layer: 0, path: Vec::new() }, index: before_children.len(), node: after_children[before_children.len()].clone() });
-        let drawing_inverse = inverse_semio_drawing_mutation(&drawing, &before_drawing);
+        let drawing_inverse = inverse_semio_drawing_mutation(&drawing, &before_drawing).map_err(GisMapProposalError::InverseRefused)?;
         let mut projected_drawing = before_drawing.clone();
         apply_semio_drawing_mutation(&mut projected_drawing, &drawing);
         if projected_drawing != after_drawing {
@@ -136,25 +138,25 @@ impl GisMapInference {
         let before_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot));
         let after_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&after));
         let value_payload = crate::semio_value_from_serde_json(&serde_json::Value::from(&created.item.data));
-        let value = SemioValueMutation::from_value(dsl::DslValue::object([
-            ("mutation".into(), dsl::DslValue::String("insertListItem".into())),
-            ("path".into(), dsl::DslValue::Array(vec![dsl::DslValue::object([("kind".into(), dsl::DslValue::String("key".into())), ("key".into(), dsl::DslValue::String("regions".into()))])])),
+        let value = SemioValueMutation::from_value(semio_framework_value::DslValue::object([
+            ("mutation".into(), semio_framework_value::DslValue::String("insertListItem".into())),
+            ("path".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("kind".into(), semio_framework_value::DslValue::String("key".into())), ("key".into(), semio_framework_value::DslValue::String("regions".into()))])])),
             ("index".into(), created.index.to_value()),
             ("value".into(), value_payload.to_value()),
         ]))
         .map_err(|_| GisMapProposalError::Composition)?;
-        let value_inverse = inverse_semio_value_mutation(&value, &before_value);
+        let value_inverse = inverse_semio_value_mutation(&value, &before_value).map_err(GisMapProposalError::InverseRefused)?;
         let mut projected_value = before_value;
         apply_semio_value_mutation(&mut projected_value, &value);
         if projected_value != after_value {
             return Err(GisMapProposalError::Composition);
         }
-        let bytes = dsl::os_pack::json::to_json_string(&parent).len()
-            + dsl::os_pack::json::to_json_string(&parent_inverse).len()
-            + dsl::os_pack::json::to_json_string(&drawing).len()
-            + dsl::os_pack::json::to_json_string(&drawing_inverse).len()
-            + dsl::os_pack::json::to_json_string(&value).len()
-            + dsl::os_pack::json::to_json_string(&value_inverse).len();
+        let bytes = semio_framework_pack_json::to_json_string(&parent).len()
+            + semio_framework_pack_json::to_json_string(&parent_inverse).len()
+            + semio_framework_pack_json::to_json_string(&drawing).len()
+            + semio_framework_pack_json::to_json_string(&drawing_inverse).len()
+            + semio_framework_pack_json::to_json_string(&value).len()
+            + semio_framework_pack_json::to_json_string(&value_inverse).len();
         if bytes > 65_536 {
             return Err(GisMapProposalError::Bounds);
         }
@@ -163,8 +165,11 @@ impl GisMapInference {
 }
 
 impl protocol::Inference<GisMapSnapshot> for GisMapInference {
-    fn infer(snapshot: &GisMapSnapshot) -> Self {
+    fn infer(snapshot: &GisMapSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds: lon_lat_bounds(&all_lon_lat_pairs(snapshot)) }
+    
+        })
     }
 }
 
@@ -185,13 +190,6 @@ impl protocol::InferenceSpec<GisMapSnapshot> for GisMapInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::GismapBuilder {
-    type Snapshot = GisMapSnapshot;
-    type Inference = GisMapInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gismap.inference`'s facet leaves into the OS-wide inference catalog — call

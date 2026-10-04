@@ -4,9 +4,9 @@ use crate::RewritingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditRhs, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
-    if base.rhs_json == payload.new_rhs_json {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Rhs is already up to date.");
+    if base.rhs == payload.new_rhs {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Rhs is already up to date.");
     }
-    protocol::MutationOutcome::new(RewritingDiff { rhs_json: Some(payload.new_rhs_json.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(RewritingDiff { rhs: Some(payload.new_rhs.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

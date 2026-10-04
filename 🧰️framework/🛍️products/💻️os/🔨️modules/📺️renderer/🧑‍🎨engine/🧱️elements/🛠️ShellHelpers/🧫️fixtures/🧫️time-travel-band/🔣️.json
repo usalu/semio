@@ -518,7 +518,7 @@
       }
     },
     {
-      "name": "an unknown replay fault names its code",
+      "name": "an unknown replay fault reads the replay-failed copy and never shows its code",
       "session": {
         "sessionId": "1",
         "generation": 11,
@@ -534,7 +534,7 @@
           "progress": null,
           "review": null,
           "outcome": null,
-          "fault": "Replay failed (store.replay-unreadable)",
+          "fault": "Replay failed: later mutations could not be checked",
           "accepted": null
         },
         "de": {
@@ -543,7 +543,7 @@
           "progress": null,
           "review": null,
           "outcome": null,
-          "fault": "Neuanwendung fehlgeschlagen (store.replay-unreadable)",
+          "fault": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden",
           "accepted": null
         }
       },

@@ -18,10 +18,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢change-frame-columns/🔤️splits/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("change-frame-columns/splits-the-text-frame-into-two-columns: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-frame-columns/splits-the-text-frame-into-two-columns: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("change-frame-columns/splits-the-text-frame-into-two-columns: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-frame-columns/splits-the-text-frame-into-two-columns: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
     serde_json::from_str(MUTATION).expect("change-frame-columns/splits-the-text-frame-into-two-columns: mutation decodes")
@@ -48,7 +48,7 @@ async fn recolumns_the_text_frame_without_changing_its_wrap_mode() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_the_single_column_text_frame() {
     let base = before();
-    let inverse = mutation().inverse(&base);
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-frame-columns inverts to exactly one step on a text frame");
     match &inverse[0] {
         LayoutMutation::ChangeFrameColumns(step) => {
@@ -68,12 +68,12 @@ async fn inverse_restores_the_single_column_text_frame() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: LayoutSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-frame-columns/splits-the-text-frame-into-two-columns: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-frame-columns/splits-the-text-frame-into-two-columns: committed mutation JSON is not canonical");
 }
@@ -99,7 +99,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-frame-columns/splits-the-text-frame-into-two-columns: change-frame-columns must emit a nested frame patch populating only columns");
 }
@@ -109,8 +109,8 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-frame-columns/splits-the-text-frame-into-two-columns: committed diff JSON is not canonical");
 }
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `change-frame-columns` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-frame-columns/splits-the-text-frame-into-two-columns: committed diff did not carry before to after");
 }

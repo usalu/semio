@@ -1,4 +1,4 @@
-//! Diff for `change-self-weight-assumed-gk`.
+//! 🔺️ Diff for `change-self-weight-assumed-gk`.
 use super::ChangeSelfWeightAssumedGk;
 use crate::artifact_schema::diff::En1991SelfWeightElementsList;
 use crate::{En1991Diff, En1991Snapshot};
@@ -7,7 +7,7 @@ pub fn diff(payload: &ChangeSelfWeightAssumedGk, base: &En1991Snapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
     if base.self_weight_elements[payload.index].assumed_gk == payload.new_assumed_gk {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
     let mut values = base.self_weight_elements.clone();
     values[payload.index].assumed_gk = payload.new_assumed_gk;

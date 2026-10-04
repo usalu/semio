@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `s.stdio.semio/v1/flow` from a real `s.stdio.json` (rfc8259) snapshot —
 //! near-direct structural mapping (`{"nodes":[...],"edges":[...]}`), no lossy fields: every
 //! `FlowNode`/`FlowEdge` field has a 1:1 JSON member. Malformed/missing members are real
-//! errors (`store::PackError::Schema`), never silently defaulted away.
+//! errors (`|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail))`), never silently defaulted away.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
@@ -12,34 +12,34 @@ use semio_s_artifact_stdio_json::JsonSnapshot;
 //#region 🔖️JsonAccessors
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn get<'a>(members: &'a [JsonMember], key: &str) -> Result<&'a JsonValue, store::PackError> {
-    members.iter().find(|m| m.key == key).map(|m| &m.value).ok_or_else(|| store::PackError::Schema(format!("flow json: missing member {key:?}")))
+    members.iter().find(|m| m.key == key).map(|m| &m.value).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: missing member {key:?}"))))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn as_object(v: &JsonValue) -> Result<&[JsonMember], store::PackError> {
     match v {
         JsonValue::Object { members } => Ok(members),
-        other => Err(store::PackError::Schema(format!("flow json: expected object, got {other:?}"))),
+        other => Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: expected object, got {other:?}")))),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn as_array(v: &JsonValue) -> Result<&[JsonValue], store::PackError> {
     match v {
         JsonValue::Array { items } => Ok(items),
-        other => Err(store::PackError::Schema(format!("flow json: expected array, got {other:?}"))),
+        other => Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: expected array, got {other:?}")))),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn as_string(v: &JsonValue) -> Result<String, store::PackError> {
     match v {
         JsonValue::String { value } => Ok(value.clone()),
-        other => Err(store::PackError::Schema(format!("flow json: expected string, got {other:?}"))),
+        other => Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: expected string, got {other:?}")))),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn as_f64(v: &JsonValue) -> Result<f64, store::PackError> {
     match v {
-        JsonValue::Number { lexeme } => lexeme.parse::<f64>().map_err(|e| store::PackError::Schema(format!("flow json: bad number lexeme {lexeme:?}: {e}"))),
-        other => Err(store::PackError::Schema(format!("flow json: expected number, got {other:?}"))),
+        JsonValue::Number { lexeme } => lexeme.parse::<f64>().map_err(|e| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: bad number lexeme {lexeme:?}: {e}")))),
+        other => Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("flow json: expected number, got {other:?}")))),
     }
 }
 //#endregion 🔖️JsonAccessors

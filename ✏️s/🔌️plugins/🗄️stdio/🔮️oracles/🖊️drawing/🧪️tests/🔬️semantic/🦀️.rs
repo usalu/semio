@@ -4,7 +4,7 @@ use semio_repo_test_host::Json;
 
 #[test]
 fn semantic_golden_entities_match_the_independent_dxf_reader() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🖊️semantic/🔣️.json")).expect("declared semantic cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖊️semantic/🔣️.json")).expect("declared semantic cases");
     for case in cases.as_array().expect("closed case array") {
         let bytes = case["input"].as_str().expect("declared DXF input").as_bytes();
         if let Some(prefix) = case["errorPrefix"].as_str() {
@@ -28,6 +28,7 @@ fn semantic_golden_entities_match_the_independent_dxf_reader() {
             assert_eq!(entity.str("layer"), expected["layer"].as_str().unwrap());
             for key in ["start", "end"] {
                 let actual: Vec<f64> = entity.array(key).iter().map(|value| match value { Json::Number(number) => *number, _ => panic!("coordinate must be numeric") }).collect();
+                assert_eq!(serde_json::to_value(&actual).unwrap(), expected[key], "the owned projection retains the literal f64 representation: {key}");
                 let expected: Vec<f64> = expected[key].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect();
                 assert_eq!(actual, expected, "{key}");
             }

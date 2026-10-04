@@ -62,7 +62,12 @@
         },
         "group": "media",
         "order": 20
-      }
+      },
+      "enum": [
+        "sparse",
+        "mesh",
+        "image"
+      ]
     },
     "mime": {
       "type": [
@@ -125,7 +130,7 @@
     "first": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Unsigned64Transport",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "hidden",
         "role": "value",
         "label": {
           "en": "First Leaf Index",
@@ -135,8 +140,6 @@
           "en": "Leaf index where the first chunk is placed.",
           "de": "Blockindex, an dem der erste Block abgelegt wird."
         },
-        "step": 1,
-        "precision": 0,
         "group": "media",
         "order": 60
       }
@@ -146,6 +149,20 @@
       "minItems": 1,
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ByteBuffer"
+      },
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Chunks",
+          "de": "Blöcke"
+        },
+        "description": {
+          "en": "The content's next leaves, computed by the reconstruction.",
+          "de": "Die nächsten Blöcke des Inhalts, von der Rekonstruktion berechnet."
+        },
+        "group": "media",
+        "order": 70
       }
     }
   }

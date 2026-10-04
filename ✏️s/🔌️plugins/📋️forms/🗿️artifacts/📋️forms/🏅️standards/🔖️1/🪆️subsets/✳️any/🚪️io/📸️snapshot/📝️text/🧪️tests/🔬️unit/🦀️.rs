@@ -28,7 +28,7 @@ async fn default_fixture_dsl_round_trips() {
     assert_eq!(forms_steps(&spec).len(), 1);
     assert_dsl_round_trip(&spec);
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🖼️assets/📇️contact/🔣️.json")).unwrap();
-    let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&spec)).unwrap();
+    let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec)).unwrap();
     assert_eq!(actual, expected);
 }
 

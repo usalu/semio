@@ -4,7 +4,10 @@
 use crate::mutations::{add_palette_color, BitmapMutation};
 use crate::schema::snapshot::BitmapSnapshot;
 
-pub fn inverse(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
+pub fn inverse(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> Result<Vec<BitmapMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(color) = base.input.palette.get(payload.index) else { return Vec::new() };
     vec![add_palette_color(payload.index, *color)]
+
+    })())
 }

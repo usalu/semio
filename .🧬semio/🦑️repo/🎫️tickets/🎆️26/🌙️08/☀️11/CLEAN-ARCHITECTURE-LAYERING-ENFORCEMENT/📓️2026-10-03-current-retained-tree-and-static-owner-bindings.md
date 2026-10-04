@@ -1,0 +1,11 @@
+# Retained Tree and Static Owner Bindings
+
+The closed lower Tree reading-direction corpus now declares root direction auto and LTR row reading, separately from either outer panel direction. Both original browser laws remain byte-exact except additive imports; the additive root law validates the closed schema and two hostile mutations, then observes twelve English/German Chromium character geometry cases. Actual complete lower route is GREEN3/3 with DEBUG witness. No Tree production code changed.
+
+Higher original World2 and measures9 names are all retained; actual complete route is GREEN11/11. World retains its explicit RTL panel axis and every15 row ID/hierarchy/selection/activation assertion. Measures retains exact toggle authority, disability, intent and identity checks. The earlier failing DOM identity omitted the retained row scope; the current exact literal names surface/row/control, as documented by UiInterpreterContext.domScope and independently retained original187 interpreter cohort's sibling control isolation law. The bare intent key is unchanged.
+
+The three complete source/interface files are actual GREEN24/24 with no original identity loss: General Settings now names the canonical customizable panel-inset token; Dag checks the single shared row sink's five unchanged operation names; cancellation binds the actual full PointerInfo carrier and explicitly checks release/forwarding of its physical id. Original neutral schemas/corpora and all other source predicates are unchanged. These are portable source/runtime observations, not a new native renderer runtime claim.
+
+The unchanged complete Paint selection-focus file is GREEN51/51. Its newly failing whole-suite cancellation law timed out waiting for initial Select-all completion before the lock assertions; this separate pass does not erase the whole-suite failure or claim a production repair.
+
+All eight modified full before/current sources, Unicode-offset inverse edits, and actual runtime rosters are in generated/current-native-worker/renderer-owned-contract-bindings-full-inverses-and-runtime-1.json. Every inverse is exact. Exact current strict TypeScript verification is running separately; full unfiltered frontend replay remains required after the package declaration defect is repaired.

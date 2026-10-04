@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kinds",
+    "directions",
+    "encodings",
+    "message",
+    "diagnostic",
+    "vmCancellation",
+    "providerCancellation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "plugin.sqlite.refusal/v1"
+    },
+    "kinds": {
+      "const": [
+        "invalidValue",
+        "canceled",
+        "ownershipLimit",
+        "allocationFailed",
+        "workLimit",
+        "depthLimit",
+        "unsupportedOwner",
+        "invariantViolated"
+      ]
+    },
+    "directions": {
+      "const": [
+        "export",
+        "import"
+      ]
+    },
+    "encodings": {
+      "const": [
+        "binary",
+        "text"
+      ]
+    },
+    "message": {
+      "const": "same literal limit canceled unsupported \u0000語"
+    },
+    "diagnostic": {
+      "const": {
+        "code": "fixture.sqlite.typed-cause",
+        "message": "diagnostic remains independent \u0000語",
+        "line": 2,
+        "column": 3
+      }
+    },
+    "vmCancellation": {
+      "const": "turnFaultCancelled"
+    },
+    "providerCancellation": {
+      "const": "canceled"
+    }
+  },
+  "$defs": {
+    "rejection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message",
+        "diagnostics"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "invalidValue",
+            "canceled",
+            "ownershipLimit",
+            "allocationFailed",
+            "workLimit",
+            "depthLimit",
+            "unsupportedOwner",
+            "invariantViolated"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  }
+}

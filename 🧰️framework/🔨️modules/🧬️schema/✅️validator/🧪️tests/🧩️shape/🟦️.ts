@@ -86,7 +86,7 @@ test("actual guards preserve identities, sparse slots, labels and exact own enum
     expect(observe(api, row, value)).toEqual(row.expected);
     if (row.expected.admitted && row.guard !== "keys") {
       const result = row.guard === "record" ? api.requireRecord(value, row.label) : row.guard === "array" ? api.requireStringArray(value, row.label) : row.guard === "string" ? api.requireString(value, row.label) : api.requireLiteral(value, row.label, row.allowed!);
-      expect(result).toBe(value);
+      expect<unknown>(result).toBe(value);
     }
     if (descriptors) expect(Object.getOwnPropertyDescriptors(value)).toEqual(descriptors);
     expect(row.keys).toEqual(keys);

@@ -68,7 +68,7 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
     original.meshes.push(SemioMesh { id: "mesh-a".into(), primitives: vec![SemioPrimitive { id: "primitive-a".into(), positions: vec![SemioPoint3 { x: 0.0, y: 1.0, z: 2.0 }], ..Default::default() }] });
     let mut app = artifact_app_laws::new_registered_app::<EditorApp<SemioMeshEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_mesh_editor(), examples: Vec::new() } }).await;
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, SEMIO_MESH_DOCUMENT_SCHEMA) else { panic!("mesh fixture produces a document load") };
-    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
     let meta = artifact_app_laws::meta("local");
     let arguments = |primitive_id: &str, point: [f64; 3]| {
         DslValue::object([
@@ -89,11 +89,11 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
     assert_eq!(app.snapshot().unwrap().meshes[0].primitives[0].positions[0], SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
 
     let missing = arguments("missing", [7.0, 8.0, 9.0]);
-    let history_before = semio_framework::io::resolve_ready(app.history_snapshot()).expect("history before refused edit").upserts.len();
+    let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history before refused edit").upserts.len();
     app.handle_action("set-vertex", Some(&missing), &meta).await.unwrap();
     assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
     assert_eq!(app.snapshot().unwrap().meshes[0].primitives[0].positions[0], SemioPoint3 { x: 3.0, y: 4.0, z: 5.0 });
-    assert_eq!(semio_framework::io::resolve_ready(app.history_snapshot()).expect("history after refused edit").upserts.len(), history_before);
+    assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after refused edit").upserts.len(), history_before);
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -110,9 +110,9 @@ async fn registered_set_vertex_refuses_duplicate_targets_without_history() {
     ] {
         let mut app = artifact_app_laws::new_registered_app::<EditorApp<SemioMeshEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_mesh_editor(), examples: Vec::new() } }).await;
         let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&duplicate, SEMIO_MESH_DOCUMENT_SCHEMA) else { panic!("mesh fixture produces a document load") };
-        app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
         let meta = artifact_app_laws::meta("local");
-        let history_before = semio_framework::io::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
+        let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
         let args = DslValue::object([
             ("meshId".into(), DslValue::String("mesh-a".into())),
             ("primitiveId".into(), DslValue::String("primitive-a".into())),
@@ -122,7 +122,7 @@ async fn registered_set_vertex_refuses_duplicate_targets_without_history() {
         app.handle_action("set-vertex", Some(&args), &meta).await.unwrap();
         assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
         assert_eq!(app.snapshot().unwrap(), duplicate);
-        assert_eq!(semio_framework::io::resolve_ready(app.history_snapshot()).expect("history after duplicate refusal").upserts.len(), history_before);
+        assert_eq!(::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history after duplicate refusal").upserts.len(), history_before);
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 }

@@ -48,7 +48,7 @@ pub(crate) mod context {
             updated_at_ms: 1,
             updated_by: "user:1".into(),
         });
-        app.load_document_text(&store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load test artifact");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load test artifact");
         (app, id)
     }
     
@@ -64,7 +64,7 @@ pub(crate) mod context {
         let mut app = new_app().await;
         let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
         let snapshot = empty_space_index_snapshot("space-1");
-        app.load_document_text(&store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load empty Space index");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load empty Space index");
         let descriptor = DocumentDescriptor {
             space_id: "space-1".into(),
             document_id: id.clone(),
@@ -99,7 +99,7 @@ pub(crate) mod context {
                 },
             ),
         ];
-        app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: pack::to_json_string(&events) }), &meta("local")).await.expect("fold indexed artifact");
+        app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local")).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
         let config = store::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
         assert_eq!(config.indexed_artifacts.len(), 1);
@@ -193,24 +193,24 @@ async fn the_members_panel_body_renders_through_the_editor_dispatch() {
 /// artifact editors already use (e.g. `🌍️gis/🗿️artifacts/🗺️gismap`).
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    let cases: Vec<(&str, pack::JsonValue)> = vec![
-        ("createArtifact", pack::json!({ "name": "First", "kindChoice": "{\"kindId\":\"s.gis.gismap\"}" })),
-        ("deleteArtifact", pack::json!({ "id": "artifact-1" })),
-        ("renameArtifact", pack::json!({ "id": "artifact-1", "newName": "Renamed" })),
-        ("touchArtifact", pack::json!({ "id": "artifact-1", "nowMs": 2, "actor": "user:1" })),
-        ("requestDeleteArtifact", pack::json!({ "id": "artifact-1" })),
-        ("openArtifact", pack::json!({ "id": "artifact-1" })),
-        ("openArtifactWith", pack::json!({ "id": "artifact-1", "role": "editor", "pluginId": "writer", "appId": "writer.editor" })),
-        ("foldDirectoryEvents", pack::json!({ "eventsJson": "[]" })),
-        ("presenceHeartbeat", pack::json!({ "artifactId": "artifact-1", "actorsCsv": "user:1" })),
-        ("inviteMember", pack::json!({ "email": "a@example.com", "role": "author" })),
-        ("removeMember", pack::json!({ "userId": "user:1" })),
-        ("setVisibility", pack::json!({ "visibility": "public" })),
-        ("copyInviteLink", pack::json!({ "role": "spectator", "ttlSecs": 604800u64 })),
-        ("requestInviteMember", pack::json!({})),
+    let cases: Vec<(&str, semio_framework_pack_json::Value)> = vec![
+        ("createArtifact", semio_framework_pack_json::json!({ "name": "First", "kindChoice": "{\"kindId\":\"s.gis.gismap\"}" })),
+        ("deleteArtifact", semio_framework_pack_json::json!({ "id": "artifact-1" })),
+        ("renameArtifact", semio_framework_pack_json::json!({ "id": "artifact-1", "newName": "Renamed" })),
+        ("touchArtifact", semio_framework_pack_json::json!({ "id": "artifact-1", "nowMs": 2, "actor": "user:1" })),
+        ("requestDeleteArtifact", semio_framework_pack_json::json!({ "id": "artifact-1" })),
+        ("openArtifact", semio_framework_pack_json::json!({ "id": "artifact-1" })),
+        ("openArtifactWith", semio_framework_pack_json::json!({ "id": "artifact-1", "role": "editor", "pluginId": "writer", "appId": "writer.editor" })),
+        ("foldDirectoryEvents", semio_framework_pack_json::json!({ "eventsJson": "[]" })),
+        ("presenceHeartbeat", semio_framework_pack_json::json!({ "artifactId": "artifact-1", "actorsCsv": "user:1" })),
+        ("inviteMember", semio_framework_pack_json::json!({ "email": "a@example.com", "role": "author" })),
+        ("removeMember", semio_framework_pack_json::json!({ "userId": "user:1" })),
+        ("setVisibility", semio_framework_pack_json::json!({ "visibility": "public" })),
+        ("copyInviteLink", semio_framework_pack_json::json!({ "role": "spectator", "ttlSecs": 604800u64 })),
+        ("requestInviteMember", semio_framework_pack_json::json!({})),
     ];
     for (action, args) in cases {
-        let args = pack::json_to_dsl_value(&args);
+        let args = semio_framework_pack_json::to_dsl_value(&args);
         let command = SpaceIndexEditor::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
         assert_eq!(command.command_id(), action, "the bridged command's own id must round-trip");
     }
@@ -220,7 +220,7 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 #[semio_framework_async_macros::async_test]
 async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay() {
     let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
-    let args = pack::json_to_dsl_value(&pack::json!({ "name": " First map ", "kindChoice": kind_choice }));
+    let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": " First map ", "kindChoice": kind_choice }));
     let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some(&args)).expect("dialog submission must bridge") else {
         panic!("expected CreateArtifact");
     };
@@ -232,8 +232,8 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
         panic!("dialog submission must emit one ReplayShellCommand");
     };
     assert_eq!(action_id, "os.create-space-artifact");
-    let args = pack::json_from_dsl_value(args.as_ref().expect("relay args"));
-    assert_eq!(args, pack::json!({ "kindChoice": kind_choice, "name": "First map" }));
+    let args = semio_framework_pack_json::from_dsl_value(args.as_ref().expect("relay args"));
+    assert_eq!(args, semio_framework_pack_json::json!({ "kindChoice": kind_choice, "name": "First map" }));
 }
 
 /// 🆔️ Lane 4-F: `#s-space-create-artifact`'s no-args click must bridge to an EMPTY `CreateArtifact`

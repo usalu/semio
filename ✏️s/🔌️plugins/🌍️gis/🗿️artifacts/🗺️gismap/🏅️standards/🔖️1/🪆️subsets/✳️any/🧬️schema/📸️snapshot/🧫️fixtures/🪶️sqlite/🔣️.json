@@ -64,7 +64,7 @@
         "name": "text",
         "value": {
           "kind": "text",
-          "value": "世界\u0000 editable"
+          "value": "\u4e16\u754c\u0000 editable"
         }
       },
       {
@@ -93,5 +93,6 @@
         }
       }
     ]
-  }
+  },
+  "invalidUtf16CodeUnits": [[55296], [57343]]
 }

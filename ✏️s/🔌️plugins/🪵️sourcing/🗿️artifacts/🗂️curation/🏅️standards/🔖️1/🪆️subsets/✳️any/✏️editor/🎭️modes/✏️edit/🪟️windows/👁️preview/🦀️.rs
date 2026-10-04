@@ -61,17 +61,17 @@ fn preview_fit_revision(kind_id: &str) -> u32 {
 fn preview_fit_json(kind: &ObjectKind) -> String {
     let revision = preview_fit_revision(&kind.id);
     let bounds = preview_kind_bounds(kind);
-    let f64_array = |values: [f64; 3]| dsl::DslValue::Array(values.into_iter().map(dsl::DslValue::float).collect());
+    let f64_array = |values: [f64; 3]| semio_framework_value::DslValue::Array(values.into_iter().map(semio_framework_value::DslValue::float).collect());
     let mut entries = vec![
-        ("enabled".to_string(), dsl::DslValue::Bool(true)),
-        ("revision".to_string(), dsl::DslValue::uint(u64::from(revision))),
-        ("padding".to_string(), dsl::DslValue::float(SOURCING_PREVIEW_FIT_PADDING)),
+        ("enabled".to_string(), semio_framework_value::DslValue::Bool(true)),
+        ("revision".to_string(), semio_framework_value::DslValue::uint(u64::from(revision))),
+        ("padding".to_string(), semio_framework_value::DslValue::float(SOURCING_PREVIEW_FIT_PADDING)),
     ];
     if let Some((minimum, maximum)) = bounds {
         entries.push(("boundsMin".to_string(), f64_array(minimum)));
         entries.push(("boundsMax".to_string(), f64_array(maximum)));
     }
-    dsl::json::to_json_string(&dsl::DslValue::Object(entries))
+    semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(entries))
 }
 //#endregion 🔖️Framing
 
@@ -88,14 +88,14 @@ pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &Sou
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return semio_framework_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
     };
-    let meshes_json = dsl::json::to_json_string(&dsl::DslValue::Array(vec![if box_parts(&kind.geometry).is_some() {
+    let meshes_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![if box_parts(&kind.geometry).is_some() {
         unit_box_mesh_json()
     } else if let GeometryRecipe::Glb { url, .. } = &*kind.geometry {
         glb_mesh_json(url)
     } else {
         kind_mesh_json(kind)
     }]));
-    let instances_json = dsl::json::to_json_string(&dsl::DslValue::Array(kind_instances_json(kind, [0.0, 0.0, 0.0], 1.0, false)));
+    let instances_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(kind_instances_json(kind, [0.0, 0.0, 0.0], 1.0, false)));
     let sun = WorldSunConfig::default();
     let scene = World3dScene { fit_json: Some(preview_fit_json(kind)), ..world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &sun) };
     scene_surface(SOURCING_CURATION_SURFACE_PREVIEW, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)

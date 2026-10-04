@@ -80,34 +80,34 @@ mod tests {
         let envelope: serde_json::Value = serde_json::from_str(witness).expect("committed wire witness");
         let value = serde_json::from_value::<T>(envelope["payload"].clone()).expect("direct payload");
         assert_eq!(serde_json::to_value(&value).unwrap(), envelope["payload"]);
-        assert_eq!(crate::os_pack::json::from_json_str::<T>(&envelope["payload"].to_string()).expect("first-party direct payload"), value);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&value)).unwrap(), envelope["payload"]);
+        assert_eq!(semio_framework_pack_json::from_json_str::<T>(&envelope["payload"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party direct payload"), value);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(), envelope["payload"]);
         assert_eq!(value.print_op(), row["text"].as_str().unwrap());
         assert_eq!(T::parse_op(&value.print_op()).unwrap(), value);
         assert!(T::parse_op("unknown").is_err());
         let mut unknown = envelope["payload"].clone();
         unknown["unknown"] = serde_json::json!(true);
-        assert!(crate::os_pack::json::from_json_str::<T>(&unknown.to_string()).is_err());
+        assert!(semio_framework_pack_json::from_json_str::<T>(&unknown.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
         assert!(serde_json::from_value::<T>(unknown).is_err());
         let mutation = wrap(value);
         assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
         assert_eq!(serde_json::to_value(&mutation).unwrap(), envelope);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&mutation)).unwrap(), envelope);
-        assert_eq!(crate::os_pack::json::from_json_str::<CounterMutation>(&envelope.to_string()).unwrap(), mutation);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).unwrap(), envelope);
+        assert_eq!(semio_framework_pack_json::from_json_str::<CounterMutation>(&envelope.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), mutation);
         assert_eq!(serde_json::from_value::<CounterMutation>(envelope).unwrap(), mutation);
         assert_eq!(CounterMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let base = row["base"].as_i64().unwrap();
         let outcome = mutation.diff(&base);
         let level = match outcome.worst_level() {
             None => "applied",
-            Some(crate::os_dsl::Severity::Error) => "error",
-            Some(crate::os_dsl::Severity::Fatal) => "fatal",
+            Some(semio_framework_diagnostic::Severity::Error) => "error",
+            Some(semio_framework_diagnostic::Severity::Fatal) => "fatal",
             other => panic!("unexpected fixture outcome {other:?}"),
         };
         assert_eq!(level, row["outcome"].as_str().unwrap());
         assert_eq!(outcome.diff().apply(&base).unwrap(), row["next"].as_i64().unwrap());
-        assert_eq!(mutation.inverse(&base).len(), usize::try_from(row["inverseCount"].as_u64().unwrap()).unwrap());
+        assert_eq!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").len(), usize::try_from(row["inverseCount"].as_u64().unwrap()).unwrap());
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod tests {
         let mutation = CounterMutation::AddCounter(AddCounter { delta: i64::MIN });
         let before = i64::MAX;
         let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let inverse = mutation.inverse(&before);
+        let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse, vec![AddCounter { delta: 1 }.into(), AddCounter { delta: i64::MAX }.into()]);
         let restored = inverse.into_iter().rev().fold(after, |state, operation| operation.diff(&state).diff().apply(&state).unwrap());
         assert_eq!(restored, before);

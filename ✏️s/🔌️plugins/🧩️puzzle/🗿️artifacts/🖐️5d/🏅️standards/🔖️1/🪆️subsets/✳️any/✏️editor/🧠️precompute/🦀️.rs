@@ -68,7 +68,7 @@ pub(crate) fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
 /// 🌉️ The puzzle 3d document the planner sees for a 5d document: parts as objects with their grips as vortices,
 /// fasteners as attractions, and the kind catalogs the planner places from.
 pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Puzzle5dKindCatalogs>) -> Result<Puzzle3dPlaySnapshot, Fault> {
-    let kind_compatibility = document.kind_compatibility.as_ref().map(|entries| dsl::FromValue::from_value(dsl::DslValue::from(entries))).transpose().map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-kind-compatibility: {error}")))?.unwrap_or_default();
+    let kind_compatibility = document.kind_compatibility.as_ref().map(|entries| semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(entries))).transpose().map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-compatibility: {error}")))?.unwrap_or_default();
     let typed = Puzzle3dSnapshot {
         schema: PUZZLE_3D_SCHEMA.into(),
         domain: document.domain.clone(),
@@ -78,13 +78,13 @@ pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Pu
         target_volumes: document.target_volumes.iter().map(puzzle3d_target_volume).collect(),
         references: Vec::new(),
     };
-    dsl::FromValue::from_value(dsl::ToValue::to_value(&typed)).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))
+    semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&typed)).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))
 }
 
 /// 🗂️ The authored kind catalogs of a 5d play snapshot (`kindCatalogs` child plus its `kindCatalogsExtra` rows),
 /// or `None` when it authors none.
 pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Result<Option<crate::Puzzle5dKindCatalogs>, Fault> {
-    let typed: crate::Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(snapshot.value())).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))?;
+    let typed: crate::Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(snapshot.value())).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))?;
     Ok(crate::kind_catalogs_of(&typed.kind_catalogs, &typed.kind_catalogs_extra).filter(|catalogs| !catalogs.parts.is_empty()))
 }
 
@@ -93,8 +93,8 @@ pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Resul
 /// as vortex templates and every grip kind as a vortex kind, so such a document fills with its own kinds.
 pub fn puzzle3d_kind_catalogs(document: &Puzzle5dDocument, authored: Option<crate::Puzzle5dKindCatalogs>) -> Result<Puzzle3dKindCatalogs, Fault> {
     if let Some(authored) = authored {
-        let renamed = puzzle3d_catalog_names(dsl::ToValue::to_value(&authored), 0);
-        return dsl::FromValue::from_value(renamed).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-kind-catalogs: {error}")));
+        let renamed = puzzle3d_catalog_names(semio_framework_value::ToValue::to_value(&authored), 0);
+        return semio_framework_value::FromValue::from_value(renamed).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-kind-catalogs: {error}")));
     }
     let mut catalogs = Puzzle3dKindCatalogs::default();
     let mut kinds = std::collections::HashSet::new();
@@ -130,9 +130,9 @@ pub fn puzzle3d_kind_catalogs(document: &Puzzle5dDocument, authored: Option<crat
 
 /// 🔤️ Renames a 5d catalog value into the engine's naming: `parts`/`grips`/`ropes`/`fasteners` at the top,
 /// `grips` inside a part kind, and the grip, rope and fastener kind references inside their rows.
-fn puzzle3d_catalog_names(value: dsl::DslValue, depth: usize) -> dsl::DslValue {
+fn puzzle3d_catalog_names(value: semio_framework_value::DslValue, depth: usize) -> semio_framework_value::DslValue {
     match value {
-        dsl::DslValue::Object(fields) => dsl::DslValue::Object(
+        semio_framework_value::DslValue::Object(fields) => semio_framework_value::DslValue::Object(
             fields
                 .into_iter()
                 .map(|(key, value)| {
@@ -150,7 +150,7 @@ fn puzzle3d_catalog_names(value: dsl::DslValue, depth: usize) -> dsl::DslValue {
                 })
                 .collect(),
         ),
-        dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(|item| puzzle3d_catalog_names(item, depth)).collect()),
+        semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(|item| puzzle3d_catalog_names(item, depth)).collect()),
         other => other,
     }
 }
@@ -202,12 +202,12 @@ fn puzzle3d_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
 }
 
 pub(crate) fn editor_part(part: &crate::Puzzle5dPart) -> Result<Puzzle5dPart, Fault> {
-    serde_json::from_value(serde_json::Value::from(&dsl::ToValue::to_value(part))).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))
+    serde_json::from_value(serde_json::Value::from(&semio_framework_value::ToValue::to_value(part))).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 
 fn schema_part(part: &Puzzle5dPart) -> Result<crate::Puzzle5dPart, Fault> {
     let value = serde_json::to_value(part).map_err(|error| Fault::from(format!("puzzle5d-planner-part: {error}")))?;
-    dsl::FromValue::from_value(dsl::DslValue::from(&value)).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-part: {error}")))
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&value)).map_err(|error: semio_framework_value::ValueError| Fault::from(format!("puzzle5d-planner-part: {error}")))
 }
 //#endregion 🔖️Document
 
@@ -362,7 +362,7 @@ impl Puzzle5dPlannerBoard {
             anchor: Default::default(),
             origin: preview.origin,
             orientation: Some(preview.orientation),
-            scale: preview.scale.clone().and_then(|scale| dsl::FromValue::from_value(scale).ok()),
+            scale: preview.scale.clone().and_then(|scale| semio_framework_value::FromValue::from_value(scale).ok()),
             mesh_url: Some(preview.mesh_url.clone()),
             vortices: kind.vortices.iter().map(|template| Puzzle3dVortex { id: template.id.clone(), vortex_kind: template.vortex_kind.clone(), label: None, position: template.point, direction: Some(template.direction), radius: template.radius, hidden: false, locked: false }).collect(),
             hidden: false,

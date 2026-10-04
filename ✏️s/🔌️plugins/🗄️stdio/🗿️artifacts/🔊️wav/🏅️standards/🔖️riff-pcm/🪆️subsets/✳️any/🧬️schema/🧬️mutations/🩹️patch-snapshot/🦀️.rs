@@ -1,36 +1,15 @@
-//! 🩹️ Compact typed WAV snapshot patch with an exact inverse captured from the publication base.
+//! 🩹️ Path-scoped WAV snapshot patch: one pointer operation with its exact inverse, its value typed by the snapshot sub-schema at the pointer.
 
 use super::*;
 use semio_s_artifact_stdio_contract::editing;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol)]
+#[mutation_leaf(contract = ::protocol, input_schema = Self::input_schema_at_path)]
 pub struct PatchSnapshot {
     pub patch: editing::SnapshotPatch,
 }
 
-impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchSnapshot {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "snapshot", kind: "patch-snapshot", record: "PatchSnapshot" };
-
-    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
-        match editing::apply_snapshot_patch(base, &self.patch) {
-            Ok(next) => protocol::MutationOutcome::new(diff_set_snapshot(base, &next)),
-            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
-        }
-    }
-
-    fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
-        editing::inverse_snapshot_patch(base, &self.patch).map(|patch| vec![WavMutation::PatchSnapshot(Self { patch })]).unwrap_or_default()
-    }
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
-    }
-
-    fn target(&self) -> Vec<String> {
-        self.patch.edits.first().map(|edit| edit.path.clone()).unwrap_or_default()
-    }
-}
+semio_s_artifact_stdio_contract::snapshot_patch_leaf! { leaf: PatchSnapshot, snapshot: WavSnapshot, mutation: WavMutation, diff: WavDiff, snapshot_schema: "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json" }
 
 #[cfg(test)]
 mod tests {
@@ -42,7 +21,7 @@ mod tests {
         assert!(WavMutation::parse_op("patch-snapshot patch=€0").is_err());
         let mut base = WavSnapshot::default();
         base.data = WavData::Pcm8(vec![7; 2 * 1_024 * 1_024]);
-        let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1048577".into(), value: dsl::DslValue::Number(dsl::Number::UInt(9)) };
+        let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1048577".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(9)) };
         let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare sample patch");
         let mutation = WavMutation::PatchSnapshot(PatchSnapshot { patch });
         let next = MutationDiff::apply(mutation.diff(&base).diff(), &base).expect("apply sample patch");
@@ -51,7 +30,7 @@ mod tests {
         let WavData::Pcm8(base_samples) = &base.data else { unreachable!() };
         assert_eq!(&samples[..1_048_577], &base_samples[..1_048_577]);
         assert_eq!(&samples[1_048_578..], &base_samples[1_048_578..]);
-        let inverse = mutation.inverse(&base);
+        let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
         assert_eq!(MutationDiff::apply(inverse[0].diff(&next).diff(), &next).expect("apply inverse"), base);
         assert!(mutation.encode_op().expect("encode forward patch").len() < 1_048_576);

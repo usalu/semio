@@ -1,0 +1,2 @@
+semio stdio.tsv.dsl v1
+schema="" trailing-newline=false line-ending=crlf records=[ [ "Grüße\u{0}雪" "literal\tfield" "literal\r\nfield" ] [ ] ]

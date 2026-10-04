@@ -1,0 +1,14 @@
+# Current Generic UI Canonical CSS Bindings and Whole Runtime
+
+The full current generic UI registered route actually selected 1,076 laws: 1,064 passed and 12 failed in 24.65 seconds (25.3 seconds Nx). Every prior 1,074 law identity remains selected; the two additions are the retained Tree content reading-order law and the explicit EN/DE Window printable-key Search admission law. Both additions passed. Twelve previously failing laws now pass, including all three independent floating contrast laws, the original Mode printable-key routing law, and the canonical active foreground, Pane inset, Slider radius and celebration transparency bindings. Twelve original laws still fail; no complete generic UI GREEN is claimed.
+
+The authored expectation cut binds current owned active foreground paints, standard padding, panel inset, full Slider radius, and transparent celebration mask spelling. The original scalars, action identities, input values and other assertions remain. The selected Tree nested label paint assertion intentionally changes from excluding the active foreground token to requiring the current owned token; independent closed Chrome browser laws already verify selected labels/icons and exclusion on unselected descendants. The celebration transparency spelling additionally matches the independent color-string oracle RGBA output for both transparent and #0000. This is an explicit contract correction, retained with its original full source and exact inverse rather than silently treated as an unchanged assertion.
+
+The complete inverse receipt contains 10 line edits and reconstructs the captured entire original source exactly: true. The current whole roster receipt lists every retained original ID, both additions, all twelve remaining failures and all twelve resolved failures. Those remaining conflicts concern independent pane activation and Tree row/guide geometry; they require concrete owner contract work.
+
+Whole renderer React strict TypeScript compilation passed in 38.1 seconds Nx. The exact sixteen current repair source strict configuration passed in 29.2 seconds Nx. The full renderer React runtime independently passed all 2,904 laws in its registered whole route; that separate GREEN does not substitute for generic UI or native Renderer execution.
+
+Generated receipts: generic-canonical-css-bindings-full-inverse-1.json; whole-generic-ui-runtime-current-3-roster-receipt.json; whole-generic-ui-registered-runtime-current-3.log; whole-renderer-react-strict-current-3.log; renderer-and-generic-current-repairs-strict-1.log.
+
+
+Final current exact16-source strict TypeScript replay49691 is GREEN24.9seconds Nx with strict:true and noEmit:true, after both new owner browser/DOM laws and all original canonical bindings. Whole rendererReact compiler97284 GREEN27.7seconds is a distinct complete owner compilation.

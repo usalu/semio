@@ -7,7 +7,7 @@ fn numeric_semantics(value:serde_json::Value)->serde_json::Value{match value{ser
 fn sqlite_snapshot_presentation_ordinary_native_geometry_preserves_all_raw_words(){
  let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
  for hex in laws["binary64Words"].as_array().unwrap(){
-  let word=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let value=f64::from_bits(word);let mut expected:PresentationSnapshot=store::json::from_json_str(&laws["snapshot"].to_string()).unwrap();
+  let word=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let value=f64::from_bits(word);let mut expected:PresentationSnapshot=semio_framework_pack_json::from_json_str(&laws["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   expected.source.frame=crate::FigureTileFrame{x:value,y:value,width:value,height:value};expected.source.source_aspect=Some(value);expected.tiles[0].crop=expected.source.frame.clone();
   for encoding in[false,true]{let actual=if encoding{<PresentationSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<PresentationSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&expected)).unwrap()};
    for number in[actual.source.frame.x,actual.source.frame.y,actual.source.frame.width,actual.source.frame.height,actual.source.source_aspect.unwrap(),actual.tiles[0].crop.x,actual.tiles[0].crop.y,actual.tiles[0].crop.width,actual.tiles[0].crop.height]{assert_eq!(number.to_bits(),word,"{hex}: native geometry word");}
@@ -23,8 +23,8 @@ fn sqlite_snapshot_presentation_actual_native_declaration_exposes_owned_relation
 #[test]
 fn sqlite_snapshot_presentation_neutral_native_fields_retain_both_literal_child_domains(){
  let laws:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let expected=&laws["snapshot"];
- let snapshot:PresentationSnapshot=store::json::from_json_str(&expected.to_string()).unwrap();
- assert_eq!(numeric_semantics(serde_json::from_str::<serde_json::Value>(&store::json::to_json_string(&snapshot)).unwrap()),numeric_semantics(expected.clone()));
+ let snapshot:PresentationSnapshot=semio_framework_pack_json::from_json_str(&expected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ assert_eq!(numeric_semantics(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap()),numeric_semantics(expected.clone()));
  assert_eq!(snapshot.source.pdf_page,Some(u32::MAX));assert_eq!(snapshot.tiles[0].id,snapshot.tiles[1].id);assert_eq!(snapshot.presentation.target.artifact_id,"");assert_eq!(snapshot.animation.target.artifact_id,"!@/\0世界");
  for encoding in[false,true]{let restored=if encoding{<PresentationSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&snapshot)).unwrap()}else{<PresentationSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&snapshot)).unwrap()};assert_eq!(restored,snapshot);}
 }
@@ -39,7 +39,7 @@ semio_framework_dispatch_macros::dyn_enum_close!{
  }
 }
 fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
-fn fixture()->PresentationSnapshot{store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap()}
+fn fixture()->PresentationSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&PresentationSnapshot)->SqliteDatabase{snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn restore(database:&SqliteDatabase)->PresentationSnapshot{PresentationSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 fn file(snapshot:&PresentationSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
@@ -71,7 +71,7 @@ fn sqlite_snapshot_presentation_independent_queries_and_surrogate_edits_remain_s
 #[test]
 fn sqlite_snapshot_presentation_independent_malformed_sql_refuses_owned_shapes(){
  use std::{io::Write,process::{Command,Stdio}};let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(input.sql);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
- for sql in laws()["malformedSql"].as_array().unwrap(){let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|PresentationSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");}
+ for sql in laws()["malformedSql"].as_array().unwrap(){let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|PresentationSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");}
 }
 
 #[test]

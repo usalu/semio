@@ -27,7 +27,7 @@ async fn inference_determinism_law() {
     use crate::WriterSnapshot;
     use protocol::Inference;
     let snapshot = WriterSnapshot::default();
-    assert_eq!(WriterInference::infer(&snapshot), WriterInference::infer(&snapshot));
+    assert_eq!(WriterInference::infer(&snapshot).expect("valid materialized inference fixture"), WriterInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -35,5 +35,5 @@ async fn inference_default_law() {
     use crate::schema::inferences::WriterInference;
     use crate::WriterSnapshot;
     use protocol::Inference;
-    assert_eq!(WriterInference::infer(&WriterSnapshot::default()), WriterInference::default());
+    assert_eq!(WriterInference::infer(&WriterSnapshot::default()).expect("valid materialized inference fixture"), WriterInference::default());
 }

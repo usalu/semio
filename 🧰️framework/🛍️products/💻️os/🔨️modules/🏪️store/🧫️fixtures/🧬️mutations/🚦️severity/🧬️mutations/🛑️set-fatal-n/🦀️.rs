@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -21,9 +21,12 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetFatalN {
     fn diff(&self, _base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
         crate::os_spr::MutationOutcome::fatal("mutation.invariant", "n invariant violated", ["n"])
     }
-    fn inverse(&self, base: &DemoSnapshot) -> Vec<SeverityMutation> {
+    fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<SeverityMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![SeverityMutation::RestoreN(RestoreN { n: base.n })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native("Set Fatal N", "Schwerwiegend N setzen")
     }

@@ -18,7 +18,10 @@ pub struct ChangeBarLayerDiameter {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBarLayerDiameter {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "bar-layer-diameter", kind: "change-bar-layer-diameter", record: "ChangedBarLayerDiameter" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change bar diameter of {}/{}", self.member_id, self.layer_id), &format!("Stabdurchmesser von {}/{} ändern", self.member_id, self.layer_id))
     }

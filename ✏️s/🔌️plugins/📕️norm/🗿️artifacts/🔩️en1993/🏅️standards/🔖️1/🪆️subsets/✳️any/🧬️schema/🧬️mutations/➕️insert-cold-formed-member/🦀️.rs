@@ -9,7 +9,10 @@ pub struct InsertColdFormedMember { pub index: usize, pub cold_formed_member: Co
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertColdFormedMember {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cold-formed-member", kind: "insert-cold-formed-member", record: "InsertedColdFormedMember" };
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cold-formed member at position #{}", self.index), &format!("Kaltprofil-Bauteil an Position #{} einfügen", self.index)) }
     fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
 }

@@ -19,7 +19,8 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::sav::schema::check_sav_conformance;
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 
@@ -28,10 +29,10 @@ pub mod derived_construction {
         diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
-            span: dsl::TextSpan::at(1, 1),
+            span: semio_framework_diagnostic::TextSpan::at(1, 1),
             message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
             expected: None,
-            scope: dsl::FaultScope::default(),
+            scope: semio_framework_diagnostic::FaultScope::default(),
         }));
     }
 
@@ -85,7 +86,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -121,7 +122,11 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::schema::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("sav") };
@@ -176,11 +181,12 @@ pub mod derived_analysis {
         out
     }
     /// 🛡️ Checks Structural Analysis View without native encoding or unbounded scans.
-    pub fn check_sav_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,String>{
-        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,mvd_diagnostic};
-        let(mut out,mut bytes)=(Vec::new(),0usize);let(schema,view)=mvd_header(snapshot,"StructuralAnalysisView",control)?;
-        for(condition,code,message,error)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3",true),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name StructuralAnalysisView",true),(mvd_instances(snapshot,"IFCSTRUCTURALANALYSISMODEL",control)?.is_empty(),CODE_NO_ANALYSIS_MODEL,"no IFCSTRUCTURALANALYSISMODEL instance -- a StructuralAnalysisView document must have at least one",true),(mvd_instances(snapshot,"IFCRELASSIGNSTOGROUP",control)?.is_empty(),CODE_NO_GROUP_ASSIGNMENT,"no IFCRELASSIGNSTOGROUP instance -- structural members/connections are not related to their analysis model",false),(mvd_instances(snapshot,"IFCSTRUCTURALLOADGROUP",control)?.is_empty(),CODE_NO_LOADS,"no IFCSTRUCTURALLOADGROUP instance -- no loads present",false)]{if condition{mvd_diagnostic(control,&mut bytes,out.len(),message.len())?;out.push(if error{hard(code,message.into())}else{soft(code,message.into())});}}
-        Ok(out)
+    pub fn check_sav_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
+
+        use crate::standards::v2x3::subsets::base::schema::snapshot::sqlite_snapshot::{mvd_header,mvd_instances,MvdDiagnostics};
+        let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"StructuralAnalysisView",control)?;
+        for(condition,code,message,error)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3",true),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name StructuralAnalysisView",true),(mvd_instances(snapshot,"IFCSTRUCTURALANALYSISMODEL",control)?.is_empty(),CODE_NO_ANALYSIS_MODEL,"no IFCSTRUCTURALANALYSISMODEL instance -- a StructuralAnalysisView document must have at least one",true),(mvd_instances(snapshot,"IFCRELASSIGNSTOGROUP",control)?.is_empty(),CODE_NO_GROUP_ASSIGNMENT,"no IFCRELASSIGNSTOGROUP instance -- structural members/connections are not related to their analysis model",false),(mvd_instances(snapshot,"IFCSTRUCTURALLOADGROUP",control)?.is_empty(),CODE_NO_LOADS,"no IFCSTRUCTURALLOADGROUP instance -- no loads present",false)]{if condition{out.emit(code,if error{Severity::Error}else{Severity::Warning},format_args!("{message}"),control)?;}}
+        Ok(out.finish())
     }
     //#endregion 🔖️Conformance
 

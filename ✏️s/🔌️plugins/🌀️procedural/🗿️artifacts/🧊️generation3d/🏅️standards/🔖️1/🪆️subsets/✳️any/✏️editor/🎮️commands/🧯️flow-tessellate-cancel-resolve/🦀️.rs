@@ -17,6 +17,5 @@ pub use crate::preview_eval::FlowTessellateCancelResolve;
 /// trip has to leave the window's latch exactly as quiescent as the closed run left it — which is why
 /// this is NOT folded through `flowTessellateResolve`, whose settle would count a hop answer.
 pub fn handle(payload: &FlowTessellateCancelResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    preview_eval::resolve_tessellate_cancel(payload, session);
-    Ok(Emit::default())
+    Ok(Emit { extension_invocations: preview_eval::resolve_tessellate_cancel(payload, session), ..Default::default() })
 }

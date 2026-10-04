@@ -17,9 +17,12 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetSnapshot 
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
         agg_diff(&TiffBaselineMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
-        agg_inverse(&TiffBaselineMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffBaselineMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&TiffBaselineMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

@@ -17,6 +17,7 @@
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGISTRY
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
+import { assertLaunchSeedPlacement } from "./🧱️placement/🟦️.ts";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
@@ -87,6 +88,7 @@ function readSeed(repoRoot: string, readText?: (path: string) => string): { read
   } catch {
     throw new Error(`🚀️launch/🟦️.ts: seed file ${seedPath} is not valid JSONC`);
   }
+  assertLaunchSeedPlacement(document);
   const markerIndex = raw.indexOf(DEV_LAUNCHERS_MARKER);
   if (markerIndex === -1 || !document.devLaunchers) throw new Error(`🚀️launch/🟦️.ts: seed file ${seedPath} is missing the devLaunchers marker`);
   const skeleton = `${raw.slice(0, markerIndex)}}\n`;

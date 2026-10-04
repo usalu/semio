@@ -4,7 +4,7 @@ use protocol::OpBinary;
 
 #[test]
 fn generic_framing_tags_payloads_parse_and_walk_all_leaf_frames() {
-    let spec = dsl::parse_protocol(COMPONENT_PROTOCOL_SEMIO).expect("parse one-byte tag protocol");
+    let spec = semio_framework_dsl::parse_protocol(COMPONENT_PROTOCOL_SEMIO).expect("parse one-byte tag protocol");
     let frames = [
         (1, TxtMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewlineMutation { value: true })),
         (2, TxtMutation::SetLineEnding(set_line_ending::SetLineEndingMutation { value: LineEnding::CrLf })),
@@ -16,7 +16,7 @@ fn generic_framing_tags_payloads_parse_and_walk_all_leaf_frames() {
         let frame = mutation.encode_op().expect("encode current leaf frame");
         assert_eq!(frame.first(), Some(&tag));
         assert!(frame.len() > 1);
-        let trace = dsl::walk_protocol(&spec, &frame).expect("walk current leaf frame");
+        let trace = semio_framework_dsl::walk_protocol(&spec, &frame).expect("walk current leaf frame");
         assert_eq!(trace.consumed, frame.len());
         assert_eq!(TxtMutation::decode_op(&frame).expect("decode current leaf frame"), mutation);
     }

@@ -245,10 +245,10 @@ fn fixture_row(value: &serde_json::Value) -> SpaceRow {
     SpaceRow {
         id: value["id"].as_str().expect("row id").to_string(),
         name: value["name"].as_str().expect("row name").to_string(),
-        kind: dsl::os_pack::json::from_json_str(&decode("kind")).expect("row kind"),
-        visibility: dsl::os_pack::json::from_json_str(&decode("visibility")).expect("row visibility"),
+        kind: semio_framework_pack_json::from_json_str(&decode("kind"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("row kind"),
+        visibility: semio_framework_pack_json::from_json_str(&decode("visibility"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("row visibility"),
         access: [SpaceAccess::Author, SpaceAccess::Member, SpaceAccess::Public].into_iter().find(|access| value["access"] == access.as_str()).expect("row access"),
-        role: (!value["role"].is_null()).then(|| dsl::os_pack::json::from_json_str(&decode("role")).expect("row role")),
+        role: (!value["role"].is_null()).then(|| semio_framework_pack_json::from_json_str(&decode("role"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("row role")),
         member_count: value["memberCount"].as_u64().expect("member count") as u32,
         document_count: value["documentCount"].as_u64().expect("document count") as u32,
         active_connections: value["activeConnections"].as_u64().expect("active connections") as u32,
@@ -257,7 +257,7 @@ fn fixture_row(value: &serde_json::Value) -> SpaceRow {
 }
 
 fn fixture_events(value: &serde_json::Value) -> Vec<DirectoryEvent> {
-    dsl::os_pack::json::from_json_str(&value.to_string()).expect("the fold's events decode as directory events")
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the fold's events decode as directory events")
 }
 
 /// 🧾️ Read-your-writes: every `receiptFolds` case of the shared fixture — the React twin

@@ -72,7 +72,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
         assert_eq!(first.quality, "exact");
         assert!(first.complete);
         let inference =
-            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
+            <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_value::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"))
                 .expect("typed inference");
         let expected = &case["expected"];
         assert_eq!(inference.position_count as u64, expected["positionCount"].as_u64().expect("position count"));
@@ -117,7 +117,7 @@ async fn malformed_snapshot_is_a_structured_execution_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn service_enforces_work_recursion_and_cancellation_identity() {
-    let snapshot = GisMapSnapshot { positions: vec![MapFeature { id: "nested".into(), data: dsl::DslValue::from(serde_json::json!({ "geometry": { "lon": 1.0, "lat": 2.0 } })) }], ..Default::default() };
+    let snapshot = GisMapSnapshot { positions: vec![MapFeature { id: "nested".into(), data: semio_framework_value::DslValue::from(serde_json::json!({ "geometry": { "lon": 1.0, "lat": 2.0 } })) }], ..Default::default() };
     let no_work = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 32 };
     assert_eq!(execute(&snapshot, &no_work, "work", WireArtifactInferenceCacheMode::Cold).err().expect("work budget").code, "gis.gismap.inference.budget");
     let no_allocation = WireArtifactInferenceBudget { allocation_bytes: 1, work_units: 1_000, recursion_depth: 32 };

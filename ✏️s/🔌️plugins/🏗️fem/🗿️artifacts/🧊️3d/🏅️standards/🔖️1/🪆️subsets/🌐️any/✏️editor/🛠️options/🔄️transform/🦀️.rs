@@ -6,7 +6,7 @@ use crate::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;
 use crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig;
 use crate::editor::fem3d::terminology::Fem3dLabels;
 use crate::editor::fem3d::{fem3d_measure_action, FEM3D_PLAY_CONTROLLER_ID};
-use dsl::json;
+use semio_framework_pack_json::json;
 use semio_framework_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = FEM3D_UTILITY_TRANSFORM;

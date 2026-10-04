@@ -31,8 +31,8 @@ pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_result(indicators: &GltfEntityIndicators) -> dsl::DslValue {
-    dsl::ToValue::to_value(&indicators.mass.centroid)
+pub fn encode_result(indicators: &GltfEntityIndicators) -> semio_framework_value::DslValue {
+    semio_framework_value::ToValue::to_value(&indicators.mass.centroid)
 }
 
 #[cfg(test)]

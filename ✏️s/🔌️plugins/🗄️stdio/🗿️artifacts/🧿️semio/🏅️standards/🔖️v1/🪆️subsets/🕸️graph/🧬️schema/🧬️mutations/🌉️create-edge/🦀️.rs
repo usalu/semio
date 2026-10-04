@@ -17,6 +17,11 @@ pub struct CreateEdge {
     pub kind: String,
     #[value(default)]
     pub label: String,
+    pub source_port: Option<String>,
+    pub target_port: Option<String>,
+    pub properties: Vec<crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateEdge {
@@ -25,9 +30,12 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateEd
     fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
     }

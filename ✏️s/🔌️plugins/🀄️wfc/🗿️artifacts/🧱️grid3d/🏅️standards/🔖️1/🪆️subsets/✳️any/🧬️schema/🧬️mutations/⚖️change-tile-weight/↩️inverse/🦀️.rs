@@ -4,7 +4,10 @@
 use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 
-pub fn inverse(payload: &super::ChangeTileWeight, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
+pub fn inverse(payload: &super::ChangeTileWeight, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = tile_index(base, &payload.tile_id) else { return Vec::new() };
     vec![crate::mutations::change_tile_weight(payload.tile_id.clone(), base.tiles[index].weight)]
+
+    })())
 }

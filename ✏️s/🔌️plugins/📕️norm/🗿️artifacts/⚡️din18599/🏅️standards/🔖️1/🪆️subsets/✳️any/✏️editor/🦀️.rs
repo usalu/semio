@@ -76,6 +76,8 @@ impl ArtifactEditor for Din18599PlayApp {
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![crate::examples::demo::source(), crate::examples::compliant_detached::source(), crate::examples::noncompliant_detached::source(), crate::examples::compliant_two_zone::source(), crate::examples::cooled_office::source()]
     }
+    /// 🪆️ The derived `climateTable` child (`s.stdio.semio@v1/table`) opens through the stdio semio member family.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Din18599Snapshot;
     type Mutation = Din18599Mutation;
     type Config = NoConfig;
@@ -130,6 +132,14 @@ impl ArtifactEditor for Din18599PlayApp {
 
     fn initial_snapshot() -> Din18599Snapshot {
         Din18599Snapshot::default()
+    }
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::din18599_child_restore_projection(snapshot)
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        Ok(crate::genesis_din18599_child_pack(snapshot, slot, child_id))
     }
 
     fn io() -> Option<AppIo> {

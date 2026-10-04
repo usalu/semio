@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAcroForm {
         MutationOutcome::new(diff::diff_set_acro_form(base, self.form.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::SetAcroForm(SetAcroForm { form: base.acro_form.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set acro-form", "AcroForm setzen")

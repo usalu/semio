@@ -82,6 +82,7 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
         EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods() }),
@@ -108,6 +109,7 @@ async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
         EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("50", "1.0")) }),
@@ -117,7 +119,7 @@ async fn inverse_law() {
     for m in variants {
         let mut forward = base.clone();
         apply_epw_mutation(&mut forward, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_epw_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
@@ -262,6 +264,7 @@ async fn field_sweep_every_mutable_field_changes() {
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Tricky, [City]") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,tricky, [value]".into() }),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: "TYPICAL/EXTREME PERIODS,x".into() }),
@@ -299,6 +302,7 @@ async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &EpwMutation) -> &'static str {
         match mutation {
             EpwMutation::SetSnapshot(_) => "set-snapshot",
+            EpwMutation::PatchSnapshot(_) => "patch-snapshot",
             EpwMutation::SetLocation(_) => "set-location",
             EpwMutation::SetDesignConditions(_) => "set-design-conditions",
             EpwMutation::SetTypicalExtremePeriods(_) => "set-typical-extreme-periods",
@@ -314,6 +318,7 @@ async fn kinds_match_enum_and_catalog() {
     }
     let samples = [
         EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: EpwSnapshot::default() }),
+        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: EpwLocation::default() }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: String::new() }),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: String::new() }),

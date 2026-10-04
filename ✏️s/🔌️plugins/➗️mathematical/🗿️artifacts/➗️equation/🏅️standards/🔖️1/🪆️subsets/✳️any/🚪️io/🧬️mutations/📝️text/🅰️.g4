@@ -1,35 +1,37 @@
-// 🅰️ ANTLR4 mirror of the normative 📖️.grammar.semio (same production names,
-// kebab-case -> camelCase). The grammar/slug identity below (`grammar` line + `DOCUMENT`
-// lexer rule) is preserved verbatim from the prior identity fix; the .semio itself defines
-// no `header`/`body`/`payload` envelope for this facet (`start line`), so DOCUMENT is
-// kept for traceability but is not referenced by the transcribed rules below.
+// 🅰️ ANTLR4 mirror of the normative 📖️.grammar.semio (same production names, kebab-case -> camelCase): one
+// `keyword key=value ...` line per EquationMutation variant, exactly what `print_op` writes.
 grammar Mathematical_equation_mutations;
 
-DOCUMENT: 'schema' [ ]+ 'mathematical.equation.mutations' ;
-
-line: changeGraphDirected | updateGraphAlgorithm | replaceGraph | createNode | deleteNode | deleteNodes | changeNodeLabel | moveNode | connectNodes | disconnectNodes | replacePoints | insertPoint | removePoint | movePoint ;
-changeGraphDirected: 'change-graph-directed' SP boolean ;
-updateGraphAlgorithm: 'update-graph-algorithm' SP text SP text? ;
-replaceGraph: 'replace-graph' SP block ;
-createNode: 'create-node' SP id SP text SP number SP number ;
-deleteNode: 'delete-node' SP id ;
-deleteNodes: 'delete-nodes' SP block ;
-changeNodeLabel: 'change-node-label' SP id SP text ;
-moveNode: 'move-node' SP id SP number SP number ;
-connectNodes: 'connect-nodes' SP id SP text SP text ;
-disconnectNodes: 'disconnect-nodes' SP id ;
-replacePoints: 'replace-points' SP block ;
-insertPoint: 'insert-point' SP number SP number SP number ;
-removePoint: 'remove-point' SP number ;
-movePoint: 'move-point' SP number SP number SP number ;
-id: OCTET+ ;
+line: changeGraphDirected | updateGraphAlgorithm | replaceGraph | createNode | deleteNode | deleteNodes | changeNodeLabel | moveNode | connectNodes | disconnectNodes | replacePoints | insertPoint | removePoint | movePoints | changeCoefficient | moveNodes | setNodePositions | setPointPositions ;
+changeGraphDirected: 'change-graph-directed' SP 'new-directed=' boolean ;
+updateGraphAlgorithm: 'update-graph-algorithm' SP 'new-algorithm=' quoted SP 'new-algorithm-seed=' optionalQuoted ;
+replaceGraph: 'replace-graph' SP 'graph=' quoted ;
+createNode: 'create-node' SP 'id=' quoted SP 'label=' quoted SP 'x=' number SP 'y=' number ( SP 'index=' count )? ;
+deleteNode: 'delete-node' SP 'id=' quoted ;
+deleteNodes: 'delete-nodes' SP 'ids=' quoted ;
+changeNodeLabel: 'change-node-label' SP 'id=' quoted SP 'new-label=' quoted ;
+moveNode: 'move-node' SP 'id=' quoted SP 'x=' number SP 'y=' number ;
+connectNodes: 'connect-nodes' SP 'id=' quoted SP 'source=' quoted SP 'target=' quoted ( SP 'index=' count )? ;
+disconnectNodes: 'disconnect-nodes' SP 'id=' quoted ;
+replacePoints: 'replace-points' SP 'points=' points ;
+insertPoint: 'insert-point' SP 'index=' count SP 'x=' number SP 'y=' number ;
+removePoint: 'remove-point' SP 'index=' count ;
+movePoints: 'move-points' SP 'indices=' quoted SP 'dx=' number SP 'dy=' number ;
+changeCoefficient: 'change-coefficient' SP 'label=' count SP 'numer=' quoted SP 'denom=' quoted ;
+moveNodes: 'move-nodes' SP 'ids=' quoted SP 'dx=' number SP 'dy=' number ;
+setNodePositions: 'set-node-positions' SP 'positions=' quoted ;
+setPointPositions: 'set-point-positions' SP 'positions=' quoted ;
+quoted: DQUOTE ( escaped | ~DQUOTE )* DQUOTE ;
+escaped: '\\' ( '\\' | DQUOTE ) ;
+optionalQuoted: quoted | '-' ;
 number: OCTET+ ;
-text: OCTET+ ;
+count: DIGIT+ ;
 boolean: 'true' | 'false' ;
-block: '{' NL OCTET+ '}' ;
+points: '[' ( pair ( ';' pair )* )? ']' ;
+pair: number ',' number ;
 
-// 📐 Framework dialect-primitive terminals (not defined in the .semio itself — see
-// the ticket report for this deviation, same treatment as the repo's cad-mutations pair).
-NL: '\r'? '\n' ;
+// 📐 Framework dialect-primitive terminals (not defined in the .semio itself).
+DQUOTE: '"' ;
+DIGIT: [0-9] ;
 OCTET: . ;
 SP: ' ' ;

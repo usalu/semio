@@ -103,8 +103,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "APP_CHANNEL_VERSION" | "AppChannelClient" | "AppChannelRequestSequence" | "INVOCATION_RESULT_PACK_MAXIMUM_BYTES" | "backboneKindFromUri" | "buildFileBackboneUri" | "buildFolderBackboneUri" | "buildFrameworkSyncUtilities" | "buildRemoteBackboneUri" | "clonePackValue" | "decodeAppCommand" | "decodeAppFrame" | "decodeBackboneMessage" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodeConflictsFromWire" | "decodeDispatchReportFromWire" | "decodeDocumentArchiveBytes" | "decodeDocumentPackBytes" | "decodeDocumentPackSnapshot" | "decodeInvocationResultPacks" | "decodeMergeReportFromWire" | "decodePackValue" | "decodeScenePackValue" | "encodeAppCommand" | "encodeAppFrame" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodeDocumentArchiveBytes" | "encodeDocumentPackBundle" | "encodeDocumentPackBytes" | "encodePackValue" | "faultMessages" | "isPackByteVector" | "isPackInteger" | "packInt" | "packUInt" | "packValueToExactJson" | "parseRemoteBackboneUri" | "planWorkflow"> & Pick<typeof import("@semio-tech/framework"), "createTurnOutcomeBroadcast"> & Pick<typeof import("@semio-tech/framework-replication"), "decodePresencePeer" | "encodePresencePeer">, source: TestSource): Promise<void> {
-  const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "APP_CHANNEL_VERSION" | "CHANNEL_MISMATCH_CODE" | "admitGuestChannelVersion" | "AppChannelClient" | "AppChannelRequestSequence" | "INVOCATION_RESULT_PACK_MAXIMUM_BYTES" | "backboneKindFromUri" | "buildFileBackboneUri" | "buildFolderBackboneUri" | "buildFrameworkSyncUtilities" | "buildRemoteBackboneUri" | "clonePackValue" | "decodeAppCommand" | "decodeAppFrame" | "decodeBackboneMessage" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodeConflictsFromWire" | "decodeDispatchReportFromWire" | "decodeDocumentArchiveBytes" | "decodeDocumentPackBytes" | "decodeDocumentPackSnapshot" | "decodeInvocationResultPacks" | "decodeMergeReportFromWire" | "decodePackValue" | "decodeScenePackValue" | "encodeAppCommand" | "encodeAppFrame" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodeDocumentArchiveBytes" | "encodeDocumentPackBundle" | "encodeDocumentPackBytes" | "encodePackValue" | "faultMessages" | "isPackByteVector" | "isPackInteger" | "packInt" | "packUInt" | "packValueToExactJson" | "parseRemoteBackboneUri" | "planWorkflow"> & Pick<typeof import("@semio-tech/framework"), "createTurnOutcomeBroadcast"> & Pick<typeof import("@semio-tech/framework-replication"), "decodePresencePeer" | "encodePresencePeer">, source: TestSource): Promise<void> {
+  const { APP_CHANNEL_VERSION, CHANNEL_MISMATCH_CODE, admitGuestChannelVersion, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
   const documentArchive = {
     parent_pack: [1, 2],
     parent_spr: [3],
@@ -464,7 +464,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { ContextMenu: { seq: 5, request: [9, 9] } },
       { ArtifactCommand: { seq: 6, command: [7] } },
       { ApplyEnvelopes: { seq: 7, envelopes: [] } },
-      { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
       { ReadDocument: { seq: 9 } },
       { LoadDocumentArchive: { seq: 36, archive: documentArchive } },
       { ReadDocumentArchive: { seq: 37 } },
@@ -478,13 +477,15 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { MediaIn: { seq: 14, port: "in-1", descriptor: [1], data: [2, 3] } },
       { MediaOut: { seq: 15, port: "out-1", request: [4] } },
       { MediaFingerprint: { seq: 16, port: "fp-1" } },
-      { PureCommand: { seq: 17, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } },
+      { PureCommand: { seq: 17, command: [1], head: [2] } },
+      { PureCommand: { seq: 41, command: [1], head: [] } },
       { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
       { ReadChildren: { seq: 19 } },
+      { ReadChildHeads: { seq: 42 } },
       { ReadHistory: { seq: 20 } },
-      { transactionPrepare: { seq: 21, txn_id: "txn-1", mutation_id: "s.demo#kind", payload: [1, 2], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
-      { transactionPrepare: { seq: 22, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "step-1", origin: [9], prepared_child_ops: [] } },
-      { transactionPrepare: { seq: 36, txn_id: "txn-2", mutation_id: "", payload: [], prepared_ops: [], label: "step-2", origin: [9], prepared_child_ops: [5, 6] } },
+      { transactionPrepare: { seq: 21, txn_id: "txn-1", mutation_id: "s.demo#kind", payload: [1, 2], prepared_ops: [], origin: [], prepared_child_ops: [] } },
+      { transactionPrepare: { seq: 22, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], origin: [9], prepared_child_ops: [] } },
+      { transactionPrepare: { seq: 36, txn_id: "txn-2", mutation_id: "", payload: [], prepared_ops: [], origin: [9], prepared_child_ops: [5, 6] } },
       { transactionCommit: { seq: 23, txn_id: "txn-1" } },
       { transactionRollback: { seq: 24, txn_id: "txn-1" } },
       { transactionUndo: { seq: 25, group_id: "grp-1" } },
@@ -518,10 +519,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Emit: { in_reply_to: 11, document_ops: [], config_ops: [], draft_ops: [], output: [4], diagnostics: [], child_ops: [6, 7, 8] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
+      { ChildHeads: { in_reply_to: 42, entries: [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8, 9] }, { slot: "brep", child_id: "child-2", dialect: "s.stdio.brep@1/*", head_pack: [] }] } },
+      { ChildHeads: { in_reply_to: 43, entries: [] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8], history_edit: [9] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } },
       { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
-      { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], description: "move", coalesce_key: "k-1", foreign: [[2, 3]] } },
+      { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], foreign: [[2, 3]] } },
       { transactionPrepared: { txn_id: "txn-1", foreign: [[1]], rejection: [] } },
       { transactionPrepared: { txn_id: "txn-1", foreign: [], rejection: [1, 2] } },
       { transactionCommitted: { txn_id: "txn-1", edit_id: "edit-1" } },
@@ -571,8 +574,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ Command: { seq: 0, command: [], view_state: [] } })[0]).toBe(1);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(15);
+      expect(encodeAppCommand({ ReadChildHeads: { seq: 0 } })[0]).toBe(42);
       expect(encodeAppCommand({ ReadHistory: { seq: 0 } })[0]).toBe(16);
-      expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } })[0]).toBe(17);
+      expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], origin: [], prepared_child_ops: [] } })[0]).toBe(17);
       expect(encodeAppCommand({ transactionCommit: { seq: 0, txn_id: "" } })[0]).toBe(18);
       expect(encodeAppCommand({ transactionRollback: { seq: 0, txn_id: "" } })[0]).toBe(19);
       expect(encodeAppCommand({ transactionUndo: { seq: 0, group_id: "" } })[0]).toBe(20);
@@ -592,6 +596,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ PollDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(34);
       expect(encodeAppCommand({ CancelDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(35);
       expect(encodeAppCommand({ AcknowledgeDocumentArchiveLoad: { seq: 0, operation: 1 } })[0]).toBe(36);
+      expect(() => decodeAppCommand(new Uint8Array([6, 8, 1, 1, 1, 2]))).toThrow("decodeAppCommand: unknown tag 6");
     });
 
     it("tags every AppFrame variant per the agreed contract order", () => {
@@ -600,7 +605,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
       expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [], tool_run: [], history_edit: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(14);
-      expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(15);
+      expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], foreign: [] } })[0]).toBe(15);
       expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(16);
       expect(encodeAppFrame({ transactionCommitted: { txn_id: "", edit_id: "" } })[0]).toBe(17);
       expect(encodeAppFrame({ transactionRolledBack: { txn_id: "" } })[0]).toBe(18);
@@ -611,6 +616,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ WindowConfigs: { in_reply_to: 0, entries: [] } })[0]).toBe(24);
       expect(encodeAppFrame({ DocumentArchive: { in_reply_to: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(26);
       expect(encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: 0, status: { operation: 1, state: "ready", completed: 2, total: 2, fault: [] } } })[0]).toBe(27);
+      expect(encodeAppFrame({ ChildHeads: { in_reply_to: 0, entries: [] } })[0]).toBe(32);
+      expect(() => decodeAppFrame(new Uint8Array([32, 1, 0x81, 0x08]))).toThrow("decodeAppFrame: child head count exceeds the member authority");
     });
 
     it("rejects recursive document archives beyond their fixed member authority", () => {
@@ -662,7 +669,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["ContextMenu", { ContextMenu: { seq: 1, request: [1] } }],
         ["ArtifactCommand", { ArtifactCommand: { seq: 1, command: [1] } }],
         ["ApplyEnvelopes", { ApplyEnvelopes: { seq: 1, envelopes: [] } }],
-        ["LoadDocument", { LoadDocument: { seq: 1, pack: [1], spr: [2] } }],
         ["ReadDocument", { ReadDocument: { seq: 1 } }],
         ["LoadConfig", { LoadConfig: { seq: 1, pack: [1], spr: [2] } }],
         ["ReadConfig", { ReadConfig: { seq: 1 } }],
@@ -671,9 +677,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["MediaIn", { MediaIn: { seq: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaOut", { MediaOut: { seq: 1, port: "p", request: [1] } }],
         ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
-        ["PureCommand", { PureCommand: { seq: 1, command: [1], document: [2], document_spr: [3], config: [4], config_spr: [5], draft: [6], draft_spr: [7] } }],
+        ["PureCommand", { PureCommand: { seq: 1, command: [1], head: [2] } }],
         ["LoadChildren", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
         ["ReadChildren", { ReadChildren: { seq: 1 } }],
+        ["ReadChildHeads", { ReadChildHeads: { seq: 1 } }],
         ["ReadHistory", { ReadHistory: { seq: 1 } }],
       ];
             const commandGoldenHex: Readonly<Record<string, string>> = {
@@ -683,7 +690,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ContextMenu: "03010101",
         ArtifactCommand: "04010101",
         ApplyEnvelopes: "050100",
-        LoadDocument: "060101010102",
         ReadDocument: "0701",
         LoadConfig: "080101010102",
         ReadConfig: "0901",
@@ -692,9 +698,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         MediaIn: "0a01017001010102",
         MediaOut: "0b0101700101",
         MediaFingerprint: "0c010170",
-        PureCommand: "0d010101010201030104010501060107",
+        PureCommand: "0d0101010102",
         LoadChildren: "0e01010173016301640101",
         ReadChildren: "0f01",
+        ReadChildHeads: "2a01",
         ReadHistory: "1001",
       };
             const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
@@ -712,6 +719,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [], child_ops: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
+        ["ChildHeads", { ChildHeads: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", head_pack: [1] }] } }],
         ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } }],
         ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
         ["UiPatch", { UiPatch: { in_reply_to: 1, surface: "1:body", kind: "window", revision: 3, base_revision: 2, ops: [9] } }],
@@ -732,6 +740,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         Emit: "0a010101000001020000",
         Draft: "0b01010101020164",
         Children: "0c01010173016301640101",
+        ChildHeads: "2001010173016301640101",
         Ephemeral: "0d0201020304000000",
         HistorySnapshot: "0e010101",
         UiPatch: "15010106313a626f64790677696e646f7703020109",
@@ -781,6 +790,18 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(APP_CHANNEL_VERSION).toBe(pin.channelVersion);
     });
 
+    it("admits only a guest of the host's own channel version, naming both versions when it refuses (shared handshake corpus)", async () => {
+      const { readFileSync } = await import("node:fs");
+      const law = JSON.parse(readFileSync(new URL("./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json", source.url), "utf8")) as { code: string; cases: { name: string; guestOffset: number; admitted: boolean }[] };
+      expect(law.code).toBe(CHANNEL_MISMATCH_CODE);
+      for (const row of law.cases) {
+        const guest = APP_CHANNEL_VERSION + row.guestOffset;
+        const refusal = admitGuestChannelVersion(guest, APP_CHANNEL_VERSION);
+        if (row.admitted) expect(refusal, row.name).toBeNull();
+        else expect([refusal?.code, refusal?.origin, refusal?.params], row.name).toEqual([CHANNEL_MISMATCH_CODE, "framework", { guest: String(guest), host: String(APP_CHANNEL_VERSION) }]);
+      }
+    });
+
     it("matches the shared cross-language transaction fixture vectors, byte-for-byte", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
@@ -792,16 +813,16 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
       const commandCases: Readonly<Record<string, AppCommandValue>> = {
-        TransactionPrepareOwner: { transactionPrepare: { seq: 1, txn_id: "t", mutation_id: "m", payload: [9], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } },
-        TransactionPreparePrePlanned: { transactionPrepare: { seq: 2, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], label: "l", origin: [9], prepared_child_ops: [] } },
-        TransactionPreparePrePlannedChildren: { transactionPrepare: { seq: 7, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1]], label: "l", origin: [9], prepared_child_ops: [5, 6] } },
+        TransactionPrepareOwner: { transactionPrepare: { seq: 1, txn_id: "t", mutation_id: "m", payload: [9], prepared_ops: [], origin: [], prepared_child_ops: [] } },
+        TransactionPreparePrePlanned: { transactionPrepare: { seq: 2, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1], [2, 2]], origin: [9], prepared_child_ops: [] } },
+        TransactionPreparePrePlannedChildren: { transactionPrepare: { seq: 7, txn_id: "t", mutation_id: "", payload: [], prepared_ops: [[1]], origin: [9], prepared_child_ops: [5, 6] } },
         TransactionCommit: { transactionCommit: { seq: 3, txn_id: "t" } },
         TransactionRollback: { transactionRollback: { seq: 4, txn_id: "t" } },
         TransactionUndo: { transactionUndo: { seq: 5, group_id: "g" } },
         TransactionRedo: { transactionRedo: { seq: 6, group_id: "g" } },
       };
       const frameCases: Readonly<Record<string, AppFrameValue>> = {
-        TransactionProposal: { transactionProposal: { in_reply_to: 1, proposal_id: "p", local_ops: [[1]], description: "d", coalesce_key: "k", foreign: [] } },
+        TransactionProposal: { transactionProposal: { in_reply_to: 1, proposal_id: "p", local_ops: [[1]], foreign: [] } },
         TransactionPrepared: { transactionPrepared: { txn_id: "t", foreign: [[1]], rejection: [] } },
         TransactionCommitted: { transactionCommitted: { txn_id: "t", edit_id: "e" } },
         TransactionRolledBack: { transactionRolledBack: { txn_id: "t" } },
@@ -917,7 +938,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("matches the shared Rust vectors and the independent LEB128 encoder without rounding", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv/dist/2020.js");
-      const directory = "./🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire-v19";
+      const directory = "./🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/";
       const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL(directory + "🧬️schema/🔣️.json", source.url), "utf8"));
       expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
@@ -1240,7 +1261,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const handle = fakeHandle((_instanceId, commands) => [
         {
           OperationCompleted: {
-            operation: 9,
+            operation: 9n,
             revision: 4n,
             ui_scope: Array.from(encodePackValue("full")),
             history_patch: Array.from(encodePackValue({ cursor: packUInt(7n), upserts: [{ seq: packUInt(41n), label: "Set Active Example", count: packUInt(1n) }], canUndo: true, canRedo: false, commandFilter: "all" })),
@@ -1254,9 +1275,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(frames).toHaveLength(1);
       expect(frames.every((frame) => "Invocation" in frame)).toBe(true);
       expect(completions).toHaveLength(1);
-      const completion = completions[0] as { readonly instanceId: number; readonly operation: number; readonly revision: bigint; readonly uiScope: unknown; readonly historyPatch: { readonly cursor: number; readonly upserts: readonly { readonly seq: number }[] } };
+      const completion = completions[0] as { readonly instanceId: number; readonly operation: bigint; readonly revision: bigint; readonly uiScope: unknown; readonly historyPatch: { readonly cursor: number; readonly upserts: readonly { readonly seq: number }[] } };
       expect(completion.instanceId).toBe(1);
-      expect(completion.operation).toBe(9);
+      expect(completion.operation).toBe(9n);
       expect(completion.revision).toBe(4n);
       expect(completion.uiScope).toBe("full");
       // 📌️ The `HistoryPatch` carrier bug: `seq`/`cursor` cross as pack integer carriers, and a row id
@@ -1298,8 +1319,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🏁️app-frame-operation-completed.json"), "utf8")) as Record<string, string>;
-      for (const [key, revision] of [["OperationCompleted", 5n], ["OperationCompletedWideRevision", 0xfedc_ba98_7654_3210n]] as const) {
-        const frame: AppFrameValue = { OperationCompleted: { operation: 7, revision, ui_scope: [1], history_patch: [2] } };
+      for (const [key, operation, revision] of [["OperationCompleted", 7n, 5n], ["OperationCompletedWideRevision", 7n, 0xfedc_ba98_7654_3210n], ["OperationCompletedWideOperation", 0xffff_ffff_ffff_ffffn, 5n]] as const) {
+        const frame: AppFrameValue = { OperationCompleted: { operation, revision, ui_scope: [1], history_patch: [2] } };
         const hex = Array.from(encodeAppFrame(frame), (byte) => byte.toString(16).padStart(2, "0")).join("");
         expect(hex).toBe(vectors[key]);
         expect(decodeAppFrame(new Uint8Array(Buffer.from(vectors[key]!, "hex")))).toEqual(frame);
@@ -1324,7 +1345,23 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(second).toHaveLength(2);
     });
 
-    it("configure()/readDocument()/loadDocument() frame the right AppCommand variant", async () => {
+    it("readChildHeads() sends ReadChildHeads and answers the ChildHeads entries of its own sequence, owning their bytes", async () => {
+      const seen: AppCommandValue[] = [];
+      const heads = [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8] }];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        const command = commands[0]!;
+        return "ReadChildHeads" in command ? [{ ChildHeads: { in_reply_to: command.ReadChildHeads.seq, entries: heads } }] : [{ Done: { in_reply_to: commandSeq(command) } }];
+      });
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const entries = await client.readChildHeads();
+      heads[0]!.head_pack.fill(0);
+      expect([seen, entries]).toEqual([[{ ReadChildHeads: { seq: 1 } }], [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8] }]]);
+      const refusing = new AppChannelClient(fakeHandle((_instanceId, commands) => [{ Done: { in_reply_to: commandSeq(commands[0]!) } }]), new AppChannelRequestSequence(), 1, "app.demo");
+      await expect(refusing.readChildHeads()).rejects.toThrow("missing ChildHeads frame for seq 1");
+    });
+
+    it("configure()/readDocument() frame the right AppCommand variant", async () => {
       const seen: AppCommandValue[] = [];
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
@@ -1333,10 +1370,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.configure({ locale: "en" });
       await client.readDocument();
-      await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
-      expect(seen[0]).toEqual({ ConfigCommand: { seq: 1, command: Array.from(encodePackValue({ locale: "en" })) } });
-      expect(seen[1]).toEqual({ ReadDocument: { seq: 2 } });
-      expect(seen[2]).toEqual({ LoadDocument: { seq: 3, pack: [1], spr: [2] } });
+      expect(seen).toEqual([{ ConfigCommand: { seq: 1, command: Array.from(encodePackValue({ locale: "en" })) } }, { ReadDocument: { seq: 2 } }]);
     });
 
     it("loadDocumentArchive()/readDocumentArchive() preserve the complete recursive closure and root cache", async () => {
@@ -1361,19 +1395,23 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(client.documentPack()).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
     });
 
-    it("loadDocumentArchive() cancels and acknowledges the exact retained operation", async () => {
+    it("loadDocumentArchive() sends nothing for a cancel before admission, and cancels, polls and acknowledges the exact retained operation after it", async () => {
       const seen: AppCommandValue[] = [];
+      const controller = new AbortController();
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
         const command = commands[0]!;
+        if ("LoadDocumentArchive" in command) controller.abort(new Error("caller cancelled archive"));
         if ("PollDocumentArchiveLoad" in command) {
           return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "cancelled", completed: 0, total: 3, fault: [] } } }];
         }
         return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
-      const controller = new AbortController();
-      controller.abort(new Error("caller cancelled archive"));
+      const early = new AbortController();
+      early.abort(new Error("caller cancelled before admission"));
+      await expect(client.loadDocumentArchive(documentArchive, early.signal)).rejects.toThrow("caller cancelled before admission");
+      expect(seen).toEqual([]);
       await expect(client.loadDocumentArchive(documentArchive, controller.signal)).rejects.toThrow("caller cancelled archive");
       expect(seen).toEqual([
         { LoadDocumentArchive: { seq: 1, archive: documentArchive } },
@@ -1381,6 +1419,23 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         { PollDocumentArchiveLoad: { seq: 3, operation: 1 } },
         { AcknowledgeDocumentArchiveLoad: { seq: 4, operation: 1 } },
       ]);
+    });
+
+    it("loadDocumentArchive() reports a cancel the guest decided on its own (a person's Cancel in the history body) as an AbortError, after its progress and acknowledgement", async () => {
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        const command = commands[0]!;
+        if ("PollDocumentArchiveLoad" in command) {
+          const state = seen.filter((sent) => "PollDocumentArchiveLoad" in sent).length === 1 ? "running" : "cancelled";
+          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state, completed: 1, total: 3, fault: [] } } }];
+        }
+        return [{ Done: { in_reply_to: commandSeq(command) } }];
+      });
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const progress: string[] = [];
+      const outcome = await client.loadDocumentArchive(documentArchive, undefined, (status) => progress.push(`${status.state} ${status.completed}/${status.total}`)).then(() => null, (error: unknown) => error);
+      expect([outcome instanceof DOMException && outcome.name === "AbortError", progress, seen.map((sent) => Object.keys(sent)[0]), client.documentPack()]).toEqual([true, ["running 1/3", "cancelled 1/3"], ["LoadDocumentArchive", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"], null]);
     });
 
     it("loads and reads exact persisted-local window config envelopes", async () => {
@@ -1415,39 +1470,37 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       expect(validate({ ...fixture, optimistic: true })).toBe(false);
       const pair = (value: { pack: number[]; spr: number[] }) => ({ pack: Uint8Array.from(value.pack), spr: Uint8Array.from(value.spr) });
+      const archiveOf = (value: { pack: number[]; spr: number[] }) => ({ parent_pack: [...value.pack], parent_spr: [...value.spr], members: [] });
       for (const row of fixture.cases) {
         const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
-        let sent = 0;
-        let refuseEnqueue = false;
+        let admission = "done";
         const client = new AppChannelClient({
           outcomes: broadcast.stream,
           enqueue: (_instanceId: number, commands: readonly Uint8Array[]) => {
-            if (refuseEnqueue) throw new Error("document-cache.enqueue");
-            sent = Object.values(decodeAppCommand(commands[0]!))[0]!.seq;
+            const command = decodeAppCommand(commands[0]!);
+            if ("LoadDocumentArchive" in command && admission === "enqueue") throw new Error("document-cache.enqueue");
+            const seq = commandSeq(command);
+            const document = { Document: { in_reply_to: seq, pack: fixture.reply.pack, spr: fixture.reply.spr, ops: "" } };
+            const error = { Error: { in_reply_to: seq, fault: [99], report: [] } };
+            const reply: AppFrameValue[] | "transport" =
+              "PollDocumentArchiveLoad" in command ? [{ DocumentArchiveLoad: { in_reply_to: seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 1, total: 1, fault: [] } } }] :
+              !("LoadDocumentArchive" in command) || admission === "done" ? [{ Done: { in_reply_to: seq } }] :
+              admission === "transport" ? "transport" :
+              admission === "document" ? [document] :
+              admission === "error-document" ? [document, error] : [error];
+            queueMicrotask(() => broadcast.push(reply === "transport" ? { instanceId: 1, error: new Error("document-cache.transport") } : { instanceId: 1, frames: reply.map(encodeAppFrame) }));
           },
         }, new AppChannelRequestSequence(), 1, "cache");
         try {
-          const seed = pair(fixture.initial);
-          const initial = client.loadDocument(seed.pack, seed.spr);
-          broadcast.push({ instanceId: 1, frames: [encodeAppFrame({ Done: { in_reply_to: sent } })] });
-          await initial;
+          await client.loadDocumentArchive(archiveOf(fixture.initial));
           expect(client.documentPack()).toEqual(pair(fixture.initial));
-          const candidate = pair(fixture.candidate);
-          refuseEnqueue = row.outcome === "enqueue";
-          const loading = client.loadDocument(candidate.pack, candidate.spr);
-          const settled = loading.then(() => "resolved", () => "rejected");
-          candidate.pack.fill(255);
-          candidate.spr.fill(255);
+          admission = row.outcome;
+          const candidate = archiveOf(fixture.candidate);
+          const settled = client.loadDocumentArchive(candidate).then(() => "resolved", () => "rejected");
+          candidate.parent_pack.fill(255);
+          candidate.parent_spr.fill(255);
           expect(client.documentPack()).toEqual(pair(fixture.initial));
-          const document = { Document: { in_reply_to: sent, pack: fixture.reply.pack, spr: fixture.reply.spr, ops: "" } };
-          const error = { Error: { in_reply_to: sent, fault: [99], report: [] } };
-          if (row.outcome === "transport") broadcast.push({ instanceId: 1, error: new Error("document-cache.transport") });
-          else if (row.outcome !== "enqueue") broadcast.push({ instanceId: 1, frames: (
-            row.outcome === "done" ? [{ Done: { in_reply_to: sent } }] :
-            row.outcome === "document" ? [document] :
-            row.outcome === "error-document" ? [document, error] : [error]
-          ).map(encodeAppFrame) });
-          await settled;
+          expect(await settled).toBe(row.outcome === "done" ? "resolved" : "rejected");
           expect(client.documentPack()).toEqual(pair(fixture[row.expected]));
           const exposed = client.documentPack()!;
           exposed.pack.fill(254);
@@ -1460,14 +1513,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
           broadcast.complete();
         }
       }
-    });
-
-    it("caches the document pack from accepted loadDocument arguments without a document echo", async () => {
-      const handle = fakeHandle(() => [{ Done: { in_reply_to: 1 } }]);
-      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
-      expect(client.documentPack()).toBeNull();
-      await client.loadDocument(new Uint8Array([1, 2]), new Uint8Array([3]));
-      expect(client.documentPack()).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
     });
 
     it("caches the document pack from every AppFrame::Document reply, most recent wins", async () => {
@@ -1491,13 +1536,13 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.transactionPrepareOwner("txn-1", "s.doc#kind", new Uint8Array([1]));
-      await client.transactionPreparePlanned("txn-1", [new Uint8Array([2]), new Uint8Array([3])], "duplicate", new Uint8Array([4]));
+      await client.transactionPreparePlanned("txn-1", [new Uint8Array([2]), new Uint8Array([3])], new Uint8Array([4]));
       await client.transactionCommit("txn-1");
       await client.transactionRollback("txn-1");
       await client.transactionUndo("grp-1");
       await client.transactionRedo("grp-1");
-      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], label: "", origin: [], prepared_child_ops: [] } });
-      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], label: "duplicate", origin: [4], prepared_child_ops: [] } });
+      expect(seen[0]).toEqual({ transactionPrepare: { seq: 1, txn_id: "txn-1", mutation_id: "s.doc#kind", payload: [1], prepared_ops: [], origin: [], prepared_child_ops: [] } });
+      expect(seen[1]).toEqual({ transactionPrepare: { seq: 2, txn_id: "txn-1", mutation_id: "", payload: [], prepared_ops: [[2], [3]], origin: [4], prepared_child_ops: [] } });
       expect(seen[2]).toEqual({ transactionCommit: { seq: 3, txn_id: "txn-1" } });
       expect(seen[3]).toEqual({ transactionRollback: { seq: 4, txn_id: "txn-1" } });
       expect(seen[4]).toEqual({ transactionUndo: { seq: 5, group_id: "grp-1" } });
@@ -2051,10 +2096,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(decodeBrowserActorCommandPublicationV1(ephemeral, fixture.commandRequest.actionSequence)).toEqual(ephemeralSnapshot);
       expect(decodeBrowserActorIntentPublicationV1(ephemeral)).toEqual(ephemeralSnapshot);
       const progress = encodeAppFrame({ Invocation: { in_reply_to: 0, output: [1, 2], diagnostics: [], ui_scope: [3], history_patch: [], messages: [], mutations: [], inverse_group: [] } });
-      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 0xfedc_ba98_7654_3210n, ui_scope: [1], history_patch: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", historyPatch: null });
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3n, revision: 0xfedc_ba98_7654_3210n, ui_scope: [1], history_patch: [] } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", operation: 3n, revision: 0xfedc_ba98_7654_3210n, historyPatch: null });
       const historyBytes = Array.from(encodePackValue({ cursor: 1, upserts: [] }));
-      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 1n, ui_scope: [], history_patch: historyBytes } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", historyPatch: historyBytes });
-      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3, revision: 1n, ui_scope: [], history_patch: Array.from(encodePackValue([1])) } }), fixture.commandRequest.actionSequence)).toThrow("invalid history patch");
+      expect(decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3n, revision: 1n, ui_scope: [], history_patch: historyBytes } }), fixture.commandRequest.actionSequence)).toEqual({ kind: "operation-completed", operation: 3n, revision: 1n, historyPatch: historyBytes });
+      expect(() => decodeBrowserActorCommandPublicationV1(encodeAppFrame({ OperationCompleted: { operation: 3n, revision: 1n, ui_scope: [], history_patch: Array.from(encodePackValue([1])) } }), fixture.commandRequest.actionSequence)).toThrow("invalid history patch");
       const progressPublication = decodeBrowserActorCommandPublicationV1(progress, fixture.commandRequest.actionSequence);
       expect(progressPublication.kind).toBe("completion");
       if (progressPublication.kind !== "completion") throw new Error("expected completion");

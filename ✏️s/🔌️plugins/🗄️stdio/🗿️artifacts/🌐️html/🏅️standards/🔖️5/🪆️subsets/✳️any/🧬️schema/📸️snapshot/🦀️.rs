@@ -20,9 +20,9 @@
 //! vocabulary addresses nodes by child index. The two normative placements a purely literal reader
 //! gets wrong are applied by [`normalize_html_root_whitespace`] — see its own doc comment.
 
-use dsl::TextSpan;
+use semio_framework_diagnostic::TextSpan;
 use framework_schema::ArtifactSchema;
-use store::TextError;
+use semio_framework_diagnostic::TextError;
 
 //#region 🔖️Ids
 pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
@@ -308,7 +308,7 @@ impl<'a> Parser<'a> {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn err(&self, message: impl Into<String>) -> TextError {
-        TextError::new(message, self.span())
+        TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, self.span())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -524,7 +524,7 @@ impl<'a> Parser<'a> {
             return Ok(HtmlNode::Element { name, attributes, children: Vec::new() });
         }
         if self_closed {
-            return Err(TextError::new(format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"), open_span));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("'/>' self-closing syntax is only supported on void elements, found on non-void '<{name}/>'"), open_span));
         }
 
         if let Some(kind) = RawTextKind::from_tag_name(&name) {
@@ -540,7 +540,7 @@ impl<'a> Parser<'a> {
         let mut children = Vec::new();
         loop {
             match self.peek() {
-                None => return Err(TextError::new(format!("unterminated element '<{name}>', expected '</{name}>'"), open_span)),
+                None => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unterminated element '<{name}>', expected '</{name}>'"), open_span)),
                 Some(b'<') => {
                     if self.peek_str("<!--") {
                         self.pos += 4;
@@ -778,18 +778,18 @@ impl store::ArtifactPack for HtmlSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_html_document(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        parse_html_document(text).map_err(|e| store::PackError::Schema(e.to_string()))
+        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
+        parse_html_document(text).map_err(store::PackError::from)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -806,3 +806,7 @@ mod sqlite_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🚦️native/🦀️.rs"] mod controlled_native;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🧹️lifecycle/🦀️.rs"] mod sqlite_lifecycle_tests;

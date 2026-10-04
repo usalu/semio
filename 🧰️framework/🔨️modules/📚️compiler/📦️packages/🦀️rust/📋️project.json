@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/framework-compiler-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/📚️compiler",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/*"
+    ]
+  },
+  "targets": {
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    }
+  }
+}

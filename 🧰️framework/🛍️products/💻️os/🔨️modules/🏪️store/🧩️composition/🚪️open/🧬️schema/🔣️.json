@@ -145,8 +145,8 @@
         },
         "cases": {
           "type": "array",
-          "minItems": 10,
-          "maxItems": 10,
+          "minItems": 11,
+          "maxItems": 11,
           "items": {
             "type": "object",
             "additionalProperties": false,

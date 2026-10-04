@@ -1,6 +1,6 @@
 //! 🧪️ `change-data-fields` fixture — `🧾️attaches`.
 //!
-//! Proves the opaque `data_fields_json` blob is replaced wholesale.
+//! Proves the typed `data_fields` dictionary is replaced wholesale.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -18,10 +18,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧾change-data-fields/🧾️attaches/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("change-data-fields/attaches-a-data-fields-payload: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-data-fields/attaches-a-data-fields-payload: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("change-data-fields/attaches-a-data-fields-payload: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("change-data-fields/attaches-a-data-fields-payload: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
     serde_json::from_str(MUTATION).expect("change-data-fields/attaches-a-data-fields-payload: mutation decodes")
@@ -31,11 +31,11 @@ fn applied() -> LayoutSnapshot {
     mutation().diff(&base).diff().apply(&base).expect("change-data-fields applies to its committed before-snapshot")
 }
 
-/// ▶️ `change-data-fields` stores the payload string byte-for-byte, unparsed.
+/// ▶️ `change-data-fields` stores the complete typed dictionary.
 #[semio_framework_async_macros::async_test]
-async fn stores_the_opaque_json_blob_verbatim() {
+async fn stores_the_complete_typed_dictionary() {
     let after = applied();
-    assert_eq!(after.data_fields_json.as_deref(), Some("{\"client\":\"acme\"}"), "change-data-fields must store the payload JSON string verbatim");
+    assert_eq!(after.data_fields, Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]}), "change-data-fields preserves the typed client value");
     assert!(after.print_target.is_none(), "change-data-fields must not touch the print target");
     assert_eq!(after.name, "Fixture Layout", "change-data-fields must not rename the document");
     assert_eq!(after, expected_after(), "change-data-fields/attaches-a-data-fields-payload: applied state differs from the committed after-snapshot");
@@ -45,10 +45,10 @@ async fn stores_the_opaque_json_blob_verbatim() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_clears_the_data_fields_payload() {
     let base = before();
-    let inverse = mutation().inverse(&base);
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-data-fields inverts to exactly one step");
     match &inverse[0] {
-        LayoutMutation::ChangeDataFields(step) => assert!(step.new_json.is_none(), "the inverse must carry BASE's absent data-fields payload"),
+        LayoutMutation::ChangeDataFields(step) => assert!(step.new_fields.is_none(), "the inverse must carry BASE's absent data-fields payload"),
         other => panic!("change-data-fields must invert to change-data-fields, got {other:?}"),
     }
     let mut snapshot = applied();
@@ -62,12 +62,12 @@ async fn inverse_clears_the_data_fields_payload() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: LayoutSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-data-fields/attaches-a-data-fields-payload: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-data-fields/attaches-a-data-fields-payload: committed mutation JSON is not canonical");
 }
@@ -80,20 +80,20 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-data-fields/attaches-a-data-fields-payload: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    assert_eq!(produced.diff().data_fields_json, Some(Some("{\"client\":\"acme\"}".to_string())), "change-data-fields fills the doubly-optional `data_fields_json` diff field");
+    assert_eq!(produced.diff().data_fields, Some(crate::diff::FormDictionaryChange{dictionary:Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]})}), "change-data-fields replaces the optional dictionary");
     assert!(produced.diff().print_target.is_none(), "change-data-fields leaves `print_target` untouched in the diff");
 }
 
 /// 🔺️ The sparse delta `change-data-fields` produces is exactly the committed diff — the most load-bearing
 /// assertion in the fixture, because it pins WHICH fields the mutation may touch, not merely that the
-/// end state matches. Here the ONLY populated field is `dataFieldsJson`, carrying the opaque blob verbatim.
+/// end state matches. Here the ONLY populated field is `dataFields`, carrying the complete dictionary.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "change-data-fields/attaches-a-data-fields-payload: change-data-fields must emit a diff whose sole populated field is `dataFieldsJson`");
+    assert_eq!(produced, committed, "change-data-fields/attaches-a-data-fields-payload: change-data-fields must emit a diff whose sole populated field is `dataFields`");
 }
 
 /// 🔣️ The committed diff decodes into `LayoutDiff` and re-encodes byte-for-byte: `LayoutDiff` has
@@ -101,8 +101,8 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
+    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-data-fields/attaches-a-data-fields-payload: committed diff JSON is not canonical");
 }
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `change-data-fields` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-data-fields/attaches-a-data-fields-payload: committed diff did not carry before to after");
 }

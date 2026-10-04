@@ -22,9 +22,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_page_height(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_page_height(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_page_height(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change page \"{}\" height", self.id), &format!("Höhe von Seite \"{}\" ändern", self.id))
     }
@@ -40,7 +43,7 @@ pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if page.height == payload.new_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has height {}.", payload.id, payload.new_height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has height {}.", payload.id, payload.new_height));
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { height: Some(payload.new_height), ..Default::default() } }], ..Default::default() }),
@@ -50,10 +53,13 @@ pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot
 //#endregion ↕️ChangePageHeight
 
 //#region ↕️ChangePageHeight
-pub fn inverse_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![LayoutMutation::ChangePageHeight(ChangePageHeight { id: payload.id.clone(), new_height: page.height })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion ↕️ChangePageHeight

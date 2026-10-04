@@ -35,7 +35,6 @@ async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> Mutati
         inverse: vec![DemoMutation::SetN { n: 0 }],
         mutation_meta: Vec::new(),
         description: None, verb: None,
-        coalesce_key: None,
         sequence_number: 1,
         started_at: "0".into(),
         finished_at: None,

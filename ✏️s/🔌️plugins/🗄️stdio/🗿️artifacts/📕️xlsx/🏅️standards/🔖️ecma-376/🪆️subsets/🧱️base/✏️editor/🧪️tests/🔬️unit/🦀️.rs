@@ -19,17 +19,6 @@ async fn editor_declares_the_main_window() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn flat_cells_orders_by_sheet_then_cell_storage_order() {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    let document = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
-            sheets: vec![XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] }],
-            ..Default::default()
-    });
-    let rows = xlsx_flat_cells(&document);
-    assert_eq!(rows, vec![("S1".to_string(), 1, 0, XlsxCellValue::Number(1.0)), ("S2".to_string(), 2, 1, XlsxCellValue::Boolean(true))]);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn render_value_resolves_shared_strings_and_exposes_editable_formula_source() {
     let strings = vec!["hello".to_string()];
     assert_eq!(render_xlsx_cell_value(&XlsxCellValue::SharedString(0), &strings), "hello");
@@ -54,7 +43,7 @@ async fn parse_cell_value_detects_bool_and_number_before_falling_back_to_inline_
 async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_binary_codec() {
     const FIXTURE: &str = include_str!("../../🧫️fixtures/📊️stable-cell-edit/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_str(FIXTURE).expect("third-party JSON oracle parses the action fixture");
-    let args = dsl::json::from_json_str::<dsl::DslValue>(FIXTURE).expect("DSL JSON parses the action fixture");
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("DSL JSON parses the action fixture");
     let command = XlsxEditor::command_from_action("set-cell", Some(&args)).expect("stable cell action parses");
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = &command else { panic!("expected native command") };
     assert_eq!(
@@ -75,7 +64,10 @@ async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_bin
 #[semio_framework_async_macros::async_test]
 async fn stable_cell_edit_targets_identity_and_rejects_a_stale_revision() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
-    let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 41, col: 7, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() });
+    let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 41, col: 7, value: XlsxCellValue::Number(1.0) }] }],
+        ..Default::default()
+    });
     let address = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 41, 7).unwrap();
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 41, column: 7, revision: address.revision.clone(), value: "2".into() };
     let emit = xlsx_set_cell_emit(&snapshot, &command).expect("matching revision emits a mutation");
@@ -85,14 +77,66 @@ async fn stable_cell_edit_targets_identity_and_rejects_a_stale_revision() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn blank_cell_command_inserts_canonical_xml_saves_for_calamine_and_inverts_exactly() {
+    use crate::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
+    use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_vacancy_address, insert_cell};
+    use calamine::{Data, Reader};
+    use protocol::Mutation;
+    let base = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
+    let vacancy = xlsx_cell_vacancy_address(&base, "Blank", 1, 0).unwrap();
+    let command = XlsxEditorCommand::SetCell { sheet_name: "Blank".into(), row: 1, column: 0, revision: vacancy.worksheet.revision.clone(), value: "42".into() };
+    let emitted = xlsx_set_cell_emit(&base, &command).unwrap();
+    let mutation = XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::Number(42.0) });
+    assert_eq!(emitted.artifact_mutations, vec![mutation.clone()]);
+    let mut edited = base.clone();
+    apply_xlsx_mutation(&mut edited, &mutation);
+    assert_eq!(edited.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(42.0));
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(encode_xlsx(&edited).unwrap())).expect("Calamine opens canonical blank-cell save");
+    assert!(matches!(reference.worksheet_range("Blank").unwrap().get_value((0, 0)), Some(Data::Float(value)) if *value == 42.0));
+    for inverse in <XlsxMutation as Mutation<XlsxSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        apply_xlsx_mutation(&mut edited, &inverse);
+    }
+    assert_eq!(edited, base, "vacancy insertion inverse restores every authoritative OPC and XML field");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn sparse_row_insertion_preserves_formula_neighbors_and_stales_prior_vacancies() {
+    use crate::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
+    use crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::mutations::{
+        apply_xlsx_mutation,
+        cell_address::{resolve_xlsx_cell_vacancy_address, xlsx_cell_vacancy_address},
+        insert_cell,
+    };
+    let mut snapshot = build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet {
+            name: "Sparse".into(),
+            cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Formula { expr: "2+3".into(), cached: Some(Box::new(XlsxCellValue::Number(5.0))) } }, XlsxCell { row: 1, col: 2, value: XlsxCellValue::InlineString("right".into()) }],
+        }],
+        ..Default::default()
+    });
+    let old_vacancy = xlsx_cell_vacancy_address(&snapshot, "Sparse", 2, 0).unwrap();
+    let middle = xlsx_cell_vacancy_address(&snapshot, "Sparse", 1, 1).unwrap();
+    apply_xlsx_mutation(&mut snapshot, &XlsxMutation::InsertCell(insert_cell::InsertCell { address: middle, value: XlsxCellValue::InlineString("middle".into()) }));
+    let projected = snapshot.project_workbook().unwrap();
+    assert_eq!(projected.sheets[0].cells.iter().map(|cell| (cell.row, cell.col)).collect::<Vec<_>>(), [(1, 0), (1, 1), (1, 2)]);
+    assert_eq!(projected.sheets[0].cells[0].value, XlsxCellValue::Formula { expr: "2+3".into(), cached: Some(Box::new(XlsxCellValue::Number(5.0))) });
+    assert!(resolve_xlsx_cell_vacancy_address(&snapshot, &old_vacancy).is_err(), "a structural edit invalidates a prior worksheet vacancy revision");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
     use crate::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
     const FIXTURE: &str = include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
     let shared_strings: Vec<String> = serde_json::from_value(fixture["sharedStrings"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let original: XlsxCellValue = dsl::json::from_json_str(&case["value"].to_string()).unwrap();
-        let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value: original.clone() }] }], shared_strings: shared_strings.clone() });
+        let original: XlsxCellValue = semio_framework_pack_json::from_json_str(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
+            sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value: original.clone() }] }],
+            shared_strings: shared_strings.clone(),
+        });
         let revision = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
         let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: case["draft"].as_str().unwrap().into() };
         let emitted = xlsx_set_cell_emit(&snapshot, &command).unwrap();
@@ -105,9 +149,15 @@ async fn unchanged_cell_drafts_preserve_types_and_cached_values() {
     let mut snapshot = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells: vec![XlsxCell { row: 1, col: 0, value }] }], shared_strings });
     let revision = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet", 1, 0).unwrap().revision;
     let command = XlsxEditorCommand::SetCell { sheet_name: "Sheet".into(), row: 1, column: 0, revision, value: conflict["draft"].as_str().unwrap().into() };
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }));
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(
+        &mut snapshot,
+        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index: 1, value: "unrelated change".into() }),
+    );
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_ok(), "unrelated shared strings do not invalidate this cell");
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }));
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation(
+        &mut snapshot,
+        &XlsxMutation::SetSharedString(crate::standards::v_ecma_376::subsets::base::schema::mutations::set_shared_string::SetSharedString { index, value: conflict["replacement"].as_str().unwrap().into() }),
+    );
     assert!(xlsx_set_cell_emit(&snapshot, &command).is_err(), "referenced text changes invalidate the draft");
 }
 
@@ -118,7 +168,8 @@ async fn unchanged_cell_draft_fixture_matches_independent_spreadsheet_values_and
     use calamine::{Data, Reader};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/✍️unchanged-cell-draft/🔣️.json")).unwrap();
     let cases = fixture["cases"].as_array().unwrap();
-    let cells = cases.iter().enumerate().map(|(index, case)| XlsxCell { row: index as u32 + 1, col: 0, value: dsl::json::from_json_str(&case["value"].to_string()).unwrap() }).collect();
+    let cells =
+        cases.iter().enumerate().map(|(index, case)| XlsxCell { row: index as u32 + 1, col: 0, value: semio_framework_pack_json::from_json_str(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() }).collect();
     let snapshot = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet".into(), cells }], shared_strings: serde_json::from_value(fixture["sharedStrings"].clone()).unwrap() });
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(encode_xlsx(&snapshot).unwrap())).unwrap();
     let values = reference.worksheet_range("Sheet").unwrap();
@@ -294,3 +345,28 @@ async fn canonical_xlsx_no_op_save_preserves_all_xml_fields_and_custom_part_path
         }
     }
 }
+
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens_through_one_mutation() {
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_cell::SetCell};
+    for case in canonical_save_fixture()["cases"].as_array().unwrap() {
+        let mut snapshot = decode_xlsx(&canonical_fixture_zip(case)).unwrap_or_else(|error| panic!("{} import: {error}", case["id"]));
+        let address = xlsx_cell_address(&snapshot, "Data", 1, 0).unwrap_or_else(|error| panic!("{} A1 address: {error}", case["id"]));
+        apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetCell(SetCell { address, value: XlsxCellValue::Number(99.25) }));
+        let encoded = <XlsxEditor as ArtifactEditor>::encode_natural_file(&snapshot).unwrap_or_else(|error| panic!("{} natural export: {error}", case["id"]));
+        assert_independent_canonical_package(&encoded, case, true);
+        let independently_reopened = decode_xlsx(&encoded).unwrap_or_else(|error| panic!("{} independent reopen: {error}", case["id"]));
+        assert_eq!(independently_reopened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(99.25));
+        let reopened = <XlsxEditor as ArtifactEditor>::decode_natural_file(&encoded).unwrap_or_else(|error| panic!("{} natural reopen: {error}", case["id"]));
+        let Some(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: opened })) = <XlsxEditor as ArtifactEditor>::whole_document_operation(reopened) else {
+            panic!("natural XLSX opens through one event-sourced snapshot mutation")
+        };
+        assert_eq!(opened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(99.25));
+        if case["calamine"].as_bool().unwrap() {
+            assert_independent_spreadsheet_values(encoded, case, true);
+        }
+    }
+}
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_framework_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");

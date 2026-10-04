@@ -6,7 +6,6 @@
 
 use crate::Iso16757Snapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a iso16757 snapshot. One field per named inference under
@@ -23,8 +22,11 @@ pub struct Iso16757Inference {
 }
 
 impl protocol::Inference<Iso16757Snapshot> for Iso16757Inference {
-    fn infer(snapshot: &Iso16757Snapshot) -> Self {
+    fn infer(snapshot: &Iso16757Snapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { outline: Iso16757Outline::compute(snapshot) }
+    
+        })
     }
 }
 
@@ -52,13 +54,6 @@ impl protocol::InferenceSpec<Iso16757Snapshot> for Iso16757Inference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Iso16757Builder {
-    type Snapshot = Iso16757Snapshot;
-    type Inference = Iso16757Inference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.iso16757.inference`'s facet leaves into the OS-wide inference catalog — call once at

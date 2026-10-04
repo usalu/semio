@@ -14,7 +14,7 @@ fn minimal_document_with_character_style() -> LayoutSnapshot {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }
@@ -53,7 +53,7 @@ fn overrides_frame_flags_document() -> LayoutSnapshot {
             ],
         }],
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }

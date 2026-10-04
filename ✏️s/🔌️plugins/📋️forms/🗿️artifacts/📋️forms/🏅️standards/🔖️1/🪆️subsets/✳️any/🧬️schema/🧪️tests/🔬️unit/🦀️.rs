@@ -1,5 +1,5 @@
 use super::*;
-use dsl::os_pack::json::object;
+use semio_framework_pack_json::object;
 
 #[semio_framework_async_macros::async_test]
 async fn locate_question_finds_a_question_anywhere_in_the_document() {
@@ -54,7 +54,7 @@ async fn forms_play_step_tree_id_prefixes_with_step() {
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_value_conversions_round_trip_through_json() {
-    // 🩹️ A whole-number float (e.g. `6.0`) round-trips through `dsl::DslValue` as the integer-typed
+    // 🩹️ A whole-number float (e.g. `6.0`) round-trips through `semio_framework_value::DslValue` as the integer-typed
     // `serde_json::Number` (`6`), which does not `==` the float-typed literal despite being numerically
     // equal — a `dsl` value-system characteristic, not something this conversion controls. Use a
     // fractional value here so the round-trip assertion is unambiguous.

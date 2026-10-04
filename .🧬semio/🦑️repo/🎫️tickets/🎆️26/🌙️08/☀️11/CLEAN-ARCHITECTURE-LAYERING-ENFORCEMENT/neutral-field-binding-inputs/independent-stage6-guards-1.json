@@ -1,0 +1,224 @@
+{
+  "input": "🗑️generated/neutral-field-binding/stage-6/source-ready-1.json",
+  "sha256": "2eac26377f69da56d50c3e542f6570d98a0783e0e7e4e997a1d40618c4998d95",
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🟦️.ts",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧫️fixtures/🪆️binding/🔣️.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪆️binding/🔣️.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🚦️refusals/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🪆️binding/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪟️poses/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection/🦀️.rs",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🏛️ownership/🟦️.ts",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🟦️.ts",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📋️project.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📋️project.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/package.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/package.json",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "beforeHash": true,
+      "authoredHash": true,
+      "current": true,
+      "forward": true,
+      "inverse": true
+    }
+  ],
+  "contexts": 13,
+  "contextExact": true
+}

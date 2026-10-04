@@ -2,13 +2,14 @@ import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
 import fixtures from "../../🧫️fixtures/🔣️.json";
-import { parseComponentTarget, componentGroup, selectedMeshVertices } from "../../🟦️.ts";
+import { parseComponentTarget, componentGroup, selectedMeshVertices, selectedAnalyticLabels, validateAnalyticSource } from "../../🟦️.ts";
 import topology from "../../🧫️fixtures/🥽️topology/🔣️.json";
 import editSchema from "../../../🎮️commands/🥽️edit-mesh-selection/🧬️schema/🔣️.json";
 import knifeSchema from "../../../🎮️commands/🔪️knife-mesh-selection/🧬️schema/🔣️.json";
 import knifeFixtures from "../../../🎮️commands/🔪️knife-mesh-selection/🧫️fixtures/🔣️.json";
 import { knifeSelectionParameters } from "../../../🎮️commands/🔪️knife-mesh-selection/🟦️.ts";
 import { Vector3 } from "three";
+import { generation3dMeshSelectionSelfTests } from "../../../🎮️commands/🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts";
 
 describe("evaluated mesh component selection", () => {
   for (const fixture of topology.valid) test(`resolves topology ${fixture.ids.join(",")}`, () => {
@@ -46,7 +47,7 @@ describe("mesh component selection contract", () => {
   const validate = new Ajv().compile(schema);
   const validateEdit = new Ajv().compile(editSchema);
   for (const mode of fixtures.quickActions) for (const operation of mode.operations) test(`quick action schema: ${mode.granularity}/${operation}`, () => {
-    const payload = { operation, amount: 0.1, cuts: 1, dx: 0, dy: 0, dz: 0 };
+    const payload = { operation, amount: 0.1, cuts: 1, dx: 0, dy: 0, dz: 0, width: 0.1, segments: 1, mergeMode: "center", tolerance: 0.0001, radius: 1, grid: 1, center: [0, 0, 0] };
     expect(validateEdit(payload)).toBe(true);
     for (const cuts of [0, 257, 1.5]) expect(validateEdit({ ...payload, cuts })).toBe(false);
   });
@@ -62,4 +63,25 @@ describe("mesh component selection contract", () => {
     if ("error" in group) expect(() => componentGroup(group.ids)).toThrow();
     else expect(componentGroup(group.ids)).toEqual({ instance: group.instance, granularity: group.granularity, components: group.components });
   });
+});
+
+describe("exact analytic component labels", () => {
+  for (const fixture of fixtures.analyticGroups) test("retains uint64 label identity", () => {
+    const labels = selectedAnalyticLabels(fixture.ids);
+    expect(labels).toEqual(fixture.labels);
+    expect(labels.map(label => BigInt(label).toString())).toEqual(fixture.labels);
+    expect(() => selectedMeshVertices(fixture.ids, JSON.stringify(topology.mesh))).toThrow();
+  });
+});
+
+describe("analytic selection source admission", () => {
+  for (const [index, fixture] of fixtures.analyticAdmission.entries()) test(`exact source membership ${index}`, () => {
+    const validate = () => validateAnalyticSource(fixture.ids, fixture.revision, fixture.handle, fixture.references);
+    if (fixture.accepted) expect(validate()).toEqual(fixtures.analyticGroups[0].labels);
+    else expect(validate).toThrow();
+  });
+});
+
+test("selected geometry inputs use exact labels for analytic operations", () => {
+  expect(generation3dMeshSelectionSelfTests()).toBeGreaterThan(0);
 });

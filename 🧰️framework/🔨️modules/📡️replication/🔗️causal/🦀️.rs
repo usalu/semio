@@ -93,7 +93,7 @@ impl crate::value::ToValue for MutationEnvelope {
 impl crate::value::FromValue for MutationEnvelope {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for MutationEnvelope, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationEnvelope, found {value:?}")));
         };
         let mut mutation_id = None;
         let mut document_id = None;
@@ -125,15 +125,15 @@ impl crate::value::FromValue for MutationEnvelope {
             }
         }
         Ok(MutationEnvelope {
-            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing mutationId"))?,
-            document_id: document_id.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing documentId"))?,
-            actor: actor.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing actor"))?,
-            dependencies: dependencies.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing dependencies"))?,
-            observed: observed.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing observed"))?,
-            target: target.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing target"))?,
-            diff: diff.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing diff"))?,
-            inverse: inverse.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing inverse"))?,
-            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing timestamp"))?,
+            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing mutationId"))?,
+            document_id: document_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing documentId"))?,
+            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing actor"))?,
+            dependencies: dependencies.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing dependencies"))?,
+            observed: observed.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing observed"))?,
+            target: target.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing target"))?,
+            diff: diff.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing diff"))?,
+            inverse: inverse.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing inverse"))?,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationEnvelope missing timestamp"))?,
             transaction,
             verb,
             line,
@@ -156,7 +156,7 @@ impl crate::value::ToValue for ArtifactDiff {
 impl crate::value::FromValue for ArtifactDiff {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for ArtifactDiff, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ArtifactDiff, found {value:?}")));
         };
         let mut schema = None;
         let mut payload = None;
@@ -167,7 +167,7 @@ impl crate::value::FromValue for ArtifactDiff {
                 _ => {}
             }
         }
-        Ok(ArtifactDiff { schema: schema.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing payload"))? })
+        Ok(ArtifactDiff { schema: schema.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ArtifactDiff missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ArtifactDiff missing payload"))? })
     }
 }
 
@@ -186,7 +186,7 @@ impl crate::value::ToValue for InverseMutation {
 impl crate::value::FromValue for InverseMutation {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for InverseMutation, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InverseMutation, found {value:?}")));
         };
         let mut schema = None;
         let mut payload = None;
@@ -197,7 +197,7 @@ impl crate::value::FromValue for InverseMutation {
                 _ => {}
             }
         }
-        Ok(InverseMutation { schema: schema.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing payload"))? })
+        Ok(InverseMutation { schema: schema.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InverseMutation missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InverseMutation missing payload"))? })
     }
 }
 //#endregion 🔖️Envelope
@@ -641,7 +641,7 @@ impl crate::value::ToValue for FrontierSummary {
 impl crate::value::FromValue for FrontierSummary {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for FrontierSummary, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for FrontierSummary, found {value:?}")));
         };
         let mut document_id = None;
         let mut head_edit_ordinal = None;
@@ -656,10 +656,10 @@ impl crate::value::FromValue for FrontierSummary {
                 "last_commit_seq" => last_commit_seq = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("last_commit_seq"))?),
                 "chain_hash" => {
                     let crate::value::DslValue::Array(items) = entry else {
-                        return Err(crate::value::ValueError::new("FrontierSummary.chain_hash must be an array").under("chain_hash"));
+                        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary.chain_hash must be an array").under("chain_hash"));
                     };
                     if items.len() != 32 {
-                        return Err(crate::value::ValueError::new(format!("expected exactly 32 bytes for chain_hash, found {}", items.len())).under("chain_hash"));
+                        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected exactly 32 bytes for chain_hash, found {}", items.len())).under("chain_hash"));
                     }
                     let mut bytes = [0u8; 32];
                     for (index, item) in items.into_iter().enumerate() {
@@ -671,11 +671,11 @@ impl crate::value::FromValue for FrontierSummary {
             }
         }
         Ok(FrontierSummary {
-            document_id: document_id.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing document_id"))?,
-            head_edit_ordinal: head_edit_ordinal.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing head_edit_ordinal"))?,
-            head_edit_id: head_edit_id.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing head_edit_id"))?,
-            last_commit_seq: last_commit_seq.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing last_commit_seq"))?,
-            chain_hash: chain_hash.ok_or_else(|| crate::value::ValueError::new("FrontierSummary missing chain_hash"))?,
+            document_id: document_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary missing document_id"))?,
+            head_edit_ordinal: head_edit_ordinal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary missing head_edit_ordinal"))?,
+            head_edit_id: head_edit_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary missing head_edit_id"))?,
+            last_commit_seq: last_commit_seq.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary missing last_commit_seq"))?,
+            chain_hash: chain_hash.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierSummary missing chain_hash"))?,
         })
     }
 }
@@ -712,17 +712,17 @@ impl crate::value::FromValue for FrontierComparison {
                 "Equal" => Ok(FrontierComparison::Equal),
                 "Ahead" => Ok(FrontierComparison::Ahead),
                 "Behind" => Ok(FrontierComparison::Behind),
-                other => Err(crate::value::ValueError::new(format!("unknown FrontierComparison variant `{other}`"))),
+                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown FrontierComparison variant `{other}`"))),
             },
             crate::value::DslValue::Object(entries) => {
                 if entries.len() != 1 {
-                    return Err(crate::value::ValueError::new("expected an externally-tagged enum object with exactly one key"));
+                    return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "expected an externally-tagged enum object with exactly one key"));
                 }
                 let (tag, payload) = entries.into_iter().next().unwrap();
                 match tag.as_str() {
                     "Diverged" => {
                         let crate::value::DslValue::Object(fields) = payload else {
-                            return Err(crate::value::ValueError::new("FrontierComparison.Diverged payload must be an object").under("Diverged"));
+                            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierComparison.Diverged payload must be an object").under("Diverged"));
                         };
                         let common_edit_count = fields
                             .into_iter()
@@ -730,13 +730,13 @@ impl crate::value::FromValue for FrontierComparison {
                             .map(|(_, v)| <u64 as crate::value::FromValue>::from_value(v))
                             .transpose()
                             .map_err(|e: crate::value::ValueError| e.under("common_edit_count"))?
-                            .ok_or_else(|| crate::value::ValueError::new("FrontierComparison.Diverged missing common_edit_count"))?;
+                            .ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "FrontierComparison.Diverged missing common_edit_count"))?;
                         Ok(FrontierComparison::Diverged { common_edit_count })
                     }
-                    other => Err(crate::value::ValueError::new(format!("unknown FrontierComparison variant `{other}`"))),
+                    other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown FrontierComparison variant `{other}`"))),
                 }
             }
-            other => Err(crate::value::ValueError::new(format!("expected a string or object, found {other:?}"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string or object, found {other:?}"))),
         }
     }
 }

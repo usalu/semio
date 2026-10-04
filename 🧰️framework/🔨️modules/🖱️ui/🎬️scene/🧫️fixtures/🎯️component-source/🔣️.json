@@ -1,0 +1,12 @@
+{
+  "schema": "ui.mesh-component-source.v1",
+  "source": {"handle": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "revision": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"},
+  "references": {"face": ["9007199254740993", "18446744073709551615"], "edge": ["17"], "vertex": ["23"]},
+  "cases": [
+    {"kind": "face", "group": 0, "label": "9007199254740993"},
+    {"kind": "face", "group": 1, "label": "18446744073709551615"},
+    {"kind": "edge", "group": 0, "label": "17"},
+    {"kind": "vertex", "group": 0, "label": "23"}
+  ],
+  "invalidLabels": ["0", "01", "-1", "nan", "18446744073709551616"]
+}

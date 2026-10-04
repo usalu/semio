@@ -12,15 +12,18 @@ impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
     fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
         match *self {}
     }
-    fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
+    fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
         match *self {}
-    }
+    
+    })())
+}
 }
 //#endregion 🧬️ChildrenTestMutation
 
 //#region 📡️EmptyChildrenCodecs
 impl protocol::OpText for ChildrenTestMutation {
-    fn parse_op(_line: &str) -> Result<Self, store::TextError> { Err(store::TextError::new("children test mutations do not exist", store::TextSpan::at(1, 1))) }
+    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "children test mutations do not exist", semio_framework_diagnostic::TextSpan::at(1, 1))) }
     fn print_op(&self) -> String { match *self {} }
 }
 impl protocol::OpBinary for ChildrenTestMutation {

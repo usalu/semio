@@ -15,7 +15,7 @@ impl Deserializer<CurationSnapshot> for ZipIntoCuration {
     const FROM: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<CurationSnapshot> {
-        let error = |message: String| IoError { message: format!("ZipIntoCuration: {message}"), diagnostics: Vec::new() };
+        let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ZipIntoCuration: {message}")));
         let IoPayload::Binary(bytes) = payload else {
             return Err(error("expected a binary zip payload".into()));
         };

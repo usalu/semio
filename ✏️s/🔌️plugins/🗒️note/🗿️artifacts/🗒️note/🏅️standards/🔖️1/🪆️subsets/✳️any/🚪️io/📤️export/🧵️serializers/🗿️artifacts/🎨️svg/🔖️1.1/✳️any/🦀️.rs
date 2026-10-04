@@ -6,7 +6,7 @@
 //! raw-bytes `Binary` wrapper (the class of bug this ticket's carrier-law fix targets).
 
 use crate::NoteSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -17,8 +17,8 @@ pub struct NoteIntoSvg;
 impl Serializer<NoteSnapshot> for NoteIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
-        let (svg, _width, _height) = crate::io::note_document_to_svg(from).map_err(|error| IoError { message: format!("NoteIntoSvg: {error}"), diagnostics: Vec::new() })?;
+    async fn serialize(from: &NoteSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+        let (svg, _width, _height) = crate::io::note_document_to_svg(from).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("NoteIntoSvg: {error}"))))?;
         Ok(IoOutcome::clean(IoPayload::Text(svg)))
     }
 }

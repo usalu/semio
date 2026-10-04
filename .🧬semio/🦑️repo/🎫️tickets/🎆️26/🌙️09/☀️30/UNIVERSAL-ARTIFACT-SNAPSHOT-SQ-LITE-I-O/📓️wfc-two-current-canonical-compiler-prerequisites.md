@@ -1,0 +1,9 @@
+# WFC Two Current Canonical Compiler Prerequisites
+
+Actual Root two-owner Native run exited1 in2m8s before any assertions. Prospective10 SQLite laws per owner are not runtime receipts. Complete stdout/stderr remains `🗑️generated/root-wfc-two-grid-two-current-ten-semantic-pixel-native-baseline.log`.
+
+Fresh authority is existing repository `semio-framework-pack-json`: its strict typed parser takes an explicit JsonMemberPolicy and returns current ValueError. Root mounted43 fully guarded current-path pairs with197 authored calls moved from the removed DSL facade to that actual existing crate and explicit Reject policy. Both artifact Cargo manifests now directly depend on that existing repository crate; no external runtime dependency, shim or facade was added. All authored mutation fixture/oracle payloads, remaining DSL operations, native snapshot encoders and SQL bodies were retained.
+
+A further four guarded Grid2d pairs use complete canonical IO causes, preserve source-span diagnostics via the actual charged text-refusal constructor, provide the existing empty ArchiveChildren value to the current Serializer interface and assert current typed cancellation causes directly. Former cancellation message substring assertions were removed rather than used as classifiers.
+
+Full before/after guarded inputs are retained in `📥️inputs/root-wfc-two-canonical-json-prerequisite-pairs.json` and `📥️inputs/root-grid-two-current-canonical-refusal-and-child-carrier-pairs.json`. The46 parser-only Rust checks, including separate CAD fixture prerequisite, exited0; this is syntax verification only. WFC renderer PNG current-owner construction and retirement signature are assigned to High Physical. Owning Native tests must be replayed after that remaining prerequisite and can still reveal independent type or semantic gaps.

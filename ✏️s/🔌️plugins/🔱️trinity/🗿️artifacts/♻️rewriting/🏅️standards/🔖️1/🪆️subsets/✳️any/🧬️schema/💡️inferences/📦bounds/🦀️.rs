@@ -1,6 +1,6 @@
 //! 📦 `bounds` — one named inference: the 2d bounding box + node count of `rule_layout`, the only
 //! positioned data this rule-editing artifact's snapshot carries a typed shape for
-//! (`before_fixture_json`/`lhs_json`/`rhs_json` are opaque JSON blobs, not structured data). A
+//! (`working_graph`/`lhs`/`rhs` are opaque JSON blobs, not structured data). A
 //! plain whole-snapshot scalar (per the family root's own "simple whole-snapshot scalars"
 //! guidance) — no `InferredField`/incremental caching needed for a handful of `{x, y}` points.
 

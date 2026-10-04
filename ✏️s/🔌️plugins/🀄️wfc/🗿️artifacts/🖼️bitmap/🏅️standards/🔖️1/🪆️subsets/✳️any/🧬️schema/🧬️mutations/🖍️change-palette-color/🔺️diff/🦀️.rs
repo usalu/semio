@@ -8,7 +8,7 @@ pub fn diff(payload: &super::ChangePaletteColor, base: &BitmapSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("The palette has no colour at index {}.", payload.index), ["palette".to_string()]);
     };
     if *existing == payload.color {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Palette colour {} already holds that value.", payload.index));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Palette colour {} already holds that value.", payload.index));
     }
     let mut palette = base.input.palette.clone();
     palette[payload.index] = payload.color;

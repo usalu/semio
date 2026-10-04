@@ -1,0 +1,25 @@
+{
+  "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🧵️continuation/🧬️schema/🔣️.json",
+  "property": "projection.sourceCapacity",
+  "closedSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "measureBeforeAllocation",
+      "ownershipSourceMultiples",
+      "overSourceBytes"
+    ],
+    "properties": {
+      "measureBeforeAllocation": {
+        "const": true
+      },
+      "ownershipSourceMultiples": {
+        "const": 32
+      },
+      "overSourceBytes": {
+        "const": 1
+      }
+    }
+  },
+  "fixtureChanged": false
+}

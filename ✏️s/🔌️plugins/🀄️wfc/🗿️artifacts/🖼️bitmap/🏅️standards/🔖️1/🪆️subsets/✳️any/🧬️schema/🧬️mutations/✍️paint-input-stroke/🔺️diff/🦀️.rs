@@ -27,12 +27,12 @@ pub fn diff(payload: &super::PaintInputStroke, base: &BitmapSnapshot) -> protoco
         region[((cell.y - y) * width + (cell.x - x)) as usize] = payload.color as u8;
     }
     if region == prior {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Every stroke cell already holds this colour.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Every stroke cell already holds this colour.".to_string());
     }
     let outcome = protocol::MutationOutcome::new(BitmapDiff { input_regions: vec![BitmapPixelRegion { x, y, width, height, pixels: encode_base64(&region) }], ..Default::default() });
     let total = stroke_cells(&payload.points).len();
     if inside.len() < total {
-        return outcome.warn("mutation.partial", format!("{} of {total} stroke cells lie outside the {}×{} input sample and are skipped.", total - inside.len(), base.input.width, base.input.height));
+        return outcome.warning("mutation.partial", format!("{} of {total} stroke cells lie outside the {}×{} input sample and are skipped.", total - inside.len(), base.input.width, base.input.height));
     }
     outcome
 }

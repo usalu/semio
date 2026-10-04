@@ -4,11 +4,11 @@ use super::*;
 async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
     let mesh_workspace = "{}".to_string();
     let original_mesh = mesh_child_handle("obj-1", &mesh_workspace);
-    let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new() };
+    let mut object = LowpolyObject { mesh_state:None, id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh: Some(original_mesh), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new() };
     let original = object.clone();
     let new_mesh_workspace = "{\"changed\":true}".to_string();
     let new_mesh = mesh_child_handle("obj-1", &new_mesh_workspace);
-    let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())), mesh_content: None };
+    let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())), mesh_content: None, mesh_state:None };
     object.apply_patch(&patch);
     assert_eq!(object.name, "Renamed");
     assert!(object.smooth_shading);
@@ -44,10 +44,11 @@ async fn lowpoly_selection_defaults_target_whole_mesh() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
-    use framework_schema::{parse_state_class_kebab, ArtifactSchemaFields};
+    use framework_schema::ArtifactSchemaFields;
+    use semio_framework_schema_state::parse_state_class_kebab;
     let descriptor = schema::lowpoly_artifact_schema_descriptor();
     assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
-    let schema: dsl::os_pack::json::Value = dsl::os_pack::json::from_json_str(descriptor.snapshot.json_schema).expect("snapshot json");
+    let schema: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(descriptor.snapshot.json_schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot json");
     assert_eq!(schema["title"], "LowpolySnapshot");
     let properties = schema["properties"].as_object().expect("properties");
     let mut json_states: Vec<(String, _)> = properties

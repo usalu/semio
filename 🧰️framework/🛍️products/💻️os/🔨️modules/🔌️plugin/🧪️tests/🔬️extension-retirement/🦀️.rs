@@ -15,8 +15,8 @@ mod extension_retirement_tests {
         fn invoke(&self, _capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> { Ok(request.to_vec()) }
         fn begin_close(&mut self) { self.sealed.store(true, Ordering::SeqCst); }
         fn close_step(&mut self, items: usize, bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if let Some(step) = self.close.begin_option(&mut self.value, items).map_err(plugin_internal_fault)? { return Ok(extension_retirement::snapshot_close_step(step)); }
-            let step = self.close.step(items, bytes).map_err(plugin_internal_fault)?;
+            if let Some(step) = self.close.begin_option(&mut self.value, items).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))? { return Ok(extension_retirement::snapshot_close_step(step)); }
+            let step = self.close.step(items, bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
             if let store::os_store::SnapshotRetirementStep::Pending { released_bytes, .. } = step { self.released_bytes += released_bytes; }
             if step == store::os_store::SnapshotRetirementStep::Complete { assert_eq!(self.released_bytes, self.expected_bytes); self.terminal.store(true, Ordering::SeqCst); }
             Ok(extension_retirement::snapshot_close_step(step))
@@ -28,14 +28,14 @@ mod extension_retirement_tests {
         let sealed = Arc::new(AtomicBool::new(false));
         let terminal = Arc::new(AtomicBool::new(false));
         let resource = Resource { value: Some(fixture["resource"].as_str().unwrap().into()), close: Default::default(), sealed: sealed.clone(), terminal: terminal.clone(), expected_bytes: fixture["resourceBytes"].as_u64().unwrap() as usize, released_bytes: 0 };
-        let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
+        let bundle = ExtensionBundle::new(id, id, "1").resource_owner(resource).owned_handler(fixture["capability"].as_str().unwrap()).contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         (bundle, sealed, terminal)
     }
 
     fn extension_fixture() -> serde_json::Value {
         let text = include_str!("../../🧫️fixtures/🧩️extension-retirement/🔣️.json");
         let oracle: serde_json::Value = serde_json::from_str(text).unwrap();
-        let first_party = store::DslValue::from(&oracle);
+        let first_party = semio_framework_value::DslValue::from(&oracle);
         assert_eq!(serde_json::Value::from(first_party), oracle);
         oracle
     }
@@ -168,7 +168,7 @@ mod extension_retirement_tests {
     fn extension_bundle_resource_retirement_refuses_implicit_live_drop_and_disposes_cold_explicitly() {
         let fixture = extension_fixture();
         let dropped = Arc::new(AtomicBool::new(false));
-        let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
+        let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         let address = &mut bundle as *mut ExtensionBundle;
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| unsafe { std::ptr::drop_in_place(address) }));
         let panic = result.unwrap_err();
@@ -180,7 +180,7 @@ mod extension_retirement_tests {
         drain_bundle(&mut bundle,&fixture);
         assert_eq!(usize::from(dropped.load(Ordering::SeqCst)), fixture["dropBoundary"]["terminalOwnerDrops"].as_u64().unwrap() as usize);
         drop(bundle);
-        let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", store::DslValue::from(&fixture["metadata"]));
+        let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
         cold.dispose_cold().unwrap();
         assert!(cold.terminal_is_empty());
         drop(cold);
@@ -263,7 +263,7 @@ mod extension_retirement_tests {
 
     #[test]
     fn extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll() {
-        semio_framework::io::resolve_ready(async {
+        ::semio_framework_async::poll::resolve_ready(async {
             let fixture = extension_fixture();
             let (bundle, sealed, terminal) = fixture_bundle("poll", &fixture);
             let mut candidate = Some(bundle);

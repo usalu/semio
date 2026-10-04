@@ -4,7 +4,7 @@ type TestSource = { readonly url: string };
  * declaration the Rust producer is pinned against
  * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, paint2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, paint2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, PAINT2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey, surfaceKindSceneLanes } = dependencies;
+  const { nodeGraphSurfaceLaneTexts, nodeGraphSceneFromLanes, UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, paint2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, paint2dSceneFromLanes, WORLD3D_SCENE_LANES, NODE_GRAPH_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, PAINT2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey, surfaceKindSceneLanes } = dependencies;
   const { describe, expect, it } = vitest;
   void source;
 
@@ -357,6 +357,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
+  describe("node graph retained carriers", () => {
+    it("restores oversized typed nodes and a Unicode host snapshot before host projection", async () => {
+      const { default: fixture } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json");
+      const nodes = Array.from({ length: fixture.nodeCount }, (_, index) => ({ ...fixture.node, id: String(index) }));
+      const snapshot = JSON.stringify({ label: fixture.hostSnapshotLabel.repeat(fixture.repeatCount) });
+      const laneTexts = { "framework.scene.nodeGraph.nodes": JSON.stringify(nodes), "framework.scene.nodeGraph.hostSnapshot": snapshot };
+      const { store, record } = surfaceWithLanes(laneTexts, "node-graph", fixture.schema);
+      const declared = Object.entries(laneTexts).map(([key, payload]) => ({ lane: NODE_GRAPH_SCENE_LANES.find((lane: AnyRecord) => lane.bodyKey === key)!.lane, bytes: utf8ByteLength(payload), hash: "fixture" }));
+      const collected = nodeGraphSurfaceLaneTexts(record, store.getState(), declared);
+      expect(Object.fromEntries(collected)).toEqual(laneTexts);
+      expect(nodeGraphSceneFromLanes({ nodes: [], edges: [], lanes: declared }, collected)).toEqual({ nodes, edges: [], lanes: declared, hostSnapshotJson: snapshot });
+      expect(utf8ByteLength(laneTexts["framework.scene.nodeGraph.nodes"])).toBeGreaterThan(32768);
+    });
+  });
+
   describe("paged surface routing", () => {
     /** ⚖️ LAW: the Interpreter routes a surface through `PagedSurfaceView` iff that kind publishes
      * lanes. `SurfaceView` used to repeat the kind list by hand and `paint-2d` was missing from it
@@ -374,7 +389,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(surfaceKindSceneLanes("tiled-map")?.length).toBeGreaterThan(0);
       expect(surfaceKindSceneLanes("table")).toEqual(tableContract.lanes);
       expect(surfaceKindSceneLanes("text-editor")).toEqual([{ lane: "buffer", field: textEditorContract.field, bodyKey: textEditorContract.laneKey, optional: false }]);
-      for (const kind of ["node-graph", "icon-render", "ink-canvas", "diff-view", "event-feed"]) {
+      expect(surfaceKindSceneLanes("node-graph")).toEqual(NODE_GRAPH_SCENE_LANES);
+      for (const kind of [ "icon-render", "ink-canvas", "diff-view", "event-feed"]) {
         expect(surfaceKindSceneLanes(kind)).toBeUndefined();
       }
     });

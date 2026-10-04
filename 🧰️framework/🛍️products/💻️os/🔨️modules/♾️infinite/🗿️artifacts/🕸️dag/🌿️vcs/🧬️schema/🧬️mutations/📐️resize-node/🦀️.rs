@@ -1,7 +1,7 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagSnapshot, ResizedNode};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "resize-node")]
@@ -19,9 +19,12 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ResizeNode {
         }
         protocol::MutationOutcome::new(DagDiff::from(DagDelta { resized_node: Some(ResizedNode { id: self.id.clone(), width: self.width, height: self.height }), ..Default::default() }))
     }
-    fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
+    fn inverse(&self, base: &DagSnapshot) -> Result<Vec<DagMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ResizeNode(Self { id: self.id.clone(), width: node.width, height: node.height })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize node {}", self.id), &format!("Größe von Knoten {} ändern", self.id))
     }

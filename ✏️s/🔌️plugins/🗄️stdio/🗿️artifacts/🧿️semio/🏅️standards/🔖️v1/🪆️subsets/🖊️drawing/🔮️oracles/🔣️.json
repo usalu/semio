@@ -372,6 +372,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "create-layer",
         "delete-layer",
         "create-node",
@@ -836,13 +837,13 @@
     {
       "id": "drawing-exact",
       "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this subset lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
-      "absoluteLength": 1e-9,
+      "absoluteLength": 1e-09,
       "relativeLength": 1e-12,
-      "absoluteArea": 1e-9,
+      "absoluteArea": 1e-09,
       "relativeArea": 1e-11,
-      "absoluteVolume": 1e-9,
+      "absoluteVolume": 1e-09,
       "relativeVolume": 1e-11,
-      "normalizedHausdorffMax": 1e-9,
+      "normalizedHausdorffMax": 1e-09,
       "normalizedCentroidDistanceMax": 1e-10,
       "maxOverrideFactor": 1
     }
@@ -1535,6 +1536,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

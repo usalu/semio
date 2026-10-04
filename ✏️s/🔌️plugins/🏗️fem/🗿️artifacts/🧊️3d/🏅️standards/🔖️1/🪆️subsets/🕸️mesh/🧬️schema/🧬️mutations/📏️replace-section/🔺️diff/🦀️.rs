@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceSection, base: &Fem3dSnapshot) -> protocol::Mutatio
         return target_mismatch("Section", &payload.id, &payload.new_section.id);
     }
     if existing == &payload.new_section {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Section \"{}\" already has that value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Section \"{}\" already has that value.", payload.id));
     }
     if let Some(breach) = section_breach(&payload.new_section) {
         return invariant(breach, vec![payload.id.clone()]);

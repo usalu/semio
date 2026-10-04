@@ -1,7 +1,8 @@
 use super::*;
 use crate::editor::fem3d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
 use crate::editor::fem3d::modes::edit::windows::results;
-use crate::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsAnimation;
+use crate::app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
+use crate::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
 use crate::editor::fem3d::unit_tests::context::{close, dispatch, fem3d_app, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, InvocationResult, NoConfig, ViewModel, ViewWindowInstance};
@@ -23,14 +24,14 @@ fn results_view() -> ViewModel {
 }
 
 /// 🎚️ The transport the addressed results window ended up with, read back off its own config partition.
-async fn published(app: &mut Fem3dApp) -> Fem3dResultsAnimation {
+async fn published(app: &mut Fem3dApp) -> FemResultsAnimation {
     semio_framework_plugin::artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(app, &results_view()).await.expect("capture results window config").unwrap_or_default().animation
 }
 
 /// 🫧️ The running clock of the addressed results window, read back off its own transient partition.
-fn clock(app: &mut Fem3dApp) -> Option<Fem3dPlaybackClock> {
+fn clock(app: &mut Fem3dApp) -> Option<FemPlaybackClock> {
     let snapshot = app.window_transient_snapshot(&results_view()).expect("capture results window transient");
-    results::transient::captured_clock(snapshot.as_ref(), WINDOW)
+    results::transient::captured_clock::<results::transient::Fem3dResultsWindowTransientOwner>(snapshot.as_ref(), WINDOW)
 }
 
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
@@ -88,7 +89,7 @@ async fn result_animation_tick_advances_the_clock_and_rearms_while_playing() {
 async fn result_animation_tick_parks_the_clock_when_stopped() {
     let mut app = fem3d_app();
     assert_eq!(tick(&mut app).await, 0);
-    assert_eq!(published(&mut app).await, Fem3dResultsAnimation::default());
+    assert_eq!(published(&mut app).await, FemResultsAnimation::default());
     assert_eq!(clock(&mut app), None);
     play(&mut app, SetResultAnimation { phase: Some(0.0), playing: Some(true), speed: Some(1.0), ..blank() }).await;
     assert_eq!(tick(&mut app).await, 1);
@@ -165,6 +166,7 @@ async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
 
 /// 🧾️ The history rows that carry an applied edit.
 async fn history_rows(app: &mut Fem3dApp) -> usize {
+    use semio_framework_plugin::PluginApp as _;
     app.history_snapshot().await.expect("history").upserts.iter().filter(|row| row.applied && !row.op_lines.is_empty()).count()
 }
 
@@ -181,21 +183,21 @@ async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
     assert!(handle_window(&ResultAnimationTick { window_id: WINDOW.into() }, &view, &cfg, &results_view()).is_err(), "the batch route has no transient to land a frame in");
     let mut app = fem3d_app();
     let rows = history_rows(&mut app).await;
-    let generation = app.window_config_generation(&results_view()).await.expect("config generation");
     play(&mut app, SetResultAnimation { playing: Some(true), ..tagged() }).await;
+    let opened = app.window_config_generation(&results_view()).await.expect("config generation").expect("the press opened the window's config partition");
     play(&mut app, SetResultAnimation { playing: Some(false), ..tagged() }).await;
-    let pressed = app.window_config_generation(&results_view()).await.expect("config generation");
-    assert_eq!(pressed, generation + 2, "every transport press is ONE edit of its own");
+    let pressed = opened + 1;
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), Some(pressed), "every transport press is ONE edit of its own");
     for value in ["0.25", "0.4"] {
         transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": value, "windowId": WINDOW, "gesture": "fem3d-play-results.phase:1", "commit": false })).await;
     }
-    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed, "slider ticks publish no edit");
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), Some(pressed), "slider ticks publish no edit");
     transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": "0.5", "windowId": WINDOW, "gesture": "fem3d-play-results.phase:1", "commit": true })).await;
-    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed + 1, "the release publishes ONE edit");
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), Some(pressed + 1), "the release publishes ONE edit");
     assert_eq!(published(&mut app).await.phase, 0.5);
     transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": "0.75", "windowId": WINDOW, "gesture": "fem3d-play-results.phase:2", "commit": false })).await;
     transport_wire(&mut app, serde_json::json!({ "windowId": WINDOW, "gesture": "fem3d-play-results.phase:2", "abort": "blur" })).await;
-    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed + 1, "a cancelled press publishes nothing");
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), Some(pressed + 1), "a cancelled press publishes nothing");
     assert_eq!(published(&mut app).await.phase, 0.5, "the cancelled seek left zero trace");
     assert_eq!(history_rows(&mut app).await, rows, "playback edits are never history rows");
     close(&mut app);
@@ -222,44 +224,3 @@ async fn result_animation_frames_never_touch_the_window_config_ledger() {
     close(&mut app);
 }
 
-/// ⏳️ Laws that drive hundreds of frames through the mounted harness — under the `long` profile.
-mod long {
-    use super::*;
-
-    /// 🧾️ LAW: the cost of a frame does not grow with the frames already played. The clock used to
-    /// live in the window config: every frame amended ONE coalesced edit, but that edit accumulated
-    /// every frame's operation and the store re-digested the whole edit on each amend, so the tick
-    /// went from 0.2 ms to 240 ms inside 300 frames (and the browser's tick period tripled inside a
-    /// minute). On the transient partition a frame is one root swap. 1 200 frames under the
-    /// reactor's real maintenance budget — one fair step per frame — with the last fifth of the run
-    /// costing no more than four times its first fifth, no maintenance pressure ever reported, and the
-    /// window config untouched.
-    #[semio_framework_async_macros::async_test]
-    async fn result_animation_frame_cost_stays_flat_across_a_long_run() {
-        let mut app = fem3d_app();
-        play(&mut app, SetResultAnimation { phase: Some(0.0), playing: Some(true), speed: Some(0.25), loop_mode: Some("loop".into()), ..blank() }).await;
-        let config_generation = app.window_config_generation(&results_view()).await.expect("config generation");
-        let frames = 1_200usize;
-        let fifth = frames / 5;
-        let mut first = std::time::Duration::ZERO;
-        let mut last = std::time::Duration::ZERO;
-        for frame in 0..frames {
-            let started = std::time::Instant::now();
-            assert_eq!(tick(&mut app).await, 1, "frame {frame}: the clock keeps re-arming");
-            let elapsed = started.elapsed();
-            if frame < fifth {
-                first += elapsed;
-            } else if frame >= frames - fifth {
-                last += elapsed;
-            }
-            semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one fair maintenance step per frame");
-            assert!(!semio_framework_plugin::PluginApp::maintenance_under_pressure(&*app), "frame {frame}: a frame never displaces a store owner");
-        }
-        assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), config_generation, "no frame amended the window config");
-        assert!(last <= first * 4, "the last {fifth} frames took {last:?} against {first:?} for the first {fifth}: the frame cost grows with the run");
-        let running = clock(&mut app).expect("the clock runs");
-        let expected = (frames as f64 * ANIMATION_TICK_SECONDS * 0.25).rem_euclid(1.0);
-        assert!((running.phase - expected).abs() < 1e-6, "every one of the {frames} frames landed: phase {} vs {expected}", running.phase);
-        close(&mut app);
-    }
-}

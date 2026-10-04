@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runtimeKey", "operationEpoch", "status"],
+  "properties": {
+    "runtimeKey": { "type": "string", "minLength": 1 },
+    "operationEpoch": { "type": "integer", "minimum": 1 },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "serviceId", "payload"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "serviceId": { "type": "string", "minLength": 1 },
+        "payload": { "type": "object", "additionalProperties": false, "required": ["received"], "properties": { "received": { "type": "integer", "minimum": 0 } } }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,
+ "required":["forecast","allocation","retirement","inlineRoot","semanticTables","limits","ledger","nativeRoles"],
+ "properties":{
+  "forecast":{"const":"unpaidBorrowedBound"},"allocation":{"const":"fullConcreteBufferBeforeConstruction"},"retirement":{"const":"noCumulativeRefund"},"inlineRoot":{"const":"noBackingRequest"},"semanticTables":{"const":12},
+  "limits":{"type":"object","additionalProperties":false,"required":["semantic","backing","file"],"properties":{"semantic":{"const":"maxValueBytes"},"backing":{"const":"maxAllocationBytes"},"file":{"const":"maxFileBytes"}}},
+  "nativeRoles":{"type":"object","additionalProperties":false,"required":["owned","semantic","preflight","decimal"],"properties":{"owned":{"const":"maxAllocationBytes"},"semantic":{"const":"maxValueBytes"},"preflight":{"const":"paidFrontiersOnly"},"decimal":{"const":"literalUtf8Coefficient"}}},
+  "ledger":{"type":"object","additionalProperties":false,"required":["requests","expectedSpent","exact","refused"],"properties":{"requests":{"const":[24,48,65536]},"expectedSpent":{"const":65608},"exact":{"const":65608},"refused":{"const":65607}}}
+ }
+}

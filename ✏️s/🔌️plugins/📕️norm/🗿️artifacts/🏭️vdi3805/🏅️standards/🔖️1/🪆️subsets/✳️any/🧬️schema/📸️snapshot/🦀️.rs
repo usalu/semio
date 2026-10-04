@@ -11,7 +11,7 @@ pub mod sqlite;
 #[path="🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
 
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -43,8 +43,8 @@ impl Default for Vdi3805Snapshot {
     }
 }
 
-pub fn encode_vdi3805_snapshot_json(snapshot: &Vdi3805Snapshot) -> String { pack::json::to_json_string(snapshot) }
-pub fn decode_vdi3805_snapshot_json(text: &str) -> Result<Vdi3805Snapshot, String> { pack::json::from_json_str(text).map_err(|e| e.to_string()) }
+pub fn encode_vdi3805_snapshot_json(snapshot: &Vdi3805Snapshot) -> String { semio_framework_pack_json::to_json_string(snapshot) }
+pub fn decode_vdi3805_snapshot_json(text: &str) -> Result<Vdi3805Snapshot, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string()) }
 pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| format!("{e:?}")) }
 pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String { store::ArtifactDsl::print_dsl(snapshot) }
 pub fn decode_vdi3805_pack(bytes: &[u8]) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| format!("{e:?}")) }

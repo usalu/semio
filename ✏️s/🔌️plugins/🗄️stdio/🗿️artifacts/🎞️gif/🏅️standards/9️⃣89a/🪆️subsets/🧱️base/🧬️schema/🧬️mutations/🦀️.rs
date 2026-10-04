@@ -58,6 +58,8 @@ pub mod set_screen_size;
 /// matches the `SpaceMutation`/`FlowMutationDsl` framework precedent's formatting convention;
 /// `#[dsl(base64)]` on the one bare `Vec<u8>` payload (`SetFramePixels::indices`) keeps it compact.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 //#endregion 🔖️Leaves
@@ -65,11 +67,12 @@ pub mod set_snapshot;
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none —
 /// mirrors 87a's own migration precedent.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = GifSnapshot, diff = GifDiff, schema = "GifMutation")]
 pub enum GifMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetScreenSize(set_screen_size::SetScreenSize),
     SetGlobalColorTable(set_global_color_table::SetGlobalColorTable),
     SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex),
@@ -101,6 +104,7 @@ impl GifMutation {
     pub fn kind(&self) -> &'static str {
         match self {
             GifMutation::SetSnapshot(_) => "set-snapshot",
+            GifMutation::PatchSnapshot(_) => "patch-snapshot",
             GifMutation::SetScreenSize(_) => "set-screen-size",
             GifMutation::SetGlobalColorTable(_) => "set-global-color-table",
             GifMutation::SetBackgroundColorIndex(_) => "set-background-color-index",
@@ -126,7 +130,7 @@ impl GifMutation {
 
 /// 🏷️ Every declared kind, kebab-case — mirrors the catalog's `mutationCatalogs[].kinds` exactly.
 pub const KINDS: &[&str] = &[
-    "set-snapshot",
+    "set-snapshot", "patch-snapshot",
     "set-screen-size",
     "set-global-color-table",
     "set-background-color-index",
@@ -193,6 +197,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     };
     let gct_value = Some(GifColorTable { sorted: true, colors: vec![Default::default(); 2] });
     vec![
+        GifMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: 10, height: 10 }),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: gct_value }),
@@ -240,10 +245,11 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
     if let Some((message, target)) = raster_refusal(this, base) {
-        return protocol::MutationOutcome::refuse("mutation.target-mismatch", message, target);
+        return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, target);
     }
     protocol::MutationOutcome::new(match this {
         GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
+        GifMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<GifSnapshot, GifMutation>>::diff(patch, base),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
         GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index }) => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
@@ -302,6 +308,16 @@ pub(crate) fn agg_diff(this: &GifMutation, base: &GifSnapshot) -> protocol::Muta
 }
 
 //#region 🔖️RasterGuard
+/// 🖼️ The whole-snapshot raster guard: the first frame of `snapshot` the GIF89a stream cannot carry, if any.
+fn snapshot_raster_refusal(snapshot: &GifSnapshot) -> Option<(String, Vec<String>)> {
+    snapshot.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (snapshot.width, snapshot.height)).or_else(|| frame_covers(index, frame)).or_else(|| frame_colored(index, frame, snapshot.gct.as_ref())))
+}
+
+/// 🛂️ The raster guard a path-scoped snapshot patch must pass (the `patch-snapshot` leaf's whole-snapshot check).
+pub(crate) fn raster_check(snapshot: &GifSnapshot) -> Result<(), String> {
+    snapshot_raster_refusal(snapshot).map_or(Ok(()), |(message, _)| Err(message))
+}
+
 /// 🖼️ Refuses an edit that would leave a frame the GIF89a Data Stream cannot carry, checked on the frames the edit
 /// touches: an image must fit within the Logical Screen (§20 "Each image must fit within the boundaries of the Logical
 /// Screen"), its Table Based Image Data holds one index per pixel of its rectangle (§22), and every index addresses an
@@ -311,7 +327,7 @@ fn raster_refusal(this: &GifMutation, base: &GifSnapshot) -> Option<(String, Vec
     let screen = (base.width, base.height);
     let frame_at = |index: usize| base.frames.get(index).map(|frame| (index, frame));
     match this {
-        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => snapshot.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (snapshot.width, snapshot.height)).or_else(|| frame_covers(index, frame)).or_else(|| frame_colored(index, frame, snapshot.gct.as_ref()))),
+        GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => snapshot_raster_refusal(snapshot),
         GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width, height }) => base.frames.iter().enumerate().find_map(|(index, frame)| frame_fits(index, frame, (*width, *height))),
         GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct }) => base.frames.iter().enumerate().filter(|(_, frame)| frame.lct.is_none()).find_map(|(index, frame)| frame_colored(index, frame, gct.as_ref())),
         GifMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => {
@@ -359,9 +375,11 @@ fn frame_colored(index: usize, frame: &GifFrame, gct: Option<&GifColorTable>) ->
 /// exists (an out-of-range index) inverts to the EMPTY step list — mirrors 87a's own precedent
 /// now that `NoMutation` no longer exists as a stand-in.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &GifMutation, base: &GifSnapshot) -> Vec<GifMutation> {
+pub(crate) fn agg_inverse(this: &GifMutation, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         GifMutation::SetSnapshot(_) => vec![GifMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        GifMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<GifSnapshot, GifMutation>>::inverse(patch, base)?),
         GifMutation::SetScreenSize(_) => vec![GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: base.width, height: base.height })],
         GifMutation::SetGlobalColorTable(_) => vec![GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: base.gct.clone() })],
         GifMutation::SetBackgroundColorIndex(_) => vec![GifMutation::SetBackgroundColorIndex(set_background_color_index::SetBackgroundColorIndex { index: base.background_color_index })],
@@ -423,6 +441,8 @@ pub(crate) fn agg_inverse(this: &GifMutation, base: &GifSnapshot) -> Vec<GifMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -430,22 +450,22 @@ pub(crate) fn agg_inverse(this: &GifMutation, base: &GifSnapshot) -> Vec<GifMuta
 /// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — the same ~15-line body
 /// every `DslOps`-derived enum's `OpText` impl uses.
 impl OpText for GifMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

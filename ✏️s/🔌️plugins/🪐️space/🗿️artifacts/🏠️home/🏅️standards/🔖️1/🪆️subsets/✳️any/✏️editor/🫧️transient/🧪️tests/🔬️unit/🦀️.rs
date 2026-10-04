@@ -60,7 +60,7 @@ fn directory_pages(spaces: usize) -> Vec<String> {
         let through = chunk.last().expect("non-empty page").seq;
         let page = sealed(after, through, index + 1 < chunks.len(), chunk.to_vec());
         after = through;
-        pack::to_json_string(&page)
+        semio_framework_pack_json::to_json_string(&page)
     }).collect()
 }
 
@@ -140,7 +140,7 @@ fn a_captured_root_never_sees_a_later_page_and_untouched_rows_stay_shared() {
     let captured = Arc::new(HomeTransient::with_directory(HomeTransient::default().directory().fold_page(&first)));
     let held_row = captured.directory().space_row("space-a").expect("the job holds one row");
     let renamed = sealed(4, 5, false, vec![event(5, store::os_directory::DirectoryEventBody::SpaceRenamed { space_id: "space-a".into(), name: "Two".into() })]);
-    let (published, _) = publish(&captured, item(&pack::to_json_string(&renamed)));
+    let (published, _) = publish(&captured, item(&semio_framework_pack_json::to_json_string(&renamed)));
     assert_eq!(captured.directory().space("space-a").expect("captured row").view.name, "One", "the captured root is immutable");
     assert_eq!(held_row.view.name, "One", "the held row belongs to the captured root");
     assert_eq!(published.directory().space("space-a").expect("published row").view.name, "Two");
@@ -185,11 +185,11 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
         };
     }
     for (name, before, mutation, after, diff, outcome) in [vector!("✅️apply"), vector!("🟰️apply"), vector!("🚫️apply")] {
-        let report = pack::parse_json(&home_transient_mutation_report_json(before, mutation, after).expect("bridge report")).expect("report JSON");
-        let outcome = pack::parse_json(outcome).expect("outcome JSON");
+        let report = semio_framework_pack_json::parse(&home_transient_mutation_report_json(before, mutation, after).expect("bridge report"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report JSON");
+        let outcome = semio_framework_pack_json::parse(outcome, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome JSON");
         assert_eq!(report["snapshot"], report["expectedSnapshot"], "{name}: the applied snapshot is the committed after-snapshot");
-        assert_eq!(report["diff"], pack::parse_json(diff).expect("diff JSON"), "{name}: the delta is the committed diff");
-        let codes = |messages: &pack::JsonValue| messages.as_array().expect("messages").iter().map(|message| message["code"].as_str().expect("code").to_owned()).collect::<Vec<_>>();
+        assert_eq!(report["diff"], semio_framework_pack_json::parse(diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff JSON"), "{name}: the delta is the committed diff");
+        let codes = |messages: &semio_framework_pack_json::Value| messages.as_array().expect("messages").iter().map(|message| message["code"].as_str().expect("code").to_owned()).collect::<Vec<_>>();
         assert_eq!(codes(&report["messages"]), codes(&outcome["messages"]), "{name}: the diagnostics are the declared outcome's");
         assert_eq!(report["snapshot"] != report["base"], outcome["status"] == "applied", "{name}: only an applied vector moves the snapshot");
         assert!(report["inverseSteps"].as_array().expect("inverse steps").is_empty(), "{name}: a derived page is never undone");
@@ -202,18 +202,18 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
 /// document and indexed document of the language-neutral fixture, and corruption is explicit rather than defaulted.
 #[test]
 fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
-    let fixture: pack::JsonValue = pack::parse_json(include_str!("../../🧫️fixtures/📇️projection-wire-v1/🔣️.json")).expect("language-neutral projection fixture");
-    let wire = pack::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
-    let transient: HomeTransient = pack::from_json_str(&wire.to_string()).expect("fixture projection");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/📇️projection-wire-v1/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral projection fixture");
+    let wire = semio_framework_pack_json::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
+    let transient: HomeTransient = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture projection");
     let document_ids: Vec<&str> = transient.directory().spaces().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect();
     assert_eq!(document_ids, vec!["document-雪"]);
-    let encoded: pack::JsonValue = pack::parse_json(&pack::to_json_string(&transient)).expect("encoded projection JSON");
+    let encoded: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&semio_framework_pack_json::to_json_string(&transient), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("encoded projection JSON");
     assert_eq!(encoded, wire);
     for malformed in fixture["malformed"].as_array().expect("malformed cases") {
-        assert!(pack::parse_json(malformed.as_str().expect("malformed text")).ok().is_none_or(|directory| pack::from_json_str::<HomeTransient>(&pack::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": directory }).to_string()).is_err()));
+        assert!(semio_framework_pack_json::parse(malformed.as_str().expect("malformed text"), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().is_none_or(|directory| semio_framework_pack_json::from_json_str::<HomeTransient>(&semio_framework_pack_json::json!({ "sessionBindingSha256": "", "authorizationGeneration": 0, "receiptSha256": "", "directory": directory }).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err()));
     }
-    let half_bound = pack::json!({ "sessionBindingSha256": BINDING, "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
-    assert!(pack::from_json_str::<HomeTransient>(&half_bound.to_string()).is_err(), "a partial resume authority is refused");
+    let half_bound = semio_framework_pack_json::json!({ "sessionBindingSha256": BINDING, "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
+    assert!(semio_framework_pack_json::from_json_str::<HomeTransient>(&half_bound.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "a partial resume authority is refused");
     store::os_store::test_support::assert_dsl_round_trip(&transient);
     let bytes = store::ArtifactPack::encode_pack(&transient);
     assert_eq!(<HomeTransient as store::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
@@ -222,13 +222,13 @@ fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
 /// 🔤️ The one verb round-trips its text line and its binary op.
 #[test]
 fn the_page_verb_round_trips_text_and_binary() {
-    let mutation = item(&pack::to_json_string(&sealed(0, 1, false, vec![created(1, "space-a", "One")])));
+    let mutation = item(&semio_framework_pack_json::to_json_string(&sealed(0, 1, false, vec![created(1, "space-a", "One")])));
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
     let bytes = protocol::OpBinary::encode_op(&mutation).expect("binary op");
     assert_eq!(<HomeTransientMutation as protocol::OpBinary>::decode_op(&bytes).expect("binary round trip"), mutation);
-    assert!(mutation.inverse(&HomeTransient::default()).is_empty(), "a derived projection page is never undone");
+    assert!(mutation.inverse(&HomeTransient::default()).expect("valid retained mutation inverse fixture").is_empty(), "a derived projection page is never undone");
     let refused = item("{").diff(&HomeTransient::default());
-    assert!(refused.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == protocol::Severity::Fatal));
+    assert!(refused.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == semio_framework_diagnostic::Severity::Fatal));
     assert_eq!(refused.diff(), &HomeTransient::default());
 }
 

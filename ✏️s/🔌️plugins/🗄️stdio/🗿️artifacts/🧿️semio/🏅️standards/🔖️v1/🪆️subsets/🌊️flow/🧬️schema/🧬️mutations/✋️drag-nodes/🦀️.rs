@@ -33,9 +33,9 @@ impl DragNodes {
         }
         let missing: Vec<String> = self.targets.iter().filter(|id| node_at(base, id).is_none()).cloned().collect();
         let partial: Vec<protocol::MutationMessage> =
-            (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in this flow): {}", missing.len(), self.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+            (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in this flow): {}", missing.len(), self.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
         if (self.dx, self.dy) == (0.0, 0.0) {
-            return protocol::MutationOutcome::new(SemioFlowDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "a zero offset moves nothing").at(self.targets.clone())]));
+            return protocol::MutationOutcome::new(SemioFlowDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(self.targets.clone())]));
         }
         let modified = moved.into_iter().map(|node| NamedModified { key: node.id.clone(), diff: FlowNodeDiff { position: Some(SemioPoint2 { x: node.position.x + self.dx, y: node.position.y + self.dy }), ..Default::default() } }).collect();
         protocol::MutationOutcome::new(SemioFlowDiff { nodes: Some(FlowNodesDiff { modified, ..Default::default() }), edges: None }).absorb_messages(partial)
@@ -62,9 +62,12 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for DragNodes 
     fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::Diff> {
         self.outcome(base)
     }
-    fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         self.undo(base)
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let number = |value: f64| {
             let rounded = (value * 100.0).round() / 100.0;

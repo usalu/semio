@@ -20,7 +20,7 @@ pub fn measure(config: &WriterMainWindowConfig, labels: &WriterPlayLabels) -> Wi
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: writer_action("setEditorSetting", Some(dsl::DslValue::object([("field".into(), dsl::DslValue::String("fontPx".into()))]))),
+        on_change: writer_action("setEditorSetting", Some(semio_framework_value::DslValue::object([("field".into(), semio_framework_value::DslValue::String("fontPx".into()))]))),
     }
 }
 //#endregion 🔖️Measure

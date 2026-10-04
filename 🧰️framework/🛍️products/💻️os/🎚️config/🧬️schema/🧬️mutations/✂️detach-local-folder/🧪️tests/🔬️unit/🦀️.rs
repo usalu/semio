@@ -15,7 +15,7 @@ fn detach_serializes_like_the_typescript_projection() {
 #[test]
 fn detaching_a_bound_document_inverts_to_its_prior_binding() {
     let base = LocalFolderBindings { bindings: vec![binding("a.fixture")] };
-    assert_eq!(detach_local_folder("a.fixture").inverse(&base), vec![attach_local_folder(binding("a.fixture"))]);
+    assert_eq!(detach_local_folder("a.fixture").inverse(&base).expect("valid retained mutation inverse fixture"), vec![attach_local_folder(binding("a.fixture"))]);
 }
 
 #[test]
@@ -25,5 +25,5 @@ fn detaching_an_unbound_document_is_a_warned_no_op_without_an_undo() {
     let raised = apply_local_folders_config_mutation_reporting(&mut snapshot, &detach_local_folder("b.fixture"));
     assert_eq!(snapshot, base);
     assert_eq!(raised.iter().map(|(code, _)| code.as_str()).collect::<Vec<_>>(), vec!["mutation.no-op"]);
-    assert!(detach_local_folder("b.fixture").inverse(&base).is_empty());
+    assert!(detach_local_folder("b.fixture").inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
 }

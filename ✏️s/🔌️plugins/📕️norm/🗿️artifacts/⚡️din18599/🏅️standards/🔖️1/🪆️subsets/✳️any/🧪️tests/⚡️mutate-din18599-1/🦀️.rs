@@ -1,7 +1,7 @@
 //! 🦀️ DIN V 18599 exhaustive mutation case — the Rust SUBJECT half. `s.norm.din18599` is a semio-native artifact with no
 //! third-party reader or writer, so its reference is the independent Python implementation registered as the oracle
 //! `din18599-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
-//! `Din18599Mutation` vocabulary — a energy-balance building: document scalars, whole-facet system specifications, zone and element lists and the composed climate child.
+//! `Din18599Mutation` vocabulary — a energy-balance building: document scalars, whole-facet system specifications, zone and element lists and the parent-owned monthly climate with its derived climate table.
 //!
 //! ⚖️ Every law is asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module, reached
 //! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
@@ -87,7 +87,7 @@ mod subject {
             let original = projection(&base)?;
             let (mut current, _messages) = apply_din18599_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation failed: {error}"))?;
             let mutated = projection(&current)?;
-            let steps = inverse_din18599_mutation(&mutation, &base);
+            let steps = inverse_din18599_mutation(&mutation, &base).expect("valid retained mutation inverse fixture");
             if parse_json(&outcome)?.str("status") == "applied" && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
             }
@@ -151,7 +151,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         for kind in semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
         built = built.subject("identity-round-trip", subject::round_trip);
     }

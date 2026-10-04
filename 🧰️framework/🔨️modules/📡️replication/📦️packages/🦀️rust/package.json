@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-replication-rs",
+  "private": true,
+  "scripts": {
+    "test-command-ingress-ownership": "nx run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
+    "test-command-ingress-native": "nx run @semio-tech/framework-replication-rs:test-command-ingress-native"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

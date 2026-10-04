@@ -1,0 +1,5 @@
+{
+  "mutation": "setText",
+  "path": [0, 0],
+  "text": "World 文字"
+}

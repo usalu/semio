@@ -24,7 +24,7 @@ pub fn diff(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> protocol::Mut
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Paint layer {} of object \"{}\" is not a square RGBA texture.", payload.layer_index, payload.object_id), [payload.object_id.clone()]);
     };
     if runs.is_empty() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The stroke changes no pixel of layer {} of object \"{}\".", payload.layer_index, payload.object_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The stroke changes no pixel of layer {} of object \"{}\".", payload.layer_index, payload.object_id));
     }
     protocol::MutationOutcome::new(diff_paint_stroke(payload.object_id.clone(), payload.layer_index, runs.into_iter().map(|run| SchemaPixelRun { offset: run.offset, bytes: run.bytes }).collect()))
 }

@@ -1,0 +1,957 @@
+{
+  "schema": "generation3d.polygon-import.v1",
+  "cases": [
+    {
+      "id": "ObjConcaveCornerSurface",
+      "format": "obj",
+      "source": {
+        "schema": "stdio.obj",
+        "vertices": [
+          {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "x": 3,
+            "y": 0,
+            "z": 0
+          },
+          {
+            "x": 3,
+            "y": 3,
+            "z": 0
+          },
+          {
+            "x": 2,
+            "y": 3,
+            "z": 0
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "z": 0
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "z": 0
+          },
+          {
+            "x": 1,
+            "y": 3,
+            "z": 0
+          },
+          {
+            "x": 0,
+            "y": 3,
+            "z": 0
+          }
+        ],
+        "texcoords": [
+          {
+            "u": 0,
+            "v": 0
+          },
+          {
+            "u": 1,
+            "v": 0
+          },
+          {
+            "u": 1,
+            "v": 1
+          },
+          {
+            "u": 0.75,
+            "v": 1
+          },
+          {
+            "u": 0.75,
+            "v": 0.25
+          },
+          {
+            "u": 0.25,
+            "v": 0.25
+          },
+          {
+            "u": 0.25,
+            "v": 1
+          },
+          {
+            "u": 0,
+            "v": 1
+          }
+        ],
+        "normals": [
+          {
+            "x": 0,
+            "y": 0,
+            "z": 1
+          }
+        ],
+        "faces": [
+          {
+            "vertices": [
+              {
+                "vertex": 0,
+                "texcoord": 0,
+                "normal": 0
+              },
+              {
+                "vertex": 1,
+                "texcoord": 1,
+                "normal": 0
+              },
+              {
+                "vertex": 2,
+                "texcoord": 2,
+                "normal": 0
+              },
+              {
+                "vertex": 3,
+                "texcoord": 3,
+                "normal": 0
+              },
+              {
+                "vertex": 4,
+                "texcoord": 4,
+                "normal": 0
+              },
+              {
+                "vertex": 5,
+                "texcoord": 5,
+                "normal": 0
+              },
+              {
+                "vertex": 6,
+                "texcoord": 6,
+                "normal": 0
+              },
+              {
+                "vertex": 7,
+                "texcoord": 7,
+                "normal": 0
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "panel",
+            "faces": [
+              0
+            ]
+          },
+          {
+            "name": "shell",
+            "faces": [
+              0
+            ]
+          }
+        ],
+        "objects": [
+          {
+            "name": "Surface",
+            "faces": [
+              0
+            ]
+          }
+        ],
+        "usemtl": [
+          {
+            "faceIndexFrom": 0,
+            "material": "copper"
+          }
+        ],
+        "smoothingGroups": [
+          {
+            "faceIndexFrom": 0,
+            "group": 2
+          }
+        ],
+        "unknownStatements": []
+      },
+      "polygon": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        ],
+        "attributes": {
+          "normal": {
+            "domain": "corner",
+            "semantic": "normal",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0,
+                1
+              ]
+            ],
+            "indices": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "uv": {
+            "domain": "corner",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0.75,
+                1
+              ],
+              [
+                0.75,
+                0.25
+              ],
+              [
+                0.25,
+                0.25
+              ],
+              [
+                0.25,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "indices": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "obj.groups": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              [
+                "panel",
+                "shell"
+              ]
+            ]
+          },
+          "obj.object": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              "Surface"
+            ]
+          },
+          "obj.material": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              "copper"
+            ]
+          },
+          "obj.smoothing": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              2
+            ]
+          }
+        }
+      },
+      "area": 7
+    },
+    {
+      "id": "PlyConcaveVertexSurface",
+      "format": "ply",
+      "source": {
+        "schema": "stdio.ply",
+        "format": "ascii",
+        "comments": [],
+        "elements": [
+          {
+            "name": "vertex",
+            "count": 8,
+            "properties": [
+              {
+                "form": "scalar",
+                "name": "x",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "y",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "z",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "nx",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "ny",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "nz",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "u",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "v",
+                "kind": "double"
+              },
+              {
+                "form": "scalar",
+                "name": "weight",
+                "kind": "double"
+              }
+            ],
+            "rows": [
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.125
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.25
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 2
+                  },
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.75
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.375
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 2
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.75
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.25
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.5
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.25
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.25
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.625
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.25
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.75
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 3
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0
+                  },
+                  {
+                    "kind": "double",
+                    "value": 1
+                  },
+                  {
+                    "kind": "double",
+                    "value": 0.875
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "face",
+            "count": 1,
+            "properties": [
+              {
+                "form": "list",
+                "name": "vertex_indices",
+                "countKind": "uChar",
+                "valueKind": "int"
+              },
+              {
+                "form": "scalar",
+                "name": "region",
+                "kind": "int"
+              }
+            ],
+            "rows": [
+              {
+                "values": [
+                  {
+                    "kind": "list",
+                    "value": [
+                      {
+                        "kind": "int",
+                        "value": 0
+                      },
+                      {
+                        "kind": "int",
+                        "value": 1
+                      },
+                      {
+                        "kind": "int",
+                        "value": 2
+                      },
+                      {
+                        "kind": "int",
+                        "value": 3
+                      },
+                      {
+                        "kind": "int",
+                        "value": 4
+                      },
+                      {
+                        "kind": "int",
+                        "value": 5
+                      },
+                      {
+                        "kind": "int",
+                        "value": 6
+                      },
+                      {
+                        "kind": "int",
+                        "value": 7
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "int",
+                    "value": 4
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "polygon": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        ],
+        "attributes": {
+          "normal": {
+            "domain": "vertex",
+            "semantic": "normal",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1
+              ]
+            ]
+          },
+          "uv": {
+            "domain": "vertex",
+            "semantic": "uv",
+            "interpolation": "linear",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0.75,
+                1
+              ],
+              [
+                0.75,
+                0.25
+              ],
+              [
+                0.25,
+                0.25
+              ],
+              [
+                0.25,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          },
+          "ply.vertex.weight": {
+            "domain": "vertex",
+            "semantic": "custom",
+            "interpolation": "linear",
+            "values": [
+              0,
+              0.125,
+              0.25,
+              0.375,
+              0.5,
+              0.625,
+              0.75,
+              0.875
+            ]
+          },
+          "ply.face.region": {
+            "domain": "face",
+            "semantic": "custom",
+            "interpolation": "constant",
+            "values": [
+              4
+            ]
+          }
+        }
+      },
+      "area": 7
+    }
+  ]
+}

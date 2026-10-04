@@ -3,7 +3,7 @@ use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 
 //#region 🔖️Payload
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";
@@ -83,8 +83,8 @@ fn json_node(value: &DslValue, path: &str) -> FacadeResult<u32> {
 fn graphql_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
     let object = exact_object(value, &["present", "absent"], path)?;
     match (object_field(object, "present"), object_field(object, "absent")) {
-        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
-        (None, Some(DslValue::Bool(true))) => Ok(None),
+        (Some(semio_framework_value::DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (None, Some(semio_framework_value::DslValue::Bool(true))) => Ok(None),
         _ => facade_error("nullable", path),
     }
 }
@@ -92,7 +92,7 @@ fn graphql_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>
 fn proto_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
     let object = exact_object(value, &["present", "absent"], path)?;
     match (object_field(object, "present"), object_field(object, "absent")) {
-        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (Some(semio_framework_value::DslValue::String(value)), None) => Ok(Some(value.clone())),
         (None, Some(absent)) if exact_object(absent, &[], path)?.is_empty() => Ok(None),
         _ => facade_error("nullable", path),
     }
@@ -376,7 +376,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
         }
     }
 
-    fn inverse(&self, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
         if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
             return Vec::new();
@@ -386,7 +387,9 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
             Self::Restore(restore) => Self::Restore(GltfChangeNodeNameRestore { node: restore.node, before: restore.after.clone(), after: restore.before.clone() }),
         };
         vec![super::GltfMutation::ChangeNodeName(inverse)]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Node Name", "Knotenname ändern")

@@ -14,7 +14,7 @@ async fn example_parses_to_the_reference_stock() {
     let snapshot = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
     assert_eq!(snapshot.stock_payload.solid, crate::WorkingSolid::Reference { reference_id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() });
     assert_eq!(snapshot.step_payloads.len(), 7);
-    assert_eq!(Process3dInference::infer(&snapshot), Process3dInference::infer(&snapshot));
+    assert_eq!(Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 //#endregion 🧪️ExampleLaws
 

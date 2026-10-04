@@ -6,7 +6,7 @@ use crate::mutations::replace_route_data;
 use crate::op::GisMapMutation;
 use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::{GisMapSnapshot, MapFeature};
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::{json, Value};
@@ -81,18 +81,18 @@ fn feature_anchor(entries: &[(String, DslValue)]) -> Option<(f64, f64)> {
         return Some((lon, lat));
     }
     let points = entries.iter().find(|(key, _)| key == "points").and_then(|(_, value)| value.as_array())?;
-    let first = points.first().and_then(DslValue::as_array)?;
+    let first = points.first().and_then(semio_framework_value::DslValue::as_array)?;
     Some((first.first()?.as_f64()?, first.get(1)?.as_f64()?))
 }
 
 /// 🚚️ Translates every `points` vertex by `(delta_lon, delta_lat)`, leaving non-numeric vertices alone.
 fn translate_points(value: &DslValue, delta_lon: f64, delta_lat: f64) -> DslValue {
     let Some(points) = value.as_array() else { return value.clone() };
-    DslValue::Array(
+    semio_framework_value::DslValue::Array(
         points
             .iter()
-            .map(|point| match (point.as_array().and_then(|pair| pair.first()).and_then(DslValue::as_f64), point.as_array().and_then(|pair| pair.get(1)).and_then(DslValue::as_f64)) {
-                (Some(lon), Some(lat)) => DslValue::Array(vec![DslValue::float(lon + delta_lon), DslValue::float(lat + delta_lat)]),
+            .map(|point| match (point.as_array().and_then(|pair| pair.first()).and_then(semio_framework_value::DslValue::as_f64), point.as_array().and_then(|pair| pair.get(1)).and_then(semio_framework_value::DslValue::as_f64)) {
+                (Some(lon), Some(lat)) => semio_framework_value::DslValue::Array(vec![DslValue::float(lon + delta_lon), DslValue::float(lat + delta_lat)]),
                 _ => point.clone(),
             })
             .collect(),
@@ -120,7 +120,7 @@ fn edited_collection_operations(document: &GisMapSnapshot, collection: &str, fea
         return Vec::new();
     }
     edit(&mut entries, target);
-    let after: Vec<MapFeature> = before.iter().map(|feature| if feature.id == target.id { MapFeature { id: feature.id.clone(), data: DslValue::Object(entries.clone()) } } else { feature.clone() }).collect();
+    let after: Vec<MapFeature> = before.iter().map(|feature| if feature.id == target.id { MapFeature { id: feature.id.clone(), data: semio_framework_value::DslValue::Object(entries.clone()) } } else { feature.clone() }).collect();
     collection_operations(collection, before, &after)
 }
 //#endregion 🔖️FeatureCollections
@@ -131,7 +131,7 @@ pub mod add_feature {
 
     /// 🆕️ Appends a feature to one document collection. `collection` picks the triplet, the id is
     /// minted, and `(lon, lat, span)` seed the geometry that collection needs.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-feature")]
     pub struct AddFeature {
         pub collection: String,
@@ -150,7 +150,7 @@ pub mod add_feature {
         let label = if payload.label.is_empty() { id.clone() } else { payload.label.clone() };
         let data = minted_feature_data(&payload.collection, &id, &label, payload.lon, payload.lat, payload.span);
         let mut after = before.to_vec();
-        after.push(MapFeature { id, data: DslValue::from(&data) });
+        after.push(MapFeature { id, data: semio_framework_value::DslValue::from(&data) });
         Ok(Emit::mutations(collection_operations(&payload.collection, before, &after)))
     }
 }
@@ -162,7 +162,7 @@ pub mod move_feature {
 
     /// 🚚️ Moves the addressed feature's anchor to `(lon, lat)` — a point is re-seated, a polyline or
     /// ring is translated whole so its shape survives the move.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "move-feature")]
     pub struct MoveFeature {
         pub collection: String,
@@ -176,8 +176,8 @@ pub mod move_feature {
             let Some((lon, lat)) = feature_anchor(entries) else { return };
             let (delta_lon, delta_lat) = (payload.lon - lon, payload.lat - lat);
             if entries.iter().any(|(key, _)| key == "lon") {
-                write_entry(entries, "lon", DslValue::float(payload.lon));
-                write_entry(entries, "lat", DslValue::float(payload.lat));
+                write_entry(entries, "lon", semio_framework_value::DslValue::float(payload.lon));
+                write_entry(entries, "lat", semio_framework_value::DslValue::float(payload.lat));
             }
             if let Some((_, points)) = entries.iter_mut().find(|(key, _)| key == "points") {
                 *points = translate_points(points, delta_lon, delta_lat);
@@ -194,7 +194,7 @@ pub mod rename_feature {
 
     /// 🏷️ Retitles the addressed feature — the attribute half of feature editing, kept apart from the
     /// geometry half so each verb does exactly one thing.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "rename-feature")]
     pub struct RenameFeature {
         pub collection: String,
@@ -207,9 +207,9 @@ pub mod rename_feature {
             return Ok(Emit::default());
         }
         let operations = edited_collection_operations(doc.snapshot, &payload.collection, &payload.feature_id, |entries, _| {
-            write_entry(entries, "label", DslValue::String(payload.label.clone()));
+            write_entry(entries, "label", semio_framework_value::DslValue::String(payload.label.clone()));
             if entries.iter().any(|(key, _)| key == "name") {
-                write_entry(entries, "name", DslValue::String(payload.label.clone()));
+                write_entry(entries, "name", semio_framework_value::DslValue::String(payload.label.clone()));
             }
         });
         Ok(Emit::mutations(operations))
@@ -222,7 +222,7 @@ pub mod delete_feature {
     use super::*;
 
     /// 🗑️ Removes the addressed feature from its collection.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "delete-feature")]
     pub struct DeleteFeature {
         pub collection: String,
@@ -245,14 +245,14 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
     if route_ids.is_empty() {
         return Emit::default();
     }
-    let dsl_value = DslValue::String(value.to_string());
+    let dsl_value = semio_framework_value::DslValue::String(value.to_string());
     let operations: Vec<GisMapMutation> = document
         .routes
         .iter()
         .filter(|route| route_ids.iter().any(|id| id == &route.id))
         .filter_map(|route| {
             let mut data = route.data.clone();
-            let DslValue::Object(entries) = &mut data else {
+            let semio_framework_value::DslValue::Object(entries) = &mut data else {
                 return None;
             };
             if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == field) {
@@ -271,7 +271,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
 pub mod patch_positions {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-positions")]
     pub struct PatchPositions {
         pub positions_json: String,
@@ -291,7 +291,7 @@ pub mod patch_positions {
 pub mod patch_routes {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-routes")]
     pub struct PatchRoutes {
         pub route_ids: Vec<String>,
@@ -309,7 +309,7 @@ pub mod patch_routes {
 pub mod patch_route {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-route")]
     pub struct PatchRoute {
         pub route_id: String,

@@ -35,10 +35,10 @@ async fn seeded(text: &str) -> Replica {
 }
 
 /// ⌨️ One live typing delivery of the main window at `now_ms` (`action` + `args` + the window's `typing` buffer), published.
-async fn deliver(app: &mut Replica, action: &str, mut args: Vec<(String, dsl::DslValue)>, now_ms: u64) -> Result<InvocationResult, Fault> {
-    args.push((TYPING_BUFFER_ARG.into(), dsl::DslValue::String(WRITER_TYPING_BUFFER.into())));
+async fn deliver(app: &mut Replica, action: &str, mut args: Vec<(String, semio_framework_value::DslValue)>, now_ms: u64) -> Result<InvocationResult, Fault> {
+    args.push((TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
     app.set_tool_clock_ms(Some(now_ms));
-    let result = app.handle_action(action, Some(&dsl::DslValue::Object(args)), &window_meta()).await;
+    let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &window_meta()).await;
     if result.is_ok() {
         settle_registered_typed_operation(app, meta("local").instance_id).await.expect("the delivery publishes");
     }
@@ -47,7 +47,7 @@ async fn deliver(app: &mut Replica, action: &str, mut args: Vec<(String, dsl::Ds
 
 /// 🏁️ The host's commit signal (`reason`) for the main window's run at `now_ms`.
 async fn end_run(app: &mut Replica, reason: &str, now_ms: u64) {
-    deliver(app, "textSplice", vec![(TYPING_COMMIT_ARG.into(), dsl::DslValue::String(reason.into()))], now_ms).await.unwrap_or_else(|fault| panic!("the {reason} signal: {fault:?}"));
+    deliver(app, "textSplice", vec![(TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String(reason.into()))], now_ms).await.unwrap_or_else(|fault| panic!("the {reason} signal: {fault:?}"));
 }
 
 /// ⌨️ One author typing into the main window: the text it sees, its caret (scalars) and its splice sequence.
@@ -74,14 +74,14 @@ async fn type_run(app: &mut Replica, author: &mut Author, run: &str, now_ms: u64
         author.seq += 1;
         let caret = next.chars().take(author.caret + 1).map(char::len_utf8).sum::<usize>() as u64;
         let args = vec![
-            ("start".to_string(), dsl::DslValue::uint(u64::from(splice.start))),
-            ("deleted".to_string(), dsl::DslValue::String(splice.deleted)),
-            ("insert".to_string(), dsl::DslValue::String(splice.insert)),
-            ("before".to_string(), dsl::DslValue::String(splice.before)),
-            ("after".to_string(), dsl::DslValue::String(splice.after)),
-            ("seq".to_string(), dsl::DslValue::uint(author.seq)),
-            ("anchor".to_string(), dsl::DslValue::uint(caret)),
-            ("caret".to_string(), dsl::DslValue::uint(caret)),
+            ("start".to_string(), semio_framework_value::DslValue::uint(u64::from(splice.start))),
+            ("deleted".to_string(), semio_framework_value::DslValue::String(splice.deleted)),
+            ("insert".to_string(), semio_framework_value::DslValue::String(splice.insert)),
+            ("before".to_string(), semio_framework_value::DslValue::String(splice.before)),
+            ("after".to_string(), semio_framework_value::DslValue::String(splice.after)),
+            ("seq".to_string(), semio_framework_value::DslValue::uint(author.seq)),
+            ("anchor".to_string(), semio_framework_value::DslValue::uint(caret)),
+            ("caret".to_string(), semio_framework_value::DslValue::uint(caret)),
         ];
         deliver(app, "textSplice", args, now).await.unwrap_or_else(|fault| panic!("keystroke {scalar:?}: {fault:?}"));
         author.view = next;
@@ -117,8 +117,8 @@ async fn undo(app: &mut Replica) {
     settle_registered_typed_operation(app, meta("local").instance_id).await.expect("the undo publishes");
 }
 
-async fn history_edit(app: &mut Replica, verb: &str, args: Vec<(&str, dsl::DslValue)>) {
-    let args = dsl::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+async fn history_edit(app: &mut Replica, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
+    let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
     let result = app.handle_action(verb, Some(&args), &window_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
@@ -157,8 +157,8 @@ async fn one_typing_run_is_one_edit_and_one_row_with_its_transaction() {
     let transaction = row.transaction.as_ref().expect("the row is the run's tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#textSplice"), "{transaction:?}");
     assert_eq!(row.mutations.len(), 1, "one net splice for the whole run");
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Type “hello”");
-    assert_eq!(row.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "„hello“ tippen");
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Type “hello”");
+    assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "„hello“ tippen");
     undo(&mut app).await;
     assert_eq!(committed(&app), "Doc: \nend", "one undo reverts the whole run");
     close_registered_fixture_app(&mut app);
@@ -214,18 +214,18 @@ async fn a_frozen_document_refuses_typing_with_zero_trace() {
     let rows_before = edit_rows(&mut app).await.len();
     let mut author = Author::at("abc", 3);
     let now = type_run(&mut app, &mut author, "d", 1_000, 50).await;
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(target))]).await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(target))]).await;
     assert_eq!((edit_rows(&mut app).await.len(), committed(&app)), (rows_before + 1, "abcd".to_string()), "the open run committed before the history edit froze the document");
     let splice = TextSplice::from_edit("abcd", "abcde", TEXT_SPLICE_CONTEXT_SCALARS).expect("a keystroke");
     let args = vec![
-        ("start".to_string(), dsl::DslValue::uint(u64::from(splice.start))),
-        ("deleted".to_string(), dsl::DslValue::String(splice.deleted)),
-        ("insert".to_string(), dsl::DslValue::String(splice.insert)),
-        ("before".to_string(), dsl::DslValue::String(splice.before)),
-        ("after".to_string(), dsl::DslValue::String(splice.after)),
-        ("seq".to_string(), dsl::DslValue::uint(author.seq + 1)),
-        ("anchor".to_string(), dsl::DslValue::uint(5)),
-        ("caret".to_string(), dsl::DslValue::uint(5)),
+        ("start".to_string(), semio_framework_value::DslValue::uint(u64::from(splice.start))),
+        ("deleted".to_string(), semio_framework_value::DslValue::String(splice.deleted)),
+        ("insert".to_string(), semio_framework_value::DslValue::String(splice.insert)),
+        ("before".to_string(), semio_framework_value::DslValue::String(splice.before)),
+        ("after".to_string(), semio_framework_value::DslValue::String(splice.after)),
+        ("seq".to_string(), semio_framework_value::DslValue::uint(author.seq + 1)),
+        ("anchor".to_string(), semio_framework_value::DslValue::uint(5)),
+        ("caret".to_string(), semio_framework_value::DslValue::uint(5)),
     ];
     let refused = deliver(&mut app, "textSplice", args, now + 10).await;
     assert!(refused.as_ref().is_err_and(|fault| fault.code.0 == "timeTravel.frozen"), "typing into a frozen document is refused: {refused:?}");
@@ -282,14 +282,14 @@ async fn a_run_edited_in_history_replays_deterministically() {
     let mut app = session("hello").await;
     let rows = edit_rows(&mut app).await;
     let edited = rows[rows.len() - 2].mutations.first().map(|mutation| mutation.mutation_id.clone()).expect("the first run's net splice");
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", dsl::DslValue::String(edited))]).await;
-    history_edit(&mut app, "historyEditInput", vec![("path", dsl::DslValue::String("/insert".into())), ("value", dsl::DslValue::String("howdy".into()))]).await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(edited))]).await;
+    history_edit(&mut app, "historyEditInput", vec![("path", semio_framework_value::DslValue::String("/insert".into())), ("value", semio_framework_value::DslValue::String("howdy".into()))]).await;
     history_edit(&mut app, "historyEditAccept", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage != Some(HistoryTimeTravelStage::Replaying)).await;
     assert_eq!(time_travel_stage(&mut app).await, Some(HistoryTimeTravelStage::Reviewing));
     assert_eq!(committed(&app), seed.replacen("Doc: ", "Doc: hello", 1) + "!", "reviewing never touches the committed document");
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
-    history_edit(&mut app, "historyEditCommit", vec![("choice", dsl::DslValue::String("overwrite".into()))]).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(committed(&app), seed.replacen("Doc: ", "Doc: howdy", 1) + "!", "the overwrite folds the edited run and replays the later one");
     let mut fresh = session("howdy").await;

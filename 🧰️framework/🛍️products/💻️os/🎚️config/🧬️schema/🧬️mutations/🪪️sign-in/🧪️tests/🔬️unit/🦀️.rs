@@ -18,6 +18,6 @@ fn sign_in_serializes_like_the_typescript_projection() {
 fn replacing_a_session_inverts_to_the_prior_identity() {
     let base = IdentitySetting(Some(identity("prior")));
     let mutation = sign_in(identity("next"));
-    let inverse = mutation.inverse(&base);
+    let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![sign_in(identity("prior"))]);
 }

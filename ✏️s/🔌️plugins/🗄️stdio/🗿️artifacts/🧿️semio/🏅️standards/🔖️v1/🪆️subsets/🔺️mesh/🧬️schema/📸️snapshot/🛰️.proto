@@ -36,6 +36,11 @@ message SemioMaterial {
   SemioRgba base_color = 2;
   float metallic = 3;
   float roughness = 4;
+  optional string base_color_texture = 5;
+  optional string metallic_roughness_texture = 6;
+  optional string normal_texture = 7;
+  optional string occlusion_texture = 8;
+  optional string emissive_texture = 9;
 }
 
 message SemioTexture {

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "parserParity": true,
+  "oldWorkspaceEntries": 74,
+  "newWorkspaceEntries": 87,
+  "addedWorkspaces": [
+    "🧰️framework/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
+    "🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🏛️ownership/🧮️compute",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust"
+  ],
+  "changedOriginalWorkspaces": [],
+  "addedPackages": [
+    "@semio-tech/compute-ownership-runner",
+    "@semio-tech/framework-mesh-attributes-ownership",
+    "@semio-tech/framework-os-compute-ownership",
+    "@semio-tech/framework-os-flow-compute-ownership",
+    "@semio-tech/framework-os-kernel",
+    "@semio-tech/framework-plugin",
+    "@semio-tech/framework-plugin-compute-ownership",
+    "@semio-tech/framework-plugin-host-fixture",
+    "@semio-tech/framework-plugin-host-fixture-compute-ownership",
+    "@semio-tech/framework-replication-rs",
+    "@semio-tech/framework-rs",
+    "@semio-tech/framework-ui-viewport-rs",
+    "semio-framework-pixels"
+  ],
+  "removedPackages": [],
+  "lockSha256": "059bf928221e0a7e469f530782155b6ef5b796e9aee30463d0d4c177d000222c"
+}

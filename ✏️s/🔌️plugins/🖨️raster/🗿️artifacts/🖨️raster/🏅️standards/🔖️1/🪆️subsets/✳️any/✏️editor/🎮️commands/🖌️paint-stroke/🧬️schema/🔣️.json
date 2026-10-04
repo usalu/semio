@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Paint Stroke",
+  "description": "One stroke dispatch: the layer, the tool and the samples in the target image's pixels. Without a phase it is the whole stroke; a streamed stroke sends `stream` ticks carrying new samples and a `commit` with the rest under one `gesture`, or an `abort` with its `reason` (no samples). Brush size, opacity, hardness, colour, target and selection are the session's.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "tool",
+    "xs",
+    "ys"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "tool": {
+      "type": "string",
+      "enum": [
+        "brush",
+        "eraser"
+      ]
+    },
+    "xs": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 2048,
+      "items": {
+        "type": "number"
+      }
+    },
+    "ys": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 2048,
+      "items": {
+        "type": "number"
+      }
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "stream",
+        "commit",
+        "abort"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "tool",
+        "blur",
+        "captureLost",
+        "baseMoved",
+        "frozen",
+        "retired"
+      ]
+    },
+    "gesture": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

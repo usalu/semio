@@ -14,7 +14,7 @@ use super::*;
     #[test]
     fn app_pack_and_spr_exclude_window_transient_and_operation_fields() {
         let shared = Puzzle3dConfig::default();
-        let spr = dsl::json::to_json_string(&shared);
+        let spr = semio_framework_pack_json::to_json_string(&shared);
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
         // 🧮️ Four fill/distribution preferences plus `activeExampleId` (wave B26) — see the twin law in
         // `✏️editor/🧪️tests/🔬️unit/🦀️.rs`.

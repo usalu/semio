@@ -38,6 +38,8 @@ pub mod insert_triangle;
 pub mod remove_triangle;
 /// 📐️ Typed content mutation for `stdio.stl`.
 //#region 🔖️Leaves
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
 #[path = "🏷️set-solid-name/🦀️.rs"]
@@ -55,6 +57,7 @@ pub mod set_triangle_vertices;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StlMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetSolidName(set_solid_name::SetSolidName),
     InsertTriangle(insert_triangle::InsertTriangle),
     RemoveTriangle(remove_triangle::RemoveTriangle),
@@ -67,7 +70,7 @@ pub enum StlMutation {
 /// 🧾️ Kebab-case spelling of every `StlMutation` variant, in declaration order — the vocabulary
 /// `../../🔮️oracles/🔣️.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
-pub const KINDS: &[&str] = &["set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Apply
@@ -94,6 +97,7 @@ pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) ->
 pub(crate) fn agg_diff(this: &StlMutation, base: &StlSnapshot) -> protocol::MutationOutcome<StlDiff> {
     protocol::MutationOutcome::new(match this {
         StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
+        StlMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<StlSnapshot, StlMutation>>::diff(patch, base),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => diff::diff_set_solid_name(name),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => diff::diff_insert_triangle(*index, *triangle),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => diff::diff_remove_triangle(*index),
@@ -107,9 +111,11 @@ pub(crate) fn agg_diff(this: &StlMutation, base: &StlSnapshot) -> protocol::Muta
 /// to the EMPTY inverse (`Vec::new()`) rather than a `NoMutation` stand-in, now that the derive
 /// forbids a unit variant.
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &StlMutation, base: &StlSnapshot) -> Vec<StlMutation> {
+pub(crate) fn agg_inverse(this: &StlMutation, base: &StlSnapshot) -> Result<Vec<StlMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
         StlMutation::SetSnapshot(_) => vec![StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        StlMutation::PatchSnapshot(patch) => <patch_snapshot::PatchSnapshot as protocol::MutationKind<StlSnapshot, StlMutation>>::inverse(patch, base)?,
         StlMutation::SetSolidName(_) => vec![StlMutation::SetSolidName(set_solid_name::SetSolidName { name: base.solid_name.clone() })],
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, .. }) => {
             vec![StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: (*index).min(base.triangles.len()) })]
@@ -127,6 +133,8 @@ pub(crate) fn agg_inverse(this: &StlMutation, base: &StlSnapshot) -> Vec<StlMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -157,6 +165,7 @@ fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
 fn print_stl_op(m: &StlMutation) -> String {
     match m {
         StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => format!("set-solid-name name={}", diff::hex_encode_str(name)),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => format!("insert-triangle index={index} triangle={}", diff::enc_triangle(triangle)),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => format!("remove-triangle index={index}"),
@@ -174,6 +183,7 @@ fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
     };
     match keyword {
         "set-snapshot" => Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?)? })),
+        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-solid-name" => Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name: diff::hex_decode_str(get("name")?)? })),
         "insert-triangle" => Ok(StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: diff::parse_usize(get("index")?)?, triangle: diff::dec_triangle(get("triangle")?)? })),
         "remove-triangle" => Ok(StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: diff::parse_usize(get("index")?)? })),
@@ -187,8 +197,8 @@ impl OpText for StlMutation {
     fn print_op(&self) -> String {
         print_stl_op(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_stl_op(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_stl_op(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -221,6 +231,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, S
 /// 🏷️ Op tags of `StlMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
 const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_SOLID_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-solid-name");
 const TAG_INSERT_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-triangle");
 const TAG_REMOVE_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-triangle");
@@ -247,6 +258,10 @@ impl OpBinary for StlMutation {
             StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
                 enc_snapshot_bin(snapshot, &mut out);
                 TAG_SET_SNAPSHOT
+            }
+            StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => {
+                out.extend(patch.encode_op()?);
+                TAG_PATCH_SNAPSHOT
             }
             StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => {
                 diff::write_str_bin(&mut out, name);
@@ -284,6 +299,7 @@ impl OpBinary for StlMutation {
                 let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
             }
+            TAG_PATCH_SNAPSHOT => semio_s_artifact_stdio_contract::editing::SnapshotPatch::decode_op(&bytes[reader.position()..]).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
             TAG_SET_SOLID_NAME => {
                 let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name }))
@@ -327,6 +343,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
     let base = StlSnapshot { schema: crate::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StlSnapshot { solid_name: "renamed".into(), ..base } }),
+        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/solidName".into(), value: semio_framework_value::DslValue::String("patched".into()) } }),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() }),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: StlTriangle { normal: [1.0, 0.0, 0.0], vertices: [[99.0, 0.0, 0.0], [100.0, 0.0, 0.0], [99.0, 1.0, 0.0]] } }),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 }),

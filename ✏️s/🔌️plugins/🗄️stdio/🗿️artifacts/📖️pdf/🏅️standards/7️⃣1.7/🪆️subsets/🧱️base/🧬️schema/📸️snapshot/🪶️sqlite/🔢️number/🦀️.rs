@@ -1,4 +1,5 @@
 //! 🔢️ Authored native binary64 scalar fields for each PDF semantic entity.
+use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
 use sqlite_snapshot::artifact::{FloatColumn,FloatRow,insert_ieee754,insert_key_ieee754};
 pub(super) type Row<'a>=FloatRow<'a>;
@@ -48,37 +49,42 @@ pub(super) fn columns(table:&str)->&'static[FloatColumn]{
 }
 enum Rows<'c,'p>{
     Owned(sqlite_snapshot::artifact::Projection<'c,'p>),
-    Forecast{control:&'c mut Control<'p>,count:usize},
+    Forecast{control:&'c mut Control<'p>,count:usize,bytes:usize},
 }
 pub(super) struct Projection<'c,'p>{rows:Rows<'c,'p>}
 impl<'c,'p> Projection<'c,'p>{
-    pub fn new(sql:&str,control:&'c mut Control<'p>)->Result<Self,String>{Ok(Self{rows:Rows::Owned(sqlite_snapshot::artifact::Projection::new(sql,control)?)})}
-    pub fn forecast(control:&'c mut Control<'p>)->Result<Self,String>{control.checkpoint(Phase::EncodeNative,0,0)?;Ok(Self{rows:Rows::Forecast{control,count:0}})}
-    pub fn insert(&mut self,table:&str,cells:&[C<'_>])->Result<i64,String>{match &mut self.rows{
+    pub fn new(sql:&str,control:&'c mut Control<'p>)->Result<Self,ValueError>{Ok(Self{rows:Rows::Owned(sqlite_snapshot::artifact::Projection::new(sql,control)?)})}
+    pub fn forecast(control:&'c mut Control<'p>)->Result<Self,ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;Ok(Self{rows:Rows::Forecast{control,count:0,bytes:0}})}
+    pub fn insert(&mut self,table:&str,cells:&[C<'_>])->Result<i64,ValueError>{match &mut self.rows{
         Rows::Owned(inner)=>insert_ieee754(inner,table,cells,columns(table)),
-        Rows::Forecast{control,count}=>forecast_row(control,count),
+        Rows::Forecast{control,count,bytes}=>forecast_row(control,count,bytes,table,cells),
     }}
-    pub fn insert_key(&mut self,table:&str,key:i64,cells:&[C<'_>])->Result<(),String>{match &mut self.rows{
+    pub fn insert_key(&mut self,table:&str,key:i64,cells:&[C<'_>])->Result<(),ValueError>{match &mut self.rows{
         Rows::Owned(inner)=>insert_key_ieee754(inner,table,key,cells,columns(table)),
-        Rows::Forecast{control,count}=>forecast_row(control,count).map(|_|()),
+        Rows::Forecast{control,count,bytes}=>forecast_row(control,count,bytes,table,cells).map(|_|()),
     }}
-    pub fn checkpoint(&mut self)->Result<(),String>{match &mut self.rows{
+    pub fn checkpoint(&mut self)->Result<(),ValueError>{match &mut self.rows{
         Rows::Owned(inner)=>inner.checkpoint(),
-        Rows::Forecast{control,count}=>control.checkpoint(Phase::EncodeNative,*count,0),
+        Rows::Forecast{control,count,..}=>control.checkpoint(Phase::EncodeNative,*count,0),
     }}
-    pub fn check_rows(&self,count:usize)->Result<(),String>{match &self.rows{
+    pub fn check_rows(&self,count:usize)->Result<(),ValueError>{match &self.rows{
         Rows::Owned(inner)=>inner.check_rows(count),
         Rows::Forecast{control,..}=>control.check_rows(count),
     }}
-    pub fn finish(self)->Result<Db,String>{match self.rows{Rows::Owned(inner)=>inner.finish(),Rows::Forecast{..}=>Err("PDF row forecast owns no SQLite database".into())}}
-    pub fn finish_forecast(self)->Result<usize,String>{match self.rows{
-        Rows::Forecast{control,count}=>{control.checkpoint(Phase::EncodeNative,count,count)?;Ok(count)},
-        Rows::Owned(_)=>Err("PDF materialization is not a borrowed forecast".into()),
+    pub fn finish(self)->Result<Db,ValueError>{match self.rows{Rows::Owned(inner)=>inner.finish(),Rows::Forecast{..}=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF row forecast owns no SQLite database"))}}
+    pub fn finish_forecast(self)->Result<usize,ValueError>{match self.rows{
+        Rows::Forecast{control,count,..}=>{control.checkpoint(Phase::EncodeNative,count,count)?;Ok(count)},
+        Rows::Owned(_)=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF materialization is not a borrowed forecast")),
     }}
 }
-fn forecast_row(control:&mut Control<'_>,count:&mut usize)->Result<i64,String>{
-    let next=count.checked_add(1).ok_or("PDF entity row count overflow")?;
+fn forecast_row(control:&mut Control<'_>,count:&mut usize,bytes:&mut usize,table:&str,cells:&[C<'_>])->Result<i64,ValueError>{
+    let mut row_bytes=8usize;
+    for cell in cells{let size=match cell{C::Null=>0,C::Integer(_)|C::Real(_)|C::Float32(_)=>8,C::Text(value)=>value.len(),C::Blob(value)=>value.len()};row_bytes=row_bytes.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PDF semantic cell byte count overflow"))?;}
+    for column in columns(table){let index=match column{FloatColumn::Binary64(index)|FloatColumn::Binary32(index)=>*index};let cell=cells.get(index.checked_sub(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF IEEE identity column is invalid"))?).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"PDF IEEE field is missing"))?;let value=match cell{C::Null=>continue,C::Real(value)=>*value,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF IEEE field has an invalid storage class"))};let class=if value.is_nan(){row_bytes-=8;"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"};row_bytes=row_bytes.checked_add(8+class.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PDF IEEE semantic byte count overflow"))?;}
+    let total=bytes.checked_add(row_bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PDF semantic value byte count overflow"))?;
+    control.check_value_bytes(total)?;
+    let next=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"PDF entity row count overflow"))?;
     control.check_rows(next)?;
     if next%256==0{control.checkpoint(Phase::EncodeNative,next,0)?;}
-    *count=next;i64::try_from(next).map_err(|_|"PDF entity identity exceeds i64".into())
+    *bytes=total;*count=next;i64::try_from(next).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"PDF entity identity exceeds i64"))
 }

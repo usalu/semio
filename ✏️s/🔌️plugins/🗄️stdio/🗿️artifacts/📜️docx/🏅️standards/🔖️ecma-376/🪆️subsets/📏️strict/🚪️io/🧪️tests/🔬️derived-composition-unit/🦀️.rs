@@ -21,9 +21,9 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#)).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}" conformance="strict"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
-        )
+        ).expect("bounded test OPC converts to retained ownership")
     }
 
     /// 📦️ The artifact pack serializes the authoritative strict XML part without regeneration.
@@ -52,9 +52,9 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(&format!(r#"<w:document xmlns:w="{STRICT_MAIN_NS}"><w:body/></w:document>"#)).unwrap()).unwrap(),
             }],
-        );
+        ).expect("bounded test OPC converts to retained ownership");
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxStrictComposerComposition::compose(&sources).expect_err("transitional relationship base must not stamp strict");

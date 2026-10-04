@@ -16,6 +16,10 @@
   "properties": {
     "annex": {
       "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
       "x-semio-state": "artifact"
     },
     "materials": {
@@ -224,7 +228,12 @@
             }
           },
           "support": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "simplySupported",
+              "continuous",
+              "cantilever"
+            ]
           }
         }
       },

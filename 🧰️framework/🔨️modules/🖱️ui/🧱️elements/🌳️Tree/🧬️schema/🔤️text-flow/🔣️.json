@@ -3,6 +3,7 @@
   "type": "object",
   "required": [
     "version",
+    "root",
     "flows",
     "labels"
   ],
@@ -10,6 +11,15 @@
   "properties": {
     "version": {
       "const": 1
+    },
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "rowInline"],
+      "properties": {
+        "direction": { "const": "auto" },
+        "rowInline": { "const": "ltr" }
+      }
     },
     "flows": {
       "type": "array",
@@ -54,4 +64,3 @@
     }
   }
 }
-

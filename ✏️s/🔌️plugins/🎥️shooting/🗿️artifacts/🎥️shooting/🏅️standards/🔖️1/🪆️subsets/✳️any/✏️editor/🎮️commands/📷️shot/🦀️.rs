@@ -11,8 +11,8 @@ use crate::mutations::rename_shot::RenameShot;
 use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
 use crate::op::ShootingMutation;
 use crate::ShootingShot;
-use dsl::json;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -42,7 +42,7 @@ fn active_shot_id(snapshot: &crate::ShootingSnapshot) -> Option<String> {
 pub mod set_active_shot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-shot")]
     pub struct SetActiveShot {
         pub shot_id: Option<String>,
@@ -61,7 +61,7 @@ pub mod set_active_shot {
 pub mod set_active_shot_label {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-shot-label")]
     pub struct SetActiveShotLabel {
         pub value: String,
@@ -80,7 +80,7 @@ pub mod set_active_shot_label {
 pub mod set_active_shot_format {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-shot-format")]
     pub struct SetActiveShotFormat {
         pub value: String,
@@ -99,7 +99,7 @@ pub mod set_active_shot_format {
 pub mod set_active_shot_shape {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-shot-shape")]
     pub struct SetActiveShotShape {
         pub value: String,
@@ -118,7 +118,7 @@ pub mod set_active_shot_shape {
 pub mod patch_shots {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "patch-shots")]
     pub struct PatchShots {
         pub shot_ids: Vec<String>,
@@ -146,7 +146,7 @@ pub mod add_shot {
     use super::*;
     use crate::standards::v1::subsets::any::schema::next_shooting_id;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "add-shot")]
     pub struct AddShot {
         pub format: String,

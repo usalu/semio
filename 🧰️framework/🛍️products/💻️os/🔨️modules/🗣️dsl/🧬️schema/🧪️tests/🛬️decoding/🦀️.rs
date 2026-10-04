@@ -1,6 +1,17 @@
-use semio_framework_os_kernel::{native_decoding::*,os_dsl::schema::*,os_dsl::*,PackEncodeOptions,PackDecodeOptions,pack_rt};
+
+use semio_framework_dsl_record::{ExprValue,FieldSpec,FieldValue,NativeSchemaControl,ParseOptions,RecordSpec,RecordSpecProducer,Shape,Wire,parse,parse_exact,parse_exact_controlled,parse_expr_text_controlled,print,print_expr};
+use semio_framework_value::{DslValue};
+use semio_framework_diagnostic::{Limits};
+use semio_framework_dsl::{unit_by_symbol};
+use semio_framework_diagnostic as diagnostic;
+use semio_framework_os_kernel::native_decoding::*;
+use semio_framework_dsl_record::*;
+use semio_framework_os_kernel::os_dsl::*;
+use semio_framework_os_kernel::PackEncodeOptions;
+use semio_framework_os_kernel::PackDecodeOptions;
+use semio_framework_os_kernel::pack_rt;
 fn row_spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"label",Shape::Text),FieldSpec::new(1,"value",Shape::Float)])}
-fn row_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(2)?;let mut fields=control.allocate_vec(2)?;for(id,key,shape)in[(0,"label",Shape::Text),(1,"value",Shape::Float)]{fields.push(producer::field(id,key,shape,control)?);control.step()?;}producer::record(None,RecordLayout::Inline,fields,control)})}
+fn row_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(2)?;let mut fields=control.allocate_vec(2)?;for(id,key,shape)in[(0,"label",Shape::Text),(1,"value",Shape::Float)]{fields.push(producer::field(id,key,shape,control)?);control.step()?;}producer::record(None,RecordLayout::Inline,fields,control)})}
 fn row_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:row_spec,decoding:|control|row_spec_controlled(control),encoding:|control|row_spec_controlled(control)}}
 fn native_spec()->RecordSpec{RecordSpec::new(Some("controlled"),RecordLayout::Lines,vec![
     FieldSpec::new(0,"flag",Shape::Bool),FieldSpec::new(1,"signed",Shape::Int),FieldSpec::new(2,"unsigned",Shape::UInt),FieldSpec::new(3,"float",Shape::Float),FieldSpec::new(4,"text",Shape::Text),FieldSpec::new(5,"octets",Shape::Bytes64),FieldSpec::new(6,"tag",Shape::Enum(vec![("first".into(),0),("second".into(),1)])),FieldSpec::new(7,"count",Shape::Count),FieldSpec::new(8,"coord",Shape::Coord(3)),FieldSpec::new(9,"dir",Shape::Dir),FieldSpec::new(10,"dim",Shape::Dim(3)),FieldSpec::new(11,"range",Shape::Range),FieldSpec::new(12,"labels",Shape::List(Box::new(Shape::Text))),FieldSpec::new(13,"nested",Shape::Record(row_producer())),FieldSpec::new(14,"entries",Shape::Map(Box::new(Shape::Int))),FieldSpec::new(15,"dynamic",Shape::Value),FieldSpec::new(16,"formula",Shape::Expr),FieldSpec::new(17,"rows",Shape::Table(row_producer())),FieldSpec::new(18,"stress",Shape::Quantity(unit_by_symbol("GPa").unwrap())),FieldSpec::new(19,"embedded",Shape::Embed("text".into()))])}
@@ -44,7 +55,7 @@ fn sqlite_snapshot_native_pack_controls_expression_materialization(){
 }
 
 fn optional_list_row_spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(1,"min",Shape::Float).optional(),FieldSpec::new(2,"max",Shape::Float).optional(),FieldSpec::new(3,"label",Shape::Text).optional(),FieldSpec::new(4,"children",Shape::List(Box::new(Shape::Record(optional_list_row_producer())))).optional()])}
-fn optional_list_row_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;let children=Shape::List(producer::boxed(Shape::Record(optional_list_row_producer()),control)?);for(id,key,shape)in[(1,"min",Shape::Float),(2,"max",Shape::Float),(3,"label",Shape::Text),(4,"children",children)]{fields.push(producer::field(id,key,shape,control)?.optional());control.step()?;}producer::record(None,RecordLayout::Inline,fields,control)})}
+fn optional_list_row_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;let children=Shape::List(producer::boxed(Shape::Record(optional_list_row_producer()),control)?);for(id,key,shape)in[(1,"min",Shape::Float),(2,"max",Shape::Float),(3,"label",Shape::Text),(4,"children",children)]{fields.push(producer::field(id,key,shape,control)?.optional());control.step()?;}producer::record(None,RecordLayout::Inline,fields,control)})}
 fn optional_list_row_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:optional_list_row_spec,decoding:|control|optional_list_row_spec_controlled(control),encoding:|control|optional_list_row_spec_controlled(control)}}
 fn optional_list_rows_json(rows:&[FieldValue])->serde_json::Value{serde_json::Value::Array(rows.iter().map(|value|{let FieldValue::Record(row)=value else{panic!("record")};let mut out=serde_json::Map::new();for(id,key)in[(1,"min"),(2,"max"),(3,"label"),(4,"children")]{match row.get(id){Some(FieldValue::Float(value))=>{out.insert(key.into(),serde_json::json!(value));},Some(FieldValue::Text(value))=>{out.insert(key.into(),value.clone().into());},Some(FieldValue::List(value))=>{out.insert(key.into(),optional_list_rows_json(value));},Some(FieldValue::Absent)|None=>{},other=>panic!("unexpected {other:?}")}}out.into()}).collect())}
 #[test]

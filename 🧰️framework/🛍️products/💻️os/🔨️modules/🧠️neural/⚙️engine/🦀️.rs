@@ -23,7 +23,7 @@ pub use cold::{ColdOwner, ColdRetire};
 
 #[path = "📔️registry/🦀️.rs"]
 pub mod registry;
-pub use registry::{RegistryRetirement, SharedRegistry};
+pub use registry::{RegistryIdentity, RegistryRetirement, SharedRegistry};
 
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection. `serde` is TEST-ONLY
@@ -62,6 +62,9 @@ impl Dictionary {
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.pairs.get(key)
     }
+
+    /// 📍️ Borrows an original ranked entry from the existing ordered dictionary owner.
+    pub fn entry_at_rank(&self,index:usize)->Option<(&String,&Value)> {self.pairs.entry_at_rank(index)}
 
     pub fn schema(&self) -> Option<&str> {
         self.get(SCHEMA_KEY).and_then(|v| v.as_atom()).and_then(|a| a.as_str())
@@ -146,42 +149,62 @@ impl ToValue for Dictionary {
     }
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
-            control.begin_stage(self.len()).map_err(ValueError::new)?;
-            let mut entries = Vec::<(String, DslValue)>::guard_decoded(control.allocate_vec(self.len()).map_err(ValueError::new)?);
+            control.begin_stage(self.len())?;
+            let mut entries = Vec::<(String, DslValue)>::guard_decoded(control.allocate_vec(self.len())?);
             for (key, value) in self.iter() {
-                entries.get_mut().push((control.copy_text(key).map_err(ValueError::new)?, value.to_value_controlled(control)?));
-                control.step().map_err(ValueError::new)?;
+                entries.get_mut().push((control.copy_text(key)?, value.to_value_controlled(control)?));
+                control.step()?;
             }
             Ok(DslValue::Object(entries.take()))
         }))
     }
 }
 
+impl semio_framework_pack_json::JsonWriteSource for Dictionary {
+    fn node_at_path(&self,path:&[usize])->Result<semio_framework_pack_json::JsonWriteNode<'_>,ValueError> {
+        use semio_framework_pack_json::JsonWriteNode;
+        let mut dictionary=self;
+        for (depth,index) in path.iter().enumerate() {
+            let (_,value)=dictionary.entry_at_rank(*index).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"JSON dictionary path is absent"))?;
+            if depth+1==path.len() {return Ok(match value {Value::Dictionary(value)=>JsonWriteNode::Object(value.len()),Value::Atom(Atom::Null)=>JsonWriteNode::Null,Value::Atom(Atom::Boolean(value))=>JsonWriteNode::Bool(*value),Value::Atom(Atom::Integer(value))=>JsonWriteNode::Number(Number::Int(*value)),Value::Atom(Atom::Decimal(value))=>JsonWriteNode::Number(Number::Float(*value)),Value::Atom(Atom::String(value))=>JsonWriteNode::String(value)});}
+            dictionary=value.as_dictionary().ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"JSON dictionary path crosses a scalar"))?;
+        }
+        Ok(JsonWriteNode::Object(dictionary.len()))
+    }
+    fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError> {
+        let mut dictionary=self;
+        for position in path {dictionary=dictionary.entry_at_rank(*position).and_then(|(_,value)|value.as_dictionary()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"JSON dictionary member path is absent"))?;}
+        dictionary.entry_at_rank(index).map(|(key,_)|key.as_str()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"JSON dictionary member is absent"))
+    }
+}
+
 impl FromValue for Dictionary {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(entries) = value else { return Err(ValueError::new("expected an object for Dictionary")) };
-        let mut builder = ColdDictionaryBuilder::new();
-        for (key, entry) in entries {
-            builder.insert(key, Value::from_value(entry)?);
+        let mut input=retirement::RetainedDictionaryInput::new(value);
+        loop {
+            match input.step(4096,4096) {
+                Ok(Some(dictionary))=>return Ok(dictionary),
+                Ok(None)=>{},
+                Err(error)=>{input.cancel();while !input.terminal_is_empty() {input.close_step(1,4096);}return Err(error);},
+            }
         }
-        Ok(builder.finish())
     }
     fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let DslValue::Object(entries) = value else { return Err(ValueError::new("expected an object for Dictionary")); };
+        let DslValue::Object(entries) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Dictionary")); };
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
-            control.begin_stage(entries.len()).map_err(ValueError::new)?;
+            control.begin_stage(entries.len())?;
             let mut builder = ColdDictionaryBuilder::new();
             for (key, value) in entries {
-                let key = control.copy_text(key).map_err(ValueError::new)?;
+                let key = control.copy_text(key)?;
                 let value = Value::from_value_controlled(value, control)?;
-                builder.insert_controlled(key, value, control).map_err(ValueError::new)?;
-                control.step().map_err(ValueError::new)?;
+                builder.insert_controlled(key, value, control)?;
+                control.step()?;
             }
             Ok(builder.finish())
         }))
     }
     fn default_value_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        control.scoped_stage(|control| { control.begin_stage(1).map_err(ValueError::new)?; control.step().map_err(ValueError::new)?; Ok(Self::new()) })
+        control.scoped_stage(|control| { control.begin_stage(1)?; control.step()?; Ok(Self::new()) })
     }
     fn retire_decoded(self) { self.retire_cold(); }
 }
@@ -335,11 +358,11 @@ impl FromValue for Atom {
             DslValue::Null => Ok(Atom::Null),
             DslValue::Bool(b) => Ok(Atom::Boolean(b)),
             DslValue::Number(Number::Int(value)) => Ok(Atom::Integer(value)),
-            DslValue::Number(Number::UInt(value)) => Ok(Atom::Integer(value as i64)),
+            DslValue::Number(Number::UInt(value)) => i64::try_from(value).map(Atom::Integer).map_err(|_| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unsigned atom exceeds the signed integer range")),
             DslValue::Number(Number::Float(value)) => Ok(Atom::Decimal(value)),
             DslValue::String(s) => Ok(Atom::String(s)),
-            DslValue::Bytes(_) => Err(ValueError::new("expected an atom, found bytes")),
-            DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new("expected an atom, found an array or object")),
+            DslValue::Bytes(_) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an atom, found bytes")),
+            DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an atom, found an array or object")),
         }
     }
     fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
@@ -349,7 +372,7 @@ impl FromValue for Atom {
             DslValue::Number(Number::Int(_) | Number::UInt(_)) => i64::from_value_controlled(value, control).map(Self::Integer),
             DslValue::Number(Number::Float(_)) => f64::from_value_controlled(value, control).map(Self::Decimal),
             DslValue::String(_) => String::from_value_controlled(value, control).map(Self::String),
-            _ => Err(ValueError::new("expected an atom")),
+            _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an atom")),
         }
     }
 }
@@ -407,10 +430,10 @@ impl ToValue for FieldSpec {
 
 impl FromValue for FieldSpec {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for FieldSpec")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for FieldSpec")) };
         Ok(Self {
-            key: value.get("key").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("key"))?,
-            value: value.get("value").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new("value"))?,
+            key: value.get("key").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "key"))?,
+            value: value.get("value").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "value"))?,
             default: value.get("default").cloned().map(Option::<Value>::from_value).transpose()?.unwrap_or_default(),
             label: value.get("label").cloned().map(Option::<String>::from_value).transpose()?.unwrap_or_default(),
         })
@@ -445,13 +468,13 @@ impl ToValue for Schema {
 
 impl FromValue for Schema {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Schema")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Schema")) };
         Ok(Self {
-            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
-            module: value.get("module").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("module"))?,
-            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
-            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("icon"))?,
-            summary: value.get("summary").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("summary"))?,
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "id"))?,
+            module: value.get("module").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "module"))?,
+            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "name"))?,
+            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "icon"))?,
+            summary: value.get("summary").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "summary"))?,
             fields: value.get("fields").cloned().map(Vec::<FieldSpec>::from_value).transpose()?.unwrap_or_default(),
         })
     }
@@ -475,11 +498,11 @@ impl ToValue for SchemaRef {
 
 impl FromValue for SchemaRef {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for SchemaRef")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for SchemaRef")) };
         Ok(Self {
-            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
-            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
-            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("icon"))?,
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "id"))?,
+            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "name"))?,
+            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "icon"))?,
         })
     }
 }
@@ -621,6 +644,11 @@ fn field_channel_operators(value: &ValueType) -> Vec<String> {
     }
 }
 
+/// 📃️ Declares element schemas for schema-derived homogeneous list channels.
+fn field_channel_item_types(value: &ValueType) -> Vec<String> {
+    match value { ValueType::List(inner) => field_channel_value_types(inner), _ => Vec::new() }
+}
+
 /// 🔢️ The port type every numeric channel carries — one `Dictionary::with_schema("number")`.
 pub const VALUE_TYPE_NUMBER: &str = "number";
 
@@ -661,13 +689,13 @@ pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
     let mut inputs = vec![ChannelSpec::requires(&schema.id, &[schema.id.as_str()]).with_value_types(&[schema.id.as_str()]).with_cardinality(Cardinality::ZeroOrOne)];
     for field in &schema.fields {
         let operators = field_channel_operators(&field.value);
-        inputs.push(ChannelSpec::requires(&field.key, &operators).with_value_types(&field_channel_value_types(&field.value)).with_cardinality(schema_field_input_cardinality(&field.value)));
+        inputs.push(ChannelSpec::requires(&field.key, &operators).with_value_types(&field_channel_value_types(&field.value)).with_item_types(&field_channel_item_types(&field.value)).with_cardinality(schema_field_input_cardinality(&field.value)));
     }
     let (instance_code, instance_abbreviation, instance_full_name) = derive_channel_names(&schema.id);
     let mut outputs = vec![ChannelSpec::named(instance_code, instance_abbreviation, produced_channel_id(&schema.id), instance_full_name).with_operators(vec![schema.id.clone()]).with_value_types(&[schema.id.as_str()])];
     for field in &schema.fields {
         let (code, abbreviation, full_name) = derive_channel_names(&field.key);
-        outputs.push(ChannelSpec::named(code, abbreviation, produced_channel_id(&field.key), full_name).with_operators(field_channel_operators(&field.value)).with_value_types(&field_channel_value_types(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
+        outputs.push(ChannelSpec::named(code, abbreviation, produced_channel_id(&field.key), full_name).with_operators(field_channel_operators(&field.value)).with_value_types(&field_channel_value_types(&field.value)).with_item_types(&field_channel_item_types(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
     }
     outputs.push(ChannelSpec::list_output("errors", vec![]));
     OperatorInfo {
@@ -932,7 +960,11 @@ pub struct Synapse {
     pub to_port: String,
 }
 
+#[path = "🚦️native/🦀️.rs"]
+mod native_controlled;
+
 impl ToValue for Synapse {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { native_controlled::encode_synapse(self, control) }
     fn to_value(&self) -> DslValue {
         DslValue::Object(vec![
             ("id".into(), self.id.to_value()),
@@ -945,12 +977,13 @@ impl ToValue for Synapse {
 }
 
 impl FromValue for Synapse {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_synapse(value, control) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Synapse")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Synapse")) };
         Ok(Self {
-            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
-            from: value.get("from").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("from"))?,
-            to: value.get("to").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("to"))?,
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "id"))?,
+            from: value.get("from").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "from"))?,
+            to: value.get("to").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "to"))?,
             from_port: value.get("fromPort").cloned().map(String::from_value).transpose()?.unwrap_or_else(default_from_port),
             to_port: value.get("toPort").cloned().map(String::from_value).transpose()?.unwrap_or_else(default_to_port),
         })
@@ -958,6 +991,7 @@ impl FromValue for Synapse {
 }
 
 impl ToValue for Neuron {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { native_controlled::encode_neuron(self, control) }
     fn to_value(&self) -> DslValue {
         DslValue::Object(vec![
             ("id".into(), self.id.to_value()),
@@ -969,30 +1003,39 @@ impl ToValue for Neuron {
 }
 
 impl FromValue for Neuron {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_neuron(value, control) }
+    fn retire_decoded(self) { native_controlled::retire_neuron(self) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Neuron")) };
-        Ok(Self {
-            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
-            kind: value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("kind"))?,
-            params: value.get("params").cloned().map(Dictionary::from_value).transpose()?.unwrap_or_default(),
-            tree: value.get("tree").cloned().map(Option::<Box<Tree>>::from_value).transpose()?.unwrap_or_default(),
-        })
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Neuron")) };
+        let id = value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "id"))?;
+        let kind = value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "kind"))?;
+        let params = ColdOwner::new(value.get("params").cloned().map(Dictionary::from_value).transpose()?.unwrap_or_default());
+        let tree = value.get("tree").cloned().map(Option::<Box<Tree>>::from_value).transpose()?.unwrap_or_default();
+        Ok(Self { id, kind, params: params.into_inner(), tree })
     }
 }
 
 impl ToValue for Tree {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { native_controlled::encode_tree(self, control) }
     fn to_value(&self) -> DslValue {
         DslValue::Object(vec![("neurons".into(), self.neurons.to_value()), ("synapses".into(), self.synapses.to_value())])
     }
 }
 
 impl FromValue for Tree {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_tree(value, control) }
+    fn retire_decoded(self) { native_controlled::retire_tree(self) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for Tree")) };
-        Ok(Self {
-            neurons: value.get("neurons").cloned().map(Vec::<Neuron>::from_value).transpose()?.unwrap_or_default(),
-            synapses: value.get("synapses").cloned().map(Vec::<Synapse>::from_value).transpose()?.unwrap_or_default(),
-        })
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Tree")) };
+        let mut neurons = ColdOwner::new(Vec::new());
+        if let Some(entries) = value.get("neurons") {
+            let DslValue::Array(entries) = entries else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an array for neurons")); };
+            for (index, entry) in entries.iter().enumerate() {
+                neurons.push(Neuron::from_value(entry.clone()).map_err(|error| error.under(index))?);
+            }
+        }
+        let synapses = value.get("synapses").cloned().map(Vec::<Synapse>::from_value).transpose()?.unwrap_or_default();
+        Ok(Self { neurons: neurons.into_inner(), synapses })
     }
 }
 // #endregion 🔖️Tree
@@ -1084,6 +1127,11 @@ pub trait OperatorJob: Send {
     /// 🛑️ Retires the job at the next observable boundary. A job that already produced its output
     /// is never retired: supersession may only stop work still in flight.
     fn cancel(&mut self);
+    /// 🧹️ Advances acknowledged cancellation with explicit structural and payload-byte grants.
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<OperatorJobStep,EvalError> {
+        if maximum_bytes==0 {return Ok(OperatorJobStep::Working(self.progress()));}
+        self.step(maximum_items)
+    }
 }
 
 /// 🧮️ Computational unit: one dictionary to another.
@@ -1227,8 +1275,8 @@ impl ToValue for Cardinality {
 
 impl FromValue for Cardinality {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::String(raw) = value else { return Err(ValueError::new("expected a string for Cardinality")) };
-        Self::from_symbol(&raw).map_err(|error| ValueError::new(error.to_string()))
+        let DslValue::String(raw) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string for Cardinality")) };
+        Self::from_symbol(&raw).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 // #endregion 🔖️Cardinality
@@ -1252,10 +1300,10 @@ impl ToValue for VariadicSpec {
 
 impl FromValue for VariadicSpec {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for VariadicSpec")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for VariadicSpec")) };
         Ok(Self {
-            slot_key: value.get("slotKey").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("slotKey"))?,
-            min: value.get("min").cloned().map(usize::from_value).transpose()?.ok_or_else(|| ValueError::new("min"))?,
+            slot_key: value.get("slotKey").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "slotKey"))?,
+            min: value.get("min").cloned().map(usize::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "min"))?,
             max: value.get("max").cloned().map(Option::<usize>::from_value).transpose()?.unwrap_or_default(),
         })
     }
@@ -1275,6 +1323,8 @@ pub struct ChannelSpec {
     pub operators: Vec<String>,
     #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub value_types: Vec<String>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    pub item_types: Vec<String>,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub default: Option<Value>,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
@@ -1285,7 +1335,7 @@ pub struct ChannelSpec {
 
 impl ToValue for ChannelSpec {
     fn to_value(&self) -> DslValue {
-        DslValue::Object(vec![
+        let mut fields = vec![
             ("code".into(), self.code.to_value()),
             ("abbreviation".into(), self.abbreviation.to_value()),
             ("name".into(), self.name.to_value()),
@@ -1295,20 +1345,23 @@ impl ToValue for ChannelSpec {
             ("default".into(), self.default.to_value()),
             ("label".into(), self.label.to_value()),
             ("cardinality".into(), self.cardinality.to_value()),
-        ])
+        ];
+        if !self.item_types.is_empty() { fields.push(("itemTypes".into(), self.item_types.to_value())); }
+        DslValue::Object(fields)
     }
 }
 
 impl FromValue for ChannelSpec {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for ChannelSpec")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for ChannelSpec")) };
         Ok(Self {
-            code: value.get("code").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("code"))?,
-            abbreviation: value.get("abbreviation").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("abbreviation"))?,
-            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
-            full_name: value.get("fullName").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("fullName"))?,
+            code: value.get("code").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "code"))?,
+            abbreviation: value.get("abbreviation").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "abbreviation"))?,
+            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "name"))?,
+            full_name: value.get("fullName").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "fullName"))?,
             operators: value.get("operators").cloned().map(Vec::<String>::from_value).transpose()?.unwrap_or_default(),
             value_types: value.get("valueTypes").cloned().map(Vec::<String>::from_value).transpose()?.unwrap_or_default(),
+            item_types: value.get("itemTypes").cloned().map(Vec::<String>::from_value).transpose()?.unwrap_or_default(),
             default: value.get("default").cloned().map(Option::<Value>::from_value).transpose()?.unwrap_or_default(),
             label: value.get("label").cloned().map(Option::<String>::from_value).transpose()?.unwrap_or_default(),
             cardinality: value.get("cardinality").cloned().map(Cardinality::from_value).transpose()?.unwrap_or_default(),
@@ -1341,19 +1394,19 @@ fn derive_channel_names(name: &str) -> (String, String, String) {
 
 impl ChannelSpec {
     pub fn named(code: impl Into<String>, abbreviation: impl Into<String>, name: impl Into<String>, full_name: impl Into<String>) -> Self {
-        Self { code: code.into(), abbreviation: abbreviation.into(), name: name.into(), full_name: full_name.into(), operators: Vec::new(), value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code: code.into(), abbreviation: abbreviation.into(), name: name.into(), full_name: full_name.into(), operators: Vec::new(), value_types: Vec::new(), item_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn requires(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
         let name = name.into();
         let (code, abbreviation, full_name) = derive_channel_names(&name);
-        Self { code, abbreviation, name, full_name, operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(), value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code, abbreviation, name, full_name, operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(), value_types: Vec::new(), item_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn provides(name: impl Into<String>, operators: Vec<String>) -> Self {
         let name = name.into();
         let (code, abbreviation, full_name) = derive_channel_names(&name);
-        Self { code, abbreviation, name, full_name, operators, value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code, abbreviation, name, full_name, operators, value_types: Vec::new(), item_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn with_operators(mut self, operators: Vec<String>) -> Self {
@@ -1375,6 +1428,12 @@ impl ChannelSpec {
 
     pub fn with_default(mut self, default: Value) -> Self {
         self.default.replace(default).retire_cold();
+        self
+    }
+
+    /// 📃️ Declares homogeneous collection element schemas independently of the list's wire schema.
+    pub fn with_item_types(mut self, item_types: &[impl AsRef<str>]) -> Self {
+        self.item_types = item_types.iter().map(|entry| entry.as_ref().to_string()).collect();
         self
     }
 
@@ -1476,14 +1535,14 @@ impl ToValue for OperatorInfo {
 
 impl FromValue for OperatorInfo {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Object(_) = &value else { return Err(ValueError::new("expected an object for OperatorInfo")) };
+        let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for OperatorInfo")) };
         Ok(Self {
-            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("id"))?,
-            extension: value.get("extension").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("extension"))?,
-            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
-            abbreviation: value.get("abbreviation").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("abbreviation"))?,
-            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("icon"))?,
-            summary: value.get("summary").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("summary"))?,
+            id: value.get("id").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "id"))?,
+            extension: value.get("extension").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "extension"))?,
+            name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "name"))?,
+            abbreviation: value.get("abbreviation").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "abbreviation"))?,
+            icon: value.get("icon").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "icon"))?,
+            summary: value.get("summary").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "summary"))?,
             inputs: value.get("inputs").cloned().map(Vec::<ChannelSpec>::from_value).transpose()?.unwrap_or_default(),
             outputs: value.get("outputs").cloned().map(Vec::<ChannelSpec>::from_value).transpose()?.unwrap_or_default(),
             variadic_input: value.get("variadicInput").cloned().map(Option::<VariadicSpec>::from_value).transpose()?.unwrap_or_default(),
@@ -2258,7 +2317,7 @@ impl<'a> Evaluator<'a> {
         dirty: &HashSet<String>,
         previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
-        self.evaluate_channels_budgeted(tree, seeds, operator_infos, dispatch, cache, dirty, previous, EvalStepBudget::UNBOUNDED).map(|budgeted| budgeted.channels)
+        self.evaluate_channels_budgeted(tree, seeds, operator_infos, dispatch, cache, dirty, previous, EvalStepBudget::UNBOUNDED,&|_|true).map(|budgeted| budgeted.channels)
     }
 
     /// ⏳️ Sequential topo walk that stops after computing `budget.dispatches` cache-missed (i.e.
@@ -2285,6 +2344,7 @@ impl<'a> Evaluator<'a> {
         dirty: &HashSet<String>,
         previous: Option<&EvalChannels>,
         budget: EvalStepBudget,
+        source_required: &dyn Fn(u64)->bool,
     ) -> Result<BudgetedEval, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
@@ -2334,7 +2394,8 @@ impl<'a> Evaluator<'a> {
                 spent += 1;
                 continue;
             }
-            let merged = ColdOwner::new(input.merge(&neuron.params));
+            let literal = ColdOwner::new(unwired_params(tree, neuron));
+            let merged = ColdOwner::new(input.merge(&literal));
             let key = node_hash(&neuron.kind, &merged);
             let is_miss = !cache.contains(key);
             if is_miss && budget.exhausted(spent) {
@@ -2350,7 +2411,7 @@ impl<'a> Evaluator<'a> {
                         // from its plugin, but every LATER neuron that does not depend on it can
                         // still be walked in this same call, so its own request rides the same round
                         // trip instead of costing a whole further hop.
-                        pending_extensions.push(PendingExtensionEval { neuron_id: neuron_id.clone(), extension_id, operator_id, node_hash, input_json: pack::json::to_json_string(&*merged) });
+                        pending_extensions.push(PendingExtensionEval { neuron_id: neuron_id.clone(), extension_id, operator_id, node_hash, input_json: if source_required(node_hash) {semio_framework_pack_json::to_json_string(&*merged)}else{String::new()} });
                         parked.insert(neuron_id.clone());
                         spent += 1;
                         continue;
@@ -2435,7 +2496,8 @@ impl<'a> Evaluator<'a> {
                     level_outputs.insert(neuron_id.clone(), input.merge(&neuron.params)).retire_cold();
                     continue;
                 }
-                compute_jobs.push((neuron_id.clone(), neuron.kind.clone(), input.merge(&neuron.params)));
+                let literal = ColdOwner::new(unwired_params(tree, neuron));
+                compute_jobs.push((neuron_id.clone(), neuron.kind.clone(), input.merge(&literal)));
             }
 
             for (neuron_id, kind, merged) in compute_jobs.into_inner() {
@@ -2598,6 +2660,13 @@ fn insert_variadic_slot(acc: Dictionary, slot_key: &str, port_id: &str, value: V
 
 fn insert_fixed_port(acc: Dictionary, port_key: &str, value: Value) -> Dictionary {
     acc.insert(port_key.to_string(), value)
+}
+
+/// 🔌️ A neuron's recorded literals without the ones its wires shadow (design §20.10): a wire into port `P` shadows the
+/// literal recorded for `P`, so a compute neuron evaluates wire > recorded literal > declared default. A dictionary wire
+/// (empty `to_port`) shadows nothing.
+fn unwired_params(tree: &Tree, neuron: &Neuron) -> Dictionary {
+    neuron.params.iter().filter(|(key, _)| !tree.synapses.iter().any(|synapse| synapse.to == neuron.id && !synapse.to_port.is_empty() && synapse.to_port == **key)).fold(Dictionary::new(), |literal, (key, value)| literal.insert(key.clone(), value.clone()))
 }
 
 /// 💉️ Fills missing declared input keys from operator channel defaults.
@@ -2817,4 +2886,8 @@ fn topo_levels(tree: &Tree) -> Result<Vec<Vec<String>>, EvalError> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🚦️owned-controls/🦀️.rs"]
+mod owned_value_controls;
 // #endregion 🔖️Tests

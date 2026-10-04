@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceCollaborationRecord, base: &ProgramSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", "No collaboration record exists with this id.", [payload.collaboration_record.header.id.0.clone()]);
     };
     if existing == &payload.collaboration_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This collaboration record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This collaboration record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.collaboration_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff {

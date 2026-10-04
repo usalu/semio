@@ -917,3 +917,429 @@ Agreed with S3-W2A (one paging mechanism = tree windows, no new verb, no view st
   - Updated: `input_pointers_and_host_values_take_the_declared_shape` (list + item rows), the chips law (chip rows, window
     total ≥ 11, remove by index), the session-leads law (inputs are a window over every row).
   - The puzzle 2d `useSelection` corpus step finds the reference row (`….row`).
+
+### S3.5 Resume after the usage cut + reboot (18:40) and N1 tree-disclosure parity — WRITTEN
+
+Repair check: every S3.1–S3.4 edit is on disk (no half edit). The 12:5x checks died with the reboot.
+
+wgpu UI tree disclosure (found by S3-W2C):
+- `UiTree::disclosure_open` and `disclosure_is_interactive` (`UI/🎯️targets/🧊️wgpu/🌳️tree`) treated a tree item as a disclosure only
+  with materialised `items`. A closed history row (N1: `window.total` = op count, no children) therefore had no `aria-expanded`,
+  and the retained toggle refused it.
+- Both now read the new `UiTreeItemNode::has_rows()` (`🧩️component`): materialised items, or `window.total > 0`. That is the
+  predicate `📌️mounted_layout` already used; its private `tree_item_has_rows` is deleted in favour of the method.
+- New law `a_tree_item_with_unstreamed_window_rows_is_a_closed_disclosure` (`🧪️tests/♿️retained-section-accessibility`, sharing
+  a new `mounted(records)` helper). A windowed item without children is collapsed, toggles open and announces expanded; a leaf is
+  no disclosure and the toggle refuses it.
+
+### S3.6 N2 disabled list edits name their bound (coordinator item 3) — WRITTEN
+
+- `TimeTravelList.max` and `TimeTravelListItem.min` carry `maxItems`/`minItems`.
+- `time_travel_item_limit_text` gives the reason ("Maximum 8 items" / "Höchstens 8 Einträge", "Minimum 1 item" / "Mindestens 1
+  Eintrag", singular at 1). The new copy is `HistoryPanelText::{MaxItems, MaxItem, MinItems, MinItem}`.
+- Where the reason shows:
+  - The list row reads "Items: n · Maximum n items" while Add is disabled.
+  - A disabled Remove item (its own row or an object item's header) carries the reason as its row description.
+  - A reference-list chip at `minItems` does the same.
+- The list law pins the texts in both locales.
+
+### S3.7 Verification after the reboot (gated, foreground)
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework --lib` | ✔ (lib test red from peers: `🕹️interaction/🧬️schema/🧪️tests/🔬️unit/🦀️.rs:7` `semio_framework_schema::SchemaFormat` moved) |
+| `cargo check -p semio-framework-plugin --lib` (N2 + facets + Panel) | ✔ 18:50, no warning in `⏪️time-travel` |
+| `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` | ✔ |
+| `cargo check -p semio-framework-plugin --lib --tests` | ✘ 58 errors, 0 in my files: peer `LocalizedLabel` crate-root re-export removed + `semio_framework_schema::artifact_schema_descriptor_registered` moved |
+| `cargo check -p semio-framework-ui --features testkit --tests` | ✔ |
+| `cargo check -p semio-framework-ui --target wasm32-unknown-unknown` (default and `--features wgpu-engine`) | ✔ / ✔ |
+| `cargo test -p semio-framework-ui --features testkit --lib` (18:55) | 767 ✔ / 1 ✘ (my new disclosure law built its items as bare tree items, which the reconcile wraps as their own sections; fixed to a section parent) → `-- retained_section_collapse_tests conformance_corpus` 16 ✔, incl. the disclosure law and the a11y corpus law (the yield fix holds) |
+| puzzle 2d `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --lib -- select_tool_history` | BLOCKED 19:0x: os-kernel red from a peer DSL crate split (`🗣️dsl/👪️family/🗂️catalog/🦀️.rs:11` `semio_framework_dsl` unresolved) |
+
+### S3.8 Tree row semantics on both renderers (coordinator decisions 1 + 2) — React verified, wgpu written
+
+**Contract:**
+- `RowAction.reason: Option<Label>`, plus `RowAction::disabled_because(reason)`. A disabled action stays focusable
+  (`aria-disabled`) and every renderer names the reason as its description.
+- The typed catalog gains field `5 => reason`.
+- The TS projection is regenerated (`SEMIO_TYPEGEN_OUT`; schema metadata RowAction v4, `reason?: Label | null`).
+- The retained typed-wire TS decoder reads `reason`.
+- Literal sites get `reason: None`: the runtime reconcile-unit test, the plugin `row_action` builder and its patches unit test,
+  and the wgpu shell's row-action packing (S3-W2C's file; it has no reason to carry yet).
+
+**React:**
+- (1) `🌳️Tree`: a property row (one holding a control) now shows its `description` beside the label
+  (`data-slot="tree-description"`). `useTreeRowDescribedControls` names it in the `aria-describedby` of every focusable inside the
+  value slot and keeps it there across the control's own re-renders (MutationObserver). Before, the editor's refused reasons,
+  units, "Cleared" and item counts were invisible in React.
+- (2) `TreeRowActionButton`: a disabled tree row/header action is `aria-disabled` (not `disabled`), stays focusable, refuses
+  activation, and names `reason` through `aria-describedby` (sr-only text).
+- `TableRowActionButton` in the Interpreter does the same for table row actions. The Interpreter passes `RowAction.reason` to the
+  Tree.
+- This is product-wide, as decided. The laws that pinned native `disabled` now pin focusable `aria-disabled` + no dispatch:
+  - engine-contract "gates Execute on required args";
+  - time-travel N15 "a refused Edit says why";
+  - Interpreter table "dispatches a tree row and a table row with one target identically".
+
+**wgpu ARIA mirror (`♿️accessibility`):**
+- A control under a tree item (not a nested row, inline toolbar or detail) carries the row's description (after its own, ` · `).
+- A row action's virtual button stays focusable/tabbable when disabled, is not actionable, and its description is the reason.
+  `ROW_ACTION_KEY_INFIX` is `pub(crate)`.
+
+**Shared corpus case `🖥️composite/💬️row-semantics`:**
+- Written by `T/🧪️s3-w1e-row-semantics-case.py`. It holds a property row "Scale" whose description is a refusal and which holds a
+  slider, and a row "Move" with a disabled "Edit" whose reason is "Not possible right now".
+- New expectation key `rowSemantics.{describedControls, disabledRowActions}`.
+- Case counts 76 → 77 (Rust contract, TS contract, React Interpreter); the wgpu shape groups go 54 → 55.
+- Laws:
+  - React "exposes row descriptions on their controls and keeps disabled row actions focusable with their reason";
+  - wgpu `row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable_with_their_reason` (also checks that the
+    contract twin `RowTarget::action_binding` refuses the action).
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` (after `reason`) | 215 + 12 + 1 ✔ |
+| typegen regenerate + `--test typegen_export` | ✔ (91 types) |
+| TS `conformanceCorpusSelfTests()` (bun) | 77 ✔ |
+| ui-react `tsc --noEmit` | 0 errors |
+| renderer-react `tsc --noEmit` | 4 errors, all peer (store worker `line` ×3, Shell `idleInstalledServiceStatusV1`) |
+| ui-react vitest `🌳️Tree 🎚️Slider 🪜️Stepper` | 4 files, 78 ✔ |
+| renderer vitest `🗣️Interpreter ⏪️time-travel/🧪️tests/🧩️component 🔬️engine-contract` filtered to the touched laws (`-t …`) | 7 ✔ |
+| renderer vitest full five suites (`🗣️Interpreter 🧪️staged-arg-controls ⏪️time-travel/🧪️tests/🧩️component ⚙️settings-general-layout 🔬️engine-contract`) before the law updates | 939 ✔ / 14 ✘. 3 were the old `disabled` pins (now updated, green above). 11 are peer: overlay flow ×2 and declarative-forms gap (`--ui-spacing` refactor), settings `anchorPositionStyle` pin, text-editor key/paste/compose ×5, graph parameter dispatch, tutorial portal (`Worker is not defined`) |
+| wgpu `cargo test -p semio-framework-ui … conformance_corpus` (row-semantics law + 55 cases) | PENDING — tree red (peer DSL crate extraction); waiting for the coordinator's TREE GREEN |
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` (19:27, with `💬️row-semantics`; count 77) | 215 + 12 + 1 ✔ |
+
+### S3.9 Owed after TREE GREEN, open items, coordinator actions (19:30)
+
+Owed verification. These wait for the coordinator's TREE GREEN; the peer DSL crate extraction keeps os-kernel red. One run each:
+1. `cargo test -p semio-framework-ui --features testkit --lib`: full suite, incl. the row-semantics law and the disclosure law.
+2. `cargo test -p semio-framework --lib -- number_facets history_edit_actions`. The lib-test binary was red from a peer
+   (`🕹️interaction/🧬️schema/🧪️tests/🔬️unit/🦀️.rs:7`).
+3. `cargo test -p semio-framework-plugin --lib -- time_travel`, covering:
+   - the N2 list law;
+   - the updated chips, session-leads and pointer laws;
+   - S3-W2A's editor-keys law.
+
+   The plugin lib-test binary was also red from peers (`LocalizedLabel` crate-root export, schema-registry moves).
+4. `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --lib -- select_tool_history`: the S2.5 runtime law,
+   with the facets now from `number_facets` and the `useSelection` step on the windowed reference row.
+5. `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` and `cargo check -p semio-framework-ui --target
+   wasm32-unknown-unknown --features wgpu-engine` again, after the S3.8 edits.
+
+Open items:
+- N2 (d) option search is deferred; every option of a long choice is reachable through the windowed option rows.
+- The `reference_list` contract recipe is no longer used by the time-travel editor. It stays a contract recipe with its own corpus
+  case, and React's staged reference field mirrors its semantics.
+
+Coordinator actions (not run by this WP):
+- Re-activation of puzzle 2d (React 6012 + wgpu 6112) for the live probe of the editor rows (windowed inputs/chips/options,
+  list add/remove).
+- No descriptor, `describe`, launch.json or central schema generate is needed: the history-edit verbs stay 12, and the new
+  `edit` arg is a manifest definition change only.
+
+### S3.10 Owed runs after TREE GREEN (10-03 05:50)
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-ui --features testkit --lib` (05:49) | **769 ✔ / 2 ✘**. Every W1-E law is green: `row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable_with_their_reason`, `a_tree_item_with_unstreamed_window_rows_is_a_closed_disclosure`, `the_history_editor_controls_project_their_corpus_accessibility`, the G6 corpus law and the 55 shape cases. Both ✘ are peer: `wgpu::draw::tests::world_mesh_instance_packs_policy_and_standard_material_into_one_fixed_stride` (128 ≠ 112) and `wgpu::gpu::prepared_present_tests::every_world_color_cursor_uses_the_encoded_composite_attachment` (17 ≠ 15 pipelines) — world/GPU pipeline work |
+| `cargo test -p semio-framework --lib -- number_facets history_edit_actions dialog_choices` (05:52) | BLOCKED: peer test `🎠️kernel/🧪️tests/💡️service-operation/🦀️.rs:9` (`dsl::json` gone) breaks the lib-test binary |
+| `cargo test -p semio-framework-plugin --lib -- time_travel` (05:57) | BLOCKED: 81 errors in 7 peer test files (`?` cannot convert `dsl::io_schema::IoError` to `String`: `🧪️tests/🧩️composition/🦀️.rs:21`, `🏗️builder/🧪️tests/🔬️schema-stamping/🦀️.rs:187`, `🧪️tests/🔬️app-declarations-fixture/🦀️.rs:75` …), 0 in my files. Reported once to the coordinator |
+| puzzle 2d `-- select_tool_history` (06:06) | BLOCKED: `semio-framework` lib red again in flight (`🧰️framework/📦️packages/🦀️rust/🦀️.rs:28` `semio_framework_io_schema` unresolved, peer DSL/io-schema extraction) |
+| `cargo check -p semio-framework --lib` (06:23) | ✔ (the in-flight io-schema split settled) |
+| puzzle 2d `-- select_tool_history` (06:36) | BLOCKED: peer red in the stdio dependencies of the ✏️s workspace, the same `?`/error-type migration: `🎒️zip/…/🪶️sqlite/🚦️native/🦀️.rs:41` (2 errors), `🎨️svg/…/🔰️basic/🧬️schema/🦀️.rs:198` (6), `🧊️gltf/…/♾️any/🧬️schema/🧬️mutations/🦀️.rs:135` (13) |
+
+Status at 06:40: every W1-E change is source-complete.
+
+- **Verified green:** the UI contract (215+12+1, typegen), the UI lib laws (every W1-E law; 769 ✔), React (ui-react 78 ✔, the
+  touched renderer laws 7 ✔), the TS corpus (77), bun facets (13) and history-edit vocab (3), and `cargo check` of the plugin lib
+  (native and wasip2) and the UI crate (wasm32 ×2).
+- **Still blocked by peer test or dependency breaks**, all owner-guess the DSL/io-schema extraction:
+  - the manifest `number_facets` law;
+  - the plugin `time_travel` laws (N2 list law, updated chips/session/pointer laws);
+  - the puzzle 2d S2.5 law.
+
+  Re-run these three commands once the peer's migration reaches the test files and the stdio crates.
+
+### S3.11 F7 — `ContextMenuItemSpec.reason` (S3-W2A request) — Rust written, React verified
+
+- Contract (`UI/🎯️targets/🧊️wgpu/🧩️component`):
+  - `ContextMenuItemSpec.reason: Option<String>` (serde/value `reason`, skipped when None).
+  - `impl ContextMenuItemSpec { pub fn disabled_because(mut self, reason: String) -> Self }`.
+  - The wire-format test pins the absent/present forms.
+- TS twin (`UI/🎬️scene`): `readonly reason?: string`.
+- React (`🖱️ContextMenu`):
+  - `ContextMenuItem.reason?: UiLabel`.
+  - A disabled row is `aria-disabled` (no native `disabled`) and is reached by arrow keys (`contextMenuFocusableIndices`); ordinals stay enabled-only.
+  - The reason shows beside the label and is named by `aria-describedby`; click and Enter do nothing.
+  - `mapContextMenuSpecs` (World3dHost) passes `reason`.
+  - Law "keeps a disabled row focusable with aria-disabled, names its reason, and never runs it" (11/11 ✔).
+- wgpu shell menu (hand-painted chrome, S3-W2C's file): routed to the coordinator with the exact edit points (`ContextMenuItem.reason`,
+  `context_menu_enabled_indices`, reason painting + chrome accessibility description).
+
+### S3.12 `x-semio-ui.optionSource` (design §20.11) — TS verified, Rust written (tree red)
+
+Schema-first, end to end:
+- **Meta-schema** `🛂️manifest/🧬️schema/🔣️.json` `InputUi.optionSource = {snapshot: "^/…"}`. It also covers the strict
+  vocabulary (the validator `$ref`s the manifest `InputUi`). The TS `parseInputUi` + `InputUi` type are updated.
+- **Rust:**
+  - `pub enum OptionSource { Snapshot { pointer } }` and `ArgSchema::String.option_source`.
+  - The reader (`input_option_source`, `INPUT_UI_KEYS` 19) refuses `uiInvalid` on a non-string or beside an `enum`.
+  - `control()` gives Select when sourced, and the widget compatibility check accepts it.
+  - Every literal construction is updated: manifest ×5, the mcp source-builders test, and the plugin time-travel test.
+- **TS twin:** `mutationInputDefs` (`sourcedOptions`), `argControl`, the widget check, and the generated projection. Schema metadata
+  `ArgSchema` v3 + new `OptionSource` v1 in `🧬️schema/📽️projection`, mirrored in `🤖️generated/🪪️manifest/🟦️.ts`.
+- **Corpus** `🧫️mutation-inputs` +4 cases: `option-source-from-the-previewed-document`, plus three refusals (on a number, beside an
+  enum, relative pointer).
+- **Time-travel editor:**
+  - `🔖️Pointer` gains `time_travel_option_pointer` (fills `{field}` from the draft payload, RFC 6901-escaped),
+    `time_travel_document_options` (keys in document order; labelled by record `label`/`name` {en,de}/text → glossary → key) and
+    `time_travel_resolve_options`. A recorded key the document lacks stays an option, and no enum is ever added, so the fold
+    decides.
+  - `🔖️Driver`: `resolve_time_travel_options` plus the shared `time_travel_previewed_value` (the snaps resolver now uses it too).
+  - One call line in the history render (`🔌️plugin/🦀️.rs`).
+  - The React and wgpu selects are unchanged; more than 32 sourced options become the N2 windowed option rows.
+- **Laws:**
+  - Rust and TS reader control assertions.
+  - The plugin law `sourced_options_are_the_keys_of_the_previewed_document`: template escaping (`w/1` → `w~11`), labels en/de, stale
+    key kept, no enum, an unfillable template offers only the recorded key.
+- Told S3-PROCEDURAL (a7fd2aa4782869ebd) to declare it on `change-widget-input.channel`, and to keep the fold law refusing an
+  unknown key.
+
+| Command | Result |
+|---|---|
+| `bun test ./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts` | 88 ✔ (incl. the 4 new cases + control) |
+| `python3 🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py` | 207 jsonschema verdicts over 40 cases ✔ |
+| ui-react `tsc --noEmit` | 0 errors |
+| ui-react vitest `🖱️ContextMenu` | 11 ✔ |
+| renderer-react `tsc --noEmit` | 1 error, peer (`🌐️World3dHost/🟦️.tsx:2226`, surface material work at 06:47) |
+| `cargo check -p semio-framework-plugin --lib` (06:56) | BLOCKED: os-kernel red again (peer: `🧬️semio/🦀️.rs:4` `os_dsl::ValueRefusalKind`, `🚪️io/🦀️.rs:2654` `PackError::TextRefusal`), so the manifest/plugin Rust is not compiled yet |
+
+Owed on the next green tree (one run each):
+- `cargo check -p semio-framework --lib --tests`, then `cargo test -p semio-framework --lib -- mutation_inputs number_facets history_edit_actions`.
+- `cargo test -p semio-framework-plugin --lib -- time_travel`.
+- The UI wire-format test `-- ui_node_wire_format`.
+- The `semio-framework` projection test `exports_typescript` (app-label), which checks the hand-mirrored generated manifest TS.
+
+Projection check without cargo: a Python simulation of `render_typescript()` over the 204 metadata rows of `🧬️schema/📽️projection`
+matches `🤖️generated/🪪️manifest/🟦️.ts` for the `OptionSource` and `ArgSchema` edits. The one remaining diff is a peer's: projection
+`TutorialDocumentEventKind` no longer has `coalesceKey` (the §20.1 CLOSURE deletion), while the generated file still does. The
+projection test will fail on that until the CLOSURE owner regenerates the file (`SEMIO_TYPEGEN_OUT`).
+
+S3-PROCEDURAL asked for record lookup: generation3d's `hostSnapshot.widgets` is an array of tagged records. The template is now
+walked one segment at a time by `time_travel_option_target`, which replaces `time_travel_option_pointer`:
+- A `{field}` segment on an object is that object's key.
+- A `{field}` segment on an array selects the record whose own `field` equals the payload's top-level `field`.
+- A literal segment indexes an array or keys an object, with RFC 6901 escapes.
+
+The spelling stays `/hostSnapshot/widgets/{id}/params`; no extra marker is needed. The meta-schema description, the Rust/TS doc and
+the corpus case (`/hostSnapshot/…`) were updated. The plugin law now pins an array of tagged widget records, keyed lookup, numeric
+index, and no match. TS reader suite: 90 ✔. Spelling sent to S3-PROCEDURAL.
+
+## Session 4 — 2026-10-04
+
+S4-UI (Opus) inherits S3-W1E and S3-W2B (`📓️w2-b-report.md` points here). Brief: `🧭️plan.md` Session 4 row S4-UI, `📓️s4-resume.md`
+§2.2/§2.5/§4 D18 D21/§6.1/§7. Scratch: `🗑️generated/s4-ui/`. Private test target `target-nde-s4-ui`.
+
+### S4.1 Repair-first (rule 34) — done, nothing half-finished
+
+- `git diff HEAD --stat` over `🖱️ui`, `🛂️manifest`, React `🛠️ShellHelpers`/`🗣️Interpreter`/`🏛️ShellHost`/`🔌️PluginRuntime` and plugin
+  `⏪️time-travel`. Files touched between the predecessors' last report (10-03 06:59) and the cut (12:07) belong to other WPs
+  (S3-GATES oracle claims, S3-NOTICES fault-notices, S3-STROKES/AGNOSTIC mutation-inputs corpus). Everything later (10-03 19:45 → 10-04 00:47)
+  is Codex peer churn (`Tree/🟦️.tsx` gained `busy`; `Interpreter` gained the row-action admission). It all compiles and its tests pass; I repaired nothing.
+
+### S4.2 Owed verification
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework --lib -- number_facets history_edit_actions dialog_choices mutation_inputs every_corpus_case` (`fw-lib-1.txt`) | **22 ✔ / 0 ✘** (owed since S3.9; all W1E manifest laws) |
+| `cargo test -p semio-framework-ui --features testkit --lib` (`ui-lib-1.txt`) | **770 ✔ / 2 ✘**. Both ✘ are the known peer failures: `wgpu::draw::tests::world_mesh_instance_packs_policy_and_standard_material_into_one_fixed_stride`, `wgpu::gpu::prepared_present_tests::every_world_color_cursor_uses_the_encoded_composite_attachment` |
+
+### S4.3 W1E-3 kernel half — one status copy (coordinator decision, 02:20) — DONE, verified
+
+- `FW/🎠️kernel/🦀️.rs`, new region `🔖️HistoryReprojectionStatus`:
+  - `HISTORY_REPROJECTION_LABELS` (11 rows `remote|step|load.{title,progress,paused,refused}` + `reason.unnamed`, en/de);
+  - `HistoryReprojectionStatus { title, text, done, total, paused, fault }`;
+  - `history_reprojection_status(&HistoryReprojection, Terminology, Locale)`.
+
+  Rules: a fault with total 0 reads `<kind>.refused` with the code's placeholder-free kernel history notice, else `reason.unnamed`
+  (never a raw code); `paused` applies only to remote; anything else reads the kind's progress line. Load gets its own refused copy
+  (W2A-8 found that Load reused the step copy).
+- TS twin `historyReprojectionStatus` + `HISTORY_REPROJECTION_LABELS` live in `FW/🎠️kernel/🟦️.ts`, in the same-named region.
+- Schema-first:
+  - `🧬️schema/🔣️history-reprojection/🔣️.json`;
+  - fixture `🧫️fixtures/🧫️history-reprojection/🔣️.json` (11 cases);
+  - laws `🧪️tests/🧪️history-reprojection/{🦀️.rs,🟦️.ts}`. The TS law has the Ajv oracle and hostile rows, and is added to the kernel vitest include list.
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework --lib -- history_reprojection history_notices history_patch fault_notice` (`fw-lib-2.txt`) | **10 ✔ / 0 ✘** (2 new) |
+| kernel TS `bun ./📜️script.ts test 🧪️history-reprojection 🧪️history-notices` (`SEMIO_VITEST_POLICY` = `repositoryVitestPolicyV1(<package dir>)`) | **2 files, 5 ✔** |
+
+Relayed to `main` for S4-WGPU (mirror key `shell.history.reprojection`) and S4-RUNTIME (TT section adopts it, delete the
+`HistoryPanelText` replay copies).
+
+### S4.4 `history.step-blocked` kernel notice (coordinator YES, 02:55) — DONE, verified
+
+- `HISTORY_NOTICE_LABELS` now has 7 rows. The new row is `history.step-blocked`: "Later mutations would end with errors — fix or
+  withdraw them first." / "Spätere Mutationen würden mit Fehlern enden — zuerst beheben oder zurückziehen."
+- It is in the TS twin, the `🧫️history-notices` fixture, and a new `🧫️history-reprojection` case that names it. S4-RUNTIME stores the code
+  in TT `step_reprojection_turn` (relayed).
+- Rust `-- history_reprojection history_notices history_patch fault_notice` 10/10. Kernel TS suite: 7 files, 78 ✔. Manifest
+  fault-notices bun: 5 ✔.
+
+### S4.5 W1E-2 contract `TreeItemProps.selected` + W1E-1 `revealReason` corpus — DONE, verified (contract + React; wgpu by S4-WGPU)
+
+- Contract (`🖱️ui/🧬️contract`):
+  - `TreeItemProps.selected: Option<bool>` (serde `selected`, skipped when None) and builder `.selected(bool)`;
+  - typed catalog field `13 => selected`;
+  - TS projection `TreeItemProps` v3, hand-mirrored in `🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts` and checked by `typegen_export`;
+  - retained typed TS decoder plus its fixture;
+  - literal sites in Rust (contract test, runtime ownership/reconcile tests, wgpu shell ×2, plugin builder-contract test ×3) and in TS
+    (24 treeItem literals in tests and stories).
+- `UiNodeRecord` grew from 7072 B to 7088 B. Re-pinned (greenfield):
+  - the resident fixtures/schemas (`🎟️resident`, `🗃️fixed`, `🔄️refresh`, `🌳️root`);
+  - the `⏳️async/🧫️fixtures/🧱️boxed-fixed-slots` budget for `wgpu::engine::UiSurfaceRegistry`, 165920 → 165984.
+- Corpus `🖥️composite/💬️row-semantics` (generator `T/🧪️s3-w1e-row-semantics-case.py`, extended):
+  - `disabledRowActions[i].revealReason {on: [hover, focus, press], off: [leave, blur, escape]}` (W1E-1);
+  - `selectedRows` over two new option rows (W1E-2).
+- Producer: TT long-option rows (more than `UI_FIXED_LIST_ITEMS` = 32) are `tree_item(label).selected(chosen)` holding the choose
+  button. The id `{id}.option.{i}.row` is unchanged.
+- React:
+  - (W1E-1) new `DisabledReasonHint` (`🖱️ui/🧱️elements/💡️ChromeControlHint`, exported from ui-react). The reason element is always the
+    action's `aria-describedby`. It becomes a visible glass tooltip (`[data-slot=row-action-reason][data-revealed]`) on hover (400 ms delay,
+    mouse/pen), keyboard focus and press, and hides on leave, blur, Escape and a press elsewhere.
+  - Used by the Tree `TreeRowActionButton` and the Interpreter `TableRowActionButton`. The table's `title="label · reason"` mouse-only
+    path is gone.
+  - Test adapter `fireEvent` gains `pointerEnter`/`pointerLeave`.
+  - (W1E-2) the Interpreter maps contract `selected` to the row's `isSelected`, giving `aria-selected` + `data-selected` + the selected fill.
+- wgpu (S4-WGPU, reported green 03:4x): `RowReasonHint` router/paint and mirror `selected`. Laws
+  `a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press` and `option_rows_announce_and_paint_their_selected_state` —
+  `cargo test -p semio-framework-ui --features testkit --lib -- conformance_corpus row_action tree_item accessibility` 40/0 (their run).
+
+### S4.6 W1E-3 React half — DONE, verified
+
+- `ShellHistoryProjectionV1.reprojection` is folded from every patch; absent means `null`.
+- New `HistoryReprojectionStatus` (`🛠️ShellHelpers/⏪️time-travel`), mounted by ShellHost beside the band (outside the History panel) for
+  the focused program:
+  - `[data-semio-history-reprojection=<kind>]` with `-phase=progress|paused|refused`; the code lives only in `data-notice-code`;
+  - the title + text + progress bar come from the kernel copy;
+  - the `role=status aria-live=polite aria-atomic` text "<title>: <text>" is announced on kind/phase change, not on every progress step;
+    the visible line and `aria-valuetext` follow every step;
+  - Cancel replay / Replay again (`historyReprojectionControlV1`) appear only while no session is open.
+- No raw codes: the band's unknown-fault copy is now the `replayFaulted` label. `ui.timeTravel.fault` is deleted from the schema and the
+  en/de bundles. The band corpus case was renamed and re-expected. Sent to S4-WGPU, whose wgpu `format!("Replay failed ({fault})")` must
+  follow.
+
+### S4.7 React `requestMediaFrames` host cancel (D21) — DONE, verified
+
+- `runRequestMediaFrames` is replaced by `requestMediaFramesSourceV1(accept, payload)` + `runMediaFramesV1(effect, source,
+  dispatchOne, app, signal, progress)`.
+  - Both tiers check the signal before each frame, and `waitForVideoEvent` rejects on abort.
+  - Each dispatched frame reports progress.
+  - A cancel sends no done and no fallback, and dispatches `importAbort` only when a frame reached a declaring guest (remodel's §15
+    streamed transaction leaves zero trace).
+- ShellHost runs it as a Tasks-window document transfer (name = picked file) with Cancel and the `import-cancelled` notice, as file
+  imports do.
+- Laws (engine-contract, `-t D5`): 13 ✔, incl. new frame-progress and cancel laws (after 1 or 2 frames, undeclared, pre-cancel).
+
+### S4.8 W1E-5 layering — decided: no change
+
+- `ActionArgDef::number_facets` returns `semio_framework_ui_contract::{SliderAppearance, UiNumberScale, UiNumberLimits, Label}`.
+- `semio-framework-ui-contract` is the dependency-free UI boundary crate. It never depends on the manifest.
+- The manifest already describes its UI in contract types (`Tone` ×6, `TREE_WINDOW_PATH_SEPARATOR`, `UiText`), and its TS twin imports
+  `🖱️ui/🧬️contract/🧩️component`.
+- manifest → ui-contract is therefore the legal downward direction, not an inversion.
+- Returning contract facets is the point of the S3.1 shared helper: one mapping, no per-renderer re-mapping (time-travel, wgpu
+  `staged_arg_row`, React `StagedNumberField`). Moving to plain numbers would re-create three mappings.
+
+### S4.9 Peer fix in my file
+
+- `🗣️Interpreter/🟦️.tsx` `ButtonView` (peer row-action-admission work, 10-04 00:47) called `.then` on any truthy `onIntent` return. A
+  host callback returning a non-promise (`dispatched.push(...)`) threw `completion.then is not a function` (5 uncaught errors in the
+  time-travel suite).
+- Fixed by narrowing with `completion instanceof Promise`.
+
+### S4.10 Verification (session 4, after S4.3–S4.9)
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` (`contract-2.txt`) | **222 + 12 + 1 ✔** |
+| `cargo test -p semio-framework-ui --features testkit --lib` (`ui-lib-2.txt`, before the slot re-pin) | 769 ✔ / 3 ✘. 2 are the known peer failures; the third was the `UiSurfaceRegistry` slot budget, re-pinned. Re-run owed |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib` (`wgpu-check-2.txt`, 03:27) | ✔ exit 0 |
+| `cargo check -p semio-framework-ui-contract -p semio-framework-plugin --lib` (`plugin-check-2.txt`, 04:26) | ✔ exit 0 (TT `.selected` caller) |
+| renderer-react W2B suites (`⏪️time-travel/🧪️tests/🧩️component 🧪️staged-arg-controls 📎️local-folders/🧪️tests 🧪️command-rejection 🪟️spawned-program-session`) (`vitest-w2b-2.txt`) | **5 files, 132/132 ✔**, 0 errors (+4 reprojection laws) |
+| renderer-react `🗣️Interpreter/🟦️.tsx` in-source (`vitest-interp-2.txt`) | **188/188 ✔** (row-semantics: reveal on/off ×3, selected rows) |
+| renderer-react `🧾️typed/🟦️.ts 🔬️engine-contract 🗄️stdio-details-tree 🪟️tree-windows 🪪️container-node-ids 📊️table` (`vitest-related-1.txt`) | 732 ✔ / 1 ✘. The ✘ is a peer test: `🧾️typed` "normalizes the native Input draft target", where the new `draftTarget` test passes a plain object to a native-buffer cursor ("Invalid native buffer admission") |
+| renderer-react `🔬️engine-contract -t D5` (`vitest-media-1.txt`) | **13 ✔** |
+| ui-react vitest `🌳️Tree 🖱️ContextMenu 💡️ChromeControlHint 🎚️Slider 🪜️Stepper` (`vitest-uireact-1.txt`) | **6 files, 94 ✔** |
+| ui-react translation totality | **2 ✔** |
+| ui-react `tsc --noEmit` | **0 errors** |
+| renderer-react `tsc --noEmit` | **0 errors** |
+
+### S4.11 Tree sections are named groups (S4-WGPU request, approved) — DONE
+
+- `accessibility_projection_node` (Rust) and `uiAccessibilityProjectionNodeV1` (TS twin) name a `TreeSection` by its
+  `label`, after the explicit accessibility label as for every other component. The role stays `group`, which is non-interactive.
+- The wgpu mirror therefore names `framework.history.reprojection`, `framework.history.editor` and the other sections, as React's headings
+  do.
+- TS twin self-test `accessibilityProjectionSelfTests()` 279 ✔, and a probe gives `group "Inputs"`. UI lib (below) is green.
+
+### S4.12 Verification after S4.11 (07:0x–08:1x; rule 42 gate from 07:40, rule 43 CHECKS ONLY from ~08:10)
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-ui --features testkit --lib` (`ui-lib-4.txt`, after the slot re-pin, with S4-WGPU's laws) | **772 ✔ / 2 ✘**, both the known peer world/GPU failures. Inside it: `ui_node_wire_format` 26 ✔, `conformance_corpus` 12 ✔ (incl. row-semantics reveal + selected), `presence_bar` 7 ✔, `peer_notes` 1 ✔, `row_action` 8 ✔, `option_rows` 3 ✔ |
+| `cargo check -p semio-framework-ui --target wasm32-unknown-unknown --features wgpu-engine` (`ui-wasm-1.txt`) | ✔ exit 0 |
+| `cargo test -p semio-framework-plugin --lib -- time_travel the_draft_editor_keys` (`plugin-tt-1.txt`) | 41 ✔ / 5 ✘. Every W1E law is green (draft editor keys, sourced options, list inputs, reference chips, filter options). The 5 ✘ are peer areas: 3 × `ValidationFailed("artifact store displaced-owner fixed retirement authority is saturated")` (S4-STORE), "pack reload" `a_history_edit_is_its_own_row…` :1404, and the paused-remote `…rerun` row :1765 (S4-RUNTIME mid-edit on TT reprojection). Routed to `main` |
+| `bun test ./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts` | 91/1 at bun's 5 s default timeout (Ajv strict-oracle test, 7.6 s at load 80); with `--timeout 60000` **92/92 ✔** |
+| `python3 🛂️manifest/🧪️tests/🧪️mutation-inputs/🐍️.py` | **216 jsonschema verdicts over 42 cases ✔** |
+| `bun test ./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️fault-notices/🟦️.ts` | **5 ✔** |
+
+OWED (rule 43, Rust tests frozen; source ready):
+- `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` after S4.11 (the contract compiled inside `ui-lib-4`).
+- `cargo test -p semio-framework --lib -- history_reprojection history_notices` and `--features typegen exports_typescript_bindings`
+  (`SEMIO_TYPEGEN_OUT` unset ⇒ compares the hand-mirrored generated manifest TS).
+- The new plugin law `long_option_rows_state_their_choice_as_selected` (TT producer of W1E-2). It is drafted in
+  `🗑️generated/s4-ui/draft-long-option-rows-law.rs` and lands in `🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs` region `☑️LongOptionRows` when
+  tests resume: it needs a `--tests` compile, and an unverified test file edit would put the shared plugin test binary at risk.
+- Puzzle 2d `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --lib -- select_tool_history` (S2.5 law; needs ✏️s
+  green, ask `main`).
+
+Raw-code fallbacks still in the Rust history body (TT, S4-RUNTIME's regions; routed to `main`): band fault `map_or_else(|| fault.to_string())`
+(≈3810) and `history_code_text` `(None, _) => code` (≈3637).
+
+### S4.13 Resume after the 08:55 cut (11:35) — nothing half-finished; final checks
+
+- Repair-first: every S4 edit was already complete on disk; the report was current through S4.12. The plugin wasip2 check that ran across the
+  cut finished green.
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-plugin --lib --target wasm32-wasip2` (`plugin-wasip2-1.txt`) | ✔ exit 0 (with the TT `.selected` producer) |
+| renderer-react W2B suites + `♿️retained-toggle-semantics` + `🗣️Interpreter/🟦️.tsx` + `🧪️fault-notices` (`vitest-final-1.txt`) | **8 files, 326/326 ✔** |
+| contract TS twins (bun): `conformanceCorpusSelfTests` / `accessibilityProjectionSelfTests` / fixed-list / carrier map / number controls / color input | **77 / 279 / 75 / 9 / 273 / 31 ✔** |
+| `bun ./📜️script.ts verify taxonomy report --scope 🧰️framework/🔨️modules/🎠️kernel` | no finding for the new `🧬️schema/🔣️history-reprojection`, `🧫️fixtures/🧫️history-reprojection`, `🧪️tests/🧪️history-reprojection` (the listed findings are pre-existing dirs) |
+
+### S4.14 Open items, status
+
+| Item | Status |
+|---|---|
+| W1E-1 disabled reason visible (contract corpus + React) | DONE, verified (React). wgpu half by S4-WGPU, reported green |
+| W1E-2 `selected` row semantics (contract + TT producer + React) | DONE, verified (contract, React, plugin compile native + wasip2). Plugin law drafted, OWED (rule 43). wgpu half by S4-WGPU, reported green |
+| W1E-3 live reprojection announcement (kernel copy + React status) + `history.step-blocked` | DONE, verified. wgpu half by S4-WGPU (`shell.history.reprojection`), reported green. TT adoption by S4-RUNTIME |
+| W1E-5 layering | DECIDED: no change (S4.8) |
+| W1E-6 probe derivation | already from `window.total` in source; selectors for the new verdicts sent to S4-E2E via `main` |
+| React `requestMediaFrames` host cancel (D21) | DONE, verified (S4.7) |
+| React readiness (names, en + de, no raw codes) | band raw code removed (React + corpus + wgpu). Remaining raw-code fallbacks are in TT (S4-RUNTIME), routed |
+| Owed Rust tests | OWED (rule 43): see S4.12 list |
+
+### S4.15 Coordinator actions
+
+1. Re-activation of puzzle 2d (React 6012 + wgpu 6112) for the live probe. React shell changes: reprojection status, disabled-reason hint,
+   selected option rows, media-frames cancel, band copy. The contract `TreeItemProps.selected` (typed field 13; `UiNodeRecord` +16 B)
+   rides the planned rebuild/describe wave of every plugin component (rule 41). There is no channel, frame or descriptor-schema change.
+2. No central `schema generate` is needed. The new kernel `🔣️history-reprojection` is a fixture schema, not a catalog leaf, and the
+   ui-contract projection (`TreeItemProps` v3) is hand-mirrored and verified by `typegen_export`.
+3. When "TESTS RESUMED": the S4.12 OWED list (contract tests, `semio-framework` reprojection + typegen, land and run the drafted plugin law,
+   puzzle 2d `select_tool_history`).
+

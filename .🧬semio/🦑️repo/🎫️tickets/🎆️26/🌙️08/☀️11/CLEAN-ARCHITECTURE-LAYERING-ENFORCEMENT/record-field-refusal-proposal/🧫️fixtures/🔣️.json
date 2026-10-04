@@ -1,0 +1,11 @@
+{
+  "kinds": ["InvalidValue", "Canceled", "OwnershipLimit", "AllocationFailed", "WorkLimit", "DepthLimit", "UnsupportedOwner", "InvariantViolated"],
+  "paths": [
+    { "method": "projectValue", "boxed": false, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" },
+    { "method": "projectRecord", "boxed": false, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" },
+    { "method": "constructValue", "boxed": false, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" },
+    { "method": "constructRecord", "boxed": false, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" },
+    { "method": "constructValue", "boxed": true, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" },
+    { "method": "constructRecord", "boxed": true, "message": "refused field", "under": "field", "expectedMessage": "field.refused field" }
+  ]
+}

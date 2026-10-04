@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
 use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-use dsl::Severity;
+use semio_framework_diagnostic::Severity;
 
 #[semio_framework_async_macros::async_test]
 async fn negative_asset_is_well_formed_but_not_valid() {

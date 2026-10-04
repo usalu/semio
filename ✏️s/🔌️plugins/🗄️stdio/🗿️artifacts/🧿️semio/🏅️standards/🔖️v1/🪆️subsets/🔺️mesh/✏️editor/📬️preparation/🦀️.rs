@@ -211,7 +211,7 @@ impl PrimitiveCopy {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -225,7 +225,7 @@ impl PrimitiveCopy {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-primitive-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-primitive-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -336,7 +336,7 @@ impl MeshCopy {
         }
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -346,7 +346,7 @@ impl MeshCopy {
                 return Ok(step);
             }
             if !primitive.terminal_is_empty() {
-                return Err(format!("{PREFIX}-primitive-copy-witness"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-primitive-copy-witness")));
             }
             self.primitive = None;
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -359,7 +359,7 @@ impl MeshCopy {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-mesh-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-mesh-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -381,6 +381,8 @@ impl MeshCopy {
 
 #[derive(Default)]
 struct MaterialCopy {
+    phase: usize,
+    texture_copies: [RetainedTextCopy; 5],
     id_copy: RetainedTextCopy,
     output: Option<SemioMaterial>,
     retirement: Option<Box<dyn app_store::ErasedSnapshotRetirement>>,
@@ -389,11 +391,34 @@ struct MaterialCopy {
 
 impl MaterialCopy {
     fn advance(&mut self, source: &SemioMaterial, maximum_bytes: usize) -> Result<StructuralCopyStep, String> {
-        let (bytes, value) = text_step(&mut self.id_copy, &source.id, maximum_bytes)?;
-        if let Some(id) = value {
-            self.output = Some(SemioMaterial { id, base_color: source.base_color, metallic: source.metallic, roughness: source.roughness });
-            return Ok(StructuralCopyStep::Complete);
+        if self.phase == 0 {
+            let (bytes, value) = text_step(&mut self.id_copy, &source.id, maximum_bytes)?;
+            if let Some(id) = value {
+                self.output = Some(SemioMaterial { id, base_color: source.base_color, metallic: source.metallic, roughness: source.roughness, ..Default::default() });
+                self.phase = 1;
+            }
+            return Ok(StructuralCopyStep::Progress { items: 1, bytes });
         }
+        if self.phase > 5 { return Ok(StructuralCopyStep::Complete); }
+        let references = [&source.base_color_texture, &source.metallic_roughness_texture, &source.normal_texture, &source.occlusion_texture, &source.emissive_texture];
+        let index = self.phase - 1;
+        let mut bytes = 0;
+        if let Some(reference) = references[index] {
+            let (copied, value) = text_step(&mut self.texture_copies[index], reference, maximum_bytes)?;
+            bytes = copied;
+            if let Some(value) = value {
+                let output = self.output.as_mut().ok_or_else(|| format!("{PREFIX}-material-output"))?;
+                match index {
+                    0 => output.base_color_texture = Some(value),
+                    1 => output.metallic_roughness_texture = Some(value),
+                    2 => output.normal_texture = Some(value),
+                    3 => output.occlusion_texture = Some(value),
+                    4 => output.emissive_texture = Some(value),
+                    _ => unreachable!(),
+                }
+                self.phase += 1;
+            }
+        } else { self.phase += 1; }
         Ok(StructuralCopyStep::Progress { items: 1, bytes })
     }
 
@@ -401,7 +426,7 @@ impl MaterialCopy {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -409,11 +434,15 @@ impl MaterialCopy {
         if step != app_store::SnapshotRetirementStep::Complete {
             return Ok(step);
         }
+        for copy in &mut self.texture_copies {
+            let step = text_close(copy, grant);
+            if step != app_store::SnapshotRetirementStep::Complete { return Ok(step); }
+        }
         if let Some(retirement) = self.retirement.as_mut() {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-material-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-material-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -428,7 +457,7 @@ impl MaterialCopy {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.id_copy.terminal_is_empty() && self.output.is_none() && self.retirement.is_none()
+        self.closing && self.id_copy.terminal_is_empty() && self.texture_copies.iter().all(RetainedTextCopy::terminal_is_empty) && self.output.is_none() && self.retirement.is_none()
     }
 }
 
@@ -488,7 +517,7 @@ impl TextureCopy {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -507,7 +536,7 @@ impl TextureCopy {
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-texture-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-texture-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -670,7 +699,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
         }
     }
 
-    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: app_store::ArtifactStoreOneItemGrant) -> Result<app_store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing {
             return Ok(app_store::SnapshotRetirementStep::Blocked);
         }
@@ -680,7 +709,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
                 return Ok(step);
             }
             if !mesh.terminal_is_empty() {
-                return Err(format!("{PREFIX}-mesh-copy-witness"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-mesh-copy-witness")));
             }
             self.mesh = None;
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -691,7 +720,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
                 return Ok(step);
             }
             if !material.terminal_is_empty() {
-                return Err(format!("{PREFIX}-material-copy-witness"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-material-copy-witness")));
             }
             self.material = None;
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -702,7 +731,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
                 return Ok(step);
             }
             if !texture.terminal_is_empty() {
-                return Err(format!("{PREFIX}-texture-copy-witness"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-texture-copy-witness")));
             }
             self.texture = None;
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -715,7 +744,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
             let step = retirement.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
             if step == app_store::SnapshotRetirementStep::Complete {
                 if !retirement.terminal_is_empty() {
-                    return Err(format!("{PREFIX}-snapshot-retirement-witness"));
+                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,format!("{PREFIX}-snapshot-retirement-witness")));
                 }
                 self.retirement = None;
                 return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });

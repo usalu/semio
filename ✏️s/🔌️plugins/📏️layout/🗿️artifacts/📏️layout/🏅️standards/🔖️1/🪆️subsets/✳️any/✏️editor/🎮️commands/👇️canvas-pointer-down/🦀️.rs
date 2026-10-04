@@ -62,7 +62,7 @@ fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutWindowConfig, sx: f64, sy: f
 //#region 🔖️CanvasDrop
 //#endregion 🔖️CanvasDrop
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {
     pub surface_id: Option<String>,

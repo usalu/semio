@@ -1,15 +1,11 @@
 //! 🔺️ Jack artifact — sparse field-delta diff codec and apply/absorb.
 //!
-//! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `apply_nodes_delta`/`apply_edges_delta`/
-//! `apply_property_patch` and the whole `diff_nodes_*`/`diff_edges_*`/`diff_delete_node` builder set
-//! are gone — `JackDiff.content: Option<JackContentChild>` is now a single whole-handle-replace slot
-//! (matches `dag`'s/`writer`'s precedent). Every triad's own `🔺️diff` leaf now builds the new scene
-//! itself (reading `jack_working_scene(base)`, applying its specific semantics to a clone) and calls
-//! `diff_replace_content`.
+//! `JackDiff.content` is the whole-handle slot of the composed `content` child; no parent leaf writes it, because scene
+//! edits are child-lane leaves of `s.stdio.semio@v1/graph` (design §20.15).
 
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;
 use crate::standards::v1::subsets::any::schema::JackArtifact;
-use crate::{Edge, JackSnapshot, Node};
+use crate::JackSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -101,13 +97,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         take!(root_node_id);
         take!(query);
     }
-}
-
-/// 🏗️ The one builder every triad's `🔺️diff` leaf funnels through — mints+caches a fresh
-/// content-addressed handle for the new `(nodes, edges)` scene and wraps it as a whole-handle-replace
-/// sparse diff. Mirrors `dag`'s `diff_replace_content` precedent exactly.
-pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
-    JackDiff { content: Some(crate::jack_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️Apply
 

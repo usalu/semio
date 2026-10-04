@@ -103,8 +103,11 @@ pub fn apply_grid2d_mutation(projection: &mut Grid2dSnapshot, mutation: &Grid2dM
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
-pub fn inverse_grid2d_mutation(projection: &Grid2dSnapshot, mutation: &Grid2dMutation) -> Vec<Grid2dMutation> {
-    mutation.inverse(projection)
+pub fn inverse_grid2d_mutation(projection: &Grid2dSnapshot, mutation: &Grid2dMutation) -> Result<Vec<Grid2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+    mutation.inverse(projection)?
+
+    })
 }
 
 //#region 🌉️TestBridge

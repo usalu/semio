@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-03T19:20:10.384Z",
+  "sourceLane": "complete",
+  "managedGuiProjection": "Native-owned pending integration",
+  "predecessor": "compute-consumer-split-inputs/consumer-owner-ready-1.json",
+  "changedFiles": 25,
+  "fullCurrentSources": 49,
+  "noRustManifestOrCargoWritesOrExecution": true,
+  "sourceLaw": {
+    "red": 4,
+    "green": 4
+  },
+  "registeredRuntime": "registered-runtime-receipt.json",
+  "strict": "source-scripts-strict-receipt.json",
+  "graph": "registered-graph-receipt.json",
+  "deletion": "source-deletion-receipt.json",
+  "refusal": "missing-own-law-receipt.json",
+  "generatedRetention": "Root/Native integration pending; retain own generated evidence",
+  "knownInferenceIssue": "Repo creates level variants with positional args despite unchanged source helper refusing args; canonical test is green and Root notified"
+}

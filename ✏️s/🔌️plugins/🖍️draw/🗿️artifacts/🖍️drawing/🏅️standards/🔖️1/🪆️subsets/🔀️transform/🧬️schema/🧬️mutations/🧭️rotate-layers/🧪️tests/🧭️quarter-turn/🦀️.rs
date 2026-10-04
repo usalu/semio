@@ -37,7 +37,7 @@ fn inverse_restores_before() {
     let mutation: DrawingMutation = serde_json::from_str(MUTATION).unwrap();
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).unwrap();
-    for step in inverse_drawing_mutation(&base, &mutation) {
+    for step in inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
         apply_drawing_mutation(&mut snapshot, &step).unwrap();
     }
     assert_eq!(snapshot, base);
@@ -74,6 +74,6 @@ fn outcome_laws() {
 #[test]
 fn label_reads_degrees() {
     let label = serde_json::from_str::<DrawingMutation>(MUTATION).unwrap().label();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Rotate 1 layer by 90°");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Ebene um 90° drehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Rotate 1 layer by 90°");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Ebene um 90° drehen");
 }

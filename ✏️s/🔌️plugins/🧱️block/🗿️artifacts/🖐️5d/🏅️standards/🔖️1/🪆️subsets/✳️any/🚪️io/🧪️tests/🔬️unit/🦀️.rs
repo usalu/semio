@@ -38,7 +38,7 @@ async fn json_round_trips_every_example() {
 async fn zip_round_trips_every_example_as_a_real_archive() {
     for (id, text) in EXAMPLES {
         let snapshot = from_dsl_text(text).unwrap_or_else(|error| panic!("{id}: {error:?}"));
-        let IoPayload::Binary(bytes) = Block5dIntoZip::serialize(&snapshot).await.unwrap().value else {
+        let IoPayload::Binary(bytes) = Block5dIntoZip::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value else {
             panic!("{id}: zip export must be a binary payload");
         };
         assert!(bytes.starts_with(ZIP_MAGIC), "{id}: zip export must be a real zip 2.0 container");

@@ -1,21 +1,14 @@
 syntax = "proto3";
 package semio.s.trinity.jack.artifact;
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 message JackArtifact {
-  string schema = 1;
-  string name = 2;
-  optional string manifest_id = 3;
-  Manifest manifest = 4;
-  Camera camera = 5;
-  semio.os.store.ArtifactChild content = 6;
-  optional string root_node_id = 7;
-  string query = 8;
+ string schema = 1;
+ string name = 2;
+ optional string manifest_id = 3;
+ semio.s.trinity.jack.snapshot.Manifest manifest = 4;
+ semio.s.trinity.jack.snapshot.Camera camera = 5;
+ semio.os.store.ArtifactChild content = 6;
+ optional string root_node_id = 7;
+ string query = 8;
 }
-message Camera { double x = 1; double y = 2; double zoom = 3; }
-message Manifest {
-  repeated ManifestKind node_kinds = 1;
-  repeated ManifestKind edge_kinds = 2;
-  repeated ManifestPortKind port_kinds = 3;
-}
-message ManifestKind { string name = 1; }
-message ManifestPortKind { string name = 1; string direction = 2; }

@@ -1,0 +1,7 @@
+# PNG Current Pair Native Count Qualification
+
+The physical CSV/TSV handoff identified a previously mounted 32-file PNG full-owner pair and Source 11/11 with 260 assertions. It did not establish a current Native count of 17. This continuation did not mount or edit PNG production and did not run a current PNG owning Native gate.
+
+The exact supplied pair roster is `📥️inputs/png-current-complete-mounted-pair-roster.json`. Its authored Native input files are `📥️inputs/📷️png/🧪️tests/🪶️sqlite/🦀️.rs` (four functions, only two named with the selected `sqlite_snapshot_` prefix) and `📥️inputs/📷️png/🧪️tests/🪆️owner/🦀️.rs` (one matching function). This agrees with the coordinator's genuine current three-law selected receipt; it cannot prove preservation of an earlier seventeen-law declaration set.
+
+The historical read-only `📓️png12-current-route-and-owner-readiness.md` counted fourteen authored candidates in the older structured-chunk representation. `📓️png-paid-provider-and-borrowed-preflight-tdd-mount.md` records older coordinator fifteen-law and whole-library receipts. Those older representation epochs must remain separate from the current byte-owner pair. The pair roster includes Source audit TypeScript but no native audit Rust destination; adjacent Rust audit tests therefore require an explicit new owner-compatible mounting/preservation decision by the coordinator. No current runtime success is inferred from earlier counts or Source green.

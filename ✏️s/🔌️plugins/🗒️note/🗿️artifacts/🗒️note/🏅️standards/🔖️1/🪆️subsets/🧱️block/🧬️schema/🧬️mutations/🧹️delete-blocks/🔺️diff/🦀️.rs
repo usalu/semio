@@ -16,7 +16,7 @@ pub fn diff(payload: &DeleteBlocks, base: &NoteSnapshot) -> protocol::MutationOu
     if missing.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} requested block(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)])
+        outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} requested block(s) did not exist and were skipped.", missing.len(), payload.ids.len())).at(missing)])
     }
 }
 //#endregion 🔖️Diff

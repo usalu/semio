@@ -1,0 +1,15 @@
+# Current CAD14 and Layout9 canonical readiness
+
+Read-only source audit; no compiler/tests/edits. Exact current capsule `📥️inputs/cad-layout-current-canonical-prerequisites.json` has 27 complete line replacements across 3 CAD files, zero Layout entries and zero manifests. Excludes comments and already-paired constructors/dependencies.
+
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🚦️frontiers/🦀️.rs`: lines 112
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs`: lines 3,83,88,90,103,105,116,118,135,158,159,161,171,173
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs`: lines 81,97,117,136,140,152,170,171,173,179,182,236
+
+All pairs replace private `dsl` Record owner qualifications with `semio_framework_dsl_record`: four-name DslField/FieldValue/NativeSchemaControl/Shape import; producer::boxed; RecordValue/FieldValue; and actual __rt::DecodedFieldOwner. Canonical Record root25 publicly exports binding __rt; binding422/426 owns guard and producer40/63 owns public boxed. No guard type/function/callback change or Value alias is proposed. Both CAD/Layout manifests already bind canonical Record and Record-derive directly at19–20. CAD Value/retirement imports are already canonical. Layout narrow actual executable Record/Value scan found no remaining old qualification; DslOps/DslRecord matches were comments only.
+
+Actual owning packages are @semio-tech/cad-cad-rs / @semio-tech/layout-layout-rs and their snapshot SQLite native test owner paths remain registered via runArtifactRustPackageMain snapshotSqliteTests and package test router. Verify the focused Root selector before execution rather than broadening laws. Prior held semantic/paid CAD capsule has not been activated by this audit; no namespace fix proves domain GREEN.
+
+CAD actual complete_literal_cad comparator preserves whole ordered reference groups, each numeric slot to_bits and independent child literal identities. Existing laws include full all-fields/empty-owner domains, numeric-word slots and both native erased directions, physical/row allowance, Unicode cancellation and real declaration IO. Forest/reference-attribute owning laws elsewhere in selected14 must retain their full comparisons; this narrow source prerequisite inventory does not claim their paid repair passed or lower to PartialEq floats.
+
+Layout current backing literal_equal6 asserts full data_fields typed dictionary tags/words/octet/member order and complete native Pack equality. Full-concrete-request law8 retains actual observed allocation authority; inline Drawing controlled codec laws cover full node/path/raw geometry and nested component behavior. Actual Vcs/full owner gate remains pending Root's unchanged9 replay. Presence of dictionary/Pack tests does not authenticate live Vcs dispatch or allocated/released backing equality. No assertion/capsule production field was modified.

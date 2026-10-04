@@ -26,8 +26,8 @@ test("GeoJSON exact document identity and cancellable foreign-member traversal",
  const snapshot = { schema: "owned", value: value({ type: "Feature", geometry: null, properties: { retained: Array.from({ length: fixture.cancelNodes }, () => 1) } }) }; const database = await jsonSnapshotToSqliteDatabase(snapshot); const dialect = { artifactKind: "s.stdio.json", standard: "rfc8259", subset: "geojson" };
  for (const invalid of [{ ...dialect, artifactKind: "s.stdio.xml" }, { ...dialect, standard: "1.0" }, { ...dialect, subset: "*" }]) await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, invalid, database)).rejects.toThrow("subset");
  await expect(validateGeoJsonSnapshotSqliteDialect({ ...snapshot, schema: "different" }, dialect, database)).rejects.toThrow("identity");
- const before = new AbortController(); before.abort(); await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: before.signal })).rejects.toMatchObject({ name: "AbortError" });
- const during = new AbortController(); let visited = 0; await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: during.signal, onProgress: event => { if (event.completed >= 256) { visited = event.completed; during.abort(); } } })).rejects.toMatchObject({ name: "AbortError" }); expect(visited).toBe(256);
+ const before = new AbortController(); before.abort(); await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: before.signal })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" });
+ const during = new AbortController(); let visited = 0; await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: during.signal, onProgress: event => { if (event.completed >= 256) { visited = event.completed; during.abort(); } } })).rejects.toMatchObject({ name: "ValueError", kind: "canceled" }); expect(visited).toBe(256);
 });
 test("GeoJSON typed numeric meaning belongs to its named guard while raw strings remain relational",async()=>{
  for(const item of fixture.typedNumberCases){

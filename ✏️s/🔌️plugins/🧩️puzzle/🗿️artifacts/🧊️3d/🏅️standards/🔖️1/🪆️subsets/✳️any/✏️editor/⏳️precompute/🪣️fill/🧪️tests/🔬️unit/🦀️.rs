@@ -12,11 +12,17 @@ fn faulted(outcome: StepOutcome) -> bool {
     true
 }
 
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, precompute_work_clock, precompute_work_done, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use crate::standards::v1::subsets::any::schema::{BrushKindWeights, Fixture, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
-use std::time::{Duration, Instant};
+
+/// 🧮️ Primitive work one fill builder step may cost ([`precompute_work_done`]): one transition of the cursorized planner —
+/// one preparation item, one candidate, one broad-phase lookup or one collision probe.
+const FILL_STEP_WORK_CEILING: u64 = 100_000;
+
+/// 🧮️ Primitive work the adversarial broad-phase plan may spend before its first candidate is on screen.
+const FILL_FIRST_CANDIDATE_WORK_CEILING: u64 = 10_000_000;
 
 /// 🎯️ What a fresh editor asks for — the product default, never a planner ceiling.
 const TEST_REQUESTED_COUNT: usize = 100;
@@ -333,9 +339,10 @@ fn empty_fill_transition_stays_below_watchdog_ceiling() {
     let mut sequence = 0;
     for _ in 0..EMPTY_FILL_TRANSITION_TURNS {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let started = Instant::now();
+        let before = precompute_work_done();
         let _ = builder.step(&mut context);
-        assert!(started.elapsed() < Duration::from_millis(8));
+        let work = precompute_work_done() - before;
+        assert!(work <= FILL_STEP_WORK_CEILING, "one empty-scene step cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}");
         if matches!(builder.stage, FillJobStage::Complete(_)) {
             break;
         }
@@ -392,24 +399,24 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     });
     let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(meshes)), Operation::new(OperationId(29), RevisionId(1), Generation(1), 29), TEST_REQUESTED_COUNT);
     let mut sequence = 0;
-    let started = Instant::now();
-    let mut first_candidate = None;
-    let mut max_step = Duration::ZERO;
+    let started = precompute_work_done();
+    let (mut first_candidate, mut worst) = (None, 0_u64);
     for _ in 0..50_000 {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let step_started = Instant::now();
+        let before = precompute_work_done();
         let outcome = builder.step(&mut context);
-        let step_elapsed = step_started.elapsed();
-        max_step = max_step.max(step_elapsed);
-        assert!(step_elapsed < Duration::from_millis(8), "stage {:?} reached the 8ms ceiling", builder.stage);
+        let work = precompute_work_done() - before;
+        worst = worst.max(work);
+        assert!(work <= FILL_STEP_WORK_CEILING, "stage {:?} cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}", builder.stage);
         if first_candidate.is_none() && builder.current_preview.is_some() {
-            first_candidate = Some(started.elapsed());
+            first_candidate = Some(precompute_work_done() - started);
         }
         if outcome.is_terminal() {
             break;
         }
     }
-    assert!(first_candidate.is_some_and(|elapsed| elapsed < Duration::from_millis(50)), "adversarial fill did not publish its first candidate within 50ms: {first_candidate:?}");
+    eprintln!("[DEBUG] adversarial broad-phase fill: worst step {worst} units, first candidate after {first_candidate:?} units");
+    assert!(first_candidate.is_some_and(|work| work <= FILL_FIRST_CANDIDATE_WORK_CEILING), "adversarial fill did not publish its first candidate within {FILL_FIRST_CANDIDATE_WORK_CEILING} units: {first_candidate:?}");
     assert!(matches!(builder.stage, FillJobStage::Complete(_)));
     assert_eq!(builder.sequence.len(), 1);
 }
@@ -705,7 +712,7 @@ fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<S
     };
     let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example parses");
     let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "fill");
-    let mut scene: SceneConfig = dsl::FromValue::from_value(crate::editor::puzzle3d::scene_config_value(&envelope)).expect("scene config decodes");
+    let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(crate::editor::puzzle3d::scene_config_value(&envelope)).expect("scene config decodes");
     scene.seed = seed;
     let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
@@ -1105,40 +1112,6 @@ fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
     assert_eq!(keys(&renderer), expected, "a cursor-driven renderer holds every reported record");
 }
 
-/// ⏱️ Turn clock of the interactive law: records where the wall slice expired in the first cold run
-/// and replays exactly those expiries in the later runs, so every run takes the same bounded turns.
-#[derive(Default)]
-struct FillRunTurnClock {
-    reads: u64,
-    deadline: u64,
-    first_expired: Option<u64>,
-    replay_expiry: Option<u64>,
-}
-
-thread_local! {
-    static FILL_RUN_TURN_CLOCK: std::cell::RefCell<FillRunTurnClock> = std::cell::RefCell::new(FillRunTurnClock::default());
-}
-
-fn fill_run_recording_clock() -> Option<u64> {
-    let now = semio_framework_job::default_now_us();
-    FILL_RUN_TURN_CLOCK.with(|clock| {
-        let mut clock = clock.borrow_mut();
-        clock.reads += 1;
-        if clock.first_expired.is_none() && now.is_none_or(|now| now >= clock.deadline) {
-            clock.first_expired = Some(clock.reads);
-        }
-    });
-    now
-}
-
-fn fill_run_replaying_clock() -> Option<u64> {
-    FILL_RUN_TURN_CLOCK.with(|clock| {
-        let mut clock = clock.borrow_mut();
-        clock.reads += 1;
-        Some(if clock.replay_expiry.is_some_and(|expiry| clock.reads >= expiry) { u64::MAX } else { 0 })
-    })
-}
-
 /// 🪞️ The tool run ledger's overlay append of one op (`📋️tool-run-contract.md` §2.7.2): decode, diff against the
 /// running overlay, apply — `None` for an op the overlay no longer admits.
 fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzle3dPlaySnapshot> {
@@ -1151,82 +1124,51 @@ fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzl
     outcome.diff().apply(overlay).ok()
 }
 
-/// ⏱️ LAW (red→green row 1, the successor of the deleted `fillBuildTick` law): on the shipped Nakagin document,
-/// over at least 771 turns, (a) every `drive_step` of the fill run job under the interactive lane's wall slice
-/// and (b) every overlay append of one tick's `appendOps` — the O(k) fold the tool run ledger performs — stay
-/// below the artifact's unchanged 2 ms budget. Like the artifact's other interactive laws it takes each turn's
-/// best of several cold runs; the first run slices by the real clock and the others replay its slice
-/// boundaries exactly, so every run yields the same ticks in the same order.
+/// ⏱️ LAW (red→green row 1, the successor of the deleted `fillBuildTick` law): on the shipped Nakagin document the fill run
+/// job is driven with the thread's primitive-work meter as its clock ([`precompute_work_clock`]) and a slice of
+/// `budgetWork` units, over at least `turns` turns: (a) every `drive_step` stays inside `stepWorkCeiling` units — no unit
+/// between two deadline checks outgrows the slice — and (b) every tick appends at most `appendOpsCeiling` provisional ops,
+/// each of which folds onto the running overlay (the O(k) append the tool run ledger performs). The counts are
+/// deterministic: the same turns, ticks and costs on an idle and a saturated machine.
 #[test]
 fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_nakagin() {
     let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
     let law = &fixture["laws"]["interactive"];
-    let minimum_turns = law["turns"].as_u64().expect("turns") as usize;
-    let budget = Duration::from_micros(law["budgetUs"].as_u64().expect("budget"));
-    let runs = law["coldRuns"].as_u64().expect("cold runs") as usize;
-    let seed = law["seed"].as_u64().expect("seed");
-    let mut expiries: Vec<Option<u64>> = Vec::new();
-    let mut best: Vec<Duration> = Vec::new();
-    let mut best_appends: Vec<Duration> = Vec::new();
-    let mut counters = [0; 5];
-    for run in 0..runs {
-        let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
-        let mut overlay = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
-        let mut append = 0;
-        let mut job = fill_run_job(roots, lane, seed, law["requested"].as_u64().expect("requested") as usize);
-        let operation = job.operation();
-        let mut sequence = 0;
-        let mut verdict = None;
-        for turn in 0.. {
-            let recording = run == 0;
-            assert!(recording || turn < expiries.len(), "cold run {run} took more turns than the recorded run");
-            let (step_budget, clock): (StepBudget, fn() -> Option<u64>) = if recording {
-                let start = semio_framework_job::default_now_us().expect("clock");
-                FILL_RUN_TURN_CLOCK.with(|clock| *clock.borrow_mut() = FillRunTurnClock { deadline: start + semio_framework_job::INTERACTIVE_LANE_WALL_US, ..FillRunTurnClock::default() });
-                (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + semio_framework_job::INTERACTIVE_LANE_WALL_US), fill_run_recording_clock)
-            } else {
-                FILL_RUN_TURN_CLOCK.with(|clock| *clock.borrow_mut() = FillRunTurnClock { replay_expiry: expiries[turn], ..FillRunTurnClock::default() });
-                (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1), fill_run_replaying_clock)
-            };
-            let started = Instant::now();
-            let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, step_budget, root_cancel_token(), clock, &mut sequence, &mut verdict);
-            let elapsed = started.elapsed();
-            if recording {
-                expiries.push(FILL_RUN_TURN_CLOCK.with(|clock| clock.borrow().first_expired));
-                best.push(elapsed);
-            } else {
-                best[turn] = best[turn].min(elapsed);
-            }
-            match settle_fill_run_outcome(outcome) {
-                FillRunTurn::Complete => {
-                    assert!(recording || turn + 1 == expiries.len(), "cold run {run} completed after {} turns, the recorded run after {}", turn + 1, expiries.len());
-                    break;
-                }
-                FillRunTurn::Tick(tick) if !tick.append_ops.is_empty() => {
-                    let started = Instant::now();
-                    for bytes in &tick.append_ops {
-                        overlay = fold_overlay_op(&overlay, bytes).expect("every appended op applies onto the overlay it was planned against");
-                    }
-                    let elapsed = started.elapsed();
-                    if recording {
-                        best_appends.push(elapsed);
-                    } else {
-                        best_appends[append] = best_appends[append].min(elapsed);
-                    }
-                    append += 1;
-                }
-                _ => {}
-            }
+    let number = |key: &str| law[key].as_u64().unwrap_or_else(|| panic!("interactive law {key}"));
+    let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
+    let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
+    let mut overlay = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
+    let mut job = fill_run_job(roots, lane, seed, number("requested") as usize);
+    let operation = job.operation();
+    let (mut sequence, mut verdict) = (0, None);
+    let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
+    loop {
+        let start = precompute_work_done();
+        let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget), root_cancel_token(), precompute_work_clock, &mut sequence, &mut verdict);
+        let work = precompute_work_done() - start;
+        turns += 1;
+        if work > worst {
+            (worst, worst_turn) = (work, turns);
         }
-        counters = job.counters();
+        match settle_fill_run_outcome(outcome) {
+            FillRunTurn::Complete => break,
+            FillRunTurn::Tick(tick) if !tick.append_ops.is_empty() => {
+                worst_append = worst_append.max(tick.append_ops.len());
+                for bytes in &tick.append_ops {
+                    overlay = fold_overlay_op(&overlay, bytes).expect("every appended op applies onto the overlay it was planned against");
+                }
+                appends += 1;
+            }
+            _ => {}
+        }
     }
-    let worst_append = best_appends.iter().max().copied().unwrap_or(Duration::ZERO);
-    assert!(!best_appends.is_empty(), "the measured run appended at least one tick of provisional ops");
-    assert!(worst_append < budget, "the worst overlay append of one tick's appendOps took {worst_append:?}, over {budget:?}");
-    let (turn, worst) = best.iter().enumerate().max_by_key(|(_, elapsed)| **elapsed).map_or((0, Duration::ZERO), |(turn, elapsed)| (turn + 1, *elapsed));
-    assert!(best.len() >= minimum_turns, "the law measures at least {minimum_turns} turns, the run took {}", best.len());
+    let counters = job.counters();
+    eprintln!("[DEBUG] fill run nakagin: worst step {worst} units at turn {worst_turn} of {turns}, {appends} appending ticks, worst append {worst_append} ops (slice {budget})");
+    assert!(appends > 0, "the measured run appended at least one tick of provisional ops");
+    assert!(worst_append <= append_ceiling, "one tick appended {worst_append} provisional ops, over {append_ceiling}");
+    assert!(turns >= minimum_turns, "the law measures at least {minimum_turns} turns, the run took {turns}");
     assert!(counters[1] > 0 && counters[0] > counters[1], "the measured run tested and placed objects: {counters:?}");
-    assert!(worst < budget, "fill run job worst drive_step {worst:?} at turn {turn} of {} exceeds {budget:?}", best.len());
+    assert!(worst <= ceiling, "fill run job worst drive_step cost {worst} units at turn {worst_turn} of {turns}, over {ceiling} (slice {budget})");
 }
 
 /// ⚖️ LAW: with one unit of fuel a run job step publishes exactly one visible unit — the `testing` upsert of the

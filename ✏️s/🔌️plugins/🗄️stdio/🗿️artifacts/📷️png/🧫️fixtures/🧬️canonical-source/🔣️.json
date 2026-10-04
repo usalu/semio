@@ -1,0 +1,88 @@
+{
+  "schema": "stdio.png.canonical-source-fixtures",
+  "cases": [
+    {
+      "id": "precision-16bit-gray",
+      "file": "precision-16bit-gray.png",
+      "width": 2,
+      "height": 1,
+      "bitDepth": 16,
+      "colorType": 0,
+      "interlace": 0,
+      "preview": {
+        "bitDepth": 8,
+        "colorType": 6,
+        "interlace": 0,
+        "background": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "indexed-2bit-duplicate-palette",
+      "file": "indexed-2bit-duplicate-palette.png",
+      "width": 4,
+      "height": 1,
+      "bitDepth": 2,
+      "colorType": 3,
+      "interlace": 0,
+      "preview": {
+        "bitDepth": 8,
+        "colorType": 6,
+        "interlace": 0,
+        "background": [
+          255,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "rgba8-multi-idat-private",
+      "file": "rgba8-multi-idat-private.png",
+      "width": 2,
+      "height": 1,
+      "bitDepth": 8,
+      "colorType": 6,
+      "interlace": 0,
+      "preview": {
+        "bitDepth": 8,
+        "colorType": 6,
+        "interlace": 0,
+        "background": null
+      }
+    },
+    {
+      "id": "rgba8-adam7",
+      "file": "rgba8-adam7.png",
+      "width": 3,
+      "height": 3,
+      "bitDepth": 8,
+      "colorType": 6,
+      "interlace": 1,
+      "preview": {
+        "bitDepth": 8,
+        "colorType": 6,
+        "interlace": 0,
+        "background": null
+      }
+    },
+    {
+      "id": "grayscale-1bit",
+      "file": "grayscale-1bit.png",
+      "width": 8,
+      "height": 1,
+      "bitDepth": 1,
+      "colorType": 0,
+      "interlace": 0,
+      "preview": {
+        "bitDepth": 8,
+        "colorType": 6,
+        "interlace": 0,
+        "background": null
+      }
+    }
+  ]
+}

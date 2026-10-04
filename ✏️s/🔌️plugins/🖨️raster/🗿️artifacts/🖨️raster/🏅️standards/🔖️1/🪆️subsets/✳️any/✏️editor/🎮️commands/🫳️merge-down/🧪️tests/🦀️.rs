@@ -5,7 +5,7 @@ use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapshot {
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
-    document.layers=dsl::json::from_json_str(&layers.to_string()).unwrap();
+    document.layers=semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (key,value) in fixture["images"].as_object().unwrap() {
         let image=RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect()};
         let asset=crate::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
@@ -33,7 +33,7 @@ fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
         let mut encoder=PngEncodeJob::new(result.image).unwrap();while !encoder.advance().unwrap().done {}
         let emit=publish(encoder.into_result().unwrap(),result.origin,&command,&document).unwrap();let mut inverses=Vec::new();
         for mutation in &emit.artifact_mutations {
-            inverses.push(mutation.inverse(&document));let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));
+            inverses.push(mutation.inverse(&document).expect("valid retained mutation inverse fixture"));let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));
         }
         for key in row.get("retainedAssets").unwrap_or(&fixture["expected"]["retainedAssets"]).as_array().unwrap() {assert!(document.assets.contains_key(key.as_str().unwrap()));}
         for key in row.get("removedAssets").unwrap_or(&fixture["expected"]["removedAssets"]).as_array().unwrap() {assert!(!document.assets.contains_key(key.as_str().unwrap()));}
@@ -71,7 +71,7 @@ async fn layer_baking_at_asset_capacity_publishes_and_restores_retained_history(
         let mut source=document(&fixture["cases"][0]["layers"],&fixture);fill_assets(&mut source,fixture["cases"][0]["assetCapacity"].as_u64().unwrap() as usize);
         let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"bake-capacity",source,None);
         let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-        app.load_document_pack(&files).await.unwrap();
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.unwrap();
         let before=app.snapshot().unwrap();assert_eq!(before.assets.len(),64);
         let command=if merge {RasterCommand::MergeDown(MergeDown {layer_id:"upper".into()})} else {RasterCommand::FlattenLayers(super::super::flatten_layers::FlattenLayers {name:"Image".into()})};
         context::dispatch(&mut app,command).await;

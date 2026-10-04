@@ -1,0 +1,232 @@
+[
+  {
+    "name": "numeric base is refused",
+    "patch": {
+      "base": 11
+    }
+  },
+  {
+    "name": "numeric generation is refused",
+    "patch": {
+      "generation": 13
+    }
+  },
+  {
+    "name": "leading zero base",
+    "patch": {
+      "base": "011"
+    }
+  },
+  {
+    "name": "leading zero generation",
+    "patch": {
+      "generation": "013"
+    }
+  },
+  {
+    "name": "negative base",
+    "patch": {
+      "base": "-1"
+    }
+  },
+  {
+    "name": "fractional generation",
+    "patch": {
+      "generation": "1.5"
+    }
+  },
+  {
+    "name": "overflow base",
+    "patch": {
+      "base": "18446744073709551616"
+    }
+  },
+  {
+    "name": "overflow generation",
+    "patch": {
+      "generation": "18446744073709551616"
+    }
+  },
+  {
+    "name": "empty base",
+    "patch": {
+      "base": ""
+    }
+  },
+  {
+    "name": "trailing newline",
+    "patch": {
+      "base": "11\n"
+    }
+  },
+  {
+    "name": "leading whitespace",
+    "patch": {
+      "generation": " 13"
+    }
+  },
+  {
+    "name": "plus prefix",
+    "patch": {
+      "base": "+11"
+    }
+  },
+  {
+    "name": "hex spelling",
+    "patch": {
+      "generation": "0xd"
+    }
+  },
+  {
+    "name": "scientific spelling",
+    "patch": {
+      "base": "1e3"
+    }
+  },
+  {
+    "name": "nonascii digits",
+    "patch": {
+      "base": "١١"
+    }
+  },
+  {
+    "name": "null base",
+    "patch": {
+      "base": null
+    }
+  },
+  {
+    "name": "zero instance",
+    "patch": {
+      "instance": 0
+    }
+  },
+  {
+    "name": "overflow instance",
+    "patch": {
+      "instance": 4294967296
+    }
+  },
+  {
+    "name": "fractional instance",
+    "patch": {
+      "instance": 0.5
+    }
+  },
+  {
+    "name": "short hash",
+    "patch": {
+      "revision": [
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17
+      ]
+    }
+  },
+  {
+    "name": "overflow hash byte",
+    "patch": {
+      "revision": [
+        256,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17
+      ]
+    }
+  },
+  {
+    "name": "fractional hash byte",
+    "patch": {
+      "revision": [
+        0.5,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        17
+      ]
+    }
+  }
+]

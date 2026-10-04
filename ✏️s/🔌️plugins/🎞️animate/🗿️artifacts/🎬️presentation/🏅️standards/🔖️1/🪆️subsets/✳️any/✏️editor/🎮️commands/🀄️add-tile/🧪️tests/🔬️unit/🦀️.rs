@@ -42,15 +42,15 @@ async fn delete_selection_removes_only_the_selected_tile() {
     let mut app = presentation_app_with_registry().await;
     seed_2x2(&mut app).await;
     let first_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
-    let targets = dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(vec![dsl::os_pack::json::object([
-        ("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)),
-        ("id".to_string(), dsl::os_pack::json::Value::from(first_id)),
+    let targets = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::object([
+        ("granularity".to_string(), semio_framework_pack_json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)),
+        ("id".to_string(), semio_framework_pack_json::Value::from(first_id)),
     ])]));
-    let args = dsl::DslValue::object([
-        ("domainId".to_string(), dsl::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
-        ("targets".to_string(), dsl::DslValue::String(targets)),
-        ("merge".to_string(), dsl::DslValue::String("replace".into())),
-        ("method".to_string(), dsl::DslValue::String("pick".into())),
+    let args = semio_framework_value::DslValue::object([
+        ("domainId".to_string(), semio_framework_value::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
+        ("targets".to_string(), semio_framework_value::DslValue::String(targets)),
+        ("merge".to_string(), semio_framework_value::DslValue::String("replace".into())),
+        ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
     ]);
     app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("select");
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;

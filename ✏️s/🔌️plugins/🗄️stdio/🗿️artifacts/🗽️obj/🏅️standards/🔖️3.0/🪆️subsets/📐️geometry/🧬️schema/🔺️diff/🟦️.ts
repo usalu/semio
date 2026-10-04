@@ -1,4 +1,4 @@
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🔺️ ObjDiff schema facet — mirrors 🦀️.rs field-for-field. Handcrafted sparse
  * diff: four index-keyed recursive triples (vertices/texcoords/normals/faces), two name-keyed
  * triples (groups/objects), a tri-state scalar (mtllib), and three whole-vec-replace scalars
@@ -192,9 +192,9 @@ export function parseObjTexCoordsDiff(value: unknown, at = "$"): ObjTexCoordsDif
 export function parseObjNormalDiff(value: unknown, at = "$"): ObjNormalDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    x: row["x"] === undefined ? undefined : parseBinary64(row["x"]),
-    y: row["y"] === undefined ? undefined : parseBinary64(row["y"]),
-    z: row["z"] === undefined ? undefined : parseBinary64(row["z"]),
+    x: row["x"] === undefined ? undefined : parseBinary64Transport(row["x"]),
+    y: row["y"] === undefined ? undefined : parseBinary64Transport(row["y"]),
+    z: row["z"] === undefined ? undefined : parseBinary64Transport(row["z"]),
   };
 }
 
@@ -308,10 +308,10 @@ export function parseObjObjectsDiff(value: unknown, at = "$"): ObjObjectsDiff {
 export function parseObjVertexDiff(value: unknown, at = "$"): ObjVertexDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    x: row["x"] === undefined ? undefined : parseBinary64(row["x"]),
-    y: row["y"] === undefined ? undefined : parseBinary64(row["y"]),
-    z: row["z"] === undefined ? undefined : parseBinary64(row["z"]),
-    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64(row["w"]),
+    x: row["x"] === undefined ? undefined : parseBinary64Transport(row["x"]),
+    y: row["y"] === undefined ? undefined : parseBinary64Transport(row["y"]),
+    z: row["z"] === undefined ? undefined : parseBinary64Transport(row["z"]),
+    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64Transport(row["w"]),
   };
 }
 
@@ -319,9 +319,9 @@ export function parseObjVertexDiff(value: unknown, at = "$"): ObjVertexDiff {
 export function parseObjTexCoordDiff(value: unknown, at = "$"): ObjTexCoordDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    u: row["u"] === undefined ? undefined : parseBinary64(row["u"]),
-    v: row["v"] === undefined ? undefined : parseBinary64(row["v"]),
-    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64(row["w"]),
+    u: row["u"] === undefined ? undefined : parseBinary64Transport(row["u"]),
+    v: row["v"] === undefined ? undefined : parseBinary64Transport(row["v"]),
+    w: row["w"] === undefined || row["w"] === null ? row["w"] : parseBinary64Transport(row["w"]),
   };
 }
 

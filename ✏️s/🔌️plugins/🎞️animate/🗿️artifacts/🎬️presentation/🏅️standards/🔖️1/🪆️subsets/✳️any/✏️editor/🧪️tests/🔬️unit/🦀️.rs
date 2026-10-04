@@ -75,7 +75,7 @@ pub(crate) mod context {
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -307,7 +307,7 @@ async fn import_media_frames_in_inserts_a_new_tile() {
     use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
-    let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("hero-frame")), ("src".to_string(), dsl::os_pack::json::Value::from("/frames/hero.png"))]));
+    let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("hero-frame")), ("src".to_string(), semio_framework_pack_json::Value::from("/frames/hero.png"))]));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
     app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
     let (_, after_tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
@@ -320,7 +320,7 @@ async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
     use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     for _ in 0..2 {
-        let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("frame"))]));
+        let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("frame"))]));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
         app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
     }

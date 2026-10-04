@@ -34,7 +34,7 @@ fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crat
 }
 //#endregion 🔖️Helpers
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "duplicate-block")]
 pub struct DuplicateBlock {
     pub block_id: String,

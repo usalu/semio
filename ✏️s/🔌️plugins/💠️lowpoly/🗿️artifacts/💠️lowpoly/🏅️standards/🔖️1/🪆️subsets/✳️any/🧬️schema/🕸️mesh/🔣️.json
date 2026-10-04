@@ -1,0 +1,262 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mesh/schema.json",
+  "title": "LowpolyMeshState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vertices",
+    "halfedges",
+    "faces",
+    "uvSeams",
+    "attributes",
+    "materials",
+    "textures"
+  ],
+  "properties": {
+    "vertices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position",
+          "normal",
+          "halfedge"
+        ],
+        "properties": {
+          "position": {
+            "$ref": "#/$defs/vector3"
+          },
+          "normal": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/vector3"
+              }
+            ]
+          },
+          "halfedge": {
+            "$ref": "#/$defs/optionalIndex"
+          }
+        }
+      }
+    },
+    "halfedges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vertex",
+          "twin",
+          "next",
+          "face",
+          "uv"
+        ],
+        "properties": {
+          "vertex": {
+            "$ref": "#/$defs/index"
+          },
+          "twin": {
+            "$ref": "#/$defs/optionalIndex"
+          },
+          "next": {
+            "$ref": "#/$defs/index"
+          },
+          "face": {
+            "$ref": "#/$defs/optionalIndex"
+          },
+          "uv": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/$defs/b32"
+            }
+          }
+        }
+      }
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "halfedge",
+          "smooth",
+          "flipped"
+        ],
+        "properties": {
+          "halfedge": {
+            "$ref": "#/$defs/index"
+          },
+          "smooth": {
+            "type": "boolean"
+          },
+          "flipped": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "uvSeams": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/index"
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "domain",
+          "semantic",
+          "interpolation",
+          "values",
+          "indices"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "enum": [
+              "vertex",
+              "corner",
+              "face",
+              "edge"
+            ]
+          },
+          "semantic": {
+            "enum": [
+              "normal",
+              "uv",
+              "color",
+              "material",
+              "custom"
+            ]
+          },
+          "interpolation": {
+            "enum": [
+              "linear",
+              "nearest",
+              "constant"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/value"
+            }
+          },
+          "indices": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/index"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/member"
+      }
+    },
+    "textures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mime",
+          "bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "bytes": {
+            "$ref": "#/$defs/octets"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "b32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}$"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "optionalIndex": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/index"
+        }
+      ]
+    },
+    "vector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/b32"
+      }
+    },
+    "octets": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "value": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/intrinsic/schema.json"
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/intrinsic/schema.json"
+        }
+      }
+    }
+  }
+}

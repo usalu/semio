@@ -1,0 +1,53 @@
+{
+  "envelopeId": "fixture.allocation",
+  "literal": {
+    "unit": "文🌠",
+    "repeat": 20000,
+    "utf8Bytes": 140000,
+    "cancelAfterBytes": 65530
+  },
+  "maximumAllocationBytes": 16777216,
+  "tinyAllocationBytes": 1,
+  "semanticBytes": 1,
+  "refusalMessage": "allocation fixture typed refusal",
+  "cancellation": {
+    "priorAdmissionBytes": 8,
+    "stages": [
+      { "phase": "DecodeNative", "scope": "borrowed-validation", "ownedLiteralBytes": 0 },
+      { "phase": "DecodeNative", "scope": "owned-binding", "ownedLiteralBytes": 140000 },
+      { "phase": "EncodeNative", "scope": "owned-projection", "ownedLiteralBytes": 140000 }
+    ]
+  },
+  "ledgerCases": [
+    {
+      "id": "success-then-refusal",
+      "maximum": 12,
+      "stages": [
+        {
+          "owned": 8,
+          "outcome": "success"
+        },
+        {
+          "owned": 4,
+          "outcome": "refusal"
+        }
+      ],
+      "remaining": 0
+    },
+    {
+      "id": "canceled-keeps-admission",
+      "maximum": 20,
+      "stages": [
+        {
+          "owned": 12,
+          "outcome": "canceled"
+        },
+        {
+          "owned": 8,
+          "outcome": "success"
+        }
+      ],
+      "remaining": 0
+    }
+  ]
+}

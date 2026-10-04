@@ -301,7 +301,8 @@ pub(crate) fn agg_diff(this: &JsonIJsonMutation, base: &JsonSnapshot) -> protoco
 /// member insert (adding one would change the wire and the cross-language catalog), so the undo of a
 /// non-last member degrades to the whole-snapshot restore, which is exact. The `🐍️.py` oracle of
 /// `🔀️mutate-json-rfc8259-i-json` carries the same rule, for the same reason.
-pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
+pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match this {
         JsonIJsonMutation::SetSnapshot(_) => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         JsonIJsonMutation::SetTopLevel(_) => match JsonIJsonRoot::from_value(&base.value) {
@@ -344,6 +345,8 @@ pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<
             _ => Vec::new(),
         },
     }
+
+    })())
 }
 //#endregion 🔖️MutationTrait
 

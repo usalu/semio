@@ -18,6 +18,7 @@ crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 # 🎒️ `pack::json::to_json_string` — the evaluator's pending-extension branch needs a JSON string of

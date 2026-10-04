@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 22,
+  "maxItems": 22,
+  "prefixItems": [
+    {
+      "const": ""
+    },
+    {
+      "const": "normal"
+    },
+    {
+      "const": "世界"
+    },
+    {
+      "const": "\u0000"
+    },
+    {
+      "const": "世界\u0000"
+    },
+    {
+      "const": "space key"
+    },
+    {
+      "const": "a=b"
+    },
+    {
+      "const": "a\"b"
+    },
+    {
+      "const": "a\\b"
+    },
+    {
+      "const": "a\nb"
+    },
+    {
+      "const": "a\tb"
+    },
+    {
+      "const": "123"
+    },
+    {
+      "const": "1.25"
+    },
+    {
+      "const": "_"
+    },
+    {
+      "const": "true"
+    },
+    {
+      "const": "null"
+    },
+    {
+      "const": "nan"
+    },
+    {
+      "const": "inf"
+    },
+    {
+      "const": "a--b"
+    },
+    {
+      "const": "a->b"
+    },
+    {
+      "const": "a/b"
+    },
+    {
+      "const": "__proto__"
+    }
+  ],
+  "items": false
+}

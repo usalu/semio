@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Complete TIFF Operation Grant",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "domain",
+    "refusal"
+  ],
+  "properties": {
+    "domain": {
+      "const": {
+        "kind": "tiff",
+        "schema": "literal tiff\u0000世界😀",
+        "byteOrder": "littleEndian",
+        "ifds": [
+          {
+            "entries": [],
+            "storage": {
+              "kind": "strips",
+              "offsetsKind": "long",
+              "byteCountsKind": "long",
+              "chunks": [
+                [
+                  0,
+                  255,
+                  65,
+                  0
+                ]
+              ]
+            }
+          }
+        ],
+        "projectionRequests": [
+          4,
+          4
+        ],
+        "tableCount": 16,
+        "tableSlotCount": 32,
+        "tableSlotBytes": 128
+      }
+    },
+    "refusal": {
+      "const": "ownershipLimit"
+    }
+  }
+}

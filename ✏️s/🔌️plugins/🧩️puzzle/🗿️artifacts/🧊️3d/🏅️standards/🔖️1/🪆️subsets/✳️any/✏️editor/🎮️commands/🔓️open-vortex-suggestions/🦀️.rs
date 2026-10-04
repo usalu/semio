@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 💡️ Opens the suggestion menu over `fullId` WITHOUT switching the host-owned utility/tool into brush
 /// mode: as its own floating popup, or — `submenu: true` — as the regular context menu's "suggest" submenu,

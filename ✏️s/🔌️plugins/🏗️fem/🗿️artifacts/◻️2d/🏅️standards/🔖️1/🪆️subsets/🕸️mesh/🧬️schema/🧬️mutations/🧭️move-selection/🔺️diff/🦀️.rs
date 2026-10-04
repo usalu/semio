@@ -45,7 +45,7 @@ pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::Mutation
         .map(|item| Fem2dRegionsPatchEntry { id: item.id.clone(), item })
         .collect();
     if patched_nodes.is_empty() && patched_regions.is_empty() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The transform moves none of the {} named node(s) and region(s).", targets.len()));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and region(s).", targets.len()));
     }
     let outcome = protocol::MutationOutcome::new(Fem2dDiff {
         nodes: (!patched_nodes.is_empty()).then(|| Fem2dNodesDelta { patched: patched_nodes, ..Default::default() }),
@@ -56,7 +56,7 @@ pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::Mutation
     if missing.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} named node(s) and region(s) do not exist and were skipped.", missing.len(), targets.len())).at(missing)])
+        outcome.absorb_messages([protocol::MutationMessage::warning("mutation.partial", format!("{} of {} named node(s) and region(s) do not exist and were skipped.", missing.len(), targets.len())).at(missing)])
     }
 }
 

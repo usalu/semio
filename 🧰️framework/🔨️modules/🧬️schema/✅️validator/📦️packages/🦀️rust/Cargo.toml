@@ -18,6 +18,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-pack = { workspace = true }
 

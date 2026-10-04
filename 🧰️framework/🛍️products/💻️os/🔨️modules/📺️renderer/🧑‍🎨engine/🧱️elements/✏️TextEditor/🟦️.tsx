@@ -10,14 +10,16 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
+import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ActionOperationControlV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1, type LocalDocumentOwnerV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
 import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
 import { createEditorSession, type EditorWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useAppKeybindingsByActionId } from "../🏛️ShellHost/🟦️.tsx";
+import { inputCommitReceiptMatchesPublicationV1, type InputDiagnosticV1, type InputOutcomeV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1, publishLocalPresenceTypingV1 } from "../👕️canvas-presence/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -52,10 +54,71 @@ export type TextEditorExplicitDraftSettings = Readonly<{
   applyingLabel: string;
   cancelLabel: string;
   failedLabel: string;
+  syntaxErrorLabel: string;
+  validationErrorLabel: string;
+  pathLabel: string;
+  lineLabel: string;
+  columnLabel: string;
+  publicationRevision: string;
 }>;
 
-export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: string; draft: string; dirty: boolean; conflicted: boolean }>;
+export type TextEditorExplicitDraftPending = Readonly<{ token: object; value: string; revision: string; outcome: InputOutcomeV1 | null; settled: boolean }>;
+export type TextEditorExplicitDraftState = Readonly<{ surfaceId: string; base: string; revision: string; draft: string; dirty: boolean; conflicted: boolean; failed: boolean; diagnostic: InputDiagnosticV1 | null; pending: TextEditorExplicitDraftPending | null; operation: ActionOperationControlV1 | null; cancelling: boolean; cancellationAccepted: boolean }>;
+type RetainedTextEditorDraftV1 = { readonly owner: LocalDocumentOwnerV1; readonly key: string; readonly bucket: RetainedTextEditorDraftBucketV1; state: TextEditorExplicitDraftState; attached: boolean; readonly listeners: Set<(state: TextEditorExplicitDraftState) => void> };
+type RetainedTextEditorDraftBucketV1 = { readonly entries: Map<string, RetainedTextEditorDraftV1>; unsubscribe: () => void };
 //#endregion Types
+
+export const TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1 = 64;
+const retainedTextEditorDraftsV1 = new WeakMap<LocalDocumentOwnerV1, RetainedTextEditorDraftBucketV1>();
+
+function retainedTextEditorDraftBucketV1(owner: LocalDocumentOwnerV1): RetainedTextEditorDraftBucketV1 {
+  const current = retainedTextEditorDraftsV1.get(owner);
+  if (current) return current;
+  const bucket: RetainedTextEditorDraftBucketV1 = { entries: new Map(), unsubscribe: () => {} };
+  if (!owner.active) return bucket;
+  retainedTextEditorDraftsV1.set(owner, bucket);
+  bucket.unsubscribe = owner.subscribeRetirement(() => {
+    bucket.entries.clear();
+    bucket.unsubscribe();
+    retainedTextEditorDraftsV1.delete(owner);
+  });
+  return bucket;
+}
+
+function retainedTextEditorDraftKeyV1(windowId: string, draftScope: string): string { return `${windowId.length}:${windowId}${draftScope.length}:${draftScope}`; }
+
+function acquireRetainedTextEditorDraftV1(owner: LocalDocumentOwnerV1, key: string, initial: TextEditorExplicitDraftState): RetainedTextEditorDraftV1 {
+  const bucket = retainedTextEditorDraftBucketV1(owner);
+  return bucket.entries.get(key) ?? { owner, key, bucket, state: initial, attached: false, listeners: new Set() };
+}
+
+function meaningfulRetainedTextEditorDraftV1(state: TextEditorExplicitDraftState): boolean { return state.dirty || state.pending !== null || state.conflicted || state.failed; }
+
+function publishRetainedTextEditorDraftV1(entry: RetainedTextEditorDraftV1, state: TextEditorExplicitDraftState): void {
+  if (!entry.owner.active) return;
+  entry.state = state;
+  if (meaningfulRetainedTextEditorDraftV1(state)) {
+    if (!entry.attached) {
+      while (entry.bucket.entries.size >= TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1) {
+        const clean = [...entry.bucket.entries].find(([, candidate]) => !meaningfulRetainedTextEditorDraftV1(candidate.state));
+        if (!clean) break;
+        clean[1].attached = false;
+        entry.bucket.entries.delete(clean[0]);
+      }
+      if (entry.bucket.entries.size < TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1) {
+        entry.bucket.entries.set(entry.key, entry);
+        entry.attached = true;
+      }
+    }
+  } else if (entry.attached) {
+    entry.bucket.entries.delete(entry.key);
+    entry.attached = false;
+  }
+  for (const listener of entry.listeners) listener(state);
+}
+
+/** 🧮️ Reports the bounded dirty/pending Source drafts held by one exact live document owner. */
+export function retainedTextEditorDraftCountV1(owner: LocalDocumentOwnerV1): number { return retainedTextEditorDraftsV1.get(owner)?.entries.size ?? 0; }
 
 const TOKEN_CLASS_COLORS: Record<string, string> = {
   keyword: "text-info",
@@ -336,6 +399,10 @@ function parseJsonOr<T>(json: string | undefined, fallback: T): T {
   }
 }
 
+function exactU64(value: unknown): value is string {
+  return typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/u.test(value) && BigInt(value) <= 0xffff_ffff_ffff_ffffn;
+}
+
 /** 📝 Decodes the strict explicit-commit subset of a text-editor scene's settings. */
 export function parseTextEditorExplicitDraftSettings(json: string | undefined): TextEditorExplicitDraftSettings | null {
   if (!json) return null;
@@ -362,6 +429,17 @@ export function parseTextEditorExplicitDraftSettings(json: string | undefined): 
       value.cancelLabel.length === 0 ||
       typeof value.failedLabel !== "string" ||
       value.failedLabel.length === 0 ||
+      typeof value.syntaxErrorLabel !== "string" ||
+      value.syntaxErrorLabel.length === 0 ||
+      typeof value.validationErrorLabel !== "string" ||
+      value.validationErrorLabel.length === 0 ||
+      typeof value.pathLabel !== "string" ||
+      value.pathLabel.length === 0 ||
+      typeof value.lineLabel !== "string" ||
+      value.lineLabel.length === 0 ||
+      typeof value.columnLabel !== "string" ||
+      value.columnLabel.length === 0 ||
+      !exactU64(value.publicationRevision) ||
       (value.editArguments !== undefined && (value.editArguments === null || typeof value.editArguments !== "object" || Array.isArray(value.editArguments)))
     ) return null;
     return {
@@ -376,6 +454,12 @@ export function parseTextEditorExplicitDraftSettings(json: string | undefined): 
       applyingLabel: value.applyingLabel,
       cancelLabel: value.cancelLabel,
       failedLabel: value.failedLabel,
+      syntaxErrorLabel: value.syntaxErrorLabel,
+      validationErrorLabel: value.validationErrorLabel,
+      pathLabel: value.pathLabel,
+      lineLabel: value.lineLabel,
+      columnLabel: value.columnLabel,
+      publicationRevision: value.publicationRevision,
     };
   } catch {
     return null;
@@ -387,16 +471,85 @@ export function textEditorExplicitDraftAction(settings: TextEditorExplicitDraftS
   return { controllerId: "", action: settings.editAction, args: { ...settings.editArguments, [settings.editArgument]: draft } };
 }
 
-/** 🔄 Preserves dirty local text across rerenders and accepts only its exact persisted echo. */
-export function reconcileTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, sceneBuffer: string): TextEditorExplicitDraftState {
-  if (state.surfaceId !== surfaceId || !state.dirty || state.draft === sceneBuffer) return { surfaceId, base: sceneBuffer, draft: sceneBuffer, dirty: false, conflicted: false };
-  return { ...state, conflicted: sceneBuffer !== state.base };
+/** 🆕️ Starts a source draft at one canonical document publication. */
+export function createTextEditorExplicitDraft(surfaceId: string, buffer: string, revision: string): TextEditorExplicitDraftState {
+  return { surfaceId, base: buffer, revision, draft: buffer, dirty: false, conflicted: false, failed: false, diagnostic: null, pending: null, operation: null, cancelling: false, cancellationAccepted: false };
 }
 
-/** ✍️ Recomputes dirty/conflict state against the latest persisted buffer for each local edit. */
-export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, sceneBuffer: string, draft: string): TextEditorExplicitDraftState {
-  if (state.surfaceId !== surfaceId || draft === sceneBuffer) return { surfaceId, base: sceneBuffer, draft, dirty: draft !== sceneBuffer, conflicted: false };
-  return { surfaceId, base: state.base, draft, dirty: true, conflicted: sceneBuffer !== state.base };
+/** 🔄️ Only the exact native receipt acknowledges Apply; equal foreign text preserves a conflict. */
+export function reconcileTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, buffer: string, revision: string): TextEditorExplicitDraftState {
+  if (state.surfaceId !== surfaceId) return createTextEditorExplicitDraft(surfaceId, buffer, revision);
+  const pending = state.pending;
+  if (pending) {
+    if (!pending.settled) return state;
+    if (pending.outcome && inputCommitReceiptMatchesPublicationV1(pending.outcome, revision)) {
+      const draft = state.draft === pending.value ? buffer : state.draft;
+      return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, dirty: draft !== buffer };
+    }
+    if (pending.outcome?.kind === "applied" && pending.outcome.commit && revision === pending.revision) return state;
+    return { ...state, pending: null, operation: null, cancelling: false, cancellationAccepted: false, failed: true, diagnostic: pending.outcome?.kind === "refused" ? pending.outcome.diagnostic ?? null : null, conflicted: revision !== state.revision || buffer !== state.base };
+  }
+  if (!state.dirty) return createTextEditorExplicitDraft(surfaceId, buffer, revision);
+  return { ...state, conflicted: revision !== state.revision || buffer !== state.base };
+}
+
+/** ✍️ Editing while Apply is pending preserves the newer draft across its eventual publication. */
+export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftState, surfaceId: string, buffer: string, draft: string, revision: string): TextEditorExplicitDraftState {
+  if (state.surfaceId !== surfaceId || (!state.pending && draft === buffer)) return { ...createTextEditorExplicitDraft(surfaceId, buffer, revision), draft, dirty: draft !== buffer };
+  return { ...state, draft, dirty: draft !== state.base || state.pending !== null, failed: false, diagnostic: null, conflicted: state.pending ? state.conflicted : revision !== state.revision || buffer !== state.base };
+}
+
+/** 📮️ Reserves a single Apply owner until both completion and its publication arrive. */
+export function beginTextEditorExplicitDraft(state: TextEditorExplicitDraftState): TextEditorExplicitDraftState {
+  if (!state.dirty || state.conflicted || state.pending) return state;
+  return { ...state, failed: false, diagnostic: null, pending: { token: {}, value: state.draft, revision: state.revision, outcome: null, settled: false }, operation: null, cancelling: false, cancellationAccepted: false };
+}
+
+const ownsTextEditorExplicitDraftPending = (state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending): boolean => state.pending?.token === pending.token;
+
+/** 🪪️ Binds the first exact admitted operation only to the Apply owner that started it. */
+export function startTextEditorExplicitDraftOperation(state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending, operation: ActionOperationControlV1): TextEditorExplicitDraftState {
+  return !ownsTextEditorExplicitDraftPending(state, pending) || state.pending!.settled || state.operation !== null ? state : { ...state, operation };
+}
+
+/** ⏹️ Marks one exact cancellation request without releasing or discarding the local draft. */
+export function requestTextEditorExplicitDraftCancellation(state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending): TextEditorExplicitDraftState {
+  return !ownsTextEditorExplicitDraftPending(state, pending) || state.operation === null || state.cancelling || state.pending!.settled ? state : { ...state, cancelling: true };
+}
+
+/** 🛡️ Records accepted cancellation; the original terminal receipt still retires the Apply owner. */
+export function acceptTextEditorExplicitDraftCancellation(state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending): TextEditorExplicitDraftState {
+  if (!ownsTextEditorExplicitDraftPending(state, pending) || !state.cancelling) return state;
+  if (state.pending!.settled) return { ...state, pending: null, operation: null, cancelling: false, cancellationAccepted: false, failed: false, diagnostic: null };
+  return { ...state, cancellationAccepted: true };
+}
+
+/** ↩️ A refused exact cancellation releases only the Cancel control and resumes a terminal receipt already observed. */
+export function refuseTextEditorExplicitDraftCancellation(state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending, surfaceId: string, buffer: string, revision: string): TextEditorExplicitDraftState {
+  if (!ownsTextEditorExplicitDraftPending(state, pending) || !state.cancelling) return state;
+  const resumed = { ...state, cancelling: false, cancellationAccepted: false };
+  return state.pending!.settled ? reconcileTextEditorExplicitDraft(resumed, surfaceId, buffer, revision) : resumed;
+}
+
+/** 🏁️ Late completion from a retired Apply owner cannot alter another draft. */
+export function settleTextEditorExplicitDraft(state: TextEditorExplicitDraftState, pending: TextEditorExplicitDraftPending, outcome: unknown, surfaceId: string, buffer: string, revision: string): TextEditorExplicitDraftState {
+  if (!ownsTextEditorExplicitDraftPending(state, pending) || state.surfaceId !== surfaceId) return state;
+  const value = outcome as { kind?: unknown; commit?: { operation?: unknown; revision?: unknown } } | null | undefined;
+  const answer = value?.kind === "applied" && exactU64(value.commit?.operation) && exactU64(value.commit?.revision) || value?.kind === "refused" ? outcome as InputOutcomeV1 : null;
+  const settled = { ...pending, outcome: answer, settled: true };
+  if (state.cancellationAccepted) return { ...state, pending: null, operation: null, cancelling: false, cancellationAccepted: false, failed: false, diagnostic: null };
+  const next = { ...state, pending: settled };
+  return state.cancelling ? next : reconcileTextEditorExplicitDraft(next, surfaceId, buffer, revision);
+}
+
+/** 🗣️ Maps a stable native diagnostic code and coordinates through localized explicit-draft labels. */
+export function textEditorExplicitDraftFailureV1(settings: TextEditorExplicitDraftSettings, diagnostic: InputDiagnosticV1 | null): string {
+  if (diagnostic === null) return settings.failedLabel;
+  const label = diagnostic.code === "snapshot-edit.invalid-source" ? settings.syntaxErrorLabel : diagnostic.code.startsWith("snapshot-edit.") ? settings.validationErrorLabel : settings.failedLabel;
+  const location = diagnostic.span === undefined ? [] : [`${settings.lineLabel} ${diagnostic.span.line}`, `${settings.columnLabel} ${diagnostic.span.column}`];
+  const path = diagnostic.params?.path;
+  if (path) location.push(`${settings.pathLabel} ${path}`);
+  return location.length === 0 ? label : `${label} ${location.join(", ")}`;
 }
 
 //#endregion EditingHelpers
@@ -431,6 +584,8 @@ function WasmEditorSurface({
   onAction,
   explicitDraft,
   explicitDraftDirty,
+  descriptionId,
+  invalid,
   onDraftChange,
   requestContextMenu,
 }: {
@@ -440,6 +595,8 @@ function WasmEditorSurface({
   readonly onAction: (action: ActionDescriptor) => void;
   readonly explicitDraft?: TextEditorExplicitDraftSettings | null;
   readonly explicitDraftDirty?: boolean;
+  readonly descriptionId?: string;
+  readonly invalid?: boolean;
   readonly onDraftChange?: (text: string) => void;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 }) {
@@ -1192,7 +1349,7 @@ function WasmEditorSurface({
             startRename();
             return;
           }
-          if (event.key === "a" && (event.metaKey || event.ctrlKey)) {
+          if (event.key.toLowerCase() === "a" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
             session?.selectAll();
             emitSelection();
@@ -1302,6 +1459,8 @@ function WasmEditorSurface({
         aria-readonly={readOnly}
         data-read-only={readOnly ? "" : undefined}
         aria-label={editorLabel}
+        aria-describedby={descriptionId}
+        aria-invalid={invalid || undefined}
       />
     </div>
   );
@@ -1312,16 +1471,45 @@ function WasmEditorSurface({
 export function TextEditorHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.textEditor;
   const isClient = useClient();
+  const localDocumentOwner = useLocalDocumentOwnerV1();
+  const localDocumentWindow = useLocalDocumentWindowV1() ?? node.surfaceId;
   const explicitDraft = useMemo(() => parseTextEditorExplicitDraftSettings(scene?.settingsJson), [scene?.settingsJson]);
-  const [draftState, setDraftState] = useState<TextEditorExplicitDraftState>(() => ({ surfaceId: node.surfaceId, base: scene?.buffer ?? "", draft: scene?.buffer ?? "", dirty: false, conflicted: false }));
-  const [draftApply, setDraftApply] = useState<{ pending: boolean; error: string | null }>({ pending: false, error: null });
+  const draftScope = JSON.stringify([node.controllerId, node.surfaceId, explicitDraft?.editAction, explicitDraft?.editArgument, Object.entries(explicitDraft?.editArguments ?? {}).filter(([key]) => key !== "revision")]);
+  const publication = { scope: draftScope, buffer: scene?.buffer ?? "", revision: explicitDraft?.publicationRevision ?? "" };
+  const publicationRef = useRef(publication);
+  publicationRef.current = publication;
+  const mountedRef = useRef(true);
+  const retainsExplicitDraft = explicitDraft !== null && localDocumentOwner?.active === true;
+  const retainedDraft = useMemo(() => retainsExplicitDraft && localDocumentOwner
+    ? acquireRetainedTextEditorDraftV1(localDocumentOwner, retainedTextEditorDraftKeyV1(localDocumentWindow, draftScope), createTextEditorExplicitDraft(draftScope, publication.buffer, publication.revision))
+    : null, [draftScope, localDocumentOwner, localDocumentWindow, retainsExplicitDraft]);
+  const [draftState, setDraftState] = useState<TextEditorExplicitDraftState>(() => retainedDraft?.state ?? createTextEditorExplicitDraft(draftScope, publication.buffer, publication.revision));
+  const draftStateRef = useRef(draftState);
+  const updateDraft = (next: TextEditorExplicitDraftState) => {
+    draftStateRef.current = next;
+    if (retainedDraft) publishRetainedTextEditorDraftV1(retainedDraft, next);
+    if (mountedRef.current) setDraftState(next);
+  };
+  useEffect(() => {
+    if (!retainedDraft) return;
+    const receive = (next: TextEditorExplicitDraftState) => {
+      if (!mountedRef.current) return;
+      draftStateRef.current = next;
+      setDraftState(next);
+    };
+    retainedDraft.listeners.add(receive);
+    draftStateRef.current = retainedDraft.state;
+    setDraftState(retainedDraft.state);
+    return () => { retainedDraft.listeners.delete(receive); };
+  }, [retainedDraft]);
   useEffect(() => {
     if (!scene || !explicitDraft) return;
-    setDraftState((current) => reconcileTextEditorExplicitDraft(current, node.surfaceId, scene.buffer));
-  }, [explicitDraft, node.surfaceId, scene]);
+    updateDraft(reconcileTextEditorExplicitDraft(draftStateRef.current, draftScope, scene.buffer, explicitDraft.publicationRevision));
+  }, [draftScope, explicitDraft?.publicationRevision, scene?.buffer]);
   useEffect(() => {
-    if (!draftState.dirty) setDraftApply({ pending: false, error: null });
-  }, [draftState.dirty]);
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
   const tokens = useMemo((): readonly GrammarToken[] => {
     if (!scene?.tokensJson) return [];
     try {
@@ -1344,28 +1532,57 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
 
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
-  const draft = explicitDraft && draftState.surfaceId === node.surfaceId ? draftState.draft : scene.buffer;
+  const currentDraft = draftState.surfaceId === draftScope ? draftState : createTextEditorExplicitDraft(draftScope, scene.buffer, publication.revision);
+  const draft = explicitDraft ? currentDraft.draft : scene.buffer;
+  const pending = currentDraft.pending !== null;
+  const failure = explicitDraft && (currentDraft.conflicted || currentDraft.failed) ? currentDraft.conflicted ? explicitDraft.conflictLabel : textEditorExplicitDraftFailureV1(explicitDraft, currentDraft.diagnostic) : null;
+  const statusId = `${node.surfaceId}.draft-status`;
   const displayedScene = explicitDraft ? { ...scene, buffer: draft } : scene;
   const changeDraft = (text: string) => {
-    setDraftApply((current) => current.error === null ? current : { pending: false, error: null });
-    setDraftState((current) => changeTextEditorExplicitDraft(current, node.surfaceId, scene.buffer, text));
+    updateDraft(changeTextEditorExplicitDraft(draftStateRef.current, draftScope, scene.buffer, text, publication.revision));
   };
   const discardDraft = () => {
-    setDraftApply({ pending: false, error: null });
-    setDraftState({ surfaceId: node.surfaceId, base: scene.buffer, draft: scene.buffer, dirty: false, conflicted: false });
+    if (!draftStateRef.current.pending) updateDraft(createTextEditorExplicitDraft(draftScope, scene.buffer, publication.revision));
   };
   const applyDraft = async () => {
-    if (!explicitDraft || !draftState.dirty || draftState.conflicted || draftApply.pending) return;
-    const action = textEditorExplicitDraftAction(explicitDraft, draft);
-    setDraftApply({ pending: true, error: null });
-    const reason = refusalReason(await onAction({ ...action, controllerId: node.controllerId }));
-    setDraftApply(reason === null ? { pending: false, error: null } : { pending: false, error: reason });
+    if (!explicitDraft) return;
+    const before = reconcileTextEditorExplicitDraft(draftStateRef.current, draftScope, scene.buffer, publication.revision);
+    const next = beginTextEditorExplicitDraft(before);
+    if (next === before || !next.pending) return;
+    const owner = next.pending;
+    updateDraft(next);
+    let outcome: unknown;
+    try {
+      outcome = await onAction({ ...textEditorExplicitDraftAction(explicitDraft, owner.value), controllerId: node.controllerId }, { started: (operation) => {
+        const current = retainedDraft?.state ?? draftStateRef.current;
+        updateDraft(startTextEditorExplicitDraftOperation(current, owner, operation));
+      } });
+    } catch { outcome = null; }
+    const latest = publicationRef.current;
+    const settled = settleTextEditorExplicitDraft(retainedDraft?.state ?? draftStateRef.current, owner, outcome, latest.scope, latest.buffer, latest.revision);
+    if (retainedDraft?.owner.active) publishRetainedTextEditorDraftV1(retainedDraft, settled);
+    else if (mountedRef.current) updateDraft(settled);
+  };
+  const cancelDraft = async () => {
+    const before = retainedDraft?.state ?? draftStateRef.current;
+    const owner = before.pending;
+    const operation = before.operation;
+    if (!owner || !operation) return;
+    const requested = requestTextEditorExplicitDraftCancellation(before, owner);
+    if (requested === before) return;
+    updateDraft(requested);
+    let outcome: unknown;
+    try { outcome = await operation.cancel(); } catch { outcome = null; }
+    const current = retainedDraft?.state ?? draftStateRef.current;
+    const latest = publicationRef.current;
+    const accepted = typeof outcome === "object" && outcome !== null && (outcome as { readonly kind?: unknown }).kind === "applied";
+    updateDraft(accepted ? acceptTextEditorExplicitDraftCancellation(current, owner) : refuseTextEditorExplicitDraftCancellation(current, owner, latest.scope, latest.buffer, latest.revision));
   };
 
   return (
-    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && draftState.dirty ? "true" : "false"}>
+    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && currentDraft.dirty ? "true" : "false"} aria-busy={explicitDraft && pending || undefined}>
       {isClient ? (
-        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} explicitDraft={explicitDraft} explicitDraftDirty={draftState.dirty} onDraftChange={changeDraft} requestContextMenu={requestContextMenu} />
+        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={changeDraft} requestContextMenu={requestContextMenu} />
       ) : (
         <div className="relative min-h-0 flex-1">
           <HighlightedBuffer buffer={draft} tokens={tokens} />
@@ -1376,16 +1593,20 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
             rows={24}
             value={draft}
             placeholder={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
+            aria-label={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
+            aria-describedby={failure ? statusId : undefined}
+            aria-invalid={Boolean(failure) || undefined}
             onLazyChange={(value) => explicitDraft ? changeDraft(value) : onAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } })}
           />
         </div>
       )}
       {explicitDraft ? (
-        <div className="flex items-center justify-end gap-2 border-t border-border px-3 py-2">
-          {draftState.conflicted || draftApply.error ? <span role="alert" className="mr-auto truncate text-xs text-destructive">{draftState.conflicted ? explicitDraft.conflictLabel : `${explicitDraft.failedLabel}: ${draftApply.error}`}</span> : null}
-          {draftApply.pending ? <span role="status" className="mr-auto text-xs text-muted-foreground">{explicitDraft.applyingLabel}</span> : null}
-          <button type="button" className="rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={!draftState.dirty || draftApply.pending} onClick={discardDraft}>{explicitDraft.discardLabel}</button>
-          <button type="button" className="rounded bg-accent px-3 py-1 text-xs text-accent-foreground disabled:opacity-50" disabled={!draftState.dirty || draftState.conflicted || draftApply.pending} onClick={() => void applyDraft()}>{explicitDraft.applyLabel}</button>
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-3 py-2">
+          {failure ? <span id={statusId} role="alert" className="mr-auto break-words text-xs text-destructive">{failure}</span> : null}
+          {pending ? <span role="status" className="mr-auto text-xs text-muted-foreground">{explicitDraft.applyingLabel}</span> : null}
+          {pending ? <button type="button" className="shrink-0 rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={currentDraft.operation === null || currentDraft.cancelling} aria-busy={currentDraft.cancelling || undefined} onClick={() => void cancelDraft()}>{explicitDraft.cancelLabel}</button> : null}
+          <button type="button" className="shrink-0 rounded border border-border px-3 py-1 text-xs text-foreground disabled:opacity-50" disabled={!currentDraft.dirty || pending} onClick={discardDraft}>{explicitDraft.discardLabel}</button>
+          <button type="button" className="shrink-0 rounded bg-accent px-3 py-1 text-xs text-accent-foreground disabled:opacity-50" disabled={!currentDraft.dirty || currentDraft.conflicted || pending} onClick={() => void applyDraft()}>{explicitDraft.applyLabel}</button>
         </div>
       ) : null}
       {diagnostics.length > 0 ? (

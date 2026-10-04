@@ -48,10 +48,10 @@ async fn snapshot_rejects_unknown_format() {
 
 //#region 🔖️Plan
 fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
-    HistoryEdit { line: None, id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, verb: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None, lane: None }
+    HistoryEdit { line: None, id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, description: None, verb: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None, lane: None }
 }
 
-async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
+async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) where ProtocolError:From<S::Error> {
     let len = dict.len();
     if len > *base {
         let entries = dict.entries_since(*base);

@@ -17,7 +17,7 @@ pub fn measure(layers: &RemodelingLayerVisibility, labels: &RemodelingLabels) ->
         label: Some(label.into()),
         pressed,
         text: None,
-        on_change: remodeling_window_action("setLayerVisibility", Some(dsl::DslValue::object([("layer".to_string(), dsl::DslValue::String(layer.to_string())), ("visible".to_string(), dsl::DslValue::Bool(!pressed))]))),
+        on_change: remodeling_window_action("setLayerVisibility", Some(semio_framework_value::DslValue::object([("layer".to_string(), semio_framework_value::DslValue::String(layer.to_string())), ("visible".to_string(), semio_framework_value::DslValue::Bool(!pressed))]))),
     };
     WindowMeasure::Group {
         id: "remodeling-measure-layers".into(),

@@ -10,3 +10,8 @@ pub mod editing;
 
 #[path = "../../🧩️compositing/🦀️.rs"]
 pub mod compositing;
+
+#[path = "../../🖊️coverage/🦀️.rs"]
+pub mod coverage;
+#[path = "../../🎨️sampling/↗️affine/🦀️.rs"]
+pub mod affine_sampling;

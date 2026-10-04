@@ -2,7 +2,7 @@ use super::super::{ConnectPorts, WorkflowDiff, WorkflowMutation, WorkflowSnapsho
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "disconnect-edge")]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEd
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::DisconnectEdge { edge_id: self.edge_id.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.graph.edges.iter().find(|edge| edge.id == self.edge_id).map(|edge| vec![WorkflowMutation::ConnectPorts(ConnectPorts { edge: edge.clone() })]).unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
     }

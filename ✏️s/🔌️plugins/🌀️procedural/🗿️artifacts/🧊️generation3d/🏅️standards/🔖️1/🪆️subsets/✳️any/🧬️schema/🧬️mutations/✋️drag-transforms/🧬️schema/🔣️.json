@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/drag-transforms/schema.json",
   "title": "DragTransforms",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `drag-transforms` mutation record — one gumball drag as intent: the offset every addressed translate operator adds to its own offset, read off the BASE graph, so an edited drag replays on any base.",
   "type": "object",
   "additionalProperties": false,

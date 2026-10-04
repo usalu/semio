@@ -43,7 +43,7 @@ impl SubsetRoundtripSpec for DocxAnyRoundtrip {
         crate::engine::decode_docx(bytes).map_err(|e| e.to_string())
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
         DocxInference::infer(snapshot)
     }
 

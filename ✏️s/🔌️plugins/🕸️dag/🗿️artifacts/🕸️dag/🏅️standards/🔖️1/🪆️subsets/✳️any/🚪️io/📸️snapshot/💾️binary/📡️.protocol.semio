@@ -1,7 +1,7 @@
 dialect protocol
-protocol dag.snapshot
+protocol dag.dag
 version 1
-schema dag.dag.snapshot
+schema dag.dag
 start frame
 framing magic 0x8953f83f7d340d0a
 header fixed 32

@@ -92,7 +92,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct CsvBuilderConstruction {
         snapshot: CsvSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for CsvBuilderConstruction {
@@ -105,11 +105,11 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(crate::schema::snapshot::read_csv_source_text(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<CsvSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(crate::schema::snapshot::read_csv_source_binary(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::schema::mutations::apply_csv_mutation(&mut self.snapshot, &mutation);
@@ -119,7 +119,7 @@ pub mod derived_construction {
             self.snapshot = <CsvDiff as protocol::MutationDiff<CsvSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -181,23 +181,8 @@ pub mod derived_analysis {
 
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Text(text) => {
-                    let body = match store::semio_format::split_text_preamble(text) {
-                        Ok((_, rest)) => rest,
-                        Err(_) => text,
-                    };
-                    looks_like_csv(body)
-                }
-                AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
-                    Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_csv(&text),
-                        Err(_) => IoConfidence::Low,
-                    },
-                    Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_csv(text),
-                        Err(_) => IoConfidence::Low,
-                    },
-                },
+                AnalyzeSource::Text(text) => if text.starts_with("semio "){if crate::schema::snapshot::read_csv_source_text(text).is_ok(){IoConfidence::High}else{IoConfidence::Low}}else{looks_like_csv(text)},
+                AnalyzeSource::Binary(bytes) => if bytes.starts_with(&[137,83,69,77,13,10,26,10]){if crate::schema::snapshot::read_csv_source_binary(bytes).is_ok(){IoConfidence::High}else{IoConfidence::Low}}else{std::str::from_utf8(bytes).map(looks_like_csv).unwrap_or(IoConfidence::Low)},
             }
         }
 
@@ -207,18 +192,18 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <CsvSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match crate::schema::snapshot::read_csv_source_text(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match crate::schema::snapshot::read_csv_source_binary(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }

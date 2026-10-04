@@ -17,9 +17,12 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetDoctype {
     fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         agg_diff(&HtmlMutation::SetDoctype(self.clone()), base)
     }
-    fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
-        agg_inverse(&HtmlMutation::SetDoctype(self.clone()), base)
-    }
+    fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&HtmlMutation::SetDoctype(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
     }

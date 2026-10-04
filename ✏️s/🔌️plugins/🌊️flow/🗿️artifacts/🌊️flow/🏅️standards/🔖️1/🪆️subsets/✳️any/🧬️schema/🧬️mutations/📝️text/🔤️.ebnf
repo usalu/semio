@@ -1,3 +1,0 @@
-(* ebnf flow.flow.mutations *)
-document = header, body ;
-header = 'schema', space, 'flow.flow.mutations', newline ;

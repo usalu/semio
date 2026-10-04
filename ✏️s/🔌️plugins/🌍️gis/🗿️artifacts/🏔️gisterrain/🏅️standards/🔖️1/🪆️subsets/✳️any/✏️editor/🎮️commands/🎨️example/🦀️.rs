@@ -38,7 +38,7 @@ pub fn example_document(example_id: &str) -> Result<GisTerrainSnapshot, Fault> {
 
 //#region 🔖️SetActiveExample
 /// ✏️ Replaces document content by diffing this artifact's two editable fields — `exaggeration` and
-/// the `map:in` overlay's `importedFeaturesJson` — into the authored `change-exaggeration` /
+/// the `map:in` overlay's `importedMap` — into the authored `change-exaggeration` /
 /// `change-imported-features` leaves, so this is a Mutation action, not a View one. Never a
 /// whole-document snapshot swap (that vocabulary is retired by the taxonomy): each emitted leaf
 /// still has its own real inverse, so one undo restores the prior document exactly. A field that
@@ -51,7 +51,7 @@ pub fn example_document(example_id: &str) -> Result<GisTerrainSnapshot, Fault> {
 pub mod set_active_example {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
         pub example_id: String,
@@ -64,8 +64,8 @@ pub mod set_active_example {
         if document.exaggeration != next.exaggeration {
             artifact_mutations.push(GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: next.exaggeration }));
         }
-        if document.imported_features_json != next.imported_features_json {
-            artifact_mutations.push(GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: next.imported_features_json.clone() }));
+        if document.imported_map != next.imported_map {
+            artifact_mutations.push(GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: next.imported_map.clone() }));
         }
         Ok(Emit { artifact_mutations, ..Default::default() })
     }

@@ -5,12 +5,15 @@ use crate::standards::v1::subsets::any::schema::mutations::{add_load, Fem3dMutat
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemoveLoad, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub fn inverse(payload: &RemoveLoad, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.load_cases
         .iter()
         .find(|case| case.id == payload.case_id)
         .and_then(|case| case.loads.iter().find(|load| load_id(load) == payload.load_id).cloned())
         .map(|load| vec![Fem3dMutation::AddLoad(add_load::AddLoad { case_id: payload.case_id.clone(), load: Box::new(load) })])
         .unwrap_or_default()
+
+    })())
 }
 //#endregion 🔖️Inverse

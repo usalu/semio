@@ -23,7 +23,7 @@ pub(crate) fn sample_pptx() -> PptxSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn maps_shapes_and_drops_other() {
-    let semio = semio_framework_plugin::resolve_ready(SemioPresentationFromPptx::deserialize(&sample_pptx())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioPresentationFromPptx::deserialize(&sample_pptx())).expect("deserialize");
     assert!(semio.masters.is_empty() && semio.layouts.is_empty());
     assert_eq!(semio.slides.len(), 1);
     let slide = &semio.slides[0];

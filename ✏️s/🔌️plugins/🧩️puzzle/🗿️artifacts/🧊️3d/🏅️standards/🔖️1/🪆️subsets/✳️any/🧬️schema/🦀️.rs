@@ -116,7 +116,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle3dBuilderConstruction {
         snapshot: Puzzle3dSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for Puzzle3dBuilderConstruction {
@@ -129,7 +129,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self { snapshot: <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -139,7 +139,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -148,7 +148,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -190,14 +190,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -231,7 +231,7 @@ semio_framework_plugin::derive_artifact_facets!(
 pub(crate) type Quat = [f64; 4];
 pub(crate) type Vec3 = [f64; 3];
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -273,7 +273,7 @@ impl Default for BrushHostRules {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -286,7 +286,7 @@ pub struct BrushKindWeights {
     pub(crate) vortex_weights: std::collections::BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCompatEntry {
     pub(crate) source: String,
@@ -300,7 +300,7 @@ pub struct KindCompatEntry {
     pub(crate) specificity: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindVortexTemplate {
     #[cfg_attr(test, serde(default))]
@@ -344,7 +344,7 @@ impl Default for ObjectKindVortexTemplate {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindRepresentation {
     #[cfg_attr(test, serde(default))]
@@ -370,7 +370,7 @@ pub struct ObjectKindRepresentation {
     pub(crate) description: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKind {
     pub(crate) id: String,
@@ -379,13 +379,13 @@ pub struct ObjectKind {
     pub(crate) representations: Vec<ObjectKindRepresentation>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
-    pub(crate) scale: Option<dsl::DslValue>,
+    pub(crate) scale: Option<semio_framework_value::DslValue>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub(crate) vortices: Vec<ObjectKindVortexTemplate>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexKindCatalog {
     pub(crate) id: String,
@@ -415,7 +415,7 @@ pub struct VortexKindCatalog {
     pub(crate) default_cable_kind: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CableKindCatalog {
     pub(crate) id: String,
@@ -426,7 +426,7 @@ pub struct CableKindCatalog {
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCatalogBundle {
     #[cfg_attr(test, serde(default))]
@@ -440,7 +440,7 @@ pub struct KindCatalogBundle {
     pub(crate) cables: Vec<CableKindCatalog>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexProps {
     pub id: String,
@@ -451,7 +451,7 @@ pub struct VortexProps {
     pub direction: Option<Vec3>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct FixtureObject {
     pub id: String,
@@ -466,13 +466,13 @@ pub struct FixtureObject {
     pub mesh_url: Option<String>,
     pub origin: Vec3,
     pub orientation: Option<Quat>,
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub vortices: Vec<VortexProps>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -508,7 +508,7 @@ pub struct AttractionProps {
     pub y: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -520,12 +520,12 @@ pub struct WorldVolumeProps {
     pub orientation: Option<Quat>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
 }
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct Fixture {
     #[cfg_attr(test, serde(default))]
@@ -542,7 +542,7 @@ pub struct Fixture {
 /// 📨️ The full typed payload `Puzzle3dEngineCommand::SetScene` carries — the exact same shape
 /// `Puzzle3dCollision::set_scene`'s JSON payload has always deserialized into, just reused directly
 /// instead of re-declared, so the command enum's field IS this type, not a mirror of it.
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct SceneConfig {
     pub(crate) fixture: Fixture,
@@ -586,10 +586,10 @@ pub struct BrushPreviewState {
     pub orientation: Quat,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -601,7 +601,7 @@ pub struct BrushPlacePayload {
     pub orientation: Quat,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub scale: Option<dsl::DslValue>,
+    pub scale: Option<semio_framework_value::DslValue>,
 }
 
 /// 🎯️ A suggestion-popup preview accepted as-is becomes a placement at the exact same pose — the one
@@ -937,7 +937,7 @@ pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
 /// old JSON-string method parsed: `SetScene` mirrors `set_scene`'s `SceneConfig` JSON body,
 /// `ApplyBrushPlacement` mirrors `apply_brush_placement_json`'s `BrushPlacePayload` body,
 /// `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Puzzle3dEngineCommand {
     #[dsl(key = "set-scene")]
     SetScene { scene: SceneConfig },
@@ -951,22 +951,22 @@ pub enum Puzzle3dEngineCommand {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Puzzle3dEngineCommand {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 

@@ -16,9 +16,10 @@ fn unit_cube() -> SemioMeshSnapshot {
 /// height is 2·√(2/3), so the fitted silhouette covers √3·s² pixels with s = (edge − 2·margin)/height.
 #[test]
 fn a_unit_cube_projects_to_the_analytic_hexagon() {
-    let png = semio_framework_plugin::resolve_ready(SemioMeshToPng::serialize(&unit_cube())).expect("png");
-    assert_eq!((png.width, png.height), (512, 512));
-    let painted = png.pixels.chunks(4).map(|px| 1.0 - (px[0] as f64 + px[1] as f64 + px[2] as f64) / 765.0).map(|darkness| if darkness > 0.05 { 1.0 } else { 0.0 }).sum::<f64>();
+    let png = ::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(&unit_cube())).expect("png");
+    let projection = semio_s_artifact_stdio_png::io::project_png(&png.bytes).expect("mesh PNG projection");
+    assert_eq!((projection.width, projection.height), (512, 512));
+    let painted = projection.pixels.chunks(4).map(|px| 1.0 - (px[0] as f64 + px[1] as f64 + px[2] as f64) / 765.0).map(|darkness| if darkness > 0.05 { 1.0 } else { 0.0 }).sum::<f64>();
     let scale = (MESH_VIEW_EDGE - 2.0 * MESH_VIEW_MARGIN) / (2.0 * (2.0f64 / 3.0).sqrt());
     let expected = 3.0f64.sqrt() * scale * scale;
     assert!((painted - expected).abs() / expected < 0.01, "painted {painted} vs analytic {expected}");

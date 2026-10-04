@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialConductivity, base: &EnergyMod
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Glazing material {}: conductivity (W/m·K) must be a positive finite value, got {}.", payload.id.0, payload.new_conductivity_w_m_k), [payload.id.0.to_string()]);
     }
     if existing.conductivity_w_m_k == payload.new_conductivity_w_m_k {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Glazing material {} already carries this conductivity (W/m·K): {}.", payload.id.0, payload.new_conductivity_w_m_k));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Glazing material {} already carries this conductivity (W/m·K): {}.", payload.id.0, payload.new_conductivity_w_m_k));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {

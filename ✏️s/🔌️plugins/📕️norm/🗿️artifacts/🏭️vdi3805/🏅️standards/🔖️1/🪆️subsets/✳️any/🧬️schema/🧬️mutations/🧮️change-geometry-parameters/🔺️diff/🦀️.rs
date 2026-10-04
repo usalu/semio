@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeGeometryParameters, base: &Vdi3805Snapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Geometry \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if entry.parameters == payload.new_parameters {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Geometry \"{}\" already has these parameters.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Geometry \"{}\" already has these parameters.", payload.id));
     }
     let mut geometry = base.geometry.clone();
     if let Some(entry) = geometry.get_mut(&payload.id) {

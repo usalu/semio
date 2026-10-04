@@ -3,6 +3,9 @@
 use super::ChangeZoneNightVentilation;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(payload: &ChangeZoneNightVentilation, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+pub fn inverse(payload: &ChangeZoneNightVentilation, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     base.zones.iter().find(|zone| zone.id == payload.zone_id).map(|zone| vec![Din4108Mutation::ChangeZoneNightVentilation(ChangeZoneNightVentilation { zone_id: payload.zone_id.clone(), new_night_ventilation: zone.night_ventilation.clone() })]).unwrap_or_default()
+
+    })())
 }

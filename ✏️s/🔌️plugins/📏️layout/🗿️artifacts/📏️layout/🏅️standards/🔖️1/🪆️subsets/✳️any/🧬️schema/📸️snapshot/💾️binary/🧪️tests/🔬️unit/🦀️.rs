@@ -25,7 +25,7 @@ async fn pack_round_trips_minimal_document_with_character_style() {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     };
@@ -66,7 +66,7 @@ async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
             ],
         }],
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     };

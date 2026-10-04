@@ -68,7 +68,7 @@ use semio_framework_2d::compute::EngineHandles;
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Wfc2dMutation` kind a UI can
 /// trigger, plus the three non-document verbs (camera, armed tile, solve result).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Wfc2dEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -110,8 +110,8 @@ pub enum Wfc2dEditorCommand {
     CommitFill { payload_json: String },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
-    /// 🕹️ The NodeGraph canvas' OWN gesture channel: a released node drag (the node-graph gesture record), a completed
-    /// or cut wire and a whole-graph `setHostSnapshot` all arrive as `nodeGraphEdit` rows, never as
+    /// 🕹️ The NodeGraph canvas' OWN gesture channel: a released node drag (the node-graph gesture record), a completed,
+    /// cut or deleted wire and a deleted node all arrive as `nodeGraphEdit` rows, never as
     /// `move-slot`/`connect-slots` directly. One release is ONE drag-tool transaction of relative `drag-slots` leaves.
     #[dsl(key = "node-graph-edit")]
     NodeGraphEdit { operations_json: String },
@@ -295,7 +295,7 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         (!self.completed && wfc2d_command_id(command) == self.tool_id).then(|| wfc2d_retained_extent(command, snapshot)).flatten()
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Wfc2dEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<Wfc2dEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Wfc2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Wfc2dEditor>>, Fault> {
         if self.completed || wfc2d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.route"), "the bounded WFC 2D work rejects an undeclared or completed route"));
         }
@@ -410,22 +410,22 @@ impl graph::SlotGraphView for Wfc2dGraphView<'_> {
 pub struct Wfc2dEditor;
 
 //#region 🔖️Args
-fn arg<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
+fn arg<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
     match args {
-        Some(dsl::DslValue::Object(entries)) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value),
+        Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value),
         _ => None,
     }
 }
 
-fn arg_f64(args: Option<&dsl::DslValue>, key: &str, fallback: f64) -> f64 {
+fn arg_f64(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: f64) -> f64 {
     match arg(args, key) {
-        Some(dsl::DslValue::Number(number)) => number.as_f64(),
-        Some(dsl::DslValue::String(text)) => text.parse().unwrap_or(fallback),
+        Some(semio_framework_value::DslValue::Number(number)) => number.as_f64(),
+        Some(semio_framework_value::DslValue::String(text)) => text.parse().unwrap_or(fallback),
         _ => fallback,
     }
 }
 
-fn arg_u64(args: Option<&dsl::DslValue>, key: &str, fallback: u64) -> u64 {
+fn arg_u64(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: u64) -> u64 {
     let value = arg_f64(args, key, fallback as f64);
     if value.is_finite() && value >= 0.0 {
         value as u64
@@ -434,25 +434,25 @@ fn arg_u64(args: Option<&dsl::DslValue>, key: &str, fallback: u64) -> u64 {
     }
 }
 
-fn arg_bool(args: Option<&dsl::DslValue>, key: &str, fallback: bool) -> bool {
+fn arg_bool(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: bool) -> bool {
     match arg(args, key) {
-        Some(dsl::DslValue::Bool(value)) => *value,
-        Some(dsl::DslValue::String(text)) => text == "true",
+        Some(semio_framework_value::DslValue::Bool(value)) => *value,
+        Some(semio_framework_value::DslValue::String(text)) => text == "true",
         _ => fallback,
     }
 }
 
-fn arg_string(args: Option<&dsl::DslValue>, key: &str) -> String {
+fn arg_string(args: Option<&semio_framework_value::DslValue>, key: &str) -> String {
     match arg(args, key) {
-        Some(dsl::DslValue::String(text)) => text.clone(),
-        Some(other) => dsl::json::to_json_string(other),
+        Some(semio_framework_value::DslValue::String(text)) => text.clone(),
+        Some(other) => semio_framework_pack_json::to_json_string(other),
         None => String::new(),
     }
 }
 
 /// 🏷️ An optional string argument: absent or empty answers `None`, so a rule with no relation scope
 /// and a rule whose relation is the empty string cannot be confused.
-fn arg_optional_string(args: Option<&dsl::DslValue>, key: &str) -> Option<String> {
+fn arg_optional_string(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<String> {
     let value = arg_string(args, key);
     (!value.is_empty()).then_some(value)
 }
@@ -493,7 +493,7 @@ pub struct Wfc2dGraphGesture {
 /// adjacency already cut) leaves nothing.
 pub fn wfc2d_node_graph_edit(document: &Wfc2dSnapshot, operations_json: &str) -> Result<Wfc2dGraphGesture, Fault> {
     let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
-    let args: dsl::DslValue = dsl::json::from_json_str(&format!("{{\"operations\":{operations_json}}}")).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
+    let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&format!("{{\"operations\":{operations_json}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
     let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut gesture = Wfc2dGraphGesture::default();
     for row in rows {
@@ -570,7 +570,7 @@ pub fn wfc2d_example_document(example_id: &str) -> Option<Wfc2dSnapshot> {
 /// phantom history entry a "replace every collection" mutation set would.
 fn wfc2d_load_document_effect(document: &Wfc2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Wfc2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("wfc", WFC_2D_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc", WFC_2D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🗃️Examples
@@ -644,7 +644,7 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
         }
         Wfc2dEditorCommand::NodeGraphEdit { operations_json } => {
             let gesture = wfc2d_node_graph_edit(document, operations_json)?;
-            return Ok(drag::wfc2d_drag_tool_emit(WFC_2D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_2D_GRAPH_VIEW_SCALE));
+            return Ok(drag::wfc2d_drag_tool(WFC_2D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_2D_GRAPH_VIEW_SCALE).into());
         }
         Wfc2dEditorCommand::SetActiveExample { example_id } => {
             let Some(next) = wfc2d_example_document(example_id) else {
@@ -746,6 +746,24 @@ pub fn render_body(
 }
 
 impl ArtifactEditor for Wfc2dEditor {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
+            [
+            ("wfc2d.tile.unknown-tile", LocalizedLabel::native("This tile does not exist.", "Diese Kachel existiert nicht.")),
+            ("wfc2d.tile.unknown-pin", LocalizedLabel::native("This pin does not exist.", "Diese Fixierung existiert nicht.")),
+            ("wfc2d.slot.unknown-slot", LocalizedLabel::native("This slot does not exist.", "Dieser Steckplatz existiert nicht.")),
+            ("wfc2d.rule.unknown-rule", LocalizedLabel::native("This rule does not exist.", "Diese Regel existiert nicht.")),
+            ("wfc2d.edge.unknown-edge", LocalizedLabel::native("This edge does not exist.", "Diese Kante existiert nicht.")),
+            ("wfc2d.id.taken", LocalizedLabel::native("This id is already in use.", "Diese Kennung ist bereits vergeben.")),
+            ("wfc2d.example.unknown", LocalizedLabel::native("This example does not exist.", "Dieses Beispiel existiert nicht.")),
+            ("wfc2d.retained.extent", LocalizedLabel::native("The document is too large for this action.", "Das Dokument ist für diese Aktion zu groß.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = Wfc2dSnapshot;
     type Mutation = Wfc2dMutation;
     type Config = Wfc2dConfig;
@@ -850,15 +868,18 @@ impl ArtifactEditor for Wfc2dEditor {
     /// 🕹️ The `slot` domain's addressable ids — the framework validates every selection write against
     /// this, so a node the canvas picks is only ever selectable while the document still declares it.
     /// Flat: adjacency is a peer relation, never a parent one.
-    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<protocol::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let ordered = doc.snapshot.slots.iter().map(|slot| TopologyNode { id: slot.id.clone(), granularity: "slot".into(), parent: None }).collect();
         protocol::InteractionTopology { domains: [("slot".to_string(), protocol::DomainTopology { ordered })].into_iter().collect() }
-    }
+    
+})())
+}
 
-    /// 🌉️ The args bridge every UI dispatch crosses — typed against `dsl::DslValue`, never
+    /// 🌉️ The args bridge every UI dispatch crosses — typed against `semio_framework_value::DslValue`, never
     /// `serde_json::Value`: without this override the trait's own default answers
     /// `app.command.unsupported` and every button in every pane is inert.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         Ok(match action {
             "change-seed" => Wfc2dEditorCommand::ChangeSeed { seed: arg_u64(args, "seed", 0) },
             "create-slot" => Wfc2dEditorCommand::CreateSlot {
@@ -935,7 +956,7 @@ impl ArtifactEditor for Wfc2dEditor {
         }
         let tool_id = wfc2d_command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.tool-mismatch"), "WFC 2D command does not match its exact registered tool"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC 2D command does not match its exact registered tool"));
         }
         if wfc2d_retained_extent(&request.command, &request.snapshot).is_none() {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.retained.extent"), "WFC 2D bounded route exceeded its declared work extent"));

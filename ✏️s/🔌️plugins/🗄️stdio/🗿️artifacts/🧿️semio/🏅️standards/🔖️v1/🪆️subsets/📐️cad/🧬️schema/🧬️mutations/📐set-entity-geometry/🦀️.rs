@@ -18,9 +18,12 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetEntityGeo
     fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<<SemioCadMutation as Mutation<SemioCadSnapshot>>::Diff> {
         agg_diff(&SemioCadMutation::SetEntityGeometry(self.clone()), base)
     }
-    fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
-        agg_inverse(&SemioCadMutation::SetEntityGeometry(self.clone()), base)
-    }
+    fn inverse(&self, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&SemioCadMutation::SetEntityGeometry(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity geometry", "Entitätsgeometrie setzen")
     }

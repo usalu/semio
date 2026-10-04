@@ -32,7 +32,7 @@ pub fn diff(payload: &super::MoveNodes, base: &Generation2dSnapshot) -> protocol
         };
     }
     if (payload.dx, payload.dy) == (0.0, 0.0) {
-        return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "the drag offset is zero").at(payload.ids.clone())]));
+        return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the drag offset is zero").at(payload.ids.clone())]));
     }
     if moved.iter().any(|(_, layout)| !layout.x.is_finite() || !layout.y.is_finite()) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", "the moved position leaves the finite canvas", payload.ids.clone());

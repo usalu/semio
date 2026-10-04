@@ -12,7 +12,7 @@ fn inference_determinism_law() {
 
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
     let snapshot = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses"));
-    assert_eq!(Generation2dInference::infer(&snapshot), Generation2dInference::infer(&snapshot));
+    assert_eq!(Generation2dInference::infer(&snapshot).expect("valid materialized inference fixture"), Generation2dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -21,6 +21,6 @@ fn inference_default_law() {
     use crate::Generation2dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(Generation2dInference::infer(&Generation2dSnapshot::default()), Generation2dInference::default());
+    assert_eq!(Generation2dInference::infer(&Generation2dSnapshot::default()).expect("valid materialized inference fixture"), Generation2dInference::default());
 }
 //#endregion 🧪️InferenceLaws

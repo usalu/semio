@@ -1,0 +1,1 @@
+The 410 composed rows have 0 fresh current/hash/inverse/forward-patch gaps. This verifies composition guards, while native integration, conditional features and remaining helper contracts retain their separate scope. [Full observations](🗑️generated/cargo-workspace-general-transfer/independent-four-hundred-ten-integration-current-guards-1.json).

@@ -11,7 +11,7 @@ fn update_layer_renames_and_locks_and_inverse_restores_it() {
     assert_eq!(layer.name, "Art");
     assert!(!layer.visible);
     assert!(layer.locked);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse applies");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse applies");
     let layer = restored.pages.iter().find(|page| page.id == "page-1").unwrap().layers.iter().find(|layer| layer.id == "layer-1").unwrap();
     assert_eq!(layer.name, "Content");
     assert!(layer.visible);

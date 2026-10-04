@@ -5,7 +5,7 @@
 //! 🔖 `IoFidelity::Lossy`: elements, regions, materials, sections, supports, loads and analysis
 //! settings have no column in one flat table, so there is no csv import.
 use crate::Fem2dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{encode_csv, CsvField, CsvRecord};
@@ -28,7 +28,7 @@ pub struct Fem2dIntoCsv;
 impl Serializer<Fem2dSnapshot> for Fem2dIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &Fem2dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Fem2dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(csv_text(from))))
     }
 }

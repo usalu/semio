@@ -30,9 +30,12 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for MoveWidget {
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
     }

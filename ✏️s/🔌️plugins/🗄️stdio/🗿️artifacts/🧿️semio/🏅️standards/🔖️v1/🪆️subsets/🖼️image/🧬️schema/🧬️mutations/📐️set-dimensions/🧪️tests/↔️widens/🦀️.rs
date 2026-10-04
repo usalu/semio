@@ -27,13 +27,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("set-dimensions before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions before snapshot decodes")
 }
 fn expected_after() -> SemioImageSnapshot {
-    dsl::json::from_json_str(AFTER).expect("set-dimensions after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions after snapshot decodes")
 }
 fn mutation() -> SemioImageMutation {
-    dsl::json::from_json_str(MUTATION).expect("set-dimensions mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
     let SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) = mutation() else { panic!("set-dimensions/widens-the-frameless-canvas-to-four-by-two: the committed mutation must be the set-dimensions variant") };
@@ -59,7 +59,7 @@ async fn widens_and_heightens_the_canvas() {
 async fn the_undo_set_dimensions_restores_the_original_canvas() {
     let base = before();
     let mutation = mutation();
-    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base);
+    let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 2, height: 1 })], "the undo must carry BASE's own dimensions, not a delta");
     let mut current = before();
     apply_semio_image_mutation(&mut current, &mutation);
@@ -73,12 +73,12 @@ async fn the_undo_set_dimensions_restores_the_original_canvas() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioImageSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioImageSnapshot = semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-dimensions mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("set-dimensions mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-dimensions mutation reparses");
     assert_eq!(reencoded, original, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed mutation JSON is not canonical");
 }
@@ -95,7 +95,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = leaf_outcome();
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -103,7 +103,7 @@ async fn produces_committed_diff() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed set-dimensions diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-dimensions diff decodes");
     let produced = decoded.apply(&before()).expect("committed set-dimensions diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed diff did not carry before to after");
 }
@@ -111,10 +111,10 @@ async fn committed_diff_applies_to_after() {
 /// 🔣️ The committed diff is canonical and carries exactly the two scalar slots.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_only_width_and_height() {
-    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed set-dimensions diff decodes");
+    let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-dimensions diff decodes");
     assert_eq!((decoded.width, decoded.height), (Some(4), Some(2)), "both scalar slots must be written");
     assert!(decoded.frames.is_none() && decoded.metadata.is_none() && decoded.icc.is_none(), "set-dimensions must touch no collection and no ICC profile");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed diff JSON is not canonical");
 }

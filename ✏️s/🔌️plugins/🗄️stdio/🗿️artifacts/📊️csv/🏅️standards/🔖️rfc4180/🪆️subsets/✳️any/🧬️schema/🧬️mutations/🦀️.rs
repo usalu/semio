@@ -95,9 +95,10 @@ pub(crate) fn agg_diff(this: &CsvMutation, base: &CsvSnapshot) -> protocol::Muta
 }
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &CsvMutation, base: &CsvSnapshot) -> Vec<CsvMutation> {
+pub(crate) fn agg_inverse(this: &CsvMutation, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+    Ok({
     match this {
-        CsvMutation::PatchSnapshot(payload) => protocol::MutationKind::inverse(payload, base),
+        CsvMutation::PatchSnapshot(payload) => protocol::MutationKind::inverse(payload, base)?,
         CsvMutation::SetSnapshot(_) => {
             vec![CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
         }
@@ -116,6 +117,8 @@ pub(crate) fn agg_inverse(this: &CsvMutation, base: &CsvSnapshot) -> Vec<CsvMuta
             None => Vec::new(),
         },
     }
+
+    })
 }
 //#endregion 🔖️MutationTrait
 
@@ -174,8 +177,8 @@ impl OpText for CsvMutation {
     fn print_op(&self) -> String {
         print_csv_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_csv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_csv_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -197,10 +200,10 @@ fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     w.write_bytes(bytes);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
+fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackRefusal> {
     let len = r.read_varint_u64()? as usize;
     let bytes = r.read_bytes(len)?;
-    String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
+    String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackRefusal::Malformed { kind:semio_framework_value::ValueRefusalKind::InvalidValue, what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
@@ -208,7 +211,7 @@ pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
     w.write_u8(if f.quoted { 1 } else { 0 });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
+pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackRefusal> {
     let value = read_bin_str(r)?;
     let quoted = r.read_u8()? != 0;
     Ok(CsvField { value, quoted })
@@ -221,7 +224,7 @@ pub(crate) fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
+pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackRefusal> {
     let n = r.read_varint_u64()? as usize;
     let mut fields = Vec::with_capacity(n);
     for _ in 0..n {
@@ -239,7 +242,7 @@ fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
+fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackRefusal> {
     let schema = read_bin_str(r)?;
     let has_header = r.read_u8()? != 0;
     let n = r.read_varint_u64()? as usize;
@@ -250,9 +253,6 @@ fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::Pa
     Ok(CsvSnapshot { schema, has_header, records })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
-}
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `CsvMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
@@ -301,22 +301,22 @@ impl OpBinary for CsvMutation {
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let ordinal = r.read_u8().map_err(|error| op_pack_err(&error))?;
+        let ordinal = r.read_u8().map_err(protocol::ProtocolError::from)?;
         let mutation = match ordinal {
             patch_snapshot::binary::BINARY_TAG => return patch_snapshot::binary::decode(&bytes[1..]),
-            TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? }),
-            TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(|error| op_pack_err(&error))? != 0 }),
+            TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(protocol::ProtocolError::from)? }),
+            TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(protocol::ProtocolError::from)? != 0 }),
             TAG_INSERT_RECORD => {
-                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let record = read_bin_record(&mut r).map_err(|error| op_pack_err(&error))?;
+                let index = r.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
+                let record = read_bin_record(&mut r).map_err(protocol::ProtocolError::from)?;
                 CsvMutation::InsertRecord(insert_record::InsertRecord { index, record })
             }
-            TAG_REMOVE_RECORD => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize }),
+            TAG_REMOVE_RECORD => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize }),
             TAG_SET_FIELD => {
-                let record_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let field_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let quoted = r.read_u8().map_err(|error| op_pack_err(&error))? != 0;
-                let value = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
+                let record_index = r.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
+                let field_index = r.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
+                let quoted = r.read_u8().map_err(protocol::ProtocolError::from)? != 0;
+                let value = read_bin_str(&mut r).map_err(protocol::ProtocolError::from)?;
                 CsvMutation::SetField(set_field::SetField { record_index, field_index, value, quoted })
             }
             other => {

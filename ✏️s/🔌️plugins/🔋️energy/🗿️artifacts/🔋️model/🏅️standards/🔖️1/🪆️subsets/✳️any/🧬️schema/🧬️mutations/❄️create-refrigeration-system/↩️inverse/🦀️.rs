@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::CreateRefrigerationSystem, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::CreateRefrigerationSystem, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if base.model.refrigeration_systems.iter().any(|item| item.id == payload.id)
         || payload.index as usize > base.model.refrigeration_systems.len()
         || !(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.defrost_schedule_id)
@@ -18,5 +19,7 @@ pub fn inverse(payload: &super::CreateRefrigerationSystem, base: &EnergyModelSna
         return Vec::new();
     }
     vec![vocabulary::delete_refrigeration_system(payload.id)]
+
+    })())
 }
 //#endregion 🔖️Inverse

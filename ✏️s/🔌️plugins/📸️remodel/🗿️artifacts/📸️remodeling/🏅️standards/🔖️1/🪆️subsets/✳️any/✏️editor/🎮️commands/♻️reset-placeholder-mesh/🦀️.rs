@@ -35,7 +35,7 @@ fn placeholder_result() -> RemodelingMesh {
 //#region 🔖️ClearResult
 //#endregion 🔖️ClearResult
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "reset-placeholder-mesh")]
 pub struct ResetPlaceholderMesh {}
 

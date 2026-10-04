@@ -1,10 +1,10 @@
 //! 🔌 `s.trinity.jack` exhaustive mutation case — Rust SUBJECT adapter. Ticket
 //! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
-//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
-//! a second implementation of the scene, of its `.dsl.semio` carrier and of all nine typed
-//! mutations, written in Python from this subset's committed snapshot schema, mutation grammar and
-//! specification vectors. This adapter registers the SUBJECT half only: keeping oracle registrations
+//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` beside this file — a second
+//! implementation of the parent document, of its `.dsl.semio` carrier and of its one parent-lane mutation
+//! (`set-query`), written in Python from this subset's committed snapshot schema, mutation grammar and specification
+//! vector. Scene edits are child-lane leaves of `s.stdio.semio@v1/graph` (design §20.15), adjudicated there. This adapter registers the SUBJECT half only: keeping oracle registrations
 //! here would put this repository's answer on both sides of the comparison.
 //!
 //! **What the two roles each hold.** The cross-language projection is the seven members BOTH committed
@@ -24,7 +24,7 @@ use semio_repo_test_host::Adapter;
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property", "set-query"];
+const KINDS: &[&str] = &["set-query"];
 
 //#endregion 🔖️Kinds
 
@@ -84,14 +84,14 @@ mod subject {
         Ok(Json::Object(entries))
     }
 
-    fn disagreement(what: &str, got: &JackSnapshot, expected: &JackSnapshot) -> String {
-        format!("{what}\n     got: {} {}\nexpected: {} {}", encode_jack_snapshot_json(got), jack_scene_summary(got), encode_jack_snapshot_json(expected), jack_scene_summary(expected))
+    fn disagreement(what: &str, got: &JackSnapshot, expected: &JackSnapshot) -> Result<String, String> {
+        Ok(format!("{what}\n     got: {} {}\nexpected: {} {}", encode_jack_snapshot_json(got).map_err(|cause| cause.into_message())?, jack_scene_summary(got).map_err(|cause| cause.into_message())?, encode_jack_snapshot_json(expected).map_err(|cause| cause.into_message())?, jack_scene_summary(expected).map_err(|cause| cause.into_message())?))
     }
 
     /// 🗣️ The real committed tower, with its composed child resolved by the parse itself.
     fn tower(ctx: &Context) -> Result<JackSnapshot, String> {
         let parsed = parse_jack_dsl(&fixture_text(ctx, "asset://")?)?;
-        let summary = jack_scene_summary(&parsed);
+        let summary = jack_scene_summary(&parsed).map_err(|cause| cause.into_message())?;
         if !summary.contains("jack_orphan") || !summary.contains("e-jack-prune") {
             return Err(format!("mutate-jack-1: the committed tower must resolve its composed child to the nine-piece scene these payloads address, got {summary}"));
         }
@@ -114,7 +114,7 @@ mod subject {
                 return Err(format!("mutate-{kind}: the feature's parameters were meant to APPLY to the committed tower, but the implementation raised {raised:?}"));
             }
             if applied.content.child_id == base.content.child_id && applied.query == base.query {
-                return Err(format!("mutate-{kind}: applying this kind to the tower left the content-addressed child handle at {} — the mutation never reached the scene ({})", base.content.child_id, jack_scene_summary(&applied)));
+                return Err(format!("mutate-{kind}: applying this kind to the tower left the content-addressed child handle at {} — the mutation never reached the scene ({})", base.content.child_id, jack_scene_summary(&applied).map_err(|cause| cause.into_message())?));
             }
             let projection = projection(&applied)?;
             Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
@@ -136,17 +136,17 @@ mod subject {
                 return Err(format!("inverse-{kind}: the forward mutation was rejected: {raised:?}"));
             }
             if current.content.child_id == base.content.child_id && current.query == base.query {
-                return Err(format!("inverse-{kind}: the forward mutation left the content handle untouched, so restoring it proves nothing ({})", jack_scene_summary(&current)));
+                return Err(format!("inverse-{kind}: the forward mutation left the content handle untouched, so restoring it proves nothing ({})", jack_scene_summary(&current).map_err(|cause| cause.into_message())?));
             }
             let mutated = projection(&current)?;
-            for step in inverse_trinity_graph_mutation_steps(&payload, &base) {
+            for step in inverse_trinity_graph_mutation_steps(&payload, &base).expect("valid retained mutation inverse fixture") {
                 let undone = apply_trinity_graph_mutation_reporting(&mut current, &step);
                 if undone.iter().any(|(code, _)| code != "mutation.no-op") {
                     return Err(format!("inverse-{kind}: an inverse step was rejected: {undone:?}"));
                 }
             }
             if current != base {
-                return Err(disagreement(&format!("inverse law violated: applying {kind:?} and then its own inverse did not restore the original"), &current, &base));
+                return Err(disagreement(&format!("inverse law violated: applying {kind:?} and then its own inverse did not restore the original"), &current, &base)?);
             }
             let projection = Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), projection(&current)?)]);
             Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
@@ -165,8 +165,8 @@ mod subject {
             let scene = JackSnapshot::from_json(&fixture_text(ctx, ".scene.json")?).map_err(|error| format!("spec-vector-{kind}: the declared composed scene must decode: {error:?}"))?;
             let mut base = snapshot_of(&fixture_text(ctx, "⬅️before")?, "committed before", kind)?;
             let mut expected = snapshot_of(&fixture_text(ctx, "➡️after")?, "committed after", kind)?;
-            materialize_jack_content(&mut base.content, scene.nodes(), scene.edges());
-            materialize_jack_content(&mut expected.content, scene.nodes(), scene.edges());
+            materialize_jack_content(&mut base.content, scene.nodes().map_err(|cause| cause.into_message())?, scene.edges().map_err(|cause| cause.into_message())?);
+            materialize_jack_content(&mut expected.content, scene.nodes().map_err(|cause| cause.into_message())?, scene.edges().map_err(|cause| cause.into_message())?);
             let vector = mutation_of(&fixture_text(ctx, "🦠️mutation")?, "committed vector", kind)?;
             let verdict = ctx.doc_json()?.str("verdict");
             let mut replayed = base.clone();
@@ -190,7 +190,7 @@ mod subject {
                 other => return Err(format!("spec-vector-{kind}: the feature declares an unknown verdict {other:?}")),
             }
             if replayed != expected {
-                return Err(disagreement(&format!("spec-vector-{kind}: the vector must leave the document at the committed after-snapshot"), &replayed, &expected));
+                return Err(disagreement(&format!("spec-vector-{kind}: the vector must leave the document at the committed after-snapshot"), &replayed, &expected)?);
             }
             if replayed.content != base.content {
                 return Err(format!("spec-vector-{kind}: the vector re-minted the composed child handle ({} -> {}) — the scene may be unchanged, but the document is no longer the same document", base.content.child_id, replayed.content.child_id));
@@ -210,7 +210,7 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let text = fixture_text(ctx, "asset://")?;
         let parsed = parse_jack_dsl(&text)?;
-        let summary = jack_scene_summary(&parsed);
+        let summary = jack_scene_summary(&parsed).map_err(|cause| cause.into_message())?;
         for piece in ["jack_orphan", "jack_prune", "jack_spare", "ci_t_f8_b_c0"] {
             if !summary.contains(piece) {
                 return Err(format!("identity-round-trip: the committed tower carries the piece {piece:?}, but the parse resolved {summary}"));
@@ -222,7 +222,7 @@ mod subject {
         let printed = print_jack_dsl(&parsed);
         let reparsed = parse_jack_dsl(&printed)?;
         if reparsed != parsed {
-            return Err(disagreement("identity-round-trip: printing the document back to DSL and reparsing it lost content", &reparsed, &parsed));
+            return Err(disagreement("identity-round-trip: printing the document back to DSL and reparsing it lost content", &reparsed, &parsed)?);
         }
         if printed != text {
             let at = printed.as_bytes().iter().zip(text.as_bytes().iter()).position(|(one, other)| one != other);

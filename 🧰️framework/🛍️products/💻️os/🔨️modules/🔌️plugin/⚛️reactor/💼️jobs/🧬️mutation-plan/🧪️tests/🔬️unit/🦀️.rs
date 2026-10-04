@@ -41,7 +41,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
             assert_eq!(decoded_mutation_id, mutation_id);
         }
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 1 must be Running(Some(identity)), not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
@@ -52,13 +52,13 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
             let result: crate::app::WireArtifactMutationPlanResult = semio_framework_value::FromValue::from_value(value).expect("result decodes");
             assert_eq!(result.mutation_id, mutation_id);
-            assert_eq!(result.label, protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the job wire, not a pre-resolved string");
+            assert_eq!(result.label, semio_framework_ui_locale::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the job wire, not a pre-resolved string");
             assert_eq!(result.owner_ops.len(), 1);
             let op = JobTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
             assert_eq!(op, JobTestOp::AddValue(AddValue { delta: 5 }));
         }
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             panic!("slice 2 must dispatch to the registered kind, not fail: {} {}", fault.code.0, fault.message);
         }
         JobStep::Running(_) => panic!("slice 2 must finish Done, the native mutation-plan call is atomic"),
@@ -101,7 +101,7 @@ async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
     start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value").await;
     match step_job(303, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
-            let fault = dsl::decode_fault_bytes(&bytes);
+            let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.mutation-plan.decode");
         }
         _ => panic!("garbage mutation-plan input must fail on slice 1"),

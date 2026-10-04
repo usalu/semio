@@ -35,6 +35,60 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-absolute-varint-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-absolute-varint-source",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-absolute-varint-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-absolute-varint-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-borrowed-preflight-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-borrowed-preflight-source",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-borrowed-preflight-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-borrowed-preflight-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-schema-hash-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-schema-hash-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-schema-storage-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-schema-storage-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
     }
   }
 }

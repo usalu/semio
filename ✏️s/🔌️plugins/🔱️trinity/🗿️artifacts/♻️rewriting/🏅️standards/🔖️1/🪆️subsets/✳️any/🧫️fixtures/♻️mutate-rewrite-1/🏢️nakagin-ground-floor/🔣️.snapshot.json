@@ -1,18 +1,499 @@
 {
-  "beforeFixtureJson": "{\n  \"schema\": \"trinity.graph\",\n  \"name\": \"Nakagin Capsule Tower — Ground Floor\",\n  \"manifestId\": \"nakagin\",\n  \"camera\": { \"x\": 0.0, \"y\": 0.0, \"zoom\": 1.0 },\n  \"nodes\": [\n    {\n      \"id\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\",\n      \"kind\": \"Piece\",\n      \"name\": \"b\",\n      \"x\": 0.0,\n      \"y\": 0.0,\n      \"width\": 96.0,\n      \"height\": 48.0,\n      \"properties\": { \"label\": \"tower-core\", \"position\": { \"x\": 0.0, \"y\": 0.0, \"z\": 0.0 }, \"tier\": 0.0 },\n      \"ports\": [\n        { \"id\": \"c5465220-19ba-4443-8f1d-617c832dd13c\", \"kind\": \"Connector\", \"direction\": \"out\", \"properties\": {} }\n      ]\n    },\n    {\n      \"id\": \"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\",\n      \"kind\": \"Piece\",\n      \"name\": \"t_f0_b_c0\",\n      \"x\": -140.0,\n      \"y\": 80.0,\n      \"width\": 88.0,\n      \"height\": 40.0,\n      \"properties\": { \"label\": \"floor0-left\", \"position\": { \"x\": -1.2, \"y\": 1.2, \"z\": 0.0 }, \"tier\": 0.0 },\n      \"ports\": [\n        { \"id\": \"7be6cfda-db1b-47e4-bcea-cd011e516e2e\", \"kind\": \"Connector\", \"direction\": \"in\", \"properties\": {} }\n      ]\n    }\n  ],\n  \"edges\": [\n    {\n      \"id\": \"cc0d14f5-11b2-4258-ac52-287d0d46b23b\",\n      \"kind\": \"Connection\",\n      \"source\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\",\n      \"target\": \"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\",\n      \"properties\": { \"gap\": 0.0, \"rise\": 0.0, \"rotation\": 270.0, \"shift\": 0.0, \"tilt\": 0.0, \"turn\": 0.0, \"u\": -1.2, \"v\": 1.2 }\n    }\n  ],\n  \"rootNodeId\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\"\n}",
-  "lhsJson": "{\n  \"pattern\": {\n    \"leftVar\": \"a\",\n    \"leftKind\": \"Piece\",\n    \"edgeVar\": \"r\",\n    \"edgeKind\": \"Connection\",\n    \"rightVar\": \"b\",\n    \"rightKind\": \"Piece\"\n  },\n  \"whereClause\": \"a.name = 'b'\"\n}",
-  "rhsJson": "{\n  \"create\": [],\n  \"delete\": [],\n  \"set\": [{ \"var\": \"a\", \"prop\": \"label\", \"value\": \"$label\" }],\n  \"merge\": [],\n  \"parameters\": [{ \"name\": \"label\", \"kind\": \"string\", \"default\": \"nakagin-core\" }]\n}",
+  "workingGraph": {
+    "schema": "trinity.graph",
+    "name": "Nakagin Capsule Tower — Ground Floor",
+    "manifestId": "nakagin",
+    "manifest": {
+      "nodeKinds": [
+        {
+          "name": "Balcony",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "Base",
+          "properties": [],
+          "portKinds": [
+            "core rectangular bottom"
+          ]
+        },
+        {
+          "name": "Base Blob",
+          "properties": [],
+          "portKinds": [
+            "core circular bottom"
+          ]
+        },
+        {
+          "name": "Bridge",
+          "properties": [],
+          "portKinds": [
+            "platform right",
+            "platform left"
+          ]
+        },
+        {
+          "name": "Capital",
+          "properties": [],
+          "portKinds": [
+            "roof rectangular top"
+          ]
+        },
+        {
+          "name": "Capsule",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "Capsule Backslash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule J",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule L",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule P",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule q",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule S",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule Slash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony Backslash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony J",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony L",
+          "properties": [],
+          "portKinds": [
+            "door capsule left"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony P",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony Q",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony S",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony Slash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Capsule With Balcony Z",
+          "properties": [],
+          "portKinds": [
+            "door capsule left"
+          ]
+        },
+        {
+          "name": "Capsule Z",
+          "properties": [],
+          "portKinds": [
+            "door capsule left"
+          ]
+        },
+        {
+          "name": "Cylindric Capital",
+          "properties": [],
+          "portKinds": [
+            "roof circular top"
+          ]
+        },
+        {
+          "name": "Cylindric First Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "core circular top",
+            "tambour circular top",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Cylindric Last Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "tambour circular bottom",
+            "roof circular bottom",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Cylindric Single Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "core circular top",
+            "roof circular bottom",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Cylindric Tambour",
+          "properties": [],
+          "portKinds": [
+            "tambour circular bottom",
+            "tambour circular top",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Ellipsoid",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "First Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "core rectangular top",
+            "tambour rectangular top",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Last Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "tambour rectangular bottom",
+            "roof rectangular bottom",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Single Storey Tambour",
+          "properties": [],
+          "portKinds": [
+            "core circular top",
+            "roof rectangular bottom",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Tambour",
+          "properties": [],
+          "portKinds": [
+            "tambour rectangular bottom",
+            "tambour rectangular top",
+            "door tambour right",
+            "door tambour left"
+          ]
+        },
+        {
+          "name": "Trapezoid",
+          "properties": [],
+          "portKinds": []
+        },
+        {
+          "name": "Trapezoid Capsule Backslash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule J",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule L",
+          "properties": [],
+          "portKinds": [
+            "door capsule left"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule P",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule Q",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule S",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule Slash",
+          "properties": [],
+          "portKinds": [
+            "door capsule right"
+          ]
+        },
+        {
+          "name": "Trapezoid Capsule Z",
+          "properties": [],
+          "portKinds": [
+            "door capsule left"
+          ]
+        },
+        {
+          "name": "Piece",
+          "properties": [
+            {
+              "name": "position",
+              "kind": "data",
+              "valueType": {
+                "kind": "any"
+              }
+            },
+            {
+              "name": "label",
+              "kind": "data",
+              "valueType": {
+                "kind": "text"
+              }
+            },
+            {
+              "name": "tier",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            }
+          ],
+          "portKinds": [
+            "Connector"
+          ]
+        }
+      ],
+      "edgeKinds": [
+        {
+          "name": "Connection",
+          "properties": [
+            {
+              "name": "gap",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "rotation",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "tilt",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "rise",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "turn",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "shift",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "u",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            },
+            {
+              "name": "v",
+              "kind": "data",
+              "valueType": {
+                "kind": "decimal"
+              }
+            }
+          ]
+        },
+        {
+          "name": "edge.link",
+          "properties": []
+        }
+      ],
+      "portKinds": [
+        {
+          "name": "Connector",
+          "direction": "out",
+          "properties": []
+        }
+      ]
+    },
+    "camera": {
+      "x": {
+        "bits": "0000000000000000"
+      },
+      "y": {
+        "bits": "0000000000000000"
+      },
+      "zoom": {
+        "bits": "3ff0000000000000"
+      }
+    },
+    "content": {
+      "childId": "nakagin-ground-floor-rewriting-content",
+      "target": {
+        "artifactId": "nakagin-ground-floor-rewriting-content",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    },
+    "rootNodeId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+    "query": ""
+  },
+  "lhs": {
+    "pattern": {
+      "leftVar": "a",
+      "leftKind": "Piece",
+      "edgeVar": "r",
+      "edgeKind": "Connection",
+      "rightVar": "b",
+      "rightKind": "Piece"
+    },
+    "whereClause": "a.name = 'b'"
+  },
+  "rhs": {
+    "create": [],
+    "delete": [],
+    "set": [
+      {
+        "var": "a",
+        "prop": "label",
+        "value": { "kind": "string", "value": "$label" }
+      }
+    ],
+    "merge": [],
+    "parameters": [
+      {
+        "name": "label",
+        "kind": "string",
+        "default": {
+          "kind": "string",
+          "value": "nakagin-core"
+        }
+      }
+    ]
+  },
   "parameterBindings": {
-    "label": "nakagin-core"
+    "label": {
+      "kind": "string",
+      "value": "nakagin-core"
+    }
   },
   "ruleLayout": {
     "a": {
-      "x": 0.0,
-      "y": 0.0
+      "x": {
+        "bits": "0000000000000000"
+      },
+      "y": {
+        "bits": "0000000000000000"
+      }
     },
     "b": {
-      "x": -140.0,
-      "y": 80.0
+      "x": {
+        "bits": "c061800000000000"
+      },
+      "y": {
+        "bits": "4054000000000000"
+      }
     }
   }
 }

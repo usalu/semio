@@ -7,7 +7,7 @@ pub mod mutation {
     use crate::RasterSnapshot;
 
     //#region 🔖️ReorderLayers
-    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
     #[mutation_leaf(contract = ::protocol)]
     #[value(rename_all = "camelCase")]
     pub struct ReorderLayers {
@@ -23,9 +23,12 @@ pub mod mutation {
             super::super::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Vec<RasterMutation> {
-            super::super::inverse::inverse(self, base)
-        }
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok({
+            super::super::inverse::inverse(self, base)?
+        
+    })
+}
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
             semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Reihenfolge von Ebene {} ändern", self.layer_id))

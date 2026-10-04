@@ -1,7 +1,13 @@
 {
-  "beforeFixtureJson": null,
-  "lhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\",\"near\":\"shaft\"}}",
-  "rhsJson": null,
+  "workingGraph": null,
+  "lhs": {
+    "pattern": {
+      "leftVar": "c",
+      "leftKind": "Piece"
+    },
+    "whereClause": "c.name != 'shaft'"
+  },
+  "rhs": null,
   "parameterBindings": null,
   "ruleLayout": null
 }

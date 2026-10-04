@@ -5,7 +5,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-track-codec")]
 #[value(rename_all = "camelCase")]
@@ -20,9 +20,12 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         agg_diff(&Mp4Mutation::SetTrackCodec(self.clone()), base)
     }
-    fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
-        agg_inverse(&Mp4Mutation::SetTrackCodec(self.clone()), base)
-    }
+    fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&Mp4Mutation::SetTrackCodec(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set track codec", "Codec der Spur setzen")
     }

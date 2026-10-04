@@ -1,4 +1,5 @@
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 
 pub const DOCUMENT_BACKBONE_BINDING_SCHEMA_V1: &str = "semio.plugin.document-backbone-binding.v1";
 pub const DOCUMENT_BACKBONE_BINDING_RECEIPT_SCHEMA_V1: &str = "semio.plugin.document-backbone-binding-receipt.v1";
@@ -14,7 +15,7 @@ pub enum DocumentBackboneBindingOperationV1 {
     Retire,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue, ToValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, semio_framework_value::FromValue, semio_framework_value::ToValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct DocumentBackboneBindingWireV1 {
@@ -52,7 +53,7 @@ impl DocumentBackboneBindingCommandV1 {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, FromValue, ToValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, semio_framework_value::FromValue, semio_framework_value::ToValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct DocumentBackboneBindingReceiptWireV1 {
@@ -124,7 +125,7 @@ pub fn decode_document_backbone_binding_command_v1(payload: &[u8]) -> Result<Opt
         Ok(value) => value,
         Err(_) => return Ok(None),
     };
-    if value.get("schema").and_then(dsl::DslValue::as_str) != Some(DOCUMENT_BACKBONE_BINDING_SCHEMA_V1) {
+    if value.get("schema").and_then(semio_framework_value::DslValue::as_str) != Some(DOCUMENT_BACKBONE_BINDING_SCHEMA_V1) {
         return Ok(None);
     }
     if store::pack_rt::encode_wire_value(&value) != payload {

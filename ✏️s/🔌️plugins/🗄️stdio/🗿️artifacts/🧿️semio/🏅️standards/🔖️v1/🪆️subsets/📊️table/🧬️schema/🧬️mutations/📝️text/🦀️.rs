@@ -55,7 +55,8 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 
 fn print_table_mutation(m: &SemioTableMutation) -> String {
     match m {
-        SemioTableMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
+        SemioTableMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
+        SemioTableMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioTableMutation::CreateColumn(p) => format!("createColumn:{},{},{}", enc_str(&p.name), enc_cell_kind(p.kind), enc_opt_usize(p.index)),
         SemioTableMutation::DeleteColumn(p) => format!("deleteColumn:{}", enc_str(&p.name)),
         SemioTableMutation::RenameColumn(p) => format!("renameColumn:{},{}", enc_str(&p.name), enc_str(&p.new_name)),
@@ -69,11 +70,15 @@ fn print_table_mutation(m: &SemioTableMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioTableMutation::PatchSnapshot(crate::standards::v1::subsets::table::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
-        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
         return Ok(SemioTableMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("table mutation: missing ':' in {line:?}"))?;
@@ -117,8 +122,8 @@ impl protocol::OpText for SemioTableMutation {
     fn print_op(&self) -> String {
         print_table_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_table_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_table_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -132,6 +137,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
     use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
     use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
     vec![
+        SemioTableMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "extra".into(), kind: SemioTableCellKind::Int, index: None }),
         SemioTableMutation::DeleteColumn(DeleteColumn { name: "label".into() }),

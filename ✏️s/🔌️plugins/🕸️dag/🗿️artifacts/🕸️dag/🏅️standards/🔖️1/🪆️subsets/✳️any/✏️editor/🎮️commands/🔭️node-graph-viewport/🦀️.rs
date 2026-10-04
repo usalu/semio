@@ -1,12 +1,12 @@
 //! 🗂️ 🗂️ DAG play app commands command — `node-graph-viewport`.
 
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use crate::op::DagMutation;
+use crate::DagMutation;
 use crate::DagSnapshot;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "node-graph-viewport")]
 pub struct NodeGraphViewport {
     #[dsl(block)]

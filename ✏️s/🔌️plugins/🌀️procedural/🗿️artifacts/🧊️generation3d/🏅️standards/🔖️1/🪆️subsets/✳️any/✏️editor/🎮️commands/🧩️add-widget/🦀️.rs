@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 pub const AUTOMATIC_GAP: f64 = 48.0;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "add-widget")]
 pub struct AddWidget {
@@ -23,7 +23,7 @@ pub struct AddWidget {
 }
 
 fn creation_fault(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("generation3d.widget.add"), message.into())
+    Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_WIDGET_ADD), message.into())
 }
 
 impl AddWidget {
@@ -37,6 +37,7 @@ impl AddWidget {
         for (name, value) in [("neuronKind", &self.neuron_kind), ("format", &self.format), ("action", &self.action)] {
             if let Some(value) = value { fields.push((name, value.as_str())); }
         }
+        if self.kind == "outputExport" && self.format.is_none() { fields.push(("format", "gltf")); }
         fields
     }
 
@@ -46,14 +47,16 @@ impl AddWidget {
             return Err(creation_fault(format!("unknown widget kind: {}", self.kind)));
         }
         for (kind, name, value) in [("neuron", "neuronKind", &self.neuron_kind), ("outputExport", "format", &self.format), ("outputAction", "action", &self.action)] {
+            if kind == "outputExport" && self.kind == kind && value.is_none() { continue; }
             if (self.kind == kind) != value.is_some() || value.as_ref().is_some_and(|value| value.is_empty()) {
                 return Err(creation_fault(format!("{} requires only its own descriptor fields; invalid {name}", self.kind)));
             }
         }
+        if self.kind == "outputExport" && self.format.as_deref().is_some_and(|format| !crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().any(|row| row.id == format)) { return Err(creation_fault("choose an artifact-owned 3D export format")); }
         if [self.x, self.y].into_iter().flatten().any(|number| !number.is_finite()) {
             return Err(creation_fault("widget coordinates must be finite"));
         }
-        Ok(dsl::json::to_json_string(&dsl::DslValue::object(self.descriptor_fields().into_iter().map(|(name, value)| (name.into(), dsl::DslValue::String(value.into()))))))
+        Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object(self.descriptor_fields().into_iter().map(|(name, value)| (name.into(), semio_framework_value::DslValue::String(value.into()))))))
     }
 }
 

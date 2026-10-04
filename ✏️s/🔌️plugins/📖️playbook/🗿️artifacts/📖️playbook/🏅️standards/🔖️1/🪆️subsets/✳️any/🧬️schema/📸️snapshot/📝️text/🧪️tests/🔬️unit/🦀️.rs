@@ -17,6 +17,7 @@ async fn facade_generator_example_dsl_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn facade_generator_example_matches_the_handcrafted_spec() {
     let document = parse_dsl(FACADE_GENERATOR_EXAMPLE_TEXT).expect("parse example");
-    assert!(!document.steps().is_empty());
+    assert_eq!(document.title.as_deref(), Some("Facade Panel Generator"));
+    assert_eq!(document.flow.child_id, crate::examples::demo::FLOW_ID);
     assert_eq!(print_dsl(&document).trim_end(), FACADE_GENERATOR_EXAMPLE_TEXT.trim_end());
 }

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, declaredComponentKind, declaredComponentDeploymentDirectoryV1, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { decodeRegistryDescriptorV1 } from "../🧬️schema/🟦️.ts";
+import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 
 
@@ -327,16 +327,60 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
 
 
 
+/** 📇️ The deployed catalog rows; refuses every stale-channel descriptor unless `staleChannel: "exclude"` withholds it. */
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
+  return generatePluginRegistryReport(repoRoot, options).entries;
+}
+
+
+/** 🩺️ The deployed catalog rows plus every plugin withheld because its descriptor, or a runtime dependency's, speaks another app channel. */
+export function generatePluginRegistryReport(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryReportV1 {
   const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
   const filterIds = filterPlaygroundPlugin && !isHostPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
   const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined), options.view);
-  const entries: DeployedRegistryEntryV1[] = [];
+  const admitted: DeployedRegistryEntryV1[] = [];
+  const diagnostics: RegistryChannelDiagnosticV1[] = [];
   for (const path of manifestPaths) {
-    entries.push(parseDeployedRegistryEntryV1(parseCompiledComponentOwnerV1(path, repoRoot, options.view)));
+    try {
+      admitted.push(parseDeployedRegistryEntryV1(parseCompiledComponentOwnerV1(path, repoRoot, options.view)));
+    } catch (error) {
+      if (!(error instanceof StaleChannelDescriptorError)) throw error;
+      const { pluginId, cratePath } = parseComponentSourceOwnerV1(path, repoRoot, options.view);
+      diagnostics.push({ code: "stale-channel", pluginId, cratePath, descriptorChannel: error.descriptorChannel, hostChannel: error.hostChannel });
+    }
+  }
+  if (diagnostics.length && options.staleChannel !== "exclude") throw new Error(`stale-channel descriptors refused (host app channel ${REGISTRY_HOST_APP_CHANNEL_VERSION}): ${diagnostics.map((row) => `${row.pluginId} (${row.cratePath})`).join(", ")}`);
+  const withheld = new Set(diagnostics.map((row) => row.pluginId));
+  let entries = admitted;
+  for (let changed = true; changed;) {
+    changed = false;
+    const kept: DeployedRegistryEntryV1[] = [];
+    for (const entry of entries) {
+      const dependency = entry.dependsOn.find((id) => withheld.has(id));
+      if (dependency === undefined) { kept.push(entry); continue; }
+      withheld.add(entry.pluginId);
+      diagnostics.push({ code: "stale-channel-dependency", pluginId: entry.pluginId, cratePath: entry.cratePath, dependency });
+      changed = true;
+    }
+    entries = kept;
   }
   entries.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
-  return claimOwnedArtifactKinds(entries);
+  diagnostics.sort((a, b) => a.pluginId.localeCompare(b.pluginId));
+  return { entries: claimOwnedArtifactKinds(entries), diagnostics };
+}
+
+
+/** 🧾️ Admits the generated withheld-plugin diagnostics file without inferring missing members. */
+export function parseRegistryChannelDiagnosticsV1(text: string): readonly RegistryChannelDiagnosticV1[] {
+  const rows: unknown = JSON.parse(text);
+  if (!Array.isArray(rows)) throw new Error(`${REGISTRY_DIAGNOSTICS_FILE} must be an array`);
+  return rows.map((row) => {
+    const value = row as Record<string, unknown>;
+    if (typeof value.pluginId !== "string" || typeof value.cratePath !== "string") throw new Error(`${REGISTRY_DIAGNOSTICS_FILE} row lacks its plugin identity`);
+    if (value.code === "stale-channel" && typeof value.hostChannel === "number" && Object.keys(value).length === 5) return value as RegistryChannelDiagnosticV1;
+    if (value.code === "stale-channel-dependency" && typeof value.dependency === "string" && Object.keys(value).length === 4) return value as RegistryChannelDiagnosticV1;
+    throw new Error(`${REGISTRY_DIAGNOSTICS_FILE} row has an undeclared shape`);
+  });
 }
 
 
@@ -399,7 +443,21 @@ export type GeneratePluginRegistryOptions = {
   readonly filterPlaygroundPlugin?: string;
   readonly packages?: readonly DiscoveredPackage[];
   readonly view?: RegistryCatalogInputView;
+  /** 🕰️ `exclude` (dev `generate` only) withholds stale-channel plugins with a diagnostic; every release gate keeps the refusing default. */
+  readonly staleChannel?: "refuse" | "exclude";
 };
+
+/** 🩺️ One plugin the dev catalog withholds until it is re-described against the host app channel. */
+export type RegistryChannelDiagnosticV1 = Readonly<
+  | { code: "stale-channel"; pluginId: string; cratePath: string; descriptorChannel: unknown; hostChannel: number }
+  | { code: "stale-channel-dependency"; pluginId: string; cratePath: string; dependency: string }
+>;
+
+/** 📋️ The offered catalog rows and the withheld plugins of one generation. */
+export type PluginRegistryReportV1 = Readonly<{ entries: DeployedRegistryEntryV1[]; diagnostics: RegistryChannelDiagnosticV1[] }>;
+
+/** 📄️ The generated catalog member carrying every withheld-plugin diagnostic. */
+export const REGISTRY_DIAGNOSTICS_FILE = "🩺️diagnostics.json";
 
 
 

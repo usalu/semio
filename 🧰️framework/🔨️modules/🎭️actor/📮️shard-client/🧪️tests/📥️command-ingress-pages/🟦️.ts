@@ -27,7 +27,7 @@ function firstDifference(left: Uint8Array, right: Uint8Array): number {
 /** 📥️ LAW: the host writer cuts a command into exactly the pages the shared fixture declares, stamps
  * every page with its own index against one page count, and the pages concatenate back to the EXACT
  * bytes it was handed — the TypeScript twin of
- * `📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs`'s `every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from`.
+ * `📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🔬️unit/🦀️.rs`'s `every_command_ingress_row_reassembles_to_the_exact_bytes_it_was_cut_from`.
  *
  * 🧨️ The ceiling this pins is DERIVED: a command is an assembled host answer, so it is bound by
  * `GUEST_HOST_ANSWER_CEILING_BYTES` over the page extent and by nothing else. The constant it
@@ -42,7 +42,7 @@ export async function registerCommandIngressPageTests(
   const { describe, it, expect } = vitest;
   const { ACTOR_BYTE_PAGE_BYTES, createShardCommandIngressPages, SHARD_COMMAND_MAXIMUM_PAGES } = dependencies;
   const { readFileSync } = await import("node:fs");
-  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️command-ingress-pages/🔣️.json", testSource.url), "utf8")) as CommandIngressPagesFixture;
+  const fixture = JSON.parse(readFileSync(new URL("../../📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json", testSource.url), "utf8")) as CommandIngressPagesFixture;
 
   describe("command ingress pages", () => {
     it("derives its page authority from the guest linear-memory budget", () => {

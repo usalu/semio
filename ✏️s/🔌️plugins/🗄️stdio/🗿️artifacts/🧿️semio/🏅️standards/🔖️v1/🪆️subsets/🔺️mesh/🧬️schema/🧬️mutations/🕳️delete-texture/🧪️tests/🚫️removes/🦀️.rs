@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️delete-texture/🚫️removes/🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("delete-texture before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-texture before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    dsl::json::from_json_str(AFTER).expect("delete-texture after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-texture after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    dsl::json::from_json_str(MUTATION).expect("delete-texture mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-texture mutation decodes")
 }
 
 /// ▶️ The leading texture goes; the trailing one slides down to index 0.
@@ -40,15 +40,15 @@ async fn removes_the_leading_texture() {
     assert_eq!(produced.materials, base.materials, "deleting a texture must not touch a material");
 }
 
-/// ↩️ The undo strips the tail, re-creates the texture WITH its captured bytes, rebuilds the tail.
+/// ↩️ The undo inserts the original texture and leaves every referenced sibling present.
 #[semio_framework_async_macros::async_test]
-async fn the_undo_strips_the_tail_recreates_the_texture_then_rebuilds_the_tail() {
+async fn the_undo_restores_original_position_without_mutating_referenced_siblings() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
-    assert_eq!(undo.len(), 3, "one delete per trailing texture, then the re-create, then one create per trailing texture");
-    let SemioMeshMutation::CreateTexture(recreate) = &undo[1] else { panic!("the middle undo step must re-create the removed texture") };
-    assert_eq!(recreate.texture.bytes, base.textures[0].bytes, "the undo must recapture the removed texture's own bytes — the diff never carried them");
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
+    assert_eq!(undo.len(), 1);
+    let SemioMeshMutation::PatchSnapshot(recreate) = &undo[0] else { panic!("undo must insert the deleted texture at its original position") };
+    assert_eq!(recreate.patch.path(), "/textures/0");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-texture applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
@@ -60,12 +60,12 @@ async fn the_undo_strips_the_tail_recreates_the_texture_then_rebuilds_the_tail()
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("delete-texture mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("delete-texture mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-texture mutation reparses");
     assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,12 +93,12 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-texture diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-texture diff decodes");
     let textures = decoded.textures.as_ref().expect("delete-texture must write the textures triple");
     assert_eq!(textures.removed, vec!["tex-a".to_string()], "the removal is addressed by texture id");
     assert!(textures.modified.is_empty() && textures.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.meshes.is_none() && decoded.materials.is_none(), "no mesh or material slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff JSON is not canonical");
 }
@@ -106,7 +106,20 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-texture diff decodes");
+    let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-texture diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-texture diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff did not carry before to after");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn texture_references_refuse_deletion_and_keep_sibling_references_during_inverse() {
+    let mut base = before();
+    base.materials[0].normal_texture = Some(base.textures[1].id.clone());
+    let targeted = SemioMeshMutation::DeleteTexture(crate::standards::v1::subsets::mesh::schema::mutations::delete_texture::DeleteTexture { id: base.textures[1].id.clone() });
+    let refused = targeted.diff(&base);
+    assert!(!refused.messages().is_empty());
+    assert_eq!(refused.diff().apply(&base).unwrap(), base);
+    let mut current = mutation().diff(&base).diff().apply(&base).unwrap();
+    for step in mutation().inverse(&base).expect("valid retained mutation inverse fixture") { let outcome = step.diff(&current); assert!(outcome.messages().is_empty()); current = outcome.diff().apply(&current).unwrap(); }
+    assert_eq!(current, base);
 }

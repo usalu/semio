@@ -1,5 +1,7 @@
 /** 🧪️ Ajv and Graphlib independently verify the recursive replacement publication vectors. */
 import assert from "node:assert/strict";
+import { testOwnedChildEmissionRefusalOracle } from "./📨️emission/🟦️.ts";
+import { testDeclaredChildProjectionOracle } from "./🔎️projection/🟦️.ts";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
 import vectors from "../../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
@@ -36,15 +38,18 @@ type HistoryCase = {
 type ArchiveMember = {
   ordinal: number;
   reference: { artifact_id: string };
-  owner: { parent: { artifact_id: string }; child_id: string };
+  owner: { parent: { artifact_id: string }; slot: string; child_id: string };
 };
 
-function archiveClosureAccepted(rootId: string, members: readonly ArchiveMember[]): boolean {
+type ArchiveMembership = { parent: string; slot: string; childId: string; target: string };
+
+function archiveClosureAccepted(rootId: string, members: readonly ArchiveMember[], declared: readonly ArchiveMembership[]): boolean {
+  if (declared.length !== members.length) return false;
   const graph = new graphlib.Graph({ directed: true });
   graph.setNode(rootId);
   const identities = new Set<string>();
   for (const [ordinal, member] of members.entries()) {
-    if (member.ordinal !== ordinal || member.owner.child_id !== member.reference.artifact_id || identities.has(member.reference.artifact_id)) return false;
+    if (member.ordinal !== ordinal || !declared.some(row => row.parent === member.owner.parent.artifact_id && row.slot === member.owner.slot && row.childId === member.owner.child_id && row.target === member.reference.artifact_id) || identities.has(member.reference.artifact_id)) return false;
     identities.add(member.reference.artifact_id);
     graph.setNode(member.reference.artifact_id);
   }
@@ -102,6 +107,8 @@ function historyAccepted(row: HistoryCase): boolean {
 
 /** 🌳️ Publication is possible only for one complete, live, uncancelled decoded closure. */
 export function testRecursiveOwnedDocumentReplacementOracle(): void {
+  testDeclaredChildProjectionOracle();
+  testOwnedChildEmissionRefusalOracle();
   const schema = {
     type: "object",
     additionalProperties: false,
@@ -192,7 +199,12 @@ export function testRecursiveOwnedDocumentReplacementOracle(): void {
   assert(validate(vectors), JSON.stringify(validate.errors));
   const validateArchive = new Ajv({ strict: true }).compile(archiveSchema);
   assert(validateArchive(archiveVectors.archive), JSON.stringify(validateArchive.errors));
-  assert(archiveClosureAccepted(archiveVectors.rootArtifactId, archiveVectors.archive.members));
+  const declared: ArchiveMembership[] = [{ parent: "root-1", slot: "children", childId: "child-1", target: "child-1" }, { parent: "child-1", slot: "nested", childId: "grandchild-1", target: "grandchild-1" }];
+  assert(archiveClosureAccepted(archiveVectors.rootArtifactId, archiveVectors.archive.members, declared));
+  const independent = structuredClone(archiveVectors.archive);
+  independent.members[0]!.owner.child_id = "logical-child-1";
+  assert(archiveClosureAccepted(archiveVectors.rootArtifactId, independent.members, [{ parent: "root-1", slot: "children", childId: "logical-child-1", target: "child-1" }, declared[1]!]));
+  assert(!archiveClosureAccepted(archiveVectors.rootArtifactId, independent.members, declared));
   for (const row of vectors.historyCases as HistoryCase[]) assert.equal(historyAccepted(row), row.accepted, row.id);
   for (const row of archiveVectors.invalid) {
     const archive = structuredClone(archiveVectors.archive);
@@ -200,7 +212,7 @@ export function testRecursiveOwnedDocumentReplacementOracle(): void {
     if (row.mutation.field === "ordinal") member.ordinal = row.mutation.value as number;
     else if (row.mutation.field === "owner.child_id") member.owner.child_id = row.mutation.value as string;
     else member.owner.parent.artifact_id = row.mutation.value as string;
-    assert(!archiveClosureAccepted(archiveVectors.rootArtifactId, archive.members), row.id);
+    assert(!archiveClosureAccepted(archiveVectors.rootArtifactId, archive.members, declared), row.id);
   }
   const ids = new Set<string>();
   for (const row of vectors.cases as Case[]) {

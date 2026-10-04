@@ -14,6 +14,7 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
+    "paint2d-editing-check": "bun nx run @semio-tech/framework-renderer-react:paint2d-editing-check",
     "test": "bun nx run @semio-tech/framework-renderer-react:test"
   },
   "dependencies": {

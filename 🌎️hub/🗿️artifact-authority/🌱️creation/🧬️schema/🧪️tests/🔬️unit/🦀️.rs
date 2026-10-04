@@ -3,9 +3,9 @@ use super::*;
 #[test]
 fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📚️operation-v1/🔣️.json")).unwrap();
-    let intent: ArtifactCreationIntentV1 = directory::os_pack::json::from_json_str(&fixture["intent"].to_string()).unwrap();
-    let prepared: ArtifactCreationPreparedV1 = directory::os_pack::json::from_json_str(&fixture["prepared"].to_string()).unwrap();
-    let receipt: ArtifactCreationReceiptV1 = directory::os_pack::json::from_json_str(&fixture["receipt"].to_string()).unwrap();
+    let intent: ArtifactCreationIntentV1 = semio_framework_pack_json::from_json_str(&fixture["intent"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let prepared: ArtifactCreationPreparedV1 = semio_framework_pack_json::from_json_str(&fixture["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let receipt: ArtifactCreationReceiptV1 = semio_framework_pack_json::from_json_str(&fixture["receipt"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact_creation_command_digest_v1(&intent.scope.space_id, &intent.request).unwrap(), fixture["intent"]["commandSha256"]);
     let fact = |kind: &str, revision: u64| ArtifactCreationFactV1 {
         actor_user_id: intent.actor.user_id.clone(),
@@ -37,7 +37,7 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
         if let Ok(operation) = result {
             assert!(operation.status().validate());
             assert_eq!(operation.status().ready.is_some(), row["next"] == "committed");
-            let decoded: Vec<ArtifactCreationFactV1> = directory::os_pack::json::from_json_str(&directory::os_pack::json::to_json_string(&facts)).unwrap();
+            let decoded: Vec<ArtifactCreationFactV1> = semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_json_string(&facts), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(decoded, facts);
         }
     }

@@ -333,6 +333,11 @@ Successor executor (S3-DRAW). Scratch: `🗑️generated/s3-draw/`. Aliases as i
   test assertions `coalesce_key.is_none()` (`🕹️nudge-selection/🧪️tests/🔬️unit`, `✏️editor/🧪️tests/🔬️unit`). V (view lane, D1):
   draw viewer camera `👁️viewer/🦀️.rs` window-config coalesce. F: draw folds through `drawing_inverse_rows` (derived from the leaf);
   window lanes `work_items: 1`.
+- 19:16–19:20 S3-CLOSURE wave 5a (`Emit.coalesce_key`, `Emit::amend_config`, config-lane `AmendLast` deleted) swept the rest: the note
+  refusal above, the draw viewer camera window-config coalesce, the draw `protocol::Edit` literal and both test assertions are gone —
+  draw + note have **0** `coalesce_key` / `amend` references.
+- `bun ./📜️script.ts schema mutation-labels --under ✏️s/🔌️plugins/{🖍️draw,🗒️note}` (G7 incl. `labelHandwritten`): **0 / 0** findings
+  (draw 22/22 native labels; note 28 native + 6 forwarding of 34).
 
 ### S3.6 Reference chips and "Use selection" (coordinator N3 hook)
 
@@ -365,4 +370,34 @@ Successor executor (S3-DRAW). Scratch: `🗑️generated/s3-draw/`. Aliases as i
 | 12:3x | draw TS package `bun ./📜️script.ts test` | **280 pass, 2 fail** of 283 (32 files) — the 2 pre-existing `sharp` fill-sampling cases (S2.4b) |
 | 12:3x | `schema mutation-inputs` / `mutation-payloads` `--under ✏️s/🔌️plugins/🖍️draw` | **0 / 0** (52/52 inputs, 22/22 leaves witnessed) |
 | 12:3x | same `--under ✏️s/🔌️plugins/🗒️note` | **0 / 0** (60/60 inputs, 35/35 payloads, 34/34 leaves) |
+| 13:05–13:09 | draw lib test (same command) | red in peer `🔌️plugin/🕹️interaction/🧬️mutations/🦀️.rs:15` (`semio_framework_schema_state` not linked into `semio-framework-plugin`) — schema split (S3-INFRA) |
+| 18:40 (after the 17:00 reboot) | `bun test` the five moved leaf oracle tests | **5 pass, 0 fail** (56 expects); all edits of S3.3–S3.6 intact on disk |
+| 18:4x | `verify taxonomy report --scope` each of the five `🧪️<leaf>` dirs | **5 × clean=true, 0 errors** |
+| 18:51–19:18 | draw lib test (same command), 3 runs | killed twice (SIGTERM 19:01, SIGKILL 19:14 — coordinator flock-cycle kill, rule 33), then red in peers: os-kernel `🔨️modules/🚪️io/🦀️.rs:7` `dsl::Diagnostic` unresolved, `📡️spr/🧵️channel/🦀️.rs:216-248` `crate::Fault*` missing (peer DSL extraction, S3-INFRA watching) |
+| 10-03 05:48–06:17 | draw lib test after "TREE GREEN (core)" | stuck in a ✏️s flock cycle (0.7 s CPU in 28 min, ~10 idle cargos fleet-wide) → killed my own cargo only |
+| 10-03 06:18–06:21 | draw lib test (re-run) | red in peers: `semio-s-artifact-stdio-zip` 52 errors (`🎒️zip/…/📸️snapshot/🪶️sqlite/🦀️.rs:11-71`, `🚦️native/🦀️.rs:41,45`) and `semio-s-artifact-stdio-svg` 6 errors (`🎨️svg/…/🔰️basic/🧬️schema/🦀️.rs:197-201`): no `From<ValueError>` for `String`/`IoError` (DSL/value extraction) — reported |
+| 10-03 06:21–06:36 | `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-draw cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-note-note --lib` | red in framework peer `semio-framework-artifact-workflow-workflow` (206 errors, `OS/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs`, same `ValueError` class) — reported |
+| 10-03 06:37 | `cargo check -p semio-framework-os-renderer-wgpu --tests` | red in core again: `semio-framework-os-kernel` 52 errors (`OS/🚪️io/🦀️.rs` ×36 `IoError` field/`From<String>`, `OS/🏪️store/🦀️.rs` ×12, `📜️space-history/…/🪶️sqlite` ×4) — reported; waiting for TREE GREEN |
+| 10-03 06:57 | `cargo check -p semio-framework-os-kernel --lib` (one cheap check) | kernel converging: 52 → 11 errors (peer extraction still active) |
 
+### S3.8 Open items and coordinator actions (as of 10-03 10:45)
+
+- State 10-03 10:45: no edit in flight; every source item of this session is on disk (S3.2–S3.6). OWED, blocked by the peer
+  DSL/value extraction (kernel, workflow, stdio zip/svg; coordinator "TREE GREEN" pending): draw `--lib` tests (incl. `retained_blend_mutations`,
+  both `⏪️TimeTravel` laws, the new `layer_references_read_their_name_and_take_the_canvas_selection`, the 9 `Emit::mutations` handlers);
+  note `--lib` tests (ink laws, three `⏪️TimeTravel` laws, label law, `document_setting_labels_read_the_value_not_a_debug_option`,
+  `block_references_read_their_name_and_take_the_block_selection`); `cargo check -p semio-framework-os-renderer-wgpu --tests` (also
+  waits on S3-W2C's locale wave); `cargo check -p semio-hub-draw -p semio-hub-note --target wasm32-wasip2`. All S3 Rust edits are
+  WRITTEN BUT UNVERIFIED until then.
+- Coordinator actions: re-activation of draw (React 6064 / wgpu 6164) and note after green — the component carries the label,
+  `Emit::mutations` and `Cargo.toml` feature changes; no descriptor, launch or central schema regeneration needed (no action, command,
+  schema or fixture change this session).
+- Not this WP (pre-existing, reported): draw TS `sharp` fill-sampling 2 reds; taxonomy findings of the four older draw leaf `🔬️unit`
+  dirs and `DA/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog`.
+- Scratch outputs: `🗑️generated/s3-draw/` (left for the coordinator; ticket input scripts `🧪️s3-draw-path-budget-repair.py`,
+  `🧪️s3-draw-leaf-oracle-tests.py` stay).
+
+
+## Session 4 — 2026-10-04
+
+Continued by S4-TOOLS-A (draw + note + layout + fem/lowpoly/shooting) in `📓️s4-tools-a-report.md` § Session 4.

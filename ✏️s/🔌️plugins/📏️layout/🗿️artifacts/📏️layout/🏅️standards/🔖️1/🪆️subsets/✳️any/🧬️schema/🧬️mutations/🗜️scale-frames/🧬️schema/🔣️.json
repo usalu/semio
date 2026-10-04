@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/scale-frames/schema.json",
   "title": "ScaleFrames",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 2 } },
   "description": "The `scale-frames` mutation record — a relative scaling of frames of one page about one recorded pivot: every frame centre moves away from the pivot by the factors and every frame's extent grows by them.",
   "type": "object",
   "additionalProperties": false,

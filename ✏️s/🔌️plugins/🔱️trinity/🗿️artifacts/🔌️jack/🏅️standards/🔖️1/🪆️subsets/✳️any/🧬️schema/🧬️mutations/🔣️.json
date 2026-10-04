@@ -4,30 +4,6 @@
   "title": "JackMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/create-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/delete-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/create-edge/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/delete-edge/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/rename-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/move-node/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/change-data-property/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/remove-data-property/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/set-query/schema.json"
     }
   ]

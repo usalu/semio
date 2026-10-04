@@ -1,0 +1,2 @@
+semio stdio.tsv.dsl v1
+schema="tsv.owner.雪\u{0}" trailing-newline=false line-ending=crlf records=[ ]

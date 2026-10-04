@@ -11,9 +11,10 @@ start op
 # verb this facet registers (`create`/`delete`/`change`/`move`/`add`/`remove`) —
 # `📓️taxonomy.md`'s `APPROVED_VERBS`, no `no`/`setSnapshot` (banned vocabulary). Edges are
 # id-keyed ENTITIES (`createEdge`/`deleteEdge`), never `connect`/`disconnect`.
-op = create-node | delete-node | change-node-kind | change-node-label | move-node | add-node-port | remove-node-port | add-node-property | remove-node-property | create-edge | delete-edge
+op = patch-snapshot | create-node | delete-node | change-node-kind | change-node-label | move-node | add-node-port | remove-node-port | add-node-property | remove-node-property | create-edge | delete-edge | drag-nodes | set-node-property | resize-node | rename-node | set-edge-property | add-edge-property | remove-edge-property
 
-create-node = "createNode" ":" hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]"
+patch-snapshot = "patch-snapshot" "patch" "=" hex
+create-node = "createNode" ":" hex "," hex "," hex "," hex "," hex "," hex "," hex "," "[" port-list? "]" "," "[" property-list? "]" "," at
 delete-node = "deleteNode" ":" hex
 change-node-kind = "changeNodeKind" ":" hex "," hex
 change-node-label = "changeNodeLabel" ":" hex "," hex
@@ -21,12 +22,19 @@ move-node = "moveNode" ":" hex "," hex "," hex
 add-node-port = "addNodePort" ":" hex "," INT "," port
 remove-node-port = "removeNodePort" ":" hex "," INT
 add-node-property = "addNodeProperty" ":" hex "," INT "," property
-remove-node-property = "removeNodeProperty" ":" hex "," INT
-create-edge = "createEdge" ":" hex "," hex "," hex "," hex "," hex
+remove-node-property = "removeNodeProperty" ":" hex "," hex
+create-edge = "createEdge" ":" hex "," hex "," hex "," hex "," hex "," optional-text "," optional-text "," "[" property-list? "]" "," at
 delete-edge = "deleteEdge" ":" hex
+drag-nodes = "dragNodes" ":" "[" hex {"," hex}* "]" "," hex "," hex
+set-node-property = "setNodeProperty" ":" hex "," property
+resize-node = "resizeNode" ":" hex "," hex "," hex
+rename-node = "renameNode" ":" hex "," hex
+set-edge-property = "setEdgeProperty" ":" hex "," property
+add-edge-property = "addEdgeProperty" ":" hex "," INT "," property
+remove-edge-property = "removeEdgeProperty" ":" hex "," hex
 
 port-list = port {"," port}*
-port = "[" hex "," port-kind "]"
+port = "[" hex "," port-kind "," hex "," "[" property-list? "]" "]"
 port-kind = "i" | "o" | "x"
 property-list = property {"," property}*
 property = hex ":" value
@@ -39,3 +47,6 @@ value = "Z" | "B" "[" bit "]" | "I" "[" hex "]" | "F" "[" hex "]" | "S" "[" hex 
 list-item = value ","?
 map-item = hex ":" value ","?
 bit = "0" | "1"
+
+optional-text = "-" | "[" hex "]"
+at = "-" | INT

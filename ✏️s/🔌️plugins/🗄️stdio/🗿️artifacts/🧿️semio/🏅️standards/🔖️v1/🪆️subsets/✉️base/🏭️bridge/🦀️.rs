@@ -24,23 +24,23 @@ fn main() {
         eprintln!("this bridge answers only `list-mutations s.stdio.semio v1 base`, not {command} {artifact} {standard} {subset}");
         std::process::exit(2);
     }
-    let rows: Vec<pack::JsonValue> = <SemioMutation as Mutation<SemioSnapshot>>::DESCRIPTORS
+    let rows: Vec<semio_framework_pack_json::Value> = <SemioMutation as Mutation<SemioSnapshot>>::DESCRIPTORS
         .iter()
         .map(|descriptor| {
-            pack::json_object([
-                ("id".to_string(), pack::JsonValue::from(descriptor.semantic_kind)),
-                ("variant".to_string(), pack::JsonValue::from(descriptor.aggregate_variant)),
-                ("outcomes".to_string(), pack::json_array(descriptor.outcome_classes.iter().map(|class| pack::JsonValue::from(class.as_str())))),
+            semio_framework_pack_json::object([
+                ("id".to_string(), semio_framework_pack_json::Value::from(descriptor.semantic_kind)),
+                ("variant".to_string(), semio_framework_pack_json::Value::from(descriptor.aggregate_variant)),
+                ("outcomes".to_string(), semio_framework_pack_json::array(descriptor.outcome_classes.iter().map(|class| semio_framework_pack_json::Value::from(class.as_str())))),
             ])
         })
         .collect();
-    let out = pack::json_object([
-        ("schema".to_string(), pack::JsonValue::from("semio.repository-test.runtime-inventory/v2")),
-        ("artifact".to_string(), pack::JsonValue::from("s.stdio.semio")),
-        ("standard".to_string(), pack::JsonValue::from("v1")),
-        ("subset".to_string(), pack::JsonValue::from("base")),
-        ("bridgeVersion".to_string(), pack::JsonValue::from(1_i64)),
-        ("mutations".to_string(), pack::json_array(rows)),
+    let out = semio_framework_pack_json::object([
+        ("schema".to_string(), semio_framework_pack_json::Value::from("semio.repository-test.runtime-inventory/v2")),
+        ("artifact".to_string(), semio_framework_pack_json::Value::from("s.stdio.semio")),
+        ("standard".to_string(), semio_framework_pack_json::Value::from("v1")),
+        ("subset".to_string(), semio_framework_pack_json::Value::from("base")),
+        ("bridgeVersion".to_string(), semio_framework_pack_json::Value::from(1_i64)),
+        ("mutations".to_string(), semio_framework_pack_json::array(rows)),
     ]);
-    println!("{}", pack::json_to_string(&out));
+    println!("{}", semio_framework_pack_json::to_string(&out));
 }

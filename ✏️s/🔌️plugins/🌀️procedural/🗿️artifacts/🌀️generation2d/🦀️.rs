@@ -42,6 +42,18 @@ pub fn widget_id(widget: &Widget) -> &str {
 }
 //#endregion 🔖️Helpers
 
+//#region 🔖️FaultNotices
+/// 🪆️ The refusal code of a loaded parent whose composed children cannot be projected.
+pub const GENERATION2D_CHILD_PROJECTION: &str = "generation2d.child.projection";
+
+/// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
+pub fn generation2d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [(GENERATION2D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden."))]);
+    &*NOTICES
+}
+//#endregion 🔖️FaultNotices
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::generation2d::create_generation2d_app`'s `🔖️Manifest` region.

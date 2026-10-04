@@ -7,9 +7,9 @@
 // pattern. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01/02), additive
 // phase: ADDITIVE ONLY — both enums keep their existing `Serialize`/`Deserialize` untouched.
 
-impl dsl::ToValue for IconName {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::String(match self {
+impl semio_framework_value::ToValue for IconName {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(match self {
             IconName::AlertCircle => "alert-circle",
             IconName::AlignLeft => "align-left",
             IconName::Animate => "animate",
@@ -262,10 +262,10 @@ impl dsl::ToValue for IconName {
         }.to_string())
     }
 }
-impl dsl::FromValue for IconName {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::String(s) = value else {
-            return Err(dsl::ValueError::new(format!("expected a string for IconName, found {value:?}")));
+impl semio_framework_value::FromValue for IconName {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(s) = value else {
+            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for IconName, found {value:?}")));
         };
         Ok(match s.as_str() {
             "alert-circle" => IconName::AlertCircle,
@@ -517,14 +517,14 @@ impl dsl::FromValue for IconName {
             "x" => IconName::X,
             "zoom-in" => IconName::ZoomIn,
             "zoom-out" => IconName::ZoomOut,
-            other => return Err(dsl::ValueError::new(format!("unknown IconName `{other}`"))),
+            other => return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown IconName `{other}`"))),
         })
     }
 }
 
-impl dsl::ToValue for MetabolismIconName {
-    fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::String(match self {
+impl semio_framework_value::ToValue for MetabolismIconName {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(match self {
             MetabolismIconName::Base => "base",
             MetabolismIconName::BaseBlob => "base_blob",
             MetabolismIconName::Capital => "capital",
@@ -557,10 +557,10 @@ impl dsl::ToValue for MetabolismIconName {
         }.to_string())
     }
 }
-impl dsl::FromValue for MetabolismIconName {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        let dsl::DslValue::String(s) = value else {
-            return Err(dsl::ValueError::new(format!("expected a string for MetabolismIconName, found {value:?}")));
+impl semio_framework_value::FromValue for MetabolismIconName {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(s) = value else {
+            return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for MetabolismIconName, found {value:?}")));
         };
         Ok(match s.as_str() {
             "base" => MetabolismIconName::Base,
@@ -592,7 +592,7 @@ impl dsl::FromValue for MetabolismIconName {
             "tambour_first-storey" => MetabolismIconName::TambourFirstStorey,
             "tambour_last-storey" => MetabolismIconName::TambourLastStorey,
             "tambour_single-storey" => MetabolismIconName::TambourSingleStorey,
-            other => return Err(dsl::ValueError::new(format!("unknown MetabolismIconName `{other}`"))),
+            other => return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown MetabolismIconName `{other}`"))),
         })
     }
 }

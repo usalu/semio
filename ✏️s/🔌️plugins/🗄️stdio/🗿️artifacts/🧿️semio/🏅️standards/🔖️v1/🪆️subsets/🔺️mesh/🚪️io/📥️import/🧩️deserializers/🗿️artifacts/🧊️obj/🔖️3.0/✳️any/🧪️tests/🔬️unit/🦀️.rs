@@ -27,7 +27,7 @@ fn sample_obj() -> ObjSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn deserialize_fan_triangulates_the_quad_into_two_triangles() {
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&sample_obj())).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&sample_obj())).expect("deserialize");
     assert_eq!(semio.meshes.len(), 1);
     assert_eq!(semio.meshes[0].id, "mesh-0");
     let prim = &semio.meshes[0].primitives[0];
@@ -45,7 +45,7 @@ async fn objects_partition_into_separate_semio_meshes() {
     let mut obj = sample_obj();
     obj.faces.push(ObjFace { vertices: vec![ObjFaceVertex { vertex: 0, texcoord: Some(0), normal: Some(0) }, ObjFaceVertex { vertex: 1, texcoord: Some(1), normal: Some(0) }, ObjFaceVertex { vertex: 2, texcoord: Some(2), normal: Some(0) }] });
     obj.objects = vec![semio_s_artifact_stdio_obj::schema::snapshot::ObjObject { name: "quad".into(), faces: vec![0] }, semio_s_artifact_stdio_obj::schema::snapshot::ObjObject { name: "tri".into(), faces: vec![1] }];
-    let semio = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect("deserialize");
+    let semio = ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect("deserialize");
     assert_eq!(semio.meshes.len(), 2);
     assert_eq!(semio.meshes[0].id, "quad");
     assert_eq!(semio.meshes[1].id, "tri");
@@ -56,6 +56,6 @@ async fn objects_partition_into_separate_semio_meshes() {
 async fn out_of_range_vertex_reference_is_a_hard_error() {
     let mut obj = sample_obj();
     obj.faces[0].vertices[0].vertex = 999;
-    let err = semio_framework_plugin::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect_err("out-of-range vertex must error");
+    let err = ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&obj)).expect_err("out-of-range vertex must error");
     assert!(format!("{err:?}").contains("out-of-range"), "got {err:?}");
 }

@@ -17,7 +17,7 @@ pub fn diff(payload: &ReorderSavedCameras, base: &ShootingSnapshot) -> protocol:
         ids.insert(to, item);
     }
     if ids == original {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Saved camera \"{}\" order is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Saved camera \"{}\" order is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(ShootingDiff { saved_cameras: Some(ShootingSavedCamerasDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
 }

@@ -71,11 +71,34 @@
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
-      "notes": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors.",
       "comparisonProfiles": [
         "ordered-json-v1"
       ],
       "rationale": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors."
+    },
+    {
+      "id": "forms-change-block-field-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "forms-change-block-field"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "The property oracle of `🧬️schema/🧪️tests/🧪️change-block-field` (design §17.1): over generated payloads the TS twin admits exactly what the leaf's JSON Schema admits."
     }
   ],
   "noOracleDecisions": [],

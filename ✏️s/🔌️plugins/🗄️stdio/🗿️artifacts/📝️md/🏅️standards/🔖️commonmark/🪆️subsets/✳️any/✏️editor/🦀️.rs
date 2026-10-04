@@ -12,7 +12,7 @@ use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_blo
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
@@ -31,7 +31,6 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -45,15 +44,22 @@ use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::Label;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum MdEditCommand {
-    ReplaceText { text: String },
-    EditSnapshot { event: SnapshotEditEvent },
+    ReplaceText {
+        text: String,
+    },
+    EditSnapshot {
+        event: SnapshotEditEvent,
+    },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
-    SetActiveExample { example_id: String },
+    SetActiveExample {
+        example_id: String,
+    },
 }
 
 impl protocol::OpBinary for MdEditCommand {
@@ -64,11 +70,11 @@ impl protocol::OpBinary for MdEditCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = MD_COMMAND_TOOL_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(pack::to_json_string(self).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })?;
-        <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
+        let parsed = semio_framework_pack_json::parse_bytes(bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })?;
+        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -126,18 +132,14 @@ fn md_example_snapshot(example_id: &str) -> MdSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn md_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<MdEditCommand, Fault> {
+fn md_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<MdEditCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(MdEditCommand::EditSnapshot { event });
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(MdEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         MD_KIT_ACTION_ID => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
-        other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"),
-        )),
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"))),
     }
 }
 
@@ -167,11 +169,7 @@ fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot) -> Result<Emit<MdMuta
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.invalid-text"), error.to_string())),
         },
         MdEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-md-snapshot-edit-routed-to-native-reducer")),
-        MdEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
-            ..Default::default()
-        }),
+        MdEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&md_example_snapshot(example_id), STDIO_MD_DOCUMENT_SCHEMA)], ..Default::default() }),
     }
 }
 
@@ -245,7 +243,7 @@ impl ArtifactOwnedToolJobFactory for MdRetainedCommandJobFactory {
 //#region 🧮️NetLeaves
 /// 📥️ The document an applied text means: the artifact's own DSL envelope when the text carries its preamble (an agent's
 /// whole-document write), else the CommonMark source the main window edits.
-fn md_applied_text(text: &str) -> Result<MdSnapshot, store::TextError> {
+fn md_applied_text(text: &str) -> Result<MdSnapshot, semio_framework_diagnostic::TextError> {
     match store::semio_format::split_text_preamble(text) {
         Ok(_) => <MdSnapshot as store::ArtifactDsl>::parse_dsl(text),
         Err(_) => Ok(MdSnapshot::from_text(text)),
@@ -291,7 +289,9 @@ fn md_net_block(path: &[MdPathStep], index: usize, before: &MdBlock, after: &MdB
         (MdBlock::Paragraph { .. }, MdBlock::Paragraph { inlines }) => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
         (MdBlock::Heading { level, .. }, MdBlock::Heading { level: next_level, inlines }) if level == next_level => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
         (MdBlock::BlockQuote { blocks }, MdBlock::BlockQuote { blocks: next_blocks }) => md_net_blocks(&nested(MdPathStep::BlockQuote { index }), blocks, next_blocks, leaves),
-        (MdBlock::List { ordered, start, tight, items }, MdBlock::List { ordered: next_ordered, start: next_start, tight: next_tight, items: next_items }) if (ordered, start, tight) == (next_ordered, next_start, next_tight) && items.len() == next_items.len() => {
+        (MdBlock::List { ordered, start, tight, items }, MdBlock::List { ordered: next_ordered, start: next_start, tight: next_tight, items: next_items })
+            if (ordered, start, tight) == (next_ordered, next_start, next_tight) && items.len() == next_items.len() =>
+        {
             for (item, (blocks, next_blocks)) in items.iter().zip(next_items).enumerate() {
                 md_net_blocks(&nested(MdPathStep::ListItem { index, item }), blocks, next_blocks, leaves);
             }
@@ -324,6 +324,23 @@ impl ArtifactEditor for MdEditor {
 
     const DIALECT: Dialect = MD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MD_DOCUMENT_SCHEMA;
+
+    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
+        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.md@commonmark", extension: ".md", media_type: "text/markdown", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+        Ok(snapshot.to_text().into_bytes())
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
+        Ok(MdSnapshot::from_text(text))
+    }
+
+    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
+        Some(MdMutation::SetSnapshot(SetSnapshot { snapshot }))
+    }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<MdEditor>,
@@ -445,7 +462,7 @@ impl ArtifactEditor for MdEditor {
         md_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         md_command_from_action(action, args)
     }
 
@@ -470,9 +487,12 @@ impl ArtifactEditor for MdEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
-                doc.snapshot,
+                doc,
                 view_state.locale,
                 "s.stdio.md@commonmark/*#editor",
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
@@ -490,7 +510,6 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for MdEdito
             _ => None,
         }
     }
-
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, md_net_mutations)

@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds/🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("bind-representation before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("bind-representation before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    dsl::json::from_json_str(AFTER).expect("bind-representation after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("bind-representation after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    dsl::json::from_json_str(MUTATION).expect("bind-representation mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("bind-representation mutation decodes")
 }
 
 /// ▶️ A second link appears for the same role, pointing at a different target.
@@ -46,7 +46,7 @@ async fn binds_the_second_representation_for_an_existing_type_role() {
 async fn the_undo_unbind_representation_targets_the_appended_index() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let SemioKitMutation::UnbindRepresentation(unbind) = &undo[0] else { panic!("bind-representation must undo as unbind-representation") };
     assert_eq!(unbind.index, base.representations.len(), "the undo addresses the index the link was appended AT, not the base length minus one");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward bind-representation applies");
@@ -60,12 +60,12 @@ async fn the_undo_unbind_representation_targets_the_appended_index() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "bind-representation/binds-a-second-representation-to-an-existing-type: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("bind-representation mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("bind-representation mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("bind-representation mutation reparses");
     assert_eq!(reencoded, original, "bind-representation/binds-a-second-representation-to-an-existing-type: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "bind-representation/binds-a-second-representation-to-an-existing-type: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,10 +93,10 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed bind-representation diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed bind-representation diff decodes");
     assert_eq!(decoded.representations.as_ref().map(|list| list.values.len()), Some(2), "the diff carries the whole rebuilt link list");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "bind-representation/binds-a-second-representation-to-an-existing-type: committed diff JSON is not canonical");
 }
@@ -104,7 +104,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed bind-representation diff decodes");
+    let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed bind-representation diff decodes");
     let produced = decoded.apply(&before()).expect("committed bind-representation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "bind-representation/binds-a-second-representation-to-an-existing-type: committed diff did not carry before to after");
 }

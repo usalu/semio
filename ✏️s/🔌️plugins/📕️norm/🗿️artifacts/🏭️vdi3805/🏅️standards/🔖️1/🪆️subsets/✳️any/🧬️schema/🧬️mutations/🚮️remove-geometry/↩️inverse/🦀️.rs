@@ -6,10 +6,13 @@ use crate::mutations::add_geometry;
 use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemoveGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &RemoveGeometry, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.geometry.get(&payload.id) {
         Some(geometry) => vec![Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

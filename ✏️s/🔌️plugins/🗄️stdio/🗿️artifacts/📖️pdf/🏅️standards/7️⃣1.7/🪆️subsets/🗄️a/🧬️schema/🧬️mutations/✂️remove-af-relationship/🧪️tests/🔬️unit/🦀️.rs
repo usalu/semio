@@ -12,5 +12,5 @@ fn removes_and_can_restore_the_relationship() {
     let next = outcome.diff().apply(&base).unwrap();
     let next_id = support::file_spec_named(&next, &mutation.file_name).unwrap();
     assert!(support::object(&next, next_id).and_then(|value| support::dict_name(value, "AFRelationship")).is_none());
-    assert_eq!(<RemoveAfRelationship as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).len(), 1);
+    assert_eq!(<RemoveAfRelationship as MutationKind<PdfSnapshot, PdfAMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len(), 1);
 }

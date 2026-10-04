@@ -18,10 +18,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄️rotate-frame/🌀️rotates/🎯️outcome/🔣️.json");
 
 fn before() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("rotate-frame/rotates-the-rect-frame: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: before snapshot decodes")
 }
 fn expected_after() -> LayoutSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("rotate-frame/rotates-the-rect-frame: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rotate-frame/rotates-the-rect-frame: after snapshot decodes")
 }
 fn mutation() -> LayoutMutation {
     serde_json::from_str(MUTATION).expect("rotate-frame/rotates-the-rect-frame: mutation decodes")
@@ -47,7 +47,7 @@ async fn turns_the_rotation_only() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_turns_the_rect_frame_back() {
     let base = before();
-    let inverse = mutation().inverse(&base);
+    let inverse = mutation().inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "rotate-frame inverts to exactly one step");
     match &inverse[0] {
         LayoutMutation::RotateFrame(step) => {
@@ -67,12 +67,12 @@ async fn inverse_turns_the_rect_frame_back() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: LayoutSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: LayoutSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rotate-frame/rotates-the-rect-frame: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "rotate-frame/rotates-the-rect-frame: committed mutation JSON is not canonical");
 }
@@ -81,7 +81,7 @@ async fn committed_json_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn produces_the_committed_diff_and_outcome() {
     let outcome = mutation().diff(&before());
-    let produced: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(outcome.diff())).expect("diff encodes");
+    let produced: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-frame/rotates-the-rect-frame: produced diff differs from the committed 🔺️diff");
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");

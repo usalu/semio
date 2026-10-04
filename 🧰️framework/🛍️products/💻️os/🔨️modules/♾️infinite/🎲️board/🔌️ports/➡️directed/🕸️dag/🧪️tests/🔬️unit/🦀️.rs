@@ -11,7 +11,7 @@ fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
         DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
     let mut host = DagHost::from_host_snapshot_without_layout(fixture);
     host.set_selection(&["a\"\\\n".into(), "β".into()]);
-    let expected = dsl::os_pack::json::to_json_string(&host.selected_node_ids()).into_bytes();
+    let expected = semio_framework_pack_json::to_json_string(&host.selected_node_ids()).into_bytes();
     let mut cursor = DagSelectedNodesJsonCursor::default();
     let mut rejected = cursor_grant();
     rejected.fuel = 0;
@@ -36,7 +36,7 @@ fn selected_edges_cursor_matches_direct_encode() {
     let mut host = DagHost::default_demo();
     let edge = host.host_snapshot.edges.first().expect("demo edge").id.clone();
     host.set_selection_domains_json(&format!("{{\"nodes\":[],\"edges\":[{edge:?}],\"handles\":[]}}"));
-    let expected = dsl::os_pack::json::to_json_string(&host.selected_edge_ids()).into_bytes();
+    let expected = semio_framework_pack_json::to_json_string(&host.selected_edge_ids()).into_bytes();
     let mut cursor = DagSelectedNodesJsonCursor::edges();
     let mut output = Vec::new();
     let mut census = None;
@@ -96,7 +96,7 @@ fn app_instance_node_serializes_and_sizes_n_ports() {
     assert_eq!(dag_node_kind_tag(&node.kind), "appInstance");
     assert_eq!(node.inputs().len(), 1);
     assert_eq!(node.outputs().len(), 2);
-    let json = dsl::os_pack::json::to_json_string(&node);
+    let json = semio_framework_pack_json::to_json_string(&node);
     assert!(json.contains("appInstance"));
     assert!(json.contains("instanceId"));
     let mut sized = node.clone();
@@ -146,11 +146,11 @@ fn cycle_detection_blocks_back_edge() {
 
 /// 🧪️ Two-node/one-edge `dag.host_snapshot` literal shared by the layout tests below.
 fn ab_edge_layout_fixture() -> Value {
-    let node = |id: &str| dsl::os_pack::json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
-    dsl::os_pack::json::object([
+    let node = |id: &str| semio_framework_pack_json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
+    semio_framework_pack_json::object([
         ("schema".to_string(), Value::from("dag.host_snapshot")),
         ("nodes".to_string(), Value::Array(vec![node("a"), node("b")])),
-        ("edges".to_string(), Value::Array(vec![dsl::os_pack::json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
+        ("edges".to_string(), Value::Array(vec![semio_framework_pack_json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
     ])
 }
 
@@ -239,8 +239,8 @@ fn dag_node_spec_serde_round_trip_kinds() {
         },
     ];
     for node in nodes {
-        let json = dsl::os_pack::json::to_json_string(&node);
-        let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
+        let json = semio_framework_pack_json::to_json_string(&node);
+        let back: DagNodeSpec = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(node, back);
     }
 }
@@ -555,7 +555,7 @@ fn dag_host_label_overlay_paint_state_json_includes_compact_labels() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("compact");
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let labels = raw["labels"].as_array().expect("labels");
     assert!(!labels.is_empty());
     assert!(labels.iter().all(|row| row["layout"] == "horizontal"));
@@ -584,14 +584,14 @@ fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("micro");
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let labels = raw["labels"].as_array().expect("labels");
     assert!(labels.iter().any(|row| row["text"] == "Radius" && row["layout"] == "horizontal"));
 }
 
 #[test]
 fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
-    let fixture: Value = dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🎚️slider-overlay.json")).unwrap();
+    let fixture: Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🎚️slider-overlay.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let row = &case["row"];
         let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
@@ -614,7 +614,7 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
             }],
             edges: vec![],
         });
-        let actual: Value = dsl::os_pack::json::parse(&host.slider_overlay_state_json().unwrap()).unwrap();
+        let actual: Value = semio_framework_pack_json::parse(&host.slider_overlay_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for key in ["widgetId", "label", "value", "min", "max", "step"] {
             assert_eq!(actual["sliders"][0][key], row[key], "{key}");
         }
@@ -641,7 +641,7 @@ fn dag_host_slider_overlay_state_json_includes_slider_track() {
         edges: vec![],
     });
     host.set_viewport(1280, 800, 1.0);
-    let raw: Value = dsl::os_pack::json::parse(&host.slider_overlay_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.slider_overlay_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let sliders = raw["sliders"].as_array().expect("sliders");
     assert_eq!(sliders.len(), 1);
     assert_eq!(sliders[0]["widgetId"], "slider");
@@ -678,7 +678,7 @@ fn label_overlay_port_rows_are_not_duplicated_in_json() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("normal");
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let labels = raw["labels"].as_array().expect("labels");
     let port_rows: Vec<_> = labels.iter().filter(|row| row["kind"].as_str() == Some("port")).map(|row| (row["text"].as_str().unwrap_or(""), row["align"].as_str().unwrap_or(""))).collect();
     assert_eq!(port_rows.len(), 3);
@@ -729,7 +729,7 @@ fn dag_host_label_overlay_port_text_follows_draw_lod() {
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label(lod);
-        let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         raw["labels"].as_array().expect("labels").iter().filter(|row| row["align"].as_str().is_some()).filter_map(|row| row["text"].as_str().map(str::to_string)).collect()
     };
     assert!(port_texts("normal").contains(&"! Wid".into()));
@@ -762,7 +762,7 @@ fn dag_host_exports_screen_overlay_rect() {
     let mut host = host;
     host.set_viewport(1280, 800, 1.0);
     let json = host.node_overlays_json().unwrap();
-    let overlays: Vec<Value> = dsl::os_pack::json::parse(&json).unwrap().as_array().cloned().unwrap_or_default();
+    let overlays: Vec<Value> = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap_or_default();
     assert_eq!(overlays.len(), 1);
     assert_eq!(overlays[0]["id"], "screen");
     assert_eq!(overlays[0]["mediaKind"], "svg");
@@ -791,7 +791,7 @@ fn dag_host_area_select_previews_preselect_before_commit() {
     assert!(matches!(host.engine.interaction, InteractionMode::AreaSelect { .. }), "expected area-select after marquee threshold");
     let preselect = host.preselect_widget_ids();
     assert!(!preselect.is_empty(), "marquee drag should preview widget ids before commit");
-    let preview_points: Vec<[f64; 2]> = dsl::os_pack::json::from_json_str(&host.selection_preview_points_json()).unwrap();
+    let preview_points: Vec<[f64; 2]> = semio_framework_pack_json::from_json_str(&host.selection_preview_points_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(preview_points.len() >= 2, "marquee overlay points should be published during drag");
     host.pointer_up_screen(end_sx, end_sy, false, false, false);
     assert!(!host.selected_node_ids().is_empty(), "marquee drag should commit selection on release");
@@ -832,7 +832,7 @@ fn dag_host_selection_union_bounds_screen_json_nonempty_for_selection() {
     host.set_selection(&["scale".into(), "combine".into()]);
     let json = host.selection_union_bounds_screen_json();
     assert_ne!(json, "null");
-    let parsed: Value = dsl::os_pack::json::parse(&json).unwrap();
+    let parsed: Value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(parsed["width"].as_f64().unwrap_or(0.0) > 1.0);
     assert!(parsed["height"].as_f64().unwrap_or(0.0) > 1.0);
 }
@@ -842,12 +842,12 @@ fn dag_host_entity_screen_json_resolves_node_by_id_and_wildcard() {
     let mut host = DagHost::default_demo();
     host.set_viewport(800, 600, 1.0);
     let json = host.entity_screen_json("node", "scale");
-    let parsed: Value = dsl::os_pack::json::parse(&json).unwrap();
+    let parsed: Value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(parsed["visible"], true);
     assert!(parsed["x"].as_number().is_some());
     assert!(parsed["rect"].as_array().is_some());
 
-    let wildcard: Value = dsl::os_pack::json::parse(&host.entity_screen_json("node", "*")).unwrap();
+    let wildcard: Value = semio_framework_pack_json::parse(&host.entity_screen_json("node", "*"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(wildcard["visible"], true);
 }
 
@@ -857,13 +857,13 @@ fn dag_host_entity_screen_json_resolves_node_by_id_and_wildcard() {
 fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
     let mut host = DagHost::default_demo();
     host.set_viewport(800, 600, 1.0);
-    let input_json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale@in")).unwrap();
+    let input_json: Value = semio_framework_pack_json::parse(&host.entity_screen_json("handle", "scale@in"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(input_json["visible"], true);
-    let output_json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "combine@b")).unwrap();
+    let output_json: Value = semio_framework_pack_json::parse(&host.entity_screen_json("handle", "combine@b"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(output_json["visible"], true);
-    let malformed: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale")).unwrap();
+    let malformed: Value = semio_framework_pack_json::parse(&host.entity_screen_json("handle", "scale"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(malformed["visible"], false);
-    let missing_port: Value = dsl::os_pack::json::parse(&host.entity_screen_json("handle", "scale@nope")).unwrap();
+    let missing_port: Value = semio_framework_pack_json::parse(&host.entity_screen_json("handle", "scale@nope"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(missing_port["visible"], false);
 }
 
@@ -871,7 +871,7 @@ fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
 fn dag_host_entity_screen_json_resolves_edge_with_a_two_point_polyline() {
     let mut host = DagHost::default_demo();
     host.set_viewport(800, 600, 1.0);
-    let json: Value = dsl::os_pack::json::parse(&host.entity_screen_json("edge", "e1")).unwrap();
+    let json: Value = semio_framework_pack_json::parse(&host.entity_screen_json("edge", "e1"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(json["visible"], true);
     let polyline = json["polyline"].as_array().expect("edge geometry carries a polyline");
     assert_eq!(polyline.len(), 2);
@@ -883,14 +883,14 @@ fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
     let mut host = DagHost::default_demo();
     host.set_viewport(800, 600, 1.0);
     for (domain, id) in [("node", "nonexistent"), ("handle", "*"), ("edge", "nonexistent"), ("bogus-domain", "*")] {
-        let json: Value = dsl::os_pack::json::parse(&host.entity_screen_json(domain, id)).unwrap();
+        let json: Value = semio_framework_pack_json::parse(&host.entity_screen_json(domain, id), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         if json["visible"] == true {
             continue;
         }
         assert_eq!(json["visible"], false, "domain={domain} id={id}");
     }
     let empty_fixture = DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
-    let empty: Value = dsl::os_pack::json::parse(&DagHost::from_host_snapshot(empty_fixture).entity_screen_json("node", "*")).unwrap();
+    let empty: Value = semio_framework_pack_json::parse(&DagHost::from_host_snapshot(empty_fixture).entity_screen_json("node", "*"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(empty["visible"], false);
 }
 
@@ -1708,7 +1708,7 @@ fn minimap_widget_label_overlay_includes_rect_when_visible() {
     host.set_minimap_widget_visible(true);
     host.set_viewport(1280, 800, 1.0);
     host.set_camera(500.0, 400.0, 3.0);
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let minimap = raw.get("minimapWidget").and_then(|v| v.as_object()).expect("minimap widget json");
     assert!(minimap.get("width").and_then(|v| v.as_f64()).unwrap_or(0.0) > 0.0);
 }
@@ -1719,7 +1719,7 @@ fn minimap_widget_click_repositions_camera() {
     host.set_minimap_widget_visible(true);
     host.set_viewport(1280, 800, 1.0);
     host.set_camera(500.0, 400.0, 3.0);
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let minimap = raw.get("minimapWidget").expect("minimap");
     let x = minimap["x"].as_f64().unwrap() + minimap["width"].as_f64().unwrap() * 0.5;
     let y = minimap["y"].as_f64().unwrap() + minimap["height"].as_f64().unwrap() * 0.5;
@@ -1807,11 +1807,11 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
     assert!(scene.path_count() >= host.host_snapshot.nodes.len() * 2, "a forced compact LOD must still paint every node's chrome");
-    let state: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let state: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let rows = state["labels"].as_array().expect("label overlay rows");
     assert_eq!(rows.len(), host.host_snapshot.nodes.len(), "a forced compact LOD must caption every node");
     for (row, node) in rows.iter().zip(&host.host_snapshot.nodes) {
-        assert_eq!(row["text"], dsl::os_pack::json::Value::from(node.name.as_str()), "a caption is the node's NAME at every captioned tier");
+        assert_eq!(row["text"], semio_framework_pack_json::Value::from(node.name.as_str()), "a caption is the node's NAME at every captioned tier");
     }
 }
 
@@ -2000,7 +2000,7 @@ fn note_label_overlay_skips_title_and_ports() {
         edges: vec![],
     });
     host.set_viewport(800, 600, 1.0);
-    let raw: Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+    let raw: Value = semio_framework_pack_json::parse(&host.label_overlay_paint_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let labels = raw["labels"].as_array().expect("labels");
     assert!(labels.iter().all(|row| row["text"] != "Note" && row["text"] != "out"));
 }
@@ -2030,7 +2030,7 @@ fn note_preview_action_port_accessors() {
         y: 0.0,
         width: 120.0,
         height: 48.0,
-        kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "3".into() }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+        kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "3".into() }, expanded: crate::DagExpandedPaths::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
         ..Default::default()
     };
     assert_eq!(preview.inputs().len(), 1);
@@ -2093,8 +2093,8 @@ fn dag_draw_lod_node_content_matrix() {
 #[test]
 fn dag_node_spec_round_trips_display_fields() {
     let node = DagNodeSpec::computation("n".into(), "pass through", "pass", "emoji:➡️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 80.0, 24.0);
-    let json = dsl::os_pack::json::to_json_string(&node);
-    let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&node);
+    let back: DagNodeSpec = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(back.name, "PassThrough");
     assert_eq!(back.abbreviation, "Pass");
     assert_eq!(back.icon, "emoji:➡️");
@@ -2102,7 +2102,7 @@ fn dag_node_spec_round_trips_display_fields() {
 
 #[test]
 fn preview_tree_toggle_expands_and_resizes() {
-    let json = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::object([("alpha".to_string(), dsl::os_pack::json::object([("beta".to_string(), Value::from(1))])), ("gamma".to_string(), Value::from("x"))]));
+    let json = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::object([("alpha".to_string(), semio_framework_pack_json::object([("beta".to_string(), Value::from(1))])), ("gamma".to_string(), Value::from("x"))]));
     let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
         schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -2115,14 +2115,14 @@ fn preview_tree_toggle_expands_and_resizes() {
             y: 0.0,
             width: 80.0,
             height: 80.0,
-            kind: DagNodeKind::Preview { content: DagPreviewContent::Tree { json: json.clone() }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+            kind: DagNodeKind::Preview { content: DagPreviewContent::Tree { json: json.clone() }, expanded: crate::DagExpandedPaths::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
             ..Default::default()
         }],
         edges: vec![],
     });
     host.set_viewport(800, 600, 1.0);
     let collapsed_h = host.host_snapshot.nodes[0].height;
-    let layouts = preview_tree_row_layouts(&host.host_snapshot.nodes[0], &json, &BTreeSet::new());
+    let layouts = preview_tree_row_layouts(&host.host_snapshot.nodes[0], &json, &crate::DagExpandedPaths::new());
     let row = layouts.iter().find(|entry| entry.path == "alpha").expect("alpha row");
     let (x0, y0, x1, y1) = row.row_rect;
     let world_x = x0 + (x1 - x0) * 0.75;
@@ -2157,8 +2157,8 @@ fn cluster_node_round_trips_serde() {
     let inputs = vec![IoPortSpec::simple("a", "a")];
     let outputs = vec![IoPortSpec::simple("out", "out")];
     let node = DagNodeSpec::cluster("cluster".into(), "Cluster", "Cluster", "emoji:🧩️".into(), inputs, outputs, 10.0, 20.0, 120.0, 80.0);
-    let json = dsl::os_pack::json::to_json_string(&node);
-    let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&node);
+    let back: DagNodeSpec = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(matches!(back.kind, DagNodeKind::Cluster { .. }));
 }
 

@@ -1,0 +1,11 @@
+{
+  "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+  "generatorContract": "plugin-registry",
+  "target": "@semio-tech/plugin-registry:generate",
+  "implementation": "bun ./📜️script.ts generate",
+  "seed": ".vscode/🧩️launch.seed.jsonc",
+  "output": ".vscode/launch.json",
+  "name": "🏭️generate",
+  "group": "3_dev",
+  "order": -49.8
+}

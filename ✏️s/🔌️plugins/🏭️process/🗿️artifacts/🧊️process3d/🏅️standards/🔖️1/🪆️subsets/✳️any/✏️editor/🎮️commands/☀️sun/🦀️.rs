@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
@@ -24,7 +24,7 @@ pub mod toggle_sun {
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "sun-azimuth")]
     pub struct SetSunAzimuth {
         pub value: f64,
@@ -46,7 +46,7 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "sun-elevation")]
     pub struct SetSunElevation {
         pub value: f64,
@@ -68,7 +68,7 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
     #[dsl(keyword = "sun-intensity")]
     pub struct SetSunIntensity {
         pub value: f64,

@@ -51,3 +51,5 @@ record add-app-extension tag=18
 field payload bytes
 record remove-app-extension tag=19
 field payload bytes
+record patch-snapshot tag=20
+field payload bytes

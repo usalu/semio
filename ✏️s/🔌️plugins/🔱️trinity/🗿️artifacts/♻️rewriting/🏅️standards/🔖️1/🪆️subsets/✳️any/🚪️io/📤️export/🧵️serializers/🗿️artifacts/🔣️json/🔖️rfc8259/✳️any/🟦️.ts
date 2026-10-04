@@ -1,1 +1,6 @@
-export {};
+/** 📤️ Rewriting's actual declared JSON parent uses closed scalar words and typed properties. */
+import {parseRewritingArtifact,type RewritingArtifact} from "../../../../../../../🧬️schema/🟦️.ts";
+import {propertyValueToJson} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🟦️.ts";
+import {jackToJsonValue} from "./../../../../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
+/** 📜️ Emit the typed rule program and composed graph parent without source carriers. */
+export function rewritingToJsonValue(value:RewritingArtifact):unknown{const owned=parseRewritingArtifact(value);return{workingGraph:jackToJsonValue(owned.workingGraph),lhs:owned.lhs,rhs:{...owned.rhs,set:owned.rhs.set.map(value=>({...value,value:propertyValueToJson(value.value)})),parameters:owned.rhs.parameters.map(value=>({...value,default:propertyValueToJson(value.default)}))},parameterBindings:Object.fromEntries(Object.entries(owned.parameterBindings).map(([key,value])=>[key,propertyValueToJson(value)])),ruleLayout:Object.fromEntries(Object.entries(owned.ruleLayout).map(([key,value])=>[key,{x:{bits:value.x.bits.toString(16).padStart(16,"0")},y:{bits:value.y.bits.toString(16).padStart(16,"0")}}]))};}

@@ -1,48 +1,29 @@
-//! 🧾 `outline` — one named inference: this PresentationML deck's own slide/shape/word
-//! structure. `slideCount` is `presentation.slides.len()` verbatim; `shapeCount` is the total
-//! shape count across every slide's `p:spTree` (including logical `Other` XML nodes);
-//! `wordCount` is a whitespace-split word count over every `TextBox`/`Placeholder` run's `text`
-//! (`Picture`/`Other` shapes carry no modeled text).
+//! 🧾 Counts the slide, shape and word structure of authoritative OPC and retained XML.
 
-use crate::schema::snapshot::PptxShape;
 use crate::PptxSnapshot;
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
-//#region 🔖️Outline
-/// 🧾️ `Pptx` document outline.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct PptxOutline {
-    pub slide_count: u32,
-    pub shape_count: u32,
-    pub word_count: u32,
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_word_count(shape: &PptxShape) -> u32 {
-    let text_frame = match shape {
-        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => text_frame,
-        PptxShape::Picture { .. } | PptxShape::Other { .. } => return 0,
-    };
-    text_frame.iter().flat_map(|paragraph| &paragraph.runs).map(|run| run.text.split_whitespace().count() as u32).sum()
-}
+/// 🧾 PresentationML document outline.
+#[derive(Clone,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[value(rename_all="camelCase")]
+pub struct PptxOutline {pub slide_count:u32,pub shape_count:u32,pub word_count:u32}
 
 impl PptxOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compute(snapshot: &PptxSnapshot) -> Self {
-        let slide_count = snapshot.presentation.slides.len() as u32;
-        let mut shape_count = 0u32;
-        let mut word_count = 0u32;
-        for slide in &snapshot.presentation.slides {
-            shape_count += slide.shapes.len() as u32;
-            word_count += slide.shapes.iter().map(shape_word_count).sum::<u32>();
-        }
-        Self { slide_count, shape_count, word_count }
-    }
+ pub fn compute(snapshot:&PptxSnapshot)->Result<Self,ValueError>{
+  let slides=crate::schema::mutations::xml_address::pptx_slides(snapshot).map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
+  let limit=||ValueError::new(ValueRefusalKind::WorkLimit,"PPTX outline count exceeds unsigned32");
+  let slide_count=u32::try_from(slides.len()).map_err(|_|limit())?;
+  let mut shape_count=0u32;let mut word_count=0u32;
+  for slide in &slides{
+   shape_count=shape_count.checked_add(u32::try_from(slide.shapes.len()).map_err(|_|limit())?).ok_or_else(limit)?;
+   for text in slide.shapes.iter().filter_map(|shape|shape.text.as_deref()){
+    word_count=word_count.checked_add(u32::try_from(text.split_whitespace().count()).map_err(|_|limit())?).ok_or_else(limit)?;
+   }
+  }
+  Ok(Self{slide_count,shape_count,word_count})
+ }
 }
-//#endregion 🔖️Outline
 
 #[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
+pub(crate) mod tests;

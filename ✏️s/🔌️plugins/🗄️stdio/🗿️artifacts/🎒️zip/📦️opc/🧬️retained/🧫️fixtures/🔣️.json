@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "payload": {
+    "length": 6145,
+    "multiplier": 37,
+    "increment": 11
+  },
+  "parts": [
+    {
+      "path": "word/media/image-large.bin",
+      "contentType": "application/octet-stream",
+      "payload": "pattern"
+    },
+    {
+      "path": "custom/data.bin",
+      "contentType": "application/vnd.semio.data",
+      "payload": "empty"
+    }
+  ],
+  "contentTypes": {
+    "defaults": [
+      ["xml", "application/xml"],
+      ["bin", "application/octet-stream"]
+    ],
+    "overrides": [
+      ["/word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"],
+      ["/custom/data.bin", "application/vnd.semio.data"]
+    ]
+  },
+  "relationships": [
+    {
+      "owner": "",
+      "entries": [
+        {
+          "id": "rId9",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+          "target": "word/document.xml",
+          "targetMode": "internal"
+        }
+      ]
+    },
+    {
+      "owner": "word/document.xml",
+      "entries": [
+        {
+          "id": "rId2",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+          "target": "media/image-large.bin",
+          "targetMode": "internal"
+        },
+        {
+          "id": "rId1",
+          "relType": "https://example.invalid/external",
+          "target": "https://example.invalid/resource",
+          "targetMode": "external"
+        }
+      ]
+    }
+  ],
+  "comment": "retained-🧬️-opc",
+  "grant": {
+    "maximumItems": 5,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 4096,
+    "maximumDepth": 64
+  },
+  "expected": {
+    "sourcePreserved": true,
+    "orderPreserved": true,
+    "copyRequiresMultipleTurns": true,
+    "closeRequiresMultipleTurns": true,
+    "terminalEmpty": true
+  }
+}

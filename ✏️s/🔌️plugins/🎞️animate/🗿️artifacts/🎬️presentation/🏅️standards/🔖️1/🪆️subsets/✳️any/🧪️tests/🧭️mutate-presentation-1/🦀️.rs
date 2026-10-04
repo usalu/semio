@@ -125,7 +125,7 @@ mod subject {
         let base = base(ctx)?;
         let mutation = mutation(&spec)?;
         let mut current = apply_presentation_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation did not apply: {error}"))?;
-        let mut undo = inverse_presentation_mutation(&base, &mutation);
+        let mut undo = inverse_presentation_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
         undo.reverse();
         for step in &undo {
             current = apply_presentation_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step did not apply: {error}"))?;

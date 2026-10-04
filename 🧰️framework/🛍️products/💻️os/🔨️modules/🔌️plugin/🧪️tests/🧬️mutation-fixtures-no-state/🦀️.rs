@@ -33,7 +33,7 @@ impl ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>>
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.0.as_mut() {
-            return active.close_step(1, maximum_bytes).map_err(Fault::from).map(|step| match step {
+            return active.close_step(1, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                 store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "keyed no-state presence retains a reader" },
                 store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
@@ -77,9 +77,11 @@ impl ArtifactOwnedDisposer<store::TransientStore<crate::app::NoTransient, crate:
             self.0 = KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation };
         }
         let (step, terminal_root, terminal_generation) = match &mut self.0 {
-            KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation } => {
-                (store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes).map_err(Fault::from)?, terminal_root.clone(), *terminal_generation)
-            }
+            KeyedNoTransientStoreRetirement::Retiring { retirement, terminal_root, terminal_generation } => (
+                store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?,
+                terminal_root.clone(),
+                *terminal_generation,
+            ),
             KeyedNoTransientStoreRetirement::Unstarted | KeyedNoTransientStoreRetirement::Complete { .. } => unreachable!("keyed no-state transient close state is resolved before retirement"),
         };
         match step {

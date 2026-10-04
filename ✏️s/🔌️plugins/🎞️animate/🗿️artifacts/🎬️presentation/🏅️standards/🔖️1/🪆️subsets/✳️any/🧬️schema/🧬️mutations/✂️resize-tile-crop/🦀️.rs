@@ -10,7 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// ✂️ Replaces the `tiles` entry addressed by `id`'s `crop` with `new_crop` — the crop rect is
 /// always authored as one atomic `x,y,width,height` block, so this is `resize` on the whole extent.
 /// Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "resize-tile-crop")]
@@ -27,9 +27,12 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeTileCrop
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize tile \"{}\" crop", self.id), &format!("Zuschnitt von Kachel \"{}\" ändern", self.id))

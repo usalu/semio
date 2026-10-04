@@ -48,7 +48,7 @@ async fn definition_uses_the_frozen_window_kit_kind_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
-    let _node = render(&WavSnapshot::default(), Locale::En);
+    let _node = render(&WavSnapshot::default(), Locale::En, semio_framework_plugin::UiPublicationRevision(1));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,7 +71,7 @@ async fn every_audio_command_has_one_definition_and_a_revision_bound_surface_con
     };
     let revision = "0123456789abcdef";
     let definition = definition();
-    let root = render_revisioned(&document, revision, Locale::En, &TreeWindows::unhosted()).expect("complete audio action surface assembles");
+    let root = render_revisioned(&document, revision, semio_framework_plugin::UiPublicationRevision(23), Locale::En, &TreeWindows::unhosted()).expect("complete audio action surface assembles");
     for action_id in crate::editor::wav::edit_audio::TOOL_IDS {
         assert_eq!(definition.actions.iter().filter(|action| action.id == *action_id).count(), 1, "{action_id} definition");
         let control = node_with_binding(&root, action_id).unwrap_or_else(|| panic!("{action_id} surface control"));
@@ -99,7 +99,7 @@ async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_contro
         ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, BODY_KEY);
-    let root = render_revisioned(&document, revision, Locale::En, &windows).expect("wide audio surface assembles");
+    let root = render_revisioned(&document, revision, semio_framework_plugin::UiPublicationRevision(23), Locale::En, &windows).expect("wide audio surface assembles");
     let samples = node_by_key(&root, SAMPLE_TABLE_ID).expect("coordinate table");
     let Component::Table(sample_props) = &samples.component else { panic!("sample surface is a table") };
     assert_eq!(sample_props.window.map(|window| (window.total, window.offset)), Some((channels * 2, channels * 2 - 1)));
@@ -121,7 +121,7 @@ async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_contro
 #[semio_framework_async_macros::async_test]
 async fn german_toolbar_uses_audio_terms() {
     let document = WavSnapshot { data: WavData::Pcm16(vec![0]), ..WavSnapshot::default() };
-    let root = render_revisioned(&document, "rev", Locale::De, &TreeWindows::unhosted()).expect("German audio surface assembles");
+    let root = render_revisioned(&document, "rev", semio_framework_plugin::UiPublicationRevision(23), Locale::De, &TreeWindows::unhosted()).expect("German audio surface assembles");
     let append_frame = node_by_key(&root, "append-frame").expect("append-frame button");
     let Component::Button(props) = &append_frame.component else { panic!("append frame is a button") };
     assert_eq!(props.label.0.as_str(), "Frame anhängen");

@@ -96,7 +96,7 @@ impl ArtifactSerializer for SemioDrawingToDwg {
             }
         }
 
-        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(store::PackError::Schema)?;
+        let snapshot = DwgSnapshot::from_drawing(&drawing).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         Ok(snapshot)
     }
 }

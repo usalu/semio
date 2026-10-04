@@ -21,13 +21,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️splice-text/⚠️warns/🎯️outcome/🔣️.json");
 
 fn before() -> WriterSnapshot {
-    dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before writer document decodes")
 }
 fn expected_after() -> WriterSnapshot {
-    dsl::os_pack::json::from_json_str(AFTER).expect("after writer document decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after writer document decodes")
 }
 fn mutation() -> WriterMutation {
-    dsl::os_pack::json::from_json_str(MUTATION).expect("splice-text mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("splice-text mutation decodes")
 }
 
 /// ▶️ Deleting a run that is already gone deletes nothing: the committed after-snapshot is the
@@ -50,7 +50,7 @@ async fn a_vanished_run_deletes_nothing_and_keeps_the_handle() {
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_is_the_empty_located_splice() {
     let base = before();
-    let inverse = inverse_writer_mutation(&base, &mutation());
+    let inverse = inverse_writer_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: undoing a splice is exactly one splice back");
     let WriterMutation::SpliceText(undo) = &inverse[0] else {
         panic!("splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: splice-text's inverse must be a splice-text");
@@ -68,12 +68,12 @@ async fn the_inverse_is_the_empty_located_splice() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WriterSnapshot = dsl::os_pack::json::from_json_str(text).expect("writer document decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("writer document encodes");
+        let decoded: WriterSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("writer document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("writer document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("writer document reparses");
         assert_eq!(reencoded, original, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&(mutation()))).expect("spliceText payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("spliceText payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("spliceText payload reparses");
     assert_eq!(reencoded, original, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: committed spliceText JSON is not canonical");
 }
@@ -85,7 +85,7 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("no-op"), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: a no-op is its own outcome class, not a rejection");
     let produced = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: an unchanged body is a Warning, never an Error");
+    assert_eq!(produced.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: an unchanged body is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: exactly one diagnostic is raised");
     assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: raised diagnostic code differs from the declared one");
 }
@@ -94,10 +94,10 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced splice-text diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced splice-text diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: WriterDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed splice-text diff decodes");
+    let decoded: WriterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed splice-text diff decodes");
     assert_eq!(decoded, WriterDiff::default(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: a no-op's committed diff must be the type's own default");
     let applied = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(applied, expected_after(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: committed diff did not carry before to after");

@@ -43,7 +43,7 @@ pub(super) fn foreign_step_fixture(n: u8) -> ForeignStep {
 }
 
 fn assert_counter_leaf_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
 
@@ -72,9 +72,9 @@ mod tests {
         for (witness, row) in WITNESSES.iter().zip(cases["cases"].as_array().unwrap()) {
             let wire: serde_json::Value = serde_json::from_str(witness).unwrap();
             let op = serde_json::from_value::<CounterMutation>(wire.clone()).unwrap();
-            let value_op: CounterMutation = crate::os_pack::json::from_json_str(&wire.to_string()).unwrap();
+            let value_op: CounterMutation = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(value_op, op, "first-party and independent serde parse the same neutral mutation");
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&op)).unwrap(), wire);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&op)).unwrap(), wire);
             assert!(op.descriptor().validate().is_ok());
             assert_eq!(serde_json::from_value::<CounterMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
             assert_eq!(CounterMutation::parse_op(&op.print_op()).unwrap(), op);
@@ -83,23 +83,23 @@ mod tests {
             let base = row["before"].as_i64().unwrap();
             let mut current = op.diff(&base).diff().apply(&base).unwrap();
             assert_eq!(current, row["after"].as_i64().unwrap());
-            for inverse in op.inverse(&base).iter().rev() {
+            for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture").iter().rev() {
                 current = inverse.diff(&current).diff().apply(&current).unwrap();
             }
             assert_eq!(current, base);
             let mut unknown = wire.clone();
             unknown["unknown"] = serde_json::json!(true);
-            assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&unknown.to_string()).is_err());
+            assert!(semio_framework_pack_json::from_json_str::<CounterMutation>(&unknown.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
             assert!(serde_json::from_value::<CounterMutation>(unknown).is_err());
             for key in wire.as_object().unwrap().keys().filter(|key| *key != "operation") {
                 let mut missing = wire.clone();
                 missing.as_object_mut().unwrap().remove(key);
-                assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&missing.to_string()).is_err());
+                assert!(semio_framework_pack_json::from_json_str::<CounterMutation>(&missing.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
                 assert!(serde_json::from_value::<CounterMutation>(missing).is_err());
                 for value in [serde_json::json!(null), serde_json::json!(true), serde_json::json!("1"), serde_json::json!(1e21)] {
                     let mut invalid = wire.clone();
                     invalid[key] = value;
-                    assert!(crate::os_pack::json::from_json_str::<CounterMutation>(&invalid.to_string()).is_err());
+                    assert!(semio_framework_pack_json::from_json_str::<CounterMutation>(&invalid.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
                     assert!(serde_json::from_value::<CounterMutation>(invalid).is_err());
                 }
             }
@@ -119,8 +119,8 @@ mod tests {
             }
             let expected = row["after"].as_str().unwrap().parse::<i64>().unwrap();
             assert_eq!(result, Ok(expected));
-            assert_eq!(crate::os_pack::json::from_json_str::<CounterDiff>(&crate::os_pack::json::to_json_string(&diff)).unwrap().apply(&base), Ok(expected));
-            assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
+            assert_eq!(semio_framework_pack_json::from_json_str::<CounterDiff>(&semio_framework_pack_json::to_json_string(&diff), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().apply(&base), Ok(expected));
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), serde_json::to_value(&diff).unwrap());
             assert_eq!(serde_json::from_value::<CounterDiff>(serde_json::to_value(&diff).unwrap()).unwrap().apply(&base), Ok(expected));
             let mut joined = CounterDiff::default();
             for delta in &diff.deltas {
@@ -137,7 +137,7 @@ mod tests {
             let kind = AddCounterSequence { deltas: row["deltas"].as_array().unwrap().iter().map(|delta| delta.as_str().unwrap().parse::<i64>().unwrap()).collect() };
             let mut current = fold_plan_diff(&kind, &base).diff().apply(&base).unwrap();
             assert_eq!(current, row["after"].as_str().unwrap().parse::<i64>().unwrap());
-            let stored = fold_plan_inverse(&kind, &base);
+            let stored = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
             let deltas = stored
                 .iter()
                 .map(|op| match op {

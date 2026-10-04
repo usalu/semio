@@ -2,7 +2,7 @@ use super::super::{WorkflowDiff, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "update-node-ports")]
@@ -15,9 +15,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UpdateNodePo
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::SyncNodePorts)
     }
-    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         Vec::new()
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Update workflow node ports", "Arbeitsablaufknotenanschlüsse aktualisieren")
     }

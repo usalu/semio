@@ -2,7 +2,7 @@
 //! native serialization already IS utf-8 text, so the hop is exact, not lossy.
 
 use crate::BitmapSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 
@@ -18,7 +18,7 @@ pub fn serialize(from: &BitmapSnapshot) -> String {
 impl Serializer<BitmapSnapshot> for BitmapIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &BitmapSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &BitmapSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(IoPayload::Text(serialize(from))))
     }
 }

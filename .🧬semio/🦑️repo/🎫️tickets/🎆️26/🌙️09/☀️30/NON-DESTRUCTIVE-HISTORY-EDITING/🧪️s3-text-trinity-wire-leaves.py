@@ -230,7 +230,7 @@ pub fn diff(payload: &super::ConnectWorkingPorts, base: &RewritingSnapshot) -> p
         return protocol::MutationOutcome::error("mutation.target-missing", format!("the working graph holds no node {}", missing.join(", ")), missing);
     }
     if !drawn {
-        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "the working graph already holds this wire").at(endpoints)]);
+        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "the working graph already holds this wire").at(endpoints)]);
     }
     if !super::super::working_graph_is_valid(&json) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("the working graph's manifest declares no edge kind “{}”", payload.kind), endpoints);
@@ -256,7 +256,7 @@ pub fn diff(payload: &super::DisconnectWorkingEdges, base: &RewritingSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an edge of the working graph", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     protocol::MutationOutcome::new(RewritingDiff { before_fixture_json: Some(json), ..Default::default() }).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

@@ -31,15 +31,15 @@ pub fn definition() -> WindowKindDefinition {
 /// other by design).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &LasSnapshot) -> usize {
-    dsl::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
+    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn world_instances_json(document: &LasSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<pack::JsonValue> = (0..count)
+    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
         .map(|index| {
-            pack::json!({
+            semio_framework_pack_json::json!({
                 "id": format!("las_any-{index}"),
                 "meshId": LAS_ANY_EDIT_FALLBACK_MESH_KIND,
                 "position": [index as f64 * 2.0, 0.0, 0.0],
@@ -50,12 +50,12 @@ fn world_instances_json(document: &LasSnapshot) -> String {
             })
         })
         .collect();
-    pack::json_to_string(&pack::json_array(instances))
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &LasSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = pack::json_to_string(&pack::json_array([pack::json!({ "id": LAS_ANY_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(LAS_ANY_EDIT_FALLBACK_MESH_KIND) })]));
+    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": LAS_ANY_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(LAS_ANY_EDIT_FALLBACK_MESH_KIND) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(LAS_ANY_EDIT_DEFAULT_CAMERA_POSITION, LAS_ANY_EDIT_DEFAULT_CAMERA_TARGET, LAS_ANY_EDIT_DEFAULT_CAMERA_FOV),
         meshes_json,

@@ -3,3 +3,6 @@ type ArtifactRef { artifactId: String! dialect: ArtifactDialect! }
 enum IoFidelity { Exact Canonical Semantic Lossy }
 type IoEntryDescriptor { from: ArtifactDialect! into: ArtifactDialect! fidelity: IoFidelity! sniffs: Boolean! }
 type IoRoute { hops: [IoEntryDescriptor!]! fidelity: IoFidelity! }
+
+input ArtifactDialectInput { artifactKind: String! standard: String! subset: String! }
+input ArtifactRefInput { artifactId: String! dialect: ArtifactDialectInput! }

@@ -1,0 +1,7 @@
+# Small Five SQL Typed Pairs and TIFF Helper
+
+2026-10-03. Root prepared the actual mounted CSV, TSV, BMP and Deflate SQL projection/reconstruction consumers for the canonical ValueError trait after the measured Binary dependency gate and read-only actual mount census. All four provider bodies already authored ValueError. Only their eight outer signatures and eight final into_message lowerings changed. Schema, entity ownership, field fidelity, progress and semantic checks are unchanged; missing Native/default hooks remain missing and their adjacent drafts remain unmounted.
+
+All four actual files passed parser-only checking: 🗑️generated/root-small-four-typed-0-parsed.rs through root-small-four-typed-3-parsed.rs. Together with the preceding Binary pair this covers five mounted SQL pairs, not the five-owner45-law Native proof or paid backing completeness.
+
+The next authentic TIFF owning compiler reached the actual artifact test crate and refused one helper signature at sqlite_tests restore. The helper declared Result<TiffSnapshot,String> while calling the now canonical ValueError provider. Root changed only this helper return type; no refusal or assertion was weakened. Its parser-only receipt exit0 is 🗑️generated/root-tiff-test-helper-typed-parsed.rs. Prior compiler receipt: 🗑️generated/root-authentic-tiff19-typed-binary-dependency-paired-current.log,12.0s Nx, compiler1error/17warnings,0feature assertions. Whole TIFF19 runtime rerun remains required.

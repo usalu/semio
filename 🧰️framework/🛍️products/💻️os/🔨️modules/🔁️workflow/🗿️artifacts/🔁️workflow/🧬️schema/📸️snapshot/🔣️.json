@@ -250,6 +250,22 @@
                   "type": "string"
                 }
               }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "schema"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "intrinsic"
+                },
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           ]
         },

@@ -1,0 +1,37 @@
+{
+  "name": "@semio-tech/framework-ui-viewport-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+    ]
+  },
+  "targets": {
+    "test-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-binding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-binding"
+      }
+    }
+  }
+}

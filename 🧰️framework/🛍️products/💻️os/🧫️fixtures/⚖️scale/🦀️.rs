@@ -57,6 +57,9 @@ pub mod guest {
 
     pub struct FixtureGuest;
 
+    /// 🤝️ The app-channel version this fixture speaks — a registered `channel-version` consumer, rewritten by its generator.
+    const CHANNEL_VERSION: u32 = 21;
+
     #[derive(Clone, Copy, Default)]
     struct UiAuthority {
         lifetime: Option<Lifetime>,
@@ -150,6 +153,10 @@ pub mod guest {
 
         async fn stage_cold_pair_page(_page: ColdDocumentPairPage) -> Result<(), PluginError> {
             Err(owns_no_document())
+        }
+
+        async fn channel_version() -> u32 {
+            CHANNEL_VERSION
         }
 
         async fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {

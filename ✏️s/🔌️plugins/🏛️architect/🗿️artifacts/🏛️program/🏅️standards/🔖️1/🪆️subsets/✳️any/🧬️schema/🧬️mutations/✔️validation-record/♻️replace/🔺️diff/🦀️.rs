@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplaceValidationRecord, base: &ProgramSnapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-missing", "No validation record exists with this id.", [payload.validation_record.header.id.0.clone()]);
     };
     if existing == &payload.validation_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This validation record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This validation record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.validation_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { validations: Some(ProgramValidationsDelta { patched: vec![ProgramValidationsPatchEntry { id: payload.validation_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

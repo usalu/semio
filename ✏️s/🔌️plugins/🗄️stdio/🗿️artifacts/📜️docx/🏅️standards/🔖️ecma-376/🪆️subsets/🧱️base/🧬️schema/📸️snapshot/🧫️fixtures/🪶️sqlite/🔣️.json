@@ -19,24 +19,12 @@
     ],
     "contentTypes": {
       "defaults": [
-        [
-          "xml",
-          "a"
-        ],
-        [
-          "XML",
-          "b"
-        ]
+        {"name":"xml","contentType":"a"},
+        {"name":"XML","contentType":"b"}
       ],
       "overrides": [
-        [
-          "/duplicate",
-          "x"
-        ],
-        [
-          "/duplicate",
-          ""
-        ]
+        {"name":"/duplicate","contentType":"x"},
+        {"name":"/duplicate","contentType":""}
       ]
     },
     "relationships": {
@@ -71,46 +59,67 @@
       "path": "",
       "contentType": "application/xml",
       "document": {
-        "root": {
-          "kind": "element",
-          "name": "book",
-          "attrs": [
-            {
-              "name": "z",
-              "value": "last"
-            },
-            {
-              "name": "z",
-              "value": "duplicate"
+        "nodes": [
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "text",
+              "text": "intermediate"
             }
-          ],
-          "children": [
-            {
+          },
+          {
+            "nextSibling": 2,
+            "value": {
               "kind": "text",
               "text": "shared 世界\u0000"
-            },
-            {
+            }
+          },
+          {
+            "nextSibling": 3,
+            "value": {
               "kind": "cData",
               "text": "raw <>"
-            },
-            {
+            }
+          },
+          {
+            "nextSibling": 4,
+            "value": {
               "kind": "comment",
               "text": "middle"
-            },
-            {
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
               "kind": "processingInstruction",
               "target": "render",
               "data": "now"
             }
-          ]
-        },
-        "prolog": [
+          },
           {
-            "kind": "text",
-            "text": "intermediate"
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "book",
+              "first_attribute": 0,
+              "attribute_count": 2,
+              "first_child": 1
+            }
           }
         ],
+        "attributes": [
+          {
+            "name": "z",
+            "value": "last"
+          },
+          {
+            "name": "z",
+            "value": "duplicate"
+          }
+        ],
+        "prolog": [0],
         "epilog": [],
+        "root": 5,
         "declaration": {
           "version": "arbitrary",
           "encoding": "custom",
@@ -140,8 +149,13 @@
       "path": "",
       "contentType": "",
       "document": {
+        "nodes": [],
+        "attributes": [],
         "prolog": [],
-        "epilog": []
+        "epilog": [],
+        "root": null,
+        "doctype": null,
+        "declaration": null
       }
     }
   ]

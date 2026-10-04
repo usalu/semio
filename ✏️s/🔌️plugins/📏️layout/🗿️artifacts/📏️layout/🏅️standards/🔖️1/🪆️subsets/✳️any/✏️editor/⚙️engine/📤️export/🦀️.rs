@@ -13,6 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
+#[path="🧾️dictionary/🦀️.rs"] mod dictionary;
+use dictionary::DictionaryJsonCursor;
 
 //#region 🔖️Contract
 pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage"];
@@ -69,7 +71,7 @@ fn empty_close_snapshot() -> LayoutSnapshot {
         spreads: Vec::new(),
         pages: Vec::new(),
         print_target: None,
-        data_fields_json: None,
+        data_fields: None,
         background_drawing: None,
         referenced_model: None,
     }
@@ -733,7 +735,6 @@ enum StringSource {
     DocumentSchema,
     DocumentName,
     PrintTarget,
-    DataFieldsJson,
     StringArrayElement { source: StringArraySource, index: usize },
     ParagraphId(usize),
     ParagraphName(usize),
@@ -807,6 +808,7 @@ enum TypedJsonNode {
     String { source: StringSource, cursor: JsonStringWriteCursor },
     OwnedString { value: String, cursor: JsonStringWriteCursor },
     Document,
+    Dictionary(DictionaryJsonCursor),
     Grid,
     TopArray { kind: TopArrayKind, index: usize, opened: bool },
     Paragraph(usize),
@@ -879,6 +881,7 @@ fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
 fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
     match node {
         TypedJsonNode::Scalar { bytes, .. } => bytes.len(),
+        TypedJsonNode::Dictionary(cursor) => cursor.owned_bytes(),
         TypedJsonNode::String { source, .. } => typed_string_source_owned_bytes(source),
         TypedJsonNode::OwnedString { value, .. } => value.len(),
         TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
@@ -1032,7 +1035,6 @@ impl TypedJsonCursor {
             StringSource::DocumentSchema => &snapshot.schema,
             StringSource::DocumentName => &snapshot.name,
             StringSource::PrintTarget => snapshot.print_target.as_deref().ok_or_else(missing)?,
-            StringSource::DataFieldsJson => snapshot.data_fields_json.as_deref().ok_or_else(missing)?,
             StringSource::StringArrayElement { source, index } => match source {
                 StringArraySource::SpreadPage(owner) => snapshot.spreads.get(*owner).and_then(|value| value.page_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
                 StringArraySource::PageLayer(owner) => snapshot.pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
@@ -1212,7 +1214,7 @@ impl TypedJsonCursor {
             }
             TypedJsonNode::String { source, mut cursor } => {
                 self.account_node()?;
-                let maximum = if matches!(&source, StringSource::DataFieldsJson) { MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES } else { MAX_LAYOUT_EXPORT_STRING_BYTES };
+                let maximum = MAX_LAYOUT_EXPORT_STRING_BYTES;
                 let value = Self::resolve_string(&source, snapshot)?;
                 if value.len() > maximum {
                     return Err("layout-export-json-string-limit".into());
@@ -1222,6 +1224,11 @@ impl TypedJsonCursor {
                 if !done {
                     self.stack.push(TypedJsonNode::String { source, cursor });
                 }
+            }
+            TypedJsonNode::Dictionary(mut cursor) => {
+                let (bytes, done) = cursor.advance(snapshot)?;
+                output = bytes;
+                if !done { self.stack.push(TypedJsonNode::Dictionary(cursor)); }
             }
             TypedJsonNode::OwnedString { value, mut cursor } => {
                 self.account_node()?;
@@ -1270,8 +1277,8 @@ impl TypedJsonCursor {
                     Self::static_node(b",\"printTarget\":"),
                     Self::optional_string(snapshot.print_target.is_some(), StringSource::PrintTarget),
                 ];
-                if snapshot.data_fields_json.is_some() {
-                    nodes.extend([Self::static_node(b",\"dataFieldsJson\":"), Self::string(StringSource::DataFieldsJson)]);
+                if snapshot.data_fields.is_some() {
+                    nodes.extend([Self::static_node(b",\"dataFields\":"), TypedJsonNode::Dictionary(DictionaryJsonCursor::new())]);
                 }
                 if snapshot.background_drawing.is_some() {
                     nodes.extend([Self::static_node(b",\"backgroundDrawing\":"), TypedJsonNode::BackgroundDrawing]);
@@ -2040,7 +2047,7 @@ impl TypedJsonCursor {
                     Self::static_node(b"}"),
                 ]);
             }
-            TypedJsonNode::FragmentStart | TypedJsonNode::FragmentEnd | TypedJsonNode::Static { .. } | TypedJsonNode::Scalar { .. } | TypedJsonNode::String { .. } | TypedJsonNode::OwnedString { .. } => {
+            TypedJsonNode::Dictionary(_) | TypedJsonNode::FragmentStart | TypedJsonNode::FragmentEnd | TypedJsonNode::Static { .. } | TypedJsonNode::Scalar { .. } | TypedJsonNode::String { .. } | TypedJsonNode::OwnedString { .. } => {
                 unreachable!("leaf nodes are handled before expansion")
             }
         }
@@ -2352,6 +2359,7 @@ pub struct LayoutExportToolJob {
     raw_page_cursor: usize,
     raw_validated: bool,
     completed: bool,
+    rejected_download:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
 }
 
 impl LayoutExportToolJob {
@@ -2447,8 +2455,8 @@ impl InteractiveJob for LayoutExportToolJob {
                 let chunks = std::mem::replace(&mut inner.output_chunks, ArtifactOutputChunks::new(0));
                 let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), chunks);
                 if let Some(completion) = &self.completion {
-                    if let Err(error) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
-                        let _ = error;
+                    if let Err(rejected) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
+                        if let Ok(download)=rejected.download{self.rejected_download=Some(semio_framework_value::retirement::owned_retirement(download));}
                         return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                     }
                 }
@@ -2471,6 +2479,8 @@ impl InteractiveJob for LayoutExportToolJob {
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
         self.begin_close();
+        if let Some(retirement)=self.rejected_download.as_mut(){return match retirement.close_step(maximum_items,maximum_bytes){Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.rejected_download.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},_=>InteractiveJobCloseStep::Blocked};}
+
         if let Some(inner) = self.inner.as_mut() {
             match InteractiveJob::close_step(inner, maximum_items, maximum_bytes) {
                 InteractiveJobCloseStep::Complete => self.inner = None,
@@ -2514,7 +2524,7 @@ impl InteractiveJob for LayoutExportToolJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.name.is_empty() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
+        self.rejected_download.is_none() && self.name.is_empty() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
     }
 }
 
@@ -2688,6 +2698,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
         let inner = LayoutExportJob::new(operation, payload.request).map_err(ToolJobFactoryError::new)?.with_output_chunks(payload.output_chunks);
         Ok(LayoutExportToolJob {
             inner: Some(inner),
+            rejected_download:None,
             pending_operation: None,
             pending_request: None,
             pending_output_chunks: None,
@@ -2719,6 +2730,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
         let kind = payload.request.kind;
         let mut job = LayoutExportToolJob {
             inner: None,
+            rejected_download:None,
             pending_operation: Some(operation),
             pending_request: Some(payload.request),
             pending_output_chunks: Some(payload.output_chunks),
@@ -3348,15 +3360,15 @@ impl LayoutExportJob {
                 self.validation_group = 9;
             }
             9 => {
-                let Some(value) = &snapshot.data_fields_json else {
+                if snapshot.data_fields.is_none() {
                     self.validation_group = 10;
                     return Ok(());
-                };
-                if self.json_validation.is_none() {
-                    self.json_validation = Some(JsonValidationCursor::new(value, false)?);
                 }
-                if self.json_validation.as_mut().ok_or("layout-export-json-validator")?.advance(value)? {
-                    self.json_validation = None;
+                if self.typed_validation.is_none() {
+                    self.typed_validation = Some(TypedJsonCursor::validating(TypedJsonNode::Dictionary(DictionaryJsonCursor::new())));
+                }
+                if self.typed_validation.as_mut().ok_or("layout-export-json-validator")?.advance(snapshot)?.1 {
+                    self.typed_validation = None;
                     self.validation_group = 10;
                 }
             }
@@ -3564,7 +3576,7 @@ impl LayoutExportJob {
 fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
-    let snapshot = semio_s_artifact_stdio_png::io::decode_png(&bytes).ok()?;
+    let snapshot = semio_s_artifact_stdio_png::io::project_png(&bytes).ok()?;
     let pixels = u64::from(snapshot.width).checked_mul(u64::from(snapshot.height))?;
     if pixels == 0 || pixels > 65_536 {
         return None;
@@ -4690,7 +4702,7 @@ pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -
 
 #[cfg(test)]
 pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
-    let snapshot: LayoutSnapshot = dsl::os_pack::json::from_json_str(doc_json)?;
+    let snapshot: LayoutSnapshot = semio_framework_pack_json::from_json_str(doc_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
     let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::io::LayoutError::Svg)?;
     decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
 }

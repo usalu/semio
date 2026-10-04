@@ -1,0 +1,14 @@
+[package]
+name = "semio-ticket-png-core-fixture-producer"
+version = "0.0.0"
+edition = "2021"
+
+[workspace]
+
+[[bin]]
+name = "png-core-fixture-producer"
+path = "producer.rs"
+
+[dependencies]
+semio-framework-dsl-record = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

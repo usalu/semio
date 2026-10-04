@@ -4,50 +4,14 @@
   "title": "RemoveShape",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation",
-    "slideIndex",
-    "shapeIndex"
-  ],
+  "required": ["mutation", "address"],
   "properties": {
-    "mutation": {
-      "const": "removeShape",
-      "description": "Aggregate discriminator spliced in by PptxMutation; absent when the payload stands alone."
-    },
-    "slideIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "mutation": { "const": "removeShape" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxShapeAddress",
       "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Slide Index",
-          "de": "Folienindex"
-        },
-        "description": {
-          "en": "Zero-based position of the slide in the deck.",
-          "de": "Nullbasierte Position der Folie im Foliensatz."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 10
-      }
-    },
-    "shapeIndex": {
-      "type": "integer",
-      "minimum": 0,
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Shape Index",
-          "de": "Formindex"
-        },
-        "description": {
-          "en": "Zero-based position of the shape on its slide.",
-          "de": "Nullbasierte Position der Form auf ihrer Folie."
-        },
-        "precision": 0,
-        "group": "target",
-        "order": 20
+        "label": { "en": "Shape", "de": "Form" },
+        "description": { "en": "Revision-bound shape to remove.", "de": "Revisionsgebundene zu entfernende Form." }
       }
     }
   }

@@ -148,6 +148,6 @@
     "stringRepeat": 100000,
     "cancelCompleted": 256,
     "maxRows": 10,
-    "maxValueBytes": 4096
+    "maxAllocationBytes": 4096
   }
 }

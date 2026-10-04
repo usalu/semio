@@ -23,10 +23,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveNamedDestination {
         MutationOutcome::new(diff::diff_remove_named_destination(base, &self.name))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.named_destinations.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetNamedDestination(super::set_named_destination::SetNamedDestination { destination: item.clone() })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove named destination {}", self.name), &format!("Benanntes Ziel {} entfernen", self.name))

@@ -6,6 +6,9 @@ use crate::ProgramMutation;
 use crate::ProgramSnapshot;
 
 /// ↩️ Undo by restoring the pre-state title.
-pub fn inverse(_payload: &super::RenameMeta, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+pub fn inverse(_payload: &super::RenameMeta, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![ProgramMutation::RenameMeta(super::RenameMeta { new_title: base.meta.title.clone() })]
+
+    })())
 }

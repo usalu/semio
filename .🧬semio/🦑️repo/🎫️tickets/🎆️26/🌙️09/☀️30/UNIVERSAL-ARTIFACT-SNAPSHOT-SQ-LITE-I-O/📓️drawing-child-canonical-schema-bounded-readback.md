@@ -1,0 +1,5 @@
+# Drawing Child Canonical Schema Bounded Readback
+
+Current primary authority: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🪶️sqlite/💰️reconstruction/🦀️.rs:8–11`. Parent supplied-schema/database validation remains line9. Line10 separately parses actual Drawing `ArtifactSqliteSnapshot::SQLITE_SCHEMA` through controlled schema ownership, validates each actual database table against canonical authored table SQL with the same caller/phase, then drops that schema owner before constructing Rows. This supplies the independent child constraint authority which supplied parent-table SQL alone could not establish. No cloned database/subset and no replacement schema guessed from input are present in this inspected join.
+
+This is bounded static integration evidence. High reports Root Semio196 previously195pass1fail for missing canonical child check; current Source/owning execution is outside this audit. Whole schema parser backing/error lifetime and child semantic reconstruction continue to require actual owning receipts.

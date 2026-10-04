@@ -124,7 +124,7 @@ mod subject {
         let base = base(ctx)?;
         let mutation = mutation(&spec)?;
         let mut current = apply_shooting_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation did not apply: {error}"))?;
-        for step in &inverse_shooting_mutation(&base, &mutation) {
+        for step in &inverse_shooting_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
             current = apply_shooting_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step did not apply: {error}"))?;
         }
         let restored = projection(&current)?;

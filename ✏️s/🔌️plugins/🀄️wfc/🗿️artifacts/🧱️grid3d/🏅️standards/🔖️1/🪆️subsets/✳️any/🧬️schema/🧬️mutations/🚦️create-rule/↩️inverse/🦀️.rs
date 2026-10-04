@@ -4,7 +4,10 @@
 use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 
-pub fn inverse(payload: &super::CreateRule, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
+pub fn inverse(payload: &super::CreateRule, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let _ = base;
     vec![crate::mutations::delete_rule(payload.rule.id.clone())]
+
+    })())
 }

@@ -22,7 +22,7 @@ pub enum StateClass {
 impl semio_framework_value::ToValue for StateClass {
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
         let text = match self { Self::Artifact => "Artifact", Self::Config => "Config", Self::Presence => "Presence", Self::Transient => "Transient" };
-        control.copy_text(text).map(semio_framework_value::DslValue::String).map_err(semio_framework_value::ValueError::new)
+        control.copy_text(text).map(semio_framework_value::DslValue::String)
     }
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::String(match self { StateClass::Artifact => "Artifact", StateClass::Config => "Config", StateClass::Presence => "Presence", StateClass::Transient => "Transient" }.to_string())
@@ -30,8 +30,8 @@ impl semio_framework_value::ToValue for StateClass {
 }
 impl semio_framework_value::FromValue for StateClass {
     fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
-        control.scoped_stage(|control| { control.begin_stage(1)?; control.step() }).map_err(semio_framework_value::ValueError::new)?;
-        match value { semio_framework_value::DslValue::String(text) => match text.as_str() { "Artifact" => Ok(Self::Artifact), "Config" => Ok(Self::Config), "Presence" => Ok(Self::Presence), "Transient" => Ok(Self::Transient), _ => Err(semio_framework_value::ValueError::new("unknown StateClass variant")) }, _ => Err(semio_framework_value::ValueError::new("expected a string")) }
+        control.scoped_stage(|control| { control.begin_stage(1)?; control.step() })?;
+        match value { semio_framework_value::DslValue::String(text) => match text.as_str() { "Artifact" => Ok(Self::Artifact), "Config" => Ok(Self::Config), "Presence" => Ok(Self::Presence), "Transient" => Ok(Self::Transient), _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown StateClass variant")) }, _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string")) }
     }
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
@@ -40,9 +40,9 @@ impl semio_framework_value::FromValue for StateClass {
                 "Config" => Ok(StateClass::Config),
                 "Presence" => Ok(StateClass::Presence),
                 "Transient" => Ok(StateClass::Transient),
-                other => Err(semio_framework_value::ValueError::new(format!("unknown StateClass variant `{other}`"))),
+                other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown StateClass variant `{other}`"))),
             },
-            other => Err(semio_framework_value::ValueError::new(format!("expected a string, found {other:?}"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }

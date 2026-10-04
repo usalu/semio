@@ -93,6 +93,56 @@ async fn codec_retention_law() {
 }
 //#endregion codec_retention_law
 
+#[semio_framework_async_macros::async_test]
+async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
+    let fixture = include_bytes!("../../../🧫️fixtures/🔊️.mp3");
+    let decoded = decode_mp3(fixture).expect("decode real LAME fixture");
+    let mut cursor = Mp3EncodeCursor::new(&decoded);
+    let mut encoded = Vec::new();
+    let mut progress_steps = 0usize;
+    let mut chunks = 0usize;
+    loop {
+        match cursor.advance(&decoded, 257).expect("bounded cursor advance") {
+            Mp3EncodeAdvance::Progress => progress_steps += 1,
+            Mp3EncodeAdvance::Chunk(chunk) => {
+                assert!(!chunk.is_empty());
+                assert!(chunk.len() <= 257);
+                chunks += 1;
+                encoded.extend_from_slice(&chunk);
+            }
+            Mp3EncodeAdvance::Complete => break,
+        }
+    }
+    assert!(progress_steps > 1, "ID3 measurement must itself yield");
+    assert!(chunks > 1, "the real fixture must cross multiple output grants");
+    assert_eq!(cursor.emitted_bytes(), fixture.len() as u64);
+    assert_eq!(encoded, fixture);
+    assert_eq!(encoded, encode_mp3(&decoded));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn playback_snapshot_retirement_obeys_each_byte_and_item_grant() {
+    use semio_framework_plugin::{ArtifactSnapshotDisposer, PluginCloseStep};
+    let decoded = decode_mp3(include_bytes!("../../../🧫️fixtures/🔊️.mp3")).expect("decode real LAME fixture");
+    let mut snapshot = Some(std::sync::Arc::new(decoded));
+    let mut disposer = playback::Mp3ExportSnapshotDisposer::default();
+    assert!(matches!(disposer.close_step(&mut snapshot, 0, 0).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+    let mut steps = 0usize;
+    while !disposer.terminal_is_empty(&snapshot) {
+        match disposer.close_step(&mut snapshot, 1, 4_096).expect("bounded retirement") {
+            PluginCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= 4_096);
+            }
+            PluginCloseStep::Complete => {}
+            other => panic!("unshared MP3 retirement must progress: {other:?}"),
+        }
+        steps += 1;
+        assert!(steps < 10_000);
+    }
+    assert!(steps > 10, "the real fixture must retire over many bounded grants");
+}
+
 //#region 🔖️Id3v1Retention
 #[semio_framework_async_macros::async_test]
 async fn id3v1_trailer_round_trips() {

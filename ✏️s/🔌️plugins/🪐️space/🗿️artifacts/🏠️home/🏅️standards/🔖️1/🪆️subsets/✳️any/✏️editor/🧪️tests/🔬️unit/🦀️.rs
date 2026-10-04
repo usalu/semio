@@ -4,7 +4,7 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
-    let fixture: pack::JsonValue = pack::parse_json(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -25,11 +25,11 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
         let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
         let command = HomeCommand::OpenSpace(open_space::OpenSpace { space_id: value });
-        let first_party = pack::json_from_dsl_value(&dsl::ToValue::to_value(&command));
-        let oracle: serde_json::Value = serde_json::from_str(&pack::json_to_string(&first_party)).expect("third-party JSON decode");
+        let first_party = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&command));
+        let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&first_party)).expect("third-party JSON decode");
         let oracle_wire = serde_json::to_string(&oracle).expect("third-party JSON encode");
-        assert_eq!(pack::parse_json(&oracle_wire).expect("first-party JSON decode"), first_party);
-        let decoded: HomeCommand = semio_framework_value::FromValue::from_value(pack::json_to_dsl_value(&first_party)).expect("command value decode");
+        assert_eq!(semio_framework_pack_json::parse(&oracle_wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party JSON decode"), first_party);
+        let decoded: HomeCommand = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&first_party)).expect("command value decode");
         assert_eq!(decoded, command);
         assert_eq!(home_retained_extent(&decoded, &SHomeSnapshot::default(), &protocol::InteractionState::default()).is_some(), case["accepted"].as_bool().expect("admission oracle"));
     }
@@ -128,19 +128,19 @@ async fn space_document_persists_through_backbone_port() {
 /// asserted `manageSpace` against a memberless fixture and had never run, because the assertion above
 /// it stopped the test first).
 async fn directory_with_one_folded_space() -> HomeTransient {
-    let created = pack::json!({
+    let created = semio_framework_pack_json::json!({
         "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
         "recordedAtMs": 1000
     })
     .to_string();
-    let member = pack::json!({
+    let member = semio_framework_pack_json::json!({
         "seq": 2, "id": "evt-2", "hlc": {"physicalMs": 0, "logical": 1}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "member.upserted", "spaceId": "sp-1", "userId": "u1", "role": "author"},
         "recordedAtMs": 1001
     })
     .to_string();
-    let events = [created, member].iter().map(|event| pack::from_json_str::<store::os_directory::DirectoryEvent>(event).expect("fixture directory event")).collect::<Vec<_>>();
+    let events = [created, member].iter().map(|event| semio_framework_pack_json::from_json_str::<store::os_directory::DirectoryEvent>(event, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture directory event")).collect::<Vec<_>>();
     let mut page = store::os_directory::DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
         session_binding_sha256: "a".repeat(64),
@@ -210,12 +210,12 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     app.bind_instance_id(1).await;
     let view = home_view("u1", semio_framework_ui_locale::Locale::En);
     let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
-    let page_json = pack::to_json_string(&{
+    let page_json = semio_framework_pack_json::to_json_string(&{
         let events = [
-            pack::json!({ "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-e2e", "body": {"kind": "space.created", "spaceId": "sp-e2e", "name": "Transient Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"}, "recordedAtMs": 1000 }),
+            semio_framework_pack_json::json!({ "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-e2e", "body": {"kind": "space.created", "spaceId": "sp-e2e", "name": "Transient Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"}, "recordedAtMs": 1000 }),
         ]
         .iter()
-        .map(|event| pack::from_json_str::<store::os_directory::DirectoryEvent>(&event.to_string()).expect("fixture directory event"))
+        .map(|event| semio_framework_pack_json::from_json_str::<store::os_directory::DirectoryEvent>(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture directory event"))
         .collect::<Vec<_>>();
         let mut page = store::os_directory::DirectoryEventPageV1 { schema: "semio.directory.event-page.v1".into(), session_binding_sha256: "a".repeat(64), authorization_generation: 1, after_seq_exclusive: 0, through_seq_inclusive: 1, has_more: false, events, receipt_sha256: String::new() };
         page.receipt_sha256 = semio_framework_hash::sha256_hex(page.canonical_unsigned_json().as_bytes());
@@ -228,7 +228,7 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
         assert!(!settled.lanes.contains(&TypedOperationResultLane::Config) && !settled.lanes.contains(&TypedOperationResultLane::Artifact), "page {turn}: a directory page never writes a history lane: {:?}", settled.lanes);
         assert_eq!(settled.lanes.contains(&TypedOperationResultLane::Transient), expects_item, "page {turn}: {:?}", settled.lanes);
         let receipt = settled.events.iter().find(|event| event.kind == crate::editor::home::transient::DirectoryProjectionReceiptV1::SCHEMA).expect("the terminal receipt event");
-        let receipt: crate::editor::home::transient::DirectoryProjectionReceiptV1 = protocol::FromValue::from_value(receipt.payload.clone()).expect("typed receipt");
+        let receipt: crate::editor::home::transient::DirectoryProjectionReceiptV1 = semio_framework_value::FromValue::from_value(receipt.payload.clone()).expect("typed receipt");
         assert_eq!(receipt.through_seq_inclusive, 1);
     }
     let rendered = app.render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, None, &view).await.expect("host-facing render");
@@ -250,7 +250,7 @@ fn studio_dsl(name: &str) -> String {
 }
 
 fn catalog_entries_named(name: &str) -> usize {
-    semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).iter().filter(|entry| entry.name == name).count()
+    ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).iter().filter(|entry| entry.name == name).count()
 }
 
 fn refused_as(result: Result<ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault>, code: &str) -> bool {
@@ -325,7 +325,7 @@ async fn the_import_job_refuses_by_name_and_asks_the_host_for_a_missing_file() {
 /// retained import: one chunk carries the studio text, a manifest spanning several chunks is refused by name.
 #[test]
 fn the_host_file_open_import_decodes_one_chunk_and_refuses_more() {
-    let args = |chunk_count: u32| pack::json_to_dsl_value(&pack::json!({ "payload": "schema os.space", "name": "studio.os", "chunk": 0, "chunkCount": chunk_count }));
+    let args = |chunk_count: u32| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "payload": "schema os.space", "name": "studio.os", "chunk": 0, "chunkCount": chunk_count }));
     let Ok(HomeCommand::ImportSpace(import)) = HomeApp::command_from_action("importSpace", Some(&args(1))) else { panic!("one chunk decodes into the import") };
     assert_eq!(import.dsl.as_deref(), Some("schema os.space"));
     assert!(matches!(HomeApp::command_from_action("importSpace", Some(&args(2))), Err(fault) if format!("{fault:?}").contains("s.home.import-space.oversized")));
@@ -374,7 +374,7 @@ async fn the_bind_job_validates_then_writes_the_studio_file_once() {
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     let bound = read_back().expect("commit writes the studio's document to its file backbone");
     assert_eq!(semio_framework_os::materialize_backbone_snapshot(&bound, &[]).expect("the bound studio materializes").name, "SH1 bind law", "a fresh file backbone reads the studio back");
-    let listed = semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
+    let listed = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.id == space_id).expect("the bound studio stays listed");
     assert!(!listed.backbone_uri.is_empty(), "the bound studio is a persisted catalog studio, no longer an ephemeral draft");
     assert_eq!(listed.name, "SH1 bind law", "the bound studio keeps its name");
     for entry in std::fs::read_dir(std::env::temp_dir()).into_iter().flatten().flatten() {
@@ -404,7 +404,7 @@ async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&persist(&space_id, Some(&folder_path)), &doc) else { panic!("the persist job commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     assert!(folder.exists(), "commit writes the studio into its folder");
-    let listed: Vec<_> = semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == space_id).collect();
+    let listed: Vec<_> = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == space_id).collect();
     assert_eq!(listed.len(), 1, "the persisted studio is listed once");
     assert!(!listed[0].backbone_uri.is_empty() && listed[0].name == "SH2 persist law", "listed as a persisted catalog studio under its own name");
     assert!(refused_as(work.advance(&persist(&space_id, Some(&folder_path)), &doc), "space-home-catalog-work-repeated"), "a committed job never writes twice");
@@ -445,12 +445,12 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
     assert_eq!(emit.config_mutations, vec![HomeConfigMutation::RetireLocalStudio { space_id: space_id.clone() }]);
     let retired = emit.config_mutations[0].diff(&config).diff().clone();
     assert!(retired.is_local_studio_retired(&space_id));
-    assert!(semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).iter().any(|entry| entry.id == space_id), "the tombstone never erases the studio");
-    let listed = |tombstones: &[String]| semio_framework_plugin::resolve_ready(crate::home_space_rows(transient.directory().spaces(), "u1", tombstones)).iter().any(|row| row.id == space_id);
+    assert!(::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).iter().any(|entry| entry.id == space_id), "the tombstone never erases the studio");
+    let listed = |tombstones: &[String]| ::semio_framework_async::poll::resolve_ready(crate::home_space_rows(transient.directory().spaces(), "u1", tombstones)).iter().any(|row| row.id == space_id);
     assert!(listed(&config.retired_local_studio_ids));
     assert!(matches!(delete_virtual_file_system_node::handle(&remove(format!("studio:{space_id}")), &doc, &cfg), Err(fault) if fault.code.0.as_str() == "s.home.delete-vfs-node.requires-retained-job"), "the direct lane cannot tell a hub space from a local studio");
     assert!(!listed(&retired.retired_local_studio_ids), "Home stops listing a retired studio");
-    let inverse = emit.config_mutations[0].inverse(&config);
+    let inverse = emit.config_mutations[0].inverse(&config).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![HomeConfigMutation::RestoreLocalStudio { space_id: space_id.clone() }]);
     assert_eq!(inverse[0].diff(&retired).diff(), &config, "the exact inverse lists the studio again");
     let retired_cfg = ConfigView { snapshot: &retired, window: None };
@@ -467,7 +467,7 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
 
 //#region 🗃️LocalCatalogLane
 fn kept_pair(space_id: &str) -> (String, String) {
-    let document = semio_framework_plugin::resolve_ready(crate::resolve_studio_document(space_id)).expect("the studio resolves");
+    let document = ::semio_framework_async::poll::resolve_ready(crate::resolve_studio_document(space_id)).expect("the studio resolves");
     let files = semio_framework_os::export_backbone_pack(&document).expect("the studio exports its pair");
     (protocol::base64_standard_encode(&files.pack), protocol::base64_standard_encode(&files.spr))
 }
@@ -491,7 +491,7 @@ async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&rehydrate(&space_id, &pack, &spr), &doc) else { panic!("the re-hydration commits") };
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
     assert!(emit.effects.is_empty(), "a re-hydration never asks the host to keep the studio again");
-    let listed = |id: &str| semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == id).collect::<Vec<_>>();
+    let listed = |id: &str| ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().filter(|entry| entry.id == id).collect::<Vec<_>>();
     let rows = listed(&space_id);
     assert_eq!(rows.len(), 1, "the kept studio is listed once");
     assert!(!rows[0].backbone_uri.is_empty() && rows[0].name == "SH2 kept law", "listed as a persisted studio under its own name");
@@ -535,11 +535,11 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     let [semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = emit.effects.as_slice() else { panic!("exactly one keep request: {:?}", emit.effects) };
     assert_eq!(action_id, "os.local-catalog.admit");
     let field = |key: &str| args.get(key).and_then(DslValue::as_str).map(str::to_owned).unwrap_or_default();
-    let imported = semio_framework_plugin::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.name == name).expect("the import is listed");
+    let imported = ::semio_framework_async::poll::resolve_ready(crate::list_all_space_catalog_entries()).into_iter().find(|entry| entry.name == name).expect("the import is listed");
     assert_eq!((field("documentId"), field("schema"), field("name"), field("storage"), field("target")), (imported.id.clone(), S_SPACE_SCHEMA.to_owned(), name.to_owned(), "folder".to_owned(), String::new()));
     let pack = protocol::base64_standard_decode(field("pack")).expect("the pack is base64");
     let spr = protocol::base64_standard_decode(field("spr")).expect("the spr is base64");
-    let parsed: store::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = semio_framework_plugin::resolve_ready(store::parse_document_pack(&pack, &spr)).expect("the kept pair parses");
+    let parsed: store::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::parse_document_pack(&pack, &spr)).expect("the kept pair parses");
     let envelope = parsed.into_envelope();
     let same = envelope.id == imported.id && envelope.schema == S_SPACE_SCHEMA;
     envelope.retire_unadopted();
@@ -547,3 +547,4 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
 }
 //#endregion 🗃️LocalCatalogLane
 
+semio_framework_plugin::history_edit_acceptance_law!("space", super::HomeApp, || semio_framework_plugin::App { definition: semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(super::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

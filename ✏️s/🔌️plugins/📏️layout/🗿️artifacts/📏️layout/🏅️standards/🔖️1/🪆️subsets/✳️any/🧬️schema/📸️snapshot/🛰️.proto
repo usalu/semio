@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.layout.layout.snapshot;
+import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🛰️.proto";
 import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
 message LayoutSnapshot {
@@ -14,7 +15,7 @@ message LayoutSnapshot {
   repeated semio.s.layout.layout.artifact.Spread spreads = 9;
   repeated semio.s.layout.layout.artifact.Page pages = 10;
   optional string print_target = 11;
-  optional string data_fields_json = 12;
+  optional semio.s.forms.forms.dictionary.FormDictionary data_fields = 12;
   semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 13;
   semio.os.store.ArtifactLink referenced_model = 14;
 }

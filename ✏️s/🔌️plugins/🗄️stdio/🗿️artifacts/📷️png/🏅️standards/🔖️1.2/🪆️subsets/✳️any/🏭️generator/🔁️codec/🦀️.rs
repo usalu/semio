@@ -3,7 +3,7 @@
 //! isolated from the repository's root workspace and Cargo.lock).
 //!
 //! This binary is a READER-based external oracle mechanism for this repository's own PNG 1.2/any
-//! mutation vocabulary (`🔣️oracle.json`, oracle id `png-png-1-2-mutate-reader`). Every recipe's
+//! fixtures (`🔣️oracle.json`, oracle id `png-png-1-2-mutate-reader`). Every recipe's
 //! BEFORE and AFTER document is authored directly as a typed `png::Info` value below — never by
 //! executing this repository's own `PngMutation` dispatch/diff — then handed to `png::Encoder` to
 //! become real bytes. `project` decodes real bytes back with `png::Decoder`, independent of, and
@@ -19,12 +19,12 @@
 //!                                     pixel hex into a size+digest pair and drops the raw bytes,
 //!                                     per this artifact's `semantic-png-1-2-v1` comparisonProfile).
 //!
-//! `change-timestamp`, `insert-unknown-chunk` and `remove-unknown-chunk` are still BUILT here (real
-//! bytes, via `Writer::write_chunk`'s raw escape hatch — `png::Info` 0.18.1 has no `tIME` field and
-//! the decoder skips unrecognised ancillary chunks entirely, src/decoder/stream.rs's own
-//! `SkippedAncillaryChunk`) but `project` cannot surface what it wrote back out. Those three are
-//! registered `png-1-2-mutate-uncarried` in the oracle manifest, never silently passed. Full
-//! research: .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md
+//! The recipes are reference documents: each pair is one chunk-level edit authored by the `png` crate itself, and
+//! `change-gamma-applied` is the pair the live `change-gamma` kind is witnessed against. The tIME and unknown-chunk
+//! recipes are written through `Writer::write_chunk`'s raw escape hatch, because `png::Info` 0.18.1 has no `tIME` field
+//! and the decoder skips unrecognised ancillary chunks (src/decoder/stream.rs's `SkippedAncillaryChunk`), so `project`
+//! cannot surface them. Research:
+//! .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️png-reader-witnessability.md
 
 use png::chunk::ChunkType;
 use png::text_metadata::TEXtChunk;
@@ -250,43 +250,32 @@ fn doc_json(d: &Decoded) -> String {
 //#endregion 🔖️Json
 
 //#region 🔖️Recipes
-/// 🧪 One recipe per declared `png-1-2-any` mutation kind — every kind's `outcomes` is `["applied"]`
-/// only, so every recipe returns BOTH a before and an after document (no `-rejected-` counterpart
-/// exists in this catalog, unlike `avi`). Each AFTER state touches exactly the field(s) that kind's
-/// real `PngMutation` variant touches (see `../../../../../../🧬️schema/🧬️mutations/🦀️.rs` and each
-/// `📐️<kind>/🛰️.proto` for the field list) — the values themselves are hand-chosen by this
-/// binary, never computed from any mutation dispatch.
+/// 🧪 One reference before/after pair per recipe id, each AFTER changing exactly one chunk-level fact with hand-chosen
+/// values, never computed by any mutation dispatch; only `change-gamma-applied` witnesses a live kind. `png` 0.18.1
+/// shapes three pairs: `Writer::write_image_data` never Adam7-interlaces, so the header pair changes only the
+/// dimensions; and tIME, bKGD and private chunks have no `Info` write path, so they go through `Writer::write_chunk`
+/// (bKGD between `write_header` and `write_image_data`, its spec position) — tIME with a fixed 7-byte payload, never
+/// `SystemTime::now()`, and the private `prVt` type ancillary, private and reserved-bit conformant.
 fn recipe(id: &str) -> Option<(Doc, Doc)> {
     match id {
-        // 🧬 ChangeHeaderMutation{width,height,bit_depth,color_type,interlace} — whole-value IHDR
-        // replace. Dimensions change (4x2 -> 6x2); colour type/bit depth/interlace held fixed, since
-        // `png` 0.18.1's `Writer::write_image_data` never performs Adam7 interlacing itself, so an
-        // `interlaced: true` Info would write a mismatched, unreadable-back IDAT stream — a limit of
-        // this specific crate version, not of the mutation.
         "change-header-applied" => {
             let before = base_rgb();
             let (width, height) = (6, 2);
             let after = Doc { info: rgb_info(width, height), pixels: gradient_rgb(width, height), extra_chunks: vec![] };
             Some((before, after))
         }
-
-        // 🧬 ReplacePaletteMutation — whole-value PLTE replace; index bytes (pixels) untouched.
         "replace-palette-applied" => {
             let before = base_indexed(&[(0, 0, 0), (255, 0, 0), (0, 255, 0), (0, 0, 255)]);
             let mut after = before.clone();
             after.info.palette = Some(palette_bytes(&[(255, 255, 0), (0, 255, 255), (255, 0, 255), (32, 32, 32)]).into());
             Some((before, after))
         }
-
-        // 🧬 ChangeTransparencyMutation — tRNS color-key add/replace over an RGB (non-alpha) base.
         "change-transparency-applied" => {
             let before = base_rgb();
             let mut after = before.clone();
             after.info.trns = Some(vec![0x00, 0x0A, 0x00, 0x1D, 0x00, 0x03].into());
             Some((before, after))
         }
-
-        // 🧬 ChangeGammaMutation — gAMA replace (1/2.2 -> 1.0, scaled ×100000).
         "change-gamma-applied" => {
             let mut before = base_rgb();
             before.info.source_gamma = Some(ScaledFloat::from_scaled(45455));
@@ -294,8 +283,6 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.source_gamma = Some(ScaledFloat::from_scaled(100000));
             Some((before, after))
         }
-
-        // 🧬 ChangeChromaticitiesMutation — cHRM replace (sRGB primaries -> arbitrary other set).
         "change-chromaticities-applied" => {
             let mut before = base_rgb();
             before.info.source_chromaticities = Some(SourceChromaticities::new((0.3127, 0.3290), (0.6400, 0.3300), (0.3000, 0.6000), (0.1500, 0.0600)));
@@ -303,8 +290,6 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.source_chromaticities = Some(SourceChromaticities::new((0.3457, 0.3585), (0.6800, 0.3200), (0.2650, 0.6900), (0.1500, 0.0600)));
             Some((before, after))
         }
-
-        // 🧬 ChangeSrgbIntentMutation — sRGB rendering intent replace.
         "change-srgb-intent-applied" => {
             let mut before = base_rgb();
             before.info.srgb = Some(SrgbRenderingIntent::Perceptual);
@@ -312,8 +297,6 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.srgb = Some(SrgbRenderingIntent::RelativeColorimetric);
             Some((before, after))
         }
-
-        // 🧬 ChangePhysicalDimsMutation — pHYs replace.
         "change-physical-dims-applied" => {
             let mut before = base_rgb();
             before.info.pixel_dims = Some(PixelDimensions { xppu: 2835, yppu: 2835, unit: Unit::Meter });
@@ -321,38 +304,22 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.pixel_dims = Some(PixelDimensions { xppu: 1000, yppu: 4000, unit: Unit::Unspecified });
             Some((before, after))
         }
-
-        // 🧬 ChangeTimestampMutation — tIME replace. `png::Info` 0.18.1 has NO `tIME` field at all,
-        // so both bytes are written through `Writer::write_chunk`'s raw escape hatch with a FIXED,
-        // hand-chosen 7-byte payload (year u16BE, month, day, hour, minute, second) — never
-        // `SystemTime::now()`. UNCARRIED: this crate's decoder cannot read a tIME chunk back.
         "change-timestamp-applied" => {
             let before = Doc { extra_chunks: vec![(ct(b"tIME"), vec![0x07, 0xE8, 0x01, 0x01, 0x00, 0x00, 0x00])], ..base_rgb() };
             let after = Doc { extra_chunks: vec![(ct(b"tIME"), vec![0x07, 0xE8, 0x06, 0x0F, 0x0C, 0x1E, 0x00])], ..base_rgb() };
             Some((before, after))
         }
-
-        // 🧬 ChangeBackgroundMutation — bKGD replace. `png::Encoder` 0.18.1 has no `set_background`/
-        // `Info`-driven bKGD write path at all (its own `encode_header` never checks `info.bkgd`), so
-        // both bytes are written through `Writer::write_chunk` — still the crate's own length/type/
-        // CRC framing, called between `write_header` (which already wrote IHDR) and
-        // `write_image_data` (satisfying bKGD's spec position: after PLTE if any, before IDAT). RGB
-        // format is 3x u16BE (R,G,B), 6 bytes. WITNESSABLE: the decoder DOES read bKGD into `Info::bkgd`.
         "change-background-applied" => {
             let before = Doc { extra_chunks: vec![(ct(b"bKGD"), vec![0x00, 0xFF, 0x00, 0x80, 0x00, 0x40])], ..base_rgb() };
             let after = Doc { extra_chunks: vec![(ct(b"bKGD"), vec![0x00, 0x10, 0x00, 0x20, 0x00, 0x30])], ..base_rgb() };
             Some((before, after))
         }
-
-        // 🧬 InsertTextChunkMutation — no tEXt -> one tEXt chunk.
         "insert-text-chunk-applied" => {
             let before = base_rgb();
             let mut after = before.clone();
             after.info.uncompressed_latin1_text.push(TEXtChunk { keyword: "Comment".into(), text: "hello from png-codec".into() });
             Some((before, after))
         }
-
-        // 🧬 RemoveTextChunkMutation — one tEXt chunk -> none.
         "remove-text-chunk-applied" => {
             let mut before = base_rgb();
             before.info.uncompressed_latin1_text.push(TEXtChunk { keyword: "Comment".into(), text: "hello from png-codec".into() });
@@ -360,8 +327,6 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.uncompressed_latin1_text.clear();
             Some((before, after))
         }
-
-        // 🧬 ReplaceTextChunkMutation — the one tEXt chunk's text (keyword held fixed) is replaced.
         "replace-text-chunk-applied" => {
             let mut before = base_rgb();
             before.info.uncompressed_latin1_text.push(TEXtChunk { keyword: "Comment".into(), text: "before-value".into() });
@@ -369,32 +334,22 @@ fn recipe(id: &str) -> Option<(Doc, Doc)> {
             after.info.uncompressed_latin1_text[0].text = "after-value".into();
             Some((before, after))
         }
-
-        // 🧬 ReplacePixelsMutation — same header, disjoint pixel bytes.
         "replace-pixels-applied" => {
             let before = base_rgb();
             let mut after = before.clone();
             after.pixels = before.pixels.iter().map(|b| 255 - b).collect();
             Some((before, after))
         }
-
-        // 🧬 InsertUnknownChunkMutation — no unrecognised chunk -> one. Fourcc `prVt`: lowercase
-        // first byte (ancillary — safe to ignore), uppercase second/third (private, reserved-bit
-        // conformant), lowercase fourth (not safe-to-copy blindly) — a private, unregistered,
-        // ancillary chunk type this crate's decoder never assigns to any `Info` field. UNCARRIED.
         "insert-unknown-chunk-applied" => {
             let before = base_rgb();
             let after = Doc { extra_chunks: vec![(ct(b"prVt"), vec![0xAA, 0xBB, 0xCC])], ..base_rgb() };
             Some((before, after))
         }
-
-        // 🧬 RemoveUnknownChunkMutation — one unrecognised chunk -> none. UNCARRIED.
         "remove-unknown-chunk-applied" => {
             let before = Doc { extra_chunks: vec![(ct(b"prVt"), vec![0xAA, 0xBB, 0xCC])], ..base_rgb() };
             let after = base_rgb();
             Some((before, after))
         }
-
         _ => None,
     }
 }

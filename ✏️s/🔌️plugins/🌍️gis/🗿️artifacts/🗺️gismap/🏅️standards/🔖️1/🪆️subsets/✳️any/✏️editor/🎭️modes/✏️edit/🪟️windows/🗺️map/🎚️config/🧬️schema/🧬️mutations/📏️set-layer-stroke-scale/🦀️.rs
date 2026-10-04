@@ -5,7 +5,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-layer-stroke-scale")]
@@ -24,13 +24,16 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeSc
             return MutationOutcome::fatal("mutation.invariant", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]);
         }
         if base.layer_stroke_scale.get(&self.layer_id).copied() == self.value {
-            return MutationOutcome::empty().warn("mutation.no-op", "Layer stroke scale override is already at the requested value.");
+            return MutationOutcome::empty().warning("mutation.no-op", "Layer stroke scale override is already at the requested value.");
         }
         MutationOutcome::new(MapWindowConfigDelta { layer_stroke_scale: [(self.layer_id.clone(), self.value)].into(), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { layer_id: self.layer_id.clone(), value: base.layer_stroke_scale.get(&self.layer_id).copied() }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
     }

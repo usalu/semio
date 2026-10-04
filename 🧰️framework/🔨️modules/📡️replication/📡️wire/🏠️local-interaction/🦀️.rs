@@ -36,7 +36,7 @@ impl crate::value::ToValue for LocalInteractionState {
 impl crate::value::FromValue for LocalInteractionState {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionState, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionState, found {value:?}")));
         };
         let mut selection = None;
         let mut active_mode = None;
@@ -46,13 +46,13 @@ impl crate::value::FromValue for LocalInteractionState {
                 "selection" => selection = Some(<BTreeMap<String, DomainSelection> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
                 "activeMode" => active_mode = Some(<BTreeMap<String, SelectionMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
                 "activeGranularity" => active_granularity = Some(<BTreeMap<String, String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionState"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionState"))),
             }
         }
         Ok(LocalInteractionState {
-            selection: selection.ok_or_else(|| crate::value::ValueError::new("LocalInteractionState missing selection"))?,
-            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new("LocalInteractionState missing activeMode"))?,
-            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new("LocalInteractionState missing activeGranularity"))?,
+            selection: selection.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing selection"))?,
+            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeMode"))?,
+            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeGranularity"))?,
         })
     }
 }
@@ -85,7 +85,7 @@ impl crate::value::ToValue for LocalInteractionIdentity {
 impl crate::value::FromValue for LocalInteractionIdentity {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionIdentity, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionIdentity, found {value:?}")));
         };
         let mut app_instance_id = None;
         let mut generation = None;
@@ -99,15 +99,15 @@ impl crate::value::FromValue for LocalInteractionIdentity {
                 "revision" => revision = Some(decode_revision_hex(entry).map_err(|e| e.under("revision"))?),
                 "documentRevision" => document_revision = Some(decode_revision_hex(entry).map_err(|e| e.under("documentRevision"))?),
                 "topologyRevision" => topology_revision = Some(decode_revision_hex(entry).map_err(|e| e.under("topologyRevision"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionIdentity"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionIdentity"))),
             }
         }
         Ok(LocalInteractionIdentity {
-            app_instance_id: app_instance_id.ok_or_else(|| crate::value::ValueError::new("LocalInteractionIdentity missing appInstanceId"))?,
-            generation: generation.ok_or_else(|| crate::value::ValueError::new("LocalInteractionIdentity missing generation"))?,
-            revision: revision.ok_or_else(|| crate::value::ValueError::new("LocalInteractionIdentity missing revision"))?,
-            document_revision: document_revision.ok_or_else(|| crate::value::ValueError::new("LocalInteractionIdentity missing documentRevision"))?,
-            topology_revision: topology_revision.ok_or_else(|| crate::value::ValueError::new("LocalInteractionIdentity missing topologyRevision"))?,
+            app_instance_id: app_instance_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing appInstanceId"))?,
+            generation: generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing generation"))?,
+            revision: revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing revision"))?,
+            document_revision: document_revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing documentRevision"))?,
+            topology_revision: topology_revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing topologyRevision"))?,
         })
     }
 }
@@ -137,7 +137,7 @@ impl crate::value::ToValue for LocalInteractionDomainPatch {
 impl crate::value::FromValue for LocalInteractionDomainPatch {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionDomainPatch, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionDomainPatch, found {value:?}")));
         };
         let mut selection: Option<Option<DomainSelection>> = None;
         let mut active_mode: Option<Option<SelectionMode>> = None;
@@ -147,13 +147,13 @@ impl crate::value::FromValue for LocalInteractionDomainPatch {
                 "selection" => selection = Some(<Option<DomainSelection> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
                 "activeMode" => active_mode = Some(<Option<SelectionMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
                 "activeGranularity" => active_granularity = Some(<Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionDomainPatch"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionDomainPatch"))),
             }
         }
         Ok(LocalInteractionDomainPatch {
-            selection: selection.ok_or_else(|| crate::value::ValueError::new("LocalInteractionDomainPatch missing selection"))?,
-            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new("LocalInteractionDomainPatch missing activeMode"))?,
-            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new("LocalInteractionDomainPatch missing activeGranularity"))?,
+            selection: selection.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing selection"))?,
+            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeMode"))?,
+            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeGranularity"))?,
         })
     }
 }
@@ -174,7 +174,7 @@ impl crate::value::ToValue for LocalInteractionCapture {
 impl crate::value::FromValue for LocalInteractionCapture {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionCapture, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionCapture, found {value:?}")));
         };
         let mut identity = None;
         let mut state = None;
@@ -182,12 +182,12 @@ impl crate::value::FromValue for LocalInteractionCapture {
             match key.as_str() {
                 "identity" => identity = Some(<LocalInteractionIdentity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
                 "state" => state = Some(<LocalInteractionState as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("state"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionCapture"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionCapture"))),
             }
         }
         Ok(LocalInteractionCapture {
-            identity: identity.ok_or_else(|| crate::value::ValueError::new("LocalInteractionCapture missing identity"))?,
-            state: state.ok_or_else(|| crate::value::ValueError::new("LocalInteractionCapture missing state"))?,
+            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing identity"))?,
+            state: state.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing state"))?,
         })
     }
 }
@@ -220,27 +220,27 @@ impl crate::value::ToValue for LocalInteractionRestore {
 impl crate::value::FromValue for LocalInteractionRestore {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionRestore, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionRestore, found {value:?}")));
         };
         let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let kind = match get("kind") {
             Some(crate::value::DslValue::String(s)) => s,
-            _ => return Err(crate::value::ValueError::new("LocalInteractionRestore missing kind")),
+            _ => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore missing kind")),
         };
         let known: &[&str] = match kind.as_str() { "full" => &["kind", "base", "state"], "domains" => &["kind", "base", "domains"], _ => &["kind"] };
         if let Some((unknown, _)) = fields.iter().find(|(k, _)| !known.contains(&k.as_str())) {
-            return Err(crate::value::ValueError::new(format!("unknown field `{unknown}` for LocalInteractionRestore")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{unknown}` for LocalInteractionRestore")));
         }
         match kind.as_str() {
             "full" => Ok(LocalInteractionRestore::Full {
-                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new("LocalInteractionRestore.full missing base"))?).map_err(|e| e.under("base"))?,
-                state: <LocalInteractionState as crate::value::FromValue>::from_value(get("state").ok_or_else(|| crate::value::ValueError::new("LocalInteractionRestore.full missing state"))?).map_err(|e| e.under("state"))?,
+                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing base"))?).map_err(|e| e.under("base"))?,
+                state: <LocalInteractionState as crate::value::FromValue>::from_value(get("state").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing state"))?).map_err(|e| e.under("state"))?,
             }),
             "domains" => Ok(LocalInteractionRestore::Domains {
-                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new("LocalInteractionRestore.domains missing base"))?).map_err(|e| e.under("base"))?,
-                domains: <BTreeMap<String, LocalInteractionDomainPatch> as crate::value::FromValue>::from_value(get("domains").ok_or_else(|| crate::value::ValueError::new("LocalInteractionRestore.domains missing domains"))?).map_err(|e| e.under("domains"))?,
+                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing base"))?).map_err(|e| e.under("base"))?,
+                domains: <BTreeMap<String, LocalInteractionDomainPatch> as crate::value::FromValue>::from_value(get("domains").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing domains"))?).map_err(|e| e.under("domains"))?,
             }),
-            other => Err(crate::value::ValueError::new(format!("unknown LocalInteractionRestore kind `{other}`"))),
+            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown LocalInteractionRestore kind `{other}`"))),
         }
     }
 }
@@ -269,7 +269,7 @@ impl crate::value::ToValue for LocalInteractionQueryToken {
 impl crate::value::FromValue for LocalInteractionQueryToken {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionQueryToken, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionQueryToken, found {value:?}")));
         };
         let mut request_id = None;
         let mut query_generation = None;
@@ -281,14 +281,14 @@ impl crate::value::FromValue for LocalInteractionQueryToken {
                 "queryGeneration" => query_generation = Some(decode_decimal_u64(entry).map_err(|e| e.under("queryGeneration"))?),
                 "identity" => identity = Some(<LocalInteractionIdentity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
                 "ordinal" => ordinal = Some(decode_decimal_u64(entry).map_err(|e| e.under("ordinal"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionQueryToken"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionQueryToken"))),
             }
         }
         Ok(LocalInteractionQueryToken {
-            request_id: request_id.ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryToken missing requestId"))?,
-            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryToken missing queryGeneration"))?,
-            identity: identity.ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryToken missing identity"))?,
-            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new("LocalInteractionQueryToken missing ordinal"))?,
+            request_id: request_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing requestId"))?,
+            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing queryGeneration"))?,
+            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing identity"))?,
+            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing ordinal"))?,
         })
     }
 }
@@ -320,7 +320,7 @@ impl crate::value::ToValue for LocalInteractionPage {
 impl crate::value::FromValue for LocalInteractionPage {
     fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(format!("expected an object for LocalInteractionPage, found {value:?}")));
+            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionPage, found {value:?}")));
         };
         let mut request_id = None;
         let mut query_generation = None;
@@ -336,16 +336,16 @@ impl crate::value::FromValue for LocalInteractionPage {
                 "ordinal" => ordinal = Some(decode_decimal_u64(entry).map_err(|e| e.under("ordinal"))?),
                 "terminal" => terminal = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("terminal"))?),
                 "bytes" => bytes = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("bytes"))?),
-                other => return Err(crate::value::ValueError::new(format!("unknown field `{other}` for LocalInteractionPage"))),
+                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionPage"))),
             }
         }
         Ok(LocalInteractionPage {
-            request_id: request_id.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing requestId"))?,
-            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing queryGeneration"))?,
-            identity: identity.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing identity"))?,
-            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing ordinal"))?,
-            terminal: terminal.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing terminal"))?,
-            bytes: bytes.ok_or_else(|| crate::value::ValueError::new("LocalInteractionPage missing bytes"))?,
+            request_id: request_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing requestId"))?,
+            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing queryGeneration"))?,
+            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing identity"))?,
+            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing ordinal"))?,
+            terminal: terminal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing terminal"))?,
+            bytes: bytes.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing bytes"))?,
         })
     }
 }
@@ -390,12 +390,12 @@ fn encode_decimal_u64(value: u64) -> crate::value::DslValue {
 }
 fn decode_decimal_u64(value: crate::value::DslValue) -> Result<u64, crate::value::ValueError> {
     let crate::value::DslValue::String(text) = value else {
-        return Err(crate::value::ValueError::new(format!("expected a decimal string, found {value:?}")));
+        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a decimal string, found {value:?}")));
     };
     if text.is_empty() || text.len() > 20 || (text.len() > 1 && text.starts_with('0')) || !text.bytes().all(|byte| byte.is_ascii_digit()) {
-        return Err(crate::value::ValueError::new("invalid decimal u64"));
+        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid decimal u64"));
     }
-    text.parse().map_err(|_| crate::value::ValueError::new("invalid decimal u64"))
+    text.parse().map_err(|_| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid decimal u64"))
 }
 
 /// 🌱️ Canonical 64-lowercase-hex-char encoding for a `[u8; 32]` revision — the first-party twin
@@ -408,10 +408,10 @@ fn encode_revision_hex(value: &[u8; 32]) -> crate::value::DslValue {
 }
 fn decode_revision_hex(value: crate::value::DslValue) -> Result<[u8; 32], crate::value::ValueError> {
     let crate::value::DslValue::String(text) = value else {
-        return Err(crate::value::ValueError::new(format!("expected a hex string, found {value:?}")));
+        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a hex string, found {value:?}")));
     };
     if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
-        return Err(crate::value::ValueError::new("invalid full revision"));
+        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid full revision"));
     }
     let mut bytes = [0; 32];
     for (index, pair) in text.as_bytes().as_chunks::<2>().0.iter().enumerate() { bytes[index] = nibble(pair[0]) * 16 + nibble(pair[1]); }

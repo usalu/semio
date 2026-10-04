@@ -16,7 +16,7 @@ use crate::En1994Snapshot;
 pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1994` DSL text into a `Document`.
-pub fn parse_dsl(text: &str) -> Result<En1994Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1994Snapshot, semio_framework_diagnostic::TextError> {
     <En1994Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 

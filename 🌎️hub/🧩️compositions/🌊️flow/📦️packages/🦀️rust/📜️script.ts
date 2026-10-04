@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
+import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
 
 
@@ -51,6 +51,7 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("graph-generate",GraphGenerateScript)
+  .register("preview-generated",PreviewGeneratedScript)
   .register("graph-wire-check",OwnerGraphWireCheckScript)
   .register("check", CheckScript)
   .register("test", TestScript)

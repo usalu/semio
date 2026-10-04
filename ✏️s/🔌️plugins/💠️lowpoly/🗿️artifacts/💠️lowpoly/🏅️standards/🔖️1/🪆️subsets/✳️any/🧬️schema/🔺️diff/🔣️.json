@@ -178,6 +178,32 @@
               "type": "string"
             }
           ]
+        },
+        "meshState": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "state"
+              ],
+              "properties": {
+                "state": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mesh/schema.json"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },

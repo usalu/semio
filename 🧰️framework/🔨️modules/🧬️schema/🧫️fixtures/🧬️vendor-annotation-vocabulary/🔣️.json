@@ -13,6 +13,17 @@
     "x-semio-family-options": { "type": "object" },
     "x-semio-formats": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "x-semio-invariant": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/SchemaInvariants" },
+    "x-semio-inverse-rows": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "fixed": { "type": "integer", "minimum": 0 },
+        "perTarget": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "bounded": { "type": "integer", "minimum": 1 }
+      },
+      "dependencies": { "bounded": { "type": "object", "properties": { "fixed": false, "perTarget": false } } }
+    },
     "x-semio-link": { "type": "string" },
     "x-semio-link-roles": { "type": "array", "items": { "type": "string" } },
     "x-semio-mutation": { "type": "string" },

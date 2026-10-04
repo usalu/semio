@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DeleteBattery, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::DeleteBattery, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(index) = base.model.battery_storage.iter().position(|item| item.id == payload.id) else {
         return Vec::new();
     };
@@ -15,5 +16,7 @@ pub fn inverse(payload: &super::DeleteBattery, base: &EnergyModelSnapshot) -> Ve
     }
     let existing = &base.model.battery_storage[index];
     vec![vocabulary::create_battery(index as u32, existing.id, existing.capacity_kwh, existing.max_charge_w, existing.max_discharge_w, existing.round_trip_efficiency)]
+
+    })())
 }
 //#endregion 🔖️Inverse

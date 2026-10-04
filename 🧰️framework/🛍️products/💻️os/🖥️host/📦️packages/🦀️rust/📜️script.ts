@@ -188,12 +188,12 @@ class MemberOpenProtocolScript extends BundleScript {
     let rejectedBytes = 0;
     for (const row of fixture.cases) {
       const text = row.artifactId.length > 0 && Buffer.byteLength(row.artifactId) <= fixture.limits.identityBytes && !/\p{Cc}/u.test(row.artifactId);
-      const reason = !row.sealed ? "unsealed" : row.bytes === 0 ? "empty" : row.nowUs >= row.expiresAtUs ? "expired" : !text ? "identity" : row.ownerChildId !== null && row.ownerChildId !== row.artifactId ? "owner" : null;
+      const reason = !row.sealed ? "unsealed" : row.bytes === 0 ? "empty" : row.nowUs >= row.expiresAtUs ? "expired" : !text ? "identity" : row.ownerChildId !== null && (row.ownerChildId.length === 0 || Buffer.byteLength(row.ownerChildId) > fixture.limits.identityBytes || /\p{Cc}/u.test(row.ownerChildId)) ? "owner" : null;
       const structural: SchemaCheck = ajv.compile({ type: "object", required: ["sealed", "bytes", "expiresAtUs", "artifactId", "ownerChildId"], properties: {
         sealed: { const: true }, bytes: { type: "integer", minimum: 1 }, expiresAtUs: { type: "integer", exclusiveMinimum: row.nowUs },
-        artifactId: { type: "string", minLength: 1, pattern: "^[^\\p{Cc}]+$" }, ownerChildId: { enum: [null, row.artifactId] },
+        artifactId: { type: "string", minLength: 1, pattern: "^[^\\p{Cc}]+$" }, ownerChildId: { anyOf: [{ type: "null" }, { type: "string", minLength: 1, pattern: "^[^\\p{Cc}]+$" }] },
       } });
-      assert.equal(structural(row) && new TextEncoder().encode(row.artifactId).length <= fixture.limits.identityBytes, reason === null, row.id);
+      assert.equal(structural(row) && new TextEncoder().encode(row.artifactId).length <= fixture.limits.identityBytes && (row.ownerChildId === null || new TextEncoder().encode(row.ownerChildId).length <= fixture.limits.identityBytes), reason === null, row.id);
       assert.equal(reason, row.reason, row.id);
       assert.equal(reason === null, row.admitted, row.id);
       if (reason !== null) rejectedBytes += row.bytes;
@@ -231,10 +231,14 @@ class MemberOpenProtocolScript extends BundleScript {
     }
     const source = readFileSync(join(base, "🦀️.rs"), "utf8");
     assert(source.includes("pub trait MemberOpenOperation") && source.includes("StepContext<'_>"));
-    assert(source.includes("member_open_request_rejection_retains_exact_pages_and_identity"));
-    assert(source.includes("member_open_input_framing_is_canonical_scoped_and_budgeted"));
+    assert(source.includes('#[path = "🧪️tests/🔬️unit/🦀️.rs"]') && source.includes("mod tests;"));
+    const sourceTests = readFileSync(join(base, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    assert(sourceTests.includes("member_open_request_rejection_retains_exact_pages_and_identity"));
+    assert(sourceTests.includes("member_open_input_framing_is_canonical_scoped_and_budgeted"));
     const store = readFileSync(join(base, "../../🦀️.rs"), "utf8");
-    assert(store.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
+    assert(store.includes('#[path = "🧪️tests/🔬️unit/🦀️.rs"]') && store.includes("mod tests;"));
+    const storeTests = readFileSync(join(base, "../../🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    assert(storeTests.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
     console.log(`[TRACE] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runRepositoryExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted", "member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });

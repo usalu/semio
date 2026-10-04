@@ -58,6 +58,6 @@ fn a_select_effect_replays_the_framework_action_with_json_targets() {
     let Effect::ReplayShellCommand { action_id, args } = effect else { panic!("replay") };
     assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
     let args = args.expect("args");
-    assert_eq!(args.get("domainId").and_then(dsl::DslValue::as_str), Some(FEM3D_INTERACTION_DOMAIN));
-    assert!(args.get("targets").and_then(dsl::DslValue::as_str).expect("targets").contains("\"n1\""));
+    assert_eq!(args.get("domainId").and_then(semio_framework_value::DslValue::as_str), Some(FEM3D_INTERACTION_DOMAIN));
+    assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).expect("targets").contains("\"n1\""));
 }

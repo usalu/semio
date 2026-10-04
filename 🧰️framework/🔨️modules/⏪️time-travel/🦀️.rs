@@ -873,10 +873,11 @@ pub enum TimeTravelLabel {
     CommitFailed,
     OutcomeIntroduced,
     RefusalMemberGone,
+    MemberEdited,
 }
 
 impl TimeTravelLabel {
-    pub const ALL: [Self; 36] = [
+    pub const ALL: [Self; 37] = [
         Self::StageInactive,
         Self::StageEditing,
         Self::StageReplaying,
@@ -913,6 +914,7 @@ impl TimeTravelLabel {
         Self::CommitFailed,
         Self::OutcomeIntroduced,
         Self::RefusalMemberGone,
+        Self::MemberEdited,
     ];
 
     /// 🔑️ `(key, en, de)` row of this label.
@@ -954,6 +956,7 @@ impl TimeTravelLabel {
             Self::CommitFailed => ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
             Self::OutcomeIntroduced => ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
             Self::RefusalMemberGone => ("refusalMemberGone", "The part this history edit targets was closed", "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"),
+            Self::MemberEdited => ("memberEdited", "History of a composed part edited", "Verlauf eines eingebetteten Teils bearbeitet"),
         }
     }
 

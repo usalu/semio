@@ -24,3 +24,5 @@ async fn editor_mounts_the_bounded_zip_preparation_route() {
 
     assert!(ZipIso21320Editor::native_edit_preparation_route("stdio-zip-iso21320-snapshot-edit").is_some());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ZipIso21320Editor, || semio_framework_plugin::App { definition: super::create_zip_iso21320_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320");

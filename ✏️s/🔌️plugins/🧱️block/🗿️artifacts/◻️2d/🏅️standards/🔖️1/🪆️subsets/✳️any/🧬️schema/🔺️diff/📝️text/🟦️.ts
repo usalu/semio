@@ -49,5 +49,5 @@ export const blockBlock2dDiffTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseBlock2dDiffText(value: unknown, at = "$"): Block2dDiffText {
-  return blockBlock2dDiffTextGuardObject(value, `${at}`);
+  return blockBlock2dDiffTextGuardString(value, at);
 }

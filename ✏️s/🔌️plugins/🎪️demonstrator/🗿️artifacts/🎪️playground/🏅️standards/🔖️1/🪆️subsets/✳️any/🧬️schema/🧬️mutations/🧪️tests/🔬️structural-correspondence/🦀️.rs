@@ -7,11 +7,11 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
     let owner = mutation_root.join("✒️change-schema");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
     let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
-    let descriptor = dsl::os_pack::json::parse(&descriptor_source).expect("direct descriptor must be valid JSON");
+    let descriptor = semio_framework_pack_json::parse(&descriptor_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct descriptor must be valid JSON");
     let payload_schema_source = std::fs::read_to_string(owner.join("🧬️schema/🔣️.json")).expect("direct payload schema");
-    let payload_schema = dsl::os_pack::json::parse(&payload_schema_source).expect("direct payload schema must be valid JSON");
+    let payload_schema = semio_framework_pack_json::parse(&payload_schema_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct payload schema must be valid JSON");
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
-    let catalog = dsl::os_pack::json::parse(&catalog_source).expect("language-neutral oracle catalog must be valid JSON");
+    let catalog = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");
     let descriptors = PlaygroundMutation::kinds();
 
     assert_eq!(descriptors.len(), 1);

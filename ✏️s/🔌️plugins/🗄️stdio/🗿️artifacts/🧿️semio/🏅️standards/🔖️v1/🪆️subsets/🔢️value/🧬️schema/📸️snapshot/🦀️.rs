@@ -90,6 +90,25 @@ pub enum SemioValue {
 
 //#endregion 🔖️SemioValue
 
+//#region 🔖️ScalarLabel
+/// 🏷️ The (en, de) display text of a scalar value for history labels — numbers trimmed to at most three decimals with a
+/// German decimal comma, strings quoted, booleans and null as words; `None` for bytes, lists, maps and references.
+pub fn semio_value_scalar_label(value: &SemioValue) -> Option<(String, String)> {
+    let number = |lexeme: &str| lexeme.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| {
+        let en = format!("{}", (value * 1_000.0).round() / 1_000.0);
+        let de = en.replace('.', ",");
+        (en, de)
+    });
+    match value {
+        SemioValue::Null => Some(("nothing".into(), "nichts".into())),
+        SemioValue::Bool { value } => Some(if *value { ("on".into(), "an".into()) } else { ("off".into(), "aus".into()) }),
+        SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => number(lexeme),
+        SemioValue::Str { value } => Some((format!("\"{value}\""), format!("\"{value}\""))),
+        SemioValue::Bytes { .. } | SemioValue::List { .. } | SemioValue::Map { .. } | SemioValue::Ref { .. } => None,
+    }
+}
+//#endregion 🔖️ScalarLabel
+
 //#region 🔖️ValueGraph
 /// 📦️ One id-addressable node in the graph's backing store — the strong, keyed entity `Ref`
 /// values resolve against. Real per-node diffability (see `🔺️diff`) makes this the format's
@@ -173,12 +192,12 @@ impl store::ArtifactDsl for SemioValueSnapshot {
         STDIO_SEMIOVALUE_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        dec_semio_value_snapshot(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        dec_semio_value_snapshot(body.trim()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -198,18 +217,18 @@ impl store::ArtifactPack for SemioValueSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = enc_semio_value_snapshot(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        dec_semio_value_snapshot(text).map_err(store::PackError::Schema)
+        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
+        dec_semio_value_snapshot(text).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -222,7 +241,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
 /// (first-party, over `ToValue`/`DslValue`). Mirrors `📊️table`'s and `🌊️flow`'s own bridges.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_value_snapshot_json(snapshot: &SemioValueSnapshot) -> String {
-    pack::to_json_string(snapshot)
+    semio_framework_pack_json::to_json_string(snapshot)
 }
 
 /// 📥️ The `pack::from_json_str` inverse of [`encode_semio_value_snapshot_json`] — decodes a committed
@@ -230,7 +249,7 @@ pub fn encode_semio_value_snapshot_json(snapshot: &SemioValueSnapshot) -> String
 /// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

@@ -1,5 +1,0 @@
-"""🗑️ Direct delete-step payload."""
-input DeleteStepInput {
-  pathRef: ProcedurePathRefInput!
-  id: String!
-}

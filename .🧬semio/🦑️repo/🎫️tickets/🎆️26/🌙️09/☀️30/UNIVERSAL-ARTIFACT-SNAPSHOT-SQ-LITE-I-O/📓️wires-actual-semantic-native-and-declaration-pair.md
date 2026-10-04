@@ -1,0 +1,15 @@
+# Wires Actual Semantic Native Admission and Declaration Pair
+
+The real registered Native route selected twelve laws: eight passed and four failed in `🗑️generated/root-twentytwo-measured-owner-semantic-and-prerequisite-after-native.log`. The new exact-cell law accepted Decode allowance zero against 844 authored SQL cell bytes. Earlier row/byte refusal laws failed too. These assertion failures authorized the current owner repair. No new Native success is claimed.
+
+The ten guarded mounted paths and complete before/after sources are retained in `📥️inputs/wires-exact-semantic-native-current-pairs.json`. The Pack root now uses a handcrafted semantic census in `📦️pack/🧮️census/🦀️.rs`; SQLite native hooks pass the actual caller's maxRows and maxValueBytes. Encode counts through its existing paid borrowed frontier. Decode counts the complete owned flat Document with the same Native control before reconstructing the full typed intrinsic roots. All exact semantic rows and SQL storage-class cell bytes are counted, including document/root/child IDs, child literal UTF-8, variant headers, unsigned words, IEEE numeric/null class companions, every octet and relationship ID/ordinal/reference, and ordered object member names. This semantic census does not charge forecasts or modify shared physical allocation admission.
+
+The declaration failure was `stamp_fault_notices` rejecting two-segment notice names before any child construction. The canonical notice schema requires at least three dot segments. All nine actual Wires notice identities, producers, localized declarations and exact unit expectations are now coherently authored with three segments. Real composed SemioGraph reads, graph bodies, native test grants and all twelve owning laws remain unchanged.
+
+Emit-only Rust parsing passed ten of ten files. Receipt: `🗑️generated/wires-exact-semantic-and-canonical-notice-parser.json`. The unchanged registered Source command is `bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-source`; receipt `🗑️generated/shared-wires-current-semantic-and-notice-source.log` completed exit zero: eight of eight laws passed, 88 expectations, 345 ms assertions, Nx 18.7 s. Root alone runs the unchanged Native command `bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native`.
+
+This repair proves no complete physical System backing census for Wires SQL BTree indexes or native retirement frontiers. Those remain distinct from the evidenced semantic allowance origin. Global child read/frame production remains held.
+
+## Shared Semio Native Wrapper Backlog
+
+Root's fresh readback identifies actual `✉️base/snapshot/🛬️native/🦀️.rs` lines 6–14 making NativeDecodeControl from maxValueBytes, translating progress through checkpoint.is_ok, and not settling owned_bytes into the caller. All dedicated Semio subsets including BRep select that local wrapper. It is distinct from the canonical shared Store helper repaired earlier and remains a measured ownership frontier; no production edit or paid wrapper closure is claimed here.

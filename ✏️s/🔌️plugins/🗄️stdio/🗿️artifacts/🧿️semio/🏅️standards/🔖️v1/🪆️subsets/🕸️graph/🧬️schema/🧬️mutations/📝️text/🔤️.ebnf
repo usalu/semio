@@ -3,9 +3,10 @@
    text representation (protocol::OpText::print_op/parse_op). *)
 op = create node | delete node | change node kind | change node label | move node
    | add node port | remove node port | add node property | remove node property
-   | create edge | delete edge ;
+   | create edge | delete edge | drag nodes | set node property | resize node | rename node
+   | set edge property | add edge property | remove edge property ;
 
-create node           = "createNode", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", "[", [ port list ], "]", ",", "[", [ property list ], "]" ;
+create node           = "createNode", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", "[", [ port list ], "]", ",", "[", [ property list ], "]", ",", at ;
 delete node           = "deleteNode", ":", hex ;
 change node kind      = "changeNodeKind", ":", hex, ",", hex ;
 change node label     = "changeNodeLabel", ":", hex, ",", hex ;
@@ -13,9 +14,18 @@ move node             = "moveNode", ":", hex, ",", hex, ",", hex ;
 add node port         = "addNodePort", ":", hex, ",", integer, ",", port ;
 remove node port      = "removeNodePort", ":", hex, ",", integer ;
 add node property     = "addNodeProperty", ":", hex, ",", integer, ",", property ;
-remove node property  = "removeNodeProperty", ":", hex, ",", integer ;
-create edge           = "createEdge", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex ;
+remove node property  = "removeNodeProperty", ":", hex, ",", hex ;
+create edge           = "createEdge", ":", hex, ",", hex, ",", hex, ",", hex, ",", hex, ",", optional text, ",", optional text, ",", "[", [ property list ], "]", ",", at ;
+optional text = "-" | "[", hex, "]" ;
+at            = "-" | integer ;
 delete edge           = "deleteEdge", ":", hex ;
+drag nodes            = "dragNodes", ":", "[", hex, { ",", hex }, "]", ",", hex, ",", hex ;
+set node property     = "setNodeProperty", ":", hex, ",", property ;
+resize node           = "resizeNode", ":", hex, ",", hex, ",", hex ;
+rename node           = "renameNode", ":", hex, ",", hex ;
+set edge property     = "setEdgeProperty", ":", hex, ",", property ;
+add edge property     = "addEdgeProperty", ":", hex, ",", integer, ",", property ;
+remove edge property  = "removeEdgeProperty", ":", hex, ",", hex ;
 
 port list     = port, { ",", port } ;
 port          = "[", hex, ",", port kind, "]" ;

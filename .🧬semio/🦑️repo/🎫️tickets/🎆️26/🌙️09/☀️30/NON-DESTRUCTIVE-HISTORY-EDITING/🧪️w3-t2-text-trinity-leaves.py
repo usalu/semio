@@ -409,9 +409,9 @@ pub fn diff(payload: &super::DragWorkingNodes, base: &RewritingSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a node of the working graph", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if (payload.dx, payload.dy) == (0.0, 0.0) {
-        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
+        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
     }
     protocol::MutationOutcome::new(RewritingDiff { before_fixture_json: Some(json), ..Default::default() }).absorb_messages(partial)
 }
@@ -441,9 +441,9 @@ pub fn diff(payload: &super::PatchWorkingNodes, base: &RewritingSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a node of the working graph", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if !changed {
-        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", format!("every target's {} is already “{value}”", payload.field)).at(payload.targets.clone())]));
+        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", format!("every target's {} is already “{value}”", payload.field)).at(payload.targets.clone())]));
     }
     if payload.field == "kind" && !super::super::working_graph_is_valid(&json) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("the working graph's manifest declares no node kind “{value}”"), payload.targets.clone());
@@ -470,9 +470,9 @@ pub fn diff(payload: &super::DragRuleNodes, base: &RewritingSnapshot) -> protoco
         return protocol::MutationOutcome::error("mutation.target-missing", format!("the rule draws none of the {} target node(s)", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (no node of this rule): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (no node of this rule): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     if (payload.dx, payload.dy) == (0.0, 0.0) {
-        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
+        return protocol::MutationOutcome::new(RewritingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "a zero offset moves nothing").at(payload.targets.clone())]));
     }
     let mut layout = MapDelta::default();
     for (id, point) in placed {
@@ -504,7 +504,7 @@ pub fn diff(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -> p
         layout.absorb(MapDelta::remove(key.clone()));
     }
     if layout.is_empty() {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "every rule node already sits where the payload places it");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "every rule node already sits where the payload places it");
     }
     protocol::MutationOutcome::new(RewritingDiff { rule_layout: Some(layout), ..Default::default() })
 }
@@ -527,7 +527,7 @@ pub fn diff(payload: &super::DeleteWorkingNodes, base: &RewritingSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a node of the working graph", payload.targets.len()), payload.targets.clone());
     }
     let partial: Vec<protocol::MutationMessage> =
-        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
     protocol::MutationOutcome::new(RewritingDiff { before_fixture_json: Some(json), ..Default::default() }).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

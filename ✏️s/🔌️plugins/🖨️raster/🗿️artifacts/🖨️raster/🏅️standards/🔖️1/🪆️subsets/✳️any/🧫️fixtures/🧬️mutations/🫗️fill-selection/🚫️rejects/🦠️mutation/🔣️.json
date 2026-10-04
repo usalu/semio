@@ -1,0 +1,12 @@
+{
+  "color": [
+    1.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "layerId": "ghost",
+  "mutation": "fillSelection",
+  "selection": null,
+  "target": "pixels"
+}

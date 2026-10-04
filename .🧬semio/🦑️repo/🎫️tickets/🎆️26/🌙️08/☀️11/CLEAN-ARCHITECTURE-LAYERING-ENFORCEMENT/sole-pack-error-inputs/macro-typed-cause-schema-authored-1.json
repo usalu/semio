@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["owner", "sourceOrdinal", "cause", "projection", "upper"],
+        "additionalProperties": false,
+        "properties": {
+          "owner": { "enum": ["puzzle-2d-window", "puzzle-3d-window", "note-window", "puzzle-5d-window", "remodel-frames-config"] },
+          "sourceOrdinal": { "enum": [0, 1] },
+          "cause": { "enum": ["ValueError", "SemioError"] },
+          "projection": { "enum": ["from", "into_value_error"] },
+          "upper": { "const": false }
+        },
+        "anyOf": [
+          { "properties": { "cause": { "const": "ValueError" }, "projection": { "const": "from" } } },
+          { "properties": { "cause": { "const": "SemioError" }, "projection": { "const": "into_value_error" } } }
+        ]
+      }
+    }
+  }
+}

@@ -20,9 +20,12 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ReplaceShotCamera {
     fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &ShootingSnapshot) -> Result<Vec<ShootingMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace shot \"{}\" camera", self.shot_id), &format!("Kamera von Aufnahme \"{}\" ersetzen", self.shot_id))
     }

@@ -8,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🎛️BlockField
 /// 🔣️ One settable question field and its typed value (`None` clears an optional field) — on the wire `{field, value}`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(tag = "field", content = "value", rename_all = "camelCase")]
 pub enum BlockField {
     Label(String),
@@ -24,8 +24,8 @@ pub enum BlockField {
     Min(Option<f64>),
     Max(Option<f64>),
     Step(Option<f64>),
-    Default(Option<dsl::DslValue>),
-    Params(Option<dsl::DslValue>),
+    Default(Option<semio_framework_value::DslValue>),
+    Params(Option<semio_framework_value::DslValue>),
     Condition(Option<FormExpr>),
     Options(Option<Vec<FormQuestionOption>>),
     Fields(Option<Vec<FormVectorField>>),
@@ -140,7 +140,7 @@ impl BlockField {
 
 //#region 🎛️ChangeBlockField
 /// 🎚️ Sets `change`'s field of the question `block_id` (in whichever step holds it) to `change`'s value.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeBlockField {
@@ -155,9 +155,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeBlockField {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_change_block_field(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_change_block_field(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_change_block_field(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = self.change.labels();
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))

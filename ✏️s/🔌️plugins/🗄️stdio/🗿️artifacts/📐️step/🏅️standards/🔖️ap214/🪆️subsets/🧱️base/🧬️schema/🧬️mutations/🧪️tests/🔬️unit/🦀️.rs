@@ -68,7 +68,7 @@ async fn inverse_law_mutation_level_round_trips_every_variant() {
     for m in variants {
         let mut state = base.clone();
         apply_step_mutation(&mut state, &m);
-        let inverses = <StepMutation as Mutation<StepSnapshot>>::inverse(&m, &base);
+        let inverses = <StepMutation as Mutation<StepSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = state.clone();
         for inv in &inverses {
             apply_step_mutation(&mut restored, inv);
@@ -86,6 +86,7 @@ async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     let mutations = vec![
         StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["d1".into(), "d2".into()], implementation_level: "2;1".into() } }),
         StepMutation::SetFileName(set_file_name::SetFileName {
             file_name: StepFileName {
@@ -143,6 +144,7 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot();
     let one_per_variant = vec![
         StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription::default() }),
         StepMutation::SetFileName(set_file_name::SetFileName { file_name: StepFileName::default() }),
         StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: StepFileSchema::default() }),

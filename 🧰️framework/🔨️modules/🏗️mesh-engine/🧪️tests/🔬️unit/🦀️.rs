@@ -174,7 +174,7 @@ fn mesh_from_glb_rejects_bytes_without_valid_glb_container() {
 /// `pack::json`, not hardcoded twice.
 fn expected_single_triangle() -> (Vec<f32>, Vec<f32>, Vec<u32>) {
     let text = include_str!("../../🧫️fixtures/🧊️gltf-codec/✅️expected-single-triangle.json");
-    let value = json::parse(text).expect("expected fixture json parses");
+    let value = json::parse(text,json::JsonMemberPolicy::Reject).expect("expected fixture json parses");
     let floats = |key: &str| -> Vec<f32> { value.get(key).and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect() };
     let indices = value.get("indices").and_then(json::Value::as_array).unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
     (floats("positions"), floats("normals"), indices)

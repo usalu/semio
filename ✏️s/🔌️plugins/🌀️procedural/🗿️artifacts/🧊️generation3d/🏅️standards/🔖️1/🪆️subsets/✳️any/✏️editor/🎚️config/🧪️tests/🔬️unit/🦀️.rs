@@ -12,7 +12,7 @@ fn generation3d_config_default_matches_the_former_runtime_defaults() {
 
 fn config_round_trip(base: &Generation3dConfig, operation: &Generation3dConfigMutation) -> Generation3dConfig {
     let forward = operation.diff(base).into_parts().0;
-    let backwards = operation.inverse(base);
+    let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).into_parts().0;

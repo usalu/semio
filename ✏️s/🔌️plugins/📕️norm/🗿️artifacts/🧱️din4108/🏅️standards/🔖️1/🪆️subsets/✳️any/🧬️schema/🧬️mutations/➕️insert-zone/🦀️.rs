@@ -22,9 +22,12 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertZone {
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert zone", "Zone einfügen")
     }

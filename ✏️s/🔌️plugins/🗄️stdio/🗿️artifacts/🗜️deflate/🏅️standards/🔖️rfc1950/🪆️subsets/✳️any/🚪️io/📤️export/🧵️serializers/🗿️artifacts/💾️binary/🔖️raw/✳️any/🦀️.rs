@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🗜️ Zlib-inflate deflate stream into a BinarySnapshot payload.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &DeflateSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload).map_err(store::PackError::Schema)?;
+    let bytes = crate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&from.payload).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error)))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 

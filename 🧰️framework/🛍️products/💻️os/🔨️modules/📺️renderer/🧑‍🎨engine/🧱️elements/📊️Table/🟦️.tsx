@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button, ContextMenuController, Icon, Input, Table, Textarea, uiDataLabel, useLabel, useShellScopeOptional, type ContextMenuItem, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ComponentSceneHostProps } from "@semio-tech/framework";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
@@ -87,11 +87,13 @@ export function tableStepperClampedDelta(delta: number, cell: { readonly value: 
   return Math.min(cell.max, Math.max(cell.min, cell.value + delta)) - cell.value;
 }
 
-export type TableEditableTextState = Readonly<{ base: string; draft: string; dirty: boolean; conflicted: boolean }>;
+export type TableEditableTextState = Readonly<{ base: string; draft: string; dirty: boolean; conflicted: boolean; submitted: readonly string[] }>;
 
 /** 🔄️ Preserves a dirty cell draft and marks an external persisted change as a conflict. */
 export function reconcileTableEditableText(state: TableEditableTextState, value: string): TableEditableTextState {
-  if (!state.dirty || state.draft === value) return { base: value, draft: value, dirty: false, conflicted: false };
+  const accepted = state.submitted.lastIndexOf(value);
+  if (accepted >= 0) return { base: value, draft: state.dirty ? state.draft : value, dirty: state.dirty && state.draft !== value, conflicted: false, submitted: state.submitted.slice(accepted + 1) };
+  if (!state.dirty || state.draft === value) return { base: value, draft: value, dirty: false, conflicted: false, submitted: state.submitted };
   return { ...state, conflicted: value !== state.base };
 }
 
@@ -102,14 +104,17 @@ export function tableEditableTextAction(cell: Extract<TableCellRecord, { kind: "
 
 /** ✏️ One locally buffered table cell; Enter or blur commits, Shift+Enter inserts a newline, Escape cancels. */
 export function TableEditableTextCell({ cell, id, columnLabel, onAction }: { readonly cell: Extract<TableCellRecord, { kind: "editableText" }>; readonly id: string; readonly columnLabel: string | undefined; readonly onAction: (action: ActionDescriptor) => void }): React.ReactElement {
-  const [state, setState] = useState<TableEditableTextState>(() => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false }));
+  const [state, setState] = useState<TableEditableTextState>(() => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false, submitted: [] }));
+  const committed = useRef<string | undefined>(undefined);
   useEffect(() => setState((current) => reconcileTableEditableText(current, cell.value)), [cell.value]);
   const commit = (): void => {
-    if (!state.dirty || state.conflicted) return;
+    if (!state.dirty || state.conflicted || committed.current === state.draft) return;
+    committed.current = state.draft;
+    setState((current) => ({ ...current, submitted: [...current.submitted, state.draft] }));
     onAction(tableEditableTextAction(cell, state.draft));
   };
   const cancel = (): void => {
-    setState({ base: cell.value, draft: cell.value, dirty: false, conflicted: false });
+    setState((current) => ({ base: cell.value, draft: cell.value, dirty: false, conflicted: false, submitted: current.submitted }));
   };
   return (
     <Textarea
@@ -122,7 +127,11 @@ export function TableEditableTextCell({ cell, id, columnLabel, onAction }: { rea
       rows={1}
       value={state.draft}
       onBlur={commit}
-      onChange={(event) => setState((current) => ({ ...current, draft: event.target.value, dirty: event.target.value !== current.base }))}
+      onFocus={() => { committed.current = undefined; }}
+      onChange={(event) => {
+        committed.current = undefined;
+        setState((current) => ({ ...current, draft: event.target.value, dirty: event.target.value !== current.base }));
+      }}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
         event.stopPropagation();

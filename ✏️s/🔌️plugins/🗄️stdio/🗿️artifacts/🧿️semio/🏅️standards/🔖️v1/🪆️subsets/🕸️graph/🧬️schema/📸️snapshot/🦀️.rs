@@ -86,6 +86,8 @@ pub enum SemioGraphPortKind {
 pub struct SemioGraphPort {
     pub name: String,
     pub kind: SemioGraphPortKind,
+    pub category: String,
+    pub properties: Vec<SemioValueEntry>,
 }
 //#endregion 🔖️Port
 
@@ -103,6 +105,8 @@ pub struct SemioGraphNode {
     pub label: String,
     #[value(default)]
     pub position: SemioPoint2,
+    pub width: f64,
+    pub height: f64,
     #[value(default)]
     pub ports: Vec<SemioGraphPort>,
     #[value(default)]
@@ -124,6 +128,11 @@ pub struct SemioGraphEdge {
     pub kind: String,
     #[value(default)]
     pub label: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub source_port: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub target_port: Option<String>,
+    pub properties: Vec<SemioValueEntry>,
 }
 //#endregion 🔖️Edge
 
@@ -236,13 +245,13 @@ pub(crate) fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_port(p: &SemioGraphPort) -> String {
-    format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
+    format!("[{},{},{},{}]", enc_str(&p.name), enc_port_kind(p.kind), enc_str(&p.category), enc_list(&p.properties, enc_property))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
+    let [name, kind, category, properties] = parts.as_slice() else { return Err(format!("port: expected 4 fields, got {}", parts.len())) };
+    Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)?, category:dec_str(category)?, properties:dec_list(properties,dec_property)? })
 }
 
 /// 🍃️ A property list element is `enc_semio_value_entry(&p)`'s raw output (`hexkey:value`),
@@ -260,29 +269,32 @@ pub(crate) fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_node(n: &SemioGraphNode) -> String {
-    format!("[{},{},{},{},{},{}]", enc_node_id(&n.id), enc_str(&n.kind), enc_str(&n.label), enc_point2_fields(&n.position), enc_list(&n.ports, enc_port), enc_list(&n.properties, enc_property),)
+    format!("[{},{},{},{},{},{},{},{}]", enc_node_id(&n.id), enc_str(&n.kind), enc_str(&n.label), enc_point2_fields(&n.position), enc_str(&native::NativeF64(n.width).to_string()), enc_str(&native::NativeF64(n.height).to_string()), enc_list(&n.ports, enc_port), enc_list(&n.properties, enc_property))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_node(s: &str) -> Result<SemioGraphNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, kind, label, x, y, ports, properties] = parts.as_slice() else {
-        return Err(format!("node: expected 7 fields, got {}", parts.len()));
+    let [id, kind, label, x, y, width, height, ports, properties] = parts.as_slice() else {
+        return Err(format!("node: expected 9 fields, got {}", parts.len()));
     };
-    Ok(SemioGraphNode { id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?, position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? }, ports: dec_list(ports, dec_port)?, properties: dec_list(properties, dec_property)? })
+    Ok(SemioGraphNode { id: dec_node_id(id)?, kind: dec_str(kind)?, label: dec_str(label)?, position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? }, width:dec_f64_hex(width)?,height:dec_f64_hex(height)?, ports: dec_list(ports, dec_port)?, properties: dec_list(properties, dec_property)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_edge(e: &SemioGraphEdge) -> String {
-    format!("[{},{},{},{},{}]", enc_edge_id(&e.id), enc_node_id(&e.source), enc_node_id(&e.target), enc_str(&e.kind), enc_str(&e.label))
+    format!("[{},{},{},{},{},{},{},{}]", enc_edge_id(&e.id), enc_node_id(&e.source), enc_node_id(&e.target), enc_str(&e.kind), enc_str(&e.label), enc_optional(e.source_port.as_deref()), enc_optional(e.target_port.as_deref()), enc_list(&e.properties,enc_property))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_edge(s: &str) -> Result<SemioGraphEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, source, target, kind, label] = parts.as_slice() else {
-        return Err(format!("edge: expected 5 fields, got {}", parts.len()));
+    let [id, source, target, kind, label, source_port, target_port, properties] = parts.as_slice() else {
+        return Err(format!("edge: expected 8 fields, got {}", parts.len()));
     };
-    Ok(SemioGraphEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)? })
+    Ok(SemioGraphEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)?, source_port:dec_optional(source_port)?,target_port:dec_optional(target_port)?,properties:dec_list(properties,dec_property)? })
 }
+
+pub(crate) fn enc_optional(value:Option<&str>)->String{match value{Some(value)=>format!("[{}]",enc_str(value)),None=>"-".into()}}
+pub(crate) fn dec_optional(value:&str)->Result<Option<String>,String>{if value=="-"{Ok(None)}else{Ok(Some(dec_str(strip_brackets(value)?)?))}}
 
 /// 📄️ The real structured graph body: three lines — `schema=<hex>`, `nodes=[<node>,...]`,
 /// `edges=[<edge>,...]` — matching the grammar's `document = artifact-mark schema-line nodes-line
@@ -358,12 +370,18 @@ pub(crate) fn port_kind_from_tag(tag: u8) -> Result<SemioGraphPortKind, String> 
 pub(crate) fn write_port(out: &mut Vec<u8>, p: &SemioGraphPort) {
     write_str_lp(out, &p.name);
     out.push(port_kind_tag(p.kind));
+    write_str_lp(out,&p.category);
+    store::pack_rt::write_varint_u64(out,p.properties.len() as u64);
+    for property in &p.properties{write_property(out,property);}
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_port(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphPort, String> {
     let name = read_str_lp(reader)?;
     let kind = port_kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
-    Ok(SemioGraphPort { name, kind })
+    let category=read_str_lp(reader)?;
+    let count=reader.read_varint_u64().map_err(|error|error.to_string())?;
+    let mut properties=Vec::new();for _ in 0..count{properties.push(read_property(reader)?);}
+    Ok(SemioGraphPort { name, kind, category, properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -398,6 +416,8 @@ pub(crate) fn write_node(out: &mut Vec<u8>, n: &SemioGraphNode) {
     write_str_lp(out, &n.kind);
     write_str_lp(out, &n.label);
     write_point2(out, &n.position);
+    out.extend_from_slice(&n.width.to_le_bytes());
+    out.extend_from_slice(&n.height.to_le_bytes());
     store::pack_rt::write_varint_u64(out, n.ports.len() as u64);
     for p in &n.ports {
         write_port(out, p);
@@ -413,6 +433,8 @@ pub(crate) fn read_node(reader: &mut store::ByteReader<'_>) -> Result<SemioGraph
     let kind = read_str_lp(reader)?;
     let label = read_str_lp(reader)?;
     let position = read_point2(reader)?;
+    let width=reader.read_f64_le().map_err(|error|error.to_string())?;
+    let height=reader.read_f64_le().map_err(|error|error.to_string())?;
     let port_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut ports = Vec::with_capacity(port_count as usize);
     for _ in 0..port_count {
@@ -423,7 +445,7 @@ pub(crate) fn read_node(reader: &mut store::ByteReader<'_>) -> Result<SemioGraph
     for _ in 0..property_count {
         properties.push(read_property(reader)?);
     }
-    Ok(SemioGraphNode { id, kind, label, position, ports, properties })
+    Ok(SemioGraphNode { id, kind, label, position, width, height, ports, properties })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -433,6 +455,10 @@ pub(crate) fn write_edge(out: &mut Vec<u8>, e: &SemioGraphEdge) {
     write_str_lp(out, &e.target.value);
     write_str_lp(out, &e.kind);
     write_str_lp(out, &e.label);
+    write_optional(out,e.source_port.as_deref());
+    write_optional(out,e.target_port.as_deref());
+    store::pack_rt::write_varint_u64(out,e.properties.len() as u64);
+    for property in &e.properties{write_property(out,property);}
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<SemioGraphEdge, String> {
@@ -441,8 +467,14 @@ pub(crate) fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<SemioGraph
     let target = GraphNodeId::new(read_str_lp(reader)?);
     let kind = read_str_lp(reader)?;
     let label = read_str_lp(reader)?;
-    Ok(SemioGraphEdge { id, source, target, kind, label })
+    let source_port=read_optional(reader)?;
+    let target_port=read_optional(reader)?;
+    let count=reader.read_varint_u64().map_err(|error|error.to_string())?;
+    let mut properties=Vec::new();for _ in 0..count{properties.push(read_property(reader)?);}
+    Ok(SemioGraphEdge { id, source, target, kind, label, source_port,target_port,properties })
 }
+fn write_optional(out:&mut Vec<u8>,value:Option<&str>){match value{Some(value)=>{out.push(1);write_str_lp(out,value)},None=>out.push(0)}}
+fn read_optional(reader:&mut store::ByteReader<'_>)->Result<Option<String>,String>{match reader.read_u8().map_err(|error|error.to_string())?{0=>Ok(None),1=>Ok(Some(read_str_lp(reader)?)),_=>Err("invalid Semio optional text tag".into())}}
 
 /// 🎁 `format u8` + varint-length-prefixed `schema` UTF-8 — both genuinely, individually
 /// protocol-walkable — then `nodes`/`edges` (varint count + per-record fields) as the honest opaque
@@ -494,12 +526,12 @@ impl store::ArtifactDsl for SemioGraphSnapshot {
         STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_graph_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_graph_snapshot_body(body).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -516,44 +548,37 @@ impl store::ArtifactPack for SemioGraphSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_graph_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
-        decode_graph_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_graph_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+#[path="🔣️json/🦀️.rs"]
+mod declared_json;
+
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.graph` — the shape `🌳️mutate-semio-graph` compares under `ordered-json-v1`, derived from the
-/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
-/// away from the type it claims to project. Node and edge identity travels as a NEWTYPE (`{"value": "b"}`), not as a bare string, so a
-/// hand-written adapter projection has to reproduce that wrapper at every reference site or compare
-/// unequal for a reason that has nothing to do with the mutation under test.
-/// A thin `pack::to_json_string` wrapper (over `ToValue`/`FromValue`, first-party, per this
-/// ticket's serde→value conversion).
+/// 📤️ Projects the complete declared graph JSON with exact binary64 geometry words,
+/// literal endpoint components and all nine intrinsic property families.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_graph_snapshot_json(snapshot: &SemioGraphSnapshot) -> String {
-    pack::to_json_string(snapshot)
+pub fn encode_semio_graph_snapshot_json(snapshot: &SemioGraphSnapshot) -> Result<String, semio_framework_value::ValueError> {
+    declared_json::encode(snapshot)
 }
 
-/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_graph_snapshot_json`] — decodes the
-/// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`SemioGraphSnapshot`] values, so `🌳️mutate-semio-graph`'s adapter reads the
-/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `pack` from
-/// that adapter is impossible — the generated test host links only this crate — which is why the
-/// bridge belongs here rather than there.
+/// 📥️ Reads the closed declared graph JSON through the first-party Reject-member parser
+/// and checked role binding, preserving raw geometry words and typed refusal origins.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot, semio_framework_value::ValueError> {
+    declared_json::decode(text)
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -606,7 +631,8 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 kind: "source".into(),
                 label: "Source".into(),
                 position: SemioPoint2 { x: 0.0, y: 0.0 },
-                ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out }],
+                width: 0.0, height: 0.0,
+                ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out, category: String::new(), properties: Vec::new() }],
                 properties: vec![SemioValueEntry { key: "weight".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "1".into() } }],
             },
             SemioGraphNode {
@@ -614,11 +640,12 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 kind: "sink".into(),
                 label: "Sink".into(),
                 position: SemioPoint2 { x: 120.5, y: -30.25 },
-                ports: vec![SemioGraphPort { name: "in".into(), kind: SemioGraphPortKind::In }],
+                width: 0.0, height: 0.0,
+                ports: vec![SemioGraphPort { name: "in".into(), kind: SemioGraphPortKind::In, category: String::new(), properties: Vec::new() }],
                 properties: vec![SemioValueEntry { key: "label".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Str { value: "sink node".into() } }],
             },
         ],
-        edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into() }],
+        edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(), source_port: None, target_port: None, properties: Vec::new() }],
     }
 }
 //#endregion 🔖️Demo

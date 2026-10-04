@@ -1,20 +1,8 @@
 {
   "mutation": "patchSnapshot",
   "patch": {
-    "edits": [
-      {
-        "path": [
-          "tracks",
-          "0",
-          "samples",
-          "1",
-          "sync"
-        ],
-        "edit": {
-          "operation": "set",
-          "value": true
-        }
-      }
-    ]
+    "operation": "set",
+    "path": "/tracks/0/samples/1/sync",
+    "value": true
   }
 }

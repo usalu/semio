@@ -59,7 +59,7 @@ CREATE TABLE ifc_value (
   CHECK ((kind = 'string') = (string_value IS NOT NULL)),
   CHECK ((kind = 'enum') = (enum_value IS NOT NULL)),
   CHECK ((kind = 'reference') = (reference_instance_id IS NOT NULL)),
-  CHECK ((kind = 'reference') = (reference_entity_id IS NOT NULL)),
+  CHECK (kind = 'reference' OR reference_entity_id IS NULL),
   CHECK ((kind = 'typedValue') = (typed_name IS NOT NULL)),
   CHECK ((kind = 'real') = (real_bits IS NOT NULL)),
   CHECK ((kind = 'real') = (real_class IS NOT NULL)),

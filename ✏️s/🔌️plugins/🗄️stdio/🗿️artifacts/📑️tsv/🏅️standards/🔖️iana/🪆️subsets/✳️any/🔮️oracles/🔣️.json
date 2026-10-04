@@ -50,6 +50,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-trailing-newline",
         "set-line-ending",
         "insert-row",
@@ -169,6 +170,26 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tsv-iana-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "tsv-iana-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -18,7 +18,7 @@ async fn copy_invite_link_relays_share_link_with_default_ttl() {
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.share-link");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["ttlSecs"], 3600);
     assert_eq!(args_value["spaceId"], "sp-1");
 }
@@ -39,7 +39,7 @@ async fn explicit_ttl_is_respected() {
             _ => None,
         })
         .expect("args");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args);
     assert_eq!(args_value["ttlSecs"], 60);
     assert_eq!(args_value["role"], "author");
 }

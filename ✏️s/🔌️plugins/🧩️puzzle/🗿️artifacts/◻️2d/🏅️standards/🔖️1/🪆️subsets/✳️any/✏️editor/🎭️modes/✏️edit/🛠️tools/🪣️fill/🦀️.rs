@@ -30,7 +30,7 @@ pub const RUN_SETTINGS_CONFIG: [&str; 5] = ["/fillCount", "/nodeKindWeights", "/
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
 pub fn definition(label: LocalizedLabel) -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
 }
 
 /// ⏯️ The fill run declaration (`$defs.Puzzle2dFillRun`): a mutating run revalidated at finalize and resumed on a
@@ -49,6 +49,7 @@ pub fn run_definition() -> ToolRunDefinition {
         revalidate_job: Some(JobKindId::new(PUZZLE2D_FILL_REVALIDATE_JOB)),
         settings: ToolRunSettingsReads { config: RUN_SETTINGS_CONFIG.iter().map(|pointer| pointer.to_string()).collect(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
+        member: None,
     }
 }
 

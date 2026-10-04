@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.app.stdio.tiff;
+
+message SelectIfdAction {
+  uint64 ifd_index = 1;
+}

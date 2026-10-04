@@ -1,16 +1,6 @@
-/** 🚪️ block5d ← txt — TypeScript mirror of the sibling `🦀️.rs` leaf's `from_dsl_text`.
- *
- * A real reader for this subset's own `.semio` DSL snapshot text, driven by the SAME field tables the
- * `🔣️json` export leaf declares — one schema declaration per subset, never two. Scope is exactly the
- * document shape the snapshot grammar emits: a `semio <envelope>.dsl v1` preamble, top-level
- * `key=value` scalars, `name { … }` blocks of `key=value` pairs, and `name [col:TYPE …] { … }`
- * tables whose rows are whitespace-separated `TEXT`/`REF`/`NUM`/`BOOL`/`ANG`/`CRD`/`DIR`/`LIST`/
- * `TABLE` values. It is NOT a general `dsl::parse` port and deliberately throws on anything outside
- * that shape rather than guessing.
- *
- * The matching PRINTER is not ported — `printDsl` has no TypeScript twin yet (see `📓️w3-io.md`).
- */
-
+import {out,wordFromDsl} from "../../../../../../../../../../../../◻️2d/🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import {block5dFromJsonValue} from "../../../../../../🔣️json/🟦️.ts";
+/** 🔤️ Declared Block5d Text reader with exact words and canonical typed admission. */
 import type { Block5dSnapshot } from "../../../../../../../🧬️schema/📸️snapshot/🟦️";
 import { type BlockJsonField, BLOCK5D_SNAPSHOT_FIELDS } from "../../../../../../📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️";
 
@@ -69,9 +59,7 @@ function tokenize(line: string): Token[] {
 // #endregion 🪙️Tokenizer
 
 // #region 🔢️Scalars
-function numbers(text: string): number[] {
-  return text.split(",").map((part) => Number(part));
-}
+function numbers(text:string):{bits:string}[]{return text.split(",").map(part=>out(wordFromDsl(part)))}
 
 /** 🕳️ The DSL's positional `None` marker: an unquoted `_` in a table cell (`TokenKind::Placeholder`).
  * Keyed optionals inside a block are omitted outright instead, never written as `_`. */
@@ -89,7 +77,7 @@ function scalar(token: Token, field: BlockJsonField): unknown {
       return token.text === "true";
     case "float":
     case "optionalFloat":
-      return Number(token.text.endsWith("rad") ? token.text.slice(0, -3) : token.text);
+      return out(wordFromDsl(token.text.endsWith("rad") ? token.text.slice(0, -3) : token.text));
     case "floatTuple":
     case "optionalFloatTuple":
       return numbers(token.text.startsWith("@") || token.text.startsWith("^") ? token.text.slice(1) : token.text);
@@ -109,15 +97,6 @@ function readBlockBody(lines: string[], fields: readonly BlockJsonField[]): Reco
       if (!field) throw new Error(`block5d dsl: unknown member \`${name}\``);
       record[field.key] = scalar(tokenize(raw)[0] ?? { text: "", quoted: true }, field);
     }
-  }
-  for (const field of fields) {
-    if (field.key in record) continue;
-    if (field.kind === "text") record[field.key] = "";
-    else if (field.kind === "float") record[field.key] = 0;
-    else if (field.kind === "bool") record[field.key] = false;
-    else if (field.kind === "floatTuple") record[field.key] = [];
-    else if (field.kind === "textList") record[field.key] = [];
-    else if (field.kind === "table") record[field.key] = [];
   }
   return record;
 }
@@ -194,6 +173,6 @@ export function block5dFromDslText(text: string): Block5dSnapshot {
     else if (field.kind === "record") record[field.key] = readBlockBody([], field.fields);
     else if (field.kind === "text") record[field.key] = "";
   }
-  return record as unknown as Block5dSnapshot;
+  return block5dFromJsonValue(record);
 }
 // #endregion 📥️Reader

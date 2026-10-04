@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "changeSiteLongitude",
+  "newLongitudeDeg": 200.0
+}

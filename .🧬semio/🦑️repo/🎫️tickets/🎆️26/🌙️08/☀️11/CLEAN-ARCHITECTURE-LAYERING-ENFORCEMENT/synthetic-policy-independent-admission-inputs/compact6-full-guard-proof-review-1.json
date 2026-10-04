@@ -1,0 +1,607 @@
+{
+  "at": "2026-10-03T13:15:57.333Z",
+  "sourceReadyHash": "e747f814bdea2cdcf7c4f6e8f1fd3cffa2d727e24dc594a9df1ef3bc1592fa0c",
+  "sourceReadyProofHashExact": true,
+  "mutationCount": 18,
+  "contextCount": 22,
+  "checks": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧫️fixtures/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️rust-source-direction/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "currentExact": true,
+      "beforeHashExact": true,
+      "authoredHashExact": true,
+      "inverseExact": true,
+      "forwardExact": true,
+      "inversePatchExact": true
+    }
+  ],
+  "contextChecks": [
+    {
+      "path": "📜️script.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "📋️project.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/📜️script.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/📋️project.json",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
+      "currentExact": true,
+      "shaExact": true,
+      "inverseExact": true
+    }
+  ],
+  "original80Exact": true,
+  "parseDiagnostics": 0,
+  "testRoster": [
+    "schema defines unique neutral dependency cases and exact expected edges",
+    "declared semantic roles satisfy the portable schema and package contributions",
+    "strict taxonomy direction covers paths, package aliases, subpaths, tests and scripts",
+    "dependency-cruiser independently parses and resolves every neutral fixture verdict",
+    "resolver graph validation rejects omissions, corrupt totals and contradictory verdicts",
+    "dependency-cruiser unresolved local terminals fail and authored aliases retain ownership",
+    "independent source inventory and dependency-cruiser reject self-consistent root and target omissions",
+    "portable removability cases agree with actual boundary policy loading",
+    "authored owner exports agree with independent package resolution",
+    "authored schema type declarations accept the portable wire values",
+    "private owner infrastructure exposes truthful registered commands",
+    "synthetic owner policy accepts deletion and rejects malformed present declarations",
+    "policy construction rejects ambiguous names and divergent owner declarations"
+  ],
+  "hostedRosterExact": true,
+  "hostedAll13": true,
+  "strict0": true,
+  "constructorCases": [
+    {
+      "id": "one-owner",
+      "accepted": true,
+      "expected": true,
+      "exact": true,
+      "error": null
+    },
+    {
+      "id": "identical-owner-repeated",
+      "accepted": true,
+      "expected": true,
+      "exact": true,
+      "error": null
+    },
+    {
+      "id": "distinct-owner-same-name",
+      "accepted": false,
+      "expected": false,
+      "exact": true,
+      "error": "Error: Dependency policy package name has distinct owners: @semio-test/one (🧰️framework/🔨️modules/🧪️one, 🧰️framework/🔨️modules/🧪️two)"
+    },
+    {
+      "id": "same-owner-divergent-name",
+      "accepted": false,
+      "expected": false,
+      "exact": true,
+      "error": "Error: Dependency policy owner has conflicting package authority: 🧰️framework/🔨️modules/🧪️one"
+    },
+    {
+      "id": "same-owner-divergent-exports",
+      "accepted": false,
+      "expected": false,
+      "exact": true,
+      "error": "Error: Dependency policy owner has conflicting package authority: 🧰️framework/🔨️modules/🧪️one"
+    },
+    {
+      "id": "same-owner-divergent-role",
+      "accepted": false,
+      "expected": false,
+      "exact": true,
+      "error": "Error: Dependency policy owner has conflicting package authority: 🧰️framework/🔨️modules/🧪️one"
+    },
+    {
+      "id": "same-owner-reordered-properties",
+      "accepted": true,
+      "expected": true,
+      "exact": true,
+      "error": null
+    }
+  ],
+  "gui": {
+    "errors": 0,
+    "beforeCount": 1181,
+    "authoredCount": 1183,
+    "unchangedRaw": true,
+    "header": true,
+    "footer": true,
+    "top": true,
+    "renameExact": true,
+    "additionsExact": true,
+    "additions": [
+      {
+        "name": "⚖️gate📋️forms📋️forms🟦️build",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/forms-js:build --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_LEVEL": "quick",
+          "NX_DAEMON": "false",
+          "NX_ISOLATE_PLUGINS": "false"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 408.6221
+        }
+      },
+      {
+        "name": "⚖️gate📋️forms📋️forms🟦️check",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/forms-js:check --skip-nx-cache",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_TEST_LEVEL": "quick",
+          "NX_DAEMON": "false",
+          "NX_ISOLATE_PLUGINS": "false"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 408.6222
+        }
+      }
+    ],
+    "foreignCount": 5
+  },
+  "priorReferenceExample": {
+    "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/framework-import-enforcement/synthetic-neutral-enforcement-source-ready-3.json",
+    "sha256": "2d40f85c76428a6fbc97c5b539218dd458e6d1677ed27344b101ec4399ab8930",
+    "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json"
+  },
+  "production4": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "hash": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "hash": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "hash": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "hash": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7"
+    }
+  ],
+  "owner6": [
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "hash": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "hash": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "hash": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "hash": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "hash": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "hash": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c"
+    }
+  ],
+  "sourceWrites": 0,
+  "native": false,
+  "original80ComparedAuthority": "Ready3 authored fixture (not unmodified workspace predecessor)",
+  "production4Owner6ExactAgainstReady3": true,
+  "streamedHistoryChecks": [
+    {
+      "file": "synthetic-neutral-enforcement-source-ready-3.json",
+      "hashExact": true,
+      "bytesExact": true
+    },
+    {
+      "file": "synthetic-neutral-enforcement-source-ready-4.json",
+      "hashExact": true,
+      "bytesExact": true
+    },
+    {
+      "file": "synthetic-neutral-enforcement-source-ready-5.json",
+      "hashExact": true,
+      "bytesExact": true
+    },
+    {
+      "file": "synthetic-neutral-enforcement-successor-proof-4.json",
+      "hashExact": true,
+      "bytesExact": true
+    },
+    {
+      "file": "synthetic-neutral-enforcement-successor-proof-5.json",
+      "hashExact": true,
+      "bytesExact": true
+    }
+  ],
+  "streamedProof5ObservationsExact": true,
+  "authoredHashesLinkedToProof5SourceReady": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json",
+      "proof5AuthoredHash": "e04d6791b8d1c75ae3056cc337c737dcfd233816fbe5cb6ecb6faf8749862349",
+      "currentAuthoredHash": "e04d6791b8d1c75ae3056cc337c737dcfd233816fbe5cb6ecb6faf8749862349",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️dependency-direction/🔣️.json",
+      "proof5AuthoredHash": "0280f1eeb9a87dd07d62e54ec495db96a5955cf35b56fceb437ecad44e4bee34",
+      "currentAuthoredHash": "0280f1eeb9a87dd07d62e54ec495db96a5955cf35b56fceb437ecad44e4bee34",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+      "proof5AuthoredHash": "794e0c0f4d354179d608458d804d820fa48ebd5b66d4b81a8789d3bd13d0e7f9",
+      "currentAuthoredHash": "794e0c0f4d354179d608458d804d820fa48ebd5b66d4b81a8789d3bd13d0e7f9",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "proof5AuthoredHash": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9",
+      "currentAuthoredHash": "ea21b4ce4dbadf149a4f06fcc482811b1e8f39b8259e89ea0196272930cc23d9",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "proof5AuthoredHash": "ff692c5c69bac67424952d616d8a4fffe309a288c4881fd33e7d63d2ad7e0ea3",
+      "currentAuthoredHash": "ff692c5c69bac67424952d616d8a4fffe309a288c4881fd33e7d63d2ad7e0ea3",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "proof5AuthoredHash": "10f053eb21ca1fbd6f1bcc7c196a91f466ae0529f2e00cf134508bce239b2f64",
+      "currentAuthoredHash": "10f053eb21ca1fbd6f1bcc7c196a91f466ae0529f2e00cf134508bce239b2f64",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧫️fixtures/🔣️.json",
+      "proof5AuthoredHash": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02",
+      "currentAuthoredHash": "eaa295680713f510d66568c5e676768563a45bac88b50f906f36402e02776b02",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️rust-source-direction/🔣️.json",
+      "proof5AuthoredHash": "71d0f3fdf23097edc510eca8adff559777ce27c000df932bb274c731a78b3420",
+      "currentAuthoredHash": "71d0f3fdf23097edc510eca8adff559777ce27c000df932bb274c731a78b3420",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🟦️.ts",
+      "proof5AuthoredHash": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01",
+      "currentAuthoredHash": "b73fa61bc54397fa9a63a39f8f094839219c34ae9898153bac773d993a039f01",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+      "proof5AuthoredHash": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4",
+      "currentAuthoredHash": "3d2f0e75843009f523b69d1554e684dc39c4644f42f970a6423fac115ef9cdf4",
+      "exact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs",
+      "proof5AuthoredHash": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7",
+      "currentAuthoredHash": "24ac800fbf5f78ba7f1cbb5f4bb2a8bdbf2479f635af6c18d2f11533708de7b7",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧫️fixtures/📦️wire-types/🔣️.json",
+      "proof5AuthoredHash": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32",
+      "currentAuthoredHash": "fb16905b11ad5553623c90e150eb9214792e828a65fd70ca6438842f9b0dbc32",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+      "proof5AuthoredHash": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e",
+      "currentAuthoredHash": "4bed240397b4cdec53c4cb5464152a521d017ec2b0fb04d2b8489a3e5f08902e",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts",
+      "proof5AuthoredHash": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156",
+      "currentAuthoredHash": "338e4b57a33f3e65465da0f397473adfbb08600f26d7eb9d35373c5de895f156",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts",
+      "proof5AuthoredHash": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0",
+      "currentAuthoredHash": "7ae7c80bced79ac6be7d0f6f0fd2091446a365e4712e8dca9ad98811d024e0d0",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "proof5AuthoredHash": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7",
+      "currentAuthoredHash": "46e8a41e76f7af15075ec66b5cd1ca9013911fbd68239bef7b4dede8eba4eed7",
+      "exact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts",
+      "proof5AuthoredHash": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c",
+      "currentAuthoredHash": "fa3159e1044ce1a42364fa778082a347eb3155b3a0870c82ee0b18c9ada55d5c",
+      "exact": true
+    }
+  ]
+}

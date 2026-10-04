@@ -1,0 +1,41 @@
+{
+  "assets": {
+    "pixels-paint-1b0505c1ce4347af": {
+      "childId": "raster-asset-1b0505c1ce4347af",
+      "target": {
+        "artifactId": "pixels-paint-1b0505c1ce4347af-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  },
+  "id": "transform",
+  "layers": [
+    {
+      "blendMode": "normal",
+      "height": 8,
+      "id": "paint",
+      "imageKey": "pixels-paint-1b0505c1ce4347af",
+      "kind": "pixel",
+      "locked": false,
+      "mask": null,
+      "name": "Paint",
+      "opacity": 1.0,
+      "transform": {
+        "a": 1.0,
+        "b": 0.0,
+        "c": 0.0,
+        "d": 1.0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      "visible": true,
+      "width": 12
+    }
+  ],
+  "schema": "s.raster.raster",
+  "title": "Transform"
+}

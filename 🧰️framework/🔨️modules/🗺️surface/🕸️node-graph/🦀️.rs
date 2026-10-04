@@ -26,12 +26,13 @@ use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostS
 use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod, Viewport2d};
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-use dsl::{FromValue, ToValue};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region 🔖️ScenePayload
-#[derive(Clone, Debug, Default, Deserialize, FromValue)]
+#[derive(Clone, Debug, Default, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GraphPortRecord {
@@ -56,7 +57,7 @@ pub struct GraphPortRecord {
     value_type: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, FromValue)]
+#[derive(Clone, Debug, Default, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GraphNodeRecord {
@@ -96,7 +97,7 @@ pub struct GraphNodeRecord {
     outputs: Option<Vec<GraphPortRecord>>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, FromValue)]
+#[derive(Clone, Debug, Default, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GraphEdgeRecord {
@@ -299,7 +300,7 @@ impl NodeGraphScenePayload {
 /// 🎯️ Raw geometric hit-test result of one completed pick/marquee gesture — see
 /// [`GraphHost::take_selection_gather`]. No merge/mode algebra lives on this type; the caller pairs it
 /// with the active modifier→merge policy and dispatches ONE `interactionSelect`.
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SelectionGather {
@@ -617,7 +618,9 @@ impl GraphHost {
         let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         let baseline = std::mem::take(&mut self.press_positions);
-        self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline);
+        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+            self.dag.restore_node_positions(&baseline);
+        }
         let target_ids = self.dag.selected_node_ids();
         self.pending_gather = if target_ids.is_empty() { None } else { Some(SelectionGather { target_ids, method }) };
     }
@@ -625,7 +628,9 @@ impl GraphHost {
     /// 🔗️ Drains what the last gesture did to the graph as the `nodeGraphEdit` arguments the renderer dispatches
     /// (`dag::dag_graph_edit_rows_json`, design §13.3) — never the whole fixture.
     pub fn take_graph_edits_json(&mut self) -> String {
-        dag::dag_graph_edit_rows_json(self.dag.take_graph_edits())
+        let edits = self.dag.take_graph_edits();
+        let refusal = self.dag.take_journal_refusal();
+        dag::dag_graph_edit_rows_json(&edits, refusal)
     }
 
     pub fn pointer_cancel_screen(&mut self) {
@@ -666,12 +671,15 @@ impl GraphHost {
     }
 
     /// 📐️ Aligns or distributes the selection and journals what it moved as node-graph gesture records (design §13.3),
-    /// which [`Self::take_graph_edits_json`] drains.
+    /// which [`Self::take_graph_edits_json`] drains; an align whose records outgrow one dispatch is refused whole and every
+    /// node stays where it was.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let baseline = self.dag.node_positions();
         self.dag.align_selection(mode)?;
-        self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline);
+        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+            self.dag.restore_node_positions(&baseline);
+        }
         Ok(())
     }
 
@@ -962,7 +970,7 @@ mod wasm_session {
                 self.state.borrow_mut().host.dag.set_ghost_node(None);
                 return;
             }
-            if let Ok(node) = dsl::os_pack::json::from_json_str::<DagNodeSpec>(json) {
+            if let Ok(node) = semio_framework_pack_json::from_json_str::<DagNodeSpec>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                 self.state.borrow_mut().host.dag.set_ghost_node(Some(node));
             }
         }
@@ -1054,7 +1062,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { dsl::os_pack::json::from_json_str(options_json).unwrap_or_default() };
+            let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default() };
             self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }

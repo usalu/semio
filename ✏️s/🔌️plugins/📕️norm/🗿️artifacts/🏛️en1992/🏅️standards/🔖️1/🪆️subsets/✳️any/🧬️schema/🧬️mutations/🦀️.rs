@@ -148,12 +148,15 @@ pub fn apply_en1992_mutation(base: &En1992Snapshot, mutation: &En1992Mutation) -
     let applied = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
-pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Vec<En1992Mutation> {
-    <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(mutation, base)
+pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 /// 📥️ Decodes one committed mutation JSON document into [`En1992Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1992_mutation_json(text: &str) -> Result<En1992Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

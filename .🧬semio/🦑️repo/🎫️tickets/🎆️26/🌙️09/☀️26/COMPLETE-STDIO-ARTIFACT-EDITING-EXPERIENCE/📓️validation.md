@@ -1,5 +1,11 @@
 # Editing Validation
 
+## October 4 — Natural Intrinsic Editor Route and BMP/SVG Contract
+
+- `bun nx run @semio-tech/framework-renderer-react:test --skip-nx-cache -- long --run '../../../../🧪️tests/🔬️engine-contract/🟦️.ts' --silent=false --reporter=verbose -t 'mounts exact natural codecs and opens bytes into an isolated owner'` passed **1/1** with 699 outside the selection at the 22-row matrix checkpoint after the PDF staged row and registered-editor byte witness were added. Receipt: `🗑️generated/natural-file-intrinsic-editor-route-contract-1.log`. Six Media-lane rows were added afterward, so the current 28-row fixture still requires a fresh run.
+- Production `ArtifactEditor::import_media` now consumes the same exact-schema intrinsic byte owner that `natural_file_input_media` emits. The registered `VcsArtifactApp<EditorApp<SurfaceEditorFixture>>::consume_media` regression would fail against the removed base64-only branch and is queued for native execution after the coordinated dependency lock.
+- BMP v3 and SVG 1.1 base/basic/tiny natural codec mounts, independent image/quick-XML oracle witnesses, subset refusal laws, and fresh whole-document events are source-mounted. Their native execution remains queued; no runtime pass is claimed here.
+
 ## Baseline
 
 - `bun nx run @semio-tech/stdio-artifact-contract-rs:test -- --lib`: passed on 2026-09-26. Native runner executed 2 tests, both passed. This establishes the existing shared contract baseline only; it does not validate the new editing implementation.
@@ -482,3 +488,365 @@ Root authored the DOCX nested-table projection regression before repairing the p
 The document-window neutral fixture already included an artifact-owned static address, but its TypeScript test ignored that field and the TypeScript helper discarded it. Root first expanded the existing fixture law to assert the complete arguments map and independent nested ownership. `bun x --no-install nx run @semio-tech/plugin-window-kits:test -- --run -t renderDocument` failed as expected with one missing-arguments assertion (run1). After the helper accepted optional explicit arguments and returned a deep-owned copy, the same registered task passed 2 tests with 10 unrelated tests skipped in 1.2 seconds (run2). Ordinal text targets receive page/item/text-revision arguments; canonical targets preserve only the artifact-provided map. Rust already consumes the same fixture. Package typecheck is currently running separately and has no result yet.
 
 The registered window-kits package typecheck finished in 20.9 seconds with three current media-integration errors: two missing Component-union narrowings in media fixture tests and a number-only sequence assumption in the renderer backbone envelope test after media sequences became exact bigint. Both owning execution lanes received exact diagnostics. No document-draft TypeScript diagnostic was reported, but the package check is not green yet.
+
+## Resumed Current-Checkout Validation — 3 October 2026
+
+The preceding goal turn made source progress (DOCX scoped namespace projection, exact WordprocessingML attributes, explicit false formatting, neutral fixtures/native oracle laws). On resumption the process inventory showed no live Cargo/rustc from the prior attempts. Ticket metadata remains open; root read the current `repo://goals` MCP resource and retained Running Stdio. No goal lifecycle or Git mutation was performed.
+
+Historical outcomes were read from actual logs: XML7 ran111 tests,105 passed,6 failed,1 skipped; DOCX7 exceeded its two-hour build budget before assertions; retained-clone9 failed compilation on a misplaced fixture include and a shadowed grant helper; window-kits typecheck3 passed14.9s; media TypeScript3 ran3 tests,2 passed,1 failed because a schema file URL resolved relative to the wrong module. Media execution owns the latter repair.
+
+The current Store layout has changed substantially: the old retained-clone production directory is absent. The XML mutation roster now expects8 and the demo DSL has its epilog slot, so historical errors cannot be blindly replayed as current defects. Terra audits the current Store/catalog architecture while Sol executors finish canonical XLSX and genuine incremental media export.
+
+Root launched fresh registered Bun/Nx DOCX native8 and XML native8 with separate ticket-local uplift targets and shared compilation intermediates. Logs: `🗑️generated/docx-native-current-8.log`, `🗑️generated/xml-native-current-8.log`. No current native success or browser acceptance is claimed yet.
+
+DOCX8 failed compilation on the current typed ValueError retirement contract and a removed Store JSON fixture facade. XML8 failed current compilation on two TextError constructors lacking their new typed reason and one SQLite helper returning String. Root updated those exact integration seams to first-party typed APIs. DOCX9 then compiled its test binary successfully in1m02, but nextest metadata encountered the concurrently added MP3 oracle dependency with an incorrect relative path. The media owner repaired the dependency path; DOCX10 is the fresh retry. XML9 remains running. This distinguishes successful compilation from tests actually executing; no DOCX runtime pass is claimed.
+
+## October 3 Fresh Native Results
+
+XML current 10 completed 143 tests: 142 passed and one failed, the valid-subset history-edit acceptance law. The only wire witness edits the schema identity; its derived path edit cannot replay. A self-contained, language-neutral `setText` case with a declared document type is being added so the same acceptance law exercises meaningful document text. DOCX current 11 stopped at compilation because the new QuickXML CDATA oracle used an obsolete method; it now uses `xml10_content`, matching the installed 0.42 API. DOCX current 12 is running; no new DOCX runtime pass is claimed.
+
+DOCX current 12 reached all 142 native tests: 140 passed; the new mixed CDATA/text fixture failed before implementation (`AB` versus `A<文字>BC`), and the demo mutation list placed patch-snapshot before the enum/catalog order. The CDATA projection and replacement now handle both Text and CData, preserving nontext siblings and exact inverse. The demo list order is repaired. Namespace/formatting/style preservation, table primary projection and canonical pack laws passed in that run. Current 13 stopped during the concurrent Store cursor Option transition, before any assertions; that lane declared its source coherent afterward. Current 14 is the fresh rerun.
+
+XML current 11 repeated the history law failure because the new fixture initially used a payload wrapper while XmlValidMutation uses flat fields. That fixture now matches the authored leaf schema. Current 12 adds an independent QuickXML read of edited Unicode text and preserved DOCTYPE plus exact inverse. It is running, so no success is claimed yet.
+
+CSV current preview 8 started through the registered `@semio-tech/framework-os-dev:dev-stdio-csv-react-dev` target with port 6212. Its build/activation dependencies are preserved. Browser connection is ready, but no current page has been opened or accepted.
+
+## October 3 DOCX Full Native Pass
+
+DOCX current 14 completed successfully: **142/142 native library tests passed, none skipped**, through the registered Bun/Nx target with component-app-assembly, no fail-fast and no Nx cache. Nextest 4.648 seconds, total build/run 6m57s. This includes the mixed Text/CDATA fail-first regression after its repair, namespace-aware direct formatting/style preservation, canonical XML save/pack, table run projection and editor integration laws. This establishes the tested native behavior; it does not establish a published browser experience or scalable paged DOCX ownership.
+
+XML current 12 ran144 tests:142 passed, two failed. History edit acceptance now passes using the flat typed setText fixture. The independent XML reader test accidentally read internal DSL output; fixed to read actual export_utf8 bytes. A SQLite row-limit assertion expected OwnershipLimit although current shared check_rows deliberately returns WorkLimit; updated the expectation after verifying the framework implementation. XML current13 is running.
+
+CSV preview8 failed compilation on the typed TextError constructor migration in TXT. The identical five snapshot-edit decoder call sites in TXT/CSV/TSV/JSON/I-JSON now explicitly report InvalidValue, matching XML’s already compiled repair. A new activation run is required before any browser acceptance.
+
+Office public-facet current19 failed on a number versus bigint prolog-position fixture; current20 progressed through that repair and failed on native JSON.stringify of bigint PPTX values. The test projection now serializes exact integers as canonical decimal strings, and the remaining PPTX XML-boundary fixture positions use those strings. Current21 is running.
+
+## October 3 Contract Integration Follow-Up
+
+Office TypeScript runs 22 and 23 reached independently validated PPTX XML boundary laws: stale diff/replacement `prologPosition` schema required JSON integers while the current public contract uses exact decimal strings; then the canonical XML attribute schema accepted misplaced fields. Updated the two PPTX scalar schemas and canonical XML `XmlAttr.additionalProperties` to match existing strict parsers. Neither run passed. CSV preview 9 and family component 20 failed BCF controlled native/SQLite methods still returning text errors after the shared typed-refusal API change; BCF integration now retains typed refusal kinds, awaiting compilation.
+
+## October 3 Office Contract and XML Results
+
+The registered `@semio-tech/stdio-js:test` run 25 passed (23.7s, 36 dependency tasks, package reports 36 artifact contracts). It includes AJV/public TypeScript checks for DOCX/XLSX/PPTX and canonical XML exact-integer boundaries. Run 24 exposed the canonical XML TypeScript attribute parser silently discarding unexpected fields; fixed explicit rejection in step with the JSON schema.
+
+XML native run 14 executed 144 tests: 142 passed, 2 failed. The new independent XML history oracle accidentally included serializer prolog whitespace; narrowed the oracle to element content. The 2,048-empty-document cancellation law exposed a real missing measurement/projection checkpoint when documents contain no nodes; added periodic document measurement and per-document projection checkpoints. Run 15 is pending.
+
+DOCX empty-paragraph schema/three neutral fixtures and an independent namespace-aware QuickXML + archive save/reopen + exact inverse law were authored before the new projection/preparation code. Native validation awaits the formatting-control integration. The new projection distinguishes existing runs from empty paragraphs and creates the first run without replacing paragraph properties/comments/foreign markup. It is not evidence for fully scalable projection or complete rich text editing.
+
+## October 3 XML Native Validation
+
+Registered XML native run 15 passed all 144 tests, zero skipped (Nextest 5.263s; Nx 1m49s). The independent Unicode/DOCTYPE history law and the 2,048-empty-document cancellation law both passed after the targeted fixes. This validates the executed native laws, not browser behavior. DOCX native run 15 now includes empty-paragraph/edit/save/undo and the new run-format controls and is pending.
+
+## October 3 Shared Preview Integration
+
+CSV preview 11 stopped because current Hub Cargo manifest changes required a lock refresh. Ran registered `workspace:deps-cargo-lock` with offline resolution successfully (19.6s), preserving external pinned versions (`Locking 0 packages`). Preview 12 then reached a private mesh-import cursor reference in spatial-session: the public BREP engine method used a type hidden behind private `mesh_io`. Explicitly reexported the cursor/result from the engine and updated the session/Flow callers to that public facade, preserving the implementation. Next preview build pending.
+
+Native Store ownership runtime validation also hit two stray commas between method items in `expansion_owner!` test invocations; removed only those commas so the existing trait implementations can compile. This test-only repair does not change runtime behavior.
+
+Office TypeScript run 26 passed (42.7s), including AJV validation of the new DOCX empty-paragraph fixture. DOCX15 reached compile failures in the new toolbar tests/imports; Office worker corrected them and root started native16, pending.
+
+## October 3 Store Driver Retirement
+
+The dedicated `interrupted_retained_clone_publication_handoffs_to_store_maintenance` runtime law passed: 1 passed, 0 failed, 1,255 filtered; Nx success. Evidence retained separately as `store-driver-handoff-native-green.log`, preserving the earlier failed log. The fixture covers losing the local publication handle after transfer into Store maintenance and releasing its probe only after a grant-bounded terminal drain. This is the tested publication path; it does not establish every artifact owner has been migrated to paged storage.
+
+Evidence qualification: the separately captured Store green log is an Nx cache replay (`existing outputs match the cache, left as is`). Root requested one `--skip-nx-cache` invocation of that same single runtime law to establish fresh execution against current source before treating it as current validation.
+
+## October 3: DOCX Native 16, Fresh Store Handoff, Preview 13
+
+- DOCX native 16 ran 154 tests: 141 passed, 13 failed. Failures were action classification, empty formatting no-op behavior, toggle accessibility labels, borrowed SQLite native preflight, and a foreign-node XML preservation assertion. The latter assumed serializer whitespace; it now compares expanded namespace/local-name and attributes through independent QuickXML parsing. All repairs require a fresh run.
+- Store retained-clone publication handoff ran fresh with `--skip-nx-cache`: 1 passed, 1,255 filtered. Evidence: `🗑️generated/store-driver-handoff-native-fresh.log`. Earlier cached output is not fresh validation.
+- CSV preview 13 failed before server startup on 11 PPTX typed-error integration compiler errors. Root updated PPTX SQLite/native/subset and DSL/Pack boundaries to retain typed refusals. No browser success is claimed.
+
+- Office aggregate TypeScript/Ajv 27 completed successfully after the empty-paragraph preservation fixture update. PPTX preflight law already exists; root connected its existing borrowed backing module to actual snapshot preflight/encode/decode. Native proof is pending.
+
+## October 3: Coherent Retry and Presentation Export Laws
+
+- CSV preview 14 failed before startup with 235 compiler diagnostics: GIF 155 and JPG 80, all in the current typed-error integration boundary. Media execution owns these repairs.
+- PPTX native 5 failed before assertions with 13 retained OPC/PagedList compilation diagnostics. The bounded-ownership worker has repaired those source issues; a fresh native run is still required.
+- DOCX native 17 is running the full component-assembly suite, including direct formatting tri-state semantics, empty-paragraph authoring and borrowed encoding preflight. No result yet.
+- Root added schema-first literal XML export cases for VML apostrophes/entities/Unicode, custom part names and extended properties, and independent QuickXML/ZIP regression tests. PPTX existing fixture-specific serializer rewriting and path sorting remain unchanged for the red test run. Test dependencies are development-only; registered Cargo lock synchronization is running.
+
+- DOCX native 17 failed before assertions on three QuickXML0.42 string/byte API mismatches in the newly added inherited-bold independent oracle. Root fixed the test API usage and started native18; no native17 success claim.
+- Registered Cargo lock synchronization2 passed after adding PPTX development-only QuickXML and ZIP oracle dependencies. PPTX literal-export red1 is running against the original exporter.
+- EPW snapshot SQLite methods and relational helpers now preserve typed ValueError refusals. Root started the full native EPW1 suite; other remaining typed media/XLSX boundaries are assigned to their owning workers.
+
+- Office aggregate TypeScript/Ajv28 passed fresh (1m06s, 36 artifact dependencies), including the new literal XML export fixture schema. This does not prove native save behavior.
+- Root scoped diff whitespace checks passed for PPTX native/SQLite/export, EPW SQLite, and the DOCX empty-paragraph oracle.
+- Current native queue is waiting behind another chat’s healthy Flow BREP Cargo test. Its process was inspected read-only and left untouched; root is holding further broad native launches.
+
+## October 3: DOCX18 Runtime and Native Fixture API Repairs
+
+- DOCX18 actually executed 156 tests: **154 passed, 2 failed**, 0 skipped. Root empty-paragraph preservation/save/reopen/undo law passed. Remaining failures: inherited-format oracle built no styles part (Office source repair now authored); native preflight row-budget refusal classification (bounded ownership worker inspecting semantics).
+- PPTX literal-export red1 failed before assertions on 14 test compilation errors: removed JSON aliases and one incorrect decoder import. Root repaired these sites, using explicit JSON member rejection, and started red2 against the unchanged exporter.
+- EPW native1 failed before assertions on 16 compilation errors: removed JSON aliases, typed refusal assertion, and TextError callback boundaries. Root repaired these sites; native2 is not yet run. BCF’s equivalent removed test JSON aliases were updated proactively and remain unverified.
+
+- PPTX literal-export red2 executed both regressions: **0 passed, 2 failed**, 146 filtered. Independent QuickXML rejected the saved apostrophe-containing VML style; independent ZIP reader observed sample-specific part sorting instead of authored sequence. Root removed filename-based XML rewriting and the hardcoded slide/image ordering, using the checked canonical OPC XML serializer and package part order. Green verification is next.
+
+## October 3: Presentation Regression Green and Audit Rotation
+
+- PPTX literal XML export green1 passed **2/2** freshly, 146 filtered, after red2 proved both failures. Three neutral XML cases preserve apostrophes/entities/Unicode through independent ZIP and QuickXML readers and saved canonical XML roots; custom content members follow authored order. This removes the hardcoded VML quote rewriting and sample slide/image ordering.
+- Media registered checks for GIF, JPG, AVI, MP4 and WAV passed after typed-error integration. Root started CSV preview15; no browser proof yet.
+- Retained OPC native law compiled and ran **0/1 passed**, 81 filtered: retained copy failed to terminate within 99,999 steps. The bounded implementation report explicitly records that actual DOCX Store ownership is not migrated. Terra now independently audits the nontermination and owner wiring, then XLSX grid/vacancy.
+- DOCX19 and EPW2 full native suites started after the two DOCX18 source repairs and EPW test API fixes. Their outcomes remain pending.
+
+- DOCX19 full native component-assembly suite passed **156/156**, 0 skipped (Nextest8.883s, Nx1m20s, cache skipped), including empty paragraph, tri-state direct formatting, inherited explicit-off independent save oracle, and borrowed preflight. Browser acceptance is still separate.
+- EPW2 ran58 tests: **56 passed, 2 failed**. Both failures used the logical SQLite value-byte ceiling for physical native encoding/decoding ownership. Source inspection confirms the current native record codecs use the independent cumulative `allocation_stage` allowance. The two native assertions now set `max_allocation_bytes:1`; the relational `max_value_bytes:0` refusal remains unchanged. Fresh EPW3 is running.
+
+- EPW3 full native suite passed **58/58**, 0 skipped, with physical native and logical relational budget tests using their separate limits. Nx26.6s and Nextest1.133s, cache skipped.
+- XLSX grid native1 failed before assertions on24 compile errors in newly connected backing projections and UI/tests. Office owns repair; no grid runtime success claim.
+- CSV preview15 failed before startup because the compiled spatial dependency lacked `PayloadRetirement::owned`. Read-only inspection shows the method is now present in the current shared source; root made no spatial change for this failure. Preview16 waits for coherent XLSX repair.
+- BCF native1 started to validate the prior root typed-error and strict JSON test-boundary repairs.
+
+- Media native logs inspected by root: GIF `gif-pack-json-test-2026-10-03-2.log` reports **124/124** passed, 0 skipped; JPG `jpg-pack-json-test-2026-10-03-2.log` reports **133/133** passed, 0 skipped. Earlier JPG unsuffixed log reports131/133 and is superseded by the second run. Media continues WAV/AVI/MP4 and the dedicated MP3 independent decoder oracle.
+
+- BCF native1 failed before assertions while the Office shared XML projection append API was in flight (`backing::append` unresolved). Retry waits for that owner’s coherent checkpoint.
+- Independent retained-OPC audit found a deterministic generic PagedList owner-placement stall under the existing64-byte grant and a separate scaffold retirement/copy budget liveness risk. Both are assigned to bounded execution with unchanged fixture grants and generic regression requirements. Source findings are not runtime successes.
+- Root started shared artifact contract native13 fresh to revalidate Details first paint, bounded repeated projection, typed structural operations and common action wiring against current source.
+
+- Shared artifact contract native13 passed fresh **89/89**, 0 skipped (Nextest1.434s, Nx2m16s, cache skipped). This includes Details first-paint/repeated-projection, bounded collections, schema capabilities, enum/localized controls and action laws. Fresh browser Redo and language-switch behavior remains unverified.
+
+- Current registered `@semio-tech/stdio-plugin:test` with `editor-catalog-contract` passed fresh in9s. Independent Ajv and TOML checks cover **88 editors across10 deployed packages**,36 formats,6 common editing operations, one launchable playground per editor. This is source/catalog proof; component links and browser reachability remain separate.
+- Office declared the shared XML/OPC append projection and XLSX native boundary coherent. Root started XLSX grid native2, BCF native2 and CSV preview16 from that checkpoint.
+
+## October 3: Integration Retries and Retained OPC Runtime
+
+- XLSX grid native2 and BCF native2 failed before artifact assertions on two private plugin `protocol::value::ValueError` inference signatures. Root changed only those references to the existing public `protocol::ValueError` facade. The concurrent Inference trait already returned `Result` by inspection, so the earlier mismatched-return diagnostic required no wrapper or erased refusal.
+- CSV preview16 failed on stale OPC relationship-owner imports and `.groups()` while the backing implementation was being repaired. Office confirmed the current backing uses conventional OpcPackage/BTreeMap and correct imports. Preview17 then stopped on a lockfile mismatch during the newly added BMP test dependency; registered offline lock synchronization passed14.6s. Preview18, XLSX native3 and BCF native3 are running.
+- Root independently inspected retained OPC green5: **1/1 passed**,81 skipped, fresh cache-skipped run. The unchanged64-byte fixture proves terminating copy, controlled materialization/cancellation, interrupted multi-turn cursor close and final retirement. DOCX production ownership migration is now in progress; whole XML owners and streaming-save integration remain required.
+- BMP source parser regression is authored schema-first:9 neutral cases for case/whitespace, odd tails, invalid hex and non-ASCII, with independent `hex` decoder in native tests. Production parser remains unchanged for red1. New canonical-architecture source gate passed **14 checks**, Ajv and independent byte comparison; its first attempt used a stale forced Nx graph and did not run. Source gate/native focused launchers are registered alongside existing BMP gates.
+
+- XLSX native3 reached artifact tests but failed compilation on two TreeItem/TreeItemBuilder mismatches in the new editor/viewer grids. Office repaired them with the shared builder prelude and root started native4. BCF native3 had one stale test `.contains()` call on typed ValueError; root changed it to assert the verified OwnershipLimit kind and started native4.
+- CSV preview18 failed before startup during the announced DOCX retained owner migration. Root will start preview19 after DOCX and PPTX production source checkpoints cohere; no browser acceptance exists from18.
+- BMP source-hex red1 **ran0/1 passed**,96 skipped. It demonstrated both odd-tail inputs were wrongly accepted and both emoji inputs panicked on UTF-8 slicing. Root added complete ASCII hexadecimal-pair validation before byte slicing/allocation and changed the loop to consume every validated pair; green1 is running. The debug trace in red1 had an undefined twin count because it loaded the earlier void-return helper, while the separate current source contract2 passed14 counted assertions. Current twin now returns that count.
+
+- BCF native4 failed before assertions because the new kind assertion called `kind()` instead of the current public `kind` field. Root verified the ValueError declaration, corrected the assertion, and started native5. BMP green1 and XLSX native4 remain running; read-only process inspection confirms active Rust compilation in shared framework dependencies, not abandoned jobs.
+
+- BMP source green1 and BCF native5 failed writing Cargo fingerprints with ENOSPC. XLSX native4 reached final link without source errors and then also failed for disk capacity. Root recovered4.68GiB by deleting12 verified inactive ticket-generated directories; exact inventory is in the ticket output space-recovery report. No shared cache, source input, report, retained log or other chat process was removed. BMP green2 is running; XLSX5 and BCF6 follow sequentially.
+
+- BMP green2 and MP4 retry3 stopped before assertions on a newly added `PagedMap::values_mut` overpromising DoubleEndedIterator. Bounded execution corrected that declaration to Iterator+ExactSizeIterator, matching PagedIterMut. BMP green3 is running; no parser-green claim yet.
+
+- Root inspected fresh media logs: AVI incremental/native run5 passed **52/52**,0 skipped. Registered MP3 independent oracle run3 executed **8/8** tests,0 ignored/filtered, including unconditional feature registration, real MPEG frame walk, independent ID3 projection, roundtrip and inverse laws. Its separate documentation-test phase has0 tests, but the actual library phase demonstrably ran8; the earlier zero-library-test result is superseded. MP4 native retry remains required.
+
+- BMP source-hex green3 passed fresh **1/1**,96 skipped (Nextest0.015s, Nx4m44s), after red1 proved the four intended failures. All9 neutral cases now match the independent hex decoder, including complete odd-tail refusal and Unicode panic prevention. Full BMP native suite remains to run. Root started XLSX native5 after this success.
+
+## Shared Raster Region Source Cut — October 3
+
+- Source red1 ran:85 existing tests passed; new raster module import failed before implementation.
+- Source green1 passed97/97 tests across3 files,475 assertions, Nx2.7s, cache skipped. Four output/inverse cases, seven refusal cases and schema validation agree with fast-json-patch/Ajv.
+- Rust twin and PNG planner integration authored; native tests pending. PNG cancellation now checks the byte grant; no native runtime success claimed yet.
+- XLSX native5 progressed past the shared Cargo artifact-directory lock and is compiling. BCF6/full BMP/PNG native gates remain queued sequentially.
+
+## XLSX Native5 Actual Runtime Result
+
+145 tests ran:139 passed,6 failed,1 skipped, Nextest3.620s/Nx10m17s including shared Cargo lock wait. Source/compile succeeded. Three runtime input resolver failures point to the new insert-cell /address/worksheet lacking an EN/DE UI label. Strict and Transitional history end-to-end tests have no committed/derived fixture cases. The allocator oracle reports ReconstructSnapshot settled1307391 bytes against1307937 actual requested bytes, a546-byte undercharge. All six failures were assigned to the Office worker; no assertions or thresholds were relaxed. BCF native6 started after XLSX5 completed.
+
+## Raster Source Green2 and Durable Launch Registration
+
+Fresh source green2 passed97/97 tests,479 assertions,Nx4.4s after freezing the TypeScript plan and its owned geometry/color. Both language implementations now retain immutable plan values. Native gates remain pending. Root found the authoritative launch seed at `.vscode/🧩️launch.seed.jsonc`: the OS plugin launch renderer derives launch.json from this seed. Prior missing rows were attributed to concurrent edits without enough evidence; derivation explains the repeated removal. Both source seed and launch.json now carry the two BMP source gates and two raster native gates. The existing shared editing source launch already reaches all raster TypeScript laws. No other launch entries were rewritten.
+
+## MP4 Native5 Green and BCF Native6 Red
+
+Root inspected MP4 run5 log:65/65 tests passed,0skipped, Nextest10.540s/Nx5m28s. This confirms the typed physical file ceiling fix; it does not establish the still-missing live incremental mux path. BCF native6 ran71 tests:69 passed,2failed,0skipped. Both failures are genuine missing semantic-value admission in native encode/decode at max_value_bytes1. Root is adding a borrowed BCF semantic-byte/row admission pass and an exact394-byte neutral-fixture frontier law with independent serde_json counting. The tests are not being relaxed. PPTX native3 and preview19 are currently running.
+
+## Preview19 and PPTX Native3 Build Diagnostics
+
+Preview19 did not start a browser server: WASM compilation failed at PPTX canonical mutation fatal outcome because an empty Vec had no inferable String item type. Office owns the repair. PPTX native3 did not run tests: the in-flight PagedBytes retirement change had two mutable self borrow errors; bounded agent confirmed both fixed in current source and its newer generic native tests compile. Root started focused raster native1 before the next broad native retry. Registered plugin-registry generation passed36.7s and preserved root seed-owned launch rows.
+
+### October3 Raster Native and Preview20
+
+Shared raster native1 passed2/2,89outside,Nextest0.033s,Nx9m39s. Sourcegreen2 passed97/97,479assertions. PNG current cancellation/full-capacity native1 is active. Preview20 failed before serving: semio-s-artifact-stdio-semio uses the former PPTX presentation field and old helper arity; Office execution owns adaptation. No browser acceptance receipt.
+
+Concurrent OPC authority identified in UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O: its root14:11UTC report assigns the actual flat relationship owner to Physical. Our fleet stopped its mistaken BTree reconciliation and removed guessed layout helpers; preserve the foreign explicit owner representation and adapt retained/Office consumers.
+
+### October3 Explicit Package Owner and Cancellation Checkpoint
+
+Retained OPC current green10 passes1/1,81outside,Nextest0290c3c0-dc8d-45ba-9caa-c8c05a25e7c4,Nx1m20s. It exercises the unchanged64-byte grant, cancellation, materialization and full retirement after the explicit relationship owner transition. DOCX Store lifecycle is active in the ownership lane. PNGnative1 ran no tests because shared OPC SQL callback shape/nested Result did not yet match; both are corrected in source. PNGnative2 and preview21 are active.
+
+The PNG test selection now includes the actual registered factory and wire dispatch: prepare a256KiB patch, close through the real16KiB grant, bound all byte/item releases, reach terminal-empty and confirm no completion edit. This additional law is authored, not yet a runtime pass. The equal-length stale mounted publication law remains outstanding.
+
+### October3 PNG Cancellation Runtime GREEN
+
+Registered PNG pixel_region selection native2 passed6/6,173outside,Nextest0.227s,uncached Nx. It includes exact byte/inverse/nativePNG output, invalid region refusal,16KiB cancellation accounting and19-turn work bound,128patch4096×2048admission,4096×2160last-pixeledit, localized action definition, and actual registered factory wire dispatch cancelled after the first256KiBpatch with no edit emission. Runtime DEBUG lines are in png-pixel-region-native-2.log. This is the focused raster/cancellation receipt, not fullPNG or mounted stale-revision proof. BCF full native7 now active.
+
+### October3 DOCX Large Owner Lifecycle GREEN and Preview21
+
+Bounded executor reports docx-retained-opc-store-lifecycle-6.log fresh/uncachedNextesta7760374-e86f-40db-b4d3-507847707f09:1/1passes,157outside,4.38sruntime,Nx2m14s. Actual1.25MiB retained package executes Store cancellation/drain, publication, save, third-partyZIPcomparison, reopen and terminal Store disposal. Shared retained XML remains incomplete and is now assigned execution.
+
+Preview21 failed before serving: current MP4 visual sample/bitrate owners lack RetireOwned (sixcompiler diagnostics). Media worker owns that exact repair. PNG equal-length later-revision mounted app law is now authored and queued; no passing claim. Office source gates are green and its slot now implements BMP fidelity/controls while root queues Office native gates.
+
+### October3 BCF Whole Library GREEN
+
+Fresh uncached BCFnative7 passes72/72,zero skipped,Nextest4.086s. It includes the exact394semantic-byte frontier/393refusal, row limits, independentJSONcensus, full native binary/text encoding/decoding and all previous71laws. Logs bcf-native-7.log. Preview22 reached the new shared retainedXMLfoundation but XmlQuote lacked RetainedClone/RetireOwned (fourdiagnostics); boundedlaneownsrepair. No server/browseracceptance yet. PNGnative3seven-law selection nowactivewiththemountedstale-rootwitness.
+
+### October3 Mounted PNG Stale Revision GREEN
+
+Fresh uncached PNGnative3 passes7/7,173outside,Nextest1.004s. Added mountedapp fixture verifies a region operation remains awaiting publication, changes the document through public text-op ingestion without changing raster length, observes exact stale immutable document root refusal, preserves the later pixel bytes and closes the actual app. Previous six raster/cancel/admission laws remain green. This also compiled the shared retainedXML source with XmlQuote derive fixes. Root PPTXnative4 and preview23 are active.
+
+### October3 XLSX Whole Library GREEN and PPTX Test Pairing
+
+Fresh uncached XLSXnative6 passes145tests,one skipped,Nextest5.186s. All six native5 failures are now cleared on the explicit package-owner model: labels, history fixtures and reconstruction admission. PPTXnative4 ran zero assertions after63compilerdiagnostics, mostly missing test imports and base-editor names copied into Strict/Transitional tests. Root paired all three editor test modules to their actual named owners, added shape/paragraph construction DTO imports to three window tests, corrected two owned snapshot comparisons, and imported MutationKind for the SetSnapshot leaf. The inference test namespace was already corrected by concurrent work and preserved. PPTXnative5 now runs.
+
+Preview23 failed before serving on the active BMP authority cut (61diagnostics, including new mutation leaf descriptors). Office/BMP execution owns a coherent complete pair; root holds preview24 until that actual compiler boundary is green. Media current MP4 default cursor66/66 and live component route2/2 are green; AVI live route is active. Shared retainedXML additive foundation1/1 is green; production DOCX XML migration is active.
+
+
+## October 3: AVI Live Export and Preview24
+
+Media worker reports fresh actual AVI component live export2/2 (62outside selection), including exact native output and registered cancellation/final disposal. Receipt: `🗑️generated/avi-live-export-route-2026-10-03-1.log`; external MP4 reader oracle remains active. Root started preview24 after Office reported all61BMPproduction diagnostics repaired; no current browser receipt yet. PPTXnative5 remains active after test-only compiler repairs. Narrow PPTX diff check found one trailing blank line in the TypeScript transform fixture test; root removed that blank line only.
+
+
+## October3: Checked Plan Boundary and Current Preview
+
+Shared raster source red2:97passed/1failed (the intended foreign-plan refusal). Source green1:98/98,488assertions, independent JSON Patch and strict TypeScript compilation. Native ownership twin is authored but not yet executed. PPTXnative5 stopped before assertions on six missing viewer-test DTO imports; root added those imports in the three concrete subsets and started native6. Preview24 stopped on a stale PPTX publication digest; current source receipts and publication independently matched the actual SHA256 by the time of inspection, so no catalog patch was needed. Preview25 has passed generator inputs, registry generation and CSV session generation and is compiling the current component. No current browser acceptance yet. Media external MP4 0.14 reader oracle now reports1/1 green; worker moved to canonical TIFF implementation.
+
+
+## October3 15:15 UTC: Preview25 and Browser Inputs
+
+Preview25 ended after8m4s: generator inputs, registry and session succeeded; the actual wasm component failed on8in-flight DOCX base mutation diagnostics after retained XML/PagedList authority changed. Root sent exact lines and log to the ownership worker and is holding preview26 until its private compiler checkpoint. BMP production no longer appears among this compile failure set; this is not a BMP full-test receipt. PPTXnative6 remains active waiting shared native compilation. The browser inputs now include hand-authored XLSX and PPTX packages independently reopened/CRC-checked with Python ZipFile and parsed with ElementTree; no browser assertions have run.
+
+
+## October3: DOCX Compile Mount and PPTX Test Import Correction
+
+Ownership worker reports fresh private DOCX check3 green, exit0, Nx12.8s: paged XML parts and retained XML now compile across native/save/import/SQL, mutations, conformance, diff, preparation and retirement. Production lifecycle assertions are next. TIFF schema/consumer migration remains in progress, so preview26 is held until its Rust mount is coherent. PPTXnative6 ended at compilation (13m39s) because root put the three viewer-test DTO imports under `crate::schema` instead of the verified `crate::schema::snapshot` re-export; root corrected those paths and started native7. No PPTXruntime result is claimed for native6.
+
+
+## October3: Shared JSON Parser Compile Cut
+
+PPTXnative7 and BMPnative1 both stopped before artifact assertions on5shared `pack-json` compiler diagnostics: NumberScan absent, two incorrect retirement macro names and a non-Copy Value passed to leaf. Read-only inspection of the current source already found the owner’s fixes: NumberScan declaration, `artifact_retirement_sequence!` and per-scalar Value retirement. Root made no foreign edit and started PPTXnative8; Office was instructed to run BMPnative2. These are justified fresh retries after verified source changes, not passing native receipts.
+
+## PowerPoint Native Runtime 8 — 2026-10-03
+
+Current source compiled and executed 132 tests: 124 passed, eight failed, zero skipped. Nextest run b3d6460e-8623-466e-ade7-5f6dfc134a76; runtime 8.249 seconds. Failures cover missing Details input labels, stale native demo fixtures, the typed missing-presentation relationship error, and canonical subset builder construction. Fixes and rerun remain in progress. Shared raster plan ownership native run 1 stopped before its tests on concurrent mesh-engine compilation errors; no native pass is claimed.
+
+## DOCX Retained XML Production Lifecycle — 2026-10-03
+
+The shared flat paged retained XML owner is now the production authority for DOCX XML parts. DOCX schema/native/SQLite projection and reconstruction, import/export, subset checks, diff, addressed mutation preparation and retirement use the retained owner and paged part directory. Materializing one conventional XML part at the parser/save/SQLite/diff/addressed-edit boundary remains explicit; direct retained parsing, borrowed traversal and streaming OPC/ZIP encoding remain open scaling work.
+
+The clean cache-skipped lifecycle7 selection passed **1/1**, 157 filtered, in 4.818 seconds; Nextest run `7324ae71-af40-44d3-bde6-ad7f83c692e2`. Its neutral fixture carries a1.25MiB binary OPC owner and a1.0625MiB retained XML text owner. The registered DOCX Store route cancels and terminally drains an in-flight preparation, publishes an addressed edit, saves and independently reads both ZIP members, reopens the snapshot, retires the reopened owner catalog and terminally disposes the live Store. Every lifecycle stage is bounded by16,384 turns. Receipt: `🗑️generated/docx-retained-opc-xml-store-lifecycle-7.log`.
+
+## PowerPoint and Preview Owner Routing — 2026-10-03
+
+PowerPoint native9 stopped after 13 passes and one failure: current literal fixtures parsed but retained the old content-type/XML part order. The two demo assets now use canonical construction order with no derived presentation field. Native10 passed all 86 tests selected by the current runner in 2.246 seconds, zero skipped. This is not yet a claim that all test levels were exercised. The earlier label, builder-refresh, typed relationship error, and fixture repairs compile in this run.
+
+Preview26 stopped before compilation because the current framework preview target now runs through native owner policy but taxonomy validation required a direct script. Added seven neutral command-route witnesses, schema, and exact route resolution shared by validation and preview execution. Red1 failed on missing resolver; green1 passed three regression tests including bounded preview invocation and existing same-project preview rules. Native owner manifest, cwd, inner script and task remain exact. Preview27 is now running; no browser acceptance is claimed.
+
+A fresh Terra audit spawn and retry of the prior auditor both returned agent thread limit reached despite a completed lane. Existing Sol execution agent was resumed to preserve four active workers; previous Terra audit reports remain available.
+
+## Current Preview and Coverage — 2026-10-03
+
+Native owner preview regression green2 passed3/3 and now exercises native wrapper dispatch arguments with a recording process test double under both Bun and TypeScript transpilation. Preview27 reached wasm dependency build and stopped at stale Hub Cargo.lock. The registered workspace:deps-cargo-lock target completed successfully; Cargo reported zero external package upgrades for each workspace. Preview28 is running against synchronized workspace dependency graphs. PowerPoint normal test routing now explicitly enables component-app-assembly so its editor/history laws are always included; native11 is active, native10 86/86 only covered the default codec selection.
+
+## PowerPoint Complete Current Native Selection — 2026-10-03
+
+Native11 passed132/132 tests, zero skipped, runtime2.793s. The permanent test router now explicitly includes component-app-assembly, so registered editor, viewer, history, input resolution and dialect tests run alongside codec/native/SQL/diff tests. The prior eight runtime failures are cleared in current source. Native10 default86 selection remains superseded by this full receipt. Current SQLite TypeScript twin is running; browser acceptance remains pending.
+
+## Independent PowerPoint and Raster Checks — 2026-10-03
+
+PowerPoint canonical SQLite source-current1 passed15/15 tests and117assertions, including independent Bun SQLite and Ajv schemas, in2.94s. Full native11 run ID560a67f7-a690-4362-85e8-ecef5387a5ae. Shared raster plan ownership native2 passed3/3,89outside selection,0.032s: the new owned-input twin now pairs TypeScript forged-plan protection with Rust private-plan/copy semantics and independent JSON Patch.
+
+Repository-library typecheck ran and failed on four diagnostics in unrelated import-edge authority and historical JSON source encoding tests; no diagnostics referenced the preview route resolver, normalization or modified regression. This is a failed aggregate gate, not a typecheck pass. Three focused preview-route tests remain green.
+
+## Current Full Composition — 2026-10-03
+
+Preview28 reached current full Stdio wasm composition and failed30compilation diagnostics in Semio image BMP/TIFF import/export consumers after their snapshot authority changes. Root assigned each lane its corresponding conversion consumer repairs. No browser server started; no runtime claim. See current-preview-consumer-integration research for exact paths.
+
+## Parallel Composition Validation — 2026-10-03
+
+Current Semio BMP/TIFF image consumers are mounted against canonical snapshot representations; preview29 is running to verify full production wasm integration. Registered editor-component-check21 is running with an absolute ticket-owned output directory, covering actual emitted editor-family components rather than source catalog counts. Neither has a pass receipt yet. Source audit additionally found transparent Semio RGBA input is flattened by the new unconditional24bit BMP conversion; assigned to BMP lane with independent alpha witnesses.
+
+## Component Link Retry — 2026-10-03
+
+Editor-component-check21 stopped in base wasm-release compilation because DOCX called a newly introduced XML retirement helper before that dependency export had landed. Current source now exports the helper publicly and unconditionally, confirmed by direct source inspection and its owner; component-check22 is running against that coherent API. Preview29 remains active; BMP preview sources have since changed to first-party PNG plus explicit localized unavailable rendering, so its source coverage must be checked before browser claims.
+
+## Preview Publication Ownership — 2026-10-03
+
+Preview29 passed current full Stdio wasm compilation and stopped at publication because the existing generated browser module tree was marked as owned by the old Stdio component Cargo manifest, while the current producer is the Hub composition. Under the same exclusive artifact publication lease, root verified the exact previous owner, rejected symlinks/unlisted files, and atomically preserved all39generated files under ticket generated/retired-stdio-browser-owner-2026-10-03. No ownership guard was weakened and no authored source was removed. Preview30 now regenerates through the current declared producer. Browser acceptance remains pending. Component-check22 remains active.
+
+
+## DOCX Retained XML Full Native Green — 2026-10-03
+
+Fresh uncached full DOCX component-app-assembly validation passed **158/158**, zero skipped, in14.071 seconds; Nextest run `afb8ba3b-add8-4f1f-92a8-dc32b9be149b`, Nx26.7s. This supersedes the earlier142pass/16fail checkpoint. The repaired laws cover schema labels, canonical set-snapshot tuple authority, mutation history, exact SQLite allocation, retained XML projection/reconstruction, native binary/text round trips and deep cancellation. Receipt: `🗑️generated/docx-native-current-21-retained-xml-green.log`.
+
+The focused small-stack native cancellation law separately passed1/1,157filtered, in5.359 seconds; Nextest run `e36f461f-056e-4acc-828f-736269021656`. Encode cancellation now keeps a materialized conventional XML document in an iterative retirement guard, so error unwinding cannot recursively destroy an8,192-level tree. `DocxSnapshot::retire_sqlite_snapshot` also drains its typed retained owner with demand-aware byte grants. Receipt: `🗑️generated/docx-retained-deep-green-2.log`.
+
+## Shared Editor Interaction Gates — 2026-10-03
+
+The current focused renderer selection passed69/69 across retained inputs, body window coordination and editable table text. Neutral JSON fixtures are validated with Ajv; Testing Library and the accessibility API verify the rendered controls. Receipt: `🗑️generated/live-editor-renderer-current-1.log`. Red witnesses separately reproduced duplicate Enter/blur commits, concurrent dispatch while the previous command was pending, sibling viewport reports replacing one another, and the missing live disclosure context factory.
+
+The broader in-source table and tree-window selection passed55/55,132outside the selection, in7.85s. It covers interpreted tree windows, virtual table windows, neutral viewport vectors and short guest responses. Receipt: `🗑️generated/live-editor-window-laws-current-1.log`. These are selected suites, not the full renderer gate.
+
+Live preview30 DOM acceptance now exposes both header fields and expands Source. Invalid Source Apply preserves the draft and presents an alert; Discard restores the persisted source. Browser error logs were empty on the subsequent inspection. Rapid commit browser acceptance still requires preview31 with native draftTarget emission. Screenshots have intermittently omitted window contents despite populated, visible, unobscured DOM controls; visual paint acceptance remains open.
+
+## Release Component Size Gate — 2026-10-03
+
+Component-check22 compiled and extracted the first full Stdio release core, then failed its64MiB distribution limit with a92.6MiB core. The remaining nine packages were not exercised. Most bytes belong to code and data sections, not removable debug metadata. The dev preview is separate and does not satisfy this release gate. Receipt: `🗑️generated/editor-component-check-current-22.log`.
+
+## October 3 Latest Root Gates
+
+- Retained input publication queue: 55/55 pass (`retained-input-publication-green-1.log`), with both command/publication ordering cases, normalized numeric acknowledgement, refused/superseded outcomes, and changed foreign guards. A later independent causal audit found the same-value foreign publication gap; native revision receipts are under implementation.
+- Stable preview 32: twenty rapid edits published in order, twenty Undo returned through every prior value to alpha, twenty Redo restored every value. No fresh warning/error console entries at this checkpoint. HMR was disabled through the existing preview option.
+- Shared input/window laws: 30/30 selected pass (`live-editor-input-window-laws-current-3.log`). Aggregate renderer typecheck remains non-green: four concurrent World3dHost test calls have five arguments against a four-argument API.
+- Family component check 23 compiled but failed Binaryen validation of native saturating float conversions. A neutral fixture reproduced the failure and explicit Rust target feature support passed the registered contract (`release-component-features-green-1.log`). Real family optimized size is still unverified.
+- Window content inset neutral/React DOM regression: expected red (first action inset missing), then 1/1 selected green with six geometry/scroll/edgeless cases (`window-content-clearance-green-1.log`). Browser verification is in progress.
+- Worker PNG checkpoint: native 42/42, exact SQLite source + independent pngjs/zlib 8/8, TypeScript pngjs 2/2 and package check green; detailed receipts and exact scoped file inventory in report/.
+
+## Causal Draft Recovery Checkpoint
+
+-63/63 focused editable-controls pass, including receipt/publication ordering, preserved draft on same-value foreign revision, Escape pending-publication ordering, native refusal, both explicit locales, accessible description oracle, warning popover and discard action (`retained-input-recovery-green-2.log`). The initial recovery red had59pass/4fail for missing descriptions.
+- Shared Nx graph temporarily blocked first recovery and locale gate; another concurrent agent repaired flow-core's implicit dependency to the renamed @semio-tech/framework-os-flow project before root's exact patch. Root did not edit that project. Fresh graph rebuild then ran the63 tests successfully.
+- Window full suite12/12, ten inset geometry vectors. Launch generator completed; exact gate is present in generated launch.json.
+- PPTX canonical construction worker checkpoint133/133 native and16/16 TypeScript/Ajv/Bun-SQLite,118assertions, recorded in its implementation report.
+- A requested Terra slot rotation was refused twice by the collaboration tool's agent-thread limit. Existing Sol ownership slot was reused for archive-load execution; the active four-worker maximum remains occupied.
+
+- Shared translation-totality gate2/2 passed (`retained-input-recovery-i18n-2.log`). Aggregate typecheck found the new discard Button omitted its required icon; corrected and typecheck2 running.
+- A second concurrent flow registration transition removed the temporary package/project manifests. Root repaired flow-core's dependency to the again-authoritative Cargo-inferred `semio-framework-os-flow`; fresh `nx show project` JSON confirmed its exact existing root (`flow-project-integration-1.json`).
+- Family component24 failed before optimization because its compiled Details contract preceded the86-producer ArtifactView migration. Current Media Details native witness1/1 passed after source settled. Root stopped old preview32 and started coherent preview33 with current native deps and HMR disabled; further runtime acceptance pending.
+
+- Final aggregate renderer typecheck2 passed after the discard-icon correction (`retained-input-recovery-typecheck-2.log`). No remaining compiler diagnostic at that checkpoint.
+
+- Unified Scrollable/window inset preserves first content and user scroll: expected nested-scroll red47px unwanted jump, then4/4 focused green across2files (`window-content-clearance-nested-scroll-green-2.log`);11geometry vectors. Fresh aggregate typecheck green (`window-content-clearance-unified-typecheck-1.log`).
+
+## Current Preview 33 and Table Escape Integration
+
+Fresh native preview33 completed staging and served at localhost:6212, serve pid1796. At 2026-10-03T19:01:46Z reload restored the full CSV grid and Details tree. A real cell edit to `Receipt33` published in both surfaces with no new warnings/errors. The next Demo reload returned the example value `alpha`; this proves archive load and admission, not persistence of that unsaved edit.
+
+Safe temporary metadata tracing on the second reload recorded LoadDocumentArchive seq9/operation9 returning Done(inReplyTo9), PollDocumentArchiveLoad seq11 through23 returning matching DocumentArchiveLoad frames, and AcknowledgeDocumentArchiveLoad seq24 returning Done(inReplyTo24). No payload was logged. Ownership worker removes this instrumentation after capture.
+
+On the same coherent activation, twenty rapid edits `Current01` through `Current20` all published. Twenty Undo gestures produced Current19 through Current01 then alpha; twenty Redo gestures restored Current01 through Current20 in exact order. Fresh warning/error console entries were empty for this run. Actual file download/import acceptance is next.
+
+A new real retained Table + Input DOM regression exposed Escape bubbling into the row handler: the parent focused its row, causing blur to submit the supposedly discarded draft. `retained-table-escape-red-2.log` failed because one command was emitted instead of zero. The Input now consumes Escape propagation after preventing its default and discarding the draft. `retained-table-escape-green-1.log` passed 26 selected actual Table/input laws (225 outside selection); the independent full editable-controls suite in `retained-table-escape-input-green-1.log` passed. Neutral draft/commit-count fixture and Testing Library accessibility/DOM were used; no simulated row handler substitutes for the real renderer.
+
+Full post-Escape editable-controls verification: `retained-table-escape-input-green-1.log`, 63/63 tests passed, 0 skipped. The real Table integration is independently covered by the26 selected green laws above.
+
+Source explicit ownership: neutral causal red1failure after runner registration; pure14/14 green. Mounted DOM/typecheck and required native producer propagation are in progress; see causal-draft-recovery report. Natural file Open/Save work is ownership-lane execution; archive-only actions were insufficient.
+
+Source explicit lifecycle, mounted accessibility controls, capital/lower-case Command/Control Select All, and echo packing pass40/40 in `source-explicit-causal-dom-green-3.log` (35explicit +5echo, no skipped tests). The latest aggregate renderer typecheck is green in `source-explicit-causal-typecheck-2.log`. Required native producer propagation and fresh browser source acceptance remain in progress.
+
+## Current Window Ownership and TIFF Checkpoints
+
+The retained window provenance red witness reproduced dispatch without the originating window. The repaired full editable-controls suite passed65/65 and selected Table/interpreter laws passed12/12; renderer typecheck remains pending the concurrent natural Open/Save methods. See [window provenance](🔍️research/🧬retained-input-window-provenance-2026-10-03.md). TIFF tiled projection/editing passed111/111 native,9/9 focused independent-image laws and4 TypeScript/schema suites; see [TIFF matrix](🔍️research/🧬tiff-tiled-8bit-preview-editing-2026-10-03.md). No browser receipt for either new cut is claimed yet.
+
+## Shared Document Input Ordering
+
+Root confirmed a live different-cell CSV conflict after restoring Table focus. The bounded document-owner queue now waits for each exact native completion and each target window's matching publication. Full input gate passed82/82 (`cross-input-publication-green-5.log`); renderer typecheck passed (`cross-input-publication-typecheck-2.log`). Final dispatch-boundary retirement refinements are under test. Source retention passed39/39 with a separate fresh aggregate typecheck in the Media lane. See [input ordering](🔍️research/🧬cross-field-input-publication-2026-10-03.md). Preview34 stopped before native build because the hub lockfile was stale; registered `workspace:deps-cargo-lock` passed and preview35 is rebuilding. Neither preview attempt is reported as accepted.
+
+## October3 Primary Session and Pending Input Follow-Up
+
+Fresh mounted input/button gate95/95, cache disabled (`retained-button-admission-green-3.log`), and aggregate renderer typecheck passed. Earlier local backlog gate91/91 covers64-entry capacity/refusal/recovery. Button pending-state tests cover success/refusal/rejection and exact owner replacement. Details42/42 and shared Source TS99/99 are worker-reported current gates; native typed fault carrier3/3 and diagnostic12/12 are green. Browser35 after primary-session owner mount accepted rapid cross-field and cross-window edits with matching canonical Table/Details; repeated Add row produced2rows with no real console refusal. See `🔍️research/🧬live-csv-preview-35-2026-10-03.md`.
+
+Read-only source audit found all six Stdio/framework TextDraftView initializers include the five new diagnostic labels; this is initializer coverage, not a full current component compile verdict. Native Source width red gate remains compiling.
+
+## October 3 — Source Width and Native Integration
+
+After narrow canonical Value/Record dependency repairs in the shared compile path, the Source width test reproduced `grow=false` against the neutral `grow=true` fixture. The shared wrapper now expands to available width. All21 unrevisioned provider test/arena calls have explicit publication revision, and the unused public revision-free renderer was removed. Media repaired the two Source admission/duplicate-member diagnostic law failures discovered by the full run. Current complete contract library: **96/96, 0 skipped**, `source-contract-green-4.log`, fresh Nx success. Root independently read that receipt; no browser width claim is made until a current native component is mounted.
+
+Scoped `git diff --check` passed for the24 root native-coherence/layout files. The current isolated intermediate directory measured499MiB with13GiB available disk.
+
+## October 4 — Aggregate Stdio TypeScript/Schema
+
+Fresh `@semio-tech/stdio-js:test --skip-nx-cache` passed for all36artifact package inputs plus the shared office schema/TypeScript guard laws (`pptx-canonical-schema-aggregate-1.log`,21.6s; all36dependencies successful). The final repair registered PPTX’s referenced snapshot schema, replaced the removed projection diff fixture with canonical XML parts, and removed stale presentation shadows from two boundary snapshots. Native and browser receipts remain separate.
+
+## October 4 PDF Natural Route and Row Admission
+
+- PDF 1.7 natural route: **2/2** selected native laws passed, 706 skipped; `pdf-natural-file-native-attempt-7.log`, fresh Nx run. Independent lopdf output, actual registered Open/Save, invalid-input preservation, fresh-owner reopening and separate histories are covered for the small two-page fixture. Large files, profile gates, password interaction, and browser transfer remain open.
+- Table/Tree row follow-up: **8/8** focused laws and aggregate typecheck passed at the Media checkpoint. Root then reran the complete Interpreter suite after the repaired target/verb and disabled-record guards: **188/188** passed (`row-action-interpreter-regression-3.log`).
+- Preparation failures are retained honestly: PDF attempts 1–5 did not reach its tests; attempt 6 was 1 passed/1 failed due to the test's mistaken deferred-only refusal assumption. Preview 39–41 have no browser receipt; latest preview failure was a concurrently repaired pixels dependency.

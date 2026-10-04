@@ -92,13 +92,13 @@ pub fn scalar_row(question: &FormQuestion, ids: &[String], field: &str, view: &s
         return row(&id, label, select, "patchQuestions", args);
     }
     if field == "required" || field == "default" && question.kind == "boolean" {
-        let on = if field == "required" { question.required.unwrap_or(false) } else { question.default.as_ref().is_some_and(|value| *value == dsl::DslValue::Bool(true)) };
+        let on = if field == "required" { question.required.unwrap_or(false) } else { question.default.as_ref().is_some_and(|value| *value == semio_framework_value::DslValue::Bool(true)) };
         return row(&id, label, ui::toggle(on).text(ui_label(label)?), "patchQuestions", args);
     }
     if field == "default" && question.kind == "multi" {
         let mut rows = Vec::new();
         for option in question.options.iter().flatten() {
-            let selected = question.default.as_ref().is_some_and(|value| matches!(value, dsl::DslValue::Array(items) if items.contains(&dsl::DslValue::String(option.value.clone()))));
+            let selected = question.default.as_ref().is_some_and(|value| matches!(value, semio_framework_value::DslValue::Array(items) if items.contains(&semio_framework_value::DslValue::String(option.value.clone()))));
             rows.push(row(&format!("{id}.{}", option.value), &option.label, ui::toggle(selected).text(ui_label(&option.label)?), "patchQuestionOptions", arguments(vec![("field", ui_value_text("default")?), ("optionValue", ui_value_text(&option.value)?), ("questionIds", question_ids(ids)?)])?)?);
         }
         return group(&id, label, rows);

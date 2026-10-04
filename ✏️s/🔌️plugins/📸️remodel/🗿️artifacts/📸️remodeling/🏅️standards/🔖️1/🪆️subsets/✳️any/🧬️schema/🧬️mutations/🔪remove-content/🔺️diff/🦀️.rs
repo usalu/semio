@@ -14,7 +14,7 @@ pub fn diff(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Content \"{}\" stores only {stored} leaves.", payload.content_id), target);
     }
     if payload.from == stored {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Content \"{}\" stores no leaf from {stored} on.", payload.content_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Content \"{}\" stores no leaf from {stored} on.", payload.content_id));
     }
     let mut durable_artifacts = base.durable_artifacts.clone();
     if payload.from == 0 {

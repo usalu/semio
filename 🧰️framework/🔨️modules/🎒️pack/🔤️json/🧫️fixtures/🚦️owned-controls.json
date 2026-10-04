@@ -1,0 +1,142 @@
+{
+  "retainedCanonical": {
+    "maximumUnits": 1,
+    "retirementBytes": 3,
+    "keyUnit": "鍵😀",
+    "keyRepeats": 64,
+    "textUnit": "Mesh 😀 Label ",
+    "textRepeats": 256,
+    "cancelUnits": [
+      0,
+      1,
+      8,
+      64
+    ]
+  },
+  "retainedParsing": {
+    "maximumUnits": 1,
+    "retirementBytes": 3,
+    "textUnit": "Mesh 😀 Label ",
+    "textRepeats": 256
+  },
+  "retainedWriting": {
+    "budgets": [
+      1,
+      8,
+      256
+    ],
+    "retirementBytes": 3,
+    "textUnit": "Mesh 😀 \"\\\n Label ",
+    "textRepeats": 256,
+    "maximumBytes": 1000000,
+    "directSourceMember": "payload"
+  },
+  "schema": "json.owned-controls/v1",
+  "retainedNumberTexts": [
+    {
+      "prefix": "1.00000000000000011102230246251565404236316680908203125",
+      "zeroes": 4096,
+      "suffix": "1"
+    },
+    {
+      "prefix": "-1.00000000000000011102230246251565404236316680908203125",
+      "zeroes": 4096,
+      "suffix": "1"
+    },
+    {
+      "prefix": "0.",
+      "zeroes": 4096,
+      "suffix": "1"
+    },
+    {
+      "prefix": "1e",
+      "zeroes": 4096,
+      "suffix": "1"
+    },
+    {
+      "prefix": "1",
+      "zeroes": 256,
+      "suffix": ""
+    }
+  ],
+  "validTexts": [
+    "null",
+    "true",
+    "false",
+    " -9223372036854775808 ",
+    "18446744073709551615",
+    "-0.0",
+    "8322951083873004.0",
+    "1.7976931348623157e308",
+    "\"line\\n\\t\\\"\\\\\\u0001\\uD83C\\uDF0D 日本\"",
+    "[true,false,null,-42,1.25]",
+    "{\"z\":1,\"a\":{\"b\":[1,2]},\"z\":3}"
+  ],
+  "invalidTexts": [
+    "",
+    " ",
+    "[1,]",
+    "{\"a\":}",
+    "01",
+    "1e9999",
+    "true false",
+    "\"\\uD800\"",
+    "\"\\uDC00\"",
+    "\"\\uD800\\u0041\"",
+    "\"\\x\"",
+    "\"literal\nnewline\""
+  ],
+  "textUnit": "文",
+  "textRepeats": 40000,
+  "acceptedDepth": 32,
+  "refusedDepth": 130,
+  "decodeStages": [
+    "scan",
+    "materialize",
+    "bind"
+  ],
+  "encodeStages": [
+    "copy",
+    "measure",
+    "materialize"
+  ],
+  "retainedAdmission": {
+    "maximumUnits": 1,
+    "retirementBytes": 3,
+    "textUnit": "Label 😀 日本 \"\\\n ",
+    "textRepeats": 2048,
+    "collectionItems": 2048,
+    "maximumBytes": 4000000,
+    "cancelUnits": [
+      0,
+      1,
+      256,
+      8192
+    ],
+    "phases": [
+      "measure-string",
+      "materialize-string",
+      "collect-array",
+      "collect-object",
+      "materialize-array",
+      "materialize-object"
+    ]
+  },
+  "retainedProjectionAdmission": {
+    "maximumUnits": 1,
+    "retirementBytes": 3,
+    "collectionItems": 2048,
+    "maximumBytes": 4000000,
+    "cancelUnits": [
+      0,
+      1,
+      64,
+      4096
+    ],
+    "phases": [
+      "project",
+      "project-admit",
+      "project-retire"
+    ]
+  }
+}

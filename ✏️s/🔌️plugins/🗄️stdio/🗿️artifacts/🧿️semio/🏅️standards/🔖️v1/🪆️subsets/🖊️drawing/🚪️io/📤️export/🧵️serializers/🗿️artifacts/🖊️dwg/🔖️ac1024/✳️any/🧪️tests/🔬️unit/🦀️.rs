@@ -26,9 +26,9 @@ fn sample_drawing() -> SemioDrawingSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn real_round_trip_through_relocated_dwg_codec() {
     let drawing = sample_drawing();
-    let dwg = semio_framework_plugin::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");
+    let dwg = ::semio_framework_async::poll::resolve_ready(SemioDrawingToDwg::serialize(&drawing)).expect("serialize");
     assert_eq!(dwg.version, "AC1024");
-    let round_tripped = semio_framework_plugin::resolve_ready(SemioDrawingFromDwg::deserialize(&dwg)).expect("deserialize");
+    let round_tripped = ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDwg::deserialize(&dwg)).expect("deserialize");
     assert_eq!(round_tripped.layers.len(), 1);
     match &round_tripped.layers[0].root {
         DrawNode::Group { children, .. } => {

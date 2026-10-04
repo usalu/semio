@@ -116,10 +116,10 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
         node_ids.sort_unstable();
         let mut edge_pairs: Vec<(&str, &str)> = snapshot.edges.iter().map(|e| (e.source.value.as_str(), e.target.value.as_str())).collect();
         edge_pairs.sort_unstable();
-        let node_ids_json: Vec<pack::JsonValue> = node_ids.iter().map(|s| pack::JsonValue::from(*s)).collect();
-        let edge_pairs_json: Vec<pack::JsonValue> = edge_pairs.iter().map(|(a, b)| pack::JsonValue::Array(vec![pack::JsonValue::from(*a), pack::JsonValue::from(*b)])).collect();
-        let value = pack::JsonValue::Array(vec![pack::JsonValue::from(key.as_str()), pack::JsonValue::Array(node_ids_json), pack::JsonValue::Array(edge_pairs_json)]);
-        pack::json_to_string(&value).into_bytes()
+        let node_ids_json: Vec<semio_framework_pack_json::Value> = node_ids.iter().map(|s| semio_framework_pack_json::Value::from(*s)).collect();
+        let edge_pairs_json: Vec<semio_framework_pack_json::Value> = edge_pairs.iter().map(|(a, b)| semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(*a), semio_framework_pack_json::Value::from(*b)])).collect();
+        let value = semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(key.as_str()), semio_framework_pack_json::Value::Array(node_ids_json), semio_framework_pack_json::Value::Array(edge_pairs_json)]);
+        semio_framework_pack_json::to_string(&value).into_bytes()
     }
 
     fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {

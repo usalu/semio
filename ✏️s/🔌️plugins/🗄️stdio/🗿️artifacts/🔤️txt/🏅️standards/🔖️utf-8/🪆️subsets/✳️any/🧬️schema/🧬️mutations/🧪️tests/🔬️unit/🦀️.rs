@@ -1,5 +1,5 @@
 use super::*;
-use dsl::FromValue;
+use semio_framework_value::FromValue;
 use protocol::SemanticMutation;
 
 /// 🛡️ One of the two production-enum proofs required by ticket
@@ -11,15 +11,15 @@ use protocol::SemanticMutation;
 /// `FromValue`, not just by a `serde_json` sibling.
 #[test]
 fn aggregate_denies_unknown_outer_key_via_first_party_from_value() {
-    let good = dsl::DslValue::object([
-        ("mutation".to_string(), dsl::DslValue::String("set-line".to_string())),
-        ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::uint(1)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
+    let good = semio_framework_value::DslValue::object([
+        ("mutation".to_string(), semio_framework_value::DslValue::String("set-line".to_string())),
+        ("payload".to_string(), semio_framework_value::DslValue::object([("index".to_string(), semio_framework_value::DslValue::uint(1)), ("text".to_string(), semio_framework_value::DslValue::String("a".to_string()))])),
     ]);
     assert_eq!(TxtMutation::from_value(good), Ok(TxtMutation::SetLine(SetLineMutation { index: 1, text: "a".to_string() })));
-    let bad = dsl::DslValue::object([
-        ("mutation".to_string(), dsl::DslValue::String("set-line".to_string())),
-        ("payload".to_string(), dsl::DslValue::object([("index".to_string(), dsl::DslValue::uint(1)), ("text".to_string(), dsl::DslValue::String("a".to_string()))])),
-        ("extra".to_string(), dsl::DslValue::Bool(true)),
+    let bad = semio_framework_value::DslValue::object([
+        ("mutation".to_string(), semio_framework_value::DslValue::String("set-line".to_string())),
+        ("payload".to_string(), semio_framework_value::DslValue::object([("index".to_string(), semio_framework_value::DslValue::uint(1)), ("text".to_string(), semio_framework_value::DslValue::String("a".to_string()))])),
+        ("extra".to_string(), semio_framework_value::DslValue::Bool(true)),
     ]);
     assert!(TxtMutation::from_value(bad).is_err());
 }
@@ -27,6 +27,7 @@ fn aggregate_denies_unknown_outer_key_via_first_party_from_value() {
 #[test]
 fn aggregate_roster_is_exact() {
     let roster = [
+        ("set-snapshot", "SetSnapshot", <SetSnapshotMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("set-trailing-newline", "SetTrailingNewline", <SetTrailingNewlineMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("set-line-ending", "SetLineEnding", <SetLineEndingMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("insert-line", "InsertLine", <InsertLineMutation as protocol::MutationLeaf>::DESCRIPTOR),

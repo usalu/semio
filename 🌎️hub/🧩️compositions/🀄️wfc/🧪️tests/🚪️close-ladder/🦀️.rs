@@ -7,7 +7,7 @@
 //! `📓️close-ladder-2026-09-10.md` measured on procedural.
 use semio_framework_os_kernel as store;
 use semio_framework_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, AppInstanceId, Budget, Event};
-use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_load_document_text, PluginRuntime};
+use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_pack, PluginRuntime};
 
 type WfcRuntime = PluginRuntime<semio_hub_wfc::WfcApps>;
 
@@ -63,17 +63,17 @@ async fn boot(app_id: &str) -> (WfcRuntime, ActorInstanceLifetime) {
     (runtime, lifetime)
 }
 
-/// 📄️ Reads the instance's own document text once the live maintenance pump has let go of it — the
+/// 📄️ Reads the instance's own document pack once the live maintenance pump has let go of it — the
 /// pump runs on the maintenance worker lane natively, so a read issued in the same breath as the
 /// previous load answers `instance busy or poisoned` rather than a document.
-async fn settled_document_text(runtime: &WfcRuntime) -> store::ArtifactTextFiles {
+async fn settled_document_pack(runtime: &WfcRuntime) -> store::ArtifactPackFiles {
     for _ in 0..256 {
         turn(runtime, Vec::new()).await;
-        if let Ok(text) = plugin_document_text(runtime, CLOSE_INSTANCE).await {
-            return text;
+        if let Ok(pack) = plugin_document_pack(runtime, CLOSE_INSTANCE).await {
+            return pack;
         }
     }
-    panic!("the booted instance never answered its own document text")
+    panic!("the booted instance never answered its own document pack")
 }
 
 /// 🏋️ Replays a realistic editor session: `loads` document loads, each followed by `turns_per_load`
@@ -81,8 +81,8 @@ async fn settled_document_text(runtime: &WfcRuntime) -> store::ArtifactTextFiles
 /// grow with the session length.
 async fn replay_session(runtime: &WfcRuntime, loads: usize, turns_per_load: usize) {
     for _ in 0..loads {
-        let text = settled_document_text(runtime).await;
-        plugin_load_document_text(runtime, CLOSE_INSTANCE, &text).await.expect("the instance reloads its own document");
+        let pack = settled_document_pack(runtime).await;
+        semio_framework_plugin::artifact_app_laws::plugin_load_document(runtime, CLOSE_INSTANCE, &pack).await.expect("the instance reloads its own document");
         for _ in 0..turns_per_load {
             turn(runtime, Vec::new()).await;
         }

@@ -8,6 +8,7 @@ use crate::standards::v_ac1024::engine as dwg_engine;
 use crate::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
@@ -21,16 +22,16 @@ mod sqlite_tests;
 mod controlled_metadata_tests;
 
 macro_rules! dwg_ordinary_shape {
-    ([primitive $kind:ident]) => { dsl::Shape::$kind };
-    ([typed $child:ty]) => { <$child as dsl::DslField>::shape() };
-    ([tuple $kind:ident $count:literal]) => { dsl::Shape::Tuple(Box::new(dsl::Shape::$kind), Some($count)) };
-    ([enum $(($label:literal, $ordinal:literal)),+]) => { dsl::Shape::Enum(vec![$(($label.into(), $ordinal)),+]) };
+    ([primitive $kind:ident]) => { semio_framework_dsl_record::Shape::$kind };
+    ([typed $child:ty]) => { <$child as semio_framework_dsl_record::DslField>::shape() };
+    ([tuple $kind:ident $count:literal]) => { semio_framework_dsl_record::Shape::Tuple(Box::new(semio_framework_dsl_record::Shape::$kind), Some($count)) };
+    ([enum $(($label:literal, $ordinal:literal)),+]) => { semio_framework_dsl_record::Shape::Enum(vec![$(($label.into(), $ordinal)),+]) };
 }
 
 macro_rules! dwg_controlled_shape {
-    ([primitive $kind:ident], $control:ident) => {{ $control.checkpoint()?; Ok::<_, String>(dsl::Shape::$kind) }};
-    ([typed $child:ty], $control:ident) => { <$child as dsl::DslField>::shape_controlled($control) };
-    ([tuple $kind:ident $count:literal], $control:ident) => { dsl::schema::producer::boxed(dsl::Shape::$kind, $control).map(|shape| dsl::Shape::Tuple(shape, Some($count))) };
+    ([primitive $kind:ident], $control:ident) => {{ $control.checkpoint()?; Ok::<_, ValueError>(semio_framework_dsl_record::Shape::$kind) }};
+    ([typed $child:ty], $control:ident) => { <$child as semio_framework_dsl_record::DslField>::shape_controlled($control) };
+    ([tuple $kind:ident $count:literal], $control:ident) => { semio_framework_dsl_record::producer::boxed(semio_framework_dsl_record::Shape::$kind, $control).map(|shape| semio_framework_dsl_record::Shape::Tuple(shape, Some($count))) };
     ([enum $(($label:literal, $ordinal:literal)),+], $control:ident) => {{
         $control.scoped_stage(|control| {
             const LABELS: &[(&str, u32)] = &[$(($label, $ordinal)),+];
@@ -41,33 +42,33 @@ macro_rules! dwg_controlled_shape {
                 labels.push((control.copy_text(label)?, ordinal));
                 control.step()?;
             }
-            Ok(dsl::Shape::Enum(labels))
+            Ok(semio_framework_dsl_record::Shape::Enum(labels))
         })
     }};
 }
 
 macro_rules! dwg_metadata {
     ($spec:ident $(<$generic:ident>)?, $controlled:ident, $producer:ident; $($id:literal, $key:literal, $optional:literal, $shape:tt;)+) => {
-        fn $spec $(<$generic: dsl::DslField>)?() -> dsl::RecordSpec {
-            let fields = vec![$({ let mut field = dsl::FieldSpec::new($id, $key, dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
-            dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, fields)
+        fn $spec $(<$generic: semio_framework_dsl_record::DslField>)?() -> semio_framework_dsl_record::RecordSpec {
+            let fields = vec![$({ let mut field = semio_framework_dsl_record::FieldSpec::new($id, $key, dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
+            semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
         }
-        fn $controlled<C: dsl::NativeSchemaControl $(, $generic: dsl::DslField)?>(control: &mut C) -> Result<dsl::RecordSpec, String> {
+        fn $controlled<C: semio_framework_dsl_record::NativeSchemaControl $(, $generic: semio_framework_dsl_record::DslField)?>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
             control.scoped_stage(|control| {
                 const COUNT: usize = [$(stringify!($id)),+].len();
                 control.begin_stage(COUNT)?;
-                let mut fields = control.allocate_vec::<dsl::FieldSpec>(COUNT)?;
+                let mut fields = control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(COUNT)?;
                 $(control.checkpoint()?;
                 let shape = dwg_controlled_shape!($shape, control)?;
-                let mut field = dsl::schema::producer::field($id, $key, shape, control)?;
+                let mut field = semio_framework_dsl_record::producer::field($id, $key, shape, control)?;
                 field.optional = $optional;
                 fields.push(field);
                 control.step()?;)+
-                dsl::schema::producer::record(None, dsl::RecordLayout::Inline, fields, control)
+                semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
             })
         }
-        fn $producer $(<$generic: dsl::DslField>)?() -> dsl::RecordSpecProducer {
-            dsl::RecordSpecProducer {
+        fn $producer $(<$generic: semio_framework_dsl_record::DslField>)?() -> semio_framework_dsl_record::RecordSpecProducer {
+            semio_framework_dsl_record::RecordSpecProducer {
                 ordinary: $spec $(::<$generic>)?,
                 decoding: |control| $controlled::<_ $(, $generic)?>(control),
                 encoding: |control| $controlled::<_ $(, $generic)?>(control),
@@ -78,48 +79,48 @@ macro_rules! dwg_metadata {
 
 macro_rules! dwg_controlled_payloads {
     ($tag_field:literal; units[$($unit:ident = $unit_tag:literal),*]; $($tag:literal, $field:literal, $variant:ident, $ty:ty;)+) => {
-        fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{
+        fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{
             control.scoped_stage(|control|{
                 let count=match self{$(Self::$unit=>1,)*_=>2};
                 control.begin_stage(count)?;
-                let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+                let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(count,control)?;
                 match self{
-                    $(Self::$unit=>{record.insert($tag_field,dsl::FieldValue::Enum($unit_tag));control.step()?;},)*
+                    $(Self::$unit=>{record.insert($tag_field,semio_framework_dsl_record::FieldValue::Enum($unit_tag))?;control.step()?;},)*
                     $(Self::$variant(value)=>{
-                        record.insert($tag_field,dsl::FieldValue::Enum($tag));control.step()?;
-                        let field=control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as dsl::DslField>::to_value_controlled(value,control)})?;
-                        record.insert($field,field);control.step()?;
+                        record.insert($tag_field,semio_framework_dsl_record::FieldValue::Enum($tag))?;control.step()?;
+                        let field=control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as semio_framework_dsl_record::DslField>::to_value_controlled(value,control)})?;
+                        record.insert($field,field)?;control.step()?;
                     },)+
                 }
-                Ok(dsl::FieldValue::Record(record.take()))
+                Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
             })
         }
-        fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
-            let dsl::FieldValue::Record(record)=value else{return Err("DWG typed payload requires a record".into())};
+        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+            let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload requires a record"))};
             Self::from_record_controlled(record,control)
         }
-        fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
             control.scoped_stage(|control|{
                 control.begin_stage(record.fields.len())?;
-                let kind=match record.get($tag_field){Some(dsl::FieldValue::Enum(value))=>*value,_=>return Err("DWG typed payload requires its authored kind".into())};
-                let payload=match kind{$($unit_tag=>None,)*$($tag=>Some($field),)+_=>return Err("DWG typed payload kind is unknown".into())};
+                let kind=match record.get($tag_field){Some(semio_framework_dsl_record::FieldValue::Enum(value))=>*value,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload requires its authored kind"))};
+                let payload=match kind{$($unit_tag=>None,)*$($tag=>Some($field),)+_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload kind is unknown"))};
                 for(field,value)in &record.fields{
-                    if *field!=$tag_field&&Some(*field)!=payload&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG typed payload has an unowned field".into())}
+                    if *field!=$tag_field&&Some(*field)!=payload&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload has an unowned field"))}
                     control.step()?;
                 }
                 match kind{
                     $($unit_tag=>Ok(Self::$unit),)*
-                    $($tag=>Ok(Self::$variant(control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as dsl::DslField>::from_value_controlled(record.get($field).ok_or("DWG typed payload is missing")?,control)})?)),)+
+                    $($tag=>Ok(Self::$variant(control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as semio_framework_dsl_record::DslField>::from_value_controlled(record.get($field).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload is missing"))?,control)})?)),)+
                     _=>unreachable!()
                 }
             })
         }
-        fn retire_decoded(self){match self{$(Self::$unit=>{},)*$(Self::$variant(value)=><$ty as dsl::DslField>::retire_decoded(value),)+}}
+        fn retire_decoded(self){match self{$(Self::$unit=>{},)*$(Self::$variant(value)=><$ty as semio_framework_dsl_record::DslField>::retire_decoded(value),)+}}
     };
 }
 
 //#region 🔖️DrawingModel
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgLogicalGeometryKind {
     #[default]
@@ -136,7 +137,7 @@ pub enum DwgLogicalGeometryKind {
     PolyfaceMesh,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLogicalGeometry {
     pub kind: DwgLogicalGeometryKind,
@@ -150,14 +151,14 @@ pub struct DwgLogicalGeometry {
     pub closed: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLogicalLayer {
     pub name: String,
     pub color: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLogicalEntity {
     pub layer: usize,
@@ -165,7 +166,7 @@ pub struct DwgLogicalEntity {
     pub geometry: DwgLogicalGeometry,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgObjectCategory {
     Entity,
@@ -177,7 +178,7 @@ pub enum DwgObjectCategory {
     Custom,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgNamedReference {
     pub name: String,
@@ -219,146 +220,146 @@ dwg_metadata!(dwg_xrecord_value_spec, dwg_xrecord_value_spec_controlled, dwg_xre
     8, "handle_value", true, [primitive UInt];
 );
 
-impl dsl::DslField for DwgXRecordValue {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
-        control.begin_stage(3)?;let mut record=dsl::native_encoding::EncodedRecord::new(3,control)?;
+impl semio_framework_dsl_record::DslField for DwgXRecordValue {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(3)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(3,control)?;
         let (kind,group_code,payload_id,payload)=match self{
-            Self::String{group_code,value}=>(0,*group_code,2,control.scoped_stage(|control|{control.begin_stage(0)?;<String as dsl::DslField>::to_value_controlled(value,control)})?),
-            Self::Real{group_code,value}=>(1,*group_code,3,dsl::FieldValue::Float(*value)),
-            Self::Boolean{group_code,value}=>(2,*group_code,4,dsl::FieldValue::Bool(*value)),
-            Self::Integer8{group_code,value}=>(3,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer16{group_code,value}=>(4,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer32{group_code,value}=>(5,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer64{group_code,value}=>(6,*group_code,5,dsl::FieldValue::Int(*value)),
-            Self::Point3d{group_code,value}=>(7,*group_code,6,control.scoped_stage(|control|{control.begin_stage(0)?;<[f64;3] as dsl::DslField>::to_value_controlled(value,control)})?),
-            Self::Binary{group_code,octets}=>(8,*group_code,7,dsl::FieldValue::Bytes64(control.copy_bytes(octets)?)),
-            Self::Handle{group_code,value}=>(9,*group_code,8,dsl::FieldValue::UInt(*value)),
-            Self::ObjectId{group_code,absolute_value}=>(10,*group_code,8,dsl::FieldValue::UInt(*absolute_value)),
-        };record.insert(payload_id,payload);control.step()?;record.insert(0,dsl::FieldValue::Enum(kind));control.step()?;record.insert(1,dsl::FieldValue::Int(i64::from(group_code)));control.step()?;
-        Ok(dsl::FieldValue::Record(record.take()))
+            Self::String{group_code,value}=>(0,*group_code,2,control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::to_value_controlled(value,control)})?),
+            Self::Real{group_code,value}=>(1,*group_code,3,semio_framework_dsl_record::FieldValue::Float(*value)),
+            Self::Boolean{group_code,value}=>(2,*group_code,4,semio_framework_dsl_record::FieldValue::Bool(*value)),
+            Self::Integer8{group_code,value}=>(3,*group_code,5,semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer16{group_code,value}=>(4,*group_code,5,semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer32{group_code,value}=>(5,*group_code,5,semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer64{group_code,value}=>(6,*group_code,5,semio_framework_dsl_record::FieldValue::Int(*value)),
+            Self::Point3d{group_code,value}=>(7,*group_code,6,control.scoped_stage(|control|{control.begin_stage(0)?;<[f64;3] as semio_framework_dsl_record::DslField>::to_value_controlled(value,control)})?),
+            Self::Binary{group_code,octets}=>(8,*group_code,7,semio_framework_dsl_record::FieldValue::Bytes64(control.copy_bytes(octets)?)),
+            Self::Handle{group_code,value}=>(9,*group_code,8,semio_framework_dsl_record::FieldValue::UInt(*value)),
+            Self::ObjectId{group_code,absolute_value}=>(10,*group_code,8,semio_framework_dsl_record::FieldValue::UInt(*absolute_value)),
+        };record.insert(payload_id,payload)?;control.step()?;record.insert(0,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Int(i64::from(group_code)))?;control.step()?;
+        Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG XRECORD value requires a record".into())};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
-        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(dsl::FieldValue::Enum(kind))=>*kind,_=>return Err("DWG XRECORD kind missing".into())};
-        let payload_id=match kind{0=>2,1=>3,2=>4,3..=6=>5,7=>6,8=>7,9|10=>8,_=>return Err("DWG XRECORD kind unknown".into())};
-        for(id,value)in &record.fields{if *id!=0&&*id!=1&&*id!=payload_id&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG XRECORD has an unowned field".into())}control.step()?;}
-        let group_code=control.scoped_stage(|control|{control.begin_stage(0)?;<i16 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG XRECORD group code missing")?,control)})?;
-        let payload=record.get(payload_id).ok_or("DWG XRECORD payload missing")?;
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD value requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Enum(kind))=>*kind,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD kind missing"))};
+        let payload_id=match kind{0=>2,1=>3,2=>4,3..=6=>5,7=>6,8=>7,9|10=>8,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD kind unknown"))};
+        for(id,value)in &record.fields{if *id!=0&&*id!=1&&*id!=payload_id&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD has an unowned field"))}control.step()?;}
+        let group_code=control.scoped_stage(|control|{control.begin_stage(0)?;<i16 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD group code missing"))?,control)})?;
+        let payload=record.get(payload_id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD payload missing"))?;
         control.scoped_stage(|control|{control.begin_stage(0)?;match kind{
-            0=>Ok(Self::String{group_code,value:<String as dsl::DslField>::from_value_controlled(payload,control)?}),
-            1=>Ok(Self::Real{group_code,value:<f64 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            2=>Ok(Self::Boolean{group_code,value:<bool as dsl::DslField>::from_value_controlled(payload,control)?}),
-            3=>Ok(Self::Integer8{group_code,value:<i8 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            4=>Ok(Self::Integer16{group_code,value:<i16 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            5=>Ok(Self::Integer32{group_code,value:<i32 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            6=>Ok(Self::Integer64{group_code,value:<i64 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            7=>Ok(Self::Point3d{group_code,value:<[f64;3] as dsl::DslField>::from_value_controlled(payload,control)?}),
-            8=>{let dsl::FieldValue::Bytes64(bytes)=payload else{return Err("DWG XRECORD octets missing".into())};Ok(Self::Binary{group_code,octets:control.copy_bytes(bytes)?})},
-            9=>Ok(Self::Handle{group_code,value:<u64 as dsl::DslField>::from_value_controlled(payload,control)?}),
-            10=>Ok(Self::ObjectId{group_code,absolute_value:<u64 as dsl::DslField>::from_value_controlled(payload,control)?}),_=>unreachable!(),
+            0=>Ok(Self::String{group_code,value:<String as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            1=>Ok(Self::Real{group_code,value:<f64 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            2=>Ok(Self::Boolean{group_code,value:<bool as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            3=>Ok(Self::Integer8{group_code,value:<i8 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            4=>Ok(Self::Integer16{group_code,value:<i16 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            5=>Ok(Self::Integer32{group_code,value:<i32 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            6=>Ok(Self::Integer64{group_code,value:<i64 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            7=>Ok(Self::Point3d{group_code,value:<[f64;3] as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            8=>{let semio_framework_dsl_record::FieldValue::Bytes64(bytes)=payload else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD octets missing"))};Ok(Self::Binary{group_code,octets:control.copy_bytes(bytes)?})},
+            9=>Ok(Self::Handle{group_code,value:<u64 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),
+            10=>Ok(Self::ObjectId{group_code,absolute_value:<u64 as semio_framework_dsl_record::DslField>::from_value_controlled(payload,control)?}),_=>unreachable!(),
         }})
     })}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_xrecord_value_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_xrecord_value_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_xrecord_value_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_xrecord_value_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let (kind, group_code, payload_id, payload) = match self {
-            Self::String { group_code, value } => (0, *group_code, 2, dsl::FieldValue::Text(value.clone())),
-            Self::Real { group_code, value } => (1, *group_code, 3, dsl::FieldValue::Float(*value)),
-            Self::Boolean { group_code, value } => (2, *group_code, 4, dsl::FieldValue::Bool(*value)),
-            Self::Integer8 { group_code, value } => (3, *group_code, 5, dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer16 { group_code, value } => (4, *group_code, 5, dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer32 { group_code, value } => (5, *group_code, 5, dsl::FieldValue::Int(i64::from(*value))),
-            Self::Integer64 { group_code, value } => (6, *group_code, 5, dsl::FieldValue::Int(*value)),
-            Self::Point3d { group_code, value } => (7, *group_code, 6, dsl::FieldValue::Tuple(value.iter().copied().map(dsl::FieldValue::Float).collect())),
-            Self::Binary { group_code, octets } => (8, *group_code, 7, dsl::FieldValue::Bytes64(octets.clone())),
-            Self::Handle { group_code, value } => (9, *group_code, 8, dsl::FieldValue::UInt(*value)),
-            Self::ObjectId { group_code, absolute_value, .. } => (10, *group_code, 8, dsl::FieldValue::UInt(*absolute_value)),
+            Self::String { group_code, value } => (0, *group_code, 2, semio_framework_dsl_record::FieldValue::Text(value.clone())),
+            Self::Real { group_code, value } => (1, *group_code, 3, semio_framework_dsl_record::FieldValue::Float(*value)),
+            Self::Boolean { group_code, value } => (2, *group_code, 4, semio_framework_dsl_record::FieldValue::Bool(*value)),
+            Self::Integer8 { group_code, value } => (3, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer16 { group_code, value } => (4, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer32 { group_code, value } => (5, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
+            Self::Integer64 { group_code, value } => (6, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(*value)),
+            Self::Point3d { group_code, value } => (7, *group_code, 6, semio_framework_dsl_record::FieldValue::Tuple(value.iter().copied().map(semio_framework_dsl_record::FieldValue::Float).collect())),
+            Self::Binary { group_code, octets } => (8, *group_code, 7, semio_framework_dsl_record::FieldValue::Bytes64(octets.clone())),
+            Self::Handle { group_code, value } => (9, *group_code, 8, semio_framework_dsl_record::FieldValue::UInt(*value)),
+            Self::ObjectId { group_code, absolute_value, .. } => (10, *group_code, 8, semio_framework_dsl_record::FieldValue::UInt(*absolute_value)),
         };
-        record.fields.insert(0, dsl::FieldValue::Enum(kind));
-        record.fields.insert(1, dsl::FieldValue::Int(i64::from(group_code)));
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(kind));
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Int(i64::from(group_code)));
         record.fields.insert(payload_id, payload);
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err(format!("expected XRECORD value record, found {value:?}"));
         };
-        if record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count() != 3 {
+        if record.fields.values().filter(|value| !matches!(value, semio_framework_dsl_record::FieldValue::Absent)).count() != 3 {
             return Err("XRECORD value must contain exactly kind, group code, and one payload".into());
         }
         let kind = match record.get(0) {
-            Some(dsl::FieldValue::Enum(value)) => *value,
+            Some(semio_framework_dsl_record::FieldValue::Enum(value)) => *value,
             other => return Err(format!("expected XRECORD value kind, found {other:?}")),
         };
         let group_code = match record.get(1) {
-            Some(dsl::FieldValue::Int(value)) => i16::try_from(*value).map_err(|_| format!("XRECORD group code {value} exceeds i16"))?,
+            Some(semio_framework_dsl_record::FieldValue::Int(value)) => i16::try_from(*value).map_err(|_| format!("XRECORD group code {value} exceeds i16"))?,
             other => return Err(format!("expected XRECORD group code, found {other:?}")),
         };
         let result = match kind {
             0 => Self::String {
                 group_code,
                 value: match record.get(2) {
-                    Some(dsl::FieldValue::Text(value)) => value.clone(),
+                    Some(semio_framework_dsl_record::FieldValue::Text(value)) => value.clone(),
                     other => return Err(format!("expected XRECORD string, found {other:?}")),
                 },
             },
             1 => Self::Real {
                 group_code,
                 value: match record.get(3) {
-                    Some(dsl::FieldValue::Float(value)) => *value,
+                    Some(semio_framework_dsl_record::FieldValue::Float(value)) => *value,
                     other => return Err(format!("expected XRECORD real, found {other:?}")),
                 },
             },
             2 => Self::Boolean {
                 group_code,
                 value: match record.get(4) {
-                    Some(dsl::FieldValue::Bool(value)) => *value,
+                    Some(semio_framework_dsl_record::FieldValue::Bool(value)) => *value,
                     other => return Err(format!("expected XRECORD boolean, found {other:?}")),
                 },
             },
             3 => Self::Integer8 {
                 group_code,
                 value: match record.get(5) {
-                    Some(dsl::FieldValue::Int(value)) => i8::try_from(*value).map_err(|_| format!("XRECORD integer8 {value} is out of range"))?,
+                    Some(semio_framework_dsl_record::FieldValue::Int(value)) => i8::try_from(*value).map_err(|_| format!("XRECORD integer8 {value} is out of range"))?,
                     other => return Err(format!("expected XRECORD integer8, found {other:?}")),
                 },
             },
             4 => Self::Integer16 {
                 group_code,
                 value: match record.get(5) {
-                    Some(dsl::FieldValue::Int(value)) => i16::try_from(*value).map_err(|_| format!("XRECORD integer16 {value} is out of range"))?,
+                    Some(semio_framework_dsl_record::FieldValue::Int(value)) => i16::try_from(*value).map_err(|_| format!("XRECORD integer16 {value} is out of range"))?,
                     other => return Err(format!("expected XRECORD integer16, found {other:?}")),
                 },
             },
             5 => Self::Integer32 {
                 group_code,
                 value: match record.get(5) {
-                    Some(dsl::FieldValue::Int(value)) => i32::try_from(*value).map_err(|_| format!("XRECORD integer32 {value} is out of range"))?,
+                    Some(semio_framework_dsl_record::FieldValue::Int(value)) => i32::try_from(*value).map_err(|_| format!("XRECORD integer32 {value} is out of range"))?,
                     other => return Err(format!("expected XRECORD integer32, found {other:?}")),
                 },
             },
             6 => Self::Integer64 {
                 group_code,
                 value: match record.get(5) {
-                    Some(dsl::FieldValue::Int(value)) => *value,
+                    Some(semio_framework_dsl_record::FieldValue::Int(value)) => *value,
                     other => return Err(format!("expected XRECORD integer64, found {other:?}")),
                 },
             },
             7 => Self::Point3d {
                 group_code,
                 value: match record.get(6) {
-                    Some(dsl::FieldValue::Tuple(values)) if values.len() == 3 => [0, 1, 2]
+                    Some(semio_framework_dsl_record::FieldValue::Tuple(values)) if values.len() == 3 => [0, 1, 2]
                         .map(|index| match values.get(index) {
-                            Some(dsl::FieldValue::Float(value)) => Ok(*value),
+                            Some(semio_framework_dsl_record::FieldValue::Float(value)) => Ok(*value),
                             other => Err(format!("expected XRECORD point coordinate, found {other:?}")),
                         })
                         .into_iter()
@@ -371,21 +372,21 @@ impl dsl::DslField for DwgXRecordValue {
             8 => Self::Binary {
                 group_code,
                 octets: match record.get(7) {
-                    Some(dsl::FieldValue::Bytes64(value)) => value.clone(),
+                    Some(semio_framework_dsl_record::FieldValue::Bytes64(value)) => value.clone(),
                     other => return Err(format!("expected XRECORD binary value, found {other:?}")),
                 },
             },
             9 => Self::Handle {
                 group_code,
                 value: match record.get(8) {
-                    Some(dsl::FieldValue::UInt(value)) => *value,
+                    Some(semio_framework_dsl_record::FieldValue::UInt(value)) => *value,
                     other => return Err(format!("expected XRECORD handle, found {other:?}")),
                 },
             },
             10 => Self::ObjectId {
                 group_code,
                 absolute_value: match record.get(8) {
-                    Some(dsl::FieldValue::UInt(value)) => *value,
+                    Some(semio_framework_dsl_record::FieldValue::UInt(value)) => *value,
                     other => return Err(format!("expected XRECORD absolute object id, found {other:?}")),
                 },
             },
@@ -433,7 +434,7 @@ impl DwgXRecordValue {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDictionaryBody {
     #[value(default)]
@@ -457,56 +458,56 @@ dwg_metadata!(dwg_table_control_entry_spec, dwg_table_control_entry_spec_control
     1, "handle", true, [primitive UInt];
 );
 
-impl dsl::DslField for DwgTableControlEntry {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+impl semio_framework_dsl_record::DslField for DwgTableControlEntry {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{
         let count=if self.handle.is_some(){2}else{1};control.begin_stage(count)?;
-        let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
-        record.insert(0,dsl::FieldValue::Bool(self.handle.is_some()));control.step()?;
-        if let Some(handle)=self.handle{record.insert(1,dsl::FieldValue::UInt(handle));control.step()?;}
-        Ok(dsl::FieldValue::Record(record.take()))
+        let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(count,control)?;
+        record.insert(0,semio_framework_dsl_record::FieldValue::Bool(self.handle.is_some()))?;control.step()?;
+        if let Some(handle)=self.handle{record.insert(1,semio_framework_dsl_record::FieldValue::UInt(handle))?;control.step()?;}
+        Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG table-control entry requires a record".into())};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
-        control.begin_stage(record.fields.len())?;let has=control.scoped_stage(|control|{control.begin_stage(0)?;<bool as dsl::DslField>::from_value_controlled(record.get(0).ok_or("DWG handle presence missing")?,control)})?;
-        for(id,value)in &record.fields{if *id!=0&&!(has&&*id==1)&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG table-control entry has an unowned field".into())}control.step()?;}
-        Ok(Self{handle:if has{Some(control.scoped_stage(|control|{control.begin_stage(0)?;<u64 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG handle missing")?,control)})?)}else{None}})
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table-control entry requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let has=control.scoped_stage(|control|{control.begin_stage(0)?;<bool as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(0).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG handle presence missing"))?,control)})?;
+        for(id,value)in &record.fields{if *id!=0&&!(has&&*id==1)&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table-control entry has an unowned field"))}control.step()?;}
+        Ok(Self{handle:if has{Some(control.scoped_stage(|control|{control.begin_stage(0)?;<u64 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG handle missing"))?,control)})?)}else{None}})
     })}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_table_control_entry_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_table_control_entry_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_table_control_entry_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_table_control_entry_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
-        record.fields.insert(0, dsl::FieldValue::Bool(self.handle.is_some()));
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Bool(self.handle.is_some()));
         if let Some(handle) = self.handle {
-            record.fields.insert(1, <u64 as dsl::DslField>::to_value(&handle));
+            record.fields.insert(1, <u64 as semio_framework_dsl_record::DslField>::to_value(&handle));
         }
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected table-control entry record".into()) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected table-control entry record".into()) };
         match record.get(0) {
-            Some(dsl::FieldValue::Bool(false)) => Ok(Self { handle: None }),
-            Some(dsl::FieldValue::Bool(true)) => Ok(Self { handle: Some(<u64 as dsl::DslField>::from_value(record.get(1).ok_or("table-control handle missing")?)?) }),
+            Some(semio_framework_dsl_record::FieldValue::Bool(false)) => Ok(Self { handle: None }),
+            Some(semio_framework_dsl_record::FieldValue::Bool(true)) => Ok(Self { handle: Some(<u64 as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("table-control handle missing")?)?) }),
             other => Err(format!("invalid table-control handle presence {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTableControlEntries {
     #[value(default)]
     pub entry_handles: Vec<DwgTableControlEntry>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockTableControl {
     #[value(default)]
@@ -517,7 +518,7 @@ pub struct DwgBlockTableControl {
     pub paper_space_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLinetypeTableControl {
     #[value(default)]
@@ -526,7 +527,7 @@ pub struct DwgLinetypeTableControl {
     pub by_layer_handle: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionStyleTableControl {
     #[value(default)]
@@ -576,7 +577,7 @@ dwg_metadata!(table_control_body_spec, table_control_body_spec_controlled, table
     5, "dimensionStyle", true, [typed DwgDimensionStyleTableControl];
 );
 
-impl dsl::DslField for DwgTableControlBody {
+impl semio_framework_dsl_record::DslField for DwgTableControlBody {
     dwg_controlled_payloads!(1; units[];
         0,3,Block,DwgBlockTableControl;
         1,2,Layer,DwgTableControlEntries;
@@ -588,51 +589,51 @@ impl dsl::DslField for DwgTableControlBody {
         7,2,RegisteredApplication,DwgTableControlEntries;
         8,5,DimensionStyle,DwgDimensionStyleTableControl;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(table_control_body_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(table_control_body_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(table_control_body_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(table_control_body_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let (kind, field, value) = match self {
-            Self::Block(value) => (0, 3, <DwgBlockTableControl as dsl::DslField>::to_value(value)),
-            Self::Layer(value) => (1, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::TextStyle(value) => (2, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::Linetype(value) => (3, 4, <DwgLinetypeTableControl as dsl::DslField>::to_value(value)),
-            Self::View(value) => (4, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::Ucs(value) => (5, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::Viewport(value) => (6, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::RegisteredApplication(value) => (7, 2, <DwgTableControlEntries as dsl::DslField>::to_value(value)),
-            Self::DimensionStyle(value) => (8, 5, <DwgDimensionStyleTableControl as dsl::DslField>::to_value(value)),
+            Self::Block(value) => (0, 3, <DwgBlockTableControl as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Layer(value) => (1, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::TextStyle(value) => (2, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Linetype(value) => (3, 4, <DwgLinetypeTableControl as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::View(value) => (4, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Ucs(value) => (5, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Viewport(value) => (6, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::RegisteredApplication(value) => (7, 2, <DwgTableControlEntries as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::DimensionStyle(value) => (8, 5, <DwgDimensionStyleTableControl as semio_framework_dsl_record::DslField>::to_value(value)),
         };
-        record.fields.insert(1, dsl::FieldValue::Enum(kind));
+        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(kind));
         record.fields.insert(field, value);
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected table-control body record".into()) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected table-control body record".into()) };
         match record.get(1) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Block(<DwgBlockTableControl as dsl::DslField>::from_value(record.get(3).ok_or("block control missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Layer(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("layer control missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TextStyle(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("text-style control missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableControl as dsl::DslField>::from_value(record.get(4).ok_or("linetype control missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::View(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("view control missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Ucs(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("UCS control missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::Viewport(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("viewport control missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::RegisteredApplication(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("registered-application control missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableControl as dsl::DslField>::from_value(record.get(5).ok_or("dimension-style control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::Block(<DwgBlockTableControl as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("block control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::Layer(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("layer control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::TextStyle(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("text-style control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableControl as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("linetype control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::View(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("view control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::Ucs(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("UCS control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::Viewport(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("viewport control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) => Ok(Self::RegisteredApplication(<DwgTableControlEntries as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("registered-application control missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(8)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableControl as semio_framework_dsl_record::DslField>::from_value(record.get(5).ok_or("dimension-style control missing")?)?)),
             other => Err(format!("unknown table-control kind {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTableRecordCommon {
     pub name: String,
@@ -641,14 +642,14 @@ pub struct DwgTableRecordCommon {
     pub xref_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgRegisteredApplicationTableRecord {
     pub common: DwgTableRecordCommon,
     pub group_71: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTextStyleTableRecord {
     pub common: DwgTableRecordCommon,
@@ -695,89 +696,89 @@ dwg_metadata!(dwg_complex_color_value_spec, dwg_complex_color_value_spec_control
     4, "index", true, [typed u16];
 );
 
-impl dsl::DslField for DwgComplexColorValue {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+impl semio_framework_dsl_record::DslField for DwgComplexColorValue {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{
         let count=match self{Self::ByColor{..}=>4,Self::ByAci{..}|Self::ByPen{..}=>2,_=>1};control.begin_stage(count)?;
-        let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+        let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(count,control)?;
         let kind=match self{
             Self::None=>0,Self::ByLayer=>1,Self::ByBlock=>2,
-            Self::ByColor{red,green,blue}=>{record.insert(1,dsl::FieldValue::UInt(u64::from(*red)));control.step()?;record.insert(2,dsl::FieldValue::UInt(u64::from(*green)));control.step()?;record.insert(3,dsl::FieldValue::UInt(u64::from(*blue)));control.step()?;3},
-            Self::ByAci{index}=>{record.insert(4,dsl::FieldValue::UInt(u64::from(*index)));control.step()?;4},
-            Self::ByPen{index}=>{record.insert(4,dsl::FieldValue::UInt(u64::from(*index)));control.step()?;5},
+            Self::ByColor{red,green,blue}=>{record.insert(1,semio_framework_dsl_record::FieldValue::UInt(u64::from(*red)))?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::UInt(u64::from(*green)))?;control.step()?;record.insert(3,semio_framework_dsl_record::FieldValue::UInt(u64::from(*blue)))?;control.step()?;3},
+            Self::ByAci{index}=>{record.insert(4,semio_framework_dsl_record::FieldValue::UInt(u64::from(*index)))?;control.step()?;4},
+            Self::ByPen{index}=>{record.insert(4,semio_framework_dsl_record::FieldValue::UInt(u64::from(*index)))?;control.step()?;5},
             Self::Foreground=>6,Self::LayerOff=>7,Self::LayerFrozen=>8,
-        };record.insert(0,dsl::FieldValue::Enum(kind));control.step()?;Ok(dsl::FieldValue::Record(record.take()))
+        };record.insert(0,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG complex color requires a record".into())};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
-        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(dsl::FieldValue::Enum(kind))=>*kind,_=>return Err("DWG complex-color kind missing".into())};
-        let allowed:&[u16]=match kind{0|1|2|6|7|8=>&[],3=>&[1,2,3],4|5=>&[4],_=>return Err("DWG complex-color kind unknown".into())};
-        for(id,value)in &record.fields{if *id!=0&&!allowed.contains(id)&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG complex color has an unowned field".into())}control.step()?;}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex color requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Enum(kind))=>*kind,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex-color kind missing"))};
+        let allowed:&[u16]=match kind{0|1|2|6|7|8=>&[],3=>&[1,2,3],4|5=>&[4],_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex-color kind unknown"))};
+        for(id,value)in &record.fields{if *id!=0&&!allowed.contains(id)&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex color has an unowned field"))}control.step()?;}
         control.scoped_stage(|control|{control.begin_stage(0)?;match kind{
             0=>Ok(Self::None),1=>Ok(Self::ByLayer),2=>Ok(Self::ByBlock),
-            3=>Ok(Self::ByColor{red:<u8 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG red missing")?,control)?,green:<u8 as dsl::DslField>::from_value_controlled(record.get(2).ok_or("DWG green missing")?,control)?,blue:<u8 as dsl::DslField>::from_value_controlled(record.get(3).ok_or("DWG blue missing")?,control)?}),
-            4=>Ok(Self::ByAci{index:<u16 as dsl::DslField>::from_value_controlled(record.get(4).ok_or("DWG ACI missing")?,control)?}),
-            5=>Ok(Self::ByPen{index:u8::try_from(<u16 as dsl::DslField>::from_value_controlled(record.get(4).ok_or("DWG pen missing")?,control)?).map_err(|_|"DWG pen exceeds u8")?}),
+            3=>Ok(Self::ByColor{red:<u8 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG red missing"))?,control)?,green:<u8 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(2).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG green missing"))?,control)?,blue:<u8 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(3).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG blue missing"))?,control)?}),
+            4=>Ok(Self::ByAci{index:<u16 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(4).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG ACI missing"))?,control)?}),
+            5=>Ok(Self::ByPen{index:u8::try_from(<u16 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(4).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG pen missing"))?,control)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"DWG pen exceeds u8"))?}),
             6=>Ok(Self::Foreground),7=>Ok(Self::LayerOff),8=>Ok(Self::LayerFrozen),_=>unreachable!(),
         }})
     })}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_complex_color_value_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_complex_color_value_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_complex_color_value_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_complex_color_value_spec_producer()))
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let kind = match self {
             Self::None => 0,
             Self::ByLayer => 1,
             Self::ByBlock => 2,
             Self::ByColor { red, green, blue } => {
-                record.fields.insert(1, <u8 as dsl::DslField>::to_value(red));
-                record.fields.insert(2, <u8 as dsl::DslField>::to_value(green));
-                record.fields.insert(3, <u8 as dsl::DslField>::to_value(blue));
+                record.fields.insert(1, <u8 as semio_framework_dsl_record::DslField>::to_value(red));
+                record.fields.insert(2, <u8 as semio_framework_dsl_record::DslField>::to_value(green));
+                record.fields.insert(3, <u8 as semio_framework_dsl_record::DslField>::to_value(blue));
                 3
             }
             Self::ByAci { index } => {
-                record.fields.insert(4, <u16 as dsl::DslField>::to_value(index));
+                record.fields.insert(4, <u16 as semio_framework_dsl_record::DslField>::to_value(index));
                 4
             }
             Self::ByPen { index } => {
-                record.fields.insert(4, <u16 as dsl::DslField>::to_value(&u16::from(*index)));
+                record.fields.insert(4, <u16 as semio_framework_dsl_record::DslField>::to_value(&u16::from(*index)));
                 5
             }
             Self::Foreground => 6,
             Self::LayerOff => 7,
             Self::LayerFrozen => 8,
         };
-        record.fields.insert(0, dsl::FieldValue::Enum(kind));
-        dsl::FieldValue::Record(record)
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(kind));
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected complex-color value record".into()) };
-        let no_extra = |allowed: &[u16]| record.fields.iter().all(|(field, value)| *field == 0 || allowed.contains(field) || matches!(value, dsl::FieldValue::Absent));
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected complex-color value record".into()) };
+        let no_extra = |allowed: &[u16]| record.fields.iter().all(|(field, value)| *field == 0 || allowed.contains(field) || matches!(value, semio_framework_dsl_record::FieldValue::Absent));
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) if no_extra(&[]) => Ok(Self::None),
-            Some(dsl::FieldValue::Enum(1)) if no_extra(&[]) => Ok(Self::ByLayer),
-            Some(dsl::FieldValue::Enum(2)) if no_extra(&[]) => Ok(Self::ByBlock),
-            Some(dsl::FieldValue::Enum(3)) if no_extra(&[1, 2, 3]) => Ok(Self::ByColor {
-                red: <u8 as dsl::DslField>::from_value(record.get(1).ok_or("red missing")?)?,
-                green: <u8 as dsl::DslField>::from_value(record.get(2).ok_or("green missing")?)?,
-                blue: <u8 as dsl::DslField>::from_value(record.get(3).ok_or("blue missing")?)?,
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) if no_extra(&[]) => Ok(Self::None),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) if no_extra(&[]) => Ok(Self::ByLayer),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) if no_extra(&[]) => Ok(Self::ByBlock),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) if no_extra(&[1, 2, 3]) => Ok(Self::ByColor {
+                red: <u8 as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("red missing")?)?,
+                green: <u8 as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("green missing")?)?,
+                blue: <u8 as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("blue missing")?)?,
             }),
-            Some(dsl::FieldValue::Enum(4)) if no_extra(&[4]) => Ok(Self::ByAci { index: <u16 as dsl::DslField>::from_value(record.get(4).ok_or("ACI index missing")?)? }),
-            Some(dsl::FieldValue::Enum(5)) if no_extra(&[4]) => Ok(Self::ByPen { index: u8::try_from(<u16 as dsl::DslField>::from_value(record.get(4).ok_or("pen index missing")?)?).map_err(|_| "pen index exceeds u8")? }),
-            Some(dsl::FieldValue::Enum(6)) if no_extra(&[]) => Ok(Self::Foreground),
-            Some(dsl::FieldValue::Enum(7)) if no_extra(&[]) => Ok(Self::LayerOff),
-            Some(dsl::FieldValue::Enum(8)) if no_extra(&[]) => Ok(Self::LayerFrozen),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) if no_extra(&[4]) => Ok(Self::ByAci { index: <u16 as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("ACI index missing")?)? }),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) if no_extra(&[4]) => Ok(Self::ByPen { index: u8::try_from(<u16 as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("pen index missing")?)?).map_err(|_| "pen index exceeds u8")? }),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) if no_extra(&[]) => Ok(Self::Foreground),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) if no_extra(&[]) => Ok(Self::LayerOff),
+            Some(semio_framework_dsl_record::FieldValue::Enum(8)) if no_extra(&[]) => Ok(Self::LayerFrozen),
             other => Err(format!("invalid complex-color value {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgComplexColor {
     pub index: u16,
@@ -788,7 +789,7 @@ pub struct DwgComplexColor {
     pub book_name: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLayerTableRecord {
     pub common: DwgTableRecordCommon,
@@ -807,7 +808,7 @@ pub struct DwgLayerTableRecord {
     pub linetype_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLinetypeDash {
     pub length: f64,
@@ -823,7 +824,7 @@ pub struct DwgLinetypeDash {
     pub text: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLinetypeTableRecord {
     pub common: DwgTableRecordCommon,
@@ -834,7 +835,7 @@ pub struct DwgLinetypeTableRecord {
     pub dashes: Vec<DwgLinetypeDash>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockHeaderTableRecord {
     pub common: DwgTableRecordCommon,
@@ -859,7 +860,7 @@ pub struct DwgBlockHeaderTableRecord {
     pub layout_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgViewportTableRecord {
     pub common: DwgTableRecordCommon,
@@ -914,7 +915,7 @@ pub struct DwgViewportTableRecord {
     pub base_ucs_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionGeometry {
     pub scale: f64,
@@ -930,7 +931,7 @@ pub struct DwgDimensionGeometry {
     pub jog_angle: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionBehavior {
     pub tolerance: bool,
@@ -945,7 +946,7 @@ pub struct DwgDimensionBehavior {
     pub arc_symbol: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionText {
     pub height: f64,
@@ -968,7 +969,7 @@ pub struct DwgDimensionText {
     pub text_color: DwgComplexColor,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionUnits {
     pub alternate_decimal_places: u16,
@@ -992,7 +993,7 @@ pub struct DwgDimensionUnits {
     pub arrow_text_fit: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionR2010 {
     pub fixed_extension_enabled: bool,
@@ -1006,7 +1007,7 @@ pub struct DwgDimensionR2010 {
     pub flag: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionStyleTableRecord {
     pub common: DwgTableRecordCommon,
@@ -1059,7 +1060,7 @@ dwg_metadata!(table_record_body_spec, table_record_body_spec_controlled, table_r
     8, "dimensionStyle", true, [typed DwgDimensionStyleTableRecord];
 );
 
-impl dsl::DslField for DwgTableRecordBody {
+impl semio_framework_dsl_record::DslField for DwgTableRecordBody {
     dwg_controlled_payloads!(1; units[];
         0,2,RegisteredApplication,DwgRegisteredApplicationTableRecord;
         1,3,TextStyle,DwgTextStyleTableRecord;
@@ -1069,68 +1070,68 @@ impl dsl::DslField for DwgTableRecordBody {
         5,7,Viewport,DwgViewportTableRecord;
         6,8,DimensionStyle,DwgDimensionStyleTableRecord;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(table_record_body_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(table_record_body_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(table_record_body_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(table_record_body_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         match self {
             Self::RegisteredApplication(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(0));
-                record.fields.insert(2, <DwgRegisteredApplicationTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(0));
+                record.fields.insert(2, <DwgRegisteredApplicationTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::TextStyle(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(1));
-                record.fields.insert(3, <DwgTextStyleTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(1));
+                record.fields.insert(3, <DwgTextStyleTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Layer(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(2));
-                record.fields.insert(4, <DwgLayerTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(2));
+                record.fields.insert(4, <DwgLayerTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Linetype(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(3));
-                record.fields.insert(5, <DwgLinetypeTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(3));
+                record.fields.insert(5, <DwgLinetypeTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::BlockHeader(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(4));
-                record.fields.insert(6, <DwgBlockHeaderTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(4));
+                record.fields.insert(6, <DwgBlockHeaderTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Viewport(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(5));
-                record.fields.insert(7, <DwgViewportTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(5));
+                record.fields.insert(7, <DwgViewportTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::DimensionStyle(value) => {
-                record.fields.insert(1, dsl::FieldValue::Enum(6));
-                record.fields.insert(8, <DwgDimensionStyleTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(6));
+                record.fields.insert(8, <DwgDimensionStyleTableRecord as semio_framework_dsl_record::DslField>::to_value(value));
             }
         }
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err("expected table-record body record".into());
         };
         match record.get(1) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::RegisteredApplication(<DwgRegisteredApplicationTableRecord as dsl::DslField>::from_value(record.get(2).ok_or("registered-application record missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TextStyle(<DwgTextStyleTableRecord as dsl::DslField>::from_value(record.get(3).ok_or("text-style record missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::Layer(<DwgLayerTableRecord as dsl::DslField>::from_value(record.get(4).ok_or("layer record missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableRecord as dsl::DslField>::from_value(record.get(5).ok_or("linetype record missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockHeader(<DwgBlockHeaderTableRecord as dsl::DslField>::from_value(record.get(6).ok_or("block-header record missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Viewport(<DwgViewportTableRecord as dsl::DslField>::from_value(record.get(7).ok_or("viewport record missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableRecord as dsl::DslField>::from_value(record.get(8).ok_or("dimension-style record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::RegisteredApplication(<DwgRegisteredApplicationTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("registered-application record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::TextStyle(<DwgTextStyleTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("text-style record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::Layer(<DwgLayerTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("layer record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(5).ok_or("linetype record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::BlockHeader(<DwgBlockHeaderTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(6).ok_or("block-header record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::Viewport(<DwgViewportTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(7).ok_or("viewport record missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableRecord as semio_framework_dsl_record::DslField>::from_value(record.get(8).ok_or("dimension-style record missing")?)?)),
             other => Err(format!("unknown table-record kind {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgXRecordBody {
     #[value(default)]
@@ -1140,7 +1141,7 @@ pub struct DwgXRecordBody {
     pub cloning_flag: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgExtendedEntityData {
     pub application_handle: u64,
@@ -1148,7 +1149,7 @@ pub struct DwgExtendedEntityData {
     pub values: Vec<DwgXRecordValue>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgEntityMode {
     ExplicitOwner,
@@ -1158,7 +1159,7 @@ pub enum DwgEntityMode {
     Reserved,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgEntityReferenceMode {
     #[default]
@@ -1168,7 +1169,7 @@ pub enum DwgEntityReferenceMode {
     Explicit,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgEntityColorKind {
     #[default]
@@ -1178,7 +1179,7 @@ pub enum DwgEntityColorKind {
     TrueColor,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEntityColor {
     pub kind: DwgEntityColorKind,
@@ -1194,7 +1195,7 @@ pub struct DwgEntityColor {
     pub color_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEntityCommon {
     pub mode: DwgEntityMode,
@@ -1223,7 +1224,7 @@ pub struct DwgEntityCommon {
     pub edge_visual_style_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLineEntity {
     pub common: DwgEntityCommon,
@@ -1233,7 +1234,7 @@ pub struct DwgLineEntity {
     pub extrusion: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgArcEntity {
     pub common: DwgEntityCommon,
@@ -1245,7 +1246,7 @@ pub struct DwgArcEntity {
     pub end_angle: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLwPolylineVertex {
     pub point: Vec<f64>,
@@ -1258,7 +1259,7 @@ pub struct DwgLwPolylineVertex {
     pub end_width: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLwPolylineEntity {
     pub common: DwgEntityCommon,
@@ -1272,19 +1273,19 @@ pub struct DwgLwPolylineEntity {
     pub vertices: Vec<DwgLwPolylineVertex>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockBeginEntity {
     pub common: DwgEntityCommon,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockEndEntity {
     pub common: DwgEntityCommon,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgInsertEntity {
     pub common: DwgEntityCommon,
@@ -1299,7 +1300,7 @@ pub struct DwgInsertEntity {
     pub sequence_end_handle: Option<u64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgDimensionTextAttachment {
     #[default]
@@ -1314,7 +1315,7 @@ pub enum DwgDimensionTextAttachment {
     BottomRight,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgDimensionLineSpacingStyle {
     #[default]
@@ -1322,14 +1323,14 @@ pub enum DwgDimensionLineSpacingStyle {
     Exact,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionStatus {
     pub block_reference_is_exclusive: bool,
     pub user_positioned_text: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionEntityCommon {
     pub common: DwgEntityCommon,
@@ -1354,7 +1355,7 @@ pub struct DwgDimensionEntityCommon {
     pub dimension_block_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLinearDimensionEntity {
     pub dimension: DwgDimensionEntityCommon,
@@ -1365,7 +1366,7 @@ pub struct DwgLinearDimensionEntity {
     pub dimension_rotation: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgViewportStatusFlag {
     Perspective,
@@ -1392,7 +1393,7 @@ pub enum DwgViewportStatusFlag {
     GridFollowsWorkplane,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgViewportRenderMode {
     #[default]
@@ -1405,7 +1406,7 @@ pub enum DwgViewportRenderMode {
     GouraudShadedWithWireframe,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgOrthographicView {
     #[default]
@@ -1418,7 +1419,7 @@ pub enum DwgOrthographicView {
     Right,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgShadePlotMode {
     #[default]
@@ -1428,7 +1429,7 @@ pub enum DwgShadePlotMode {
     Rendered,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgDefaultLightingType {
     OneDistantLight,
@@ -1436,7 +1437,7 @@ pub enum DwgDefaultLightingType {
     TwoDistantLights,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgViewportEntity {
     pub common: DwgEntityCommon,
@@ -1483,7 +1484,7 @@ pub struct DwgViewportEntity {
     pub sun_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPointEntity {
     pub common: DwgEntityCommon,
@@ -1493,7 +1494,7 @@ pub struct DwgPointEntity {
     pub x_axis_angle: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCircleEntity {
     pub common: DwgEntityCommon,
@@ -1503,7 +1504,7 @@ pub struct DwgCircleEntity {
     pub extrusion: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEllipseEntity {
     pub common: DwgEntityCommon,
@@ -1515,7 +1516,7 @@ pub struct DwgEllipseEntity {
     pub end_parameter: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTextEntity {
     pub common: DwgEntityCommon,
@@ -1536,7 +1537,7 @@ pub struct DwgTextEntity {
     pub style_handle: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgSplineEntity {
     pub common: DwgEntityCommon,
@@ -1554,7 +1555,7 @@ pub struct DwgSplineEntity {
     pub weights: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgFace3dEntity {
     pub common: DwgEntityCommon,
@@ -1562,7 +1563,7 @@ pub struct DwgFace3dEntity {
     pub invisible_edges: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPolyline3dEntity {
     pub common: DwgEntityCommon,
@@ -1573,7 +1574,7 @@ pub struct DwgPolyline3dEntity {
     pub sequence_end_handle: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPolyfaceMeshEntity {
     pub common: DwgEntityCommon,
@@ -1584,7 +1585,7 @@ pub struct DwgPolyfaceMeshEntity {
     pub sequence_end_handle: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgVertexEntity {
     pub common: DwgEntityCommon,
@@ -1592,14 +1593,14 @@ pub struct DwgVertexEntity {
     pub point: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPolyfaceFaceEntity {
     pub common: DwgEntityCommon,
     pub indices: Vec<i16>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgSequenceEndEntity {
     pub common: DwgEntityCommon,
@@ -1657,14 +1658,14 @@ impl DwgEntityBody {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgAssociativeDependencyStatus {
     #[default]
     UpToDate,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeDependency {
     pub status: DwgAssociativeDependencyStatus,
@@ -1697,40 +1698,40 @@ dwg_metadata!(dwg_evaluation_variant_spec, dwg_evaluation_variant_spec_controlle
     1, "integer32", true, [typed i32];
 );
 
-impl dsl::DslField for DwgEvaluationVariant {
+impl semio_framework_dsl_record::DslField for DwgEvaluationVariant {
     dwg_controlled_payloads!(0; units[];
         0,1,Integer32,i32;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_evaluation_variant_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_evaluation_variant_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_evaluation_variant_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_evaluation_variant_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         match self {
             Self::Integer32(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(0));
-                record.fields.insert(1, <i32 as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(0));
+                record.fields.insert(1, <i32 as semio_framework_dsl_record::DslField>::to_value(value));
             }
         }
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-variant record".into()) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected evaluation-variant record".into()) };
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation integer32 missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::Integer32(<i32 as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("evaluation integer32 missing")?)?)),
             other => Err(format!("unknown evaluation-variant kind {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeValueDependency {
     pub dependency: DwgAssociativeDependency,
@@ -1738,7 +1739,7 @@ pub struct DwgAssociativeValueDependency {
     pub value_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeGeometryDependency {
     pub dependency: DwgAssociativeDependency,
@@ -1772,7 +1773,7 @@ dwg_metadata!(dwg_evaluation_expression_value_spec, dwg_evaluation_expression_va
     7, "integer16", true, [typed i16];
 );
 
-impl dsl::DslField for DwgEvaluationExpressionValue {
+impl semio_framework_dsl_record::DslField for DwgEvaluationExpressionValue {
     dwg_controlled_payloads!(0; units[Empty=0];
         1,1,Double,f64;
         2,2,PointGroup10,Vec<f64>;
@@ -1782,56 +1783,56 @@ impl dsl::DslField for DwgEvaluationExpressionValue {
         6,6,ObjectReference,u64;
         7,7,Integer16,i16;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_evaluation_expression_value_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_evaluation_expression_value_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_evaluation_expression_value_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_evaluation_expression_value_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let (kind, field, value) = match self {
             Self::Empty => (0, None, None),
-            Self::Double(value) => (1, Some(1), Some(<f64 as dsl::DslField>::to_value(value))),
-            Self::PointGroup10(value) => (2, Some(2), Some(<Vec<f64> as dsl::DslField>::to_value(value))),
-            Self::PointGroup11(value) => (3, Some(3), Some(<Vec<f64> as dsl::DslField>::to_value(value))),
-            Self::String(value) => (4, Some(4), Some(<String as dsl::DslField>::to_value(value))),
-            Self::Integer32(value) => (5, Some(5), Some(<i32 as dsl::DslField>::to_value(value))),
-            Self::ObjectReference(value) => (6, Some(6), Some(<u64 as dsl::DslField>::to_value(value))),
-            Self::Integer16(value) => (7, Some(7), Some(<i16 as dsl::DslField>::to_value(value))),
+            Self::Double(value) => (1, Some(1), Some(<f64 as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::PointGroup10(value) => (2, Some(2), Some(<Vec<f64> as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::PointGroup11(value) => (3, Some(3), Some(<Vec<f64> as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::String(value) => (4, Some(4), Some(<String as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::Integer32(value) => (5, Some(5), Some(<i32 as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::ObjectReference(value) => (6, Some(6), Some(<u64 as semio_framework_dsl_record::DslField>::to_value(value))),
+            Self::Integer16(value) => (7, Some(7), Some(<i16 as semio_framework_dsl_record::DslField>::to_value(value))),
         };
-        record.fields.insert(0, dsl::FieldValue::Enum(kind));
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(kind));
         if let (Some(field), Some(value)) = (field, value) {
             record.fields.insert(field, value);
         }
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-expression value record".into()) };
-        let present = record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count();
-        let expected = if matches!(record.get(0), Some(dsl::FieldValue::Enum(0))) { 1 } else { 2 };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected evaluation-expression value record".into()) };
+        let present = record.fields.values().filter(|value| !matches!(value, semio_framework_dsl_record::FieldValue::Absent)).count();
+        let expected = if matches!(record.get(0), Some(semio_framework_dsl_record::FieldValue::Enum(0))) { 1 } else { 2 };
         if present != expected {
             return Err("evaluation-expression value must contain exactly its tagged payload".into());
         }
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Empty),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Double(<f64 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation-expression double missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::PointGroup10(<Vec<f64> as dsl::DslField>::from_value(record.get(2).ok_or("evaluation-expression group-10 point missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointGroup11(<Vec<f64> as dsl::DslField>::from_value(record.get(3).ok_or("evaluation-expression group-11 point missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::String(<String as dsl::DslField>::from_value(record.get(4).ok_or("evaluation-expression string missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(5).ok_or("evaluation-expression integer32 missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::ObjectReference(<u64 as dsl::DslField>::from_value(record.get(6).ok_or("evaluation-expression object reference missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Integer16(<i16 as dsl::DslField>::from_value(record.get(7).ok_or("evaluation-expression integer16 missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::Empty),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::Double(<f64 as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("evaluation-expression double missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::PointGroup10(<Vec<f64> as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("evaluation-expression group-10 point missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::PointGroup11(<Vec<f64> as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("evaluation-expression group-11 point missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::String(<String as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("evaluation-expression string missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::Integer32(<i32 as semio_framework_dsl_record::DslField>::from_value(record.get(5).ok_or("evaluation-expression integer32 missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::ObjectReference(<u64 as semio_framework_dsl_record::DslField>::from_value(record.get(6).ok_or("evaluation-expression object reference missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) => Ok(Self::Integer16(<i16 as semio_framework_dsl_record::DslField>::from_value(record.get(7).ok_or("evaluation-expression integer16 missing")?)?)),
             other => Err(format!("unknown evaluation-expression value kind {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEvaluationExpression {
     pub parent_id: i32,
@@ -1841,7 +1842,7 @@ pub struct DwgEvaluationExpression {
     pub node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockGripLocationComponent {
     pub evaluation_expression: DwgEvaluationExpression,
@@ -1849,27 +1850,27 @@ pub struct DwgBlockGripLocationComponent {
     pub grip_expression: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDynamicBlockProxyNode {
     pub evaluation_expression: DwgEvaluationExpression,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgAssociativeActionStatus {
     #[default]
     UpToDate,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeActionDependency {
     pub owned: bool,
     pub dependency_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeAction {
     pub status: DwgAssociativeActionStatus,
@@ -1882,7 +1883,7 @@ pub struct DwgAssociativeAction {
     pub dependencies: Vec<DwgAssociativeActionDependency>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeVariable {
     pub action: DwgAssociativeAction,
@@ -1898,13 +1899,13 @@ pub struct DwgAssociativeVariable {
     pub referenced_value_dependency_handles: Vec<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssociativeDimensionDependencyBody {
     pub name: String,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgVisualStylePropertyOperation {
     Inherit,
@@ -1927,42 +1928,42 @@ dwg_metadata!(dwg_visual_style_property_spec<T>, dwg_visual_style_property_spec_
     1, "operation", false, [typed DwgVisualStylePropertyOperation];
 );
 
-impl<T: dsl::DslField> dsl::DslField for DwgVisualStyleProperty<T> {
-    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
-        control.begin_stage(2)?;let mut record=dsl::native_encoding::EncodedRecord::new(2,control)?;
-        record.insert(0,control.scoped_stage(|control|{control.begin_stage(0)?;T::to_value_controlled(&self.value,control)})?);control.step()?;
-        record.insert(1,control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as dsl::DslField>::to_value_controlled(&self.operation,control)})?);control.step()?;
-        Ok(dsl::FieldValue::Record(record.take()))
+impl<T: semio_framework_dsl_record::DslField> semio_framework_dsl_record::DslField for DwgVisualStyleProperty<T> {
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(2)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(2,control)?;
+        record.insert(0,control.scoped_stage(|control|{control.begin_stage(0)?;T::to_value_controlled(&self.value,control)})?)?;control.step()?;
+        record.insert(1,control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as semio_framework_dsl_record::DslField>::to_value_controlled(&self.operation,control)})?)?;control.step()?;
+        Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG visual-style property requires a record".into())};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
-        control.begin_stage(record.fields.len())?;for(id,value)in &record.fields{if *id>1&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG visual-style property has an unowned field".into())}control.step()?;}
-        let value=dsl::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(record.get(0).ok_or("DWG property value missing")?,control)})?,T::retire_decoded);
-        let operation=control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG property operation missing")?,control)})?;
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG visual-style property requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;for(id,value)in &record.fields{if *id>1&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG visual-style property has an unowned field"))}control.step()?;}
+        let value=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(record.get(0).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG property value missing"))?,control)})?,T::retire_decoded);
+        let operation=control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG property operation missing"))?,control)})?;
         Ok(Self{value:value.take(),operation})
     })}
-    fn retire_decoded(self){T::retire_decoded(self.value);<DwgVisualStylePropertyOperation as dsl::DslField>::retire_decoded(self.operation);}
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_visual_style_property_spec_producer::<T>())
+    fn retire_decoded(self){T::retire_decoded(self.value);<DwgVisualStylePropertyOperation as semio_framework_dsl_record::DslField>::retire_decoded(self.operation);}
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_visual_style_property_spec_producer::<T>())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_visual_style_property_spec_producer::<T>()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_visual_style_property_spec_producer::<T>()))
     }
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         record.fields.insert(0, T::to_value(&self.value));
-        record.fields.insert(1, <DwgVisualStylePropertyOperation as dsl::DslField>::to_value(&self.operation));
-        dsl::FieldValue::Record(record)
+        record.fields.insert(1, <DwgVisualStylePropertyOperation as semio_framework_dsl_record::DslField>::to_value(&self.operation));
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected visual-style property record".into()) };
-        Ok(Self { value: T::from_value(record.get(0).ok_or("visual-style property value missing")?)?, operation: <DwgVisualStylePropertyOperation as dsl::DslField>::from_value(record.get(1).ok_or("visual-style property operation missing")?)? })
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected visual-style property record".into()) };
+        Ok(Self { value: T::from_value(record.get(0).ok_or("visual-style property value missing")?)?, operation: <DwgVisualStylePropertyOperation as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("visual-style property operation missing")?)? })
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgVisualStyleProperties {
     pub face_lighting_model: DwgVisualStyleProperty<u32>,
@@ -1995,7 +1996,7 @@ pub struct DwgVisualStyleProperties {
     pub display_shadow_type: DwgVisualStyleProperty<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgVisualStyle {
     pub description: String,
@@ -2005,32 +2006,32 @@ pub struct DwgVisualStyle {
     pub properties: DwgVisualStyleProperties,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterDependencyBody {
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockRepresentationData {
     pub represented_block_header_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDynamicBlockPurgePreventer {
     pub protected_block_header_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraphNode {
     pub id: u32,
     pub expression_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraphEdge {
     pub from_node_id: u32,
@@ -2040,27 +2041,27 @@ pub struct DwgEvaluationGraphEdge {
     pub suppressed: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraph {
     pub nodes: Vec<DwgEvaluationGraphNode>,
     pub edges: Vec<DwgEvaluationGraphEdge>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterConnection {
     pub code: u32,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterProperty {
     pub connections: Vec<DwgBlockParameterConnection>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgBlockParameterBaseLocation {
     #[default]
@@ -2068,21 +2069,21 @@ pub enum DwgBlockParameterBaseLocation {
     Midpoint,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipValueSet {
     pub base_label: String,
     pub flipped_label: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgNamedEvaluationNodeReference {
     pub node_id: u32,
     pub expression_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipParameter {
     pub evaluation_expression: DwgEvaluationExpression,
@@ -2100,7 +2101,7 @@ pub struct DwgBlockFlipParameter {
     pub updated_flip: DwgNamedEvaluationNodeReference,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgVisibilityEvaluationHistory {
     #[default]
@@ -2108,7 +2109,7 @@ pub enum DwgVisibilityEvaluationHistory {
     Required,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgVisibilityState {
     pub name: String,
@@ -2116,7 +2117,7 @@ pub struct DwgVisibilityState {
     pub controlled_expression_handles: Vec<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockVisibilityParameter {
     pub evaluation_expression: DwgEvaluationExpression,
@@ -2134,14 +2135,14 @@ pub struct DwgBlockVisibilityParameter {
     pub states: Vec<DwgVisibilityState>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockElement {
     pub evaluation_expression: DwgEvaluationExpression,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockGrip {
     pub element: DwgBlockElement,
@@ -2152,14 +2153,14 @@ pub struct DwgBlockGrip {
     pub updated_y: DwgNamedEvaluationNodeReference,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPropertyExpressionReference {
     pub property_index: u32,
     pub node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockTwoPointParameter {
     pub element: DwgBlockElement,
@@ -2172,7 +2173,7 @@ pub struct DwgBlockTwoPointParameter {
     pub base_location: DwgBlockParameterBaseLocation,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearParameter {
     pub parameter: DwgBlockTwoPointParameter,
@@ -2182,14 +2183,14 @@ pub struct DwgBlockLinearParameter {
     pub allowed_values: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearGrip {
     pub grip: DwgBlockGrip,
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipGrip {
     pub grip: DwgBlockGrip,
@@ -2197,23 +2198,23 @@ pub struct DwgBlockFlipGrip {
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockVisibilityGrip {
     pub grip: DwgBlockGrip,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPlaceholder {}
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDictionaryVariable {
     pub value: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAnnotationScale {
     pub name: String,
@@ -2222,21 +2223,21 @@ pub struct DwgAnnotationScale {
     pub is_unit_scale: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDrawOrderEntry {
     pub entity_handle: u64,
     pub sort_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgSortEntitiesTable {
     pub block_header_handle: u64,
     pub entries: Vec<DwgDrawOrderEntry>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCellContentFormat {
     pub property_override_flags: u32,
@@ -2252,7 +2253,7 @@ pub struct DwgCellContentFormat {
     pub text_height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCellMargins {
     pub vertical: f64,
@@ -2263,7 +2264,7 @@ pub struct DwgCellMargins {
     pub vertical_spacing: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCellBorder {
     pub override_flags: u32,
@@ -2275,7 +2276,7 @@ pub struct DwgCellBorder {
     pub double_line_spacing: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCellBorders {
     pub top: Option<DwgCellBorder>,
@@ -2286,7 +2287,7 @@ pub struct DwgCellBorders {
     pub right: Option<DwgCellBorder>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCellStyle {
     pub property_override_flags: u32,
@@ -2298,7 +2299,7 @@ pub struct DwgCellStyle {
     pub borders: DwgCellBorders,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTableStyle {
     pub description: String,
@@ -2310,7 +2311,7 @@ pub struct DwgTableStyle {
     pub data: DwgCellStyle,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMlineLinetype {
     #[default]
@@ -2319,7 +2320,7 @@ pub enum DwgMlineLinetype {
     Continuous,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMlineCaps {
     pub square: bool,
@@ -2327,7 +2328,7 @@ pub struct DwgMlineCaps {
     pub round_outer_arcs: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMlineStyleElement {
     pub offset: f64,
@@ -2335,7 +2336,7 @@ pub struct DwgMlineStyleElement {
     pub linetype: DwgMlineLinetype,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMlineStyle {
     pub name: String,
@@ -2350,7 +2351,7 @@ pub struct DwgMlineStyle {
     pub elements: Vec<DwgMlineStyleElement>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderContentType {
     None,
@@ -2358,21 +2359,21 @@ pub enum DwgMLeaderContentType {
     #[default]
     MText,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderDrawOrder {
     #[default]
     LeaderFirst,
     ContentFirst,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderLeaderOrder {
     #[default]
     HeadFirst,
     TailFirst,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderKind {
     Invisible,
@@ -2380,7 +2381,7 @@ pub enum DwgMLeaderKind {
     Straight,
     Spline,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAttachment {
     TopOfTop,
@@ -2395,7 +2396,7 @@ pub enum DwgMLeaderTextAttachment {
     BottomOfTopNoUnderline,
     Center,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAngle {
     #[default]
@@ -2403,7 +2404,7 @@ pub enum DwgMLeaderTextAngle {
     Aligned,
     AlwaysRightReading,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAlignment {
     #[default]
@@ -2411,14 +2412,14 @@ pub enum DwgMLeaderTextAlignment {
     Center,
     Right,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderAttachmentDirection {
     #[default]
     Horizontal,
     Vertical,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMLeaderBlockConnection {
     #[default]
@@ -2426,7 +2427,7 @@ pub enum DwgMLeaderBlockConnection {
     BasePoint,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderLeaderStyle {
     pub kind: DwgMLeaderKind,
@@ -2434,25 +2435,25 @@ pub struct DwgMLeaderLeaderStyle {
     pub linetype_style_handle: u64,
     pub lineweight: i32,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderLanding {
     pub enabled: bool,
     pub gap: f64,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderDogleg {
     pub enabled: bool,
     pub length: f64,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderArrow {
     pub symbol_handle: Option<u64>,
     pub size: f64,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderTextStyle {
     pub default_content: String,
@@ -2470,7 +2471,7 @@ pub struct DwgMLeaderTextStyle {
     pub top_attachment: DwgMLeaderTextAttachment,
     pub bottom_attachment: DwgMLeaderTextAttachment,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderBlockStyle {
     pub content_handle: Option<u64>,
@@ -2481,7 +2482,7 @@ pub struct DwgMLeaderBlockStyle {
     pub use_rotation: bool,
     pub connection: DwgMLeaderBlockConnection,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMLeaderStyle {
     pub content_type: DwgMLeaderContentType,
@@ -2503,7 +2504,7 @@ pub struct DwgMLeaderStyle {
     pub break_size: f64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMaterialProjection {
     Inherit,
@@ -2513,7 +2514,7 @@ pub enum DwgMaterialProjection {
     Cylinder,
     Sphere,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMaterialTiling {
     Inherit,
@@ -2523,20 +2524,20 @@ pub enum DwgMaterialTiling {
     Clamp,
     Mirror,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMaterialMapSource {
     #[default]
     None,
     CurrentScene,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMaterialColor {
     pub factor: f64,
     pub override_rgb: Option<u32>,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMaterialMap {
     pub blend_factor: f64,
@@ -2547,7 +2548,7 @@ pub struct DwgMaterialMap {
     pub transform: Vec<f64>,
     pub source: DwgMaterialMapSource,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMaterialChannels {
     pub diffuse: bool,
@@ -2557,7 +2558,7 @@ pub struct DwgMaterialChannels {
     pub bump: bool,
     pub refraction: bool,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgMaterial {
     pub name: String,
@@ -2580,20 +2581,20 @@ pub struct DwgMaterial {
     pub enabled_channels: DwgMaterialChannels,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockActionConnection {
     pub node_id: u32,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockActionDependency {
     pub object_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockAction {
     pub evaluation_expression: DwgEvaluationExpression,
@@ -2603,14 +2604,14 @@ pub struct DwgBlockAction {
     pub action_node_ids: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgBlockMoveCoordinateMode {
     #[default]
     CartesianXy,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockMoveAction {
     pub action: DwgBlockAction,
@@ -2621,7 +2622,7 @@ pub struct DwgBlockMoveAction {
     pub coordinate_mode: DwgBlockMoveCoordinateMode,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockAlignmentParameter {
     pub parameter: DwgBlockTwoPointParameter,
@@ -2629,7 +2630,7 @@ pub struct DwgBlockAlignmentParameter {
     pub align_perpendicular: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockAlignmentGrip {
     pub grip: DwgBlockGrip,
@@ -2638,28 +2639,28 @@ pub struct DwgBlockAlignmentGrip {
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgStretchSelection {
     pub object_handle: u64,
     pub vertex_indices: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgStretchSelector {
     pub node_id: u32,
     pub point_indices: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgBlockActionCoordinateMode {
     #[default]
     CartesianXy,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockStretchAction {
     pub action: DwgBlockAction,
@@ -2673,7 +2674,7 @@ pub struct DwgBlockStretchAction {
     pub coordinate_mode: DwgBlockActionCoordinateMode,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockActionWithBasePoint {
     pub action: DwgBlockAction,
@@ -2684,14 +2685,14 @@ pub struct DwgBlockActionWithBasePoint {
     pub base_point: Vec<f64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgBlockScaleMode {
     #[default]
     Xy,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockScaleAction {
     pub base: DwgBlockActionWithBasePoint,
@@ -2701,7 +2702,7 @@ pub struct DwgBlockScaleAction {
     pub mode: DwgBlockScaleMode,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipAction {
     pub action: DwgBlockAction,
@@ -2711,7 +2712,7 @@ pub struct DwgBlockFlipAction {
     pub updated_end_connection: DwgBlockActionConnection,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockOnePointParameter {
     pub element: DwgBlockElement,
@@ -2721,7 +2722,7 @@ pub struct DwgBlockOnePointParameter {
     pub properties: Vec<DwgBlockParameterProperty>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockBasePointParameter {
     pub parameter: DwgBlockOnePointParameter,
@@ -2729,13 +2730,13 @@ pub struct DwgBlockBasePointParameter {
     pub base_point: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterAllowedValues {
     pub values: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearConstraintParameter {
     pub parameter: DwgBlockTwoPointParameter,
@@ -2747,7 +2748,7 @@ pub struct DwgBlockLinearConstraintParameter {
     pub allowed_values: DwgBlockParameterAllowedValues,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgPlotOptions {
     pub use_standard_scale: bool,
@@ -2759,21 +2760,21 @@ pub struct DwgPlotOptions {
     pub initializing: bool,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgPlotPaperUnit {
     #[default]
     Inches,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgPlotRotation {
     #[default]
     QuarterTurn,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgPlotArea {
     #[default]
@@ -2781,7 +2782,7 @@ pub enum DwgPlotArea {
     Layout,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgStandardScale {
     #[default]
@@ -2789,27 +2790,27 @@ pub enum DwgStandardScale {
     OneToOne,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgShadePlot {
     #[default]
     AsDisplayed,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgShadePlotResolution {
     #[default]
     Normal,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLayoutOptions {
     pub paper_space_linetype_scaling: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLayout {
     pub page_setup_name: String,
@@ -2855,7 +2856,7 @@ pub struct DwgLayout {
     pub viewport_handles: Vec<u64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgAssocNetworkMemberKind {
     Network,
@@ -2863,14 +2864,14 @@ pub enum DwgAssocNetworkMemberKind {
     Action,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssocNetworkMember {
     pub handle: u64,
     pub kind: DwgAssocNetworkMemberKind,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssocNetwork {
     pub action: DwgAssociativeAction,
@@ -2878,14 +2879,14 @@ pub struct DwgAssocNetwork {
     pub actions: Vec<DwgAssocNetworkMember>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgConstraintNodeCore {
     pub id: i32,
     pub connected_node_ids: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgGeometricConstraint {
     pub node: DwgConstraintNodeCore,
@@ -2894,7 +2895,7 @@ pub struct DwgGeometricConstraint {
     pub active: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgConstraintGeometry {
     pub node: DwgConstraintNodeCore,
@@ -2902,7 +2903,7 @@ pub struct DwgConstraintGeometry {
     pub geometry_node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgExplicitConstraint {
     pub geometric: DwgGeometricConstraint,
@@ -2910,7 +2911,7 @@ pub struct DwgExplicitConstraint {
     pub dimension_dependency_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgConstrainedImplicitPoint {
     pub geometry: DwgConstraintGeometry,
@@ -2920,7 +2921,7 @@ pub struct DwgConstrainedImplicitPoint {
     pub curve_node_id: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgConstrainedBoundedLine {
     pub geometry: DwgConstraintGeometry,
@@ -2932,7 +2933,7 @@ pub struct DwgConstrainedBoundedLine {
     pub end_point: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDistanceConstraint {
     pub explicit: DwgExplicitConstraint,
@@ -2940,14 +2941,14 @@ pub struct DwgDistanceConstraint {
     pub direction: Option<Vec<f64>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAxisConstraint {
     pub geometric: DwgGeometricConstraint,
     pub datum_line_index: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgConstrainedDatumLine {
     pub geometry: DwgConstraintGeometry,
@@ -2985,7 +2986,7 @@ dwg_metadata!(dwg_constraint_node_spec, dwg_constraint_node_spec_controlled, dwg
     6, "constrained_datum_line", true, [typed DwgConstrainedDatumLine];
 );
 
-impl dsl::DslField for DwgConstraintNode {
+impl semio_framework_dsl_record::DslField for DwgConstraintNode {
     dwg_controlled_payloads!(0; units[];
         0,1,ConstrainedImplicitPoint,DwgConstrainedImplicitPoint;
         1,2,PointCurveConstraint,DwgGeometricConstraint;
@@ -3002,17 +3003,17 @@ impl dsl::DslField for DwgConstraintNode {
         12,2,FixedConstraint,DwgGeometricConstraint;
         13,5,VerticalConstraint,DwgAxisConstraint;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_constraint_node_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_constraint_node_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_constraint_node_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_constraint_node_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let (kind, field, value) = match self {
             Self::ConstrainedImplicitPoint(value) => (0, 1, value.to_value()),
             Self::PointCurveConstraint(value) => (1, 2, value.to_value()),
@@ -3029,38 +3030,38 @@ impl dsl::DslField for DwgConstraintNode {
             Self::FixedConstraint(value) => (12, 2, value.to_value()),
             Self::VerticalConstraint(value) => (13, 5, value.to_value()),
         };
-        record.fields.insert(0, dsl::FieldValue::Enum(kind));
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(kind));
         record.fields.insert(field, value);
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected constraint-node record".into()) };
-        if record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count() != 2 {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected constraint-node record".into()) };
+        if record.fields.values().filter(|value| !matches!(value, semio_framework_dsl_record::FieldValue::Absent)).count() != 2 {
             return Err("constraint node must contain exactly its tagged body".into());
         }
         let geometric = || DwgGeometricConstraint::from_value(record.get(2).ok_or("geometric constraint missing")?);
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint::from_value(record.get(1).ok_or("implicit point missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::PointCurveConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::ConstrainedBoundedLine(DwgConstrainedBoundedLine::from_value(record.get(3).ok_or("bounded line missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointCoincidenceConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::DistanceConstraint(DwgDistanceConstraint::from_value(record.get(4).ok_or("distance constraint missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::PerpendicularConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::HorizontalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("horizontal constraint missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::ParallelConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::MidPointConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(9)) => Ok(Self::EqualLengthConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(10)) => Ok(Self::ColinearConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(11)) => Ok(Self::ConstrainedDatumLine(DwgConstrainedDatumLine::from_value(record.get(6).ok_or("datum line missing")?)?)),
-            Some(dsl::FieldValue::Enum(12)) => Ok(Self::FixedConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(13)) => Ok(Self::VerticalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("vertical constraint missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint::from_value(record.get(1).ok_or("implicit point missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::PointCurveConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::ConstrainedBoundedLine(DwgConstrainedBoundedLine::from_value(record.get(3).ok_or("bounded line missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::PointCoincidenceConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::DistanceConstraint(DwgDistanceConstraint::from_value(record.get(4).ok_or("distance constraint missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::PerpendicularConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::HorizontalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("horizontal constraint missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) => Ok(Self::ParallelConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(8)) => Ok(Self::MidPointConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(9)) => Ok(Self::EqualLengthConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(10)) => Ok(Self::ColinearConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(11)) => Ok(Self::ConstrainedDatumLine(DwgConstrainedDatumLine::from_value(record.get(6).ok_or("datum line missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(12)) => Ok(Self::FixedConstraint(geometric()?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(13)) => Ok(Self::VerticalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("vertical constraint missing")?)?)),
             other => Err(format!("unknown constraint-node kind {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAssoc2dConstraintGroup {
     pub action: DwgAssociativeAction,
@@ -3094,7 +3095,7 @@ dwg_metadata!(dwg_entity_body_spec, dwg_entity_body_spec_controlled, dwg_entity_
     19, "sequence_end", true, [typed DwgSequenceEndEntity];
 );
 
-impl dsl::DslField for DwgEntityBody {
+impl semio_framework_dsl_record::DslField for DwgEntityBody {
     dwg_controlled_payloads!(0; units[];
         0,1,Line,DwgLineEntity;
         1,2,Arc,DwgArcEntity;
@@ -3116,120 +3117,120 @@ impl dsl::DslField for DwgEntityBody {
         17,18,PolyfaceFace,DwgPolyfaceFaceEntity;
         18,19,SequenceEnd,DwgSequenceEndEntity;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_entity_body_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_entity_body_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_entity_body_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_entity_body_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         match self {
             Self::Line(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(0));
-                record.fields.insert(1, <DwgLineEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(0));
+                record.fields.insert(1, <DwgLineEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Arc(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(1));
-                record.fields.insert(2, <DwgArcEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(1));
+                record.fields.insert(2, <DwgArcEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::LwPolyline(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(2));
-                record.fields.insert(3, <DwgLwPolylineEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(2));
+                record.fields.insert(3, <DwgLwPolylineEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::BlockBegin(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(3));
-                record.fields.insert(4, <DwgBlockBeginEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(3));
+                record.fields.insert(4, <DwgBlockBeginEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::BlockEnd(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(4));
-                record.fields.insert(5, <DwgBlockEndEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(4));
+                record.fields.insert(5, <DwgBlockEndEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Insert(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(5));
-                record.fields.insert(6, <DwgInsertEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(5));
+                record.fields.insert(6, <DwgInsertEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::DimensionLinear(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(6));
-                record.fields.insert(7, <DwgLinearDimensionEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(6));
+                record.fields.insert(7, <DwgLinearDimensionEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Viewport(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(7));
-                record.fields.insert(8, <DwgViewportEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(7));
+                record.fields.insert(8, <DwgViewportEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Point(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(8));
-                record.fields.insert(9, <DwgPointEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(8));
+                record.fields.insert(9, <DwgPointEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Circle(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(9));
-                record.fields.insert(10, <DwgCircleEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(9));
+                record.fields.insert(10, <DwgCircleEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Ellipse(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(10));
-                record.fields.insert(11, <DwgEllipseEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(10));
+                record.fields.insert(11, <DwgEllipseEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Text(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(11));
-                record.fields.insert(12, <DwgTextEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(11));
+                record.fields.insert(12, <DwgTextEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Spline(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(12));
-                record.fields.insert(13, <DwgSplineEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(12));
+                record.fields.insert(13, <DwgSplineEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Face3d(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(13));
-                record.fields.insert(14, <DwgFace3dEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(13));
+                record.fields.insert(14, <DwgFace3dEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Polyline3d(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(14));
-                record.fields.insert(15, <DwgPolyline3dEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(14));
+                record.fields.insert(15, <DwgPolyline3dEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::PolyfaceMesh(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(15));
-                record.fields.insert(16, <DwgPolyfaceMeshEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(15));
+                record.fields.insert(16, <DwgPolyfaceMeshEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::Vertex(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(16));
-                record.fields.insert(17, <DwgVertexEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(16));
+                record.fields.insert(17, <DwgVertexEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::PolyfaceFace(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(17));
-                record.fields.insert(18, <DwgPolyfaceFaceEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(17));
+                record.fields.insert(18, <DwgPolyfaceFaceEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
             Self::SequenceEnd(value) => {
-                record.fields.insert(0, dsl::FieldValue::Enum(18));
-                record.fields.insert(19, <DwgSequenceEndEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(18));
+                record.fields.insert(19, <DwgSequenceEndEntity as semio_framework_dsl_record::DslField>::to_value(value));
             }
         }
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else { return Err("expected entity-body record".into()) };
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err("expected entity-body record".into()) };
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Line(<DwgLineEntity as dsl::DslField>::from_value(record.get(1).ok_or("LINE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Arc(<DwgArcEntity as dsl::DslField>::from_value(record.get(2).ok_or("ARC body missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::LwPolyline(<DwgLwPolylineEntity as dsl::DslField>::from_value(record.get(3).ok_or("LWPOLYLINE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::BlockBegin(<DwgBlockBeginEntity as dsl::DslField>::from_value(record.get(4).ok_or("BLOCK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockEnd(<DwgBlockEndEntity as dsl::DslField>::from_value(record.get(5).ok_or("ENDBLK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Insert(<DwgInsertEntity as dsl::DslField>::from_value(record.get(6).ok_or("INSERT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionLinear(<DwgLinearDimensionEntity as dsl::DslField>::from_value(record.get(7).ok_or("DIMENSION_LINEAR body missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Viewport(<DwgViewportEntity as dsl::DslField>::from_value(record.get(8).ok_or("VIEWPORT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::Point(<DwgPointEntity as dsl::DslField>::from_value(record.get(9).ok_or("POINT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(9)) => Ok(Self::Circle(<DwgCircleEntity as dsl::DslField>::from_value(record.get(10).ok_or("CIRCLE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(10)) => Ok(Self::Ellipse(<DwgEllipseEntity as dsl::DslField>::from_value(record.get(11).ok_or("ELLIPSE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(11)) => Ok(Self::Text(<DwgTextEntity as dsl::DslField>::from_value(record.get(12).ok_or("TEXT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(12)) => Ok(Self::Spline(<DwgSplineEntity as dsl::DslField>::from_value(record.get(13).ok_or("SPLINE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(13)) => Ok(Self::Face3d(<DwgFace3dEntity as dsl::DslField>::from_value(record.get(14).ok_or("3DFACE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(14)) => Ok(Self::Polyline3d(<DwgPolyline3dEntity as dsl::DslField>::from_value(record.get(15).ok_or("POLYLINE_3D body missing")?)?)),
-            Some(dsl::FieldValue::Enum(15)) => Ok(Self::PolyfaceMesh(<DwgPolyfaceMeshEntity as dsl::DslField>::from_value(record.get(16).ok_or("POLYLINE_PFACE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(16)) => Ok(Self::Vertex(<DwgVertexEntity as dsl::DslField>::from_value(record.get(17).ok_or("VERTEX body missing")?)?)),
-            Some(dsl::FieldValue::Enum(17)) => Ok(Self::PolyfaceFace(<DwgPolyfaceFaceEntity as dsl::DslField>::from_value(record.get(18).ok_or("VERTEX_PFACE_FACE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(18)) => Ok(Self::SequenceEnd(<DwgSequenceEndEntity as dsl::DslField>::from_value(record.get(19).ok_or("SEQEND body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::Line(<DwgLineEntity as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("LINE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::Arc(<DwgArcEntity as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("ARC body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::LwPolyline(<DwgLwPolylineEntity as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("LWPOLYLINE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::BlockBegin(<DwgBlockBeginEntity as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("BLOCK body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::BlockEnd(<DwgBlockEndEntity as semio_framework_dsl_record::DslField>::from_value(record.get(5).ok_or("ENDBLK body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::Insert(<DwgInsertEntity as semio_framework_dsl_record::DslField>::from_value(record.get(6).ok_or("INSERT body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::DimensionLinear(<DwgLinearDimensionEntity as semio_framework_dsl_record::DslField>::from_value(record.get(7).ok_or("DIMENSION_LINEAR body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) => Ok(Self::Viewport(<DwgViewportEntity as semio_framework_dsl_record::DslField>::from_value(record.get(8).ok_or("VIEWPORT body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(8)) => Ok(Self::Point(<DwgPointEntity as semio_framework_dsl_record::DslField>::from_value(record.get(9).ok_or("POINT body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(9)) => Ok(Self::Circle(<DwgCircleEntity as semio_framework_dsl_record::DslField>::from_value(record.get(10).ok_or("CIRCLE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(10)) => Ok(Self::Ellipse(<DwgEllipseEntity as semio_framework_dsl_record::DslField>::from_value(record.get(11).ok_or("ELLIPSE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(11)) => Ok(Self::Text(<DwgTextEntity as semio_framework_dsl_record::DslField>::from_value(record.get(12).ok_or("TEXT body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(12)) => Ok(Self::Spline(<DwgSplineEntity as semio_framework_dsl_record::DslField>::from_value(record.get(13).ok_or("SPLINE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(13)) => Ok(Self::Face3d(<DwgFace3dEntity as semio_framework_dsl_record::DslField>::from_value(record.get(14).ok_or("3DFACE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(14)) => Ok(Self::Polyline3d(<DwgPolyline3dEntity as semio_framework_dsl_record::DslField>::from_value(record.get(15).ok_or("POLYLINE_3D body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(15)) => Ok(Self::PolyfaceMesh(<DwgPolyfaceMeshEntity as semio_framework_dsl_record::DslField>::from_value(record.get(16).ok_or("POLYLINE_PFACE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(16)) => Ok(Self::Vertex(<DwgVertexEntity as semio_framework_dsl_record::DslField>::from_value(record.get(17).ok_or("VERTEX body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(17)) => Ok(Self::PolyfaceFace(<DwgPolyfaceFaceEntity as semio_framework_dsl_record::DslField>::from_value(record.get(18).ok_or("VERTEX_PFACE_FACE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(18)) => Ok(Self::SequenceEnd(<DwgSequenceEndEntity as semio_framework_dsl_record::DslField>::from_value(record.get(19).ok_or("SEQEND body missing")?)?)),
             other => Err(format!("unknown entity-body kind {other:?}")),
         }
     }
@@ -3331,7 +3332,7 @@ dwg_metadata!(dwg_logical_object_body_spec, dwg_logical_object_body_spec_control
     43, "layout", true, [typed DwgLayout];
 );
 
-impl dsl::DslField for DwgLogicalObjectBody {
+impl semio_framework_dsl_record::DslField for DwgLogicalObjectBody {
     dwg_controlled_payloads!(0; units[];
         0,1,Dictionary,DwgDictionaryBody;
         1,2,TableControl,DwgTableControlBody;
@@ -3377,124 +3378,124 @@ impl dsl::DslField for DwgLogicalObjectBody {
         41,42,BlockHorizontalConstraintParameter,DwgBlockLinearConstraintParameter;
         42,43,Layout,DwgLayout;);
 
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_logical_object_body_spec_producer())
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::Record(dwg_logical_object_body_spec_producer())
     }
 
-    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
-        Ok(dsl::Shape::Record(dwg_logical_object_body_spec_producer()))
+        Ok(semio_framework_dsl_record::Shape::Record(dwg_logical_object_body_spec_producer()))
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
-        let mut record = dsl::RecordValue::default();
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        let mut record = semio_framework_dsl_record::RecordValue::default();
         let (kind, payload_id, payload) = match self {
-            Self::Dictionary(value) => (0, 1, <DwgDictionaryBody as dsl::DslField>::to_value(value)),
-            Self::TableControl(value) => (1, 2, <DwgTableControlBody as dsl::DslField>::to_value(value)),
-            Self::TableRecord(value) => (2, 3, <DwgTableRecordBody as dsl::DslField>::to_value(value)),
-            Self::XRecord(value) => (3, 4, <DwgXRecordBody as dsl::DslField>::to_value(value)),
-            Self::Entity(value) => (4, 5, <DwgEntityBody as dsl::DslField>::to_value(value)),
-            Self::AssociativeDependency(value) => (5, 6, <DwgAssociativeDependency as dsl::DslField>::to_value(value)),
-            Self::AssociativeValueDependency(value) => (6, 7, <DwgAssociativeValueDependency as dsl::DslField>::to_value(value)),
-            Self::AssociativeGeometryDependency(value) => (7, 8, <DwgAssociativeGeometryDependency as dsl::DslField>::to_value(value)),
-            Self::BlockGripLocationComponent(value) => (8, 9, <DwgBlockGripLocationComponent as dsl::DslField>::to_value(value)),
-            Self::DynamicBlockProxyNode(value) => (9, 10, <DwgDynamicBlockProxyNode as dsl::DslField>::to_value(value)),
-            Self::AssociativeVariable(value) => (10, 11, <DwgAssociativeVariable as dsl::DslField>::to_value(value)),
-            Self::AssociativeDimensionDependencyBody(value) => (11, 12, <DwgAssociativeDimensionDependencyBody as dsl::DslField>::to_value(value)),
-            Self::VisualStyle(value) => (12, 13, <DwgVisualStyle as dsl::DslField>::to_value(value)),
-            Self::BlockParameterDependencyBody(value) => (13, 14, <DwgBlockParameterDependencyBody as dsl::DslField>::to_value(value)),
-            Self::BlockRepresentationData(value) => (14, 15, <DwgBlockRepresentationData as dsl::DslField>::to_value(value)),
-            Self::DynamicBlockPurgePreventer(value) => (15, 16, <DwgDynamicBlockPurgePreventer as dsl::DslField>::to_value(value)),
-            Self::EvaluationGraph(value) => (16, 17, <DwgEvaluationGraph as dsl::DslField>::to_value(value)),
-            Self::BlockFlipParameter(value) => (17, 18, <DwgBlockFlipParameter as dsl::DslField>::to_value(value)),
-            Self::BlockVisibilityParameter(value) => (18, 19, <DwgBlockVisibilityParameter as dsl::DslField>::to_value(value)),
-            Self::Placeholder(value) => (19, 20, <DwgPlaceholder as dsl::DslField>::to_value(value)),
-            Self::DictionaryVariable(value) => (20, 21, <DwgDictionaryVariable as dsl::DslField>::to_value(value)),
-            Self::AnnotationScale(value) => (21, 22, <DwgAnnotationScale as dsl::DslField>::to_value(value)),
-            Self::SortEntitiesTable(value) => (22, 23, <DwgSortEntitiesTable as dsl::DslField>::to_value(value)),
-            Self::TableStyle(value) => (23, 24, <DwgTableStyle as dsl::DslField>::to_value(value)),
-            Self::MlineStyle(value) => (24, 25, <DwgMlineStyle as dsl::DslField>::to_value(value)),
-            Self::MLeaderStyle(value) => (25, 26, <DwgMLeaderStyle as dsl::DslField>::to_value(value)),
-            Self::Material(value) => (26, 27, <DwgMaterial as dsl::DslField>::to_value(value)),
-            Self::BlockMoveAction(value) => (27, 28, <DwgBlockMoveAction as dsl::DslField>::to_value(value)),
-            Self::AssocNetwork(value) => (28, 29, <DwgAssocNetwork as dsl::DslField>::to_value(value)),
-            Self::Assoc2dConstraintGroup(value) => (29, 30, <DwgAssoc2dConstraintGroup as dsl::DslField>::to_value(value)),
-            Self::BlockLinearParameter(value) => (30, 31, <DwgBlockLinearParameter as dsl::DslField>::to_value(value)),
-            Self::BlockLinearGrip(value) => (31, 32, <DwgBlockLinearGrip as dsl::DslField>::to_value(value)),
-            Self::BlockFlipGrip(value) => (32, 33, <DwgBlockFlipGrip as dsl::DslField>::to_value(value)),
-            Self::BlockVisibilityGrip(value) => (33, 34, <DwgBlockVisibilityGrip as dsl::DslField>::to_value(value)),
-            Self::BlockAlignmentParameter(value) => (34, 35, <DwgBlockAlignmentParameter as dsl::DslField>::to_value(value)),
-            Self::BlockAlignmentGrip(value) => (35, 36, <DwgBlockAlignmentGrip as dsl::DslField>::to_value(value)),
-            Self::BlockStretchAction(value) => (36, 37, <DwgBlockStretchAction as dsl::DslField>::to_value(value)),
-            Self::BlockScaleAction(value) => (37, 38, <DwgBlockScaleAction as dsl::DslField>::to_value(value)),
-            Self::BlockFlipAction(value) => (38, 39, <DwgBlockFlipAction as dsl::DslField>::to_value(value)),
-            Self::BlockBasePointParameter(value) => (39, 40, <DwgBlockBasePointParameter as dsl::DslField>::to_value(value)),
-            Self::BlockVerticalConstraintParameter(value) => (40, 41, <DwgBlockLinearConstraintParameter as dsl::DslField>::to_value(value)),
-            Self::BlockHorizontalConstraintParameter(value) => (41, 42, <DwgBlockLinearConstraintParameter as dsl::DslField>::to_value(value)),
-            Self::Layout(value) => (42, 43, <DwgLayout as dsl::DslField>::to_value(value)),
+            Self::Dictionary(value) => (0, 1, <DwgDictionaryBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::TableControl(value) => (1, 2, <DwgTableControlBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::TableRecord(value) => (2, 3, <DwgTableRecordBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::XRecord(value) => (3, 4, <DwgXRecordBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Entity(value) => (4, 5, <DwgEntityBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssociativeDependency(value) => (5, 6, <DwgAssociativeDependency as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssociativeValueDependency(value) => (6, 7, <DwgAssociativeValueDependency as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssociativeGeometryDependency(value) => (7, 8, <DwgAssociativeGeometryDependency as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockGripLocationComponent(value) => (8, 9, <DwgBlockGripLocationComponent as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::DynamicBlockProxyNode(value) => (9, 10, <DwgDynamicBlockProxyNode as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssociativeVariable(value) => (10, 11, <DwgAssociativeVariable as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssociativeDimensionDependencyBody(value) => (11, 12, <DwgAssociativeDimensionDependencyBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::VisualStyle(value) => (12, 13, <DwgVisualStyle as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockParameterDependencyBody(value) => (13, 14, <DwgBlockParameterDependencyBody as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockRepresentationData(value) => (14, 15, <DwgBlockRepresentationData as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::DynamicBlockPurgePreventer(value) => (15, 16, <DwgDynamicBlockPurgePreventer as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::EvaluationGraph(value) => (16, 17, <DwgEvaluationGraph as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockFlipParameter(value) => (17, 18, <DwgBlockFlipParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockVisibilityParameter(value) => (18, 19, <DwgBlockVisibilityParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Placeholder(value) => (19, 20, <DwgPlaceholder as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::DictionaryVariable(value) => (20, 21, <DwgDictionaryVariable as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AnnotationScale(value) => (21, 22, <DwgAnnotationScale as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::SortEntitiesTable(value) => (22, 23, <DwgSortEntitiesTable as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::TableStyle(value) => (23, 24, <DwgTableStyle as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::MlineStyle(value) => (24, 25, <DwgMlineStyle as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::MLeaderStyle(value) => (25, 26, <DwgMLeaderStyle as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Material(value) => (26, 27, <DwgMaterial as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockMoveAction(value) => (27, 28, <DwgBlockMoveAction as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::AssocNetwork(value) => (28, 29, <DwgAssocNetwork as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Assoc2dConstraintGroup(value) => (29, 30, <DwgAssoc2dConstraintGroup as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockLinearParameter(value) => (30, 31, <DwgBlockLinearParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockLinearGrip(value) => (31, 32, <DwgBlockLinearGrip as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockFlipGrip(value) => (32, 33, <DwgBlockFlipGrip as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockVisibilityGrip(value) => (33, 34, <DwgBlockVisibilityGrip as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockAlignmentParameter(value) => (34, 35, <DwgBlockAlignmentParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockAlignmentGrip(value) => (35, 36, <DwgBlockAlignmentGrip as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockStretchAction(value) => (36, 37, <DwgBlockStretchAction as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockScaleAction(value) => (37, 38, <DwgBlockScaleAction as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockFlipAction(value) => (38, 39, <DwgBlockFlipAction as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockBasePointParameter(value) => (39, 40, <DwgBlockBasePointParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockVerticalConstraintParameter(value) => (40, 41, <DwgBlockLinearConstraintParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::BlockHorizontalConstraintParameter(value) => (41, 42, <DwgBlockLinearConstraintParameter as semio_framework_dsl_record::DslField>::to_value(value)),
+            Self::Layout(value) => (42, 43, <DwgLayout as semio_framework_dsl_record::DslField>::to_value(value)),
         };
-        record.fields.insert(0, dsl::FieldValue::Enum(kind));
+        record.fields.insert(0, semio_framework_dsl_record::FieldValue::Enum(kind));
         record.fields.insert(payload_id, payload);
-        dsl::FieldValue::Record(record)
+        semio_framework_dsl_record::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let dsl::FieldValue::Record(record) = value else {
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err(format!("expected DWG object-body record, found {value:?}"));
         };
-        if record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count() != 2 {
+        if record.fields.values().filter(|value| !matches!(value, semio_framework_dsl_record::FieldValue::Absent)).count() != 2 {
             return Err("DWG object body must contain exactly one tagged payload".into());
         }
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Dictionary(<DwgDictionaryBody as dsl::DslField>::from_value(record.get(1).ok_or("dictionary body missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TableControl(<DwgTableControlBody as dsl::DslField>::from_value(record.get(2).ok_or("table-control body missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TableRecord(<DwgTableRecordBody as dsl::DslField>::from_value(record.get(3).ok_or("table-record body missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::XRecord(<DwgXRecordBody as dsl::DslField>::from_value(record.get(4).ok_or("XRECORD body missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::Entity(<DwgEntityBody as dsl::DslField>::from_value(record.get(5).ok_or("entity body missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::AssociativeDependency(<DwgAssociativeDependency as dsl::DslField>::from_value(record.get(6).ok_or("associative-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::AssociativeValueDependency(<DwgAssociativeValueDependency as dsl::DslField>::from_value(record.get(7).ok_or("associative-value-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::AssociativeGeometryDependency(<DwgAssociativeGeometryDependency as dsl::DslField>::from_value(record.get(8).ok_or("associative-geometry-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::BlockGripLocationComponent(<DwgBlockGripLocationComponent as dsl::DslField>::from_value(record.get(9).ok_or("block-grip-location-component body missing")?)?)),
-            Some(dsl::FieldValue::Enum(9)) => Ok(Self::DynamicBlockProxyNode(<DwgDynamicBlockProxyNode as dsl::DslField>::from_value(record.get(10).ok_or("dynamic-block-proxy-node body missing")?)?)),
-            Some(dsl::FieldValue::Enum(10)) => Ok(Self::AssociativeVariable(<DwgAssociativeVariable as dsl::DslField>::from_value(record.get(11).ok_or("associative-variable body missing")?)?)),
-            Some(dsl::FieldValue::Enum(11)) => Ok(Self::AssociativeDimensionDependencyBody(<DwgAssociativeDimensionDependencyBody as dsl::DslField>::from_value(record.get(12).ok_or("associative-dimension-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(12)) => Ok(Self::VisualStyle(<DwgVisualStyle as dsl::DslField>::from_value(record.get(13).ok_or("visual-style body missing")?)?)),
-            Some(dsl::FieldValue::Enum(13)) => Ok(Self::BlockParameterDependencyBody(<DwgBlockParameterDependencyBody as dsl::DslField>::from_value(record.get(14).ok_or("block-parameter-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(14)) => Ok(Self::BlockRepresentationData(<DwgBlockRepresentationData as dsl::DslField>::from_value(record.get(15).ok_or("block-representation data missing")?)?)),
-            Some(dsl::FieldValue::Enum(15)) => Ok(Self::DynamicBlockPurgePreventer(<DwgDynamicBlockPurgePreventer as dsl::DslField>::from_value(record.get(16).ok_or("dynamic-block purge-preventer body missing")?)?)),
-            Some(dsl::FieldValue::Enum(16)) => Ok(Self::EvaluationGraph(<DwgEvaluationGraph as dsl::DslField>::from_value(record.get(17).ok_or("evaluation-graph body missing")?)?)),
-            Some(dsl::FieldValue::Enum(17)) => Ok(Self::BlockFlipParameter(<DwgBlockFlipParameter as dsl::DslField>::from_value(record.get(18).ok_or("block-flip-parameter body missing")?)?)),
-            Some(dsl::FieldValue::Enum(18)) => Ok(Self::BlockVisibilityParameter(<DwgBlockVisibilityParameter as dsl::DslField>::from_value(record.get(19).ok_or("block-visibility-parameter body missing")?)?)),
-            Some(dsl::FieldValue::Enum(19)) => Ok(Self::Placeholder(<DwgPlaceholder as dsl::DslField>::from_value(record.get(20).ok_or("placeholder body missing")?)?)),
-            Some(dsl::FieldValue::Enum(20)) => Ok(Self::DictionaryVariable(<DwgDictionaryVariable as dsl::DslField>::from_value(record.get(21).ok_or("dictionary-variable body missing")?)?)),
-            Some(dsl::FieldValue::Enum(21)) => Ok(Self::AnnotationScale(<DwgAnnotationScale as dsl::DslField>::from_value(record.get(22).ok_or("annotation-scale body missing")?)?)),
-            Some(dsl::FieldValue::Enum(22)) => Ok(Self::SortEntitiesTable(<DwgSortEntitiesTable as dsl::DslField>::from_value(record.get(23).ok_or("sort-entities-table body missing")?)?)),
-            Some(dsl::FieldValue::Enum(23)) => Ok(Self::TableStyle(Box::new(<DwgTableStyle as dsl::DslField>::from_value(record.get(24).ok_or("table-style body missing")?)?))),
-            Some(dsl::FieldValue::Enum(24)) => Ok(Self::MlineStyle(<DwgMlineStyle as dsl::DslField>::from_value(record.get(25).ok_or("MLINESTYLE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(25)) => Ok(Self::MLeaderStyle(<DwgMLeaderStyle as dsl::DslField>::from_value(record.get(26).ok_or("MLEADERSTYLE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(26)) => Ok(Self::Material(<DwgMaterial as dsl::DslField>::from_value(record.get(27).ok_or("MATERIAL body missing")?)?)),
-            Some(dsl::FieldValue::Enum(27)) => Ok(Self::BlockMoveAction(<DwgBlockMoveAction as dsl::DslField>::from_value(record.get(28).ok_or("BLOCKMOVEACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(28)) => Ok(Self::AssocNetwork(<DwgAssocNetwork as dsl::DslField>::from_value(record.get(29).ok_or("ACDBASSOCNETWORK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(29)) => Ok(Self::Assoc2dConstraintGroup(<DwgAssoc2dConstraintGroup as dsl::DslField>::from_value(record.get(30).ok_or("ACDBASSOC2DCONSTRAINTGROUP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(30)) => Ok(Self::BlockLinearParameter(<DwgBlockLinearParameter as dsl::DslField>::from_value(record.get(31).ok_or("BLOCKLINEARPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(31)) => Ok(Self::BlockLinearGrip(<DwgBlockLinearGrip as dsl::DslField>::from_value(record.get(32).ok_or("BLOCKLINEARGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(32)) => Ok(Self::BlockFlipGrip(<DwgBlockFlipGrip as dsl::DslField>::from_value(record.get(33).ok_or("BLOCKFLIPGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(33)) => Ok(Self::BlockVisibilityGrip(<DwgBlockVisibilityGrip as dsl::DslField>::from_value(record.get(34).ok_or("BLOCKVISIBILITYGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(34)) => Ok(Self::BlockAlignmentParameter(<DwgBlockAlignmentParameter as dsl::DslField>::from_value(record.get(35).ok_or("BLOCKALIGNMENTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(35)) => Ok(Self::BlockAlignmentGrip(<DwgBlockAlignmentGrip as dsl::DslField>::from_value(record.get(36).ok_or("BLOCKALIGNMENTGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(36)) => Ok(Self::BlockStretchAction(<DwgBlockStretchAction as dsl::DslField>::from_value(record.get(37).ok_or("BLOCKSTRETCHACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(37)) => Ok(Self::BlockScaleAction(<DwgBlockScaleAction as dsl::DslField>::from_value(record.get(38).ok_or("BLOCKSCALEACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(38)) => Ok(Self::BlockFlipAction(<DwgBlockFlipAction as dsl::DslField>::from_value(record.get(39).ok_or("BLOCKFLIPACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(39)) => Ok(Self::BlockBasePointParameter(<DwgBlockBasePointParameter as dsl::DslField>::from_value(record.get(40).ok_or("BLOCKBASEPOINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(40)) => Ok(Self::BlockVerticalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(41).ok_or("BLOCKVERTICALCONSTRAINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(41)) => Ok(Self::BlockHorizontalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(42).ok_or("BLOCKHORIZONTALCONSTRAINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(42)) => Ok(Self::Layout(<DwgLayout as dsl::DslField>::from_value(record.get(43).ok_or("LAYOUT body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(0)) => Ok(Self::Dictionary(<DwgDictionaryBody as semio_framework_dsl_record::DslField>::from_value(record.get(1).ok_or("dictionary body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(1)) => Ok(Self::TableControl(<DwgTableControlBody as semio_framework_dsl_record::DslField>::from_value(record.get(2).ok_or("table-control body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(2)) => Ok(Self::TableRecord(<DwgTableRecordBody as semio_framework_dsl_record::DslField>::from_value(record.get(3).ok_or("table-record body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(3)) => Ok(Self::XRecord(<DwgXRecordBody as semio_framework_dsl_record::DslField>::from_value(record.get(4).ok_or("XRECORD body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(4)) => Ok(Self::Entity(<DwgEntityBody as semio_framework_dsl_record::DslField>::from_value(record.get(5).ok_or("entity body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(5)) => Ok(Self::AssociativeDependency(<DwgAssociativeDependency as semio_framework_dsl_record::DslField>::from_value(record.get(6).ok_or("associative-dependency body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(6)) => Ok(Self::AssociativeValueDependency(<DwgAssociativeValueDependency as semio_framework_dsl_record::DslField>::from_value(record.get(7).ok_or("associative-value-dependency body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(7)) => Ok(Self::AssociativeGeometryDependency(<DwgAssociativeGeometryDependency as semio_framework_dsl_record::DslField>::from_value(record.get(8).ok_or("associative-geometry-dependency body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(8)) => Ok(Self::BlockGripLocationComponent(<DwgBlockGripLocationComponent as semio_framework_dsl_record::DslField>::from_value(record.get(9).ok_or("block-grip-location-component body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(9)) => Ok(Self::DynamicBlockProxyNode(<DwgDynamicBlockProxyNode as semio_framework_dsl_record::DslField>::from_value(record.get(10).ok_or("dynamic-block-proxy-node body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(10)) => Ok(Self::AssociativeVariable(<DwgAssociativeVariable as semio_framework_dsl_record::DslField>::from_value(record.get(11).ok_or("associative-variable body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(11)) => Ok(Self::AssociativeDimensionDependencyBody(<DwgAssociativeDimensionDependencyBody as semio_framework_dsl_record::DslField>::from_value(record.get(12).ok_or("associative-dimension-dependency body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(12)) => Ok(Self::VisualStyle(<DwgVisualStyle as semio_framework_dsl_record::DslField>::from_value(record.get(13).ok_or("visual-style body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(13)) => Ok(Self::BlockParameterDependencyBody(<DwgBlockParameterDependencyBody as semio_framework_dsl_record::DslField>::from_value(record.get(14).ok_or("block-parameter-dependency body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(14)) => Ok(Self::BlockRepresentationData(<DwgBlockRepresentationData as semio_framework_dsl_record::DslField>::from_value(record.get(15).ok_or("block-representation data missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(15)) => Ok(Self::DynamicBlockPurgePreventer(<DwgDynamicBlockPurgePreventer as semio_framework_dsl_record::DslField>::from_value(record.get(16).ok_or("dynamic-block purge-preventer body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(16)) => Ok(Self::EvaluationGraph(<DwgEvaluationGraph as semio_framework_dsl_record::DslField>::from_value(record.get(17).ok_or("evaluation-graph body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(17)) => Ok(Self::BlockFlipParameter(<DwgBlockFlipParameter as semio_framework_dsl_record::DslField>::from_value(record.get(18).ok_or("block-flip-parameter body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(18)) => Ok(Self::BlockVisibilityParameter(<DwgBlockVisibilityParameter as semio_framework_dsl_record::DslField>::from_value(record.get(19).ok_or("block-visibility-parameter body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(19)) => Ok(Self::Placeholder(<DwgPlaceholder as semio_framework_dsl_record::DslField>::from_value(record.get(20).ok_or("placeholder body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(20)) => Ok(Self::DictionaryVariable(<DwgDictionaryVariable as semio_framework_dsl_record::DslField>::from_value(record.get(21).ok_or("dictionary-variable body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(21)) => Ok(Self::AnnotationScale(<DwgAnnotationScale as semio_framework_dsl_record::DslField>::from_value(record.get(22).ok_or("annotation-scale body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(22)) => Ok(Self::SortEntitiesTable(<DwgSortEntitiesTable as semio_framework_dsl_record::DslField>::from_value(record.get(23).ok_or("sort-entities-table body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(23)) => Ok(Self::TableStyle(Box::new(<DwgTableStyle as semio_framework_dsl_record::DslField>::from_value(record.get(24).ok_or("table-style body missing")?)?))),
+            Some(semio_framework_dsl_record::FieldValue::Enum(24)) => Ok(Self::MlineStyle(<DwgMlineStyle as semio_framework_dsl_record::DslField>::from_value(record.get(25).ok_or("MLINESTYLE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(25)) => Ok(Self::MLeaderStyle(<DwgMLeaderStyle as semio_framework_dsl_record::DslField>::from_value(record.get(26).ok_or("MLEADERSTYLE body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(26)) => Ok(Self::Material(<DwgMaterial as semio_framework_dsl_record::DslField>::from_value(record.get(27).ok_or("MATERIAL body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(27)) => Ok(Self::BlockMoveAction(<DwgBlockMoveAction as semio_framework_dsl_record::DslField>::from_value(record.get(28).ok_or("BLOCKMOVEACTION body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(28)) => Ok(Self::AssocNetwork(<DwgAssocNetwork as semio_framework_dsl_record::DslField>::from_value(record.get(29).ok_or("ACDBASSOCNETWORK body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(29)) => Ok(Self::Assoc2dConstraintGroup(<DwgAssoc2dConstraintGroup as semio_framework_dsl_record::DslField>::from_value(record.get(30).ok_or("ACDBASSOC2DCONSTRAINTGROUP body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(30)) => Ok(Self::BlockLinearParameter(<DwgBlockLinearParameter as semio_framework_dsl_record::DslField>::from_value(record.get(31).ok_or("BLOCKLINEARPARAMETER body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(31)) => Ok(Self::BlockLinearGrip(<DwgBlockLinearGrip as semio_framework_dsl_record::DslField>::from_value(record.get(32).ok_or("BLOCKLINEARGRIP body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(32)) => Ok(Self::BlockFlipGrip(<DwgBlockFlipGrip as semio_framework_dsl_record::DslField>::from_value(record.get(33).ok_or("BLOCKFLIPGRIP body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(33)) => Ok(Self::BlockVisibilityGrip(<DwgBlockVisibilityGrip as semio_framework_dsl_record::DslField>::from_value(record.get(34).ok_or("BLOCKVISIBILITYGRIP body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(34)) => Ok(Self::BlockAlignmentParameter(<DwgBlockAlignmentParameter as semio_framework_dsl_record::DslField>::from_value(record.get(35).ok_or("BLOCKALIGNMENTPARAMETER body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(35)) => Ok(Self::BlockAlignmentGrip(<DwgBlockAlignmentGrip as semio_framework_dsl_record::DslField>::from_value(record.get(36).ok_or("BLOCKALIGNMENTGRIP body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(36)) => Ok(Self::BlockStretchAction(<DwgBlockStretchAction as semio_framework_dsl_record::DslField>::from_value(record.get(37).ok_or("BLOCKSTRETCHACTION body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(37)) => Ok(Self::BlockScaleAction(<DwgBlockScaleAction as semio_framework_dsl_record::DslField>::from_value(record.get(38).ok_or("BLOCKSCALEACTION body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(38)) => Ok(Self::BlockFlipAction(<DwgBlockFlipAction as semio_framework_dsl_record::DslField>::from_value(record.get(39).ok_or("BLOCKFLIPACTION body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(39)) => Ok(Self::BlockBasePointParameter(<DwgBlockBasePointParameter as semio_framework_dsl_record::DslField>::from_value(record.get(40).ok_or("BLOCKBASEPOINTPARAMETER body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(40)) => Ok(Self::BlockVerticalConstraintParameter(<DwgBlockLinearConstraintParameter as semio_framework_dsl_record::DslField>::from_value(record.get(41).ok_or("BLOCKVERTICALCONSTRAINTPARAMETER body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(41)) => Ok(Self::BlockHorizontalConstraintParameter(<DwgBlockLinearConstraintParameter as semio_framework_dsl_record::DslField>::from_value(record.get(42).ok_or("BLOCKHORIZONTALCONSTRAINTPARAMETER body missing")?)?)),
+            Some(semio_framework_dsl_record::FieldValue::Enum(42)) => Ok(Self::Layout(<DwgLayout as semio_framework_dsl_record::DslField>::from_value(record.get(43).ok_or("LAYOUT body missing")?)?)),
             other => Err(format!("expected DWG object-body kind, found {other:?}")),
         }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLogicalObject {
     pub handle: u64,
@@ -3515,7 +3516,7 @@ pub struct DwgLogicalObject {
     pub body: Option<DwgLogicalObjectBody>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgLogicalDrawing {
     /// 🧭 Handle-keyed objects are the sole persisted entity authority; use `entities()` for a derived view.
@@ -4440,7 +4441,7 @@ impl DwgLogicalGeometry {
 /// AutoCAD drawing and this codec's AC1024 header layout were verified against.
 pub const DWG_NEW_DOCUMENT_MAINTENANCE_VERSION: u8 = 2;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderUnits {
     pub unit1_conversion: f64,
@@ -4453,7 +4454,7 @@ pub struct DwgHeaderUnits {
     pub unit4_name: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderModes {
     pub dimension_associative: bool,
@@ -4478,7 +4479,7 @@ pub struct DwgHeaderModes {
     pub polyline_ellipse: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderIntegerSettings {
     pub proxy_graphics: u16,
@@ -4510,7 +4511,7 @@ pub struct DwgHeaderIntegerSettings {
     pub text_quality: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderScalars {
     pub linetype_scale: f64,
@@ -4538,7 +4539,7 @@ pub struct DwgHeaderScalars {
     pub paper_space_viewport_scale: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderTimeState {
     pub created_at: DwgJulianDate,
@@ -4547,7 +4548,7 @@ pub struct DwgHeaderTimeState {
     pub user_timer_duration: DwgJulianDate,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderSpaceGeometry {
     pub insertion_base: Vec<f64>,
@@ -4568,7 +4569,7 @@ pub struct DwgHeaderSpaceGeometry {
     pub ucs_origin_back: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDimensionSettings {
     pub scale: f64,
@@ -4639,7 +4640,7 @@ pub struct DwgDimensionSettings {
     pub extension_line_weight: i16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDrawingPolicy {
     pub text_stack_alignment: u16,
@@ -4694,7 +4695,7 @@ pub struct DwgDrawingPolicy {
     pub shadow_plane_location: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderStrings {
     pub menu: String,
@@ -4709,7 +4710,7 @@ pub struct DwgHeaderStrings {
     pub project_name: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderRelations {
     pub handle_seed: u64,
@@ -4777,7 +4778,7 @@ pub struct DwgHeaderRelations {
     pub drag_visual_style: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgHeaderVariables {
     pub units: DwgHeaderUnits,
@@ -4793,7 +4794,7 @@ pub struct DwgHeaderVariables {
     pub relations: DwgHeaderRelations,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgClass {
     pub number: u16,
@@ -4815,7 +4816,7 @@ pub struct DwgClass {
     pub reserved_values: Vec<u32>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgDependency {
     pub feature: String,
@@ -4833,28 +4834,28 @@ pub struct DwgDependency {
     pub reference_count: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgJulianDate {
     pub days: u32,
     pub milliseconds: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgVersionStamp {
     pub version: u16,
     pub maintenance: u16,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgCompatibilityProfile {
     #[default]
     Autocad2009,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgAuxiliaryHeader {
     pub total_saves: u32,
@@ -4870,7 +4871,7 @@ pub struct DwgAuxiliaryHeader {
     pub terminal_save_generation: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgRevisionHistory {
     pub format_major: u32,
@@ -4879,14 +4880,14 @@ pub struct DwgRevisionHistory {
     pub revisions: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgPreviewOrigin {
     #[default]
     BottomUp,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgRgba {
     pub red: u8,
@@ -4895,7 +4896,7 @@ pub struct DwgRgba {
     pub alpha: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgIndexedPreview {
     pub width: u32,
@@ -4908,7 +4909,7 @@ pub struct DwgIndexedPreview {
     pub background_palette_index: u8,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgApplicationPropertyKind {
     #[default]
@@ -4916,7 +4917,7 @@ pub enum DwgApplicationPropertyKind {
     DateTime,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgApplicationProperty {
     pub id: u32,
@@ -4924,7 +4925,7 @@ pub struct DwgApplicationProperty {
     pub value: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgProductInformation {
     pub name: String,
@@ -4934,7 +4935,7 @@ pub struct DwgProductInformation {
     pub locale_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgApplicationHistory {
     pub history_identifier_one: String,
@@ -4952,14 +4953,14 @@ pub struct DwgApplicationHistory {
     pub product: DwgProductInformation,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgCustomProperty {
     pub key: String,
     pub value: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgSummaryInfo {
     pub title: String,
@@ -4980,7 +4981,7 @@ pub struct DwgSummaryInfo {
     pub custom_properties: Vec<DwgCustomProperty>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgApplicationInfo {
     pub name: String,
@@ -4993,7 +4994,7 @@ pub struct DwgApplicationInfo {
     pub application_version: String,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 pub enum DwgMeasurement {
     #[default]
@@ -5001,7 +5002,7 @@ pub enum DwgMeasurement {
     Metric,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DwgTemplate {
     pub description: String,
@@ -5011,7 +5012,7 @@ pub struct DwgTemplate {
 
 //#region 🔖️Snapshot
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgSnapshot {
@@ -5215,6 +5216,12 @@ impl fmt::Display for DwgExportError {
 }
 
 impl std::error::Error for DwgExportError {}
+/// 🧭️ Every export refusal is an invalid logical, version, header or writer input to the DWG writer.
+impl From<DwgExportError> for semio_framework_value::ValueError {
+    fn from(error: DwgExportError) -> Self {
+        Self::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())
+    }
+}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), DwgExportError> {
@@ -5280,16 +5287,16 @@ impl store::ArtifactDsl for DwgSnapshot {
         "stdio.dwg"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -5303,18 +5310,18 @@ impl store::ArtifactPack for DwgSnapshot {
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }

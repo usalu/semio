@@ -14,7 +14,7 @@ pub fn diff(payload: &ChangeShotHeight, base: &ShootingSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shot \"{}\" height must be positive.", payload.id), [payload.id.clone()]);
     }
     if existing.height == payload.new_height {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shot \"{}\" already has height {}.", payload.id, payload.new_height));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shot \"{}\" already has height {}.", payload.id, payload.new_height));
     }
     protocol::MutationOutcome::new(ShootingDiff {
         shots: Some(ShootingShotsDelta { patched: vec![ShootingShotPatchEntry { id: payload.id.clone(), patch: ShootingShotPatch { height: Some(payload.new_height), ..Default::default() } }], ..Default::default() }),

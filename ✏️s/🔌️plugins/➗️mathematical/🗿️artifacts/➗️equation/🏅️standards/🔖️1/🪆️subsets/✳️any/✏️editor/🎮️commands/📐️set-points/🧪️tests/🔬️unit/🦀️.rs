@@ -8,5 +8,5 @@ async fn set_points_replaces_geometry() {
     let mut app = math_app().await;
     let geometry = EquationGeometry { points: vec![EquationPoint { x: 1.0, y: 2.0 }] };
     dispatch(&mut app, EquationCommand::SetPoints(SetPoints { geometry: geometry.clone() })).await;
-    assert_eq!(crate::equation_geometry(&app.snapshot().expect("projection")), geometry);
+    assert_eq!((app.snapshot().expect("projection")).geometry.clone(), geometry);
 }

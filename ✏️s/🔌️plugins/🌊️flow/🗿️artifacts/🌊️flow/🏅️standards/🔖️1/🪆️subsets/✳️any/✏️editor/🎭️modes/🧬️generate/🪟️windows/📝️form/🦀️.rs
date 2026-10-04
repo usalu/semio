@@ -67,7 +67,7 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
 /// `"image"`/`"text"`/`"single"` (see `forms_bridge::widget_to_playbook_block`'s exhaustive match) — the
 /// `_` arm below covers `"text"` and any future addition defensively as a plain text input, and `"note"`/
 /// `"image"` never reach this function (handled directly in [`question_field`], unwrapped, no control).
-fn question_control(question: &PlaybookBlock, value: &dsl::DslValue, field_id: &str, action: (ActionId, Option<semio_framework_plugin::UiValue>)) -> UiAssemblyResult<BuiltNode> {
+fn question_control(question: &PlaybookBlock, value: &semio_framework_value::DslValue, field_id: &str, action: (ActionId, Option<semio_framework_plugin::UiValue>)) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = action;
     match question.kind.as_str() {
         "slider" => {
@@ -134,7 +134,8 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let spec = crate::editor::flow::with_live_host_snapshot(snapshot, flow_host_snapshot_to_form_spec);
-    let generation = transient.generation();
+    let mut generation_owner = transient.generation().map_err(|error| PluginAssemblyError::new("ui.generate-form", error.into_message()))?;
+    let generation = generation_owner.as_mut();
     let Some(active) = selected_generation(&generation) else {
         return ui::text(ui_label(labels.generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));
     };

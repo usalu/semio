@@ -17,7 +17,7 @@
       "type": "string"
     },
     "newValue": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json",
       "x-semio-ui": {
         "role": "value",
         "label": {

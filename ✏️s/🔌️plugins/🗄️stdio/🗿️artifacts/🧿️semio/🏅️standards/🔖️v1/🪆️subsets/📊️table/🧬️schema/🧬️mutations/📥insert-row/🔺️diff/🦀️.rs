@@ -13,7 +13,7 @@ pub fn diff(payload: &super::InsertRow, base: &SemioTableSnapshot) -> protocol::
     if at == payload.index {
         outcome
     } else {
-        outcome.warn("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at))
+        outcome.warning("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at))
     }
 }
 //#endregion 🔖️Diff

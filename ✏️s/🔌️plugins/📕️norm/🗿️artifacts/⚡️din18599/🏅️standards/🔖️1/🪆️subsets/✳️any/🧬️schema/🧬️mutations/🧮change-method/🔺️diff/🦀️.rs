@@ -7,7 +7,7 @@ use crate::Din18599Snapshot;
 pub fn diff(payload: &ChangeMethod, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 
     if base.method == payload.new_method {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "method already has this value.");
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "method already has this value.");
     }
     protocol::MutationOutcome::new(Din18599Diff { method: Some(payload.new_method), ..Default::default() })
 }

@@ -79,8 +79,8 @@ pub(crate) mod context {
     /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle5dTestApp {
-        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests));
-        semio_framework::io::resolve_ready(app.bind_instance_id(1));
+        let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests));
+        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(1));
         Puzzle5dTestApp(app)
     }
     
@@ -203,7 +203,7 @@ pub(crate) mod context {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
+            let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
             let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
@@ -213,7 +213,7 @@ pub(crate) mod context {
 
     /// 📥️ [`dispatch`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel — the lane a
     /// shell's picked-file chunks take, where the framework's import staging admits them first.
-    pub fn dispatch_through_action(app: &mut Puzzle5dApp, action: &str, args: &dsl::DslValue) -> Result<InvocationResult, Fault> {
+    pub fn dispatch_through_action(app: &mut Puzzle5dApp, action: &str, args: &semio_framework_value::DslValue) -> Result<InvocationResult, Fault> {
         let action_meta = action_meta(action, None, None);
         let result = block_on(app.handle_action(action, Some(args), &action_meta));
         settle(app, result)
@@ -270,7 +270,7 @@ pub(crate) mod context {
         let mut view = window_view(window_id, window_id);
         view.active_utility_by_window_id.insert(window_id.to_string(), utility_id.to_string());
         let action_meta = ActionMeta { view_state: Some(view), ..meta("local") };
-        let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta));
+        let result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta));
         settle(app, result)
     }
 
@@ -279,16 +279,16 @@ pub(crate) mod context {
     /// deleted `setSelection` action.
     pub fn select_id(app: &mut Puzzle5dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-        dispatch(app, "interactionSelect", Some(&dsl::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
+        dispatch(app, "interactionSelect", Some(&semio_framework_pack_json::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
     }
     
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        render_body_with_view(app, body_key, &ViewModel::new(protocol::Locale::En, protocol::Terminology::Native))
+        render_body_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
     }
 
     pub fn render_body_with_view(app: &mut Puzzle5dApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, view_state)).expect("render");
+        let tree = ::semio_framework_async::poll::resolve_ready(app.render(body_key, None, view_state)).expect("render");
         let mut scene_json = None;
         let mut stack = vec![&tree.root];
         while let Some(node) = stack.pop() {
@@ -397,12 +397,12 @@ pub(crate) mod context {
     /// — the read half of every "dispatch → config changes → measure reflects it" law.
     pub fn window_measures_of(app: &mut Puzzle5dApp, window_kind: &str) -> Vec<WindowMeasure> {
         let view = window_view(window_kind, window_kind);
-        semio_framework::io::resolve_ready(PluginApp::window_measures(app, &view)).remove(window_kind).unwrap_or_default()
+        ::semio_framework_async::poll::resolve_ready(PluginApp::window_measures(app, &view)).remove(window_kind).unwrap_or_default()
     }
     //#endregion 🎚️Measures
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
+        parse(&app.snapshot().expect("projection").value().to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot JSON")
     }
     
     pub fn part_count(app: &Puzzle5dApp) -> usize {
@@ -699,7 +699,7 @@ async fn context_menu_is_grouped_and_keeps_delete_selection_last() {
         window_instance_id: None,
         point: None,
     };
-    let menu = semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()));
+    let menu = ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     assert!(menu.len() <= 9, "top-level context menu should stay progressively disclosed: {menu:?}");
     let last = menu.last().expect("selection context menu should not be empty");
     let last_is_destructive_leaf = last.action.as_deref() == Some("deleteSelection") && last.destructive == Some(true);
@@ -725,7 +725,7 @@ async fn set_active_example_swaps_the_document_and_undo_restores_it() {
     let mut app = app();
     let loaded = part_count(&app);
     assert!(loaded > 0);
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty");
     assert_eq!(part_count(&app), 0, "empty example clears the parts");
     dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
@@ -736,15 +736,15 @@ async fn set_active_example_swaps_the_document_and_undo_restores_it() {
 #[semio_framework_async_macros::async_test]
 async fn patch_fastener_updates_transform_offsets_and_undoes() {
     let mut app = app();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin (has fasteners)");
     let projection = projection_of(&app);
     let fastener_id = projection["fasteners"][0]["id"].as_str().expect("seeded fastener").to_string();
-    dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None).expect("patch gap");
+    dispatch(&mut app, "patchFastener", Some(&semio_framework_pack_json::json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None).expect("patch gap");
     let after = projection_of(&app);
     let fastener = after["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
     assert_eq!(fastener["gap"], 2.5);
     assert_eq!(fastener["shift"], 0.0);
-    dispatch(&mut app, "patchFastener", Some(&dsl::json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None).expect("patch rotation");
+    dispatch(&mut app, "patchFastener", Some(&semio_framework_pack_json::json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None).expect("patch rotation");
     let after2 = projection_of(&app);
     let fastener2 = after2["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
     assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
@@ -773,10 +773,10 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None)).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    semio_framework::io::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None, transaction: None })).expect("apply");
+    ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None, transaction: None })).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
+    ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️CommandEnvelopeTests
@@ -785,7 +785,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[semio_framework_async_macros::async_test]
 async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
     let result = dispatch(&mut app, "copy", None, None).expect("copy");
@@ -808,7 +808,7 @@ async fn copy_with_no_selection_is_a_benign_no_operation() {
 #[semio_framework_async_macros::async_test]
 async fn cut_removes_selected_part_and_undo_restores_it() {
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let before_count = part_count(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
@@ -824,7 +824,7 @@ async fn cut_removes_selected_part_and_undo_restores_it() {
 #[semio_framework_async_macros::async_test]
 async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let projection = projection_of(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
@@ -832,7 +832,7 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
     let before_count = part_count(&app);
     let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
-    let paste_args = dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] })));
+    let paste_args = semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] })));
     dispatch(&mut app, "paste", Some(&paste_args), None).expect("paste");
     assert_eq!(part_count(&app), before_count + 1);
     let after = projection_of(&app);
@@ -899,7 +899,7 @@ async fn window_engagements_cover_both_windows() {
     let mut app = app();
     // 🪟️ A window engagement is collected per LIVE window INSTANCE, so an empty `ViewModel` names no
     // window and the map comes back empty — the same per-instance contract `window_measures` carries.
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
+    let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     assert!(engagements.contains_key(board2d::WINDOW_KIND_ID));
     assert!(engagements.contains_key(world3d::WINDOW_KIND_ID));
 }
@@ -994,7 +994,7 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
     let expected_default = puzzle5d_default_part_kind(&puzzle5d_part_kind_options());
     assert!(!expected_default.is_empty() && expected_default != "Part", "the declared default is a real catalog kind, got {expected_default:?}");
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty");
     let before = part_count(&app);
     let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
     // 🧾️ `addPartKind` is `InteractiveJobClassification::Migrated`, so its ADMISSION carries no
@@ -1015,7 +1015,7 @@ async fn set_active_utility_emits_no_ops_and_no_history_entry() {
     // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
     let mut app = app_with_registry();
     let before = projection_of(&app);
-    let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&dsl::json!({ "utilityId": "brush" })), None).expect("switch utility");
+    let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&semio_framework_pack_json::json!({ "utilityId": "brush" })), None).expect("switch utility");
     assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
     assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
@@ -1031,8 +1031,8 @@ async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_
     let view_b = window_view(board2d::WINDOW_KIND_ID, window_b);
     let before = projection_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before window publications");
-    let result_a = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), Some(window_a)).expect("setCamera2d a");
-    let result_b = dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "camera": { "x": -42.5, "y": 7.5, "zoom": 1.5 } })), Some(window_b)).expect("setCamera2d b");
+    let result_a = dispatch(&mut app, "setCamera2d", Some(&semio_framework_pack_json::json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), Some(window_a)).expect("setCamera2d a");
+    let result_b = dispatch(&mut app, "setCamera2d", Some(&semio_framework_pack_json::json!({ "camera": { "x": -42.5, "y": 7.5, "zoom": 1.5 } })), Some(window_b)).expect("setCamera2d b");
     assert!(result_a.mutations.is_empty() && result_b.mutations.is_empty());
     assert_eq!(projection_of(&app), before);
     let app_config_after = app.config_pack().await.expect("app config after window publications");
@@ -1062,18 +1062,18 @@ async fn exact_window_transient_isolated_abort_and_reload_reset_through_register
     let window_b = "puzzle5d-transient-b";
     let view_a = window_view(board2d::WINDOW_KIND_ID, window_a);
     let view_b = window_view(board2d::WINDOW_KIND_ID, window_b);
-    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
+    dispatch(&mut app, "engagementInput", Some(&semio_framework_pack_json::json!({ "window": board2d::WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
     let transient_a = app.window_transient_snapshot(&view_a).expect("window a transient").expect("window a owner");
     let transient_b = app.window_transient_snapshot(&view_b).expect("window b transient").expect("window b owner");
     assert_eq!(transient_a.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some("fill"));
     assert_eq!(transient_b.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
-    dispatch(&mut app, "engagementAbort", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
+    dispatch(&mut app, "engagementAbort", Some(&semio_framework_pack_json::json!({ "window": board2d::WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
     let aborted = app.window_transient_snapshot(&view_a).expect("aborted transient").expect("aborted owner");
     assert_eq!(aborted.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
-    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
-    let submitted = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
+    dispatch(&mut app, "engagementInput", Some(&semio_framework_pack_json::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
+    let submitted = dispatch(&mut app, "engagementSubmit", Some(&semio_framework_pack_json::json!({ "window": board2d::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
     assert!(submitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id, .. } if window_id == window_a)));
-    dispatch(&mut app, "engagementInput", Some(&dsl::json!({ "window": board2d::WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
+    dispatch(&mut app, "engagementInput", Some(&semio_framework_pack_json::json!({ "window": board2d::WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
     let reset = reopened.window_transient_snapshot(&view_a).expect("reopened transient").expect("reopened owner");
     assert_eq!(reset.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
@@ -1088,7 +1088,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
     // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
     // engagement HUD may duplicate it as options.
     let mut app = app();
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
+    let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
     }
@@ -1100,7 +1100,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 /// `WindowEngagementControl` on the HUD and never a window rail group — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
 async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_controls() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     // 🪣️ Fill TOOL: the count entry and the distribution trees live in the tool options rail, NOT in either
     // window's measures and NOT on the engagement HUD.
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
@@ -1129,7 +1129,7 @@ async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_cont
 /// pin must not come back anywhere on the path from runtime default to rendered tool measure.
 #[semio_framework_async_macros::async_test]
 async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     assert_eq!(PUZZLE5D_DEFAULT_FILL_COUNT, 100);
     assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
     assert_eq!(Puzzle5dConfig::default().fill_count, 100);
@@ -1166,7 +1166,7 @@ async fn fill_is_registered_as_a_mode_tool_and_no_longer_as_a_utility() {
 /// verb no arm implements is a dead promise (the defect 3d still carries with `pick`/`rectangle`/`lasso`).
 #[semio_framework_async_macros::async_test]
 async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         let hud = edit::puzzle5d_engagement(&scene, window, labels, None);
@@ -1184,7 +1184,7 @@ async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
     // addressed. This law used to demand both windows, which is the pre-per-window contract.
     for window in [world3d::WINDOW_KIND_ID, board2d::WINDOW_KIND_ID] {
         let mut app = app();
-        let result = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": window, "value": "brush" })), Some(window)).expect("submit");
+        let result = dispatch(&mut app, "engagementSubmit", Some(&semio_framework_pack_json::json!({ "window": window, "value": "brush" })), Some(window)).expect("submit");
         let windows: Vec<&str> = result
             .requested_effects
             .iter()
@@ -1198,16 +1198,16 @@ async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
 }
 
 /// 🧾️ The applied history rows one dispatch upserted that carry document ops.
-fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
+fn edit_rows(result: &semio_framework_plugin::InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
     result.history_patch.iter().flat_map(|patch| patch.upserts.iter()).filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()
 }
 
 fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
-    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+    entry.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()
 }
 
 /// 📍️ One part's `(flat x, flat y, world origin)`.
@@ -1227,7 +1227,7 @@ async fn one_gumball_translate_is_one_edit_one_row_and_one_transaction() {
     let mut app = Box::new(app_with_registry());
     let part_id = seeded_parts(&mut app, 1).remove(0);
     let start = part_poses(&app, &part_id);
-    let result = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).expect("the release delta commits");
+    let result = dispatch(&mut app, "translateSelection", Some(&semio_framework_pack_json::json!({ "ids": [part_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).expect("the release delta commits");
     let rows = edit_rows(&result);
     assert_eq!(rows.len(), 1, "one gesture, one history row: {rows:?}");
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
@@ -1248,8 +1248,8 @@ async fn two_gumball_gestures_are_two_transactions() {
     let mut app = Box::new(app_with_registry());
     let part_id = seeded_parts(&mut app, 1).remove(0);
     let start = part_poses(&app, &part_id);
-    let first = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).expect("first gesture");
-    let second = dispatch(&mut app, "rotateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.5 })), None).expect("second gesture");
+    let first = dispatch(&mut app, "translateSelection", Some(&semio_framework_pack_json::json!({ "ids": [part_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).expect("first gesture");
+    let second = dispatch(&mut app, "rotateSelection", Some(&semio_framework_pack_json::json!({ "ids": [part_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.5 })), None).expect("second gesture");
     let (first, second) = (edit_rows(&first), edit_rows(&second));
     assert_eq!((first.len(), second.len()), (1, 1), "each gesture is its own row");
     assert!(second[0].op_lines[0].starts_with("rotate-selection3d"), "the turn is the parametric rotate leaf: {:?}", second[0].op_lines);
@@ -1268,7 +1268,7 @@ async fn a_board_drag_is_one_board_leaf_in_one_transaction() {
     let part_id = seeded_parts(&mut app, 1).remove(0);
     let start = part_poses(&app, &part_id);
     let events = format!("[{{\"name\":\"gesture\",\"payload\":{{\"kind\":\"drag\",\"dx\":5,\"dy\":-2.5,\"targets\":[\"{part_id}\",\"{part_id}\"]}}}}]");
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": events })), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents drag");
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": events })), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents drag");
     let rows = edit_rows(&result);
     assert_eq!(rows.len(), 1, "one batch, one row: {rows:?}");
     assert!(rows[0].op_lines.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection2d"), "the one op is the board leaf: {:?}", rows[0].op_lines);
@@ -1286,11 +1286,11 @@ async fn an_inspector_nudge_is_one_relative_transaction() {
     let mut app = Box::new(app_with_registry());
     let part_id = seeded_parts(&mut app, 1).remove(0);
     let start = part_poses(&app, &part_id);
-    let result = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id.as_str(), "field": "x", "delta": 4.0 })), None).expect("patchPart x nudge");
+    let result = dispatch(&mut app, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": part_id.as_str(), "field": "x", "delta": 4.0 })), None).expect("patchPart x nudge");
     let rows = edit_rows(&result);
     assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection2d") && rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#patchPart")), "one nudge, one transaction: {rows:?}");
     assert_eq!(part_poses(&app, &part_id).0, start.0 + 4.0, "the nudge lands relative to the committed pin");
-    let absolute = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id.as_str(), "field": "x", "value": 42.0 })), None).expect("patchPart x value");
+    let absolute = dispatch(&mut app, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": part_id.as_str(), "field": "x", "value": 42.0 })), None).expect("patchPart x value");
     let absolute = edit_rows(&absolute);
     assert!(absolute.len() == 1 && !absolute[0].op_lines[0].starts_with("drag-selection"), "an absolute edit is no gesture: {absolute:?}");
     assert_eq!(part_poses(&app, &part_id).0, 42.0, "the absolute edit lands verbatim");
@@ -1302,7 +1302,7 @@ async fn an_inspector_nudge_is_one_relative_transaction() {
 async fn a_motionless_gumball_release_leaves_zero_trace() {
     let mut app = Box::new(app_with_registry());
     let part_id = seeded_parts(&mut app, 1).remove(0);
-    let result = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id.as_str()], "dx": 0.0, "dy": 0.0, "dz": 0.0 })), None).expect("a motionless release completes");
+    let result = dispatch(&mut app, "translateSelection", Some(&semio_framework_pack_json::json!({ "ids": [part_id.as_str()], "dx": 0.0, "dy": 0.0, "dz": 0.0 })), None).expect("a motionless release completes");
     let noticed = result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. }));
     assert!(edit_rows(&result).is_empty() && result.mutations.is_empty() && !noticed, "nothing moved, nothing recorded");
     close_app(&mut app);
@@ -1333,7 +1333,7 @@ async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_c
     assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
     let after = projection_of(&app);
     assert_ne!(after, before, "exact retained import must apply its completion output");
-    let snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&after.to_string()).expect("retained projection deserializes");
+    let snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&after.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained projection deserializes");
     let catalogs = crate::kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra).expect("retained catalog replacement applied");
     let part = catalogs.parts.iter().find(|part| part.id == "retained-capsule").expect("retained part catalog row");
     assert_eq!(part.grips.first().and_then(|grip| grip.grip_kind.as_deref()), Some("retained-door"));
@@ -1390,7 +1390,7 @@ async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_cata
     // `{parts:[...],...}` shape a JSON pointer could probe directly — reassemble the full
     // `Puzzle5dKindCatalogs` through the typed snapshot + `kind_catalogs_of` accessor instead
     // (same pattern `sourcing`'s `stock_of` established for its own composed catalog field).
-    let next_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&next_projection.to_string()).expect("next_projection deserializes as Puzzle5dSnapshot");
+    let next_snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("next_projection deserializes as Puzzle5dSnapshot");
     let catalogs = crate::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
     let capsule = catalogs.parts.iter().find(|entry| entry.id == "capsule").expect("the imported part kind must appear in kindCatalogs.parts");
     assert_eq!(capsule.representations.first().map(|representation| representation.url.as_str()), Some("/mesh/capsule.glb"));
@@ -1425,7 +1425,7 @@ async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
     }
 
     let current = projection_of(&app);
-    let current_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&current.to_string()).expect("current deserializes as Puzzle5dSnapshot");
+    let current_snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&current.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("current deserializes as Puzzle5dSnapshot");
     let catalogs = crate::kind_catalogs_of(&current_snapshot.kind_catalogs, &current_snapshot.kind_catalogs_extra).expect("parts catalog present");
     assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
 }
@@ -1554,18 +1554,18 @@ async fn camera_verbs_publish_only_the_addressed_window_config() {
     let document_before = projection_of(&app);
     let config_before = app.config_pack().await.expect("app config before camera publications");
 
-    let flat = dispatch(&mut app, "setCamera", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": 4.5, "y": -2.5, "zoom": 3.0 } })), Some(board)).expect("setCamera in the board pane");
+    let flat = dispatch(&mut app, "setCamera", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": 4.5, "y": -2.5, "zoom": 3.0 } })), Some(board)).expect("setCamera in the board pane");
     assert!(flat.mutations.is_empty(), "a camera pose is never a document edit");
     assert_eq!(board_window_config(&mut app, board).await.camera2d, Puzzle5dCamera2d { x: 4.5, y: -2.5, zoom: 3.0 }, "the board pane's setCamera wrote its own flat camera");
 
-    let volume = dispatch(&mut app, "setCamera", Some(&dsl::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.0 } })), Some(world)).expect("setCamera in the world pane");
+    let volume = dispatch(&mut app, "setCamera", Some(&semio_framework_pack_json::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.0 } })), Some(world)).expect("setCamera in the world pane");
     assert!(volume.mutations.is_empty());
     let volume_camera = world_window_config(&mut app, world).await.camera3d;
     assert_eq!((volume_camera.position, volume_camera.target, volume_camera.zoom), ([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], 2.0), "the world pane's setCamera wrote its own volume camera");
 
-    dispatch(&mut app, "setCamera2d", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": -8.0, "y": 9.0, "zoom": 0.5 } })), Some(board)).expect("setCamera2d");
+    dispatch(&mut app, "setCamera2d", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "camera": { "x": -8.0, "y": 9.0, "zoom": 0.5 } })), Some(board)).expect("setCamera2d");
     assert_eq!(board_window_config(&mut app, board).await.camera2d, Puzzle5dCamera2d { x: -8.0, y: 9.0, zoom: 0.5 });
-    dispatch(&mut app, "setCamera3d", Some(&dsl::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [7.0, 7.0, 7.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })), Some(world)).expect("setCamera3d");
+    dispatch(&mut app, "setCamera3d", Some(&semio_framework_pack_json::json!({ "windowId": world3d::WINDOW_KIND_ID, "camera": { "position": [7.0, 7.0, 7.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })), Some(world)).expect("setCamera3d");
     assert_eq!(world_window_config(&mut app, world).await.camera3d.position, [7.0, 7.0, 7.0]);
 
     assert_eq!(projection_of(&app), document_before, "no camera verb touches the document lane");
@@ -1584,18 +1584,18 @@ async fn grid_verbs_publish_the_clamped_board_window_config() {
     let board = "puzzle5d-grid-board";
     assert!(window_ownership::Puzzle5dBoardWindowConfig::default().grid_snap_enabled, "snap starts on");
 
-    dispatch(&mut app, "setGridSnapEnabled", Some(&dsl::json!({ "pressed": false })), Some(board)).expect("press the snap toggle off");
+    dispatch(&mut app, "setGridSnapEnabled", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(board)).expect("press the snap toggle off");
     assert!(!board_window_config(&mut app, board).await.grid_snap_enabled, "the pressed state is what persists");
     dispatch(&mut app, "setGridSnapEnabled", None, Some(board)).expect("argument-less snap toggle");
     assert!(board_window_config(&mut app, board).await.grid_snap_enabled, "an argument-less invocation flips the current state");
 
-    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 4.0 })), Some(board)).expect("absolute grid factor");
+    dispatch(&mut app, "setGridFactor", Some(&semio_framework_pack_json::json!({ "value": 4.0 })), Some(board)).expect("absolute grid factor");
     assert_eq!(board_window_config(&mut app, board).await.grid_factor, 4.0);
-    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "delta": -1.0 })), Some(board)).expect("grid factor stepper nudge");
+    dispatch(&mut app, "setGridFactor", Some(&semio_framework_pack_json::json!({ "delta": -1.0 })), Some(board)).expect("grid factor stepper nudge");
     assert_eq!(board_window_config(&mut app, board).await.grid_factor, 3.0, "a delta nudges the current factor");
-    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 0.0 })), Some(board)).expect("grid factor below the band");
+    dispatch(&mut app, "setGridFactor", Some(&semio_framework_pack_json::json!({ "value": 0.0 })), Some(board)).expect("grid factor below the band");
     assert_eq!(board_window_config(&mut app, board).await.grid_factor, PUZZLE5D_GRID_FACTOR_MIN, "the schema's exclusive minimum is what the clamp protects");
-    dispatch(&mut app, "setGridFactor", Some(&dsl::json!({ "value": 1_000.0 })), Some(board)).expect("grid factor above the band");
+    dispatch(&mut app, "setGridFactor", Some(&semio_framework_pack_json::json!({ "value": 1_000.0 })), Some(board)).expect("grid factor above the band");
     assert_eq!(board_window_config(&mut app, board).await.grid_factor, PUZZLE5D_GRID_FACTOR_MAX);
     close_app(&mut app);
 }
@@ -1606,16 +1606,16 @@ async fn grid_verbs_publish_the_clamped_board_window_config() {
 async fn lod_and_suggestion_offset_publish_the_board_window_config() {
     let mut app = Box::new(app_with_registry());
     let board = "puzzle5d-lod-board";
-    dispatch(&mut app, "setLodMode", Some(&dsl::json!({ "value": "manual" })), Some(board)).expect("setLodMode");
+    dispatch(&mut app, "setLodMode", Some(&semio_framework_pack_json::json!({ "value": "manual" })), Some(board)).expect("setLodMode");
     assert_eq!(board_window_config(&mut app, board).await.lod_mode, "manual");
-    dispatch(&mut app, "setLodMode", Some(&dsl::json!({ "value": PUZZLE5D_LOD_MODE_AUTOMATIC })), Some(board)).expect("setLodMode back to automatic");
+    dispatch(&mut app, "setLodMode", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_LOD_MODE_AUTOMATIC })), Some(board)).expect("setLodMode back to automatic");
     assert_eq!(board_window_config(&mut app, board).await.lod_mode, PUZZLE5D_LOD_MODE_AUTOMATIC);
 
-    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MAX + 1.0 })), Some(board)).expect("setSuggestionOffset above the band");
+    dispatch(&mut app, "setSuggestionOffset", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MAX + 1.0 })), Some(board)).expect("setSuggestionOffset above the band");
     assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MAX);
-    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "delta": -1.0 })), Some(board)).expect("setSuggestionOffset stepper nudge");
+    dispatch(&mut app, "setSuggestionOffset", Some(&semio_framework_pack_json::json!({ "delta": -1.0 })), Some(board)).expect("setSuggestionOffset stepper nudge");
     assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MAX - 1.0, "the settings stepper's delta nudges the current offset");
-    dispatch(&mut app, "setSuggestionOffset", Some(&dsl::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MIN - 1.0 })), Some(board)).expect("setSuggestionOffset below the band");
+    dispatch(&mut app, "setSuggestionOffset", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_SUGGESTION_OFFSET_MIN - 1.0 })), Some(board)).expect("setSuggestionOffset below the band");
     assert_eq!(board_window_config(&mut app, board).await.suggestion_offset, PUZZLE5D_SUGGESTION_OFFSET_MIN);
     close_app(&mut app);
 }
@@ -1629,9 +1629,9 @@ async fn sun_verbs_publish_the_world_window_config() {
     let enabled_before = window_ownership::Puzzle5dWorldWindowConfig::default().sun.enabled;
     dispatch(&mut app, "toggleSun", None, Some(world)).expect("toggleSun");
     assert_eq!(world_window_config(&mut app, world).await.sun.enabled, !enabled_before, "toggling the sun flips the world pane's own environment");
-    dispatch(&mut app, "setSunAzimuth", Some(&dsl::json!({ "value": 123.0 })), Some(world)).expect("setSunAzimuth");
-    dispatch(&mut app, "setSunElevation", Some(&dsl::json!({ "value": 41.0 })), Some(world)).expect("setSunElevation");
-    dispatch(&mut app, "setSunIntensity", Some(&dsl::json!({ "value": 0.25 })), Some(world)).expect("setSunIntensity");
+    dispatch(&mut app, "setSunAzimuth", Some(&semio_framework_pack_json::json!({ "value": 123.0 })), Some(world)).expect("setSunAzimuth");
+    dispatch(&mut app, "setSunElevation", Some(&semio_framework_pack_json::json!({ "value": 41.0 })), Some(world)).expect("setSunElevation");
+    dispatch(&mut app, "setSunIntensity", Some(&semio_framework_pack_json::json!({ "value": 0.25 })), Some(world)).expect("setSunIntensity");
     let sun = world_window_config(&mut app, world).await.sun;
     assert_eq!((sun.azimuth, sun.elevation, sun.intensity), (123.0, 41.0, 0.25));
     assert_eq!(projection_of(&app), document_before, "no sun verb touches the document lane");
@@ -1659,9 +1659,9 @@ async fn config_lane_verbs_publish_the_shared_app_config_only() {
         .to_string();
 
     for (tool_id, args) in [
-        ("setBrushPlacementContactTolerance", dsl::json!({ "value": 0.02 })),
-        ("setPartKindWeight", dsl::json!({ "kindId": part_kind.as_str(), "value": 0.75 })),
-        ("setGripKindWeight", dsl::json!({ "kindId": grip_kind.as_str(), "value": 0.25 })),
+        ("setBrushPlacementContactTolerance", semio_framework_pack_json::json!({ "value": 0.02 })),
+        ("setPartKindWeight", semio_framework_pack_json::json!({ "kindId": part_kind.as_str(), "value": 0.75 })),
+        ("setGripKindWeight", semio_framework_pack_json::json!({ "kindId": grip_kind.as_str(), "value": 0.25 })),
     ] {
         let result = dispatch(&mut app, tool_id, Some(&args), Some(pane)).expect("Config-lane dispatch through the retained factory");
         assert!(result.mutations.is_empty(), "{tool_id} is never a document edit");
@@ -1709,20 +1709,20 @@ async fn grid_visibility_and_spacing_publish_the_addressed_window_config() {
     let config_before = app.config_pack().await.expect("app config before the grid group");
 
     assert!(window_ownership::Puzzle5dBoardWindowConfig::default().grid_visible, "the grid starts visible");
-    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "pressed": false })), Some(board)).expect("press the board grid off");
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "pressed": false })), Some(board)).expect("press the board grid off");
     assert!(!board_window_config(&mut app, board).await.grid_visible, "the pressed state is what persists");
-    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID })), Some(board)).expect("argument-less grid toggle");
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID })), Some(board)).expect("argument-less grid toggle");
     assert!(board_window_config(&mut app, board).await.grid_visible, "an invocation without `pressed` flips the current state");
 
-    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(world)).expect("press the world grid off");
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(world)).expect("press the world grid off");
     assert!(!world_window_config(&mut app, world).await.grid_visible, "the world pane owns its own grid visibility");
     assert!(board_window_config(&mut app, board).await.grid_visible, "one pane's grid toggle never reaches the other");
 
-    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 4.0 })), Some(world)).expect("absolute grid spacing");
+    dispatch(&mut app, "setGridSpacing", Some(&semio_framework_pack_json::json!({ "value": 4.0 })), Some(world)).expect("absolute grid spacing");
     assert_eq!(world_window_config(&mut app, world).await.grid_spacing, 4.0);
-    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 0.0 })), Some(world)).expect("grid spacing below the band");
+    dispatch(&mut app, "setGridSpacing", Some(&semio_framework_pack_json::json!({ "value": 0.0 })), Some(world)).expect("grid spacing below the band");
     assert_eq!(world_window_config(&mut app, world).await.grid_spacing, PUZZLE5D_GRID_SPACING_MIN);
-    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 10_000.0 })), Some(world)).expect("grid spacing above the band");
+    dispatch(&mut app, "setGridSpacing", Some(&semio_framework_pack_json::json!({ "value": 10_000.0 })), Some(world)).expect("grid spacing above the band");
     assert_eq!(world_window_config(&mut app, world).await.grid_spacing, PUZZLE5D_GRID_SPACING_MAX);
 
     assert_eq!(projection_of(&app), document_before, "no grid-group verb touches the document lane");
@@ -1739,19 +1739,19 @@ async fn lod_trio_publishes_the_world_window_config() {
     let world = "puzzle5d-lodtrio-world";
     assert!(window_ownership::Puzzle5dWorldWindowConfig::default().lod_automatic, "automatic LOD starts on");
 
-    dispatch(&mut app, "setLodAutomatic", Some(&dsl::json!({ "pressed": false })), Some(world)).expect("press automatic LOD off");
+    dispatch(&mut app, "setLodAutomatic", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(world)).expect("press automatic LOD off");
     assert!(!world_window_config(&mut app, world).await.lod_automatic);
     dispatch(&mut app, "setLodAutomatic", None, Some(world)).expect("argument-less automatic LOD toggle");
     assert!(world_window_config(&mut app, world).await.lod_automatic);
 
-    dispatch(&mut app, "setLodDepthVariable", Some(&dsl::json!({ "pressed": true })), Some(world)).expect("press depth-variable LOD on");
+    dispatch(&mut app, "setLodDepthVariable", Some(&semio_framework_pack_json::json!({ "pressed": true })), Some(world)).expect("press depth-variable LOD on");
     assert!(world_window_config(&mut app, world).await.lod_depth_variable);
 
-    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 250.0 })), Some(world)).expect("absolute manual LOD");
+    dispatch(&mut app, "setLodManual", Some(&semio_framework_pack_json::json!({ "value": 250.0 })), Some(world)).expect("absolute manual LOD");
     assert_eq!(world_window_config(&mut app, world).await.lod_manual, 250.0);
-    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": -4.0 })), Some(world)).expect("manual LOD below the band");
+    dispatch(&mut app, "setLodManual", Some(&semio_framework_pack_json::json!({ "value": -4.0 })), Some(world)).expect("manual LOD below the band");
     assert_eq!(world_window_config(&mut app, world).await.lod_manual, PUZZLE5D_LOD_SLIDER_MIN);
-    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 9_000.0 })), Some(world)).expect("manual LOD above the band");
+    dispatch(&mut app, "setLodManual", Some(&semio_framework_pack_json::json!({ "value": 9_000.0 })), Some(world)).expect("manual LOD above the band");
     assert_eq!(world_window_config(&mut app, world).await.lod_manual, PUZZLE5D_LOD_SLIDER_MAX);
     close_app(&mut app);
 }
@@ -1764,15 +1764,15 @@ async fn selectable_kinds_publish_the_addressed_window_config() {
     let board = "puzzle5d-selectable-board";
     let world = "puzzle5d-selectable-world";
 
-    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "kind": "grips", "pressed": false })), Some(board)).expect("press board grips off");
+    dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "kind": "grips", "pressed": false })), Some(board)).expect("press board grips off");
     let kinds = board_window_config(&mut app, board).await.selectable_kinds;
     assert_eq!((kinds.parts, kinds.grips, kinds.fasteners), (true, false, true), "only the named kind changed");
     let untouched = world_window_config(&mut app, world).await.selectable_kinds;
     assert!(untouched.grips, "the pick filter is per pane");
 
-    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "fasteners" })), Some(world)).expect("argument-less fastener toggle");
+    dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "kind": "fasteners" })), Some(world)).expect("argument-less fastener toggle");
     assert!(!world_window_config(&mut app, world).await.selectable_kinds.fasteners, "an absent `pressed` flips the current state");
-    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "vortices", "pressed": false })), Some(world)).expect("an unknown kind is a silent no-op, never a fault");
+    dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "kind": "vortices", "pressed": false })), Some(world)).expect("an unknown kind is a silent no-op, never a fault");
     let after = world_window_config(&mut app, world).await.selectable_kinds;
     assert_eq!((after.parts, after.grips), (true, true), "a kind this artifact does not carry changes nothing");
     close_app(&mut app);
@@ -1786,14 +1786,14 @@ async fn grip_show_and_direction_publish_the_world_window_config() {
     let world = "puzzle5d-grip-world";
     assert_eq!(window_ownership::Puzzle5dWorldWindowConfig::default().grip_show, PUZZLE5D_GRIP_SHOW_SELECTED);
 
-    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world)).expect("setGripShow");
+    dispatch(&mut app, "setGripShow", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world)).expect("setGripShow");
     assert_eq!(world_window_config(&mut app, world).await.grip_show, PUZZLE5D_GRIP_SHOW_ALWAYS);
-    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": "vielleicht" })), Some(world)).expect("an undeclared mode is a no-op, never a fault");
+    dispatch(&mut app, "setGripShow", Some(&semio_framework_pack_json::json!({ "value": "vielleicht" })), Some(world)).expect("an undeclared mode is a no-op, never a fault");
     assert_eq!(world_window_config(&mut app, world).await.grip_show, PUZZLE5D_GRIP_SHOW_ALWAYS);
 
-    dispatch(&mut app, "setGripDirection", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_DIRECTION_INWARDS })), Some(world)).expect("setGripDirection");
+    dispatch(&mut app, "setGripDirection", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_GRIP_DIRECTION_INWARDS })), Some(world)).expect("setGripDirection");
     assert_eq!(world_window_config(&mut app, world).await.grip_direction, PUZZLE5D_GRIP_DIRECTION_INWARDS);
-    dispatch(&mut app, "setGripDirection", Some(&dsl::json!({ "value": "seitwärts" })), Some(world)).expect("an undeclared direction is a no-op");
+    dispatch(&mut app, "setGripDirection", Some(&semio_framework_pack_json::json!({ "value": "seitwärts" })), Some(world)).expect("an undeclared direction is a no-op");
     assert_eq!(world_window_config(&mut app, world).await.grip_direction, PUZZLE5D_GRIP_DIRECTION_INWARDS);
     close_app(&mut app);
 }
@@ -1806,7 +1806,7 @@ async fn projection_verbs_publish_the_world_window_config_and_repose_only_when_t
     let world = "puzzle5d-projection-world";
     let before = world_window_config(&mut app, world).await.camera3d;
 
-    dispatch(&mut app, "setProjection", Some(&dsl::json!({ "field": "orthographicView", "value": "front" })), Some(world)).expect("setProjection");
+    dispatch(&mut app, "setProjection", Some(&semio_framework_pack_json::json!({ "field": "orthographicView", "value": "front" })), Some(world)).expect("setProjection");
     let reposed = world_window_config(&mut app, world).await.camera3d;
     assert_eq!(reposed.projection.kind, "orthographic");
     assert_eq!(reposed.projection.orthographic_view, "front");
@@ -1814,7 +1814,7 @@ async fn projection_verbs_publish_the_world_window_config_and_repose_only_when_t
     assert_eq!(reposed.target, before.target, "the target it orbits is unchanged");
     assert!(reposed.up.is_some(), "the re-derived pose states its up vector");
 
-    dispatch(&mut app, "setProjectionParam", Some(&dsl::json!({ "param": "fov", "value": 35.0 })), Some(world)).expect("setProjectionParam");
+    dispatch(&mut app, "setProjectionParam", Some(&semio_framework_pack_json::json!({ "param": "fov", "value": 35.0 })), Some(world)).expect("setProjectionParam");
     let tuned = world_window_config(&mut app, world).await.camera3d;
     assert_eq!(tuned.projection.fov, 35.0);
     assert_eq!(tuned.position, reposed.position, "a pure parameter tweak keeps the pose");
@@ -1830,13 +1830,13 @@ async fn transform_gumball_flags_publish_the_window_config() {
     let defaults = window_ownership::Puzzle5dWorldWindowConfig::default();
     assert!(defaults.transform_move && defaults.transform_rotate, "both handle families start on");
 
-    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "move", "pressed": false })), Some(world)).expect("press move off");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&semio_framework_pack_json::json!({ "flag": "move", "pressed": false })), Some(world)).expect("press move off");
     let after_move = world_window_config(&mut app, world).await;
     assert!(!after_move.transform_move && after_move.transform_rotate, "only the named flag changed");
-    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "rotate" })), Some(world)).expect("argument-less rotate toggle");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&semio_framework_pack_json::json!({ "flag": "rotate" })), Some(world)).expect("argument-less rotate toggle");
     let after_rotate = world_window_config(&mut app, world).await;
     assert!(!after_rotate.transform_move && !after_rotate.transform_rotate);
-    dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "scale", "pressed": false })), Some(world)).expect("an unknown flag is a no-op, never a fault");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&semio_framework_pack_json::json!({ "flag": "scale", "pressed": false })), Some(world)).expect("an unknown flag is a no-op, never a fault");
 
     let runtime = Puzzle5dRuntime { transform_move: false, transform_rotate: false, ..Puzzle5dRuntime::default() };
     let marked = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new(), referenced: Vec::new() };
@@ -1849,11 +1849,11 @@ async fn transform_gumball_flags_publish_the_window_config() {
 #[semio_framework_async_macros::async_test]
 async fn dispatched_window_options_are_what_the_next_measure_frame_renders() {
     let mut app = Box::new(app_with_registry());
-    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setGridVisible");
-    dispatch(&mut app, "setGridSpacing", Some(&dsl::json!({ "value": 6.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setGridSpacing");
-    dispatch(&mut app, "setLodManual", Some(&dsl::json!({ "value": 320.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setLodManual");
-    dispatch(&mut app, "setGripShow", Some(&dsl::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world3d::WINDOW_KIND_ID)).expect("setGripShow");
-    dispatch(&mut app, "setSelectableKind", Some(&dsl::json!({ "kind": "grips", "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setSelectableKind");
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setGridVisible");
+    dispatch(&mut app, "setGridSpacing", Some(&semio_framework_pack_json::json!({ "value": 6.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setGridSpacing");
+    dispatch(&mut app, "setLodManual", Some(&semio_framework_pack_json::json!({ "value": 320.0 })), Some(world3d::WINDOW_KIND_ID)).expect("setLodManual");
+    dispatch(&mut app, "setGripShow", Some(&semio_framework_pack_json::json!({ "value": PUZZLE5D_GRIP_SHOW_ALWAYS })), Some(world3d::WINDOW_KIND_ID)).expect("setGripShow");
+    dispatch(&mut app, "setSelectableKind", Some(&semio_framework_pack_json::json!({ "kind": "grips", "pressed": false })), Some(world3d::WINDOW_KIND_ID)).expect("setSelectableKind");
     let measures = window_measures_of(&mut app, world3d::WINDOW_KIND_ID);
     assert_eq!(toggle_pressed(&measures, "puzzle5d-play-world-grid-visible"), Some(false));
     assert_eq!(slider_value(&measures, "puzzle5d-play-world-grid-spacing"), Some(6.0));
@@ -1861,7 +1861,7 @@ async fn dispatched_window_options_are_what_the_next_measure_frame_renders() {
     assert_eq!(select_value(&measures, "puzzle5d-play-world-grip-show").as_deref(), Some(PUZZLE5D_GRIP_SHOW_ALWAYS));
     assert_eq!(toggle_pressed(&measures, "puzzle5d-play-world-select-grips"), Some(false));
 
-    dispatch(&mut app, "setGridVisible", Some(&dsl::json!({ "pressed": false })), Some(board2d::WINDOW_KIND_ID)).expect("board setGridVisible");
+    dispatch(&mut app, "setGridVisible", Some(&semio_framework_pack_json::json!({ "pressed": false })), Some(board2d::WINDOW_KIND_ID)).expect("board setGridVisible");
     let board_measures = window_measures_of(&mut app, board2d::WINDOW_KIND_ID);
     assert_eq!(toggle_pressed(&board_measures, "puzzle5d-play-board-grid-visible"), Some(false));
     assert_eq!(toggle_pressed(&board_measures, "puzzle5d-play-board-select-parts"), Some(true));
@@ -1874,6 +1874,7 @@ async fn dispatched_window_options_are_what_the_next_measure_frame_renders() {
 fn one_interaction_snapshot_paints_both_panes() {
     let projection = parse(
         r#"{"schema":"puzzle.5d","parts":[{"id":"teil-ä","partKind":"Part","2d":{"x":1.0,"y":2.0},"3d":{"origin":[0.0,0.0,0.0]},"grips":[{"id":"g1","gripKind":"griff-ü","2d":{},"3d":{"position":[1.0,0.0,0.0]}}]}],"fasteners":[]}"#,
+        semio_framework_pack_json::JsonMemberPolicy::Reject,
     )
     .expect("projection");
     let part_id = "teil-ä";
@@ -1885,7 +1886,7 @@ fn one_interaction_snapshot_paints_both_panes() {
     assert!(board.selection_json.contains(part_id), "the board pane paints the shared selection");
     assert_eq!(board.hovered_id.as_deref(), Some(part_id), "the board pane paints the shared hover");
 
-    let world_instances: Value = parse(&world3d::world_instances_json(&envelope.document, &envelope.interaction, None)).expect("instancesJson");
+    let world_instances: Value = parse(&world3d::world_instances_json(&envelope.document, &envelope.interaction, None), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instancesJson");
     let marked = world_instances.as_array().and_then(|rows| rows.iter().find(|row| row.get("id").and_then(Value::as_str) == Some(part_id))).expect("the world pane carries the same part");
     assert_eq!(marked.get("selected").and_then(Value::as_bool), Some(true), "the world pane paints the shared selection");
     assert_eq!(marked.get("hovered").and_then(Value::as_bool), Some(true), "the world pane paints the shared hover");
@@ -1959,10 +1960,10 @@ fn duplicate_verb_ids_are_removed_rather_than_aliased() {
 /// `🏗️nakagin-capsule-tower` currently load (see `clipboard_verbs_cover_every_part_of_the_largest_example`,
 /// red before this slice) — so a law that read those files would assert `0 == 0` and prove nothing.
 fn seeded_parts(app: &mut Puzzle5dApp, count: usize) -> Vec<String> {
-    dispatch(app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
+    dispatch(app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty document");
     assert_eq!(part_count(app), 0, "the empty example really empties the document");
     for index in 0..count {
-        dispatch(app, "addPartKind", Some(&dsl::json!({ "partKind": "Part", "x": 120.0 + index as f64 * 60.0, "y": 120.0 })), None).unwrap_or_else(|error| panic!("addPartKind {index}: {error:?}"));
+        dispatch(app, "addPartKind", Some(&semio_framework_pack_json::json!({ "partKind": "Part", "x": 120.0 + index as f64 * 60.0, "y": 120.0 })), None).unwrap_or_else(|error| panic!("addPartKind {index}: {error:?}"));
     }
     assert_eq!(part_count(app), count, "every catalogue add really wrote the document");
     projection_of(app).get("parts").and_then(Value::as_array).map(|parts| parts.iter().filter_map(|part| part.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
@@ -1978,14 +1979,14 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     // blocked in the FRAMEWORK, and driving it costs this binary ~380 s on its way to a known fault.
     // See `set_active_example_reaches_the_capsule_dream_document` below.
     for (example_id, document) in [("", empty_document()), ("concrete-forest", concrete_forest_example_document()), ("nakagin", nakagin_example_document())] {
-        dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
+        dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
         assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");
     }
     let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(concrete_forest_example_document()).expect("document serializes"));
     let interaction = protocol::InteractionState::default();
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
-        let command = Puzzle5dCommand::from_action("setActiveExample", Some(dsl::json!({ "exampleId": example_id })), None);
+        let command = Puzzle5dCommand::from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None);
         let extent = crate::retained_command::PuzzleCommandWork::extent(&work, &command, &snapshot, &interaction);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
@@ -2018,7 +2019,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_reaches_the_capsule_dream_document() {
     let mut app = Box::new(app_with_registry());
-    dispatch_traced(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "capsule-dream" })), None)
+    dispatch_traced(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "capsule-dream" })), None)
         .unwrap_or_else(|error| panic!("setActiveExample capsule-dream must reach the document, not fault: {error:?}"));
     assert_eq!(part_count(&app), capsule_dream_example_document().parts.len(), "setActiveExample capsule-dream really replaced the document");
     close_app(&mut app);
@@ -2033,14 +2034,14 @@ async fn focus_selection_publishes_the_addressed_pane_camera() {
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &parts[1]).expect("select one part");
     let world = "puzzle5d-focus-world";
     let before = world_window_config(&mut app, world).await.camera3d;
-    let focused = dispatch(&mut app, "focusSelection", Some(&dsl::json!({ "windowId": world3d::WINDOW_KIND_ID })), Some(world)).expect("focusSelection in the world pane");
+    let focused = dispatch(&mut app, "focusSelection", Some(&semio_framework_pack_json::json!({ "windowId": world3d::WINDOW_KIND_ID })), Some(world)).expect("focusSelection in the world pane");
     assert!(focused.mutations.is_empty(), "a camera focus is never a document edit");
     let after = world_window_config(&mut app, world).await.camera3d;
     assert_ne!(after.target, before.target, "the world pane's orbit target moved onto the selection");
 
     let board = "puzzle5d-focus-board";
     let board_before = board_window_config(&mut app, board).await.camera2d;
-    dispatch(&mut app, "focusSelection", Some(&dsl::json!({ "windowId": board2d::WINDOW_KIND_ID })), Some(board)).expect("focusSelection in the board pane");
+    dispatch(&mut app, "focusSelection", Some(&semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID })), Some(board)).expect("focusSelection in the board pane");
     let board_after = board_window_config(&mut app, board).await.camera2d;
     assert!(board_after != board_before, "the board pane's flat camera moved onto the selection");
     close_app(&mut app);
@@ -2063,15 +2064,15 @@ async fn translate_selection_moves_both_poses_and_refuses_a_locked_part() {
         (flat.get("x").and_then(Value::as_f64).unwrap_or_default(), flat.get("y").and_then(Value::as_f64).unwrap_or_default(), origin)
     };
     let (flat_x, flat_y, origin) = read(&app, &part_id);
-    dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "dx": 0.5, "dy": -0.25, "dz": 0.0 })), Some(world3d::WINDOW_KIND_ID)).expect("translateSelection");
+    dispatch(&mut app, "translateSelection", Some(&semio_framework_pack_json::json!({ "dx": 0.5, "dy": -0.25, "dz": 0.0 })), Some(world3d::WINDOW_KIND_ID)).expect("translateSelection");
     let (next_x, next_y, next_origin) = read(&app, &part_id);
     assert!((next_origin[0] - (origin[0] + 0.5)).abs() < 1e-9 && (next_origin[1] - (origin[1] - 0.25)).abs() < 1e-9, "the volume origin moved by the world delta");
     assert!((next_x - (flat_x + 0.5 / PUZZLE5D_FLAT_TO_WORLD)).abs() < 1e-9, "the flat pose tracked the world delta on x");
     assert!((next_y - (flat_y + 0.25 / PUZZLE5D_FLAT_TO_WORLD)).abs() < 1e-9, "the flat pose tracked the world delta on y");
 
-    dispatch(&mut app, "setSelectionFlag", Some(&dsl::json!({ "flag": "locked", "value": true })), None).expect("lock the selection");
+    dispatch(&mut app, "setSelectionFlag", Some(&semio_framework_pack_json::json!({ "flag": "locked", "value": true })), None).expect("lock the selection");
     let locked = projection_of(&app);
-    let refusal = dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "dx": 5.0 })), Some(world3d::WINDOW_KIND_ID)).expect("a locked transform refuses, it never faults");
+    let refusal = dispatch(&mut app, "translateSelection", Some(&semio_framework_pack_json::json!({ "dx": 5.0 })), Some(world3d::WINDOW_KIND_ID)).expect("a locked transform refuses, it never faults");
     assert!(refusal.mutations.is_empty(), "a locked part publishes no edit");
     assert_eq!(projection_of(&app), locked, "a locked part did not move");
     assert!(refusal.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "a locked refusal is visible: {:?}", refusal.requested_effects);
@@ -2085,12 +2086,12 @@ async fn board_node_delete_removes_the_part_and_its_fasteners() {
     let mut app = Box::new(app_with_registry());
     let parts = seeded_parts(&mut app, 2);
     let (victim, peer) = (parts[0].clone(), parts[1].clone());
-    let create = dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"edgeCreate\",\"payload\":{{\"id\":\"kante-ä\",\"source\":\"{victim}:v0\",\"target\":\"{peer}:v0\"}}}}]") });
+    let create = semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"edgeCreate\",\"payload\":{{\"id\":\"kante-ä\",\"source\":\"{victim}:v0\",\"target\":\"{peer}:v0\"}}}}]") });
     dispatch(&mut app, "applyBoardEvents", Some(&create), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents edgeCreate");
     assert_eq!(projection_of(&app).get("fasteners").and_then(Value::as_array).map_or(0, Vec::len), 1, "the board edge really became a fastener");
 
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &victim).expect("select the victim");
-    let delete = dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"nodeDelete\",\"payload\":{{\"id\":\"{victim}\"}}}}]") });
+    let delete = semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"nodeDelete\",\"payload\":{{\"id\":\"{victim}\"}}}}]") });
     dispatch(&mut app, "applyBoardEvents", Some(&delete), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents nodeDelete");
     assert_eq!(part_count(&app), 1, "the node is gone from the document");
     assert_eq!(projection_of(&app).get("fasteners").and_then(Value::as_array).map_or(0, Vec::len), 0, "the fastener incident on the node went with it");
@@ -2114,7 +2115,7 @@ async fn a_board_gesture_drag_moves_each_target_once() {
         (flat.get("x").and_then(Value::as_f64).unwrap_or(0.0), flat.get("y").and_then(Value::as_f64).unwrap_or(0.0))
     };
     let (moved, still) = (pose(&app, &parts[0]), pose(&app, &parts[1]));
-    let drag = dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"gesture\",\"payload\":{{\"gestureId\":\"g-1\",\"kind\":\"drag\",\"targets\":[\"{0}\",\"{0}\"],\"dx\":12.5,\"dy\":-4.0,\"proximity\":[]}}}}]", parts[0]) });
+    let drag = semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"gesture\",\"payload\":{{\"gestureId\":\"g-1\",\"kind\":\"drag\",\"targets\":[\"{0}\",\"{0}\"],\"dx\":12.5,\"dy\":-4.0,\"proximity\":[]}}}}]", parts[0]) });
     dispatch(&mut app, "applyBoardEvents", Some(&drag), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents gesture");
     assert_eq!(pose(&app, &parts[0]), (moved.0 + 12.5, moved.1 - 4.0), "the target moved by the offset once");
     assert_eq!(pose(&app, &parts[1]), still, "an untargeted part stays");
@@ -2125,9 +2126,9 @@ async fn a_board_gesture_drag_moves_each_target_once() {
 #[semio_framework_async_macros::async_test]
 async fn add_part_kind_creates_a_part_and_reselects_it() {
     let mut app = Box::new(app_with_registry());
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty document");
     let before = part_count(&app);
-    dispatch(&mut app, "addPartKind", Some(&dsl::json!({ "partKind": "Part" })), None).expect("addPartKind");
+    dispatch(&mut app, "addPartKind", Some(&semio_framework_pack_json::json!({ "partKind": "Part" })), None).expect("addPartKind");
     assert_eq!(part_count(&app), before + 1, "the catalogue add really wrote the document");
     let created = projection_of(&app).get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("created id").to_string();
     let selection = app.interaction_state().await.selection.get(PUZZLE5D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
@@ -2156,10 +2157,10 @@ async fn select_same_kind_widens_the_live_selection() {
 async fn fastener_crud_reaches_the_document() {
     let mut app = Box::new(app_with_registry());
     let parts = seeded_parts(&mut app, 2);
-    let create = dsl::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"edgeCreate\",\"payload\":{{\"id\":\"kante-ß\",\"source\":\"{}:v0\",\"target\":\"{}:v0\"}}}}]", parts[0], parts[1]) });
+    let create = semio_framework_pack_json::json!({ "windowId": board2d::WINDOW_KIND_ID, "eventsJson": format!("[{{\"name\":\"edgeCreate\",\"payload\":{{\"id\":\"kante-ß\",\"source\":\"{}:v0\",\"target\":\"{}:v0\"}}}}]", parts[0], parts[1]) });
     dispatch(&mut app, "applyBoardEvents", Some(&create), Some(board2d::WINDOW_KIND_ID)).expect("applyBoardEvents edgeCreate");
 
-    dispatch(&mut app, "editFastener", Some(&dsl::json!({ "id": "kante-ß", "gap": 0.75 })), None).expect("editFastener");
+    dispatch(&mut app, "editFastener", Some(&semio_framework_pack_json::json!({ "id": "kante-ß", "gap": 0.75 })), None).expect("editFastener");
     let gap = projection_of(&app)
         .get("fasteners")
         .and_then(Value::as_array)
@@ -2168,7 +2169,7 @@ async fn fastener_crud_reaches_the_document() {
         .and_then(Value::as_f64);
     assert_eq!(gap, Some(0.75), "editFastener really wrote the fastener geometry");
 
-    dispatch(&mut app, "deleteFastener", Some(&dsl::json!({ "id": "kante-ß" })), None).expect("deleteFastener");
+    dispatch(&mut app, "deleteFastener", Some(&semio_framework_pack_json::json!({ "id": "kante-ß" })), None).expect("deleteFastener");
     assert_eq!(projection_of(&app).get("fasteners").and_then(Value::as_array).map_or(0, Vec::len), 0, "deleteFastener really removed it");
     close_app(&mut app);
 }
@@ -2180,7 +2181,7 @@ async fn patch_part_writes_the_document_and_notices_an_inapplicable_edit() {
     let mut app = Box::new(app_with_registry());
     let parts = seeded_parts(&mut app, 1);
     let part_id = parts[0].clone();
-    dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": part_id, "field": "x", "value": 42.0 })), None).expect("patchPart x");
+    dispatch(&mut app, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": part_id, "field": "x", "value": 42.0 })), None).expect("patchPart x");
     let flat_x = projection_of(&app)
         .get("parts")
         .and_then(Value::as_array)
@@ -2191,7 +2192,7 @@ async fn patch_part_writes_the_document_and_notices_an_inapplicable_edit() {
     assert_eq!(flat_x, Some(42.0), "patchPart really wrote the flat pose");
 
     let before = projection_of(&app);
-    let refusal = dispatch(&mut app, "patchPart", Some(&dsl::json!({ "partId": "no-such-part", "field": "x", "value": 1.0 })), None).expect("an unaddressed patch refuses, it never faults");
+    let refusal = dispatch(&mut app, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": "no-such-part", "field": "x", "value": 1.0 })), None).expect("an unaddressed patch refuses, it never faults");
     assert!(refusal.mutations.is_empty());
     assert_eq!(projection_of(&app), before, "an unaddressed patch leaves the document alone");
     assert!(refusal.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "an inapplicable patch is visible: {:?}", refusal.requested_effects);
@@ -2286,7 +2287,7 @@ fn export_filename_follows_the_document_label() {
 #[semio_framework_async_macros::async_test]
 async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging() {
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty document");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty document");
     assert_eq!(part_count(&app), 0);
     // 📄️ The law needs a document that really chunks — the first shipped one whose export spans more
     // than one host chunk, so it keeps holding whichever example grows past the chunk next.
@@ -2320,9 +2321,9 @@ async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
     let oversized = "x".repeat(crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES + 1);
     let cases = [
         // 📦️ One byte above what one export may stream.
-        ("capacity", dsl::json!({ "payload": oversized.as_str(), "name": "huge.json" })),
+        ("capacity", semio_framework_pack_json::json!({ "payload": oversized.as_str(), "name": "huge.json" })),
         // 🔤️ A whole file that is not a puzzle 5d document.
-        ("payload", dsl::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json" })),
+        ("payload", semio_framework_pack_json::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json" })),
     ];
     for (case, args) in cases {
         let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("a refused import answers, it never faults");
@@ -2480,7 +2481,7 @@ fn context_menu_at(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>, hit:
         window_instance_id: None,
         point: None,
     };
-    semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()))
+    ::semio_framework_async::poll::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)))
 }
 
 /// 🖱️ Every action id a menu row carries, at any depth.
@@ -2512,7 +2513,7 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
         .map(|action| action.id.as_str())
         .collect();
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
@@ -2546,7 +2547,7 @@ async fn every_context_menu_row_resolves_to_a_live_verb() {
 #[semio_framework_async_macros::async_test]
 async fn context_menu_rows_follow_the_selected_granularity() {
     let mut app = app_with_registry();
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let part_id = first_part_id(&app);
     let projection = projection_of(&app);
     let grip_id = projection
@@ -2572,7 +2573,7 @@ async fn context_menu_rows_follow_the_selected_granularity() {
     assert!(grip.contains(&"openVortexSuggestions".to_string()), "one selected grip offers the suggestions submenu the world host fills live, got {grip:?}");
     assert!(!grip.contains(&"targetBrushSuggestions".to_string()), "the brush hover verb is no menu row — it only acts while the brush is armed: {grip:?}");
     let suggest = grip_rows.iter().find(|row| row.id == "suggest").expect("the suggest row");
-    assert_eq!(suggest.args.as_ref().and_then(|args| args.get("fullId")).and_then(dsl::DslValue::as_str), Some(grip_id.as_str()), "the suggest row names the grip it was opened on");
+    assert_eq!(suggest.args.as_ref().and_then(|args| args.get("fullId")).and_then(semio_framework_value::DslValue::as_str), Some(grip_id.as_str()), "the suggest row names the grip it was opened on");
 
     // 🎯️ A right-click on the grip of a SELECTED part is that grip's menu — grip markers only draw on marked
     // parts, so the part being selected is the normal case, not an edge case.
@@ -2586,7 +2587,7 @@ async fn context_menu_rows_follow_the_selected_granularity() {
     let fastener = context_menu_actions(&fastener_rows);
     assert_eq!(fastener, vec!["deleteFastener".to_string()], "a fastener offers exactly its own delete, got {fastener:?}");
     let delete = fastener_rows.iter().find(|row| row.id == "delete").expect("the delete row");
-    assert_eq!(delete.args.as_ref().and_then(|args| args.get("id")).and_then(dsl::DslValue::as_str), Some(fastener_id.as_str()), "the delete row names the fastener it was opened on");
+    assert_eq!(delete.args.as_ref().and_then(|args| args.get("id")).and_then(semio_framework_value::DslValue::as_str), Some(fastener_id.as_str()), "the delete row names the fastener it was opened on");
     assert_eq!(delete.destructive, Some(true));
     close_app(&mut app);
 }
@@ -2730,7 +2731,7 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     snapshot.parts[0].part_3d.label = None;
     snapshot.parts[0].part_2d.text = Some("Forest Left".into());
     snapshot.fasteners.push(crate::Puzzle5dFastener { id: "fastener-chip".into(), source: grip.clone(), target: grip.clone(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
-    let chip = |kinds: &[&str], id: &str| puzzle5d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string());
+    let chip = |kinds: &[&str], id: &str| puzzle5d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string());
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME], &part).as_deref(), Some("Forest Left"), "a part without a volume label reads its flat text");
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_GRIP], &grip), Some(format!("Forest Left \u{b7} {grip_kind}")), "a grip reads its part and its kind");
     assert_eq!(chip(&[PUZZLE5D_GRANULARITY_FASTENER], "fastener-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "a fastener reads its two parts");

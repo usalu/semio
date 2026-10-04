@@ -12,6 +12,26 @@ async function fixture(): Promise<NoteSnapshot> {
   return parseNoteSnapshot(value);
 }
 
+test("Note complete concrete backing contract retains owned diagnostics and full independent state", async () => {
+  const plan = await Bun.file(new URL("../🧫️fixtures/🔢️ieee.json", import.meta.url)).json();
+  expect(plan.backing).toEqual({ authority: "completeSystemAllocatorRequests", phases: ["projectSnapshot", "reconstructSnapshot"], ceilings: ["zero", "exact", "oneBelow", "cumulative"], cancellation: ["start", "materializedInterior"], diagnosticOwnership: "actualCapacity", retirementRefund: false });
+  const { default: Ajv } = await import("ajv/dist/2020");
+  const schema = await Bun.file(new URL("../🧫️fixtures/💰️backing/🧬️schema/🔣️.json", import.meta.url)).json();
+  const validate = new Ajv({ strict: true }).compile(schema);
+  expect(validate(plan.backing)).toBe(true);
+  for (const invalid of [{ ...plan.backing, extra: true }, { ...plan.backing, retirementRefund: true }, { ...plan.backing, authority: "estimatedSlots" }, { ...plan.backing, cancellation: ["start"] }]) expect(validate(invalid)).toBe(false);
+  const expected = await fixture();
+  const bytes = await exportSqliteDatabase(await noteSnapshotToSqliteDatabase(expected));
+  const sql = Database.deserialize(bytes, { safeIntegers: true });
+  try {
+    expect(sql.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+    expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(sql.query("SELECT COUNT(DISTINCT kind) AS kinds FROM note_block").get()).toEqual({ kinds: 6n });
+    expect(sql.query("SELECT COUNT(*) AS count FROM note_cell").get()).toEqual({ count: 3n });
+    expect(await noteSnapshotFromSqliteDatabase(await importSqliteDatabase(sql.serialize()))).toEqual(expected);
+  } finally { sql.close(); }
+});
+
 test("Note preserves every authored entity and permits relational text edits", async () => {
   expect(NOTE_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql", import.meta.url)).text());
   const snapshot = await fixture();

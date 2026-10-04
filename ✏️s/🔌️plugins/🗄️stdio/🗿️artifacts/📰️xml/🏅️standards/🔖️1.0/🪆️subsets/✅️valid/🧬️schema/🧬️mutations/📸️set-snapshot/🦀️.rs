@@ -17,9 +17,12 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetSnapshot {
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         agg_diff(&XmlValidMutation::SetSnapshot(self.clone()), base)
     }
-    fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
-        agg_inverse(&XmlValidMutation::SetSnapshot(self.clone()), base)
-    }
+    fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&XmlValidMutation::SetSnapshot(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }

@@ -22,7 +22,7 @@ struct CadPresenceRetirement {
 }
 
 impl ErasedSnapshotRetirement for CadPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
         if maximum_items == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -101,7 +101,7 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPrese
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(active) = self.active.as_mut() {
-            return active.close_step(1, maximum_bytes).map_err(semio_framework_plugin::Fault::from).map(|step| match step {
+            return active.close_step(1, maximum_bytes).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
                 SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "CAD presence retains captured local or peer readers" },
                 SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,

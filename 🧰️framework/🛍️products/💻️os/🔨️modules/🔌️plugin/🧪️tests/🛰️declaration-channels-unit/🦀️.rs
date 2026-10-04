@@ -1,5 +1,7 @@
 //! 🧪️ Shared declaration-channel laws run by each genuine leaf owner.
-use protocol::{FromValue, LocalizedLabel, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation, ToValue};
+use semio_framework_value::{FromValue, ToValue};
+use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation};
+use semio_framework_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 
 fn cases() -> serde_json::Value {
@@ -57,7 +59,7 @@ where
         let mut stored = Vec::new();
         for value in row["values"].as_array().expect("values") {
             let mutation = operation(i32_value(value));
-            stored.extend(mutation.inverse(&current));
+            stored.extend(mutation.inverse(&current).expect("valid retained mutation inverse fixture"));
             current = mutation.diff(&current).diff().apply(&current).expect("assignment");
         }
         assert_eq!(current, snapshot(i32_value(&row["result"])), "{row}");

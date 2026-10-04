@@ -1,0 +1,834 @@
+{
+  "schema": "semio.framework.tool-machine.gesture-drive-law.v1",
+  "note": "🌊️ The shared streamed-gesture runner (design §5 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one dispatch of a window's streamed tool (a gumball drag, a paint stroke) from the gesture its window persisted. `phases` pins the wire `phase`/`reason` arguments (absent phase = one-shot, absent reason = `tool`, unknown words refused). Every row drives the counting `tool` from `persisted` through `dispatch` in Rust (`drive_gesture`) and TypeScript (`driveGesture`) and must report `expected`: the reason the open gesture was aborted with, the ticks committed as ONE transaction, the window's next gesture and the refusal that faulted the dispatch. A gesture its tool cannot restore is dropped with zero trace and the dispatch runs from rest; a refused start or tick has no effect at all. Authored by `🧪️s4-tools-a-gesture-drive-law.py`, an independent Python model.",
+  "tool": {
+    "refuseStartVerb": "refuse-start",
+    "startRefusal": "toolTransaction.closed",
+    "resumeRefusal": "toolTransaction.closed",
+    "sendRefusal": "toolTransaction.unclosed"
+  },
+  "phases": [
+    {
+      "args": {},
+      "phase": {
+        "kind": "once"
+      }
+    },
+    {
+      "args": {
+        "reason": "blur"
+      },
+      "phase": {
+        "kind": "once"
+      }
+    },
+    {
+      "args": {
+        "phase": "stream"
+      },
+      "phase": {
+        "kind": "stream"
+      }
+    },
+    {
+      "args": {
+        "phase": "stream",
+        "reason": "blur"
+      },
+      "phase": {
+        "kind": "stream"
+      }
+    },
+    {
+      "args": {
+        "phase": "commit"
+      },
+      "phase": {
+        "kind": "commit"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "tool"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "tool"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "tool"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "blur"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "blur"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "captureLost"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "captureLost"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "baseMoved"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "baseMoved"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "frozen"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "frozen"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "retired"
+      },
+      "phase": {
+        "kind": "abort",
+        "reason": "retired"
+      }
+    },
+    {
+      "args": {
+        "phase": "abort",
+        "reason": "sideways"
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "phase": "once"
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "phase": ""
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "phase": "Stream"
+      },
+      "phase": null
+    }
+  ],
+  "rows": [
+    {
+      "name": "a-one-shot-at-rest-commits-its-tick",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "tick": 1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          1
+        ],
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-one-shot-without-a-tick-commits-nothing",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "the-first-stream-tick-opens-the-gesture",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": 1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": {
+          "verb": "drag",
+          "base": "r1",
+          "ticks": [
+            1
+          ]
+        },
+        "refused": null
+      }
+    },
+    {
+      "name": "a-stream-tick-accumulates-into-the-open-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": 2,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": {
+          "verb": "drag",
+          "base": "r1",
+          "ticks": [
+            1,
+            2
+          ]
+        },
+        "refused": null
+      }
+    },
+    {
+      "name": "the-commit-folds-its-tick-in-and-commits-the-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1,
+          2
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": 3,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          1,
+          2,
+          3
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-tickless-commit-commits-the-open-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          1
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-commit-at-rest-commits-its-tick",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": 4,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          4
+        ],
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-blur-aborts-the-open-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1,
+          2
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "abort",
+        "reason": "blur",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "blur",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "an-abort-at-rest-changes-nothing",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "phase": "abort",
+        "reason": "blur",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "an-abort-without-a-reason-is-the-tools",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "abort",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "tool",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-retired-window-aborts-the-open-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "abort",
+        "reason": "retired",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "retired",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-stream-tick-on-a-moved-base-drops-the-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": 2,
+        "base": "r2"
+      },
+      "expected": {
+        "aborted": "baseMoved",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-commit-on-a-moved-base-drops-the-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1,
+          2
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": 3,
+        "base": "r2"
+      },
+      "expected": {
+        "aborted": "baseMoved",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-one-shot-on-a-moved-base-commits-fresh",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "tick": 9,
+        "base": "r2"
+      },
+      "expected": {
+        "aborted": "baseMoved",
+        "committed": [
+          9
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "another-verbs-stream-tick-interrupts-the-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "turn",
+        "phase": "stream",
+        "tick": 5,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "captureLost",
+        "committed": null,
+        "next": {
+          "verb": "turn",
+          "base": "r1",
+          "ticks": [
+            5
+          ]
+        },
+        "refused": null
+      }
+    },
+    {
+      "name": "another-verbs-commit-interrupts-and-commits-fresh",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "turn",
+        "phase": "commit",
+        "tick": 5,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "captureLost",
+        "committed": [
+          5
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-one-shot-interrupts-the-same-verbs-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1,
+          2
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "tick": 7,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": "captureLost",
+        "committed": [
+          7
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-tickless-stream-resumes-and-keeps-the-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-stream-tick-drops-an-unrestorable-gesture-and-opens-fresh",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": 2,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": {
+          "verb": "drag",
+          "base": "r1",
+          "ticks": [
+            2
+          ]
+        },
+        "refused": null
+      }
+    },
+    {
+      "name": "a-commit-drops-an-unrestorable-gesture-and-commits-fresh",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": 2,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          2
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-bare-stream-tick-drops-an-unrestorable-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "an-abort-drops-an-unrestorable-gesture-without-trace",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "abort",
+        "reason": "blur",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-one-shot-replaces-an-unrestorable-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "tick": 7,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": [
+          7
+        ],
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-refused-start-faults-the-dispatch",
+      "persisted": null,
+      "dispatch": {
+        "verb": "refuse-start",
+        "phase": "stream",
+        "tick": 1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.closed"
+      }
+    },
+    {
+      "name": "a-refused-first-tick-faults-the-dispatch",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": -1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.unclosed"
+      }
+    },
+    {
+      "name": "a-refused-commit-keeps-the-open-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "commit",
+        "tick": -3,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.unclosed"
+      }
+    },
+    {
+      "name": "a-bare-stream-tick-at-rest-opens-nothing",
+      "persisted": null,
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": null,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-moved-base-wins-over-a-verb-switch",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "turn",
+        "phase": "stream",
+        "tick": 5,
+        "base": "r2"
+      },
+      "expected": {
+        "aborted": "baseMoved",
+        "committed": null,
+        "next": "cleared",
+        "refused": null
+      }
+    },
+    {
+      "name": "a-refused-start-after-a-verb-switch-aborts-nothing",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "refuse-start",
+        "phase": "stream",
+        "tick": 1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.closed"
+      }
+    },
+    {
+      "name": "a-refused-tick-after-a-one-shot-interruption-aborts-nothing",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ]
+      },
+      "dispatch": {
+        "verb": "drag",
+        "tick": -1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.unclosed"
+      }
+    },
+    {
+      "name": "a-refused-tick-keeps-an-unrestorable-gesture",
+      "persisted": {
+        "verb": "drag",
+        "base": "r1",
+        "ticks": [
+          1
+        ],
+        "corrupt": true
+      },
+      "dispatch": {
+        "verb": "drag",
+        "phase": "stream",
+        "tick": -1,
+        "base": "r1"
+      },
+      "expected": {
+        "aborted": null,
+        "committed": null,
+        "next": "unchanged",
+        "refused": "toolTransaction.unclosed"
+      }
+    }
+  ]
+}

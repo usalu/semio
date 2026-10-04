@@ -4,8 +4,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+pub fn inverse(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let _ = payload;
     vec![Fem3dMutation::UpdateAnalysisSettings(UpdateAnalysisSettings { settings: base.analysis.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

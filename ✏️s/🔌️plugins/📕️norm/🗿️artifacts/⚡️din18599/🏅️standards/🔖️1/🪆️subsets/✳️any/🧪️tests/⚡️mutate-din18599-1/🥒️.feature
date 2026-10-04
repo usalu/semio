@@ -18,9 +18,9 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
   reached, so neither side holds a transcription that could drift. Nine kinds change a document scalar,
   six `specify-`/`update-` kinds replace one whole system facet, two `replace-` kinds replace the zone
   and element lists, `change-element-u` addresses one element by its native id, and `update-climate`
-  addresses the composed climate CHILD, whose content-addressed handle no document here specifies: its
+  replaces the parent-owned monthly climate and re-derives the composed `climateTable` handle from it: its
   row is the committed invariant refusal, which both sides must reject bit-identically; its applied wire
-  form is witnessed payload-only under `🧾️wire-witness` and held by the crate's payload law.
+  form is witnessed payload-only under `🧾️wire-witness` and held by the crate's payload and reload laws.
 
   Each side asserts the same laws in role — the applied document must BE the committed after-snapshot,
   an `applied` vector must move the document and a `no-op` or `rejected` one must leave it bit-identical

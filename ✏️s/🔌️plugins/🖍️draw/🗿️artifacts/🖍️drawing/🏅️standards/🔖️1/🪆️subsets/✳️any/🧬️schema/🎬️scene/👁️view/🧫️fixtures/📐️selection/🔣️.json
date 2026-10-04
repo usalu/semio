@@ -1,0 +1,200 @@
+[
+  {
+    "name": "selected rectangle",
+    "source": "rectangle",
+    "selected": [
+      "a"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": [
+      0,
+      0,
+      2,
+      1
+    ]
+  },
+  {
+    "name": "locked selected rectangle",
+    "source": "rectangle",
+    "selected": [
+      "a"
+    ],
+    "locked": [
+      "a"
+    ],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "hidden selected rectangle",
+    "source": "rectangle",
+    "selected": [
+      "a"
+    ],
+    "locked": [],
+    "hidden": [
+      "a"
+    ],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "transparent selected rectangle",
+    "source": "rectangle",
+    "selected": [
+      "a"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [
+      "a"
+    ],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "selected group",
+    "source": "group full affine",
+    "selected": [
+      "group"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": [
+      22,
+      34,
+      27,
+      37
+    ]
+  },
+  {
+    "name": "selected ordinary group",
+    "source": "group full affine",
+    "selected": [
+      "group"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": true,
+    "expected": [
+      22,
+      34,
+      27,
+      37
+    ]
+  },
+  {
+    "name": "selected group includes locked child",
+    "source": "group full affine",
+    "selected": [
+      "group"
+    ],
+    "locked": [
+      "child"
+    ],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": [
+      22,
+      34,
+      27,
+      37
+    ]
+  },
+  {
+    "name": "selected locked group excludes child",
+    "source": "group full affine",
+    "selected": [
+      "group"
+    ],
+    "locked": [
+      "group"
+    ],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "selected child under locked group",
+    "source": "group full affine",
+    "selected": [
+      "child"
+    ],
+    "locked": [
+      "group"
+    ],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "selected group with hidden child",
+    "source": "group full affine",
+    "selected": [
+      "group"
+    ],
+    "locked": [],
+    "hidden": [
+      "child"
+    ],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "selected child under transparent group",
+    "source": "group full affine",
+    "selected": [
+      "child"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [
+      "group"
+    ],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "missing authored selection",
+    "source": "rectangle",
+    "selected": [
+      "absent"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": false,
+    "expected": null
+  },
+  {
+    "name": "redundant selected group and child",
+    "source": "group full affine",
+    "selected": [
+      "child",
+      "group"
+    ],
+    "locked": [],
+    "hidden": [],
+    "zeroOpacity": [],
+    "ordinary": true,
+    "expected": [
+      22,
+      34,
+      27,
+      37
+    ]
+  }
+]

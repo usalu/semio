@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
 use crate::JsonSnapshot;
-use dsl::Severity;
+use semio_framework_diagnostic::Severity;
 
 #[semio_framework_async_macros::async_test]
 async fn demo_asset_is_the_printer_s_own_canonical_text() {

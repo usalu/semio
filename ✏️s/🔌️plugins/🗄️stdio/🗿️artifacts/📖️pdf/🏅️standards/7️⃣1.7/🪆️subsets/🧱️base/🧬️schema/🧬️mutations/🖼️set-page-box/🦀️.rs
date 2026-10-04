@@ -26,10 +26,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageBox {
         MutationOutcome::new(diff::diff_set_page_box(self.index, self.kind, self.rect))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         base.pages.get(self.index).map(|page| PdfMutation::SetPageBox(SetPageBox { index: self.index, kind: self.kind, rect: match self.kind { PdfPageBox::Crop => page.crop_box, PdfPageBox::Bleed => page.bleed_box, PdfPageBox::Trim => page.trim_box, PdfPageBox::Art => page.art_box } })).into_iter().collect()
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {}: {:?}-Box setzen", self.index, self.kind))

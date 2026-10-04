@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/scale-transforms/schema.json",
   "title": "ScaleTransforms",
+  "x-semio-inverse-rows": { "perTarget": { "targets": 1 } },
   "description": "The `scale-transforms` mutation record — one gumball scaling as intent: the per-axis factors every addressed scale operator multiplies into its own factors, read off the BASE graph.",
   "type": "object",
   "additionalProperties": false,

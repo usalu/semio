@@ -53,6 +53,7 @@ pub(crate) struct TestSerialGuard {
 
 impl Drop for TestSerialGuard {
     fn drop(&mut self) {
+        crate::brep_extension::retire_execution_owners();
         OWNER.store(0, Ordering::Release);
     }
 }

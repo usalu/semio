@@ -1,5 +1,5 @@
 /** 💡️ GIS terrain inference schema — geographic bounding box + position count of the `map:in`
- * overlay decoded from `importedFeaturesJson`. */
+ * overlay decoded from `importedMap`. */
 
 export interface GisTerrainBounds {
   lonMin: number;

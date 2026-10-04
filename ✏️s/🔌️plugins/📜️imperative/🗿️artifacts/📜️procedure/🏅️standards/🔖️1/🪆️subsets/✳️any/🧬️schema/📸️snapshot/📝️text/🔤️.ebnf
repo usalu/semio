@@ -5,10 +5,7 @@ artifact mark = 'semio imperative.imperative.dsl v1' ;
 document = artifact mark, { field } ;
 field = 'schema', '=', text
       | 'flow', '=', child handle
-      | 'text', '=', child handle
-      | 'path', '=', value
-      | 'seed', '=', value ;
+      | 'text', '=', child handle ;
 child handle = 'child_id', '=', text, 'target', '=', text ;
 
-(* Framework dialect-primitive terminals: text = bare word | quoted string; value = a dynamic
-   JSON-equivalent literal as printed by the derived text engine. *)
+(* Framework dialect-primitive terminal: text = bare word | quoted string. *)

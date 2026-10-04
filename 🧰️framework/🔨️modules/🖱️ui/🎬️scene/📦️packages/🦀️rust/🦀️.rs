@@ -7,8 +7,8 @@
 //!
 //! Three properties define this crate:
 //!
-//! 1. **Wasm-safe by construction.** Depends on `ui_contract` and `serde` only (plus the tiny,
-//!    equally dependency-free `semio-framework-geometry` for `math`'s `Mat4`/`Vec3`) — no OS, no
+//! 1. **Wasm-safe by construction.** Uses `ui_contract`, `serde`, first-party value/JSON codecs and the tiny,
+//!    equally dependency-free `semio-framework-geometry` for `math`'s `Mat4`/`Vec3` — no OS, no
 //!    GPU, no tokio, no `std::fs`. `cargo check --target wasm32-unknown-unknown` is a standing gate.
 //! 2. **Product/renderer-neutral.** `🦀️scenes.rs`'s 15 structs and `🦀️math.rs`'s camera/mesh/picking
 //!    math know nothing about `ui_wgpu`, React, or any specific renderer — `ui_wgpu` re-exports the

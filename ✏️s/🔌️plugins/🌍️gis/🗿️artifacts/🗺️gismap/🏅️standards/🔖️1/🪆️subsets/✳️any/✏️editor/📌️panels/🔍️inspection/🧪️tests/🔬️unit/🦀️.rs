@@ -62,7 +62,7 @@ async fn the_inspector_summary_projects_each_document_collection_extent() {
     }
     assert!(before.contains(&document.positions.len().to_string()), "the positions row must print the document's own extent: {before}");
 
-    document.positions.push(crate::MapFeature { id: "position-probe".into(), data: dsl::DslValue::Null });
+    document.positions.push(crate::MapFeature { id: "position-probe".into(), data: semio_framework_value::DslValue::Null });
     let after = json(&document);
     assert_ne!(before, after, "appending one position must move the inspector projection");
     assert!(after.contains(&document.positions.len().to_string()), "the positions row must follow the document: {after}");

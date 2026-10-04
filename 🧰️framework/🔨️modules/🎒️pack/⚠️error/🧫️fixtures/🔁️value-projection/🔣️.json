@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "definingOwner": "semio-framework-pack-error",
+  "ownedMessage": "same misleading canceled prose",
+  "semanticKinds": ["invalidValue", "canceled", "ownershipLimit", "allocationFailed", "workLimit", "depthLimit", "unsupportedOwner", "invariantViolated"],
+  "ownedVariants": ["ValueRefusal", "TextRefusal", "IoNever", "IoTransient"],
+  "structuralVariant": "LimitExceeded",
+  "structuralMessage": "limit exceeded: same misleading canceled prose",
+  "transportCases": [
+    {"category": "nativeIo", "retry": "never"},
+    {"category": "nativeIo", "retry": "transient"},
+    {"category": "httpRequest", "retry": "never"},
+    {"category": "httpRequest", "retry": "transient"},
+    {"category": "httpBody", "retry": "never"},
+    {"category": "httpBody", "retry": "transient"}
+  ],
+  "admission": {"category": "nativeIo", "retainedBytes": 0, "physicalBytes": 64, "message": "transport admission: same misleading canceled prose"},
+  "contract": {"semanticResult": "owned-value-error", "transportResult": "value-or-original-pack-error", "ownedCause": "exact-kind-and-message", "transportCause": "same-owner-source-category-and-retry", "nativeOwnedProjectionBytes": 0, "nativeTransportProjectionBytes": 0}
+}

@@ -241,7 +241,7 @@ pub fn cached_commit(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> 
     if config.solve_json.trim().is_empty() {
         return None;
     }
-    let commit = protocol::json::from_json_str::<Grid2dInferenceCommit>(&config.solve_json).ok()?;
+    let commit = semio_framework_pack_json::from_json_str::<Grid2dInferenceCommit>(&config.solve_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
     let fits = commit
         .assignments
         .iter()

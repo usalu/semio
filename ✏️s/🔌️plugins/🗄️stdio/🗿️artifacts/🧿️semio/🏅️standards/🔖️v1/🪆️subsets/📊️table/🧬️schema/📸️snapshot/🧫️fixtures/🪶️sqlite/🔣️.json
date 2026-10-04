@@ -31,7 +31,7 @@
   "floatLexeme": "1.234567890123456789e-99",
   "text": "Grüße\u0000世界",
   "bytesHex": "0001ff",
-  "query": "SELECT name,v.kind,integer_lexeme,float_lexeme,string_value,hex(bytes_value) FROM semio_table_cell c JOIN semio_table_column ON column_id=semio_table_column.id JOIN semio_table_value v ON value_id=v.id ORDER BY semio_table_column.ordinal",
+  "query": "SELECT name,v.kind,integer_lexeme,float_lexeme,string_value,hex(bytes_value) FROM semio_table_cell c JOIN semio_table_column ON c.column_ordinal=semio_table_column.ordinal JOIN semio_table_value v ON value_id=v.id ORDER BY semio_table_column.ordinal",
   "cellKindsMayDifferFromDeclarations": true,
   "nestedCellKinds": [
     "list",

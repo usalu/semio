@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeInfiltrationVelocitySquaredTermCoefficient, b
         );
     }
     if existing.velocity_squared_term_coefficient == payload.new_velocity_squared_term_coefficient {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Infiltration {} already carries this the squared wind velocity term coefficient D: {}.", payload.id.0, payload.new_velocity_squared_term_coefficient));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Infiltration {} already carries this the squared wind velocity term coefficient D: {}.", payload.id.0, payload.new_velocity_squared_term_coefficient));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {

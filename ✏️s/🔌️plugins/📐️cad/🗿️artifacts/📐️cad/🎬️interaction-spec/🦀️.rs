@@ -3,7 +3,7 @@
 //! Sibling topic file of the cad artifact's `🦀️.rs`; the statechart that RUNS these specs
 //! lives in the artifact engine (`⚙️engine/🕹️interaction/🦀️.rs`).
 
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InteractionSpec
@@ -191,8 +191,8 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::Ha
         Expr::Distance { a, b } => {
             let av = evaluate_expr(a, env, vars);
             let bv = evaluate_expr(b, env, vars);
-            let da: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(av).ok();
-            let db: Option<[f64; 3]> = <[f64; 3] as protocol::FromValue>::from_value(bv).ok();
+            let da: Option<[f64; 3]> = <[f64; 3] as semio_framework_value::FromValue>::from_value(av).ok();
+            let db: Option<[f64; 3]> = <[f64; 3] as semio_framework_value::FromValue>::from_value(bv).ok();
             match (da, db) {
                 (Some(a), Some(b)) => DslValue::float(((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()),
                 _ => DslValue::Null,

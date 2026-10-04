@@ -1,25 +1,26 @@
 //! 🚰 Random-access PackSource and PackSink traits.
 
-use crate::codec::PackError;
+use semio_framework_pack_error::PackRefusal;
 
 //#region 🔖️Source
 /// 📥️ Random-access read source a pack file is decoded from — implementable over an
 /// in-memory slice, a file (see `pack_io`), or (via `pack_async`) a network range-fetcher.
 pub trait PackSource {
+    type Error: From<PackRefusal>;
     async fn len(&self) -> u64;
 
     async fn is_empty(&self) -> bool {
         self.len().await == 0
     }
 
-    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError>;
+    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, Self::Error>;
 
-    async fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> Result<(), PackError> {
+    async fn read_exact_at(&self, offset: u64, buf: &mut [u8]) -> Result<(), Self::Error> {
         let mut filled = 0usize;
         while filled < buf.len() {
             let read = self.read_at(offset + filled as u64, &mut buf[filled..]).await?;
             if read == 0 {
-                return Err(PackError::Truncated(offset + filled as u64));
+                return Err(PackRefusal::Truncated(offset + filled as u64).into());
             }
             filled += read;
         }
@@ -28,15 +29,16 @@ pub trait PackSource {
 }
 
 impl PackSource for &[u8] {
+    type Error = PackRefusal;
     async fn len(&self) -> u64 {
         (*self).len() as u64
     }
 
-    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
+    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackRefusal> {
         let slice: &[u8] = self;
         let total = slice.len() as u64;
         if offset > total {
-            return Err(PackError::Truncated(offset));
+            return Err(PackRefusal::Truncated(offset));
         }
         let available = &slice[offset as usize..];
         let n = available.len().min(buf.len());
@@ -46,11 +48,12 @@ impl PackSource for &[u8] {
 }
 
 impl PackSource for Vec<u8> {
+    type Error = PackRefusal;
     async fn len(&self) -> u64 {
         self.as_slice().len() as u64
     }
 
-    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackError> {
+    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, PackRefusal> {
         self.as_slice().read_at(offset, buf).await
     }
 }
@@ -58,17 +61,19 @@ impl PackSource for Vec<u8> {
 /// 📤️ Append-only write sink a pack file is encoded into — implementable over a
 /// `Vec<u8>`, a file (see `pack_io`), or any other ordered byte destination.
 pub trait PackSink {
-    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError>;
+    type Error: From<PackRefusal>;
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), Self::Error>;
 
     async fn position(&self) -> u64;
 
-    async fn flush(&mut self) -> Result<(), PackError> {
+    async fn flush(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
 }
 
 impl PackSink for Vec<u8> {
-    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackError> {
+    type Error = PackRefusal;
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), PackRefusal> {
         self.extend_from_slice(bytes);
         Ok(())
     }

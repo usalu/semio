@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeEquipmentGainWattsPerArea, base: &EnergyModel
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Equipment Gain {}: equipment power density (W/m²) must be a finite non-negative value, got {}.", payload.id.0, payload.new_watts_per_area), [payload.id.0.to_string()]);
     }
     if existing.watts_per_area == payload.new_watts_per_area {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Equipment Gain {} already carries this equipment power density (W/m²): {}.", payload.id.0, payload.new_watts_per_area));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Equipment Gain {} already carries this equipment power density (W/m²): {}.", payload.id.0, payload.new_watts_per_area));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.equipment.iter_mut().find(|item| item.id == payload.id) {

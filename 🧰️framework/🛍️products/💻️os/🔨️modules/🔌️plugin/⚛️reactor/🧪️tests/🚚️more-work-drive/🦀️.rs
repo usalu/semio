@@ -53,7 +53,8 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
             drop(builder.finish().unwrap());
         } else if case["dropKind"] == "built" {
             let action = ui_contract::ActionId::try_v1("test.late-ui-retirement", "edit").unwrap();
-            let child = ui_contract::button(ui_contract::Label(ui_contract::UiText::try_from_str("Edit").unwrap())).try_on_with(ui_contract::Trigger::Activate, action, args).unwrap_or_else(|_| panic!("fixture action binding capacity")).try_build().unwrap();
+            let child =
+                ui_contract::button(ui_contract::Label(ui_contract::UiText::try_from_str("Edit").unwrap())).try_on_with(ui_contract::Trigger::Activate, action, args).unwrap_or_else(|_| panic!("fixture action binding capacity")).try_build().unwrap();
             let root = ui_contract::column().try_child(child).unwrap_or_else(|_| panic!("fixture child capacity")).try_build().unwrap();
             drop(root);
         } else {

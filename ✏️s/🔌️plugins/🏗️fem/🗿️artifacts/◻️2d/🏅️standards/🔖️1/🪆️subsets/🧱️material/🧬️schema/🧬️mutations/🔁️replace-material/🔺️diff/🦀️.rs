@@ -20,7 +20,7 @@ pub fn diff(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> protocol::Mutati
         return rejection;
     }
     if *existing == payload.new_material {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" is already equal to the replacement value.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material \"{}\" is already equal to the replacement value.", payload.id));
     }
     protocol::MutationOutcome::new(Fem2dDiff { materials: Some(Fem2dMaterialsDelta { patched: vec![Fem2dMaterialsPatchEntry { id: payload.id.clone(), item: payload.new_material.clone() }], ..Default::default() }), ..Default::default() })
 }

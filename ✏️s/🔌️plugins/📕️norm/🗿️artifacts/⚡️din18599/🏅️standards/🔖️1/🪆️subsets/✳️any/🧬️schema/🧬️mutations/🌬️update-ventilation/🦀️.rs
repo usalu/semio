@@ -25,9 +25,12 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateVentil
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Update ventilation system", "Lüftungsanlage aktualisieren")

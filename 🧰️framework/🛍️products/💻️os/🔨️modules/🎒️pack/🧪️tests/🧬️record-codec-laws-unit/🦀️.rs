@@ -1,10 +1,13 @@
 
 use super::*;
 macro_rules! ordinary_fixture_spec {
-    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+    ($spec:path) => { semio_framework_dsl_record::RecordSpecProducer { ordinary: $spec, decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "ordinary-only test metadata has no controlled construction")), encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "ordinary-only test metadata has no controlled construction")) } };
 }
 
-use crate::os_dsl::schema::{FieldSpec, JoinMode, ParseOptions, RecordLayout};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::JoinMode;
+use semio_framework_dsl_record::ParseOptions;
+use semio_framework_dsl_record::RecordLayout;
 
 //#region 🔖️Fixtures
 /// 🧬️ One field of most scalar `Shape` variants plus a nested `Record`, a `List`, a
@@ -12,13 +15,13 @@ use crate::os_dsl::schema::{FieldSpec, JoinMode, ParseOptions, RecordLayout};
 /// laws without duplicating `pack_value`'s own exhaustive per-tag coverage.
 // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Record` below
 fn nested_point_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
 }
 
 fn mixed_spec() -> RecordSpec {
     RecordSpec::new(
         None,
-        RecordLayout::Lines,
+        semio_framework_dsl_record::RecordLayout::Lines,
         vec![
             FieldSpec::new(1, "flag", Shape::Bool),
             FieldSpec::new(2, "count", Shape::UInt),
@@ -39,11 +42,11 @@ fn mixed_spec() -> RecordSpec {
 /// 📷️ Simple scalar spec, small enough to print/parse deterministically for
 /// `assert_dsl_pack_bidirectional`.
 fn camera_spec() -> RecordSpec {
-    RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
+    RecordSpec::new(Some("camera"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
 }
 
 fn camera_sample() -> RecordValue {
-    let mut fields = HashMap::new();
+    let mut fields = RecordValue::default().fields;
     fields.insert(0, FieldValue::Float(1.0));
     fields.insert(1, FieldValue::Float(2.5));
     fields.insert(2, FieldValue::Float(3.0));
@@ -85,7 +88,7 @@ async fn record_value_gen_bounds_recursion_by_max_depth() {
     // points right back at itself. A generator that ignored `max_depth` would stack-overflow.
     // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Statements` below
     fn recursive_spec() -> RecordSpec {
-        RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), ordinary_fixture_spec!(recursive_spec))]))])
+        RecordSpec::new(Some("group"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), ordinary_fixture_spec!(recursive_spec))]))])
     }
     let spec = recursive_spec();
     let mut gen = RecordValueGen::new(7);
@@ -136,8 +139,8 @@ async fn law_streamed_equals_buffered_holds() {
 #[semio_framework_async_macros::async_test]
 async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
     let spec = camera_spec();
-    let parse_dsl = async |text: &str| crate::os_dsl::schema::parse(text, &spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("parse failed: {e}"));
-    let print_dsl = async |value: &RecordValue| crate::os_dsl::schema::print(value, &spec, JoinMode::Document);
+    let parse_dsl = async |text: &str| semio_framework_dsl_record::parse(text, &spec, &semio_framework_dsl_record::ParseOptions::default()).unwrap_or_else(|e| panic!("parse failed: {e}"));
+    let print_dsl = async |value: &RecordValue| semio_framework_dsl_record::print(value, &spec, semio_framework_dsl_record::JoinMode::Document);
     let encode_pack = async |value: &RecordValue| crate::os_pack::encode_document(&spec, value, &crate::os_pack::EncodeOptions::default()).expect("encode_pack");
     let decode_pack = async |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).expect("decode_pack").0;
     assert_dsl_pack_bidirectional(parse_dsl, print_dsl, encode_pack, decode_pack, &camera_sample()).await;

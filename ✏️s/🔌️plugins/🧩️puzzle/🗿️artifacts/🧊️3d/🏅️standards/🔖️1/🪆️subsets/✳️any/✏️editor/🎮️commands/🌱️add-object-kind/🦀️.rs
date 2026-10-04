@@ -6,7 +6,7 @@ use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::Puzzle3dObject;
 use crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::Value;
 
 /// 🥽️ One catalog row's mesh identity — `representations[].url` FIRST, `meshUrl` only as the legacy
 /// fallback. Catalogued kinds authored as compose `Representation` rows (both shipped examples, and
@@ -14,16 +14,16 @@ use dsl::os_pack::json::Value;
 /// `meshUrl`-only read placed the object with no mesh identity of its own and the fill/brush lanes
 /// rejected its candidates `mesh-unavailable`. Same precedence as `Puzzle3dKindMeshIndex::of` and the
 /// catalogue panel's drag payload.
-fn catalog_entry_mesh_url(entry: &dsl::DslValue) -> Option<String> {
+fn catalog_entry_mesh_url(entry: &semio_framework_value::DslValue) -> Option<String> {
     entry
         .get("representations")
-        .and_then(dsl::DslValue::as_array)
+        .and_then(semio_framework_value::DslValue::as_array)
         .into_iter()
         .flatten()
-        .filter_map(|representation| representation.get("url").and_then(dsl::DslValue::as_str))
+        .filter_map(|representation| representation.get("url").and_then(semio_framework_value::DslValue::as_str))
         .map(str::trim)
         .find(|url| !url.is_empty())
-        .or_else(|| entry.get("meshUrl").and_then(dsl::DslValue::as_str).map(str::trim).filter(|url| !url.is_empty()))
+        .or_else(|| entry.get("meshUrl").and_then(semio_framework_value::DslValue::as_str).map(str::trim).filter(|url| !url.is_empty()))
         .map(str::to_string)
 }
 

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stdio.png.native-paint-controlled-fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "operation", "workProtocol", "closeProtocol", "retention", "interruptionWitnesses"],
+  "properties": {
+    "schema": {"const": "stdio.png.native-paint-controlled-fixture"},
+    "source": {"type": "string", "minLength": 1},
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region", "paint", "maximumOwnedBytes"],
+      "properties": {
+        "region": {"$ref": "#/$defs/region"},
+        "paint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["profile", "samples"],
+          "properties": {
+            "profile": {"enum": ["indexed", "grayscale", "grayscale-alpha", "rgb", "rgba"]},
+            "samples": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": "integer", "minimum": 0, "maximum": 65535}}
+          }
+        },
+        "maximumOwnedBytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "workProtocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fuelPerStep", "resumablePhases", "cancellationPhases", "replayCodecPasses"],
+      "properties": {
+        "fuelPerStep": {"const": 1},
+        "resumablePhases": {"const": ["decode", "paint", "filter", "encode", "assemble"]},
+        "cancellationPhases": {"const": ["decode", "encode"]},
+        "replayCodecPasses": {"const": 0}
+      }
+    },
+    "closeProtocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probeMaximumItems", "probeMaximumBytes", "completionMaximumItems", "completionMaximumBytes"],
+      "properties": {
+        "probeMaximumItems": {"const": 1},
+        "probeMaximumBytes": {"const": 1},
+        "completionMaximumItems": {"const": 4096},
+        "completionMaximumBytes": {"type": "integer", "minimum": 32768}
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chunkOrder", "prefixChunkOrder", "suffixChunkOrder", "idatCount"],
+      "properties": {
+        "chunkOrder": {"type": "array", "items": {"type": "string", "minLength": 4, "maxLength": 4}},
+        "prefixChunkOrder": {"type": "array", "items": {"type": "string", "minLength": 4, "maxLength": 4}},
+        "suffixChunkOrder": {"type": "array", "items": {"type": "string", "minLength": 4, "maxLength": 4}},
+        "idatCount": {"type": "integer", "minimum": 1}
+      }
+    },
+    "interruptionWitnesses": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "object", "$ref": "#/$defs/witness", "properties": {"phase": {"const": "decode"}, "minimumCompleted": {"type": "integer", "minimum": 1}}},
+        {"type": "object", "$ref": "#/$defs/witness", "properties": {"phase": {"const": "encode"}, "minimumCompleted": {"type": "integer", "minimum": 1}}}
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    }
+  },
+  "$defs": {
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0},
+        "y": {"type": "integer", "minimum": 0},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1}
+      }
+    },
+    "witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "minimumCompleted"],
+      "properties": {
+        "phase": {"enum": ["decode", "encode"]},
+        "minimumCompleted": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

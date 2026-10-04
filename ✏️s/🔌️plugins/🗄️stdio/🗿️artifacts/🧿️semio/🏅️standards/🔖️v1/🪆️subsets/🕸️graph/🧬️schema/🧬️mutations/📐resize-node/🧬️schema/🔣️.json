@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/mutation/resize-node/schema.json",
+  "title": "ResizeNode",
+  "description": "The `resize-node` mutation record: a node takes an absolute canvas width and height.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "width",
+    "height"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/GraphNodeId",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Node that is resized.",
+          "de": "Knoten, dessen Größe geändert wird."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "width": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Canvas width the node takes.",
+          "de": "Leinwandbreite, die der Knoten erhält."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "group": "size",
+        "order": 20
+      }
+    },
+    "height": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Canvas height the node takes.",
+          "de": "Leinwandhöhe, die der Knoten erhält."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "group": "size",
+        "order": 30
+      }
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

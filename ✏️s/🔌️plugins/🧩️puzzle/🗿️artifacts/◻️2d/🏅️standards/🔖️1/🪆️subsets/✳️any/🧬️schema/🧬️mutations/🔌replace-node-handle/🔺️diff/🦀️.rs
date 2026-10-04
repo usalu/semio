@@ -24,7 +24,7 @@ pub fn diff(payload: &super::ReplaceNodeHandle, base: &Puzzle2dSnapshot) -> prot
         }
     }
     if next == *node {
-        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.node_id.clone()])]);
+        return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.node_id.clone()])]);
     }
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),

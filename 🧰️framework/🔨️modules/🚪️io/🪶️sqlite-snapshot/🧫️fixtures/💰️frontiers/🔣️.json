@@ -1,0 +1,53 @@
+{
+  "rowFrontier": 256,
+  "phases": [
+    "parseSchema",
+    "validateRows",
+    "buildTree"
+  ],
+  "refusal": "canceled",
+  "sharedProgressRoster": [
+    [
+      "reconstructSnapshot",
+      0,
+      0
+    ],
+    [
+      "reconstructSnapshot",
+      256,
+      513
+    ],
+    [
+      "reconstructSnapshot",
+      512,
+      513
+    ],
+    [
+      "validateRows",
+      256,
+      513
+    ],
+    [
+      "validateRows",
+      512,
+      513
+    ],
+    [
+      "reconstructSnapshot",
+      513,
+      513
+    ],
+    [
+      "indexTables",
+      0,
+      1
+    ],
+    [
+      "indexTables",
+      1,
+      1
+    ]
+  ],
+  "builderSql": "CREATE TABLE entity (id INTEGER PRIMARY KEY, payload TEXT)",
+  "builderRows": 513
+}

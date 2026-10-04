@@ -114,8 +114,8 @@ mod metal_catalog_tests {
     #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = MetalCatalog.machines();
-        let json = semio_framework_os_kernel::json::to_json_string(&machines);
-        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+        let json = semio_framework_pack_json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
         assert_eq!(parsed, machines);
     }
 
@@ -177,8 +177,8 @@ mod wood_catalog_tests {
     #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = WoodCatalog.machines();
-        let json = semio_framework_os_kernel::json::to_json_string(&machines);
-        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+        let json = semio_framework_pack_json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
         assert_eq!(parsed, machines);
     }
 
@@ -239,8 +239,8 @@ mod robotic_catalog_tests {
     #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = RoboticCatalog.machines();
-        let json = semio_framework_os_kernel::json::to_json_string(&machines);
-        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+        let json = semio_framework_pack_json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
         assert_eq!(parsed, machines);
     }
 
@@ -301,8 +301,8 @@ mod concrete_catalog_tests {
     #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = ConcreteCatalog.machines();
-        let json = semio_framework_os_kernel::json::to_json_string(&machines);
-        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
+        let json = semio_framework_pack_json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("deserialize");
         assert_eq!(parsed, machines);
     }
 

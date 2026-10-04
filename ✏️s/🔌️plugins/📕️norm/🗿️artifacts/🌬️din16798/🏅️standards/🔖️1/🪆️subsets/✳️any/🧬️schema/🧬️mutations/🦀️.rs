@@ -155,7 +155,7 @@ impl Din16798Mutation {
 }
 
 pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
-    pack::json::from_json_str(text).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Result<(Din16798Snapshot, Vec<String>), String> {
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
@@ -163,8 +163,11 @@ pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutat
     let applied = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
     Ok((applied, messages))
 }
-pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
-    <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(mutation, base)
+pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 #[cfg(test)]

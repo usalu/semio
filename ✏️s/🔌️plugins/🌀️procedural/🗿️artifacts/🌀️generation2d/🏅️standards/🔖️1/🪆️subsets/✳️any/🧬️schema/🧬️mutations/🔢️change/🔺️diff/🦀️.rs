@@ -10,7 +10,7 @@ pub fn diff(payload: &ChangeGenerationValue, base: &Generation2dSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if entry.values.get(&payload.question_id) == Some(&payload.value) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Generation \"{}\" question \"{}\" already has this value.", payload.id, payload.question_id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Generation \"{}\" question \"{}\" already has this value.", payload.id, payload.question_id));
     }
     protocol::MutationOutcome::new(diff_generation_from_ops(base, &[GenerationMutation::UpdateValues { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() }]))
 }

@@ -42,7 +42,7 @@ async fn removes_the_solid_and_leaves_the_whole_topology_under_it() {
 async fn the_undo_create_solid_restores_the_captured_shell_list() {
     let base = before();
     let mutation = mutation();
-    let undo = mutation.inverse(&base);
+    let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-solid of an existing solid undoes as exactly one create-solid");
     let SemioBrepMutation::CreateSolid(recreate) = &undo[0] else { panic!("delete-solid must undo as create-solid") };
     assert_eq!(recreate.shells, base.solids[0].shells, "the undo must recapture the deleted solid's own shell list verbatim, is_void flags included");
@@ -58,20 +58,20 @@ async fn the_undo_create_solid_restores_the_captured_shell_list() {
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded = decode_semio_brep_snapshot_json(text).expect("snapshot decodes");
-        let reencoded = pack::json::from_dsl_value(&decoded.to_value());
-        let original = pack::json::parse(text).expect("snapshot reparses");
+        let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed {label} JSON is not canonical");
     }
-    let reencoded = pack::json::from_dsl_value(&mutation().to_value());
-    let original = pack::json::parse(MUTATION).expect("delete-solid mutation reparses");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&mutation().to_value());
+    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-solid mutation reparses");
     assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ Declared `applied`: the solid exists, so mutation.target-missing must not fire
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds_as_committed() {
-    let outcome = pack::json::parse(OUTCOME).expect("outcome decodes");
-    assert_eq!(outcome.get("status").and_then(pack::json::Value::as_str), Some("applied"), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: this case is declared applied");
+    let outcome = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    assert_eq!(outcome.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: this case is declared applied");
     let produced = mutation().diff(&before());
     assert!(produced.messages().is_empty(), "deleting an existing solid must raise no diagnostics — nothing references a solid from above");
 }
@@ -81,8 +81,8 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(&mutation(), &base);
-    let produced = pack::json::from_dsl_value(&outcome.diff().to_value());
-    let committed = pack::json::parse(DIFF).expect("committed diff decodes");
+    let produced = semio_framework_pack_json::from_dsl_value(&outcome.diff().to_value());
+    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
@@ -96,8 +96,8 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(solids.removed, vec!["so1".to_string()], "the removal is addressed by solid id");
     assert!(solids.modified.is_empty() && solids.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.vertices.is_none() && decoded.edges.is_none() && decoded.loops.is_none() && decoded.faces.is_none() && decoded.shells.is_none(), "delete-solid cascades nowhere — no other collection may appear");
-    let reencoded = pack::json::from_dsl_value(&decoded.to_value());
-    let original = pack::json::parse(DIFF).expect("committed diff reparses");
+    let reencoded = semio_framework_pack_json::from_dsl_value(&decoded.to_value());
+    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed diff JSON is not canonical");
 }
 

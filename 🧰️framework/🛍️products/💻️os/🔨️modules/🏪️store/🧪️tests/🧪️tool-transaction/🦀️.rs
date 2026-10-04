@@ -5,7 +5,7 @@
 //! way. The language-agnostic corpus is checked by the TS twin beside this file (`🟦️.ts`, Ajv + fast-json-patch + xstate).
 use super::supersede_replay_tests::WitnessOp;
 use super::*;
-use crate::os_dsl::FaultFrom;
+use semio_framework_diagnostic::FaultFrom;
 use std::collections::HashSet;
 
 //#region 🧰️Harness
@@ -195,8 +195,8 @@ async fn tool_transaction_command_vectors_match_both_codecs() {
 
 //#region 🧪️TransactionLaws
 /// 🟰️ Appending ticks and committing records exactly the edit ONE `Apply` of the same operations under the same ref records:
-/// the same state, forwards, inverses, per-operation kinds, labels and outcomes, every operation stamped, no description and
-/// no coalesce key, finished, and ONE undo step taking the whole gesture back — for a single-operation gesture too, whose
+/// the same state, forwards, inverses, per-operation kinds, labels and outcomes, every operation stamped, no description,
+/// finished, and ONE undo step taking the whole gesture back — for a single-operation gesture too, whose
 /// operation is named by its edit as an applied one is.
 #[semio_framework_async_macros::async_test]
 async fn appends_and_a_commit_record_exactly_the_edit_one_apply_records() {
@@ -217,11 +217,13 @@ async fn appends_and_a_commit_record_exactly_the_edit_one_apply_records() {
         let facts = |edit: &Edit<DemoMutation>| edit.mutation_meta.iter().map(|meta| (meta.semantic_kind.clone(), meta.label.clone(), meta.transaction.clone())).collect::<Vec<_>>();
         assert_eq!(facts(edit), facts(one));
         assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&reference)), "every operation carries the ref");
-        assert_eq!((edit.description.as_deref(), edit.coalesce_key.as_deref(), edit.finished_at.is_some()), (None, None, true));
+        assert_eq!((edit.description.as_deref(), edit.finished_at.is_some()), (None, true));
         if edit.forwards.len() == 1 {
             assert_eq!(edit.mutation_meta[0].mutation_id, Some(MutationId(edit.id.clone())), "a one-operation edit names its operation");
         }
-        let outcomes = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| store.mutation_outcomes().expect("outcomes").into_iter().map(|outcome| (outcome.op_index, outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect::<Vec<_>>())).collect::<Vec<_>>();
+        let outcomes = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| {
+            store.mutation_outcomes().expect("outcomes").into_iter().map(|outcome| (outcome.op_index, outcome.worst, outcome.messages.iter().map(|message| message.code.0.clone()).collect::<Vec<_>>())).collect::<Vec<_>>()
+        };
         assert_eq!(outcomes(&streamed), outcomes(&applied));
         assert!(streamed.open_transaction().is_none());
         streamed.dispatch(ArtifactCommand::Undo).await.expect("one undo");
@@ -240,7 +242,15 @@ async fn an_aborted_transaction_leaves_no_trace_anywhere() {
     let _ = announced_operations(&remote);
     let pack = print_document_pack(store.envelope()).await.expect("pack");
     let text = print_document_text(store.envelope()).await.expect("text");
-    let before = (store.snapshot().expect("state"), store.content_revision_now(), store.applied_edit_ids().to_vec(), store.envelope().vcs.edits.len(), store.envelope().edit_messages.len(), store.mutation_outcomes().expect("outcomes").len(), store.event_log().expect("log"));
+    let before = (
+        store.snapshot().expect("state"),
+        store.content_revision_now(),
+        store.applied_edit_ids().to_vec(),
+        store.envelope().vcs.edits.len(),
+        store.envelope().edit_messages.len(),
+        store.mutation_outcomes().expect("outcomes").len(),
+        store.event_log().expect("log"),
+    );
     let sequence = tail_edit(&store).sequence_number;
     let reference = transaction("tx-gone");
     for tick in [vec![add(1)], vec![add(2), set(9)], vec![add(3)]] {
@@ -249,7 +259,15 @@ async fn an_aborted_transaction_leaves_no_trace_anywhere() {
     assert_eq!(store.snapshot_ref().n, Some(12));
     assert!(store.envelope().edit_messages.iter().any(|entry| Some(&entry.edit_id) == store.open_transaction().map(|open| &open.edit_id)), "the open edit records its own outcomes");
     store.dispatch(ArtifactCommand::AbortTransaction { transaction_id: reference.id.clone() }).await.expect("the transaction aborts");
-    let after = (store.snapshot().expect("state"), store.content_revision_now(), store.applied_edit_ids().to_vec(), store.envelope().vcs.edits.len(), store.envelope().edit_messages.len(), store.mutation_outcomes().expect("outcomes").len(), store.event_log().expect("log"));
+    let after = (
+        store.snapshot().expect("state"),
+        store.content_revision_now(),
+        store.applied_edit_ids().to_vec(),
+        store.envelope().vcs.edits.len(),
+        store.envelope().edit_messages.len(),
+        store.mutation_outcomes().expect("outcomes").len(),
+        store.event_log().expect("log"),
+    );
     assert_eq!(after, before, "an abort leaves no trace");
     assert_eq!(print_document_pack(store.envelope()).await.expect("pack"), pack);
     assert_eq!(print_document_text(store.envelope()).await.expect("text"), text);
@@ -275,8 +293,6 @@ async fn an_open_transaction_refuses_every_other_command_and_retires_its_operati
         vec![
             (apply(vec![live(set(2)), live(add(3))]), 2),
             (ArtifactCommand::ApplyInLane { mutations: vec![live(set(2))], description: None, lane: HistoryLane::Interaction, transaction: None }, 1),
-            (ArtifactCommand::AmendLast { mutations: vec![live(add(1))], coalesce_key: Some("drag".into()) }, 1),
-            (ArtifactCommand::AmendLastInLane { mutations: vec![live(add(1))], coalesce_key: None, lane: HistoryLane::Document }, 1),
             (ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: target.clone(), replacement: Some(live(set(4))) }] }, 1),
             (ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![SupersedeInput { target: target.clone(), replacement: Some(live(set(5))) }] }, 1),
             (ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: Some(Box::new(apply(vec![live(set(6))]))) }, 1),
@@ -398,5 +414,104 @@ async fn a_history_past_one_page_keeps_admitting_edits() {
     assert_eq!(store.envelope().vcs.edits.len(), 80);
     assert_eq!(store.applied_edit_ids().len(), 80);
     assert_eq!(store.snapshot_ref().n, Some(79));
+}
+
+/// ↩️ An abort gives back what the open edit took from the history, on the command route and on the batched route (audit
+/// W1G-5): the redo entry this actor's open edit dropped, the persisted cursor, the applied order, the projection and the
+/// revision equal those of before the first append, and redo then undo still step exactly as before.
+#[semio_framework_async_macros::async_test]
+async fn an_abort_restores_the_redo_stack_and_the_cursor_on_both_routes() {
+    for batched in [false, true] {
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "redo", DemoSnapshot { n: Some(0) }, None)).await;
+        store.install_document_store_owners_exact(demo_closable_store_owners());
+        store.closes_on_drop();
+        for n in [1, 2] {
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![set(n)], description: None, transaction: None }).await.expect("a plain edit");
+        }
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo the second edit");
+        let observe = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| {
+            let cursor = store.envelope().cursor.as_ref().expect("a live cursor");
+            (store.snapshot_ref().n, store.content_revision_now(), store.applied_edit_ids().to_vec(), store.redo_edit_ids().to_vec(), cursor.applied_edit_ids.to_vec(), cursor.redo_edit_ids.to_vec(), cursor.checkpoint_id.clone())
+        };
+        let before = observe(&store);
+        assert_eq!((before.0, before.3.len()), (Some(1), 1), "batched={batched}: one redo entry waits");
+        let reference = transaction("tx-redo");
+        if batched {
+            publish_batch(&mut store, 1, vec![add(5)], Some(&reference), true).await;
+        } else {
+            store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(5)], transaction: reference.clone() }).await.expect("the transaction opens");
+        }
+        assert!(store.redo_edit_ids().is_empty(), "batched={batched}: the actor's open edit drops its redo entries, as every new edit of that actor does");
+        store.dispatch(ArtifactCommand::AbortTransaction { transaction_id: reference.id.clone() }).await.expect("the transaction aborts");
+        assert_eq!(observe(&store), before, "batched={batched}: an abort restores the redo stack, the cursor, the order, the projection and the revision");
+        store.dispatch(ArtifactCommand::Redo).await.expect("the restored redo entry redoes");
+        assert_eq!(store.snapshot_ref().n, Some(2), "batched={batched}");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo again");
+        assert_eq!(store.snapshot_ref().n, Some(0), "batched={batched}");
+        test_support::assert_live_equals_replay(&store).await;
+    }
+}
+
+/// 🛬️ Remote edits that landed under an open transaction — one later and one earlier by clock — stay when it aborts (audit
+/// W1G-5): the store equals a replica that only ever saw the shared log, nothing of the transaction was announced, both
+/// persisted forms reload to it and the live projection equals a fresh replay.
+#[semio_framework_async_macros::async_test]
+async fn remote_edits_that_landed_under_an_open_transaction_survive_its_abort() {
+    let (mut store, remote) = attached_store(Some(0)).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![set(1)], description: None, transaction: None }).await.expect("a plain edit");
+    let _ = announced_operations(&remote);
+    let reference = transaction("tx-under");
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(1)], transaction: reference.clone() }).await.expect("the transaction opens");
+    store.ingest_remote(remote_edit("under", 0, add(10), 4_000_000_000_000)).await.expect("a later remote edit lands under it");
+    store.ingest_remote(remote_edit("under", 1, add(100), 1)).await.expect("an earlier remote edit lands under it");
+    let open_id = store.open_transaction().expect("still open").edit_id.clone();
+    assert_eq!(store.applied_edit_ids().last(), Some(&open_id), "the open edit stays the applied tail");
+    store.dispatch(ArtifactCommand::AbortTransaction { transaction_id: reference.id.clone() }).await.expect("the transaction aborts");
+    assert!(store.open_transaction().is_none() && store.envelope().vcs.edits.iter().all(|edit| edit.id != open_id), "the open edit is gone");
+    assert_eq!(store.envelope().vcs.edits.len(), 3, "the plain edit and both remote edits stay");
+    let mut replica = store_named("demo", Some(0)).await;
+    for event in store.event_log().expect("log") {
+        replica.ingest_remote(event).await.expect("the replica takes the shared log");
+    }
+    assert_eq!(store.snapshot().expect("store"), replica.snapshot().expect("replica"), "the aborted store equals a replica of the shared log");
+    assert_eq!(store.applied_edit_ids().len(), 3);
+    assert!(announced_operations(&remote).is_empty(), "nothing of the aborted transaction was announced");
+    assert_eq!(persisted_n(&store).await, store.snapshot_ref().n);
+    test_support::assert_live_equals_replay(&store).await;
+}
+
+/// 🐎️ A tool transaction streaming one tick per turn never starves a history step that waits for later turns (audit W1G-5):
+/// a tick appended to the open edit — the applied tail — keeps the waiting replay running instead of restarting it, so the
+/// step adopts within its budgeted turns while the ticks keep landing, and the committed result equals a fresh replay.
+#[semio_framework_async_macros::async_test]
+async fn a_transaction_streaming_while_a_local_step_waits_never_starves_it() {
+    let mut store = store_named("starve", Some(0)).await;
+    for _ in 0..40 {
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![add(1)], description: None, transaction: None }).await.expect("a plain edit");
+    }
+    store.defer_local_replays(Some(ReplayTurnBudget::operations(4)));
+    let target = store.mutation_ops().expect("operations")[0].mutation_id.clone();
+    let reference = transaction("tx-drag");
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(1)], transaction: reference.clone() }).await.expect("the drag opens");
+    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target, replacement: Some(add(5)) }] }).await.expect_err("an open transaction refuses the finalize");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: reference.id.clone() }).await.expect("the drag commits");
+    let target = store.mutation_ops().expect("operations")[0].mutation_id.clone();
+    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target, replacement: Some(add(5)) }] }).await.expect("the finalize waits for later turns");
+    assert!(store.local_step_pending(), "a 41-edit replay outlasts one 4-operation turn");
+    let reference = transaction("tx-drag-2");
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(1)], transaction: reference.clone() }).await.expect("a drag opens while the step waits");
+    let mut turns = 0;
+    while store.local_step_pending() {
+        store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(1)], transaction: reference.clone() }).await.expect("one tick per turn");
+        store.step_reprojection(None).await.expect("one budgeted turn");
+        turns += 1;
+        assert!(turns <= 32, "the waiting step adopts while the ticks keep streaming");
+    }
+    assert_eq!(store.supersessions().len(), 1, "the finalize was adopted");
+    store.dispatch(ArtifactCommand::AppendTransaction { mutations: vec![add(1)], transaction: reference.clone() }).await.expect("the drag keeps streaming after the adoption");
+    store.dispatch(ArtifactCommand::CommitTransaction { transaction_id: reference.id.clone() }).await.expect("the drag commits");
+    assert_eq!(store.snapshot_ref().n, Some(5 + 40 + turns + 2), "the superseded first edit, the other 40 and every tick");
+    test_support::assert_live_equals_replay(&store).await;
 }
 //#endregion 🧪️TransactionLaws

@@ -68,7 +68,7 @@ pub fn grid2d_active_utility(view: &ViewModel) -> &str {
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Grid2dMutation` kind plus the
 /// pane-local view verbs (camera, grid chrome, active tile, solve).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Grid2dEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -309,7 +309,7 @@ impl ArtifactCommandWork<EditorApp<Grid2dEditor>> for Grid2dCommandWork {
         GRID2D_TOOL_IDS.contains(&grid2d_command_id(command)).then_some(1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Grid2dEditor>>) -> Result<ArtifactCommandWorkStep<EditorApp<Grid2dEditor>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Grid2dEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Grid2dEditor>>, Fault> {
         if self.consumed {
             return Err(Fault::from("wfc-grid2d-retained-work-repeated"));
         }
@@ -383,22 +383,22 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Grid2dCommandJobFac
 //#endregion 🧵️RetainedCommands
 
 //#region 🔖️Args
-fn arg<'a>(args: Option<&'a dsl::DslValue>, key: &str) -> Option<&'a dsl::DslValue> {
+fn arg<'a>(args: Option<&'a semio_framework_value::DslValue>, key: &str) -> Option<&'a semio_framework_value::DslValue> {
     match args {
-        Some(dsl::DslValue::Object(entries)) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value),
+        Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value),
         _ => None,
     }
 }
 
-fn arg_f64(args: Option<&dsl::DslValue>, key: &str, fallback: f64) -> f64 {
+fn arg_f64(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: f64) -> f64 {
     match arg(args, key) {
-        Some(dsl::DslValue::Number(number)) => number.as_f64(),
-        Some(dsl::DslValue::String(text)) => text.parse().unwrap_or(fallback),
+        Some(semio_framework_value::DslValue::Number(number)) => number.as_f64(),
+        Some(semio_framework_value::DslValue::String(text)) => text.parse().unwrap_or(fallback),
         _ => fallback,
     }
 }
 
-fn arg_u32(args: Option<&dsl::DslValue>, key: &str, fallback: u32) -> u32 {
+fn arg_u32(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: u32) -> u32 {
     let value = arg_f64(args, key, f64::from(fallback));
     if value.is_finite() && value >= 0.0 {
         value as u32
@@ -407,7 +407,7 @@ fn arg_u32(args: Option<&dsl::DslValue>, key: &str, fallback: u32) -> u32 {
     }
 }
 
-fn arg_u64(args: Option<&dsl::DslValue>, key: &str, fallback: u64) -> u64 {
+fn arg_u64(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: u64) -> u64 {
     let value = arg_f64(args, key, fallback as f64);
     if value.is_finite() && value >= 0.0 {
         value as u64
@@ -416,25 +416,25 @@ fn arg_u64(args: Option<&dsl::DslValue>, key: &str, fallback: u64) -> u64 {
     }
 }
 
-fn arg_bool(args: Option<&dsl::DslValue>, key: &str, fallback: bool) -> bool {
+fn arg_bool(args: Option<&semio_framework_value::DslValue>, key: &str, fallback: bool) -> bool {
     match arg(args, key) {
-        Some(dsl::DslValue::Bool(value)) => *value,
-        Some(dsl::DslValue::String(text)) => text == "true",
+        Some(semio_framework_value::DslValue::Bool(value)) => *value,
+        Some(semio_framework_value::DslValue::String(text)) => text == "true",
         _ => fallback,
     }
 }
 
-fn arg_string(args: Option<&dsl::DslValue>, key: &str) -> String {
+fn arg_string(args: Option<&semio_framework_value::DslValue>, key: &str) -> String {
     match arg(args, key) {
-        Some(dsl::DslValue::String(text)) => text.clone(),
-        Some(other) => dsl::json::to_json_string(other),
+        Some(semio_framework_value::DslValue::String(text)) => text.clone(),
+        Some(other) => semio_framework_pack_json::to_json_string(other),
         None => String::new(),
     }
 }
 
 /// 🔑️ The first of several spellings that carries a non-empty string — the navbar sends
 /// `exampleId`, a palette form may send `id`, an inspector row `value`.
-fn arg_string_any(args: Option<&dsl::DslValue>, keys: &[&str]) -> String {
+fn arg_string_any(args: Option<&semio_framework_value::DslValue>, keys: &[&str]) -> String {
     keys.iter().map(|key| arg_string(args, key)).find(|value| !value.is_empty()).unwrap_or_default()
 }
 //#endregion 🔖️Args
@@ -455,7 +455,7 @@ pub fn example_document(example_id: &str) -> Option<Grid2dSnapshot> {
 /// undo ladder — so it rides `Effect::LoadDocument` and leaves the history exactly as it was.
 pub fn reset_document_effect(document: &Grid2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Grid2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("wfc-grid2d", WFC_GRID2D_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc-grid2d", WFC_GRID2D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Examples
@@ -481,7 +481,7 @@ impl Grid2dEditor {
     fn armed_pick(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, utility: &str, x: u32, y: u32) -> Result<Option<Grid2dMutation>, Fault> {
         Ok(match utility {
             grid::UTILITY_PIN => {
-                let tile = Self::active_tile(document, config).ok_or_else(|| Fault::from("wfc-grid2d-no-tile-to-pin"))?;
+                let tile = Self::active_tile(document, config).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.tile.none-armed"), "wfc.grid2d.tile.none-armed"))?;
                 Some(pin_cell(x, y, tile))
             }
             grid::UTILITY_MASK => {
@@ -496,7 +496,7 @@ impl Grid2dEditor {
     }
 
     fn config_emit(view_state: Option<&ViewModel>, config: Grid2dWindowConfig) -> Result<Emit<Grid2dMutation>, Fault> {
-        let view = view_state.ok_or_else(|| Fault::from("wfc-grid2d-window-required"))?;
+        let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
         let mutation = window::addressed_config(view, config)?;
         Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }
@@ -516,7 +516,7 @@ impl Grid2dEditor {
             Grid2dEditorCommand::DeleteTile { id } => delete_tile(id.clone()),
             Grid2dEditorCommand::ChangeTileWeight { id, weight } => change_tile_weight(id.clone(), *weight),
             Grid2dEditorCommand::ChangeTileMedia { id, media_json } => {
-                let media: WfcTileMedia2d = protocol::json::from_json_str(media_json).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-media:{error}")))?;
+                let media: WfcTileMedia2d = semio_framework_pack_json::from_json_str(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-media:{error}")))?;
                 change_tile_media(id.clone(), media)
             }
             Grid2dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, direction, allowed } => {
@@ -580,6 +580,19 @@ impl Grid2dEditor {
 }
 
 impl ArtifactEditor for Grid2dEditor {
+    /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+        use semio_framework_ui_locale::LocalizedLabel;
+        static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 3]> = std::sync::LazyLock::new(|| {
+            [
+            ("wfc.grid2d.window.required", LocalizedLabel::native("This action needs an open grid window.", "Diese Aktion braucht ein geöffnetes Rasterfenster.")),
+            ("wfc.grid2d.window.kind-required", LocalizedLabel::native("This action is not available in this window.", "Diese Aktion ist in diesem Fenster nicht verfügbar.")),
+            ("wfc.grid2d.tile.none-armed", LocalizedLabel::native("Arm a tile before pinning a cell.", "Vor dem Fixieren einer Zelle eine Kachel wählen.")),
+            ]
+        });
+        &*NOTICES
+    }
+
     type Snapshot = Grid2dSnapshot;
     type Mutation = Grid2dMutation;
     type Config = NoConfig;
@@ -715,7 +728,7 @@ impl ArtifactEditor for Grid2dEditor {
         }
         let tool_id = grid2d_command_id(&request.command);
         if tool_id != request.tool_id {
-            return Err(Fault::from("wfc-grid2d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "WFC grid 2D command does not match its exact registered tool"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -751,7 +764,7 @@ impl ArtifactEditor for Grid2dEditor {
 
     /// 🎥️ The canvas host syncs its own camera as one nested `camera` object; the palette's
     /// `set-camera` form states the three scalars flat. Both reach the same command.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         Ok(match action {
             "change-seed" => Grid2dEditorCommand::ChangeSeed { seed: arg_u64(args, "seed", 0) },
             "resize-grid" => Grid2dEditorCommand::ResizeGrid { width: arg_u32(args, "width", 1), height: arg_u32(args, "height", 1) },
@@ -840,7 +853,7 @@ pub fn create_grid2d_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(grid::definition())
         .window_kind_def(preview::definition())
         .tool(fill_tool::definition())
-        .mode_tools(edit::GRID2D_EDIT_MODE_ID, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
+        .mode_tools(edit::GRID2D_EDIT_MODE_ID, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .default_layout(edit::layout());
     for utility in edit::utilities() {
         builder = builder.utility(utility);

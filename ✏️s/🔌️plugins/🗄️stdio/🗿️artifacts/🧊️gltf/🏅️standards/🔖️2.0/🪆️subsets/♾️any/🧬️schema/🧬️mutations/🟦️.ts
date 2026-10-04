@@ -3,6 +3,7 @@
  * @see ./🔣️.json */
 import { gltfWireLiteral, gltfWireObject, gltfWireRequired, type GltfWireReader } from "../📸️snapshot/🟦️.ts";
 import { parseSetSnapshot, type SetSnapshot } from "./📸️snapshot/📸️set/🟦️.ts";
+import { parsePatchSnapshot, type PatchSnapshot } from "./📸️snapshot/🩹️patch/🟦️.ts";
 import { parseBindDefaultSceneMutation, type BindDefaultSceneMutation } from "./🏠️default-scene/🔗️bind/🟦️.ts";
 import { parseBindMorphTargetAttributeMutation, type BindMorphTargetAttributeMutation } from "./🎚️morph/🔗️bind/🟦️.ts";
 import { parseBindNodeCameraMutation, type BindNodeCameraMutation } from "./📷️node-camera/🔗️bind/🟦️.ts";
@@ -126,6 +127,7 @@ import { parseRemoveUsedExtensionMutation, type RemoveUsedExtensionMutation } fr
 
 export type GltfMutation =
   | { readonly mutation: "setSnapshot"; readonly payload: SetSnapshot }
+  | { readonly mutation: "patchSnapshot"; readonly payload: PatchSnapshot }
   | { readonly mutation: "bindDefaultScene"; readonly payload: BindDefaultSceneMutation }
   | { readonly mutation: "bindMorphTargetAttribute"; readonly payload: BindMorphTargetAttributeMutation }
   | { readonly mutation: "bindNodeCamera"; readonly payload: BindNodeCameraMutation }
@@ -249,6 +251,7 @@ export type GltfMutation =
 
 const payloads: { readonly [K in GltfMutation["mutation"]]: GltfWireReader<Extract<GltfMutation, { readonly mutation: K }>["payload"]> } = {
   setSnapshot: parseSetSnapshot,
+  patchSnapshot: parsePatchSnapshot,
   bindDefaultScene: parseBindDefaultSceneMutation,
   bindMorphTargetAttribute: parseBindMorphTargetAttributeMutation,
   bindNodeCamera: parseBindNodeCameraMutation,

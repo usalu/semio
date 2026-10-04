@@ -15,10 +15,10 @@ use semio_s_artifact_stdio_obj::ObjSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 
-pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<ObjSnapshot, store::TextError> {
-    semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|error| io_error(format!("generation3d→obj: {error}")))
+pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<ObjSnapshot, semio_framework_diagnostic::TextError> {
+    ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(mesh)).map_err(|error| io_error(format!("generation3d→obj: {error}")))
 }
 
-pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(semio_s_artifact_stdio_obj::engine::encode_obj(&serialize_mesh(mesh)?).into_bytes())
 }

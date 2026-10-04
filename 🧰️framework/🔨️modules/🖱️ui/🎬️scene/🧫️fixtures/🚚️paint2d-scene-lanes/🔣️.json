@@ -16,6 +16,7 @@
     "brushHardness",
     "paintTarget",
     "maskValue",
+    "fillTolerance",
     "viewMode",
     "compositeViewportJson",
     "lanes"
@@ -54,6 +55,7 @@
       "brushHardness": 0.25,
       "paintTarget": "pixels",
       "maskValue": 255,
+      "fillTolerance": 24,
       "pixelSelectionJson": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":\"[[0,2,255],[3,1,128]]\"}"
     },
     "laneTexts": {
@@ -90,7 +92,8 @@
       "brushColor": "#e07020",
       "brushHardness": 0.25,
       "paintTarget": "pixels",
-      "maskValue": 255
+      "maskValue": 255,
+      "fillTolerance": 24
     }
   }
 }

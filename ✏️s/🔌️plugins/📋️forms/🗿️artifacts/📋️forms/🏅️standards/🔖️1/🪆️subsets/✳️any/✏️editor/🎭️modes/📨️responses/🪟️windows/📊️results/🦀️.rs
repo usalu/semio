@@ -36,10 +36,10 @@ pub fn definition() -> WindowKindDefinition {
 
 fn answer_row(answer: &FormsAnswer, labels: &FormsLabels) -> UiAssemblyResult<BuiltNode> {
     let value = match &answer.value {
-        dsl::DslValue::Null => labels.unanswered.as_str().to_string(),
-        dsl::DslValue::String(value) => value.clone(),
-        dsl::DslValue::Bool(value) => if *value { labels.yes.as_str() } else { labels.no.as_str() }.to_string(),
-        value => dsl::os_pack::json::to_json_string(value),
+        semio_framework_value::DslValue::Null => labels.unanswered.as_str().to_string(),
+        semio_framework_value::DslValue::String(value) => value.clone(),
+        semio_framework_value::DslValue::Bool(value) => if *value { labels.yes.as_str() } else { labels.no.as_str() }.to_string(),
+        value => semio_framework_pack_json::to_json_string(value),
     };
     ui_admit(ui_admit(ui::tree_item(ui_label(&answer.label)?).try_id(&answer.question_id))?.description(UiText::clipped(&value)).try_build())
 }

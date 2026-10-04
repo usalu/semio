@@ -1,9 +1,10 @@
 dialect grammar
 grammar writer.snapshot
 extension writer
+comment none
 start document
-
-document = header body
-header = "schema" SP "writer.writer.snapshot" NL
-body = payload NL?
-payload = OCTET+
+document = artifact-mark "schema" "=" text "id" "=" text "language-id" "=" text "uri" "=" text "text" "=" text "document" "=" child
+artifact-mark = "semio" "writer.writer.dsl" "v1"
+child = "child_id" "=" text "target" "=" target
+target = "artifact-id" "=" text "artifact-kind" "=" text "standard" "=" text "subset" "=" text
+text = IDENT | TEXT

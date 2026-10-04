@@ -26,6 +26,14 @@
     {
       "id": "setPoints",
       "lane": "Artifact"
+    },
+    {
+      "id": "setActiveExample",
+      "lane": "HostOnly"
+    },
+    {
+      "id": "addNode",
+      "lane": "Artifact"
     }
   ],
   "laws": {

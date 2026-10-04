@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeHandleKindLabel, base: &Block2dSnapshot) -> p
     };
     let replacement = Block2dHandleKind { label: payload.new_label.clone(), ..existing.clone() };
     if replacement == *existing {
-        return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
+        return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
     protocol::MutationOutcome::new(Block2dDiff {
         handle_kinds: Some(Block2dHandleKindsDelta { patched: vec![Block2dHandleKindsPatchEntry { id: payload.id.clone(), patch: Block2dHandleKindsPatch { replacement: Some(replacement) } }], ..Default::default() }),

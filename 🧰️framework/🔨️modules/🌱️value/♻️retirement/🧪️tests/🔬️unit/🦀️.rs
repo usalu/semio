@@ -102,3 +102,62 @@ fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
         assert!(matches!(stack.step(1, 1).unwrap(), SnapshotRetirementStep::Complete));
     }
 }
+
+#[test]
+fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["leases"];let text=law["text"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(&serde_json::to_string(text).unwrap()).unwrap();assert_eq!(oracle.as_str().unwrap().len(),text.len());
+    for canceled in law["canceled"].as_array().unwrap() {for order in law["orders"].as_array().unwrap() {
+        let source=Arc::new(text.to_owned());let mut leases=vec![Some(Arc::clone(&source)),Some(Arc::clone(&source)),Some(source)];let mut released=0;
+        for (position,index) in order.as_array().unwrap().iter().enumerate() {
+            let alias=leases[index.as_u64().unwrap()as usize].take().unwrap();let mut retirement=shared_lease_retirement(alias);
+            assert!(matches!(retirement.close_step(1,0).unwrap(),SnapshotRetirementStep::Pending {released_items:0,released_bytes:0}));assert!(!retirement.terminal_is_empty());
+            assert!(matches!(retirement.close_step(0,3).unwrap(),SnapshotRetirementStep::Pending {released_items:0,released_bytes:0}));
+            let bytes=drain(retirement,law["items"].as_u64().unwrap()as usize,law["bytes"].as_u64().unwrap()as usize);assert_eq!(bytes,if position==2{text.len()}else{0},"cancel={canceled} order={order}");released+=bytes;
+        }assert_eq!(released,text.len());assert!(leases.iter().all(Option::is_none));
+    }}
+    eprintln!("[DEBUG] source lease six release orders; canceled/completed; one bounded source release");
+}
+
+#[test]
+fn native_controls_resume_same_cumulative_admission_and_cancel_before_more_work() {
+    use crate::{NativeDecodeControl,NativeEncodeControl};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["continuation"];let maximum=law["maximumBytes"].as_u64().unwrap()as usize;
+    let mut accepted=|_|true;let mut encode=NativeEncodeControl::new(maximum,&mut accepted);encode.begin_stage(9).unwrap();encode.charge(5).unwrap();encode.advance(4).unwrap();let receipt=encode.pause().unwrap();
+    let event=std::cell::Cell::new(None);let mut resumed=|value|{event.set(Some(value));true};let mut encode=NativeEncodeControl::resume(receipt,&mut resumed).unwrap();encode.checkpoint().unwrap();assert_eq!(event.get().unwrap().completed,4);assert_eq!(event.get().unwrap().total,9);assert_eq!(encode.owned_bytes(),5);encode.charge(8).unwrap();encode.advance(5).unwrap();assert_eq!(encode.owned_bytes(),maximum);assert_eq!(encode.charge(1).unwrap_err().kind,crate::ValueRefusalKind::OwnershipLimit);let receipt=encode.pause().unwrap();let mut canceled=|_|false;let mut encode=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(encode.step().unwrap_err().kind,crate::ValueRefusalKind::Canceled);assert_eq!(encode.owned_bytes(),maximum);
+    let mut accepted=|_|true;let mut decode=NativeDecodeControl::new(maximum,&mut accepted);decode.begin_stage(9).unwrap();decode.charge(5).unwrap();decode.advance(4).unwrap();let receipt=decode.pause().unwrap();
+    let event=std::cell::Cell::new(None);let mut resumed=|value|{event.set(Some(value));true};let mut decode=NativeDecodeControl::resume(receipt,&mut resumed).unwrap();decode.checkpoint().unwrap();assert_eq!(event.get().unwrap().completed,4);assert_eq!(event.get().unwrap().total,9);assert_eq!(decode.owned_bytes(),5);decode.charge(8).unwrap();decode.advance(5).unwrap();assert_eq!(decode.charge(1).unwrap_err().kind,crate::ValueRefusalKind::OwnershipLimit);let receipt=decode.pause().unwrap();let mut canceled=|_|false;let mut decode=NativeDecodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(decode.step().unwrap_err().kind,crate::ValueRefusalKind::Canceled);assert_eq!(decode.owned_bytes(),maximum);
+    eprintln!("[DEBUG] encoding/decoding resume own receipt; cumulative13bytes; fresh callback cancellation");
+}
+
+#[test]
+fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
+    use crate::{NativeEncodeControl,ValueRefusalKind};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["capacityAdmission"];let prior=&fixture["continuation"];
+    let source=Arc::new(law["source"].as_str().unwrap().to_owned());let pointer=source.as_ptr();let reference:serde_json::Value=serde_json::from_str(&serde_json::to_string(&*source).unwrap()).unwrap();assert_eq!(reference.as_str().unwrap().len(),law["sourceBytes"].as_u64().unwrap()as usize);
+    let event=std::cell::Cell::new(None);let mut accepted=|value|{assert_eq!(source.as_ptr(),pointer);event.set(Some(value));true};let mut control=NativeEncodeControl::new(prior["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);control.begin_stage(prior["total"].as_u64().unwrap()as usize).unwrap();control.charge(prior["initialBytes"].as_u64().unwrap()as usize).unwrap();control.advance(prior["initialUnits"].as_u64().unwrap()as usize).unwrap();control.checkpoint().unwrap();let before=event.get().unwrap();
+    let (mut control,error)=match control.admit_capacity(law["refusedBytes"].as_u64().unwrap()as usize,1,0){Err(rejection)=>rejection,Ok(_)=>panic!("existing ownership cannot fit refused capacity")};assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.maximum_bytes(),prior["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
+    let mut control=match control.admit_capacity(law["sourceBytes"].as_u64().unwrap()as usize,law["sourceMultiples"].as_u64().unwrap()as usize,law["scaffoldBytes"].as_u64().unwrap()as usize){Ok(control)=>control,Err(_)=>panic!("source policy capacity admitted")};assert_eq!(control.maximum_bytes(),law["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
+    let maximum=control.maximum_bytes();control.charge(maximum-control.owned_bytes()).unwrap();control.advance(prior["finalUnits"].as_u64().unwrap()as usize).unwrap();assert_eq!(control.charge(law["overrunBytes"].as_u64().unwrap()as usize).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);control.checkpoint().unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,prior["total"].as_u64().unwrap()as usize);assert_eq!(complete.owned_bytes,maximum);let receipt=control.pause().unwrap();
+    let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(shared_lease_retirement(source),1,3),law["sourceBytes"].as_u64().unwrap()as usize);
+    eprintln!("[DEBUG] consuming source capacity admission kept exact owned/completed/total counters and source lease identity; refusal preserved owner; one-byte overrun and resumed cancellation");
+}
+
+#[test]
+fn native_capacity_closed_vectors_preserve_the_consumed_admission_owner(){
+    use crate::{NativeEncodeControl,ValueRefusalKind};
+    fn number(value:&serde_json::Value)->usize{match value.as_str().unwrap(){"usizeMax"=>usize::MAX,"isizeMax"=>isize::MAX as usize,decimal=>decimal.parse().unwrap()}}
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let cases=fixture["capacityAdmission"]["cases"].as_array().unwrap();assert_eq!(cases.len(),12);
+    for case in cases {
+        let calls=std::cell::Cell::new(0);let event=std::cell::Cell::new(None);
+        let mut callback=|value|{calls.set(calls.get()+1);event.set(Some(value));true};
+        let mut control=NativeEncodeControl::new(13,&mut callback);control.begin_stage(9).unwrap();control.charge(number(&case["ownedBytes"])).unwrap();control.advance(4).unwrap();control.checkpoint().unwrap();
+        let before=event.get().unwrap();let before_calls=calls.get();
+        let result=control.admit_capacity(number(&case["sourceBytes"]),number(&case["multiples"]),number(&case["scaffoldBytes"]));
+        assert_eq!(calls.get(),before_calls,"{}",case["id"]);
+        let mut control=if case["accepted"].as_bool().unwrap(){let control=match result{Ok(control)=>control,Err(_)=>panic!("capacity unexpectedly refused: {}",case["id"])};assert_eq!(control.maximum_bytes(),number(&case["maximumBytes"]));control}else{let(control,error)=match result{Err(refusal)=>refusal,Ok(_)=>panic!("capacity unexpectedly admitted: {}",case["id"])};assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.maximum_bytes(),13);control};
+        assert_eq!(control.owned_bytes(),before.owned_bytes);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);control.advance(5).unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,9);assert_eq!(complete.total,9);assert_eq!(complete.owned_bytes,before.owned_bytes);
+        let receipt=control.pause().unwrap();let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);assert_eq!(control.owned_bytes(),before.owned_bytes);
+    }
+    eprintln!("[DEBUG] native source capacity twelve closed vectors preserve owner/counters/callback; checked overflow, signed ceiling, refusal and resumed cancellation");
+}

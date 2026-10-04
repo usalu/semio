@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
 /// 🔮️ First-party Add Widget payload.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-widget")]
@@ -19,9 +19,12 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for AddWidget {
     fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![], inserted: vec![(self.index, self.widget.clone())], replaced: vec![] })))
     }
-    fn inverse(&self, _base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+    fn inverse(&self, _base: &FlowHostSnapshot) -> Result<Vec<FlowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![FlowMutation::RemoveWidget(super::RemoveWidget { id: self.widget.id().clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Add widget {}", self.widget.id()), &format!("Widget {} hinzufügen", self.widget.id()))
     }

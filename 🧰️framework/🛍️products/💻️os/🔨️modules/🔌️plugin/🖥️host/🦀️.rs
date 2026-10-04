@@ -98,6 +98,8 @@ pub enum PluginHostError {
         plugin_id: String,
     },
     LockPoisoned(&'static str),
+    /// 🤝️ A guest the host refused to admit, with the framework fault a shell tells as its notice (`plugin.channel-mismatch`).
+    Refused(Box<semio_framework::Fault>),
 }
 
 impl std::fmt::Display for PluginHostError {
@@ -111,6 +113,7 @@ impl std::fmt::Display for PluginHostError {
             Self::IoEntryRouteConflict(conflict) => write!(formatter, "io entry route conflict for {:?} -> {:?}: {} already owns it; {} cannot replace it", conflict.from, conflict.into, conflict.existing_plugin, conflict.incoming_plugin),
             Self::PluginRuntimeConflict { plugin_id } => write!(formatter, "plugin runtime conflict for {plugin_id}"),
             Self::LockPoisoned(name) => write!(formatter, "{name} lock poisoned"),
+            Self::Refused(fault) => write!(formatter, "{}", fault.describe()),
         }
     }
 }
@@ -864,7 +867,7 @@ fn decode_guest_fault_bytes(bytes: &[u8]) -> TurnFault {
     if bytes.len() > GUEST_FAULT_MAXIMUM_BYTES {
         return TurnFault::Host(PluginHostError::Plugin("guest fault exceeds bounded wire capacity".into()));
     }
-    TurnFault::Guest(dsl::decode_fault_bytes(bytes))
+    TurnFault::Guest(semio_framework_diagnostic::decode_fault_bytes(bytes))
 }
 
 fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
@@ -1012,6 +1015,7 @@ impl MockJobStepGate {
 #[cfg(test)]
 pub struct MockGuestRuntime {
     fail_instantiate: AtomicBool,
+    refuse_instantiate: Mutex<Option<semio_framework::Fault>>,
     instantiate_admissions: std::sync::atomic::AtomicUsize,
     drop_admissions: std::sync::atomic::AtomicUsize,
     now_ms: std::sync::atomic::AtomicI64,
@@ -1041,6 +1045,7 @@ impl Default for MockGuestRuntime {
     fn default() -> Self {
         Self {
             fail_instantiate: AtomicBool::new(false),
+            refuse_instantiate: Mutex::new(None),
             instantiate_admissions: std::sync::atomic::AtomicUsize::new(0),
             drop_admissions: std::sync::atomic::AtomicUsize::new(0),
             now_ms: std::sync::atomic::AtomicI64::new(0),
@@ -1088,6 +1093,12 @@ impl MockGuestRuntime {
 
     pub async fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
         self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(Box::new(result)));
+    }
+
+    /// 🤝️ The next `instantiate` refuses the guest at admission with `fault`, as a real runtime refuses a guest of
+    /// another app channel (`PluginHostError::Refused`).
+    pub async fn script_instantiate_refusal(&self, fault: semio_framework::Fault) {
+        *self.refuse_instantiate.lock().expect("mock runtime lock poisoned") = Some(fault);
     }
 
     pub async fn script_guest_fault(&self, actor: RuntimeActorId, fault: semio_framework::Fault) {
@@ -1205,6 +1216,9 @@ impl GuestRuntime for MockGuestRuntime {
 
     async fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         self.instantiate_admissions.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        if let Some(fault) = self.refuse_instantiate.lock().expect("mock runtime lock poisoned").take() {
+            return Err(PluginHostError::Refused(Box::new(fault)));
+        }
         if self.fail_instantiate.swap(false, std::sync::atomic::Ordering::AcqRel) {
             return Err(PluginHostError::Plugin("scripted instance creation failure".into()));
         }
@@ -1418,6 +1432,7 @@ impl Drop for OwnedCodecOriginAssembly<'_> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 enum OwnedOperation {
     Describe,
+    ChannelVersion,
     Poll,
     StartJob,
     StepJob,
@@ -1438,6 +1453,7 @@ impl OwnedOperation {
     fn export(self) -> OwnedSemioExport {
         match self {
             Self::Describe => OwnedSemioExport::Describe,
+            Self::ChannelVersion => OwnedSemioExport::ChannelVersion,
             Self::Poll => OwnedSemioExport::Poll,
             Self::StartJob => OwnedSemioExport::StartJob,
             Self::StepJob => OwnedSemioExport::StepJob,
@@ -1619,7 +1635,9 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id }) })
+        let mut state = OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        admit_owned_channel(&mut state).map_err(turn_fault_host)?;
+        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(state) })
     }
 
     /// 🧊️ `owned`'s codec origin for one call ([`OwnedCodecOriginUse`]). While another call assembles it, this one waits,
@@ -1663,9 +1681,10 @@ impl OwnedRuntime {
         Ok(OwnedCodecOriginUse { origin, spent_fuel: fuel, reported_fuel: fuel })
     }
 
-    /// 🏗️ Runs `codec.pack-schema-hash` for [`OWNED_CODEC_ORIGIN_SCHEMA`] on a fresh instance — every owned codec export
-    /// first assembles the plugin bundle — and keeps the instance it completed on. Its answer, a refusal, is read only to
-    /// know the export completed as the ABI says.
+    /// 🏗️ Admits a fresh instance's channel ([`admit_owned_channel`]: the codec decodes channel-versioned `.spr`, envelope
+    /// and native bytes), then runs `codec.pack-schema-hash` for [`OWNED_CODEC_ORIGIN_SCHEMA`] on it — every owned codec
+    /// export first assembles the plugin bundle — and keeps the instance it completed on. Its answer, a refusal, is read only
+    /// to know the export completed as the ABI says.
     fn assemble_codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOrigin, TurnFault> {
         let actor = owned.artifact.instantiate()?;
         if actor.startup_active() {
@@ -1673,6 +1692,7 @@ impl OwnedRuntime {
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let mut state = OwnedInstanceState { artifact: Arc::clone(&owned.artifact), actor, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
         let invocation = resume_owned_operation_observed(&mut state, OwnedOperation::PackSchemaHash, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation)?;
@@ -1844,7 +1864,7 @@ impl GuestRuntime for OwnedRuntime {
 
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         let state = owned_state_mut(inst)?;
-        let input = dsl::os_pack::json::to_json_string(&OwnedStartJobInput { job, kind, input }).into_bytes();
+        let input = semio_framework_pack_json::to_json_string(&OwnedStartJobInput { job, kind, input }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StartJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000)?;
         decode_owned_result(&invocation.output)
@@ -1852,7 +1872,7 @@ impl GuestRuntime for OwnedRuntime {
 
     async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
         let state = owned_state_mut(inst)?;
-        let input = dsl::os_pack::json::to_json_string(&OwnedStepJobInput { job, budget }).into_bytes();
+        let input = semio_framework_pack_json::to_json_string(&OwnedStepJobInput { job, budget }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StepJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, budget.deadline_ms)?;
         decode_owned_result(&invocation.output)
@@ -1863,7 +1883,7 @@ impl GuestRuntime for OwnedRuntime {
         if state.pending.as_ref().is_some_and(|pending| pending.operation != OwnedOperation::CancelJob) {
             cancel_owned_operation(state)?;
         }
-        let input = dsl::os_pack::json::to_json_string(&OwnedCancelJobInput { job }).into_bytes();
+        let input = semio_framework_pack_json::to_json_string(&OwnedCancelJobInput { job }).into_bytes();
         begin_owned_operation(state, OwnedOperation::CancelJob, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, OWNED_SLICE_DEADLINE_MS)?;
         decode_owned_result(&invocation.output)
@@ -1888,7 +1908,7 @@ impl GuestRuntime for OwnedRuntime {
             None
         };
         let metadata = OwnedCheckpointMetadata { pending: state.pending.clone(), guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
-        let metadata = dsl::os_pack::json::to_json_string(&metadata).into_bytes();
+        let metadata = semio_framework_pack_json::to_json_string(&metadata).into_bytes();
         let actor = state.actor.checkpoint();
         let mut checkpoint = Vec::with_capacity(20 + metadata.len() + actor.len());
         checkpoint.extend_from_slice(OWNED_CHECKPOINT_MAGIC);
@@ -1917,14 +1937,14 @@ impl GuestRuntime for OwnedRuntime {
             return Err(PluginHostError::Plugin("owned host checkpoint length mismatch".to_string()));
         }
         let metadata_text = std::str::from_utf8(&checkpoint[20..metadata_end]).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let metadata: OwnedCheckpointMetadata = dsl::os_pack::json::from_json_str(metadata_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let metadata: OwnedCheckpointMetadata = semio_framework_pack_json::from_json_str(metadata_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         state.actor = state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         state.pending = metadata.pending;
         state.context = metadata.context;
         state.next_resource = metadata.next_resource;
         state.instance_id = metadata.instance_id;
         if let Some(guest_checkpoint) = metadata.guest_checkpoint {
-            let input = dsl::os_pack::json::to_json_string(&OwnedRestoreInput { state: guest_checkpoint }).into_bytes();
+            let input = semio_framework_pack_json::to_json_string(&OwnedRestoreInput { state: guest_checkpoint }).into_bytes();
             begin_owned_operation(state, OwnedOperation::Restore, Some(input)).map_err(turn_fault_host)?;
             let invocation = resume_owned_operation(state, OwnedOperation::Restore, 100_000_000, 1_000).map_err(turn_fault_host)?;
             decode_owned_result::<()>(&invocation.output).map_err(turn_fault_host)?;
@@ -2279,6 +2299,21 @@ fn write_owned_memory(actor: &mut OwnedSemioInstance, pointer: i32, bytes: &[u8]
     Ok(())
 }
 
+/// 🤝️ Fuel and wall bound of the owned `semio_owned_channel_version_v1` read at instantiation: one JSON integer, never a turn.
+const OWNED_CHANNEL_VERSION_FUEL: u64 = 1_000_000;
+const OWNED_CHANNEL_VERSION_DEADLINE_MS: u32 = 5_000;
+
+/// 🔖️ Reads a fresh owned instance's `semio_owned_channel_version_v1` once and admits it through the one kernel admission
+/// ([`protocol::admit_guest_channel_version`]) before the instance serves anything — an actor turn or a codec call —
+/// so a guest of another channel is refused as `PluginHostError::Refused` (`plugin.channel-mismatch`).
+fn admit_owned_channel(state: &mut OwnedInstanceState) -> Result<(), TurnFault> {
+    begin_owned_operation(state, OwnedOperation::ChannelVersion, None)?;
+    let invocation = resume_owned_operation(state, OwnedOperation::ChannelVersion, OWNED_CHANNEL_VERSION_FUEL, OWNED_CHANNEL_VERSION_DEADLINE_MS)?;
+    let guest: u32 = serde_json::from_slice(&invocation.output).map_err(|error| PluginHostError::Json(error.to_string()))?;
+    protocol::admit_guest_channel_version(guest, protocol::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
+    Ok(())
+}
+
 fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
     let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
     result.map_err(|error| decode_guest_fault_bytes(&error))
@@ -2548,9 +2583,9 @@ impl wit_host_async::Host for ActorHostState {
 /// `AsyncActorHostState` (24 real implementations, dispatching straight onto `AsyncServices`),
 /// mounted by the `async-plugin-runtime` packet.
 async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::ToValue::to_value(&dsl::Fault::new(
-        dsl::FaultOrigin::Os,
-        dsl::FaultCode::new("host-async.poll-backed"),
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&semio_framework_diagnostic::Fault::new(
+        semio_framework_diagnostic::FaultOrigin::Os,
+        semio_framework_diagnostic::FaultCode::new("host-async.poll-backed"),
         format!("host-async {name} cannot be awaited directly on the poll-backed WasmtimeRuntime — emit the matching `effect` from `poll` and await its `event.completed` on a later turn"),
     )))
 }
@@ -2741,7 +2776,7 @@ impl WasmtimeRuntime {
         let encoding = match encoding { "binary" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
         let limits = wit_snapshot_limits(limits);
         let output = observe_sqlite_guest(store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_export(accessor, dialect.to_string(), encoding, payload.to_vec(), limits).await), &self.epoch, deadline, progress, cancellation).await?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)?;
-        Ok(match output { actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(sqlite_wire::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }) })
+        Ok(match output { actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Done(output) => sqlite_wire::SnapshotFileResult::Done(sqlite_wire::SnapshotFile { bytes: output.bytes, diagnostics: output.diagnostics }), actor_bindings::exports::semio::framework::codec::SnapshotFileResult::Rejected(output) => sqlite_wire::SnapshotFileResult::Rejected(wit_snapshot_rejection(output)) })
     }
 
     /// 📥️ Reconstructs a native snapshot from the exact declared semantic SQLite schema.
@@ -2757,7 +2792,7 @@ impl WasmtimeRuntime {
                 let encoding = match output.encoding { actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary => "binary", actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text => "text" }.to_string();
                 sqlite_wire::SnapshotPayloadResult::Done(sqlite_wire::SnapshotPayload { encoding, bytes: output.bytes, diagnostics: output.diagnostics })
             }
-            actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(sqlite_wire::SnapshotRejection { message: output.message, diagnostics: output.diagnostics }),
+            actor_bindings::exports::semio::framework::codec::SnapshotPayloadResult::Rejected(output) => sqlite_wire::SnapshotPayloadResult::Rejected(wit_snapshot_rejection(output)),
         })
     }
 
@@ -2886,9 +2921,17 @@ async fn observe_sqlite_guest<F: std::future::Future>(future: F, epoch: &EpochDe
     }
 }
 
+/// 🏷️ Restores the actual codec ABI's complete closed provider authority.
+fn wit_snapshot_rejection(value: actor_bindings::exports::semio::framework::codec::SnapshotRejection) -> sqlite_wire::SnapshotRejection {
+    use actor_bindings::exports::semio::framework::codec::ValueRefusalKind as Wire;
+    use semio_framework_value::ValueRefusalKind as Native;
+    let kind = match value.kind { Wire::InvalidValue => Native::InvalidValue, Wire::Canceled => Native::Canceled, Wire::OwnershipLimit => Native::OwnershipLimit, Wire::AllocationFailed => Native::AllocationFailed, Wire::WorkLimit => Native::WorkLimit, Wire::DepthLimit => Native::DepthLimit, Wire::UnsupportedOwner => Native::UnsupportedOwner, Wire::InvariantViolated => Native::InvariantViolated };
+    sqlite_wire::SnapshotRejection { kind, message: value.message, diagnostics: value.diagnostics }
+}
+
 fn wit_snapshot_limits(value: semio_framework::sqlite_snapshot::SqliteDatabaseLimits) -> actor_bindings::exports::semio::framework::codec::SnapshotLimits {
     let value = sqlite_wire::SnapshotLimits::from(value);
-    actor_bindings::exports::semio::framework::codec::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
+    actor_bindings::exports::semio::framework::codec::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_allocation_bytes: value.max_allocation_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
 }
 
 //#region 🗂️GuestCodecDispatch
@@ -3037,6 +3080,8 @@ impl GuestRuntime for WasmtimeRuntime {
         self.epoch.install(&mut store, Arc::clone(&deadline));
         let _epoch = self.epoch.arm(&mut store, &deadline, budget.deadline_ms as u64);
         let bindings = actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let guest = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_channel_version(accessor).await).await.and_then(|inner| inner).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        protocol::admit_guest_channel_version(guest, protocol::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id, deadline }) })
     }
 
@@ -3569,7 +3614,10 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
         E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
         E::VideoRenderExport(inner) => Effect::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default() },
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
-        E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
+        E::RequestFileOpen(inner) => {
+            let args = match inner.params.args { Some(bytes) => decode_dsl(&bytes).await, None => None };
+            Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: inner.params.import_action, multiple: inner.params.multiple, args }
+        },
         E::RequestMediaFrames(inner) => {
             let args = match inner.params.args {
                 Some(bytes) => decode_dsl(&bytes).await,
@@ -5887,8 +5935,8 @@ impl PluginInstanceHandle {
             payload: semio_framework::io_schema::IoPayload,
         }
         let payload_text = std::str::from_utf8(&payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
+        let io_payload: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = semio_framework_pack_json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
         self.run_job_on_worker("semio.io-run", input, semio_framework_job::root_cancel_token()).await
     }
 
@@ -5903,8 +5951,8 @@ impl PluginInstanceHandle {
             payload: semio_framework::io_schema::IoPayload,
         }
         let payload_text = std::str::from_utf8(payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let io_payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let input = dsl::os_pack::json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
+        let io_payload: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let input = semio_framework_pack_json::to_json_string(&IoRunInputWire { source: from, target: into, payload: io_payload }).into_bytes();
         let result = self.run_job_on_worker("semio.io-sniff", input, semio_framework_job::root_cancel_token()).await?;
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
@@ -5946,7 +5994,7 @@ impl PluginInstanceHandle {
             to: &'a str,
             pack: Vec<u8>,
         }
-        let input = dsl::os_pack::json::to_json_string(&MigrateInputWire { from, to, pack }).into_bytes();
+        let input = semio_framework_pack_json::to_json_string(&MigrateInputWire { from, to, pack }).into_bytes();
         self.run_job_on_worker("semio.migrate", input, semio_framework_job::root_cancel_token()).await
     }
 
@@ -5966,7 +6014,7 @@ impl PluginInstanceHandle {
             key: Vec<u8>,
             sources: Vec<u8>,
         }
-        let input = dsl::os_pack::json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
+        let input = semio_framework_pack_json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
         self.run_job_on_worker("semio.compose", input, semio_framework_job::root_cancel_token()).await
     }
 }
@@ -6467,7 +6515,7 @@ impl IoRouter {
     /// further host change.
     pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let key_text = std::str::from_utf8(key_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let key: semio_framework::IoKey = dsl::os_pack::json::from_json_str(key_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let key: semio_framework::IoKey = semio_framework_pack_json::from_json_str(key_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let handle = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let owner = state
@@ -6498,7 +6546,7 @@ impl IoRouter {
             .filter(|key| key.artifact_kind == artifact_kind && key.direction == direction)
             .map(|key| semio_framework::ArtifactDialect { artifact_kind: key.format_kind.clone(), standard: key.format_standard.clone(), subset: key.format_subset.clone() })
             .collect();
-        Ok(dsl::os_pack::json::to_json_string(&dialects).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(&dialects).into_bytes())
     }
 
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the deterministic, ≤3-hop,
@@ -6510,7 +6558,7 @@ impl IoRouter {
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
         drop(state);
-        Ok(dsl::os_pack::json::to_json_string(&route).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(&route).into_bytes())
     }
 
     /// 🌉️ Executes the WHOLE resolved `from -> into` route — the WIT `io-run` host import. Resolves
@@ -6567,7 +6615,7 @@ impl IoRouter {
     /// external async accessors, so the sort key is precomputed before the sync `sort_by`.
     pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let payload_text = std::str::from_utf8(&payload_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let payload: semio_framework::io_schema::IoPayload = dsl::os_pack::json::from_json_str(payload_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let payload: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
             semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
             semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
@@ -6598,7 +6646,7 @@ impl IoRouter {
         }
         decorated.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
         let found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = decorated.into_iter().map(|(_, _, dialect, confidence)| (dialect, confidence)).collect();
-        Ok(dsl::os_pack::json::to_json_string(&found).into_bytes())
+        Ok(semio_framework_pack_json::to_json_string(&found).into_bytes())
     }
 
     /// ✂️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): drops
@@ -6756,7 +6804,7 @@ impl ArtifactInferenceRouter {
     /// and passes the roster in; `handle` is kept only for later `infer()` dispatch.
     pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let roster_text = std::str::from_utf8(roster_wire_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let metadata: Vec<GuestArtifactInferenceMetadata> = dsl::os_pack::json::from_json_str(roster_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let metadata: Vec<GuestArtifactInferenceMetadata> = semio_framework_pack_json::from_json_str(roster_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         for item in &metadata {
             if let Some(contributor) = &item.contributor {
                 if contributor != &item.owner {
@@ -6795,7 +6843,7 @@ impl ArtifactInferenceRouter {
 
     pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let identity: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let identity: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         {
             let mut live = self.live_commits.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?;
             if live.insert(identity.cancellation_id.clone(), (identity.revision, identity.generation)).is_some() {
@@ -6831,9 +6879,12 @@ impl ArtifactInferenceRouter {
 
     /// 🕸️ Contract §6: before dispatching to the owner/contributor's own `artifact-infer`, resolves
     /// this route's `depends_on` (same `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own
-    /// doc) by recursively computing each dependency's OWN result first, injecting the pairs into
+    /// doc) by recursively computing each dependency's OWN result first, appending the pairs to
     /// `dependencies: Vec<(inference_schema, result_wire_bytes)>` on the outgoing request — exactly
-    /// the WIT `artifact-inference-request.dependencies: list<tuple<string, list<u8>>>` shape.
+    /// the WIT `artifact-inference-request.dependencies: list<tuple<string, list<u8>>>` shape. The
+    /// requester's own entries — a composed document's owned children (design §20.15,
+    /// `semio_framework_plugin::inference_child_dependency`) — stay first and reach every dependency
+    /// request too ([`routed_inference_dependencies`]).
     /// `visited` is the runtime counterpart of `register_plugin`'s registration-time toposort — a
     /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what
     /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
@@ -6844,7 +6895,7 @@ impl ArtifactInferenceRouter {
     /// `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
     async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>, cancel: &semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let mut route: InferenceRouteRequest = dsl::os_pack::json::from_json_str(request_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let mut route: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         if visited.contains(&route.inference_schema) {
             return Err(PluginHostError::Plugin(format!("inference dependency cycle at call time: {} -> {}", visited.join(" -> "), route.inference_schema)));
         }
@@ -6868,19 +6919,19 @@ impl ArtifactInferenceRouter {
                         .ok_or_else(|| PluginHostError::Plugin(format!("inference `{}` declares depends_on `{dependency_schema}` which is not registered for artifact kind `{}`", route.inference_schema, route.artifact_kind)))?
                 };
                 let dependency_request = build_dependency_inference_request(&route, &dependency_metadata).await;
-                let dependency_request_bytes = dsl::os_pack::json::to_json_string(&dependency_request).into_bytes();
+                let dependency_request_bytes = semio_framework_pack_json::to_json_string(&dependency_request).into_bytes();
                 let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited, cancel)).await?;
                 dependencies.push((dependency_schema.clone(), dependency_result_bytes));
             }
             visited.pop();
-            route.dependencies = dependencies;
+            route.dependencies = routed_inference_dependencies(std::mem::take(&mut route.dependencies), dependencies);
         }
 
-        let request = dsl::os_pack::json::to_json_string(&route).into_bytes();
+        let request = semio_framework_pack_json::to_json_string(&route).into_bytes();
         let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
         let result = handle.infer(&request, cancel).await?;
         let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let echoed: InferenceRouteResult = dsl::os_pack::json::from_json_str(result_text).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let echoed: InferenceRouteResult = semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;
         Ok(result)
     }
@@ -6947,7 +6998,8 @@ fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (Stri
 /// `source_dialect`/`policy`/`budgets`/`cancellation_id`/`requested_cache_mode`/`canonical_payload`)
 /// are inherited from the parent request — the same underlying artifact source, viewed through a
 /// different inference facet. `previous_state` always starts fresh (`None`): each dependency
-/// resolves its own current result, not a cached delta.
+/// resolves its own current result, not a cached delta. The requester's own `dependencies` (a composed
+/// document's owned children, design §20.15) are caller context too, so they travel unchanged.
 async fn build_dependency_inference_request(base: &InferenceRouteRequest, dependency: &GuestArtifactInferenceMetadata) -> InferenceRouteRequest {
     InferenceRouteRequest {
         wire_version: base.wire_version,
@@ -6968,8 +7020,14 @@ async fn build_dependency_inference_request(base: &InferenceRouteRequest, depend
         previous_state: None,
         requested_cache_mode: base.requested_cache_mode.clone(),
         canonical_payload: base.canonical_payload.clone(),
-        dependencies: Vec::new(),
+        dependencies: base.dependencies.clone(),
     }
+}
+
+/// 🪆️ The dependencies one routed request carries: the requester's own entries (a composed document's owned children, design
+/// §20.15), first and unchanged, then the `depends_on` results the router resolved for it.
+fn routed_inference_dependencies(requested: Vec<(String, Vec<u8>)>, resolved: Vec<(String, Vec<u8>)>) -> Vec<(String, Vec<u8>)> {
+    requested.into_iter().chain(resolved).collect()
 }
 
 async fn validate_inference_echo(request: &InferenceRouteRequest, result: &InferenceRouteResult) -> Result<(), PluginHostError> {
@@ -7239,13 +7297,13 @@ pub struct HostArtifactMutationPlanResult {
 /// idiom `WasmPluginRuntime::read_manifest` already uses, mirrored here for the two new
 /// `contributor` wire calls (contract §6): the guest's own `encode_wire_serialized` (`🔌️plugin/
 /// 🦀️.rs`) is `store::pack_rt::encode_wire_value(&to_dsl_value(value))`, NOT plain JSON.
-async fn decode_wire_dsl<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, PluginHostError> {
+async fn decode_wire_dsl<T: semio_framework_value::FromValue>(bytes: &[u8]) -> Result<T, PluginHostError> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     let value = store::pack_rt::renormalize_whole_number_floats(value);
     semio_framework_value::FromValue::from_value(value).map_err(|error| PluginHostError::Plugin(error.to_string()))
 }
 
-async fn encode_wire_dsl<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, PluginHostError> {
+async fn encode_wire_dsl<T: semio_framework_value::ToValue>(value: &T) -> Result<Vec<u8>, PluginHostError> {
     let dsl_value = semio_framework_value::ToValue::to_value(value);
     Ok(store::pack_rt::encode_wire_value(&dsl_value))
 }
@@ -7419,8 +7477,8 @@ mod artifact_mutation_router_tests;
 
 //#region 🔖️InstanceDirectory
 /// 🗺️ `ArtifactRef ↔ (plugin_id, instance_id, artifact_kind)` — genuinely new (scout-2 §3: "there
-/// is no instance directory" before this ticket). Populated at `instantiate-app`/`Hello`/
-/// `LoadDocument` (see `WasmPluginRuntime::create_app` and `HostState::pre_adopt_command_packs`'s
+/// is no instance directory" before this ticket). Populated at `instantiate-app` and at every
+/// document load (see `WasmPluginRuntime::create_app` and `HostState::pre_adopt_command_packs`'s
 /// hooks below) and consulted by `HostTransactionCoordinator` to resolve a `ForeignStep.target`
 /// into a live instance. Keyed by plain artifact-id strings (not the full `io::ArtifactRef`, which
 /// requires an `ArtifactDialect` not always resolvable at bind time) — callers that have a real
@@ -7448,7 +7506,7 @@ impl InstanceDirectory {
     }
 
     /// 📌️ Binds `artifact_id` to `(plugin_id, instance_id, artifact_kind)`, replacing any prior
-    /// binding for the SAME `artifact_id` — a `Hello`/`LoadDocument` re-bind on the same instance
+    /// binding for the SAME `artifact_id` — a re-bind after a document load on the same instance
     /// is expected to be idempotent, not an error (unlike the mutation/inference routers' conflict
     /// rule, this is a live pointer table, not a registration ledger).
     pub async fn bind(&self, artifact_id: &str, plugin_id: &str, instance_id: u32, artifact_kind: &str) -> Result<(), PluginHostError> {
@@ -7583,7 +7641,6 @@ async fn payload_hash_of(bytes: &[u8]) -> protocol::PayloadHash {
 /// ride in one `prepared_ops` list regardless of how many `ForeignStep`s targeted this member.
 struct MemberDraft {
     prepared_ops: Vec<Vec<u8>>,
-    label: String,
     origin: protocol::MutationOrigin,
 }
 
@@ -7634,7 +7691,6 @@ impl HostTransactionCoordinator {
         mut plan_contributed: impl FnMut(&str, &str, &str, &TransactionMember, &[u8]) -> Result<HostArtifactMutationPlanResult, TransactionError>,
         initiator: TransactionMember,
         local_ops: Vec<Vec<u8>>,
-        description: String,
         foreign: Vec<protocol::ForeignStep>,
     ) -> Result<TransactionOutcome, TransactionError> {
         let txn_id = self.mint_txn_id(&initiator).await;
@@ -7650,7 +7706,7 @@ impl HostTransactionCoordinator {
 
         let mut discovery_order: Vec<TransactionMember> = vec![initiator.clone()];
         let mut drafts: BTreeMap<(String, u32), MemberDraft> = BTreeMap::new();
-        drafts.insert((initiator.plugin_id.clone(), initiator.instance_id), MemberDraft { prepared_ops: local_ops, label: description, origin: protocol::MutationOrigin::Owner });
+        drafts.insert((initiator.plugin_id.clone(), initiator.instance_id), MemberDraft { prepared_ops: local_ops, origin: protocol::MutationOrigin::Owner });
 
         let mut visited: std::collections::HashSet<(String, String, [u8; 32])> = std::collections::HashSet::new();
         let mut frontier: Vec<protocol::ForeignStep> = foreign;
@@ -7685,13 +7741,13 @@ impl HostTransactionCoordinator {
 
                 match ownership {
                     MutationOwnership::Owner { .. } => {
-                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), label: step.label.clone(), origin: protocol::MutationOrigin::Transaction { initiator: initiator_target.clone() } });
+                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), origin: protocol::MutationOrigin::Transaction { initiator: initiator_target.clone() } });
                         draft.prepared_ops.push(step.payload.clone());
                     }
                     MutationOwnership::Contributed { plugin_id: contributor } => {
                         let plan = plan_contributed(&contributor, &location.artifact_kind, &step.mutation_id.0, &member, &step.payload)?;
                         let origin = protocol::MutationOrigin::Contributed { plugin_id: contributor.clone(), mutation_id: step.mutation_id.clone(), payload_hash: payload_hash_of(&step.payload).await };
-                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), label: plan.label.clone(), origin: origin.clone() });
+                        let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), origin: origin.clone() });
                         draft.prepared_ops.extend(plan.owner_ops);
                         draft.origin = origin;
                         next_frontier.extend(plan.foreign);
@@ -7719,7 +7775,6 @@ impl HostTransactionCoordinator {
                 mutation_id: String::new(),
                 payload: Vec::new(),
                 prepared_ops: draft.prepared_ops.clone(),
-                label: draft.label.clone(),
                 origin: origin_bytes,
                 prepared_child_ops: Vec::new(),
             };
@@ -7740,7 +7795,7 @@ impl HostTransactionCoordinator {
                     prepared.push(member.clone());
                 }
                 Some(rejection_bytes) => {
-                    let fault = dsl::decode_fault_bytes(&rejection_bytes);
+                    let fault = semio_framework_diagnostic::decode_fault_bytes(&rejection_bytes);
                     rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} rejected prepare (`{}`): {}", member.plugin_id, member.instance_id, fault.code.0, fault.message)).await);
                     break;
                 }
@@ -8069,6 +8124,10 @@ mod opening_resolver_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️poll-turn-memory/🦀️.rs"]
 mod poll_turn_memory_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/⚠️refusal/🦀️.rs"]
+mod sqlite_refusal_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

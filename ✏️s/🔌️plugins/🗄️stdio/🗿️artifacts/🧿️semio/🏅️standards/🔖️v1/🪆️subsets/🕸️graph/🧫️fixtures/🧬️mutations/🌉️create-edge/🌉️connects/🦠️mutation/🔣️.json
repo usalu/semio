@@ -10,6 +10,9 @@
       "value": "b"
     },
     "kind": "data",
-    "label": "A to B"
+    "label": "A to B",
+    "source_port": null,
+    "target_port": null,
+    "properties": []
   }
 }

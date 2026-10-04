@@ -188,6 +188,7 @@
     "async-typegen",
     "dev-distribution-bundle",
     "flow-browser-package",
+    "flow-graph-catalog",
     "framework-manifest",
     "graph-catalog",
     "jco-package-adapter",
@@ -204,5 +205,49 @@
     "ui-axes",
     "ui-contract",
     "wgpu-frame-worker"
+  ],
+  "ownerExecutionRoutes": [
+    {
+      "id": "direct-owner",
+      "cwd": "compiler",
+      "command": "bun ./📜️script.ts preview-generated",
+      "valid": true
+    },
+    {
+      "id": "native-owner",
+      "cwd": ".",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd compiler -- bun ./📜️script.ts preview-generated",
+      "valid": true
+    },
+    {
+      "id": "foreign-manifest",
+      "cwd": ".",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest foreign/Cargo.toml --cwd compiler -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "foreign-cwd",
+      "cwd": ".",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd foreign -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "foreign-script",
+      "cwd": ".",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd compiler -- bun ./foreign.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "wrong-operation",
+      "cwd": ".",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd compiler -- bun ./📜️script.ts generate",
+      "valid": false
+    },
+    {
+      "id": "misplaced-wrapper",
+      "cwd": "compiler",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd compiler -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    }
   ]
 }

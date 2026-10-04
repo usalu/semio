@@ -6,7 +6,7 @@
 //! response or a `CallToolResult{isError:true}` payload from a `GatewayError`), never the reverse,
 //! so a future backend crate can construct one without pulling in JSON-RPC framing at all.
 
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️GatewayErrorCode

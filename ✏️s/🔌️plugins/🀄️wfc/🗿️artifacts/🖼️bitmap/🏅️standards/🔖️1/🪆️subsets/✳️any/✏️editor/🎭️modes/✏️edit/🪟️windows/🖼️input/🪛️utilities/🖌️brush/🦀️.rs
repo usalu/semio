@@ -15,7 +15,7 @@ use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
+use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 
 pub const UTILITY_ID: &str = "brush";
 
@@ -29,42 +29,6 @@ pub const BITMAP_BRUSH_TOOL_KEY: &str = "stroke:0";
 pub fn definition() -> UtilityDefinition {
     UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(UTILITY_ID, LocalizedLabel::native("Brush", "Pinsel"), "paintbrush") }
 }
-
-//#region 🎚️Phase
-/// 🎚️ Where one `paint-stroke` dispatch sits in a stroke: a one-shot `Once`, a `Stream` tick into the window's open
-/// transaction, the `Commit` that ends it, or a host `Abort` with its reason.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BitmapStrokePhase {
-    Once,
-    Stream,
-    Commit,
-    Abort(ToolAbortReason),
-}
-
-impl BitmapStrokePhase {
-    /// 🧩️ Reads `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason` (`blur`,
-    /// `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
-    pub fn parse(phase: Option<&str>, reason: Option<&str>) -> Option<Self> {
-        match phase {
-            None => Some(Self::Once),
-            Some("stream") => Some(Self::Stream),
-            Some("commit") => Some(Self::Commit),
-            Some("abort") => reason.map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
-            Some(_) => None,
-        }
-    }
-
-    /// 🔤️ The wire spelling of this phase (`None` for a one-shot).
-    pub fn as_str(self) -> Option<&'static str> {
-        match self {
-            Self::Once => None,
-            Self::Stream => Some("stream"),
-            Self::Commit => Some("commit"),
-            Self::Abort(_) => Some("abort"),
-        }
-    }
-}
-//#endregion 🎚️Phase
 
 //#region 🛠️BrushTool
 /// 📨️ One brush event: the stroke points this dispatch carries and the colour, plus the extent of the committed
@@ -192,32 +156,30 @@ impl machine::Host<brush_tool::BrushTool> for BrushToolHost {
     }
 }
 
-/// ⏰️ The host clock a brush event runs on, so a transaction id minted at the first upsert is unique per admission
-/// and per moment.
-pub fn bitmap_brush_tool_clock() -> protocol::HybridLogicalTimestamp {
-    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
-}
-
-/// 🛠️ One window's brush tool for one dispatch: started at rest, or resumed from the stroke its window transient
-/// persisted, driven by one event or one host abort, and persisted back while its transaction is open.
+/// 🛠️ One window's brush tool for one dispatch, driven by the shared streamed-gesture runner ([`drive_gesture`]): started
+/// at rest, or resumed from the stroke its window transient persisted, and persisted back while its transaction is open.
+/// A stroke never meets a moved base: its leaf names cells and a colour, so it repaints on any sample.
 pub struct BitmapBrushTool {
     runner: ToolMachineRunner<brush_tool::BrushTool, BrushToolHost>,
     authoring_seed: String,
 }
 
-impl BitmapBrushTool {
-    /// 🚀️ The tool at rest, for `<appId>#paint-stroke` under this admission's seed.
-    pub fn start(authoring_seed: &str) -> Result<Self, ToolRefusal> {
+impl GestureTool for BitmapBrushTool {
+    type Gesture = BitmapBrushToolState;
+    type Tick = BrushToolRequest;
+    type Mutation = BitmapMutation;
+
+    fn start(_verb: &str, authoring_seed: &str, _base_revision: &str) -> Result<Self, ToolRefusal> {
         let runner = ToolMachineRunner::start(bitmap_brush_tool_id(), protocol::ActorId(authoring_seed.to_string()), BrushToolContext::default(), BrushToolHost)?;
         Ok(Self { runner, authoring_seed: authoring_seed.to_string() })
     }
 
     /// ⏯️ The stroke a window transient persisted, restored by stable ids with its open transaction; a state the
-    /// current chart cannot restore is refused (`Closed`), so the caller drops it with zero trace.
-    pub fn resume(state: &BitmapBrushToolState) -> Result<Self, ToolRefusal> {
+    /// current chart cannot restore is refused (`Closed`), so the runner drops it with zero trace.
+    fn resume(state: &BitmapBrushToolState) -> Result<Self, ToolRefusal> {
         let definition = <brush_tool::BrushTool as machine::Machine>::definition();
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let leaf: BitmapMutation = dsl::FromValue::from_value(state.stroke.clone()).map_err(|_| ToolRefusal::Closed)?;
+        let leaf: BitmapMutation = semio_framework_value::FromValue::from_value(state.stroke.clone()).map_err(|_| ToolRefusal::Closed)?;
         let BitmapMutation::PaintInputStroke(stroke) = leaf.clone() else { return Err(ToolRefusal::Closed) };
         let snapshot = machine::restore::<brush_tool::BrushTool, machine::NoMigrations>(&persisted, BrushToolContext { stroke: Some(stroke) }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction.clone(), vec![(BITMAP_BRUSH_TOOL_KEY.to_string(), leaf)]);
@@ -225,27 +187,35 @@ impl BitmapBrushTool {
         Ok(Self { runner, authoring_seed: state.authoring_seed.clone() })
     }
 
-    /// 🛋️ Whether the tool rests (no stroke in flight).
-    pub fn at_rest(&self) -> bool {
-        self.runner.at_rest()
+    fn verb(&self) -> &str {
+        BITMAP_PAINT_STROKE_VERB
     }
 
-    /// 📨️ Runs one event on the host clock.
-    pub fn send(&mut self, event: brush_tool::Event) -> Result<ToolStep<BitmapMutation>, ToolRefusal> {
-        self.runner.send(event, bitmap_brush_tool_clock())
+    fn base_revision(&self) -> &str {
+        ""
     }
 
-    /// 🧯️ Host abort: the open transaction vanishes with zero trace and the tool rests.
-    pub fn abort(&mut self, reason: ToolAbortReason) -> ToolStep<BitmapMutation> {
-        self.runner.abort(reason)
+    fn abort(&mut self, reason: ToolAbortReason) {
+        self.runner.abort(reason);
+    }
+
+    fn send(&mut self, phase: GesturePhase, tick: Option<BrushToolRequest>) -> Result<ToolStep<BitmapMutation>, ToolRefusal> {
+        let event = match (phase, tick) {
+            (GesturePhase::Abort(_), _) => brush_tool::Event::Cancel,
+            (_, None) => return Ok(ToolStep::Idle),
+            (GesturePhase::Once, Some(request)) => brush_tool::Event::Stroke(request),
+            (GesturePhase::Stream, Some(request)) => brush_tool::Event::Stream(request),
+            (GesturePhase::Commit, Some(request)) => brush_tool::Event::Finish(request),
+        };
+        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
     }
 
     /// 💾️ The state to persist in the window transient: `Some` only while a transaction is open.
-    pub fn persist(self) -> Option<BitmapBrushToolState> {
+    fn persist(self) -> Option<BitmapBrushToolState> {
         let (snapshot, transaction) = self.runner.into_parts();
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let (_, leaf) = transaction.entries().iter().find(|(key, _)| key == BITMAP_BRUSH_TOOL_KEY)?;
-        Some(BitmapBrushToolState { states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed, transaction: transaction.reference().clone(), stroke: dsl::ToValue::to_value(leaf) })
+        Some(BitmapBrushToolState { states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed, transaction: transaction.reference().clone(), stroke: semio_framework_value::ToValue::to_value(leaf) })
     }
 }
 
@@ -254,46 +224,22 @@ pub fn bitmap_brush_tool_id() -> String {
     format!("{}#{BITMAP_PAINT_STROKE_VERB}", crate::editor::bitmap::BITMAP_EDITOR_CONTROLLER_ID)
 }
 
-/// 🧮️ What one `paint-stroke` dispatch does to the window's brush: its committed transaction (the stroke's ONE leaf
-/// and its ref) when the dispatch ends a stroke that paints something, and the window transient to publish. A
-/// one-shot interrupts an open stream (`captureLost`); a host abort, an unrestorable state, a stroke that paints no
-/// cell and a cancel all leave zero trace.
-pub fn bitmap_brush_dispatch(phase: BitmapStrokePhase, request: BrushToolRequest, transient: &BitmapInputWindowTransient, authoring_seed: &str) -> (Option<(protocol::TransactionRef, Vec<BitmapMutation>)>, BitmapInputWindowTransient) {
-    let resumed = transient.brush.as_deref().and_then(|state| BitmapBrushTool::resume(state).ok());
-    let rested = BitmapInputWindowTransient { brush: None };
-    let mut tool = match (phase, resumed) {
-        (BitmapStrokePhase::Abort(reason), Some(mut tool)) => {
-            let _ = tool.abort(reason);
-            return (None, rested);
-        }
-        (BitmapStrokePhase::Abort(_), None) => return (None, rested),
-        (BitmapStrokePhase::Once, Some(mut tool)) => {
-            let _ = tool.abort(ToolAbortReason::CaptureLost);
-            tool
-        }
-        (_, Some(tool)) => tool,
-        (_, None) => match BitmapBrushTool::start(authoring_seed) {
-            Ok(tool) => tool,
-            Err(_) => return (None, rested),
-        },
-    };
-    let event = match phase {
-        BitmapStrokePhase::Once => brush_tool::Event::Stroke(request),
-        BitmapStrokePhase::Stream => brush_tool::Event::Stream(request),
-        BitmapStrokePhase::Commit => brush_tool::Event::Finish(request),
-        BitmapStrokePhase::Abort(_) => brush_tool::Event::Cancel,
-    };
-    match tool.send(event) {
-        Ok(ToolStep::Committed(reference, mutations)) => (Some((reference, mutations)), rested),
-        Ok(ToolStep::Open) => (None, BitmapInputWindowTransient { brush: tool.persist().map(Box::new) }),
-        Ok(ToolStep::Idle | ToolStep::Aborted(..) | ToolStep::Empty(_)) | Err(_) => (None, rested),
+/// 🧮️ What one `paint-stroke` dispatch does to the window's brush, on the shared streamed-gesture runner: its committed
+/// transaction (the stroke's ONE leaf and its ref) when the dispatch ends a stroke that paints something, and the window
+/// transient to publish. A one-shot interrupts an open stream (`captureLost`); a host abort, an unrestorable state, a
+/// stroke that paints no cell and a cancel all leave zero trace.
+pub fn bitmap_brush_dispatch(phase: GesturePhase, request: BrushToolRequest, transient: &BitmapInputWindowTransient, authoring_seed: &str) -> (Option<(protocol::TransactionRef, Vec<BitmapMutation>)>, BitmapInputWindowTransient) {
+    let drive = drive_gesture::<BitmapBrushTool>(transient.brush.as_deref(), BITMAP_PAINT_STROKE_VERB, phase, Some(request), authoring_seed, "");
+    match drive.committed {
+        Some(committed) => (Some(committed), BitmapInputWindowTransient { brush: None }),
+        None => (None, BitmapInputWindowTransient { brush: drive.next.map_or_else(|| transient.brush.clone(), |next| next.map(Box::new)) }),
     }
 }
 
 /// 👁️ The sample a window paints while its brush holds an open stroke: the provisional leaf applied to `document` —
 /// a preview only this window sees, never history. `None` at rest or when the leaf paints nothing.
 pub fn bitmap_brush_preview(document: &BitmapSnapshot, transient: &BitmapInputWindowTransient) -> Option<BitmapSnapshot> {
-    let leaf: BitmapMutation = dsl::FromValue::from_value(transient.brush.as_ref()?.stroke.clone()).ok()?;
+    let leaf: BitmapMutation = semio_framework_value::FromValue::from_value(transient.brush.as_ref()?.stroke.clone()).ok()?;
     let mut preview = document.clone();
     apply_bitmap_mutation(&mut preview, &leaf).ok()?;
     (preview != *document).then_some(preview)
@@ -314,7 +260,7 @@ pub enum BitmapBrushPointer {
 /// release left open is dropped first (`interrupt`, zero trace) because a fresh press opens a new one.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BitmapBrushPointerStroke {
-    pub phase: BitmapStrokePhase,
+    pub phase: GesturePhase,
     pub points: Vec<BitmapStrokePoint>,
     pub interrupt: bool,
 }
@@ -346,16 +292,16 @@ pub fn bitmap_brush_pointer_stroke(pointer: &BitmapBrushPointer, width: u32, hei
     match pointer {
         BitmapBrushPointer::Down { world, button: 0 } => {
             let points = cells(world.as_slice());
-            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Stream, points, interrupt: open })
+            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: GesturePhase::Stream, points, interrupt: open })
         }
         BitmapBrushPointer::Down { .. } => None,
         BitmapBrushPointer::Move { samples } if open => {
             let points = cells(samples);
-            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Stream, points, interrupt: false })
+            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: GesturePhase::Stream, points, interrupt: false })
         }
         BitmapBrushPointer::Move { .. } => None,
-        BitmapBrushPointer::Up { cancelled: true, .. } if open => Some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Abort(ToolAbortReason::CaptureLost), points: Vec::new(), interrupt: false }),
-        BitmapBrushPointer::Up { world, cancelled: false } if open => Some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Commit, points: cells(world.as_slice()), interrupt: false }),
+        BitmapBrushPointer::Up { cancelled: true, .. } if open => Some(BitmapBrushPointerStroke { phase: GesturePhase::Abort(ToolAbortReason::CaptureLost), points: Vec::new(), interrupt: false }),
+        BitmapBrushPointer::Up { world, cancelled: false } if open => Some(BitmapBrushPointerStroke { phase: GesturePhase::Commit, points: cells(world.as_slice()), interrupt: false }),
         BitmapBrushPointer::Up { .. } => None,
     }
 }

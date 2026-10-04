@@ -2,7 +2,7 @@
 
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{dag_action, ui_node_list, ui_value_list, ui_value_map, ui_value_text};
-use crate::DagSnapshot;
+use crate::DagScene;
 use semio_framework_artifact_infinite_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::plugin_app_close_prelude::input;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
@@ -89,8 +89,8 @@ fn patch_args(node_ids: &[String], field: &str) -> UiAssemblyResult<semio_framew
 //#endregion 🔖️Fields
 
 //#region 🔖️Render
-pub fn render(document: &DagSnapshot, selected: &[String], labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let owned_nodes = document.nodes();
+pub fn render(scene: &DagScene, selected: &[String], labels: &DagPlayLabels) -> UiAssemblyResult<BuiltNode> {
+    let owned_nodes = &scene.nodes;
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| owned_nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
         let (id, title) = if selected.is_empty() { ("empty", labels.select_a_node) } else { ("missing", labels.node_not_found) };

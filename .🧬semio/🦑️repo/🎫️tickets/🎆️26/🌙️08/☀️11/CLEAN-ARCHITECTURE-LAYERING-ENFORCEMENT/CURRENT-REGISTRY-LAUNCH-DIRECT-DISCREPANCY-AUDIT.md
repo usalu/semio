@@ -1,0 +1,9 @@
+# Current Registry Launch Direct Discrepancy
+
+Actual read-only execution of `renderCatalogFiles`, `declaredProjectTargets` and `generateLaunchJson` at 2026-10-02T20:49:52.706Z reproduced launch byte inequality. Current actual SHA-256 is `0cc1a4440a797570cc46abf2eac6bc1bb9404379e9a4826684701cb219ffd148`; direct expected SHA-256 is `5b86a46aa5a234f131aa334c3d9c11de66d69a4601d3a806c1478b270f55a1ac`. No generation or native jobs were run.
+
+The exact current difference is two additions of `@semio-tech/framework-dsl-record-derive-rs` in input option rosters: the project selection near actual line 27719 and test-ownership project selection near 27734. There are zero added, removed or changed configuration objects in this current epoch. This is a newly discovered project-input delta, not the earlier removed 2D configuration witness.
+
+GenerateScript and CheckScript use the same `renderCatalogFiles` playgrounds and `declaredProjectTargets(repoRoot)` renderer call. Neither uses a divergent renderer policy. Generation writes the catalog before computing launch; declared target discovery is a separate live input read. A newly added derive project after generation explains the current stale launch without any seed change; prior all-input immutable epochs are necessary to prove the precise timing, so this audit does not assert when that project appeared. The projection path instead accepts an explicit catalog input view for targets and seed.
+
+Exact renderer inputs, complete actual/expected output and difference are preserved in `🗑️generated/current-framework-io-audit/launch-direct-current.json` and `.diff`; current derive project sources are in `launch-derive-project-current.json`. Full inspected renderer source epoch is in `participation-launch-epoch.json`. Re-run normal generation only after the concurrent High project cut reaches SourceReady, then compare in that same immutable input cohort.

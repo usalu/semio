@@ -11,7 +11,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🚚️ Moves the block `block_id` (currently inside `step_id`) into `to_step_id`'s `blocks`, at a
 /// FINAL-state `index` within the destination. `step_id == to_step_id` is a plain reorder within one
 /// step.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct MoveBlockToStep {
@@ -27,9 +27,12 @@ impl MutationKind<FormsSnapshot, FormMutation> for MoveBlockToStep {
     fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
         super::diff::diff_move_block_to_step(self, base)
     }
-    fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
-        super::inverse::inverse_move_block_to_step(self, base)
-    }
+    fn inverse(&self, base: &FormsSnapshot) -> Result<Vec<FormMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse_move_block_to_step(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
     }

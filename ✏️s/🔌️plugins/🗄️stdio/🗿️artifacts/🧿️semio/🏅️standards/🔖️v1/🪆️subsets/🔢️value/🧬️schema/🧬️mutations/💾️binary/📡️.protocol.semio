@@ -27,3 +27,5 @@ record set-node tag=6
 field payload bytes
 record remove-node tag=7
 field payload bytes
+record patch-snapshot tag=8
+field payload bytes

@@ -19,9 +19,12 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for MoveNode
     fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node \"{}\" to ({}, {})", self.id.value, self.new_position.x, self.new_position.y), &format!("Knoten \"{}\" nach ({}, {}) verschieben", self.id.value, self.new_position.x, self.new_position.y))
     }

@@ -1,0 +1,7 @@
+{
+  "amount": 0.5,
+  "filter": "brightness",
+  "layerId": "paint",
+  "mutation": "applyFilter",
+  "selection": null
+}

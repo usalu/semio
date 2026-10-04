@@ -49,5 +49,5 @@ export const blockBlock3dMutationsTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBlock3dMutationsText(value: unknown, at = "$"): Block3dMutationsText {
-  return blockBlock3dMutationsTextGuardObject(value, `${at}`);
+  return blockBlock3dMutationsTextGuardString(value, at);
 }

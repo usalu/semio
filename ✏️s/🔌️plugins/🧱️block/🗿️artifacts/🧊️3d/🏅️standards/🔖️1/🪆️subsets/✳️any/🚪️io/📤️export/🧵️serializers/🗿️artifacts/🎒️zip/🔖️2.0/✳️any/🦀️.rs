@@ -12,7 +12,7 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
 use crate::Block3dSnapshot;
-use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_artifact_stdio_zip::io::encode_zip;
@@ -44,7 +44,7 @@ pub struct Block3dIntoZip;
 impl Serializer<Block3dSnapshot> for Block3dIntoZip {
     const INTO: Dialect = ZIP_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block3dSnapshot) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block3dSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let bytes = encode_zip(&archive_of(from)).map_err(|error| IoError { message: format!("block3d→zip: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }

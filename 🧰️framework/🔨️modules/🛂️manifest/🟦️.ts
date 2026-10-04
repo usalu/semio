@@ -16,6 +16,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 // `🖱️ui/🎬️scene/🟦️.ts`'s own `ActionDescriptor` import from this file erases cleanly.
 import type { ContextMenuItemSpec } from "../🖱️ui/🎬️scene/🟦️.ts";
 import inputLabelGlossaryDocument from "./🔣️input-labels.json" with { type: "json" };
+import numericTransportSchemaDocument from "../🌱️value/🧬️schema/🔣️.json" with { type: "json" };
 import type { Effect } from "../🎠️kernel/🟦️.ts";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 
@@ -37,6 +38,7 @@ import type {
   ArgFormat as GeneratedArgFormat,
   ArgPresentation as GeneratedArgPresentation,
   SnapSource as GeneratedSnapSource,
+  OptionSource as GeneratedOptionSource,
   NumberScale as GeneratedNumberScale,
   ReferenceIdType as GeneratedReferenceIdType,
   // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing.
@@ -538,6 +540,7 @@ export type ArgSchema = GeneratedArgSchema;
 export type ArgFormat = GeneratedArgFormat;
 export type ArgPresentation = GeneratedArgPresentation;
 export type SnapSource = GeneratedSnapSource;
+export type OptionSource = GeneratedOptionSource;
 export type NumberScale = GeneratedNumberScale;
 export type ReferenceIdType = GeneratedReferenceIdType;
 
@@ -598,7 +601,7 @@ export function argControl(def: ActionArgDef): ActionArgControl {
   switch (schema.kind) {
     case "string": {
       const options = schema.options ?? [];
-      if (options.length > 0) return def.presentation?.kind === "segmented" ? { kind: "segmented", options } : { kind: "select", options };
+      if (options.length > 0 || schema.optionSource !== undefined) return def.presentation?.kind === "segmented" ? { kind: "segmented", options } : { kind: "select", options };
       const format = schema.format;
       if (format?.kind === "iconId") return { kind: "iconSelect", classifierKind: "icon" };
       if (format?.kind === "artifactKind") return { kind: "artifactKind", roles: format.roles };
@@ -708,7 +711,7 @@ export function actionArgNumberFacets(def: ActionArgDef, locale: ShellLocale): A
 export type InputSchemaResolver = (id: string) => unknown;
 
 /** 🚫️ The class of an {@link InputSchemaError} — the Rust `InputSchemaErrorCode` twin. */
-export type InputSchemaErrorCode = "malformed" | "refUnresolved" | "uiInvalid" | "widgetIncompatible" | "labelMissing" | "optionLabelMissing" | "localeMissing";
+export type InputSchemaErrorCode = "malformed" | "refUnresolved" | "uiInvalid" | "widgetIncompatible" | "labelMissing" | "optionLabelMissing" | "localeMissing" | "wordOnlyFloat";
 
 /** 🚫️ Why a mutation payload schema yields no input descriptors: `code` and the RFC 6901 `pointer` of the input in the payload. */
 export class InputSchemaError extends Error {
@@ -725,7 +728,7 @@ type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 type JsonObject = { [key: string]: Json };
 type ResolvedInput = { readonly document: string | null; readonly node: JsonObject; readonly ui: ReadonlyMap<string, Json>; readonly refs: readonly string[]; readonly nullable: boolean };
 
-const INPUT_UI_KEYS = new Set(["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"]);
+const INPUT_UI_KEYS = new Set(["widget", "role", "label", "description", "step", "precision", "softMin", "softMax", "snaps", "snapSource", "optionSource", "unit", "displayUnit", "displayFactor", "scale", "group", "order", "options", "ref"]);
 const INPUT_UI_NUMBER_KEYS = new Set(["step", "precision", "softMin", "softMax", "snaps", "snapSource", "displayUnit", "displayFactor", "scale"]);
 /** 🧭️ The number facets a vector shares across its components — the Rust `INPUT_UI_VECTOR_KEYS` twin. */
 const INPUT_UI_VECTOR_KEYS = new Set(["step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"]);
@@ -767,6 +770,34 @@ export function inputLabelGlossary(): ReadonlyMap<string, LocalizedLabel> {
     }),
   );
   return glossary;
+}
+
+/** 🏷️ Schema keys that annotate without constraining (and every `x-` key) — the Rust `INPUT_SHAPE_ANNOTATIONS` twin. */
+const INPUT_SHAPE_ANNOTATIONS = new Set(["title", "description", "$comment", "examples", "default", "format"]);
+
+/** 🧬️ The constraint shape of a schema node as canonical JSON text: annotations dropped, object keys sorted, `required` sorted —
+ * the Rust `input_shape` twin. */
+export function inputShape(node: Json | undefined): string {
+  if (Array.isArray(node)) return `[${node.map(inputShape).join(",")}]`;
+  if (!isObject(node)) return JSON.stringify(node ?? null);
+  const kept = Object.keys(node)
+    .filter((key) => !key.startsWith("x-") && !INPUT_SHAPE_ANNOTATIONS.has(key))
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${key === "required" && Array.isArray(node[key]) ? inputShape([...(node[key] as Json[])].sort()) : inputShape(node[key])}`);
+  return `{${kept.join(",")}}`;
+}
+
+let numericTransport: { readonly word: string; readonly number: string } | undefined;
+
+/** 🔢️ The shapes of the framework's numeric transport (`🌱️value/🧬️schema/🔣️.json` `$defs/Binary64` — the binary64 word — and the
+ * plain-number branch of `$defs/Binary64Transport`) — the Rust `input_numeric_transport` twin. */
+export function inputNumericTransport(): { readonly word: string; readonly number: string } {
+  const definitions = numericTransportSchemaDocument.$defs as unknown as Record<string, JsonObject>;
+  numericTransport ??= {
+    word: inputShape(definitions.Binary64),
+    number: inputShape((definitions.Binary64Transport!.anyOf as Json[]).find((branch) => isObject(branch) && branch.$ref === undefined)),
+  };
+  return numericTransport;
 }
 
 /** 🔤️ The single non-null JSON type a schema node declares — the Rust `input_type` twin. */
@@ -899,9 +930,36 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
           continue;
         }
       }
-      return { document, node, ui, refs, nullable: nullable || (Array.isArray(node.type) && node.type.includes("null")) };
+      const resolvedNullable = nullable || (Array.isArray(node.type) && node.type.includes("null"));
+      const transport = numericTransportAt(document, node, pointer);
+      if (transport && inputShape(node) === inputNumericTransport().word) recover(() => fail("wordOnlyFloat", pointer, "a number input accepts only the exact binary64 word, never the plain number its payload and every draft carry; reference framework/value/schema.json#/$defs/Binary64Transport"), () => undefined);
+      return { document, node: transport ? { type: "number" } : node, ui, refs, nullable: resolvedNullable };
     }
     return fail("malformed", pointer, "a $ref chain exceeds 32 hops");
+  };
+
+  /** 🔢️ Whether `node` (in `document`) is the framework's numeric transport: the binary64 word itself (read as a number but refused
+   * as `wordOnlyFloat`), or a two-branch union of that word and a plain number (each branch restated or referenced) with nothing
+   * but annotations beside it — the Rust `InputSchemaReader::numeric_transport` twin. */
+  const numericTransportAt = (document: string | null, node: JsonObject, pointer: string): boolean => {
+    const { word, number } = inputNumericTransport();
+    if (inputShape(node) === word) return true;
+    const branches = Array.isArray(node.oneOf) ? node.oneOf : Array.isArray(node.anyOf) ? node.anyOf : undefined;
+    if (branches === undefined || branches.length !== 2) return false;
+    if (Object.keys(node).some((key) => key !== "anyOf" && key !== "oneOf" && !key.startsWith("x-") && !INPUT_SHAPE_ANNOTATIONS.has(key))) return false;
+    const shapes = branches.map((branch) => {
+      let [owner, current]: [string | null, Json] = [document, branch];
+      for (let hop = 0; hop < INPUT_REF_DEPTH && isObject(current) && typeof current.$ref === "string"; hop += 1) {
+        try {
+          [owner, current] = target(owner, current.$ref, pointer);
+        } catch (error) {
+          if (!(error instanceof InputSchemaError)) throw error;
+          return "null";
+        }
+      }
+      return inputShape(current);
+    });
+    return shapes.includes(word) && shapes.includes(number);
   };
 
   const uiString = (input: ResolvedInput, key: string, pointer: string): string | undefined => {
@@ -935,6 +993,15 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
       const label = inputLabelGlossary().get(value);
       return label === undefined ? fail("optionLabelMissing", pointer, `option ${value} has no label`) : { value, label };
     });
+  };
+
+  /** 🗝️ A string input's `x-semio-ui.optionSource` — the Rust `input_option_source` twin. */
+  const sourcedOptions = (input: ResolvedInput, pointer: string): OptionSource | undefined => {
+    const source = input.ui.get("optionSource");
+    if (source === undefined) return undefined;
+    const entries = isObject(source) ? Object.entries(source) : [];
+    const [name, template] = entries.length === 1 ? entries[0]! : ["", null];
+    return name === "snapshot" && typeof template === "string" && template.startsWith("/") ? { kind: "snapshot", pointer: template } : fail("uiInvalid", pointer, "optionSource is {snapshot: pointer template}");
   };
 
   const number = (input: ResolvedInput, integer: boolean, pointer: string): ArgSchema => {
@@ -1042,7 +1109,8 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
     switch (inputType(items.node)) {
       case "string": {
         const choices = options(items, pointer);
-        return (choices.length === 0 ? { kind: "string" } : { kind: "string", options: choices }) as ArgSchema;
+        const optionSource = sourcedOptions(items, pointer);
+        return { kind: "string", ...(choices.length === 0 ? {} : { options: choices }), ...(optionSource === undefined ? {} : { optionSource }) } as ArgSchema;
       }
       case "integer":
         return number(items, true, pointer);
@@ -1070,6 +1138,7 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
       if (misplaced !== undefined) recover(() => fail("uiInvalid", pointer, `${misplaced} only applies to a number`), () => undefined);
     }
     if (input.ui.has("unit") && kind !== "integer" && kind !== "number" && kind !== "array") recover(() => fail("uiInvalid", pointer, "unit only applies to a number or a vector"), () => undefined);
+    if (input.ui.has("optionSource") && (kind !== "string" || input.node.enum !== undefined)) recover(() => fail("uiInvalid", pointer, "optionSource only sources the options of a string without an enum"), () => undefined);
     if (widget === "hidden" && (kind === "object" || kind === "array")) return { kind: "any" };
     const many = kind === "array";
     const items = many && input.node.items !== undefined ? recover((): ResolvedInput | undefined => resolve(input.document, input.node.items!, `${pointer}/-`), () => undefined) : undefined;
@@ -1091,7 +1160,8 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
         const maxLen = count(input.node, "maxLength");
         const pattern = typeof input.node.pattern === "string" ? input.node.pattern : undefined;
         const choices = options(input, pointer);
-        return { kind: "string", ...(choices.length === 0 ? {} : { options: choices }), ...(minLen === undefined ? {} : { minLen }), ...(maxLen === undefined ? {} : { maxLen }), ...(pattern === undefined ? {} : { pattern }), ...(input.node.format === "uri" ? { format: { kind: "uri" } } : {}) } as ArgSchema;
+        const optionSource = sourcedOptions(input, pointer);
+        return { kind: "string", ...(choices.length === 0 ? {} : { options: choices }), ...(optionSource === undefined ? {} : { optionSource }), ...(minLen === undefined ? {} : { minLen }), ...(maxLen === undefined ? {} : { maxLen }), ...(pattern === undefined ? {} : { pattern }), ...(input.node.format === "uri" ? { format: { kind: "uri" } } : {}) } as ArgSchema;
       }
       case "integer":
         return number(input, true, pointer);
@@ -1182,8 +1252,8 @@ function inputSchemaReader(schema: string | unknown, resolver: InputSchemaResolv
       (widget === "vector" && schema.kind === "vector") ||
       (widget === "color" && schema.kind === "vector" && (schema.dims === 3 || schema.dims === 4) && schema.min === 0 && schema.max === 1) ||
       (widget === "reference" && schema.kind === "reference") ||
-      ((widget === "select" || widget === "segmented") && schema.kind === "string" && (schema.options ?? []).length > 0) ||
-      ((widget === "text" || widget === "multiline") && schema.kind === "string" && (schema.options ?? []).length === 0);
+      ((widget === "select" || widget === "segmented") && schema.kind === "string" && ((schema.options ?? []).length > 0 || schema.optionSource !== undefined)) ||
+      ((widget === "text" || widget === "multiline") && schema.kind === "string" && (schema.options ?? []).length === 0 && schema.optionSource === undefined);
     if (!compatible) recover(() => fail("widgetIncompatible", pointer, `widget ${widget} cannot edit this value`), () => undefined);
     const presentation = widget === "slider" || widget === "stepper" || widget === "dial" || widget === "segmented" || widget === "multiline" || widget === "hidden" || widget === "color" ? ({ kind: widget } as ArgPresentation) : undefined;
     const fallback = resolved.node.default;
@@ -1433,6 +1503,15 @@ export const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID = "exportArtifactDocument";
 /** 📥️ The framework-owned Import Document action id, shell-intercepted in every app — mirrors Rust
  * `IMPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
 export const IMPORT_ARTIFACT_DOCUMENT_ACTION_ID = "importArtifactDocument";
+
+/** 💾️ The shell-intercepted action that writes a mounted natural file codec's bytes. */
+export const SAVE_ARTIFACT_FILE_ACTION_ID = "saveArtifactFile";
+
+/** 📂️ The shell-intercepted action that opens natural bytes as a new document owner. */
+export const OPEN_ARTIFACT_FILE_ACTION_ID = "openArtifactFile";
+
+/** 📄️ The ABI media port reserved for an editor's declared natural-file representation. */
+export const NATURAL_FILE_PORT_ID = "artifact:native";
 
 /** 🎓️ Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type IntroductionDefinition = GeneratedIntroductionDefinition;
@@ -2265,6 +2344,83 @@ if (import.meta.vitest) {
 }
 //#endregion 🔖️HostResolvedArgs
 
+//#region 🔖️FaultNotices
+/** 📢️ One app-declared fault notice (design §20.12) — TS twin of Rust `FaultNoticeDefinition`: the code a guest refusal carries
+ * (`<app>.<area>.<name>`) and its text in every terminology × locale cell, `{name}` placeholders filled from `Fault.params`. */
+export type FaultNoticeDefinition = { readonly code: string; readonly label: LocalizedLabel };
+
+/** 🚫️ One refusal of a fault notice table — TS twin of Rust `FaultNoticeError` (corpus `🧫️fixtures/🧫️fault-notices`). */
+export type FaultNoticeError =
+  | { readonly rule: "syntax" | "duplicate"; readonly code: string }
+  | { readonly rule: "emptyText" | "placeholder"; readonly code: string; readonly terminology: ShellTerminology; readonly locale: ShellLocale };
+
+const FAULT_NOTICE_CODE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*){2,}$/u;
+const FAULT_PARAM_NAME = /^[a-z][A-Za-z0-9]*$/u;
+
+/** 🔤️ Whether `code` is an app notice code (three or more kebab segments) — TS twin of Rust `is_fault_notice_code`. */
+export function isFaultNoticeCode(code: string): boolean {
+  return FAULT_NOTICE_CODE.test(code);
+}
+
+/** 🧩️ The sorted, unique `{name}` placeholders of one notice text, `null` for an unbalanced brace or an invalid name — TS twin of
+ * Rust `fault_notice_placeholders`. */
+export function faultNoticePlaceholders(text: string): readonly string[] | null {
+  const names = new Set<string>();
+  let rest = text;
+  for (let open = rest.search(/[{}]/u); open >= 0; open = rest.search(/[{}]/u)) {
+    if (rest[open] === "}") return null;
+    const tail = rest.slice(open + 1);
+    const close = tail.search(/[{}]/u);
+    if (close < 0 || tail[close] !== "}" || !FAULT_PARAM_NAME.test(tail.slice(0, close))) return null;
+    names.add(tail.slice(0, close));
+    rest = tail.slice(close + 1);
+  }
+  return [...names].sort();
+}
+
+/** ✅️ Every refusal of a published fault notice table, in table order — TS twin of Rust `validate_fault_notices`: code grammar,
+ * unique codes, a non-blank text in every cell, one placeholder set across a notice's cells. Empty = valid. */
+export function validateFaultNotices(notices: readonly FaultNoticeDefinition[]): FaultNoticeError[] {
+  const errors: FaultNoticeError[] = [];
+  notices.forEach((notice, index) => {
+    if (!isFaultNoticeCode(notice.code)) errors.push({ rule: "syntax", code: notice.code });
+    if (notices.slice(0, index).some((earlier) => earlier.code === notice.code)) errors.push({ rule: "duplicate", code: notice.code });
+    const first = faultNoticePlaceholders(notice.label[SHELL_TERMINOLOGIES[0]][SHELL_LOCALES[0]]);
+    for (const terminology of SHELL_TERMINOLOGIES) {
+      for (const locale of SHELL_LOCALES) {
+        const text = notice.label[terminology][locale];
+        if (text.trim() === "") errors.push({ rule: "emptyText", code: notice.code, terminology, locale });
+        else if (first === null || faultNoticePlaceholders(text)?.join("\u0000") !== first.join("\u0000")) errors.push({ rule: "placeholder", code: notice.code, terminology, locale });
+      }
+    }
+  });
+  return errors;
+}
+
+/** 🧵️ `text` with each `{name}` replaced by the value `params` names; `null` when one is missing or the text is malformed — TS twin
+ * of Rust `fill_fault_notice` (a notice is never shown half-filled). */
+export function fillFaultNotice(text: string, params: Readonly<Record<string, string>> | undefined): string | null {
+  let filled = "";
+  let rest = text;
+  for (let open = rest.indexOf("{"); open >= 0; open = rest.indexOf("{")) {
+    const close = rest.indexOf("}", open);
+    if (close < 0) return null;
+    const value = params !== undefined && Object.hasOwn(params, rest.slice(open + 1, close)) ? params[rest.slice(open + 1, close)] : undefined;
+    if (value === undefined) return null;
+    filled += rest.slice(0, open) + value;
+    rest = rest.slice(close + 1);
+  }
+  return filled + rest;
+}
+
+/** 🗣️ The notice text `code` names in `notices` for one shell axis pair, filled from `params`; `null` when undeclared or unfillable —
+ * TS twin of Rust `fault_notice_text`. */
+export function faultNoticeText(notices: readonly FaultNoticeDefinition[], code: string, params: Readonly<Record<string, string>> | undefined, terminology: ShellTerminology, locale: ShellLocale): string | null {
+  const notice = notices.find((candidate) => candidate.code === code);
+  return notice === undefined ? null : fillFaultNotice(notice.label[terminology][locale], params);
+}
+//#endregion 🔖️FaultNotices
+
 //#region AppManifestProtocol
 /** 🧬️ Generated from Rust `WindowMeasure`/`WindowEngagement*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type WindowMeasure = GeneratedWindowMeasure;
@@ -2319,7 +2475,9 @@ export type AppUtilityDefinition = Omit<GeneratedUtilityDefinition, "iconId"> & 
 export type AppToolDefinition = Omit<GeneratedToolDefinition, "iconId"> & { readonly iconId: IconName };
 export type AppCommandDefinition = Omit<GeneratedCommandDefinition, "iconId"> & { readonly iconId?: IconName };
 export type AppWindowKindDefinition = Omit<GeneratedWindowKindDefinition, "iconId"> & { readonly iconId: IconName };
-export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts" | "iconId" | "tutorials"> & {
+export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts" | "iconId" | "tutorials" | "faultNotices"> & {
+  /** 📢️ The app's published fault notices, each label the full terminology × locale matrix (design §20.12). */
+  readonly faultNotices: readonly FaultNoticeDefinition[];
   readonly defaultLayout?: WindowLayout;
   readonly namedLayouts: readonly NamedLayout[];
   readonly iconId?: IconName;

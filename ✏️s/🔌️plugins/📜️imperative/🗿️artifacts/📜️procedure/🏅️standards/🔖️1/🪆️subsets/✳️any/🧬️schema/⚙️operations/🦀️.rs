@@ -1,82 +1,10 @@
-//! ⚙️ Imperative mutation bridges, shared path operations, laws, and behavior tests.
+//! ⚙️ Procedure path operations over a [`Path`] — the scope addressing (`PathRef`) every program edit uses before its
+//! flow child leaves are derived (`crate::procedure_flow_leaves`).
 
-use crate::mutations::ProcedureMutation;
-#[cfg(test)]
-use crate::mutations::{create_step, delete_step, edit_step_params, register_procedure_mutation_descriptors, reorder_steps};
-use crate::{Path, PathRef, ProcedureSnapshot, Step};
+use crate::{Path, PathRef, Step};
 
-//#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createStep", …}`, camelCase payload
-/// fields) JSON projection — exactly the shape the committed
-/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors and
-/// `🛟️mutate-procedure-1`'s own `Examples` payloads carry — into a real [`ProcedureMutation`]. The
-/// test adapter cannot name this crate's private `dsl`/`protocol`/`store` extern-crate aliases (the
-/// generated host links only `semio-repo-test-host` and this crate), so the bridge belongs here
-/// rather than there.
-pub fn decode_procedure_mutation_json(text: &str) -> Result<ProcedureMutation, String> {
-    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
-}
-
-/// 🌱 Resolves `snapshot`'s composed `s.stdio.semio.flow` child to the program in `program_json`
-/// (a `{"steps": [...]}` `Path`). An imperative document persists only a content-addressed HANDLE,
-/// and the working scene is an exact child owner, so a decoded `⬅️before` stands for no program
-/// until its own child is materialized — exactly what each direct leaf's `cached_program()` does.
-/// `🛟️mutate-procedure-1` needs the same materialization from outside, where neither `Path` nor its
-/// `Dictionary`/`Value` argument types
-/// can be constructed, so the program travels as JSON and is decoded here.
-pub fn seed_procedure_flow_json(snapshot: &mut ProcedureSnapshot, program_json: &str) -> Result<(), String> {
-    let path: Path = dsl::os_pack::json::from_json_str(program_json).map_err(|error| error.to_string())?;
-    crate::materialize_procedure_flow(&mut snapshot.flow, &path);
-    Ok(())
-}
-
-/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
-/// pairs. All four committed vectors leave the document byte-identical — two refusals and two
-/// `Warning`-level no-ops — so the pair is the evidence rather than a side channel.
-pub fn apply_procedure_mutation_reporting(snapshot: &mut ProcedureSnapshot, mutation: &ProcedureMutation) -> Vec<(String, String)> {
-    let outcome = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
-
-/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
-/// apply for the metamorphic law to mean anything.
-pub fn inverse_procedure_mutation_steps(mutation: &ProcedureMutation, base: &ProcedureSnapshot) -> Vec<ProcedureMutation> {
-    <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::inverse(mutation, base)
-}
-
-/// 🔎️ The program the document's composed flow child currently resolves to, rendered as nested
-/// `id:kind` entries in list order — the readable half of a divergence message, so a failing
-/// scenario names WHICH step moved rather than only that two content digests differ.
-pub fn procedure_program_summary(snapshot: &ProcedureSnapshot) -> String {
-    fn render(path: &Path) -> String {
-        path.steps
-            .iter()
-            .map(|step| {
-                let bodies = step.bodies.iter().map(|(slot, body)| format!("{slot}{{{}}}", render(body))).collect::<Vec<_>>().join(" ");
-                if bodies.is_empty() {
-                    format!("{}:{}", step.id, step.kind)
-                } else {
-                    format!("{}:{}[{bodies}]", step.id, step.kind)
-                }
-            })
-            .collect::<Vec<_>>()
-            .join(" ")
-    }
-    render(&crate::procedure_working_scene(snapshot).path)
-}
-//#endregion 🌉️ExternalCodecBridge
-
-/// 🔎️ Resolves the step list a `PathRef` addresses (read from the live `flow` working scene, since
-/// `ProcedureSnapshot` no longer carries `path` directly — ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); a not-yet-materialized nested slot reads as
-/// empty. Owned `Vec` (not a borrow) since the working scene is a cache lookup, not a live borrow of
-/// `snapshot` itself. Shared by every direct leaf's `🔺️diff`/`↩️inverse` facet so base-state lookups agree.
-pub fn resolve_steps(snapshot: &ProcedureSnapshot, path_ref: &PathRef) -> Vec<Step> {
-    let path = crate::procedure_working_scene(snapshot).path;
-    resolve_steps_in_path(&path, path_ref)
-}
-
-fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
+/// 🔎️ The step list a `PathRef` addresses in `path` (an absent nested slot reads as empty).
+pub fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
         return path.steps.clone();
     }
@@ -85,11 +13,8 @@ fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
     owner_step.bodies.get(slot).map(|body| body.steps.clone()).unwrap_or_default()
 }
 
-/// 🔧 Resolves the MUTABLE step list at `path_ref` within a live working-scene `Path` — the
-/// mutation-side counterpart of `resolve_steps`, used by every direct leaf's `🔺️diff` facet to edit a
-/// full copy of the current path before re-minting a whole `flow` handle (composed children are
-/// opaque; a diff never edits a sub-slice, only mints a whole replacement — see
-/// `crate::diff_replace_flow`).
+/// 🔧 Resolves the MUTABLE step list at `path_ref` within a `Path` — the edit-side counterpart of
+/// [`resolve_steps_in_path`]; a nested slot that does not exist yet is created.
 pub fn resolve_path_mut<'a>(path: &'a mut Path, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
         return Some(&mut path.steps);
@@ -110,6 +35,67 @@ pub fn prune_empty_slot(path: &mut Path, path_ref: &PathRef) {
         }
     }
 }
+
+//#region 🔖️ProgramEdits
+/// 📍️ The scope `owner`/`slot` command fields address: a top-level control step's body slot when both name a real step,
+/// else the root scope (an unknown reference addresses nothing else).
+pub fn path_ref_in(path: &Path, owner: Option<&str>, slot: Option<&str>) -> PathRef {
+    match (owner, slot) {
+        (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.into()), slot: Some(slot.into()) },
+        _ => PathRef::default(),
+    }
+}
+
+/// 🆔️ A fresh `step-N` id one past the highest suffix anywhere in the program (nested bodies included).
+pub fn next_step_id(path: &Path) -> String {
+    fn max_suffix(steps: &[Step]) -> u64 {
+        steps.iter().fold(0, |acc, step| {
+            let own = step.id.strip_prefix("step-").and_then(|rest| rest.parse::<u64>().ok()).unwrap_or(0);
+            acc.max(own).max(step.bodies.values().map(|body| max_suffix(&body.steps)).max().unwrap_or(0))
+        })
+    }
+    format!("step-{}", max_suffix(&path.steps) + 1)
+}
+
+/// ➕️ Inserts `step` into the addressed scope at `index` (clamped; absent appends); an id the scope already holds is
+/// refused (no edit).
+pub fn insert_step(path: &mut Path, path_ref: &PathRef, index: Option<usize>, step: Step) {
+    if resolve_steps_in_path(path, path_ref).iter().any(|existing| existing.id == step.id) {
+        return;
+    }
+    if let Some(steps) = resolve_path_mut(path, path_ref) {
+        steps.insert(index.map_or(steps.len(), |index| index.min(steps.len())), step);
+    }
+}
+
+/// ➖️ Removes step `id` (with its nested bodies) from the addressed scope; an emptied body slot is pruned.
+pub fn remove_step(path: &mut Path, path_ref: &PathRef, id: &str) {
+    if let Some(steps) = resolve_path_mut(path, path_ref) {
+        steps.retain(|step| step.id != id);
+    }
+    prune_empty_slot(path, path_ref);
+}
+
+/// 🚚️ Moves step `id` to `to_index` (clamped) within the addressed scope.
+pub fn move_step(path: &mut Path, path_ref: &PathRef, id: &str, to_index: usize) {
+    if let Some(steps) = resolve_path_mut(path, path_ref) {
+        if let Some(from) = steps.iter().position(|step| step.id == id) {
+            let step = steps.remove(from);
+            steps.insert(to_index.min(steps.len()), step);
+        }
+    }
+    prune_empty_slot(path, path_ref);
+}
+
+/// 🎚️ Replaces the params of step `id` in the addressed scope (the displaced dictionary is retired, never dropped).
+pub fn set_step_params(path: &mut Path, path_ref: &PathRef, id: &str, params: crate::Dictionary) {
+    match resolve_path_mut(path, path_ref).and_then(|steps| steps.iter_mut().find(|step| step.id == id)) {
+        Some(step) => neural_engine::ColdRetire::retire_cold(std::mem::replace(&mut step.params, params)),
+        None => neural_engine::ColdRetire::retire_cold(params),
+    }
+    prune_empty_slot(path, path_ref);
+}
+//#endregion 🔖️ProgramEdits
 
 //#region 🧪️Tests
 #[cfg(test)]

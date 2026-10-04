@@ -34,7 +34,7 @@ const DRAWING_VIEW_PAYLOAD_SCHEMA: &str = "drawing.view-command.v1";
 const DRAWING_VIEW_RAW_BYTES: usize = 8_192;
 const DRAWING_VIEW_WORK_ITEMS: usize = 1;
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum DrawingViewCommand {
     #[dsl(key = "setCamera")]
     SetCamera { camera: String },
@@ -59,8 +59,8 @@ impl protocol::OpBinary for DrawingViewCommand {
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
@@ -79,31 +79,31 @@ impl protocol::OpBinary for DrawingViewCommand {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
 /// 📷️ Validates a viewer camera and publishes only the addressed local window configuration.
 fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::op::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let DrawingViewCommand::SetCamera { camera } = command;
-    let camera: store::Viewport2d = dsl::json::from_json_str(camera).map_err(|error| Fault::from(error.to_string()))?;
+    let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))?;
     camera.validate().map_err(|error| Fault::from(error.to_string()))?;
     let view = view.ok_or_else(|| Fault::from("drawing-viewer-window-required"))?;
     let config = canvas::config::DrawingViewerCanvasWindowConfig { viewport: camera,framed: true };
-    Ok(Emit { window_config_mutations: vec![canvas::config::addressed(view,config)?],ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(),panel_bodies: Vec::new(),utilities: false,tools: false,engagements: false,measures: false,labels: false },coalesce_key: Some(format!("drawing.viewer.camera:{}",view.window_id.as_deref().unwrap_or_default())),..Default::default() })
+    Ok(Emit { window_config_mutations: vec![canvas::config::addressed(view,config)?],ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(),panel_bodies: Vec::new(),utilities: false,tools: false,engagements: false,measures: false,labels: false },..Default::default() })
 }
 
-fn command_from_action(action: &str,args: Option<&dsl::DslValue>) -> Result<DrawingViewCommand,Fault> {
+fn command_from_action(action: &str,args: Option<&semio_framework_value::DslValue>) -> Result<DrawingViewCommand,Fault> {
     if action != canvas::SET_CAMERA_ACTION_ID { return Err(Fault::from("drawing-viewer-command-unsupported")); }
     let value = args.and_then(|args| args.get("camera")).ok_or_else(|| Fault::from("drawing-viewer-camera-required"))?;
-    let pose = <store::Viewport2d as dsl::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
+    let pose = <store::Viewport2d as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| Fault::from(error.to_string()))?;
     pose.validate().map_err(|error| Fault::from(error.to_string()))?;
-    Ok(DrawingViewCommand::SetCamera { camera: dsl::json::to_json_string(&pose) })
+    Ok(DrawingViewCommand::SetCamera { camera: semio_framework_pack_json::to_json_string(&pose) })
 }
 
 fn drawing_view_contract() -> ToolExecutionContract {
@@ -261,7 +261,7 @@ impl ArtifactViewer for DrawingViewer {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         command_from_action(action, args)
     }
 
@@ -279,7 +279,7 @@ impl ArtifactViewer for DrawingViewer {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.viewer.retained.tool-mismatch"), "the Drawing view command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the Drawing view command does not match its exact registered tool"));
         }
         let tool_id = request.command.action_id();
         let work = Box::new(BoundedArtifactCommandWork::new(tool_id, drawing_view_reduce, drawing_view_extent));

@@ -22,9 +22,12 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for InsertJavascriptAction {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfXMutation> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfXMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: self.script.clone() })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert JavaScript action", "JavaScript-Aktion einfügen")

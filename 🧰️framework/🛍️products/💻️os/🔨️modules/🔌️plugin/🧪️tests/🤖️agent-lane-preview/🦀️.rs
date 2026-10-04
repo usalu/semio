@@ -20,7 +20,7 @@ mod agent_lane_preview_tests {
         Yield,
         Complete,
         Cancelled,
-        Fault(String),
+        Fault(Vec<u8>),
     }
 
     /// 🎭️ A job that reports its script, one entry per step, and repeats the last entry forever.
@@ -59,10 +59,7 @@ mod agent_lane_preview_tests {
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 }),
                 ScriptedStep::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-                ScriptedStep::Fault(detail) => {
-                    let detail = detail.clone();
-                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: Self::payload(cx, semio_framework_job::JobPayloadStream::Fault, detail.as_bytes()) })
-                }
+                ScriptedStep::Fault(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: Self::payload(cx, semio_framework_job::JobPayloadStream::Fault, detail) }),
             }
         }
 
@@ -84,13 +81,14 @@ mod agent_lane_preview_tests {
     }
 
     fn scripted_step(value: &serde_json::Value) -> ScriptedStep {
-        match (value.as_str(), value.get("fault").and_then(serde_json::Value::as_str)) {
+        match (value.as_str(), value.get("fault")) {
             (Some("progress"), _) => ScriptedStep::Progress,
             (Some("checkpoint"), _) => ScriptedStep::Checkpoint,
             (Some("yield"), _) => ScriptedStep::Yield,
             (Some("complete"), _) => ScriptedStep::Complete,
             (Some("cancelled"), _) => ScriptedStep::Cancelled,
-            (None, Some(detail)) => ScriptedStep::Fault(detail.to_string()),
+            (None, Some(serde_json::Value::String(detail))) => ScriptedStep::Fault(detail.as_bytes().to_vec()),
+            (None, Some(detail @ serde_json::Value::Object(_))) => ScriptedStep::Fault(serde_json::to_vec(detail).expect("typed fault wire")),
             _ => panic!("unknown script entry {value}"),
         }
     }

@@ -2,13 +2,15 @@
 use super::*;
 #[path="🛬️decode/🦀️.rs"]
 pub(super) mod decoding;
-#[derive(dsl::DslScalar)]
+#[path="🛫️encode/🦀️.rs"]
+mod encoding;
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
 enum Kind { Null, Boolean, Number, String, Array, Object }
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Member { key: String, value: u64 }
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Node { kind: Kind, boolean: Option<bool>, number_lexeme: Option<String>, string_value: Option<String>, items: Vec<u64>, members: Vec<Member> }
-#[derive(dsl::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct Snapshot { schema: String, nodes: Vec<Node> }
 
 impl From<&JsonSnapshot> for Snapshot {
@@ -77,32 +79,32 @@ impl TryFrom<Snapshot> for JsonSnapshot{
 impl store::ArtifactDsl for JsonSnapshot{
  const EXTENSION:&'static str="json";
  fn envelope_id()->&'static str{"stdio.json"}
- fn parse_dsl(text:&str)->Result<Self,store::TextError>{
-  let body=match store::semio_format::split_text_preamble(text){Ok((envelope,body))=>{if !envelope.matches_identity("stdio.json",store::semio_format::Component::Dsl,1){return Err(dsl::__rt::field_error("JSON logical text identity differs"))}body},Err(_)=>text};
-  let record=dsl::parse_exact(body,&Snapshot::__dsl_spec(),&dsl::ParseOptions::default())?;
-  Snapshot::__dsl_from_record(&record)?.try_into().map_err(dsl::__rt::field_error)
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
+  let body=match store::semio_format::split_text_preamble(text){Ok((envelope,body))=>{if !envelope.matches_identity("stdio.json",store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("JSON logical text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))}body},Err(_)=>text};
+  let record=semio_framework_dsl_record::parse_exact(body,&Snapshot::__dsl_spec(),&semio_framework_dsl_record::ParseOptions::default())?;
+  JsonSnapshot::try_from(Snapshot::__dsl_from_record(&record)?).map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
  }
  fn print_dsl(&self)->String{
-  let body=dsl::print(&Snapshot::from(self).__dsl_to_record(),&Snapshot::__dsl_spec(),dsl::JoinMode::Document);
+  let body=semio_framework_dsl_record::print(&Snapshot::from(self).__dsl_to_record(),&Snapshot::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
   let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.json",store::semio_format::Component::Dsl,1).expect("valid JSON identity");store::semio_format::wrap_text(&envelope,&body)
  }
 }
 impl store::ArtifactPack for JsonSnapshot{
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn record_spec()->Option<dsl::RecordSpec>{Some(Snapshot::__dsl_spec())}
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
   let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&Snapshot::from(self).__dsl_to_record(),options)?;
-  let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.json",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::Schema(error.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.json",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))
  }
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
-  let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::Schema(error.to_string()))?;
-  if !envelope.matches_identity("stdio.json",store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("JSON logical pack identity differs".into()))}
+  let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
+  if !envelope.matches_identity("stdio.json",store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JSON logical pack identity differs")))}
   let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;
-  Snapshot::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.try_into().map_err(store::PackError::Schema)
+  Snapshot::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.try_into().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
  }
 }
 
-pub(super) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<(),String>{
+pub(super) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<(),semio_framework_value::ValueError>{
  let mut bound=store::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;bound.add(8192)?;bound.repeated(snapshot.schema.len(),6)?;
  let mut pending=vec![&snapshot.value];let mut rows=2usize;bound.check_rows(rows)?;
  while let Some(value)=pending.pop(){
@@ -111,8 +113,8 @@ pub(super) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapsh
    JsonValue::Null|JsonValue::Bool{..}=>{},
    JsonValue::Number{lexeme}=>bound.repeated(lexeme.len(),6)?,
    JsonValue::String{value}=>bound.repeated(value.len(),6)?,
-   JsonValue::Array{items}=>{rows=rows.checked_add(items.len().checked_mul(2).ok_or("JSON logical row count overflow")?).ok_or("JSON logical row count overflow")?;bound.check_rows(rows)?;bound.repeated(items.len(),96)?;pending.extend(items.iter().rev())},
-   JsonValue::Object{members}=>{rows=rows.checked_add(members.len().checked_mul(2).ok_or("JSON logical row count overflow")?).ok_or("JSON logical row count overflow")?;bound.check_rows(rows)?;bound.repeated(members.len(),192)?;for member in members.iter().rev(){bound.repeated(member.key.len(),6)?;pending.push(&member.value)}}
+   JsonValue::Array{items}=>{rows=rows.checked_add(items.len().checked_mul(2).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON logical row count overflow"))?).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON logical row count overflow"))?;bound.check_rows(rows)?;bound.repeated(items.len(),96)?;pending.extend(items.iter().rev())},
+   JsonValue::Object{members}=>{rows=rows.checked_add(members.len().checked_mul(2).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON logical row count overflow"))?).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"JSON logical row count overflow"))?;bound.check_rows(rows)?;bound.repeated(members.len(),192)?;for member in members.iter().rev(){bound.repeated(member.key.len(),6)?;pending.push(&member.value)}}
   }
  }
  bound.finish()
@@ -120,6 +122,13 @@ pub(super) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapsh
 
 pub(super) fn retire(snapshot:JsonSnapshot){decoding::retire_value(snapshot.value)}
 
-pub(super) fn reconstruct_record(record:&dsl::RecordValue,control:&mut protocol::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,String>{
+pub(super) fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control)}
+
+pub(super) fn reconstruct_record(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let snapshot=decoding::bind(record,control,maximum_rows)?;decoding::reconstruct(snapshot,control)
+}
+
+pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<JsonSnapshot,semio_framework_value::ValueError>{
+ let maximum_rows=control.limits().max_rows;
+ store::decode_sqlite_snapshot_record_native(payload,"stdio.json",Snapshot::__dsl_spec_producer(),|record,native|reconstruct_record(record,native,maximum_rows),control)
 }

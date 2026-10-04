@@ -9,9 +9,9 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{decode_d
 
 pub fn register() {}
 
-pub fn deserialize_text(text: &str) -> Result<LayoutSnapshot, store::TextError> {
-    let error = |message: String| store::TextError::new(format!("layout←svg: {message}"), dsl::TextSpan::at(1, 1));
+pub fn deserialize_text(text: &str) -> Result<LayoutSnapshot, semio_framework_diagnostic::TextError> {
+    let error = |message: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("layout←svg: {message}"), semio_framework_diagnostic::TextSpan::at(1, 1));
     let drawing = decode_drawing(text.as_bytes(), SemioDrawingFormat::Svg).map_err(error)?;
     let value = layout_document_json_from_drawing(&drawing, "svg", "Imported SVG").map_err(error)?;
-    <LayoutSnapshot as dsl::FromValue>::from_value(value).map_err(|e| error(e.to_string()))
+    <LayoutSnapshot as semio_framework_value::FromValue>::from_value(value).map_err(|cause|semio_framework_diagnostic::TextError::from_value_error(cause,semio_framework_diagnostic::TextSpan::at(1,1)))
 }

@@ -1,0 +1,497 @@
+{
+  "cases": [
+    {
+      "id": "construct invalidValue",
+      "operation": "construct",
+      "kind": "invalidValue",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "invalidValue",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct canceled",
+      "operation": "construct",
+      "kind": "canceled",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "canceled",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct ownershipLimit",
+      "operation": "construct",
+      "kind": "ownershipLimit",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct allocationFailed",
+      "operation": "construct",
+      "kind": "allocationFailed",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "allocationFailed",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct workLimit",
+      "operation": "construct",
+      "kind": "workLimit",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "workLimit",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct depthLimit",
+      "operation": "construct",
+      "kind": "depthLimit",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "depthLimit",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct unsupportedOwner",
+      "operation": "construct",
+      "kind": "unsupportedOwner",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "unsupportedOwner",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "construct invariantViolated",
+      "operation": "construct",
+      "kind": "invariantViolated",
+      "message": "owned refusal",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "invariantViolated",
+        "display": "body.3.field.owned refusal"
+      }
+    },
+    {
+      "id": "prose does not classify cancellation",
+      "operation": "construct",
+      "kind": "invalidValue",
+      "message": "native decoding canceled",
+      "path": [
+        "input"
+      ],
+      "expected": {
+        "kind": "invalidValue",
+        "display": "input.native decoding canceled"
+      }
+    },
+    {
+      "id": "decode cancellation",
+      "operation": "decodeCancel",
+      "kind": "canceled",
+      "message": "native decoding canceled",
+      "path": [
+        "steps",
+        0
+      ],
+      "expected": {
+        "kind": "canceled",
+        "display": "steps.0.native decoding canceled"
+      }
+    },
+    {
+      "id": "decode ownership",
+      "operation": "decodeOwnership",
+      "kind": "ownershipLimit",
+      "message": "native decoding ownership exceeds caller limit",
+      "path": [
+        "body"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "body.native decoding ownership exceeds caller limit"
+      }
+    },
+    {
+      "id": "decode collection overflow",
+      "operation": "decodeCollectionOverflow",
+      "kind": "ownershipLimit",
+      "message": "native decoding collection size overflow",
+      "path": [
+        "items"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "items.native decoding collection size overflow"
+      }
+    },
+    {
+      "id": "decode workload",
+      "operation": "decodeWork",
+      "kind": "workLimit",
+      "message": "native decoding exceeded declared stage workload",
+      "path": [
+        "nodes",
+        2
+      ],
+      "expected": {
+        "kind": "workLimit",
+        "display": "nodes.2.native decoding exceeded declared stage workload"
+      }
+    },
+    {
+      "id": "decode work overflow",
+      "operation": "decodeWorkOverflow",
+      "kind": "workLimit",
+      "message": "native decoding work overflow",
+      "path": [],
+      "expected": {
+        "kind": "workLimit",
+        "display": "native decoding work overflow"
+      }
+    },
+    {
+      "id": "decode depth",
+      "operation": "decodeDepth",
+      "kind": "depthLimit",
+      "message": "native typed construction exceeds depth limit",
+      "path": [
+        "of",
+        "of"
+      ],
+      "expected": {
+        "kind": "depthLimit",
+        "display": "of.of.native typed construction exceeds depth limit"
+      }
+    },
+    {
+      "id": "encode cancellation",
+      "operation": "encodeCancel",
+      "kind": "canceled",
+      "message": "native encoding canceled",
+      "path": [
+        "steps",
+        0
+      ],
+      "expected": {
+        "kind": "canceled",
+        "display": "steps.0.native encoding canceled"
+      }
+    },
+    {
+      "id": "encode ownership",
+      "operation": "encodeOwnership",
+      "kind": "ownershipLimit",
+      "message": "native encoding ownership exceeds caller limit",
+      "path": [
+        "body"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "body.native encoding ownership exceeds caller limit"
+      }
+    },
+    {
+      "id": "encode collection overflow",
+      "operation": "encodeCollectionOverflow",
+      "kind": "ownershipLimit",
+      "message": "native encoding collection size overflow",
+      "path": [
+        "items"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "items.native encoding collection size overflow"
+      }
+    },
+    {
+      "id": "encode workload",
+      "operation": "encodeWork",
+      "kind": "workLimit",
+      "message": "native encoding exceeds declared workload",
+      "path": [
+        "nodes",
+        2
+      ],
+      "expected": {
+        "kind": "workLimit",
+        "display": "nodes.2.native encoding exceeds declared workload"
+      }
+    },
+    {
+      "id": "encode work overflow",
+      "operation": "encodeWorkOverflow",
+      "kind": "workLimit",
+      "message": "native encoding work overflow",
+      "path": [],
+      "expected": {
+        "kind": "workLimit",
+        "display": "native encoding work overflow"
+      }
+    },
+    {
+      "id": "encode depth",
+      "operation": "encodeDepth",
+      "kind": "depthLimit",
+      "message": "native encoding exceeds depth limit",
+      "path": [
+        "of",
+        "of"
+      ],
+      "expected": {
+        "kind": "depthLimit",
+        "display": "of.of.native encoding exceeds depth limit"
+      }
+    },
+    {
+      "id": "borrowed malformed UTF8",
+      "operation": "decodeUtf8",
+      "kind": "invalidValue",
+      "message": "invalid native UTF-8",
+      "path": [
+        "input"
+      ],
+      "expected": {
+        "kind": "invalidValue",
+        "display": "input.invalid native UTF-8"
+      }
+    },
+    {
+      "id": "unsupported owned decode",
+      "operation": "decodeUnsupported",
+      "kind": "unsupportedOwner",
+      "message": "value owner has no controlled native construction implementation",
+      "path": [
+        "owner"
+      ],
+      "expected": {
+        "kind": "unsupportedOwner",
+        "display": "owner.value owner has no controlled native construction implementation"
+      }
+    },
+    {
+      "id": "unsupported owned encode",
+      "operation": "encodeUnsupported",
+      "kind": "unsupportedOwner",
+      "message": "value owner has no controlled native encoding implementation",
+      "path": [
+        "owner"
+      ],
+      "expected": {
+        "kind": "unsupportedOwner",
+        "display": "owner.value owner has no controlled native encoding implementation"
+      }
+    },
+    {
+      "id": "retained lease identity",
+      "operation": "cloneLeaseChanged",
+      "kind": "invariantViolated",
+      "message": "retained clone source lease or projected path changed",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "invariantViolated",
+        "display": "body.3.field.retained clone source lease or projected path changed"
+      }
+    },
+    {
+      "id": "retained item progress overflow",
+      "operation": "cloneItemOverflow",
+      "kind": "workLimit",
+      "message": "retained clone item progress overflow",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "workLimit",
+        "display": "body.3.field.retained clone item progress overflow"
+      }
+    },
+    {
+      "id": "retained capacity progress overflow",
+      "operation": "cloneCapacityOverflow",
+      "kind": "ownershipLimit",
+      "message": "retained clone capacity progress overflow",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "body.3.field.retained clone capacity progress overflow"
+      }
+    },
+    {
+      "id": "retained grant overrun",
+      "operation": "cloneGrantOverrun",
+      "kind": "invariantViolated",
+      "message": "refusal corpus exceeded its retained clone item, copy, or capacity grant",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "invariantViolated",
+        "display": "body.3.field.refusal corpus exceeded its retained clone item, copy, or capacity grant"
+      }
+    },
+    {
+      "id": "retained typed depth",
+      "operation": "cloneDepth",
+      "kind": "depthLimit",
+      "message": "retained box clone structural depth limit exceeded",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "depthLimit",
+        "display": "body.3.field.retained box clone structural depth limit exceeded"
+      }
+    },
+    {
+      "id": "ordered controlled cancellation",
+      "operation": "orderedCancel",
+      "kind": "canceled",
+      "message": "native decoding canceled",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "canceled",
+        "display": "body.3.field.native decoding canceled"
+      }
+    },
+    {
+      "id": "ordered controlled ownership",
+      "operation": "orderedOwnership",
+      "kind": "ownershipLimit",
+      "message": "native decoding ownership exceeds caller limit",
+      "path": [
+        "body",
+        3,
+        "field"
+      ],
+      "expected": {
+        "kind": "ownershipLimit",
+        "display": "body.3.field.native decoding ownership exceeds caller limit"
+      }
+    }
+  ],
+  "jsonCases": [
+    {
+      "id": "malformed syntax",
+      "operation": "decodeMalformed",
+      "text": "null true",
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "duplicate members",
+      "operation": "decodeDuplicate",
+      "text": "{\"x\":1,\"x\":2}",
+      "expectedKind": "invalidValue"
+    },
+    {
+      "id": "decode cancellation",
+      "operation": "decodeCancel",
+      "text": "null",
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "decode ownership",
+      "operation": "decodeOwnership",
+      "text": "\"owned\"",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "nested invalid value path",
+      "operation": "decodeNestedInvalid",
+      "text": "[[false]]",
+      "expectedKind": "invalidValue",
+      "expectedDisplay": "0.0.expected number"
+    },
+    {
+      "id": "nested control refusal path",
+      "operation": "decodeNestedCancel",
+      "text": "[[1,2]]",
+      "expectedKind": "canceled",
+      "expectedDisplay": "0.0.native decoding canceled"
+    },
+    {
+      "id": "encode cancellation",
+      "operation": "encodeCancel",
+      "text": "owned",
+      "expectedKind": "canceled"
+    },
+    {
+      "id": "encode ownership",
+      "operation": "encodeOwnership",
+      "text": "owned",
+      "expectedKind": "ownershipLimit"
+    },
+    {
+      "id": "JSON physical depth retains authority",
+      "operation": "decodeDepth",
+      "text": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[null]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "expectedKind": "depthLimit"
+    }
+  ]
+}

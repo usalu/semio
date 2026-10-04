@@ -53,18 +53,18 @@ fn chain_snapshot() -> Puzzle5dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = chain_snapshot();
-    assert_eq!(Puzzle5dInference::infer(&snapshot), Puzzle5dInference::infer(&snapshot));
+    assert_eq!(Puzzle5dInference::infer(&snapshot).expect("valid materialized inference fixture"), Puzzle5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Puzzle5dInference::infer(&Puzzle5dSnapshot::default()), Puzzle5dInference::default());
+    assert_eq!(Puzzle5dInference::infer(&Puzzle5dSnapshot::default()).expect("valid materialized inference fixture"), Puzzle5dInference::default());
 }
 
 #[test]
 fn inference_matches_flatten_snapshot_directly() {
     let snapshot = chain_snapshot();
-    let inferred = Puzzle5dInference::infer(&snapshot);
+    let inferred = Puzzle5dInference::infer(&snapshot).expect("valid materialized inference fixture");
     let direct = flatten_snapshot(&snapshot);
     for (id, pose) in &direct {
         assert_eq!(inferred.flat_positions.get(id), Some(pose), "inference must match flatten_snapshot exactly for {id}");

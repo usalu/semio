@@ -17,8 +17,8 @@ mod tests {
         opc.add_relationship("", "rId1", rel_type, "word/document.xml");
         DocxSnapshot::from_parts(
             opc,
-            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap() }],
-        )
+            vec![DocxXmlPart { path: "word/document.xml".into(), content_type: content_type.into(), document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&doc_bytes).unwrap()).unwrap()).unwrap() }],
+        ).expect("bounded test OPC converts to retained ownership")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -40,11 +40,11 @@ mod tests {
     async fn strict_namespace_anywhere_is_hard() {
         let mut snapshot = snapshot_with_main_part(REL_TYPE_OFFICE_DOCUMENT, transitional_document_bytes());
         snapshot.opc.content_types.set_override("word/styles.xml", "application/xml");
-        snapshot.xml_parts.push(DocxXmlPart {
+        snapshot.xml_parts.try_push(DocxXmlPart {
             path: "word/styles.xml".into(),
             content_type: "application/xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap(),
-        });
+            document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
+        }).unwrap();
         let diagnostics = check_transitional_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }
@@ -63,9 +63,9 @@ mod tests {
             vec![DocxXmlPart {
                 path: "word/document.xml".into(),
                 content_type: content_type.into(),
-                document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&transitional_document_bytes()).unwrap()).unwrap(),
+                document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text(std::str::from_utf8(&transitional_document_bytes()).unwrap()).unwrap()).unwrap(),
             }],
-        );
+        ).expect("bounded test OPC converts to retained ownership");
         let diagnostics = check_transitional_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {diagnostics:?}");
     }

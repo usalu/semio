@@ -6,6 +6,7 @@ import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-fo
 import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import {runArtifactTypeScriptPackageMain} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
 
 //#region 🖨️RouterAdapters
 class FontsScript extends BundleScript {
@@ -39,12 +40,16 @@ class TestScript extends BundleScript {
     await new PrintPipelineVerificationCommand(this.root, this.repoRoot).run(segments);
   }
 }
+class CheckScript extends BundleScript{
+ async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts"]});}
+}
 //#endregion 🖨️RouterAdapters
 
 const router = new ScriptRouter(import.meta.dir)
   .register("fonts", FontsScript)
   .register("generate", GenerateScript)
   .register("preview-generated", PrintTokenPreviewScript)
+  .register("check",CheckScript)
   .register("test", TestScript);
 
 if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

@@ -55,7 +55,8 @@ fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_object_mutation(m: &SemioObjectMutation) -> String {
     match m {
-        SemioObjectMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
+        SemioObjectMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
+        SemioObjectMutation::SetSnapshot(p) => format!("setSnapshot:{}", hex_encode(semio_framework_pack_json::to_json_string(&p.snapshot).as_bytes())),
         SemioObjectMutation::MoveObject(p) => format!("moveObject:{},{},{}", p.translation.x, p.translation.y, p.translation.z),
         SemioObjectMutation::RotateObject(p) => format!("rotateObject:{},{},{},{}", p.rotation.x, p.rotation.y, p.rotation.z, p.rotation.w),
         SemioObjectMutation::ScaleObject(p) => format!("scaleObject:{},{},{}", p.scale.x, p.scale.y, p.scale.z),
@@ -70,11 +71,15 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
+    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
+        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
+        return Ok(SemioObjectMutation::PatchSnapshot(crate::standards::v1::subsets::object::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
+    }
     if let Some(payload) = line.strip_prefix("setSnapshot:") {
         let bytes = hex_decode(payload)?;
         let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = pack::parse_json(&json).map_err(|error| error.to_string())?;
-        let snapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
+        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
         return Ok(SemioObjectMutation::SetSnapshot(SetSnapshot { snapshot }));
     }
     if line == "deleteBrep" {
@@ -123,8 +128,8 @@ impl protocol::OpText for SemioObjectMutation {
     fn print_op(&self) -> String {
         print_object_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_object_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_object_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -137,6 +142,7 @@ impl protocol::OpText for SemioObjectMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioObjectMutation> {
     let ref_of = |subset: &str, id: &str| store::os_io::ArtifactRef { artifact_id: id.into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
+        SemioObjectMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioObjectMutation::MoveObject(MoveObject { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }),
         SemioObjectMutation::RotateObject(RotateObject { rotation: SemioQuaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 } }),
         SemioObjectMutation::ScaleObject(ScaleObject { scale: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }),

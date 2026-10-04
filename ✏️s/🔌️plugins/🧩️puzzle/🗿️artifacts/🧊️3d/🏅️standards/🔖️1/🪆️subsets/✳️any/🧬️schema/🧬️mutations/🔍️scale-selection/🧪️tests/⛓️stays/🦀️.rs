@@ -17,20 +17,20 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/⛓️stays/🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle3dSnapshot {
-    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle3dSnapshot {
-    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle3dMutation {
-    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 fn outcome() -> serde_json::Value {
     serde_json::from_str(OUTCOME).expect("outcome decodes")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-selection` raises on the committed base.
-fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+fn produced_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
     let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
     produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
 }
@@ -39,23 +39,23 @@ fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Puzzle3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "scale-selection/stays: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "scale-selection/stays: committed mutation JSON is not canonical");
 }
 
 /// 📜️ `(level, code, target)` of every message the committed outcome declares.
-fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+fn declared_messages() -> Vec<(semio_framework_diagnostic::Severity, String, Vec<String>)> {
     let level = |text: &str| match text {
-        "info" => protocol::Severity::Info,
-        "warning" => protocol::Severity::Warning,
-        "error" => protocol::Severity::Error,
-        "fatal" => protocol::Severity::Fatal,
+        "info" => semio_framework_diagnostic::Severity::Info,
+        "warning" => semio_framework_diagnostic::Severity::Warning,
+        "error" => semio_framework_diagnostic::Severity::Error,
+        "fatal" => semio_framework_diagnostic::Severity::Fatal,
         other => panic!("scale-selection/stays: unknown message level {other:?}"),
     };
     let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
@@ -69,7 +69,7 @@ fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
 #[test]
 fn produces_committed_diff() {
     let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-selection/stays: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed["meta"].is_null() && committed["references"].is_null(), "scale-selection/stays: a selection transform touches no document meta and no reference");
@@ -78,7 +78,7 @@ fn produces_committed_diff() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-selection/stays: committed diff did not carry before to after");
 }
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation);
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "scale-selection/stays: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
@@ -118,8 +118,8 @@ fn declared_outcome_holds() {
 /// 🧾️ The committed diff is itself canonical and decodes to `Puzzle3dDiff`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let decoded: Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "scale-selection/stays: committed diff JSON is not canonical");
 }

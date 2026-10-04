@@ -11,17 +11,17 @@ mod tests {
     async fn add_paragraph_stays_strict_conformant() {
         let snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("Hello, strict world!").build().expect("must build");
         assert_eq!(snapshot.project_document().unwrap().body.len(), 1);
-        assert!(xml_document_to_text(&snapshot.xml_part(MAIN_DOCUMENT_PART).unwrap().document).contains(STRICT_MAIN_NS));
+        assert!(xml_document_to_text(&snapshot.xml_part(MAIN_DOCUMENT_PART).unwrap().document.materialize_exact().unwrap()).contains(STRICT_MAIN_NS));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
-        snapshot.xml_parts.push(DocxXmlPart {
+        snapshot.xml_parts.try_push(DocxXmlPart {
             path: "word/legacyDrawing.xml".into(),
             content_type: "application/xml".into(),
-            document: semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>").unwrap(),
-        });
+            document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text("<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>").unwrap()).unwrap(),
+        }).unwrap();
         snapshot.opc.content_types.set_override("word/legacyDrawing.xml", "application/xml");
         let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
         let err = mutated.build().expect_err("VML content must fail build()");

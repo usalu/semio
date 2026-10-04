@@ -17,7 +17,7 @@ import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framew
 
 const testDirectory = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(readFileSync(resolve(testDirectory, "../../🎬️media/🌐️browser/🧫️fixtures/🔣️.json"), "utf8"));
-const identityFixtureDirectory = resolve(testDirectory, "../../../../📡️spr/🧵️channel/🧬️fixtures/🪪️document-identity-wire-v20");
+const identityFixtureDirectory = resolve(testDirectory, "../../../../📡️spr/🧵️channel/🧬️fixtures/🪪️document-identity-wire");
 const handle = { app_instance_id: 17, parent_document_id: "document-7", operation_id: BigInt(fixture.operation), base_revision: BigInt(fixture.revision), generation: BigInt(fixture.generation) };
 function slot(token = "accepted:7"): PresentedMediaSlot {
   return { token, windowId: "media:main", nodeId: "7", nodeKey: "transport", rect: { x: 20, y: 30, width: 300, height: 180 }, clip: { x: 25, y: 35, width: 290, height: 170 }, paintOrder: 2, occluded: false, pluginId: "stdio.mp4", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", props: { schemaVersion: 1, kind: "audio", mediaType: "audio/wav", revision: fixture.revision, durationMs: 1000, positionMs: 250, selectionStartMs: 100, selectionEndMs: 900, locale: "en", labels: mediaTransportLabels("en"), resource: { kind: "artifact-media-export", controllerId: "stdio.mp4.editor", appInstanceId: 17, parentDocumentId: "document-7", outputPort: "playback:out", revision: fixture.revision, generation: fixture.generation }, capability: { status: "ready", reason: null }, hostContentHeight: 180 } };

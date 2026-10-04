@@ -44,6 +44,7 @@ use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing")]
 pub enum SemioDrawingMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(super::patch_snapshot::PatchSnapshot),
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),
     CreateNode(create_node::CreateNode),
@@ -67,7 +68,7 @@ pub enum SemioDrawingMutation {
 /// vocabulary the `semio-v1-drawing` mutation catalog (`../../🔣️oracle.json`) declares
 /// and `🖊️mutate-semio-drawing`'s exhaustive test case measures itself against. The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest.
-pub const KINDS: &[&str] = &["set-snapshot", 
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", 
     "create-layer",
     "delete-layer",
     "create-node",
@@ -105,9 +106,12 @@ pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutatio
 /// [`apply_semio_drawing_mutation`] alone cannot. Same shape as `🧰️kit`'s
 /// `inverse_semio_kit_mutation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok({
     use protocol::Mutation;
-    <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, base)
+    <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, base)?
+
+    })
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
@@ -118,7 +122,7 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
 /// recursive scene graph with no stable identity of its own.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_drawing_mutation_json(text: &str) -> Result<SemioDrawingMutation, String> {
-    pack::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -136,6 +140,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
     let root_path = NodePath { layer: 0, path: vec![] };
     let path_node_path = NodePath { layer: 0, path: vec![1] };
     vec![
+        SemioDrawingMutation::PatchSnapshot(super::patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         SemioDrawingMutation::CreateLayer(create_layer::CreateLayer { index: 1, layer: DrawLayer { id: "l1".into(), name: "new".into(), visible: true, root: DrawNode::default() } }),
         SemioDrawingMutation::DeleteLayer(delete_layer::DeleteLayer { id: "l0".into() }),
         SemioDrawingMutation::CreateNode(create_node::CreateNode { parent: root_path.clone(), index: 0, node: DrawNode::Text { value: "new".into(), at: SemioPoint2 { x: 1.0, y: 1.0 }, style: None } }),

@@ -172,6 +172,8 @@ pub struct TurnMoreWorkSources {
     pub lifecycle: bool,
     /// ♻️ UI owners released during this turn still owe bounded retirement work.
     pub ui_retirement: bool,
+    /// 🛬️ A cold-pair or checkpoint-restored document still loads through the stepped archive load.
+    pub document_load: bool,
 }
 
 impl TurnMoreWorkSources {
@@ -188,6 +190,7 @@ impl TurnMoreWorkSources {
         command_ingress: false,
         lifecycle: false,
         ui_retirement: false,
+        document_load: false,
     };
 
     /// 🔦️ Whether any source is armed — equal to the turn's `MoreWork` verdict.
@@ -208,6 +211,7 @@ impl TurnMoreWorkSources {
             (self.command_ingress, "command_ingress"),
             (self.lifecycle, "lifecycle"),
             (self.ui_retirement, "ui_retirement"),
+            (self.document_load, "document_load"),
         ]
         .into_iter()
         .filter_map(|(armed, name)| armed.then_some(name))
@@ -257,7 +261,7 @@ fn trace_turn_phase_retention(phase: &str) {
 /// the same stream, so this stays one call site.
 fn trace_guest_line(line: &str) {
     #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-    crate::app::resolve_ready(crate::component::wasip2::log("debug", line));
+    ::semio_framework_async::poll::resolve_ready(crate::component::wasip2::log("debug", line));
     #[cfg(not(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2")))]
     eprintln!("{line}");
 }
@@ -1009,9 +1013,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Event::Request { req, capability, payload, .. } => {
                 let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
                     Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
-                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(
-                        &semio_framework_value::ToValue::to_value(&fault),
-                    )),
+                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&fault))),
                 };
                 inbound_request_effects.push(Effect::Respond { req, result });
             }
@@ -1025,24 +1027,40 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     let mut effects: Vec<Effect> = document_backbone_effects;
     effects.extend(inbound_request_effects);
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
+    let cold_pair_page_lifetime = cold_pair_page.as_ref().map(|page| page.header.lifetime);
     if let Some(page) = cold_pair_page {
         let lifetime = page.header.lifetime;
         let transfer_generation = page.header.transfer_generation;
+        supersede_cold_pair_document_load(runtime, lifetime, transfer_generation).await;
         let terminal_cursor = page.header.cursor(page.header.page_count.saturating_sub(1));
         let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
-        cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().accept_page(&page, live));
+        let another_loads = COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().as_ref().is_some_and(|pending| pending.cursor.lifetime != lifetime));
+        cold_pair_ingress = if another_loads && page.page_index.saturating_add(1) == page.header.page_count {
+            semio_framework::kernel::ColdPairIngressStatus::Backpressure(page.header.cursor(page.page_index))
+        } else {
+            COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().accept_page(&page, live))
+        };
         if matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_)) {
             let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
             let load = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().begin_load(lifetime, transfer_generation, live));
-            if let Some(load) = load {
-                let result = crate::plugin_runtime::plugin_load_document_pack(runtime, lifetime.instance_id, load.files()).await.map_err(|fault| dsl::encode_fault_bytes(&fault));
-                let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
-                cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(load, result, live));
-            } else {
-                cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Fault { cursor: terminal_cursor, fault: b"cold-pair.load-admission".to_vec() };
+            match load.map(|load| cold_pair::ColdPairDocumentLoad::new(load, transfer_generation, terminal_cursor)) {
+                Some(pending) => match crate::plugin_runtime::plugin_begin_document_archive_load(runtime, lifetime.instance_id, pending.operation, pending.archive()).await {
+                    Ok(()) => COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending)),
+                    Err(fault) => cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault)), live)),
+                },
+                None => cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Fault { cursor: terminal_cursor, fault: b"cold-pair.load-admission".to_vec() },
             }
         }
     }
+    if let Some(pending) = COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow_mut().take()) {
+        let answers_this_turn = !pending.superseded && cold_pair_page_lifetime.is_none_or(|lifetime| lifetime == pending.cursor.lifetime);
+        let status = step_cold_pair_document_load(runtime, pending).await;
+        if answers_this_turn {
+            cold_pair_ingress = status;
+        }
+    }
+    let cold_pair_loading = matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_));
+    let document_load_work = step_restored_document_loads(runtime, &mut effects).await || COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().is_some());
     let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
     step_retiring_command_ingress();
     let (mut retained, mut retained_key) = COMMAND_INGRESS.with(|ingress| match ingress.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].take() {
@@ -1147,7 +1165,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         route_exchange_output(instance, output, &mut effects);
                     }
                     Err(fault) => {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) };
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) };
                         retained = None;
                     }
                 }
@@ -1173,7 +1191,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                     }
                     route_exchange_output(cursor.instance, output, &mut effects);
                 }
-                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
             },
             owner => retained = Some(owner),
         }
@@ -1257,7 +1275,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         } else if cursor.page_index == 0 && retained.is_none() {
             match semio_framework::kernel::CommandPageSet::try_new(cursor.page_count as usize) {
                 Ok(mut pages) => match pages.try_push(page) {
-                    Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                    Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
                         Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                             Ok(mut output) => {
@@ -1272,16 +1290,16 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                                 }
                                 route_exchange_output(cursor.instance, output, &mut effects);
                             }
-                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                         },
-                        Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     },
                     Ok(()) => {
                         retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
                         command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
                     }
                 },
-                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
             }
         } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = ({
             match retained {
@@ -1293,7 +1311,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
             } else {
                 match pages.try_push(page) {
-                    Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                    Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
                         Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command)))).await {
                             Ok(mut output) => {
@@ -1308,9 +1326,9 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                                 }
                                 route_exchange_output(cursor.instance, output, &mut effects);
                             }
-                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                         },
-                        Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                     },
                     Ok(()) => {
                         retained = Some(CommandIngressOwner::GenericAssembly { cursor: active, pages });
@@ -1475,7 +1493,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
-    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work;
+    let more_work = more_work || close_cleanup_work || typed_operation_scan.runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,
         process_pool: process_pool_work,
@@ -1488,6 +1506,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         command_ingress: command_ingress_pending,
         lifecycle: lifecycle_work,
         ui_retirement: ui_retirement_work,
+        document_load: document_load_work,
     });
     trace_turn_phase_retention("render");
     trace_guest_memory_pressure();
@@ -1513,7 +1532,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     });
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose()?.flatten();
-    let (ui_patches, ui_patch_receipt) = fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))?;
+    let (ui_patches, ui_patch_receipt) = if cold_pair_loading { (semio_framework::kernel::UiTurnPatches::default(), None) } else { fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))? };
     let presence = PRESENCE.with(|hub| {
         let mut hub = hub.borrow_mut();
         hub.expire(now_ms);
@@ -1616,6 +1635,89 @@ pub(crate) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framewor
 /// to, which is single by construction (the pending authority only adds to a batch that already
 /// names an instance).
 #[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
+/// 🛬️ One turn of a cold pair's stepped document load (`📓️api-stepped-document-load.md` §8): polls its archive operation —
+/// `Loading` with the last page's cursor while it runs, the pair `Applied` once it is `Ready`, its fault when it is
+/// cancelled or refused (the previous document stays: the archive load leaves zero trace) — and releases the terminal
+/// operation. An instance that closed meanwhile ends the pair `not-live`; the closing app retires its load with it.
+/// 🛑️ A cold-pair page of a newer transfer for the lifetime whose earlier pair still loads means the host abandoned that
+/// transfer: its archive load is cancelled so the stale fold never publishes, and it is marked superseded so its terminal
+/// answer is never sent to the newer transfer's turns. The newer pages answer `Backpressure` with the stale cursor until the
+/// registry has retired the stale owner (`accept_page`, one bounded step per attempt); the host resends them fresh. A load
+/// that already reached a terminal state refuses the cancel and finishes as it ended.
+async fn supersede_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, lifetime: semio_framework::kernel::ActorInstanceLifetime, transfer_generation: u64) {
+    let stale = COLD_PAIR_DOCUMENT_LOAD.with(|slot| {
+        slot.borrow_mut().as_mut().filter(|pending| pending.cursor.lifetime == lifetime && pending.cursor.transfer_generation < transfer_generation && !pending.superseded).map(|pending| {
+            pending.superseded = true;
+            pending.operation
+        })
+    });
+    if let Some(operation) = stale {
+        let _ = crate::plugin_runtime::plugin_cancel_document_archive_load(runtime, lifetime.instance_id, operation).await;
+    }
+}
+
+async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad) -> semio_framework::kernel::ColdPairIngressStatus {
+    use protocol::DocumentArchiveLoadState;
+    use semio_framework::kernel::ColdPairIngressStatus;
+    let lifetime = pending.cursor.lifetime;
+    let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
+    let finish = |load, result: Result<(), Vec<u8>>| COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(load, result, live));
+    if live.is_none() {
+        return finish(pending.load, Err(b"cold-pair.not-live".to_vec()));
+    }
+    let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation).await {
+        Ok(status) => status,
+        Err(fault) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault))),
+    };
+    if matches!(status.state, DocumentArchiveLoadState::Pending | DocumentArchiveLoadState::Running) {
+        let cursor = pending.cursor;
+        COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending));
+        return ColdPairIngressStatus::Loading(cursor);
+    }
+    let acknowledged = crate::plugin_runtime::plugin_acknowledge_document_archive_load(runtime, lifetime.instance_id, pending.operation).await;
+    let result = match (status.state, acknowledged) {
+        (_, Err(fault)) => Err(semio_framework_diagnostic::encode_fault_bytes(&fault)),
+        (DocumentArchiveLoadState::Ready, Ok(())) => Ok(()),
+        (DocumentArchiveLoadState::Cancelled, Ok(())) => Err(b"cold-pair.load-cancelled".to_vec()),
+        (_, Ok(())) => Err(status.fault),
+    };
+    finish(pending.load, result)
+}
+
+/// 📸️ Drives every checkpoint-restored document load by one poll (`📓️api-stepped-document-load.md` §4). A terminal load
+/// is acknowledged; a faulted one reaches the instance's shell as a fault, a cancelled one keeps the initial document.
+/// A closed instance's load is dropped with it. Answers whether any load still runs.
+async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>) -> bool {
+    use protocol::DocumentArchiveLoadState;
+    let operation = checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION;
+    let loads = RESTORED_DOCUMENT_LOADS.with(|loads| std::mem::take(&mut *loads.borrow_mut()));
+    let mut running = Vec::with_capacity(loads.len());
+    for instance in loads {
+        if INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).is_none()) {
+            continue;
+        }
+        let status = match crate::plugin_runtime::plugin_poll_document_archive_load(runtime, instance, operation).await {
+            Ok(status) => status,
+            Err(fault) => {
+                effects.push(shell_fault_effect(instance, &fault));
+                continue;
+            }
+        };
+        if matches!(status.state, DocumentArchiveLoadState::Pending | DocumentArchiveLoadState::Running) {
+            running.push(instance);
+            continue;
+        }
+        match crate::plugin_runtime::plugin_acknowledge_document_archive_load(runtime, instance, operation).await {
+            Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
+            Ok(()) if status.state == DocumentArchiveLoadState::Fault => effects.push(shell_fault_effect(instance, &semio_framework_diagnostic::decode_fault_bytes(&status.fault))),
+            Ok(()) => {}
+        }
+    }
+    let pending = !running.is_empty();
+    RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow_mut().extend(running));
+    pending
+}
+
 fn fill_turn_patch_page<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
     let page = take_turn_patch_page(budget_bytes)?;
     let instance = page.iter().next().and_then(|patch| parse_surface_instance(&patch.surface.0));
@@ -1968,7 +2070,7 @@ use super::pending::{parse_surface_instance, with_state as with_pending_patches}
 /// in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
 #[expect(clippy::result_large_err, reason = "A rejected external patch is returned intact by its fixed pending-queue callback.")]
 fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
-    let Ok(frame) = semio_framework::io::resolve_ready(protocol::decode_app_frame(frame_bytes)) else {
+    let Ok(frame) = ::semio_framework_async::poll::resolve_ready(protocol::decode_app_frame(frame_bytes)) else {
         return;
     };
     match frame {
@@ -1986,7 +2088,7 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
         }
         protocol::AppFrame::UiSnapshotEnd { .. } => {}
         other => {
-            let payload = semio_framework::io::resolve_ready(protocol::encode_app_frame(&other));
+            let payload = ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&other));
             effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload });
         }
     }
@@ -2024,7 +2126,7 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
             TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
-        let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input));
+        let output = ::semio_framework_async::poll::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input));
         for frame_bytes in output.frames {
             route_app_frame(resume.instance, &frame_bytes, effects);
         }
@@ -2059,22 +2161,22 @@ fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
     decode_wire_replay_shell_command(&value).ok_or(())
 }
 
-fn decode_wire_replay_shell_command(value: &dsl::DslValue) -> Option<Effect> {
+fn decode_wire_replay_shell_command(value: &semio_framework_value::DslValue) -> Option<Effect> {
     let replay = value.get("replayShellCommand").or_else(|| value.get("ReplayShellCommand"))?;
-    let action_id = replay.get("actionId").or_else(|| replay.get("action_id")).and_then(dsl::DslValue::as_str)?;
+    let action_id = replay.get("actionId").or_else(|| replay.get("action_id")).and_then(semio_framework_value::DslValue::as_str)?;
     Some(Effect::ReplayShellCommand { action_id: action_id.to_string(), args: replay.get("args").cloned() })
 }
 
 /// 📤️ W-G3's `ReplayShellCommand` fallback is the same table: `from_dsl_value` misses some
 /// camelCase effect objects, and a silent `Err(())` drops the host picker (`effects:0`).
-fn decode_wire_request_file_open(value: &dsl::DslValue) -> Option<Effect> {
+fn decode_wire_request_file_open(value: &semio_framework_value::DslValue) -> Option<Effect> {
     let file = value.get("requestFileOpen").or_else(|| value.get("RequestFileOpen"))?;
-    let req = file.get("req").and_then(|req| req.as_u64().or_else(|| req.get("id").and_then(dsl::DslValue::as_u64)))?;
-    let accept = file.get("accept").and_then(dsl::DslValue::as_str)?.to_string();
-    let import_action = file.get("importAction").or_else(|| file.get("import_action")).and_then(dsl::DslValue::as_str)?.to_string();
-    let read_as = file.get("readAs").or_else(|| file.get("read_as")).and_then(dsl::DslValue::as_str).map(str::to_string);
-    let multiple = file.get("multiple").and_then(dsl::DslValue::as_bool).unwrap_or(false);
-    Some(Effect::RequestFileOpen { req: semio_framework::kernel::RequestId(req), accept, read_as, import_action, multiple })
+    let req = file.get("req").and_then(|req| req.as_u64().or_else(|| req.get("id").and_then(semio_framework_value::DslValue::as_u64)))?;
+    let accept = file.get("accept").and_then(semio_framework_value::DslValue::as_str)?.to_string();
+    let import_action = file.get("importAction").or_else(|| file.get("import_action")).and_then(semio_framework_value::DslValue::as_str)?.to_string();
+    let read_as = file.get("readAs").or_else(|| file.get("read_as")).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+    let multiple = file.get("multiple").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false);
+    Some(Effect::RequestFileOpen { req: semio_framework::kernel::RequestId(req), accept, read_as, import_action, multiple, args: file.get("args").cloned() })
 }
 
 fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect) {

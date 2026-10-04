@@ -9,10 +9,10 @@ import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts
  * every facet of the drawing artifact agrees on the same `DrawingLayerNode`/`DrawingImageAsset`/
  * `DrawingArtboard`/`DrawingArtifact`. */
 import {
-  parsePathSegment,
+  parsePathGeometrySegment,
   parseBlendMode,
   type BlendMode,
-  type PathSegment,
+  type PathGeometrySegment,
   parseDrawingArtifact,
   parseDrawingArtboard,
   parseDrawingImageAsset,
@@ -91,7 +91,7 @@ export interface DrawingLayerPatch {
   booleanOperation?: string;
   traceParamsJson?: string;
   layerJson?: string;
-  pathSegments?: PathSegment[];
+  pathSegments?: PathGeometrySegment[];
   textContent?: string;
   textSize?: number;
 }
@@ -212,6 +212,6 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     layerJson: text("layerJson"),
     textContent: text("textContent"),
     textSize: row["textSize"] == null ? undefined : drawingDrawingDiffGuardNumber(row["textSize"], `${at}.textSize`),
-    pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathSegment(item, `${at}.pathSegments[${index}]`)),
+    pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathGeometrySegment(item, `${at}.pathSegments[${index}]`)),
   };
 }

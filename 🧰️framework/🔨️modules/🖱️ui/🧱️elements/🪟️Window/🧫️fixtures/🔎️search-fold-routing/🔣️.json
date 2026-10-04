@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "locales": [
+    { "locale": "en", "placeholder": "Query" },
+    { "locale": "de", "placeholder": "Abfrage" }
+  ],
+  "cases": [
+    { "id": "latin", "key": "b", "ctrlKey": false, "metaKey": false, "altKey": false, "isComposing": false, "searchVisible": true, "actionsVisible": false },
+    { "id": "umlaut", "key": "ä", "ctrlKey": false, "metaKey": false, "altKey": false, "isComposing": false, "searchVisible": true, "actionsVisible": false },
+    { "id": "space", "key": " ", "ctrlKey": false, "metaKey": false, "altKey": false, "isComposing": false, "searchVisible": false, "actionsVisible": false },
+    { "id": "control", "key": "b", "ctrlKey": true, "metaKey": false, "altKey": false, "isComposing": false, "searchVisible": false, "actionsVisible": false },
+    { "id": "meta", "key": "b", "ctrlKey": false, "metaKey": true, "altKey": false, "isComposing": false, "searchVisible": false, "actionsVisible": false },
+    { "id": "alternate", "key": "b", "ctrlKey": false, "metaKey": false, "altKey": true, "isComposing": false, "searchVisible": false, "actionsVisible": false },
+    { "id": "composition", "key": "b", "ctrlKey": false, "metaKey": false, "altKey": false, "isComposing": true, "searchVisible": false, "actionsVisible": false },
+    { "id": "named-key", "key": "Escape", "ctrlKey": false, "metaKey": false, "altKey": false, "isComposing": false, "searchVisible": false, "actionsVisible": false }
+  ]
+}

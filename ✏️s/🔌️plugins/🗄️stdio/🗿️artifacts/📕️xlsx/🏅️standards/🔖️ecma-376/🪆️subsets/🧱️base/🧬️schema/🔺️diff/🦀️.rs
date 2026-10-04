@@ -1,15 +1,6 @@
-//! 🔺️ XlsxDiff — handcrafted sparse diff over `XlsxSnapshot` (`opc: OpcPackage` +
-//! `workbook: XlsxWorkbook`). No `snapshot: Option<XlsxSnapshot>` full-replace slot — even
-//! `SetSnapshot`'s diff is the sparse field-by-field `XlsxDiff::between(base, next)`.
-//!
-//! `workbook.sheets` is name-keyed (a sheet's `name` is its identity — rename is documented
-//! remove+add, see the snapshot module); each sheet's `cells` is keyed by the `(row, col)`
-//! coordinate tuple (a sparse spreadsheet wants coordinate addressing, not index-positional —
-//! this ticket's own brief calls this out as the per-artifact judgment call); `shared_strings` is
-//! index-keyed. All three use the same generic `NamedTripleDiff<K, D, T>` engine (`K = String` /
-//! `(u32, u32)` / `usize` respectively) docx's `🔺️diff` established — copied here (not hoisted
-//! into a shared module) per this wave's ownership boundary, same rationale as `zip::opc` diff
-//! placement below.
+//! 🔺️ Handcrafted sparse diff over the canonical XLSX authority: non-XML OPC state plus one
+//! logical XML document per XML-bearing content part. Semantic workbook data is never diffed as
+//! an independent persisted tree.
 //!
 //! **OPC diff placement**: `zip::opc::OpcPackage` (reused directly, not reimplemented — see that
 //! module) has no diff type of its own yet, same gap docx's wave found. Defined HERE for the same
@@ -63,40 +54,6 @@ pub struct NamedModified<K, D> {
     pub diff: D,
 }
 //#endregion 🔖️GenericCollectionTriples
-
-//#region 🔖️WorkbookDiffTypes
-/// 🧮️ A cell's per-field diff — `value` is the ONLY diffable field (`row`/`col` are the cell's
-/// identity, the `(u32,u32)` key `XlsxCellsDiff` diffs by). `XlsxCellValue` is a value/weak
-/// entity per the recipe (a value union, not a keyed collection) — whole-value replaced, never
-/// sub-diffed field-by-field (its own `Formula.cached` nests another `XlsxCellValue`, so
-/// sub-diffing would need a second recursive diff type for no real gain over LWW-replace).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct XlsxCellDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub value: Option<XlsxCellValue>,
-}
-
-pub type XlsxCellsDiff = NamedTripleDiff<(u32, u32), XlsxCellDiff, XlsxCell>;
-pub type XlsxSheetsDiff = NamedTripleDiff<String, XlsxSheetDiff, XlsxSheet>;
-pub type XlsxSharedStringsDiff = NamedTripleDiff<usize, String, (usize, String)>;
-
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct XlsxSheetDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub cells: Option<XlsxCellsDiff>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct XlsxWorkbookDiff {
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub sheets: Option<XlsxSheetsDiff>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub shared_strings: Option<XlsxSharedStringsDiff>,
-}
-//#endregion 🔖️WorkbookDiffTypes
 
 //#region 🔖️OpcDiffTypes
 pub type XlsxOpcCtEntriesDiff = NamedTripleDiff<String, String, (String, String)>;
@@ -162,24 +119,8 @@ pub struct XlsxXmlPartDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.xlsx`.
-/// 🧪️ F6 CONFIRMED (STEP 1, real `cargo check -p semio-s-plugin-stdio --lib` run, see
-/// `f6-xlsx-diff-check2.txt` in the ticket folder): `#[derive(dsl::DslDiff)]` on this struct fails
-/// to compile — root cause `XlsxCellValue: DslField is not satisfied` (§3a's "enum-in-tree" rule):
-/// ```text
-/// error[E0277]: the trait bound `XlsxCellValue: DslField` is not satisfied
-///   --> …/🔺️diff/🦀️.rs:72:23   (pub value: Option<XlsxCellValue>)
-/// help: the trait `DslField` is not implemented for `…snapshot::component::XlsxCellValue`
-///   --> …/📸️snapshot/🦀️.rs:26:1   (pub enum XlsxCellValue)
-/// ```
-/// `XlsxCellValue` (`Number`/`SharedString`/`InlineString`/`Boolean`/`Formula{expr,cached}`/
-/// `Empty`) is a genuine data-carrying enum reachable from `XlsxCellDiff.value` — no `DslField`
-/// impl exists or can be added (no `impl<T: DslVariants> DslField for T` bridge in this codebase,
-/// per `f6-recon-report.md` §3a). Independently, the top-level `opc`/`workbook` fields also fail
-/// (`XlsxOpcDiff`/`XlsxWorkbookDiff: DslField` not satisfied) until every nested struct in the tree
-/// gets `#[derive(dsl::DslRecord)]`, AND the shared `NamedTripleDiff<K,D,T>` collection-triple type
-/// this file's collections use has no `DslField` impl (no blanket impl for arbitrary generic
-/// structs, only `Vec`/`BTreeMap`/arrays) — a second, independent structural blocker beyond the
-/// enum. `DiffCodec` is hand-rolled below (§5's template, `f6-recon-report.md`).
+/// The generic named collection triples and the imported XML diff are encoded by the handcrafted
+/// codecs below because they are outside the derivable `DslField` shape.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx.diff")]
@@ -563,11 +504,11 @@ fn absorb_rel_list_diff(a: XlsxOpcRelListDiff, b: XlsxOpcRelListDiff) -> XlsxOpc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeMap<String, Vec<OpcRelationship>>) -> Option<XlsxOpcRelationshipsDiff> {
+fn diff_relationships(old: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, new: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners) -> Option<XlsxOpcRelationshipsDiff> {
     let mut removed = Vec::new();
     let mut modified = Vec::new();
-    for (owner, list) in old {
-        match new.get(owner) {
+    for (owner, list) in old.groups() {
+        match new.relationships(owner) {
             None => removed.push(owner.clone()),
             Some(nlist) => {
                 if let Some(d) = diff_rel_list(list, nlist) {
@@ -577,8 +518,8 @@ fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeM
         }
     }
     let mut added = Vec::new();
-    for (owner, list) in new {
-        if !old.contains_key(owner) {
+    for (owner, list) in new.groups() {
+        if old.relationships(owner).is_none() {
             added.push((owner.clone(), list.clone()));
         }
     }
@@ -590,9 +531,9 @@ fn diff_relationships(old: &BTreeMap<String, Vec<OpcRelationship>>, new: &BTreeM
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+fn apply_relationships(rels: &mut semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, diff: &XlsxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     for (position, owner) in diff.removed.iter().enumerate() {
-        if !rels.contains_key(owner) {
+        if rels.relationships(owner).is_none() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
         }
         if diff.removed[..position].contains(owner) {
@@ -600,7 +541,7 @@ fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: 
         }
     }
     for (position, m) in diff.modified.iter().enumerate() {
-        if !rels.contains_key(&m.key) {
+        if rels.relationships(&m.key).is_none() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
         }
         if diff.removed.contains(&m.key) {
@@ -611,7 +552,7 @@ fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: 
         }
     }
     for (position, (owner, _)) in diff.added.iter().enumerate() {
-        if rels.contains_key(owner) || diff.added[..position].iter().any(|(candidate, _)| candidate == owner) {
+        if rels.relationships(owner).is_some() || diff.added[..position].iter().any(|(candidate, _)| candidate == owner) {
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists"));
         }
         if diff.removed.contains(owner) || diff.modified.iter().any(|candidate| candidate.key == *owner) {
@@ -619,30 +560,30 @@ fn apply_relationships(rels: &mut BTreeMap<String, Vec<OpcRelationship>>, diff: 
         }
     }
     for owner in &diff.removed {
-        rels.remove(owner);
+        rels.remove_owner(owner);
     }
     for m in &diff.modified {
-        let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"))?;
+        let list = rels.relationships_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"))?;
         apply_rel_list(list, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for (owner, list) in &diff.added {
-        rels.insert(owner.clone(), list.clone());
+        rels.replace_owner(owner.clone(), list.clone());
     }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_relationships(base: &BTreeMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) -> XlsxOpcRelationshipsDiff {
+fn inverse_relationships(base: &semio_s_artifact_stdio_zip::opc::OpcRelationshipOwners, diff: &XlsxOpcRelationshipsDiff) -> XlsxOpcRelationshipsDiff {
     let removed: Vec<String> = diff.added.iter().map(|(owner, _)| owner.clone()).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
-        if let Some(list) = base.get(&m.key) {
+        if let Some(list) = base.relationships(&m.key) {
             modified.push(NamedModified { key: m.key.clone(), diff: inverse_rel_list(list, &m.diff) });
         }
     }
     let mut added = Vec::new();
     for owner in &diff.removed {
-        if let Some(list) = base.get(owner) {
+        if let Some(list) = base.relationships(owner) {
             added.push((owner.clone(), list.clone()));
         }
     }
@@ -857,9 +798,8 @@ pub fn diff_set_snapshot(base: &XlsxSnapshot, next: &XlsxSnapshot) -> XlsxDiff {
 /// triples) — see `f6-recon-report.md` §5 for the primitive rationale; this file re-derives its own
 /// copies of the small helper functions since each hand-rolled codec is self-contained (no shared
 /// "hand-roll helpers" module exists yet). One addition beyond the gif/svg precedent: a GENERIC
-/// `enc_triple`/`dec_triple` pair, since `NamedTripleDiff<K,D,T>` is reused across SIX distinct
-/// `(K,D,T)` instantiations in this file (cells/sheets/shared_strings/ct-entries/parts/rel-lists,
-/// plus relationships nesting a rel-list triple as its OWN `D`) — writing six near-identical
+/// `enc_triple`/`dec_triple` pair, since `NamedTripleDiff<K,D,T>` is reused across the canonical
+/// content-type, binary-part, relationship-list, relationship-owner, and XML-part collections — writing near-identical
 /// bespoke encoders would violate this ticket's "concise code" rule for no benefit.
 //#region 🔖️Primitives
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1136,23 +1076,23 @@ pub(crate) fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSh
 //#region 🔖️TopLevel
 impl protocol::DiffCodec for XlsxDiff {
     fn print_diff(&self) -> String {
-        dsl::json::to_json_string(self)
+        semio_framework_pack_json::to_json_string(self)
     }
 
-    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        dsl::json::from_json_str(text).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut bytes = vec![store::pack_rt::OP_BINARY_FORMAT];
-        bytes.extend_from_slice(dsl::json::to_json_string(self).as_bytes());
+        bytes.extend_from_slice(semio_framework_pack_json::to_json_string(self).as_bytes());
         Ok(bytes)
     }
 
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let payload = bytes.get(1..).ok_or_else(|| protocol::ProtocolError::Malformed { what: "xlsx diff", offset: 0, detail: "missing format byte".into() })?;
         let text = std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "xlsx diff", offset: 1, detail: error.to_string() })?;
-        dsl::json::from_json_str(text).map_err(|error| protocol::ProtocolError::Malformed { what: "xlsx diff", offset: 1, detail: error.to_string() })
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "xlsx diff", offset: 1, detail: error.to_string() })
     }
 }
 //#endregion 🔖️TopLevel
@@ -1198,7 +1138,7 @@ pub(crate) fn snapshot_b() -> XlsxSnapshot {
     snap.opc.content_types.set_default("added", "application/octet-stream");
     snap.opc.set_part("xl/added.xml", "application/xml", b"fresh".to_vec());
     snap.opc.add_relationship("xl/added.xml", "rId9", "http://example/added", "media/added.png");
-    snap.opc.relationships.get_mut("xl/added.xml").unwrap()[0].target_mode = OpcTargetMode::External;
+    snap.opc.relationships.relationships_mut("xl/added.xml").unwrap()[0].target_mode = OpcTargetMode::External;
     snap
 }
 

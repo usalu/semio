@@ -9,7 +9,10 @@ pub struct ChangeMemberActionFPoint { pub member_id: String, pub action_id: Stri
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeMemberActionFPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-action-fPointN", kind: "change-member-action-f-point", record: "ChangedMemberActionFPoint" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
+    fn inverse(&self, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+    Ok({ super::inverse::inverse(self, base)? 
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Point load F_k of action {} on member {}", self.action_id, self.member_id), &format!("Einzellast F_k der Einwirkung {} an Bauteil {} ändern", self.action_id, self.member_id)) }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone(), self.action_id.clone()] }
 }

@@ -1,7 +1,34 @@
 //! 📐️ Genuine CAD parent native baselines before semantic provider opt-in.
+#[path="../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
+mod backing_observer;
+fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
+ assert_eq!(actual.schema,expected.schema);assert_eq!(actual.id,expected.id);
+ assert_eq!(actual.shape_model,expected.shape_model);assert_eq!(actual.building_model,expected.building_model);assert_eq!(actual.energy_model,expected.energy_model);assert_eq!(actual.structure_classic_model,expected.structure_classic_model);
+ assert_eq!(actual.drawings,expected.drawings);assert_eq!(actual.nodes,expected.nodes);
+ assert_eq!(actual.references_by_model_definition_id.len(),expected.references_by_model_definition_id.len());
+ for(key,expected_rows)in &expected.references_by_model_definition_id{
+  let actual_rows=actual.references_by_model_definition_id.get(key).expect("literal map group");assert_eq!(actual_rows.len(),expected_rows.len());
+  for(actual,expected)in actual_rows.iter().zip(expected_rows){assert_eq!((&actual.id,&actual.source_url,&actual.media_kind,actual.hidden,actual.locked),(&expected.id,&expected.source_url,&expected.media_kind,expected.hidden,expected.locked));assert_eq!(actual.origin.map(f64::to_bits),expected.origin.map(f64::to_bits));assert_eq!(actual.orientation.map(|q|q.map(f64::to_bits)),expected.orientation.map(|q|q.map(f64::to_bits)));assert_eq!(actual.scale.map(f64::to_bits),expected.scale.map(f64::to_bits));assert_eq!(actual.width_world.to_bits(),expected.width_world.to_bits());assert_eq!(actual.opacity.map(f64::to_bits),expected.opacity.map(f64::to_bits));}
+ }
+}
+#[test]
+fn sqlite_snapshot_cad_parent_projection_settles_actual_system_backing_requests(){
+ let expected=fixture();let wanted=database(&expected);let limits=SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,limits);
+ let(result,observed)=backing_observer::measure(||expected.to_sqlite_database(&mut control));assert_eq!(result.unwrap(),wanted);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ProjectSnapshot full concrete request settlement");
+}
+#[test]
+fn sqlite_snapshot_cad_parent_reconstruction_settles_actual_system_backing_requests(){
+ let expected=fixture();let source=database(&expected);let limits=SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,limits);
+ let(result,observed)=backing_observer::measure(||CadSnapshot::from_sqlite_database(&source,&mut control));complete_literal_cad(&result.unwrap(),&expected);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ReconstructSnapshot full concrete request settlement");
+}
+#[test]
+fn sqlite_snapshot_cad_parent_all_fields_raw_words_and_cumulative_exact_backing(){
+ let neutral=laws();assert_eq!(neutral["ownership"]["semanticBudget"],"completeSqlScalarBytes");assert_eq!(neutral["ownership"]["backingBudget"],"cumulativeSystemAllocatorRequests");
+ for hex in neutral["binary64Words"].as_array().unwrap(){let mut expected=fixture();fill(&mut expected,f64::from_bits(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap()));let source=database(&expected);complete_literal_cad(&restore(&source),&expected);backing_observer::verify_snapshot_backing_by(&expected,&source,complete_literal_cad);}
+}
 use super::CadSnapshot;
 fn laws()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
-fn fixture()->CadSnapshot{store::json::from_json_str(&laws()["snapshot"].to_string()).unwrap()}
+fn fixture()->CadSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn canonical_children(snapshot:&mut CadSnapshot){for child in[&mut snapshot.shape_model,&mut snapshot.building_model,&mut snapshot.energy_model,&mut snapshot.structure_classic_model].into_iter().flatten(){child.child_id=child.target.artifact_id.clone()}for child in &mut snapshot.drawings{child.child_id=child.target.artifact_id.clone()}}
 #[test]
 fn sqlite_snapshot_cad_parent_actual_native_factory_exposes_owned_relational_capability(){
@@ -47,7 +74,7 @@ fn sqlite_snapshot_cad_parent_independent_queries_and_surrogate_edits_preserve_l
 }
 #[test]
 fn sqlite_snapshot_cad_parent_independent_malformed_edits_refuse_owned_relations(){
- let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const output=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);output.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(output));"#;let laws=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":file(&fixture()),"sql":laws["malformedSql"]}).to_string().as_bytes())).unwrap();assert_eq!(edited.len(),21);for(sql,bytes)in laws["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).map_err(|e|e.to_string()).and_then(|d|CadSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}")}
+ let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const output=[];for(const sql of input.sql){const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(sql);output.push(Array.from(db.serialize()));db.close()}await Bun.write(Bun.stdout,JSON.stringify(output));"#;let laws=laws();let edited:Vec<Vec<u8>>=serde_json::from_slice(&oracle(script,serde_json::json!({"bytes":file(&fixture()),"sql":laws["malformedSql"]}).to_string().as_bytes())).unwrap();assert_eq!(edited.len(),21);for(sql,bytes)in laws["malformedSql"].as_array().unwrap().iter().zip(edited){assert!(import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|CadSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}")}
 }
 #[test]
 fn sqlite_snapshot_cad_parent_exact_row_and_genuine_physical_output_admission(){

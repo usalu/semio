@@ -1,19 +1,6 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.snapshot;
-import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
-
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-
-// 🧬️ Rewriting's durable document contract.
-message RewritingSnapshot {
-  // @state artifact
-  string before_fixture_json = 1;
-  // @state artifact
-  string lhs_json = 2;
-  // @state artifact
-  string rhs_json = 3;
-  // @state artifact
-  map<string, semio.framework.value.DslValue> parameter_bindings = 4;
-  // @state artifact
-  map<string, semio.s.trinity.rewriting.artifact.LayoutPoint> rule_layout = 5;
-}
+message RewritingSnapshot { semio.s.trinity.jack.snapshot.JackSnapshot working_graph = 1; semio.s.trinity.rewriting.artifact.Lhs lhs = 2; semio.s.trinity.rewriting.artifact.Rhs rhs = 3; map<string, semio.framework.graph.manifest.PropertyValue> parameter_bindings = 4; map<string, semio.s.trinity.rewriting.artifact.LayoutPoint> rule_layout = 5; }

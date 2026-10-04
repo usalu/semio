@@ -2,7 +2,7 @@ use super::super::{workflow_parameter_entity_id, AddParameter, BindParameterFiel
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "remove-parameter")]
@@ -18,7 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveParame
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::RemoveParameter { parameter_id: self.parameter_id.clone() })
     }
-    fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         {
             let Some(parameter) = base.parameters.iter().find(|parameter| workflow_parameter_entity_id(parameter) == self.parameter_id) else { return Vec::new() };
             let mut ops: Vec<WorkflowMutation> =
@@ -26,7 +27,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveParame
             ops.push(WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(parameter.clone()) }));
             ops
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} entfernen", self.parameter_id))
     }

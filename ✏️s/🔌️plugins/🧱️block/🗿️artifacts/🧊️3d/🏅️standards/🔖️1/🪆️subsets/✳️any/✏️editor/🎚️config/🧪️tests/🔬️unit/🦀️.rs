@@ -18,7 +18,7 @@ async fn config_operation_backwards_restores_the_pre_operation_snapshot() {
     let operation = Block3dConfigMutation::SetActiveRepresentation { representation_id: Some("r0".into()) };
     let next = operation.diff(&base).into_parts().0;
     assert_eq!(next.active_representation_id, Some("r0".to_string()));
-    let inverse = operation.inverse(&base);
+    let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Block3dConfigMutation::Snapshot { config: base.clone() }]);
     let restored = inverse[0].diff(&next).into_parts().0;
     assert_eq!(restored, base);

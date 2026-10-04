@@ -88,7 +88,7 @@ pub const IMPERATIVE_INTERACTION_GRANULARITY: &str = "step";
 /// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
 /// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
 /// tree, including steps nested inside `control.if`/`control.while` bodies.
-fn imperative_steps_topology(document: &ProcedureSnapshot) -> DomainTopology {
+fn imperative_steps_topology(path: &crate::Path) -> DomainTopology {
     fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for step in steps {
             let id = document_panel::step_row_id(&step.id);
@@ -98,7 +98,6 @@ fn imperative_steps_topology(document: &ProcedureSnapshot) -> DomainTopology {
             }
         }
     }
-    let path = crate::procedure_working_scene(document).path;
     let mut ordered = Vec::new();
     visit(&path.steps, None, &mut ordered);
     DomainTopology { ordered }
@@ -183,15 +182,15 @@ fn imperative_retained_extent(command: &ImperativeCommand, _snapshot: &Procedure
 /// 🧮️ One shell-supplied argument as this app's own `ValueDsl` scalar — `SetStepParams::params` is a
 /// `BTreeMap<String, ValueDsl>` whose fields are private to `crate::document_dsl`, so the conversion
 /// goes through the engine `Value` the module already converts from.
-fn imperative_value_dsl(value: &dsl::DslValue) -> crate::document_dsl::ValueDsl {
+fn imperative_value_dsl(value: &semio_framework_value::DslValue) -> crate::document_dsl::ValueDsl {
     let engine = match value {
-        dsl::DslValue::Bool(flag) => neural_engine::Value::Atom(neural_engine::Atom::Boolean(*flag)),
-        dsl::DslValue::Number(number) => match number.as_i64() {
+        semio_framework_value::DslValue::Bool(flag) => neural_engine::Value::Atom(neural_engine::Atom::Boolean(*flag)),
+        semio_framework_value::DslValue::Number(number) => match number.as_i64() {
             Some(integer) => neural_engine::Value::Atom(neural_engine::Atom::Integer(integer)),
             None => neural_engine::Value::Atom(neural_engine::Atom::Decimal(number.as_f64())),
         },
-        dsl::DslValue::String(text) => neural_engine::Value::Atom(neural_engine::Atom::String(text.clone())),
-        dsl::DslValue::Null => neural_engine::Value::Atom(neural_engine::Atom::Null),
+        semio_framework_value::DslValue::String(text) => neural_engine::Value::Atom(neural_engine::Atom::String(text.clone())),
+        semio_framework_value::DslValue::Null => neural_engine::Value::Atom(neural_engine::Atom::Null),
         other => neural_engine::Value::Atom(neural_engine::Atom::String(dsl::json::to_json_string(other))),
     };
     crate::document_dsl::value_to_value_dsl(&engine)
@@ -201,33 +200,33 @@ fn imperative_value_dsl(value: &dsl::DslValue) -> crate::document_dsl::ValueDsl 
 /// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
 /// (`app.command.unsupported`), so without this bridge no Actions-pane row could reach
 /// `ImperativeCommand::dispatch`.
-fn imperative_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<ImperativeCommand, Fault> {
-    let entries: &[(String, dsl::DslValue)] = match args {
-        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+fn imperative_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<ImperativeCommand, Fault> {
+    let entries: &[(String, semio_framework_value::DslValue)] = match args {
+        Some(semio_framework_value::DslValue::Object(object)) => object.as_slice(),
         _ => &[],
     };
     let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
     let text = |keys: &[&str], fallback: &str| match lookup(keys) {
-        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
-        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
+        Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(semio_framework_value::DslValue::String(_)) | None => fallback.to_string(),
         Some(other) => dsl::json::to_json_string(other),
     };
     let optional_text = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
+        Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
         _ => None,
     };
     let index = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
-        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
+        Some(semio_framework_value::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
+        Some(semio_framework_value::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
         _ => 0,
     };
     let optional_index = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::Number(value)) => Some(value.as_f64().max(0.0) as usize),
-        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().ok(),
+        Some(semio_framework_value::DslValue::Number(value)) => Some(value.as_f64().max(0.0) as usize),
+        Some(semio_framework_value::DslValue::String(raw)) => raw.trim().parse::<usize>().ok(),
         _ => None,
     };
     let params = |keys: &[&str]| match lookup(keys) {
-        Some(dsl::DslValue::Object(object)) => object.iter().map(|(name, value)| (name.clone(), imperative_value_dsl(value))).collect(),
+        Some(semio_framework_value::DslValue::Object(object)) => object.iter().map(|(name, value)| (name.clone(), imperative_value_dsl(value))).collect(),
         _ => std::collections::BTreeMap::new(),
     };
     match action {
@@ -277,10 +276,12 @@ fn imperative_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<ImperativePlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<ImperativePlayApp>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, NoDraftMutation>, Fault> {
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+    let context = context.ok_or_else(|| Fault::from("imperative-retained-children-required"))?;
+    let doc = ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone());
+    command.dispatch(&doc, &ConfigView { snapshot: config, window: None })
 }
 
 /// 🏭️ The ONE registered factory serving every retained id — `bounded_first_step_tool_proofs!` binds
@@ -355,7 +356,7 @@ pub struct ImperativePlayApp;
 /// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
 pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ProcedureSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -466,7 +467,7 @@ impl ArtifactEditor for ImperativePlayApp {
     }
 
     /// 🌉️ The `{action, args}` bridge every shell dispatch arrives as.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         imperative_command_from_action(action, args)
     }
 
@@ -474,8 +475,11 @@ impl ArtifactEditor for ImperativePlayApp {
         if !IMPERATIVE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if request.command.command_id() != request.tool_id || imperative_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("imperative-retained-command-tool-mismatch-or-capacity"));
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "procedure command does not match its exact registered tool"));
+        }
+        if imperative_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "procedure command payload exceeds its bounded retained extent"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> =
@@ -512,9 +516,12 @@ impl ArtifactEditor for ImperativePlayApp {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_procedure_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn initial_snapshot() -> ProcedureSnapshot {
         default_snapshot()
@@ -544,11 +551,15 @@ impl ArtifactEditor for ImperativePlayApp {
 
     /// 🕹️ `steps` domain: `HierarchyProvider::Topology` from the document's own `Step::bodies` nesting —
     /// see `imperative_steps_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut domains = std::collections::BTreeMap::new();
-        domains.insert(IMPERATIVE_INTERACTION_STEPS.to_string(), imperative_steps_topology(doc.snapshot));
+        let scene = crate::procedure_scene(doc).unwrap_or_default();
+        domains.insert(IMPERATIVE_INTERACTION_STEPS.to_string(), imperative_steps_topology(&scene.path));
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
     /// `computation.procedure`-kinded output); `"artifact:out"` replicates `ArtifactEditor::export_media`'s
@@ -556,9 +567,10 @@ impl ArtifactEditor for ImperativePlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, ProcedureSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let host = crate::editor::procedure::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
+                let scene = crate::procedure_scene(doc).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
+                let host = crate::editor::procedure::engine::ImperativeHost::from_scene(&scene);
                 let result = host.run();
-                let json = dsl::os_pack::json::to_json_string(&result.scope);
+                let json = semio_framework_pack_json::to_json_string(&result.scope);
                 // 🧊️ Same cold boundary as the `run` command: the result owns dictionaries.
                 neural_engine::ColdRetire::retire_cold(result);
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.procedure".into(), json } })
@@ -574,15 +586,15 @@ impl ArtifactEditor for ImperativePlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, ProcedureSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
-        let document = doc.snapshot;
+        let scene = crate::procedure_scene(doc).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("imperative.child-content", format!("{error:?}")))?;
         let config = cfg.snapshot;
         let labels = imperative_labels(view_state);
         (match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
-            IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
-            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
+            IMPERATIVE_PLAY_BODY_MAIN => main::render(&scene, &config.run_output_json, labels),
+            IMPERATIVE_PLAY_BODY_SCRIPT => script::render(&scene),
+            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(&scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_CATALOGUE)),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(&scene, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
         })
         .map(semio_framework_plugin::built_to_component_tree)

@@ -128,10 +128,7 @@ impl ArchiveTextCursor {
         if self.collision {
             return Err(fault("stdio.zip.name-exists", "another archive entry already has the requested name"));
         }
-        Ok(Some(Emit {
-            artifact_mutations: vec![ZipMutation::RenameEntry(crate::schema::mutations::rename_entry::RenameEntry { name: entry.name.clone(), new_name: value.into() })],
-            ..Default::default()
-        }))
+        Ok(Some(Emit { artifact_mutations: vec![ZipMutation::RenameEntry(crate::schema::mutations::rename_entry::RenameEntry { name: entry.name.clone(), new_name: value.into() })], ..Default::default() }))
     }
 }
 
@@ -167,7 +164,7 @@ where
         Some(2)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<E>>) -> Result<ArtifactCommandWorkStep<EditorApp<E>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<E>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<E>>, Fault> {
         if self.restored && input.context.is_none() {
             return Err(fault("stdio.zip.checkpoint-context", "resuming archive work requires the captured canonical context"));
         }

@@ -23,13 +23,16 @@ use super::change_layer_transform;
 use super::change_layer_adjustment_parameter;
 use super::paint_stroke;
 use super::fill_region;
+use super::apply_filter;
+use super::transform_image;
+use super::fill_selection;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the raster document, derived per
 /// `📓️derivation-rules.md` from `RasterLayerNode`'s recursive tree shape and the `assets` root
 /// collection.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster", retire_cold = retire_raster_mutation)]
 pub enum RasterMutation {
@@ -52,6 +55,9 @@ pub enum RasterMutation {
     ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter),
     PaintStroke(paint_stroke::PaintStroke),
     FillRegion(fill_region::FillRegion),
+    ApplyFilter(apply_filter::ApplyFilter),
+    TransformImage(transform_image::TransformImage),
+    FillSelection(fill_selection::FillSelection),
 }
 
 /// 🧯️ Cold disposal of a scratch mutation nobody will apply again — the store retires decoded
@@ -73,8 +79,11 @@ pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutatio
 
 /// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
 /// `Mutation::inverse`.
-pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Vec<RasterMutation> {
-    protocol::Mutation::inverse(mutation, snapshot)
+pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    Ok({
+    protocol::Mutation::inverse(mutation, snapshot)?
+
+    })
 }
 
 pub type RasterEnvelope = store::ArtifactEnvelope<RasterSnapshot, RasterMutation>;
@@ -96,12 +105,12 @@ mod mask_tests;
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
-    let snapshot: RasterSnapshot = dsl::os_pack::json::from_json_str(snapshot_json).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
+    let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
     // 🧹️ A decoded before-document owns two fixed-capacity maps (`assets`, every adjustment's
     // `params`) whose `Drop` fails closed, so the snapshot cannot simply fall off this frame when
     // the mutation beside it does not decode — every committed before-document of this artifact is
     // populated.
-    match dsl::os_pack::json::from_json_str::<RasterMutation>(mutation_json) {
+    match semio_framework_pack_json::from_json_str::<RasterMutation>(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(mutation) => Ok((snapshot, mutation)),
         Err(error) => {
             retire_bridge_snapshot(snapshot);
@@ -145,11 +154,11 @@ fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
-    let value = dsl::os_pack::json::object([
-        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(snapshot))),
-        ("messages".to_string(), dsl::os_pack::json::Value::Array(messages.into_iter().map(dsl::os_pack::json::Value::from).collect())),
+    let value = semio_framework_pack_json::object([
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))),
+        ("messages".to_string(), semio_framework_pack_json::Value::Array(messages.into_iter().map(semio_framework_pack_json::Value::from).collect())),
     ]);
-    dsl::os_pack::json::to_string(&value)
+    semio_framework_pack_json::to_string(&value)
 }
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -179,7 +188,7 @@ pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base);
+    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let stepped = bridge_step(&base, &mutation);
     Mutation::retire_cold(mutation);
     retire_bridge_snapshot(base);
@@ -225,12 +234,12 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
     let parsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed raster example does not parse: {error:?}"))?;
     let printed = <RasterSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted raster document does not parse: {error:?}"))?;
-    let value = dsl::os_pack::json::object([
-        ("printed".to_string(), dsl::os_pack::json::Value::from(printed)),
-        ("snapshot".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&reparsed))),
+    let value = semio_framework_pack_json::object([
+        ("printed".to_string(), semio_framework_pack_json::Value::from(printed)),
+        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
     ]);
-    Ok(dsl::os_pack::json::to_string(&value))
+    Ok(semio_framework_pack_json::to_string(&value))
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -241,7 +250,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
 pub const KINDS: &[&str] =
-    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter", "paint-stroke", "fill-region"];
+    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter", "paint-stroke", "fill-region", "apply-filter", "transform-image", "fill-selection"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

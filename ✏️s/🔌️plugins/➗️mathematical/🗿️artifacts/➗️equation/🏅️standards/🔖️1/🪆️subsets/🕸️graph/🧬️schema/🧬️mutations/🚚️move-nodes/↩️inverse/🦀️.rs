@@ -5,15 +5,18 @@ use crate::standards::v1::subsets::graph::schema::mutations::set_node_positions:
 use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::MoveNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {
+pub fn inverse(payload: &super::MoveNodes, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if equation_targets_invariant(&payload.ids).is_err() || !payload.dx.is_finite() || !payload.dy.is_finite() || (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();
     }
-    let graph = crate::equation_graph(base);
+    let graph = base.graph.clone();
     let positions: Vec<EquationNodePosition> = payload.ids.iter().filter_map(|id| graph.nodes.iter().find(|node| &node.id == id)).map(|node| EquationNodePosition { id: node.id.clone(), x: node.x, y: node.y }).collect();
     if positions.is_empty() {
         return Vec::new();
     }
     vec![EquationMutation::SetNodePositions(SetNodePositions { positions })]
+
+    })())
 }
 //#endregion 🔖️Inverse

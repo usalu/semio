@@ -8,7 +8,6 @@
 
 use crate::StlSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::bounds::compute_stl_bounds;
 //#region 🔖️Inference
@@ -23,8 +22,11 @@ pub struct StlInference {
 }
 
 impl protocol::Inference<StlSnapshot> for StlInference {
-    fn infer(snapshot: &StlSnapshot) -> Self {
+    fn infer(snapshot: &StlSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { bounds: compute_stl_bounds(snapshot) }
+    
+        })
     }
 }
 
@@ -32,7 +34,9 @@ impl protocol::Inference<StlSnapshot> for StlInference {
 /// `StlSnapshot::default()`'s `triangles` ever stops being empty.
 impl Default for StlInference {
     fn default() -> Self {
-        <Self as protocol::Inference<StlSnapshot>>::infer(&StlSnapshot::default())
+        let snapshot = &StlSnapshot::default();
+
+        Self { bounds: compute_stl_bounds(snapshot) }
     }
 }
 
@@ -48,17 +52,6 @@ impl protocol::InferenceSpec<StlSnapshot> for StlInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `bounds` is a single min/max fold over every triangle's own 3
-/// vertices, already O(n) in total triangle count with no honest per-triangle incremental
-/// decomposition (a merkle dep-chain over this flat triangle list costs more than the fold it
-/// would cache) — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v_ascii::subsets::any::schema::StlBuilder {
-    type Snapshot = StlSnapshot;
-    type Inference = StlInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.stl.inference`'s facet leaves into the OS-wide inference catalog —

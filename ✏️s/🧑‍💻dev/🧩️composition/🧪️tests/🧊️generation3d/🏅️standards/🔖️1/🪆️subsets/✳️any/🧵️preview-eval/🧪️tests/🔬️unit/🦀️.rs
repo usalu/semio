@@ -32,8 +32,8 @@ fn a_hop_carries_the_window_id_and_kind_it_was_addressed_to() {
         let Effect::DispatchAction { action: dispatched, args, .. } = effect else { panic!("a hop must be a dispatch effect") };
         assert_eq!(dispatched, text(action));
         let args = args.expect("an addressed hop carries args");
-        assert_eq!(args.get("windowId").and_then(dsl::DslValue::as_str), Some("preview-1"));
-        assert_eq!(args.get("windowKindId").and_then(dsl::DslValue::as_str), Some("procedural-view-preview"));
+        assert_eq!(args.get("windowId").and_then(semio_framework_value::DslValue::as_str), Some("preview-1"));
+        assert_eq!(args.get("windowKindId").and_then(semio_framework_value::DslValue::as_str), Some("procedural-view-preview"));
     }
 }
 

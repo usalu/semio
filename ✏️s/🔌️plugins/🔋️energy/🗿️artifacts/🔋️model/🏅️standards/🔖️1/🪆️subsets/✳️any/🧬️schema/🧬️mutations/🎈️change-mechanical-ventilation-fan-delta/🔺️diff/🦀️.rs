@@ -17,7 +17,7 @@ pub fn diff(payload: &super::ChangeMechanicalVentilationFanDeltaPressure, base: 
         );
     }
     if existing.fan_delta_pressure_pa == payload.new_fan_delta_pressure_pa {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Mechanical Ventilation {} already carries this fan pressure rise (Pa): {}.", payload.id.0, payload.new_fan_delta_pressure_pa));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Mechanical Ventilation {} already carries this fan pressure rise (Pa): {}.", payload.id.0, payload.new_fan_delta_pressure_pa));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.mechanical_ventilations.iter_mut().find(|item| item.id == payload.id) {

@@ -310,7 +310,7 @@ impl<'a> pack::PackSource for SubSource<'a> {
 
     async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, pack::PackError> {
         if offset > self.len {
-            return Err(pack::PackError::Truncated(offset));
+            return Err(pack::PackError::Refusal(pack::PackRefusal::Truncated(offset)));
         }
         let available = ((self.len - offset) as usize).min(buf.len());
         self.inner.read_at(self.base + offset, &mut buf[..available]).await
@@ -331,9 +331,9 @@ impl pack::PackSource for PageSubSource<'_> {
 
     async fn read_at(&self, offset: u64, output: &mut [u8]) -> Result<usize, pack::PackError> {
         if offset > self.len {
-            return Err(pack::PackError::Truncated(offset));
+            return Err(pack::PackError::Refusal(pack::PackRefusal::Truncated(offset)));
         }
-        let absolute = self.base.checked_add(offset).ok_or(pack::PackError::Truncated(offset))? as usize;
+        let absolute = self.base.checked_add(offset).ok_or(pack::PackError::Refusal(pack::PackRefusal::Truncated(offset)))? as usize;
         let available = ((self.len - offset) as usize).min(output.len());
         let mut base = 0usize;
         let mut written = 0usize;

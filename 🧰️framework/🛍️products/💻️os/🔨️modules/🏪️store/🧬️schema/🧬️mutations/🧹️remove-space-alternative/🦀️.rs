@@ -24,7 +24,8 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
         crate::os_spr::MutationOutcome::new(SpaceHistoryDiff { remove_alternative_id: Some(self.alternative_id.clone()), ..Default::default() })
     }
-    fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
+    fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         base.alternatives
             .iter()
             .find(|value| value.id == self.alternative_id)
@@ -35,7 +36,9 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
                 ]
             })
             .unwrap_or_default()
-    }
+    
+    })())
+}
     fn label(&self) -> crate::LocalizedLabel {
         crate::LocalizedLabel::native(&format!("Remove space alternative {}", self.alternative_id), &format!("Space-Alternative {} entfernen", self.alternative_id))
     }

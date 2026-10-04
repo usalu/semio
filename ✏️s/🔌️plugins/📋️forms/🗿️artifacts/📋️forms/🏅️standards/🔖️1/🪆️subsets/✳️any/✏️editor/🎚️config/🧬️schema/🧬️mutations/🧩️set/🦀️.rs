@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-contributions")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetContributions {
@@ -16,9 +16,12 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for SetContributio
         next.contributions_json = self.json.clone();
         protocol::MutationOutcome::new(next)
     }
-    fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
+    fn inverse(&self, base: &FormsConfig) -> Result<Vec<FormsConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }

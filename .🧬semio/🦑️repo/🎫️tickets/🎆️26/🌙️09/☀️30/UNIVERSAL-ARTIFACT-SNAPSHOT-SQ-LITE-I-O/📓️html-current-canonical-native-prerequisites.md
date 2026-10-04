@@ -1,0 +1,3 @@
+# HTML Current Canonical Native Prerequisites
+
+The actual finite92 HTML build reported7 compiler prerequisites and selected no assertions. Mounted2 exact guarded paths; one Rust emit-only parser zero. Tests call the actual enabled public thirdparty oracle project_html_5, direct locale types, and the declared internal scene dev dependency. Retired Emit.description is replaced by explicit independently authored English/German literals for every actual mutation variant; the neutral net-leaf corpus, event application, inverse and one-row history laws remain intact. No alias or removed assertions. Owning Native replay remains pending.

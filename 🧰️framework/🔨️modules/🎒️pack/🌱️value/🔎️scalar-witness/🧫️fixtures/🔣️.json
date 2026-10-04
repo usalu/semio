@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "grants": [1, 64, 4096],
+  "cancelAfterSteps": [0, 1, 17, 4097],
+  "terminalEmpty": true,
+  "capture": {"ordinal":3,"value":7,"laterOrdinal":99,"laterValue":123,"projections":1,"wire":[1,3,0,1,0,4,7]},
+  "cases": [
+    {"id":"empty","ordinal":0,"fields":[null,null,null],"wireBytes":4,"symbols":0},
+    {"id":"short-text","ordinal":4,"fields":[{"type":"text","unit":"node","repeat":1,"suffix":""},null,null],"wireBytes":12,"symbols":1},
+    {"id":"large-unicode","ordinal":5,"fields":[{"type":"text","unit":"🌊","repeat":4097,"suffix":""},null,null],"wireBytes":16397,"symbols":0},
+    {"id":"resolve","ordinal":33,"fields":[{"type":"u64","value":"18446744073709551615"},{"type":"text","unit":"{}","repeat":1,"suffix":""},null],"wireBytes":22,"symbols":1},
+    {"id":"parameter","ordinal":36,"fields":[{"type":"text","unit":"slider","repeat":1,"suffix":""},{"type":"f64","value":"1.25"},{"type":"text","unit":"main","repeat":1,"suffix":""}],"wireBytes":32,"symbols":2},
+    {"id":"duplicate-long-text","ordinal":36,"fields":[{"type":"text","unit":"🌊","repeat":2049,"suffix":""},{"type":"f64","value":"-0"},{"type":"text","unit":"🌊","repeat":2049,"suffix":""}],"wireBytes":8218,"symbols":1},
+    {"id":"distinct-long-prefix","ordinal":36,"fields":[{"type":"text","unit":"a","repeat":8192,"suffix":"b"},{"type":"f64","value":"2"},{"type":"text","unit":"a","repeat":8192,"suffix":"a"}],"wireBytes":16408,"symbols":0},
+    {"id":"unsigned-max","ordinal":127,"fields":[{"type":"u64","value":"18446744073709551615"},null,null],"wireBytes":16,"symbols":0},
+    {"id":"canonical-nan","ordinal":128,"fields":[{"type":"f64","value":"NaN"},null,null],"wireBytes":15,"symbols":0}
+  ]
+}

@@ -11,13 +11,13 @@ fn dispatch(payload: RenameSpace, row: Option<&store::os_directory::DirectorySpa
 }
 
 fn folded_row(name: &str) -> store::os_directory::DirectorySpace {
-    let event_json = pack::json!({
+    let event_json = semio_framework_pack_json::json!({
         "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "space.created", "spaceId": "sp-1", "name": name, "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
         "recordedAtMs": 1000
     })
     .to_string();
-    let event = pack::from_json_str::<store::os_directory::DirectoryEvent>(&event_json).expect("fixture directory event");
+    let event = semio_framework_pack_json::from_json_str::<store::os_directory::DirectoryEvent>(&event_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture directory event");
     store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event).spaces.remove("sp-1").expect("folded row")
 }
 
@@ -30,7 +30,7 @@ async fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
         other => panic!("expected OpenDialog, got {other:?}"),
     };
     assert_eq!(dialog_id, "renameSpace");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["name"], "Old Name");
 }
 
@@ -46,7 +46,7 @@ async fn non_empty_name_relays_the_rename() {
         })
         .expect("a ReplayShellCommand effect");
     assert_eq!(action_id, "os.directory.rename-space");
-    let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
+    let args_value: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(&args.expect("args"));
     assert_eq!(args_value["spaceId"], "sp-1");
     assert_eq!(args_value["name"], "New Name");
 }

@@ -52,7 +52,7 @@ async fn stacking_order_changes_but_geometry_does_not() {
 async fn inverse_restores_the_previous_address() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_drawing_mutation(&base, &mutation);
+    let inverse = inverse_drawing_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "reorder-layer undoes with exactly one counter-reorder");
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &mutation).expect("forward applies");

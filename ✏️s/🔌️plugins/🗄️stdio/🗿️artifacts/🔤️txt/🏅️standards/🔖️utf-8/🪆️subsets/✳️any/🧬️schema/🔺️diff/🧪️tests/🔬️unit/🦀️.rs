@@ -165,8 +165,8 @@ async fn diff_codec_text_binary_roundtrip_law() {
 async fn diff_grammar_conformance_law() {
     use protocol::DiffCodec;
     let grammar_text = crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
-    let grammar = dsl::parse_grammar(grammar_text).expect("parse diff grammar");
-    let recognizer = dsl::Recognizer::compile(&grammar);
+    let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse diff grammar");
+    let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
     let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
     let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
@@ -184,6 +184,12 @@ async fn diff_grammar_conformance_law() {
         let printed = d.print_diff();
         let ok = recognizer.recognize(&printed).unwrap_or_else(|e| panic!("recognize({printed:?}) errored: {e:?}"));
         assert!(ok, "diff grammar must recognize real print_diff output {printed:?} for {d:?}");
+    }
+    for text in ["lines", "removed", "modified", "added", "index", "text", "lf", "cr-lf", "trailing-newline", "line-ending", "true", "false"] {
+        let diff = TxtDiff { lines: Some(TxtLinesDiff { added: vec![TxtLineAdded { index: 0, text: text.into() }], ..Default::default() }), ..Default::default() };
+        let printed = diff.print_diff();
+        assert!(recognizer.recognize(&printed).expect("recognize literal line text"), "diff grammar must recognize literal {text:?}: {printed:?}");
+        assert_eq!(TxtDiff::parse_diff(&printed).expect("parse literal line text"), diff);
     }
 }
 //#endregion 🔖️DiffGrammarConformanceLaw

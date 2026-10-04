@@ -2,36 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutations.json",
   "title": "FlowMutation",
-  "oneOf": [
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/create-widget/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/delete-widget/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/reorder-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/replace-widget/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/connect-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/disconnect-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/reorder-synapses/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/update-synapse-endpoints/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/move-widgets/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/mutation/duplicate-widget/schema.json"
-    }
-  ]
+  "description": "The flow parent owns no mutation (design §20.15): its widgets, synapses and layout live in the composed content child (s.stdio.semio@v1/flow) and are edited only by that child's leaves, so no parent operation validates.",
+  "not": {}
 }

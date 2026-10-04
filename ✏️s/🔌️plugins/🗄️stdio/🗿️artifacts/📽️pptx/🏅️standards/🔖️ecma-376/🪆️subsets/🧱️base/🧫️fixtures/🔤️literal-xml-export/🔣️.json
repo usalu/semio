@@ -1,0 +1,29 @@
+{
+  "schema": "semio.stdio.pptx.literal-xml-export.v1",
+  "cases": [
+    {
+      "id": "vml-apostrophes-and-entities",
+      "path": "ppt/drawings/vmlDrawing71.vml",
+      "contentType": "application/vnd.openxmlformats-officedocument.vmlDrawing",
+      "xml": "<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\" style=\"font-family:'O'Brien'; width:12pt; content:&quot;A&amp;B&quot;\"/>",
+      "attribute": "style",
+      "value": "font-family:'O'Brien'; width:12pt; content:\"A&B\""
+    },
+    {
+      "id": "custom-vml-unicode",
+      "path": "assets/custom-drawing.vml",
+      "contentType": "application/vnd.openxmlformats-officedocument.vmlDrawing",
+      "xml": "<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\" style=\"font-family:'文字'; color:red\"/>",
+      "attribute": "style",
+      "value": "font-family:'文字'; color:red"
+    },
+    {
+      "id": "extended-properties-literal-empty-element",
+      "path": "docProps/app.xml",
+      "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml",
+      "xml": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Template/><Company data=\"O'Brien &amp; Söhne\">文字</Company></Properties>",
+      "attribute": "data",
+      "value": "O'Brien & Söhne"
+    }
+  ]
+}

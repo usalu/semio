@@ -1,0 +1,420 @@
+{
+  "at": "2026-10-03T13:30:37.497Z",
+  "fullInputHash": "95a261713c5f7d42c02656d66ad828ad8013402436199f48dd3f333ef8ba013d",
+  "guards": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs",
+      "capturedHash": "4f0dd2fbfe8a2ad87b7223f28789f8caf441cef76315949c100e8e706857f9bd",
+      "bodyHashExact": true,
+      "currentHash": "4f0dd2fbfe8a2ad87b7223f28789f8caf441cef76315949c100e8e706857f9bd",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "capturedHash": "6eb8afa07b4d1b75c3403567efce8c10b8b80ae6d257734333951ab48e55d622",
+      "bodyHashExact": true,
+      "currentHash": "6eb8afa07b4d1b75c3403567efce8c10b8b80ae6d257734333951ab48e55d622",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
+      "capturedHash": "4cb90af61211cdb308967c32cb37114a1a849fe3b83d893eb010e6c559d3f1b1",
+      "bodyHashExact": true,
+      "currentHash": "4cb90af61211cdb308967c32cb37114a1a849fe3b83d893eb010e6c559d3f1b1",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔗️reference/🦀️.rs",
+      "capturedHash": "f1677c474a8563c5541da8384dfec603ab3ed0d27ebe7b50bc9dcd2bac8223b0",
+      "bodyHashExact": true,
+      "currentHash": "f1677c474a8563c5541da8384dfec603ab3ed0d27ebe7b50bc9dcd2bac8223b0",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🪟️viewport/🦀️.rs",
+      "capturedHash": "23f0721d9c2ea7a4d386f83d4595073cea55004d05e4cceefecde47f8731f10e",
+      "bodyHashExact": true,
+      "currentHash": "23f0721d9c2ea7a4d386f83d4595073cea55004d05e4cceefecde47f8731f10e",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "a5b711cf2d190abf50aec059369ca6fb5b11dcc42243f943f70717da7b39bbf4",
+      "bodyHashExact": true,
+      "currentHash": "a5b711cf2d190abf50aec059369ca6fb5b11dcc42243f943f70717da7b39bbf4",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "c3194f523c7829426c4fec0fce9fbb979c1b067e8fff25eebf91d48ba6c0cc09",
+      "bodyHashExact": true,
+      "currentHash": "c3194f523c7829426c4fec0fce9fbb979c1b067e8fff25eebf91d48ba6c0cc09",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "5fb24fcc5f1cb65388eedfea1f24f5d60c51bc6a2ddc6471189d51906e24f19a",
+      "bodyHashExact": true,
+      "currentHash": "5fb24fcc5f1cb65388eedfea1f24f5d60c51bc6a2ddc6471189d51906e24f19a",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "507595f59f9358c8184bf1ec2f8f40a76cf2fc09ef4c051617506c2eb1f17a1a",
+      "bodyHashExact": true,
+      "currentHash": "507595f59f9358c8184bf1ec2f8f40a76cf2fc09ef4c051617506c2eb1f17a1a",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🦀️.rs",
+      "capturedHash": "8bf1a6adb811a56ba46cbee37c97e3957e79ee087dd192ea20d3e427a7fa4e53",
+      "bodyHashExact": true,
+      "currentHash": "8bf1a6adb811a56ba46cbee37c97e3957e79ee087dd192ea20d3e427a7fa4e53",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "2f930d7e91d92726ea80ef4aee2297ce25abf268fbe8795429c0b23c0cff53d1",
+      "bodyHashExact": true,
+      "currentHash": "2f930d7e91d92726ea80ef4aee2297ce25abf268fbe8795429c0b23c0cff53d1",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs",
+      "capturedHash": "e5871113ee8ab036cdbd5e2aa4642b24f59d8e96dd32a658346c548a3b0d8d13",
+      "bodyHashExact": true,
+      "currentHash": "e5871113ee8ab036cdbd5e2aa4642b24f59d8e96dd32a658346c548a3b0d8d13",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🦀️.rs",
+      "capturedHash": "4add9c02b1d25fe91941f801bfb9f3fe295aa3ea19c15e48495d770ae7f03c46",
+      "bodyHashExact": true,
+      "currentHash": "4add9c02b1d25fe91941f801bfb9f3fe295aa3ea19c15e48495d770ae7f03c46",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "5ed6e8e4f1610fd6e5be0d50c810b6baac32e79a092b1d34e0a8d0bf52898244",
+      "bodyHashExact": true,
+      "currentHash": "5ed6e8e4f1610fd6e5be0d50c810b6baac32e79a092b1d34e0a8d0bf52898244",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "capturedHash": "6582add1349e8ec4d2fc4bcc837fe5a00c8b8f079d945cbffa01924c3a0a4368",
+      "bodyHashExact": true,
+      "currentHash": "6582add1349e8ec4d2fc4bcc837fe5a00c8b8f079d945cbffa01924c3a0a4368",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️composite-timestamp/🦀️.rs",
+      "capturedHash": "b2b66b2918dbb19f11a77cee0ae58e269b9a8dd7b1c60c742307e8bf47212dbe",
+      "bodyHashExact": true,
+      "currentHash": "b2b66b2918dbb19f11a77cee0ae58e269b9a8dd7b1c60c742307e8bf47212dbe",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-aggregate-source-authority/🦀️.rs",
+      "capturedHash": "2e3a0ee60be54c284ee1a9fe5f543e2681abdb3f0ea0931556ee53cc4496bd2f",
+      "bodyHashExact": true,
+      "currentHash": "2e3a0ee60be54c284ee1a9fe5f543e2681abdb3f0ea0931556ee53cc4496bd2f",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mandatory-mutations/🦀️.rs",
+      "capturedHash": "bcfd1cff6023dd81402a8cb7e1bfaa74fe15fc31b57796a374ceb00c449936f9",
+      "bodyHashExact": true,
+      "currentHash": "bcfd1cff6023dd81402a8cb7e1bfaa74fe15fc31b57796a374ceb00c449936f9",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️composite-attrs/🦀️.rs",
+      "capturedHash": "6d758af3f3d09066cabec0f68016981b45203be26489ceb3d79decde4845becb",
+      "bodyHashExact": true,
+      "currentHash": "6d758af3f3d09066cabec0f68016981b45203be26489ceb3d79decde4845becb",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
+      "capturedHash": "c44c0bbdbe370a56e7d7eb7d54da303d0e580af4e7ae8ae529a092b8e2e18ae4",
+      "bodyHashExact": true,
+      "currentHash": "c44c0bbdbe370a56e7d7eb7d54da303d0e580af4e7ae8ae529a092b8e2e18ae4",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-attrs/🦀️.rs",
+      "capturedHash": "62f9bc8780ecc861b56e698927cdb16c6a41cbf5cc8b37f837674bdb7dbd013e",
+      "bodyHashExact": true,
+      "currentHash": "62f9bc8780ecc861b56e698927cdb16c6a41cbf5cc8b37f837674bdb7dbd013e",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🦀️.rs",
+      "capturedHash": "f290f3d1601005a93d7f7849bf91d2ed6d573c8452332d62d4e1ced2337fe764",
+      "bodyHashExact": true,
+      "currentHash": "f290f3d1601005a93d7f7849bf91d2ed6d573c8452332d62d4e1ced2337fe764",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🦀️.rs",
+      "capturedHash": "798d6657696ff0372899aae469d1993f0b296171295c40b8cb764434110b5fcb",
+      "bodyHashExact": true,
+      "currentHash": "798d6657696ff0372899aae469d1993f0b296171295c40b8cb764434110b5fcb",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-leaf-json/🦀️.rs",
+      "capturedHash": "a025fdb7583a76378ae7d662871968d28b56a23a65d72f5dee59e86afbb5d0c3",
+      "bodyHashExact": true,
+      "currentHash": "a025fdb7583a76378ae7d662871968d28b56a23a65d72f5dee59e86afbb5d0c3",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-leaf-derive/🦀️.rs",
+      "capturedHash": "1fb44abe27cdb25f1dfd6901ebe33bee36ad6e71d4852a073f9b3c3fac65ed21",
+      "bodyHashExact": true,
+      "currentHash": "1fb44abe27cdb25f1dfd6901ebe33bee36ad6e71d4852a073f9b3c3fac65ed21",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "1cc8e0e36176aaa6d2b171103de20c8d1ef24b228c957e0a35fbe5e8f0c7d0e5",
+      "bodyHashExact": true,
+      "currentHash": "1cc8e0e36176aaa6d2b171103de20c8d1ef24b228c957e0a35fbe5e8f0c7d0e5",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+      "capturedHash": "52ba4549b45e2b2fcb990b39319a8aa1d43283c287a859d3e9349b0f094a2668",
+      "bodyHashExact": true,
+      "currentHash": "52ba4549b45e2b2fcb990b39319a8aa1d43283c287a859d3e9349b0f094a2668",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏷️type/🦀️.rs",
+      "capturedHash": "61e0f42742d14cf3b9792ee931568da791f4865678d8dbfc65f67ae1fdca08c0",
+      "bodyHashExact": true,
+      "currentHash": "61e0f42742d14cf3b9792ee931568da791f4865678d8dbfc65f67ae1fdca08c0",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "099b142522a43a9e84851e3e80ec56c7a83f80e0d54e28dae3394befcec80db0",
+      "bodyHashExact": true,
+      "currentHash": "099b142522a43a9e84851e3e80ec56c7a83f80e0d54e28dae3394befcec80db0",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "capturedHash": "52a8f3bc2e8edc96f2458cf41e306da4e28f5681ebdef751adf8d33ec9322595",
+      "bodyHashExact": true,
+      "currentHash": "52a8f3bc2e8edc96f2458cf41e306da4e28f5681ebdef751adf8d33ec9322595",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "capturedHash": "5dbb92ade9a4b51b0a10267687c0f41488c7da12a68eb8165f47b8b0ee2abf51",
+      "bodyHashExact": true,
+      "currentHash": "5dbb92ade9a4b51b0a10267687c0f41488c7da12a68eb8165f47b8b0ee2abf51",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🦀️.rs",
+      "capturedHash": "556fb9e8a3cba9f74d983f884ad30f1671341e1a120aef20cbd1f89252b688a7",
+      "bodyHashExact": true,
+      "currentHash": "556fb9e8a3cba9f74d983f884ad30f1671341e1a120aef20cbd1f89252b688a7",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🦀️.rs",
+      "capturedHash": "5a49d04103dad5fe7388a1fd980c36fa1e47c7f80afce2a78cd2e592bd2dc9da",
+      "bodyHashExact": true,
+      "currentHash": "5a49d04103dad5fe7388a1fd980c36fa1e47c7f80afce2a78cd2e592bd2dc9da",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🦀️.rs",
+      "capturedHash": "352ad345645f53dcbbd9b6391ee3f36c709ef01ebea83aab01dc4536880088c5",
+      "bodyHashExact": true,
+      "currentHash": "352ad345645f53dcbbd9b6391ee3f36c709ef01ebea83aab01dc4536880088c5",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🦀️.rs",
+      "capturedHash": "0501f9280fbde97e25ed7c16f05c3c6239d583319143e03fbeec4b6ac7a8fc8f",
+      "bodyHashExact": true,
+      "currentHash": "0501f9280fbde97e25ed7c16f05c3c6239d583319143e03fbeec4b6ac7a8fc8f",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "capturedHash": "d534069b682865e63bcae829fb50c665888635102aa4eb026c24113d142bdc14",
+      "bodyHashExact": true,
+      "currentHash": "d534069b682865e63bcae829fb50c665888635102aa4eb026c24113d142bdc14",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "099a71f4177d8850047a130e468a685897ff508b36e524f6695f66df3a5e9f01",
+      "bodyHashExact": true,
+      "currentHash": "099a71f4177d8850047a130e468a685897ff508b36e524f6695f66df3a5e9f01",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "capturedHash": "c5c03da5f455bbadc16d94d3180cc3073ab70cfb35fff9d95b70ad13488de231",
+      "bodyHashExact": true,
+      "currentHash": "c5c03da5f455bbadc16d94d3180cc3073ab70cfb35fff9d95b70ad13488de231",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "6911bb796f8ce1c080ff370999106f3f4de3f9c5d145b6e8708b291382420f59",
+      "bodyHashExact": true,
+      "currentHash": "6911bb796f8ce1c080ff370999106f3f4de3f9c5d145b6e8708b291382420f59",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "capturedHash": "dbc7bf2ad5f52794343a8e613c1057e325bfddc6f3548ce0d3a99675f76df685",
+      "bodyHashExact": true,
+      "currentHash": "dbc7bf2ad5f52794343a8e613c1057e325bfddc6f3548ce0d3a99675f76df685",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "342f0d630fddefcb35e00cb39d4c6c469ab6e4440675a4171e90de2aefadeebd",
+      "bodyHashExact": true,
+      "currentHash": "342f0d630fddefcb35e00cb39d4c6c469ab6e4440675a4171e90de2aefadeebd",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "capturedHash": "f9bb5e4b804d17ccb5e81d6c9fef80c50349c82606c9331231265653e0aff2ab",
+      "bodyHashExact": true,
+      "currentHash": "f9bb5e4b804d17ccb5e81d6c9fef80c50349c82606c9331231265653e0aff2ab",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "5c6f14479b5dc24ef72debdb5c351371a0cbf8415e51949a1899cffac0b722c7",
+      "bodyHashExact": true,
+      "currentHash": "5c6f14479b5dc24ef72debdb5c351371a0cbf8415e51949a1899cffac0b722c7",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "capturedHash": "527f7d2fb0122f5ecaad9ea15fa2614cbff1d15675e8af4172f8e90423aef3ce",
+      "bodyHashExact": true,
+      "currentHash": "527f7d2fb0122f5ecaad9ea15fa2614cbff1d15675e8af4172f8e90423aef3ce",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "b1174eb54f4ec158d344a5323c4beb7facbee8a3b4eb386b5c14a782f5d93b92",
+      "bodyHashExact": true,
+      "currentHash": "b1174eb54f4ec158d344a5323c4beb7facbee8a3b4eb386b5c14a782f5d93b92",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "capturedHash": "182f5887b87fcec1c86666bc79217ed5d180021ee9d38c0cf61b6d9b13890720",
+      "bodyHashExact": true,
+      "currentHash": "182f5887b87fcec1c86666bc79217ed5d180021ee9d38c0cf61b6d9b13890720",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "e53410f53bcc0673a5d0632df0e6bc974602ca04cf1667730fae67841e007ed9",
+      "bodyHashExact": true,
+      "currentHash": "e53410f53bcc0673a5d0632df0e6bc974602ca04cf1667730fae67841e007ed9",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+      "capturedHash": "019ade0c6765891289e8811a046bc9b8471a0e478322a4369eeec37074e71146",
+      "bodyHashExact": true,
+      "currentHash": "019ade0c6765891289e8811a046bc9b8471a0e478322a4369eeec37074e71146",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "1a24f99a87f6f550ed0a8e0b8032a0132d1d41e31d185be57916b2df65a6d2f0",
+      "bodyHashExact": true,
+      "currentHash": "1a24f99a87f6f550ed0a8e0b8032a0132d1d41e31d185be57916b2df65a6d2f0",
+      "currentExact": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🦀️.rs",
+      "capturedHash": "0c3bad300e5f133fddf3a8d743b9e909d32ae26e32c63c7e3c0902824c94a6c3",
+      "bodyHashExact": true,
+      "currentHash": "0c3bad300e5f133fddf3a8d743b9e909d32ae26e32c63c7e3c0902824c94a6c3",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🦀️.rs",
+      "capturedHash": "7f6cca87ed9df9b96552b786d28a723cabeabcdea74b61b4c84d3f4f9a30ab55",
+      "bodyHashExact": true,
+      "currentHash": "7f6cca87ed9df9b96552b786d28a723cabeabcdea74b61b4c84d3f4f9a30ab55",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "8f3b90dace61efbcf5e72c390fd2794f9382463f49469d4c938ba28c5e369784",
+      "bodyHashExact": true,
+      "currentHash": "8f3b90dace61efbcf5e72c390fd2794f9382463f49469d4c938ba28c5e369784",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "capturedHash": "db4dd623e7301c44c7f9ca55175a9a01a1900c551606b41de82aeb231933e066",
+      "bodyHashExact": true,
+      "currentHash": "db4dd623e7301c44c7f9ca55175a9a01a1900c551606b41de82aeb231933e066",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "capturedHash": "64d1bcb511cf6428a1e7db301154a4a068c4842ceaf0e3835e048b83d5407dc7",
+      "bodyHashExact": true,
+      "currentHash": "64d1bcb511cf6428a1e7db301154a4a068c4842ceaf0e3835e048b83d5407dc7",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "capturedHash": "055bd708ce972c75f132d34a322986c6d1867be4458413c0ca0abe726bb05f49",
+      "bodyHashExact": true,
+      "currentHash": "055bd708ce972c75f132d34a322986c6d1867be4458413c0ca0abe726bb05f49",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+      "capturedHash": "20973b4ce3e85fe304d68adde88924aaa606dc23c6d7325de23172cd3166fa23",
+      "bodyHashExact": true,
+      "currentHash": "20973b4ce3e85fe304d68adde88924aaa606dc23c6d7325de23172cd3166fa23",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "capturedHash": "496ff313000a8609c74c3b3aba30c283d06ffa416205596c857cea434e12865d",
+      "bodyHashExact": true,
+      "currentHash": "496ff313000a8609c74c3b3aba30c283d06ffa416205596c857cea434e12865d",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "capturedHash": "1e8ffb75ad590164c580d48a5c2219661c78accb583959544326dc8108603798",
+      "bodyHashExact": true,
+      "currentHash": "1e8ffb75ad590164c580d48a5c2219661c78accb583959544326dc8108603798",
+      "currentExact": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "capturedHash": "ec8844f74a7ff3641036f00506d99f5473a66519efa12ac96bca8ce93e840bf0",
+      "bodyHashExact": true,
+      "currentHash": "ec8844f74a7ff3641036f00506d99f5473a66519efa12ac96bca8ce93e840bf0",
+      "currentExact": true
+    }
+  ],
+  "sourceWrites": 0
+}

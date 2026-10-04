@@ -1,0 +1,11 @@
+{
+  "pluginOwners": 117,
+  "stdioOwners": 57,
+  "nonstdioOwners": 60,
+  "nonstdioCalls": 60,
+  "nonstdioUniqueCrates": 60,
+  "stdioSelectedCrates": 36,
+  "newSelectedPackagesOutsideRetained": [],
+  "removedSelectedPackages": [],
+  "scope": "full-artifact-catalog plus actual nonstdio composition plugin constructors; feature-conditioned"
+}

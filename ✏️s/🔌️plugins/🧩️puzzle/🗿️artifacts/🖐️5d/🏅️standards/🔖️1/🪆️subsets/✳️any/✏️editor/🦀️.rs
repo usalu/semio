@@ -34,7 +34,7 @@ use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, artifact as artifact_panel, inspection, settings as settings_panel};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
+use crate::editor::puzzle5d::terminology::{puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::window as window_ownership;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
 use semio_framework_plugin::ActionArgDef;
@@ -101,7 +101,7 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactToolCompletionRejection, InteractionView};
 use serde::{Deserialize, Serialize};
-use dsl::os_pack::json::{parse, Value};
+use semio_framework_pack_json::{parse, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use semio_framework_2d::compute::EngineHandles;
@@ -202,7 +202,7 @@ const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLO
 const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = PUZZLE5D_IMPORT_MUTATION_ITEMS.div_ceil(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)) }
+    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
@@ -210,7 +210,7 @@ pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// `setSelection` action builders every document tree row used to construct by hand.
 pub fn puzzle5d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-    puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(dsl::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+    puzzle5d_action(INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
 #[derive(Clone, Debug, Default)]
@@ -441,10 +441,10 @@ pub struct Puzzle5dDocument {
 /// document JSON, matching `Puzzle5dPlaySnapshot`'s own still-`serde_json::Value` boundary), so this
 /// routes through the framework's pre-existing `DslValue -> serde_json::Value` bridge and the
 /// struct's own unconditional `Deserialize` instead. Needed because
-/// `🎮️commands/🧪️set-fixture-json` round-trips this type through `dsl::os_pack::json::from_json_str`.
-impl dsl::FromValue for Puzzle5dDocument {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        serde_json::from_value(serde_json::Value::from(&value)).map_err(|error| dsl::ValueError::new(error.to_string()))
+/// `🎮️commands/🧪️set-fixture-json` round-trips this type through `semio_framework_pack_json::from_json_str`.
+impl semio_framework_value::FromValue for Puzzle5dDocument {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        serde_json::from_value(serde_json::Value::from(&value)).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 
@@ -497,9 +497,9 @@ fn puzzle5d_value_as_f64_4(value: &Value) -> Option<[f64; 4]> {
 /// `puzzle3d_projection_value`.
 fn puzzle5d_projection_value<T>(value: T) -> Value
 where
-    dsl::DslValue: From<T>,
+    semio_framework_value::DslValue: From<T>,
 {
-    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(value))
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(value))
 }
 
 /// 🌉️ `puzzle5d_document_delta_operations` (owned by `🧬️mutations/🦀️.rs`, out of this ticket's
@@ -507,8 +507,8 @@ where
 /// `DslValue` at that one boundary, inferring the foreign return type from the callee's own
 /// signature via `Into` rather than naming it here.
 fn puzzle5d_operations_from_values(before: &Value, after: &Value) -> Vec<Puzzle5dMutation> {
-    let before_dsl = dsl::os_pack::json::to_dsl_value(before);
-    let after_dsl = dsl::os_pack::json::to_dsl_value(after);
+    let before_dsl = semio_framework_pack_json::to_dsl_value(before);
+    let after_dsl = semio_framework_pack_json::to_dsl_value(after);
     puzzle5d_document_delta_operations(&(&before_dsl).into(), &(&after_dsl).into())
 }
 
@@ -518,7 +518,7 @@ fn puzzle5d_operations_from_values(before: &Value, after: &Value) -> Vec<Puzzle5
 /// route.
 fn value_from_document(document: &Puzzle5dDocument) -> Value {
     let serde_value = serde_json::to_value(document).unwrap_or(serde_json::Value::Null);
-    dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&serde_value))
+    semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::from(&serde_value))
 }
 
 /// 🧮️ Document operations for a document mutation through the typed semantic delta vocabulary.
@@ -755,7 +755,7 @@ pub fn find_part_by_grip_full_id<'a>(document: &'a Puzzle5dDocument, full_id: &s
 }
 
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| <Vec<String> as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+    args.and_then(|value| value.get("ids")).and_then(|value| <Vec<String> as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
 pub fn remove_parts(document: &mut Puzzle5dDocument, part_ids: &[String]) {
@@ -983,7 +983,7 @@ pub fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, activ
 /// 🧾️ The interaction-aware twin: the render paths that are handed an `InteractionView` build the
 /// scene through this one so both panes project the SAME live selection and hover.
 pub fn scene_from_projection_with_interaction(projection: &Value, runtime: Puzzle5dRuntime, active_utility: &str, interaction: Puzzle5dInteractionSnapshot) -> Puzzle5dScene {
-    let document = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(projection)).unwrap_or_else(|_| empty_document());
+    let document = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_document());
     Puzzle5dScene { document, runtime, active_utility: active_utility.to_string(), interaction }
 }
 
@@ -1704,7 +1704,7 @@ impl Puzzle5dSelectionScan {
                     let selected = row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id))
                         || source.zip(target).is_some_and(|(source, target)| !self.part_ids.is_empty() && self.part_ids.contains(source) && self.part_ids.contains(target));
                     if selected {
-                        self.fasteners.push(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
+                        self.fasteners.push(serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
                     }
                 } else {
                     self.stage = Puzzle5dSelectionStage::Parts;
@@ -1716,7 +1716,7 @@ impl Puzzle5dSelectionScan {
                 if let Some(row) = self.row("parts", cursor) {
                     self.cursor += 1;
                     if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)) {
-                        self.parts.push(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
+                        self.parts.push(serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|error| error.to_string())?);
                     }
                 } else {
                     self.stage = Puzzle5dSelectionStage::Complete;
@@ -2446,7 +2446,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                     next.part_2d.y += self.delta.1;
                     next.part_3d.origin[0] += self.delta.0;
                     next.part_3d.origin[1] += self.delta.1;
-                    let typed = match <crate::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&serde_json::to_value(&next).unwrap_or(serde_json::Value::Null))) {
+                    let typed = match <crate::Puzzle5dPart as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&serde_json::to_value(&next).unwrap_or(serde_json::Value::Null))) {
                         Ok(typed) => typed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -2755,7 +2755,7 @@ fn puzzle5d_decode_import_fragment(media_json: &str) -> Result<Value, String> {
     if media_json.len() > PUZZLE5D_IMPORT_MEDIA_BYTES {
         return Err("puzzle5d kit:in payload exceeds its predecode cap".into());
     }
-    parse(media_json).map_err(|error| error.to_string())
+    parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
 /// 🧹️ One bounded unit of a retained `String`'s retirement: its content in ONE item (clearing a `String` frees
@@ -3157,12 +3157,6 @@ fn puzzle5d_retire_completion_emit_step(
     if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.draft_mutations, maximum_bytes)? {
         return Ok(Some(step));
     }
-    if let Some(step) = puzzle5d_retire_optional_string_step(&mut owner.description, maximum_bytes)? {
-        return Ok(Some(step));
-    }
-    if let Some(step) = puzzle5d_retire_optional_string_step(&mut owner.coalesce_key, maximum_bytes)? {
-        return Ok(Some(step));
-    }
     if let Some(effect) = owner.effects.last_mut() {
         if let Some(step) = puzzle5d_retire_completion_effect_step(effect, maximum_bytes)? {
             return Ok(Some(step));
@@ -3248,6 +3242,7 @@ impl Puzzle5dImportJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, port: String, media: Media) -> Self {
         let media_json = match media.payload {
             semio_framework_plugin::MediaPayload::Structured { json, .. } => Some(json),
+            semio_framework_plugin::MediaPayload::Intrinsic { value, .. } => Some(semio_framework_pack_json::to_json_string(&value)),
             semio_framework_plugin::MediaPayload::Binary { .. } => None,
         };
         Self {
@@ -3477,7 +3472,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogParts => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "parts").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogPartKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogPartKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3490,7 +3485,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogGrips => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "grips").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogGripKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogGripKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3503,7 +3498,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogFasteners => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "fasteners").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogFastenerKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogFastenerKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3516,7 +3511,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogRopes => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "ropes").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogRopeKind as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogRopeKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3530,7 +3525,7 @@ impl InteractiveJob for Puzzle5dImportJob {
             Puzzle5dImportStage::LoadCompatibility => {
                 let rows = self.snapshot_kind_compatibility_rows();
                 if let Some(row) = rows.get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -3700,7 +3695,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                     if !puzzle5d_import_keys_are(row, &["source", "target", "bidirectional", "important", "specificity"]) {
                         return puzzle5d_job_fault(cx, "puzzle5d kit:in compatibility contains an unknown field");
                     }
-                    let parsed = match <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(cx, error.to_string()),
                     };
@@ -4095,21 +4090,21 @@ fn puzzle5d_context_menu_items(
     envelope: &Puzzle5dScene,
     selection: &Puzzle5dContextSelection,
     labels: &Puzzle5dLabels,
-    is_de: bool,
+    view_state: &semio_framework_plugin::ViewModel,
     registry: &semio_framework_plugin::AppActionRegistry,
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
     let bespoke = |id: &str, label: String, icon: &str, action: &str, args: Option<Value>, destructive: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label),
         icon: Some(icon.into()),
         action: Some(action.into()),
-        args: args.map(|value| dsl::os_pack::json::to_dsl_value(&value)),
+        args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)),
         destructive: destructive.then_some(true),
         ..Default::default()
     };
     if selection.is_empty() {
-        return Menu::of(registry)
+        return Menu::of(registry, view_state)
             .item(bespoke("select-all", labels.select_all.into(), "box-select", "selectAll", None, false))
             .item(bespoke("paste", labels.paste.into(), "clipboard-paste", "paste", None, false))
             .action("openAddPartDialog")
@@ -4120,27 +4115,27 @@ fn puzzle5d_context_menu_items(
         let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| part_ids.contains(&part.id)).collect();
         let all_hidden = !selected.is_empty() && selected.iter().all(|part| part.part_2d.hidden.unwrap_or(false));
         let all_locked = !selected.is_empty() && selected.iter().all(|part| part.part_2d.locked.unwrap_or(false));
-        let phrase = selection_count_phrase(is_de, &[(part_ids.len(), if is_de { "Teil" } else { "part" }, if is_de { "Teile" } else { "parts" })]);
-        return Menu::of(registry)
+        let phrase = selection_count_phrase(view_state.locale, &[(part_ids.len(), SelectionKind::Part)]).unwrap_or_default();
+        return Menu::of(registry, view_state)
             .action("duplicateSelection")
             .item(bespoke("copy", labels.copy.into(), "copy", "copy", None, false))
             .item(bespoke("cut", labels.cut.into(), "scissors", "cut", None, false))
             .action("selectSameKindSelection")
             .action("focusSelection")
             .group("settings", |m| {
-                m.item(bespoke("hide-show", if all_hidden { labels.show.into() } else { labels.hide.into() }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(dsl::json!({ "flag": "hidden", "value": !all_hidden })), false))
-                    .item(bespoke("lock-unlock", if all_locked { labels.unlock.into() } else { labels.lock.into() }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(dsl::json!({ "flag": "locked", "value": !all_locked })), false))
+                m.item(bespoke("hide-show", if all_hidden { labels.show.into() } else { labels.hide.into() }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(semio_framework_pack_json::json!({ "flag": "hidden", "value": !all_hidden })), false))
+                    .item(bespoke("lock-unlock", if all_locked { labels.unlock.into() } else { labels.lock.into() }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(semio_framework_pack_json::json!({ "flag": "locked", "value": !all_locked })), false))
             })
             .item(bespoke("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
             .build();
     }
     if !selection.grip_ids.is_empty() {
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry, view_state);
         // 🎣️ Only for EXACTLY one grip: the suggestion search points at a single grip. The row carries the
         // world host's `openVortexSuggestions` verb, which the host turns into a live submenu: it starts the
         // search the moment the menu opens and lists the free parts as they are found.
         if let [only] = selection.grip_ids.as_slice() {
-            menu = menu.item(bespoke("suggest", labels.suggest_parts.into(), "sparkles", "openVortexSuggestions", Some(dsl::json!({ "fullId": only.as_str() })), false));
+            menu = menu.item(bespoke("suggest", labels.suggest_parts.into(), "sparkles", "openVortexSuggestions", Some(semio_framework_pack_json::json!({ "fullId": only.as_str() })), false));
         }
         return menu.action("focusSelection").item(bespoke("delete", labels.delete.into(), "trash", "deleteSelection", None, true)).build();
     }
@@ -4148,7 +4143,7 @@ fn puzzle5d_context_menu_items(
     // needs a REPLACEMENT grip a context menu cannot name, and dispatching it with an id alone is an
     // early return — a visibly dead row. Retargeting lives in the inspector, which has both grips.
     let Some(id) = selection.fastener_ids.first() else { return Vec::new() };
-    Menu::of(registry).item(bespoke("delete", labels.delete.into(), "trash", "deleteFastener", Some(dsl::json!({ "id": id.as_str() })), true)).build()
+    Menu::of(registry, view_state).item(bespoke("delete", labels.delete.into(), "trash", "deleteFastener", Some(semio_framework_pack_json::json!({ "id": id.as_str() })), true)).build()
 }
 //#endregion 🔖️ContextMenu
 
@@ -4169,7 +4164,7 @@ macro_rules! puzzle5d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
         #[derive(Clone, Debug, PartialEq)]
         pub enum Puzzle5dCommand {
-            $($Variant { window_id: Option<String>, args: Option<dsl::os_pack::json::Value> }),*
+            $($Variant { window_id: Option<String>, args: Option<semio_framework_pack_json::Value> }),*
         }
 
         impl Puzzle5dCommand {
@@ -4188,13 +4183,13 @@ macro_rules! puzzle5d_command_variants {
                 }
             }
 
-            fn args(&self) -> Option<&dsl::os_pack::json::Value> {
+            fn args(&self) -> Option<&semio_framework_pack_json::Value> {
                 match self {
                     $(Puzzle5dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
             }
 
-            fn try_from_action(action: &str, args: Option<dsl::os_pack::json::Value>, window_id: Option<String>) -> Option<Self> {
+            fn try_from_action(action: &str, args: Option<semio_framework_pack_json::Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle5dCommand::$Variant { window_id, args })),*,
                     _ => None,
@@ -4202,7 +4197,7 @@ macro_rules! puzzle5d_command_variants {
             }
 
             #[cfg(test)]
-            fn from_action(action: &str, args: Option<dsl::os_pack::json::Value>, window_id: Option<String>) -> Self {
+            fn from_action(action: &str, args: Option<semio_framework_pack_json::Value>, window_id: Option<String>) -> Self {
                 Self::try_from_action(action, args, window_id)
                     .unwrap_or_else(|| panic!("unknown puzzle5d action id in test: {action}"))
             }
@@ -4211,22 +4206,22 @@ macro_rules! puzzle5d_command_variants {
             /// is a plain JSON-bytes bridge, not a derive): reproduces serde's default externally
             /// tagged struct-variant shape (`{"VariantName": {"window_id": ..., "args": ...}}`) so
             /// `encode_op`/`decode_op` stay byte-for-byte compatible with the pre-migration wire.
-            fn to_json(&self) -> dsl::os_pack::json::Value {
+            fn to_json(&self) -> semio_framework_pack_json::Value {
                 match self {
-                    $(Puzzle5dCommand::$Variant { window_id, args } => dsl::os_pack::json::object([(
+                    $(Puzzle5dCommand::$Variant { window_id, args } => semio_framework_pack_json::object([(
                         stringify!($Variant).to_string(),
-                        dsl::os_pack::json::object([("window_id".to_string(), dsl::os_pack::json::Value::from(window_id.clone())), ("args".to_string(), args.clone().unwrap_or(dsl::os_pack::json::Value::Null))]),
+                        semio_framework_pack_json::object([("window_id".to_string(), semio_framework_pack_json::Value::from(window_id.clone())), ("args".to_string(), args.clone().unwrap_or(semio_framework_pack_json::Value::Null))]),
                     )])),*
                 }
             }
 
-            fn from_json(value: &dsl::os_pack::json::Value) -> Option<Self> {
+            fn from_json(value: &semio_framework_pack_json::Value) -> Option<Self> {
                 let entries = value.as_object()?;
                 if entries.len() != 1 {
                     return None;
                 }
                 let (tag, payload) = entries.iter().next()?;
-                let window_id = payload.get("window_id").and_then(dsl::os_pack::json::Value::as_str).map(str::to_string);
+                let window_id = payload.get("window_id").and_then(semio_framework_pack_json::Value::as_str).map(str::to_string);
                 let args = payload.get("args").cloned().filter(|value| !value.is_null());
                 match tag {
                     $(stringify!($Variant) => Some(Puzzle5dCommand::$Variant { window_id, args }),)*
@@ -4339,12 +4334,12 @@ impl protocol::OpBinary for Puzzle5dCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = &PUZZLE5D_TOOL_JOB_IDS;
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(dsl::os_pack::json::to_string(&self.to_json()).into_bytes())
+        Ok(semio_framework_pack_json::to_string(&self.to_json()).into_bytes())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        let value = parse(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))?;
-        Self::from_json(&value).ok_or_else(|| protocol::ProtocolError::Pack(store::PackError::Schema("unrecognized Puzzle5dCommand tag".to_string())))
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        let value = parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error.into_value_error())))?;
+        Self::from_json(&value).ok_or_else(|| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unrecognized Puzzle5dCommand tag"))))
     }
 }
 //#endregion 🔖️Puzzle5dCommand
@@ -4420,7 +4415,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
             return;
         }
         let request = world3d::utilities::transform::TransformToolRequest { base, records };
-        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request) {
+        if let Some((transaction, mutations)) = world3d::utilities::transform::puzzle5d_transform_tool_commit(verb, self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
             self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
             self.artifact_mutations.extend(mutations);
         }
@@ -4549,7 +4544,7 @@ pub fn puzzle5d_copy_fragment(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[Strin
 /// ✂️ The document removal of the selected parts and fasteners.
 pub fn puzzle5d_cut_operations(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[String], fastener_ids: &[String]) -> Vec<Puzzle5dMutation> {
     let before = puzzle5d_projection_value(snapshot.value());
-    let Ok(document) = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&before)) else {
+    let Ok(document) = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)) else {
         return Vec::new();
     };
     let (parts, fasteners) = copy_selection_local(&document, part_ids, fastener_ids);
@@ -4708,14 +4703,13 @@ impl Puzzle5dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let projection = puzzle5d_projection_value(doc.snapshot.value());
         let Some(labels) = puzzle5d_labels(view_state) else { return Vec::new() };
-        let Some(is_de) = puzzle5d_is_de_locale(view_state) else { return Vec::new() };
         let window_id = view_state.window_id.as_deref().unwrap_or(world3d::WINDOW_KIND_ID);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
         let mut selection = Puzzle5dContextSelection::from_surface(request.surface.as_ref());
         selection.fill_from_interaction(interaction);
-        puzzle5d_context_menu_items(&envelope, &selection, labels, is_de, registry)
+        puzzle5d_context_menu_items(&envelope, &selection, labels, view_state, registry)
     }
 }
 
@@ -5150,7 +5144,7 @@ impl Puzzle5dTransformWork {
             return puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
         }
         let request = world3d::utilities::transform::TransformToolRequest { base, records: vec![record] };
-        match world3d::utilities::transform::puzzle5d_transform_tool_commit(self.tool_id, &self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request) {
+        match world3d::utilities::transform::puzzle5d_transform_tool_commit(self.tool_id, &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request) {
             Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: UiDirtyScope::Full, ..Default::default() },
             None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
         }
@@ -5811,7 +5805,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
                 };
                 self.part_cursor += 1;
-                let part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
+                let part: Puzzle5dPart = serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
                 if self.selected.contains(&part.id) {
                     if let Some(mutation) = Self::mutation(command, &part) {
                         self.mutations.push(mutation);
@@ -5949,7 +5943,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }));
                 };
                 self.fastener_cursor += 1;
-                let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
+                let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
                 if self.selected.contains(&fastener.id) {
                     if let Some(mutation) = Self::mutation(command, &fastener) {
                         self.mutations.push(mutation);
@@ -6079,7 +6073,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 };
                 self.cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(target) {
-                    self.fastener = Some(serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
+                    self.fastener = Some(serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
                     self.stage = Puzzle5dEditFastenerStage::Kind;
                 }
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-edit-fastener-scan", "Finding fastener", "Verbindung wird gesucht"))
@@ -6237,7 +6231,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 };
                 self.fastener_cursor += 1;
                 if row.get("id").and_then(Value::as_str) == Some(id) {
-                    let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&dsl::os_pack::json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-retarget-fastener-malformed"))?;
+                    let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::Value::from(&semio_framework_pack_json::to_dsl_value(&row))).map_err(|_| Fault::from("puzzle5d-retarget-fastener-malformed"))?;
                     self.source = Some(Self::argument(command, "source", "attracting").map_or_else(|| fastener.source.clone(), str::to_string));
                     self.target = Some(Self::argument(command, "target", "attracted").map_or_else(|| fastener.target.clone(), str::to_string));
                     if self.source.as_deref().is_none_or(str::is_empty) || self.target.as_deref().is_none_or(str::is_empty) || self.source == self.target {
@@ -6730,7 +6724,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 self.processed_grips += 1;
                 self.grip_cursor += 1;
                 let part_id = part.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-patch-grip-part-id-malformed"))?;
-                let mut grip: crate::Puzzle5dGrip = <crate::Puzzle5dGrip as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
+                let mut grip: crate::Puzzle5dGrip = <crate::Puzzle5dGrip as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
                 let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
                 if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
@@ -6915,11 +6909,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
                     let grip_2d: crate::Puzzle5dGrip2d = match template.get("2d") {
-                        Some(value) => <crate::Puzzle5dGrip2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
+                        Some(value) => <crate::Puzzle5dGrip2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
                         None => Default::default(),
                     };
                     let grip_3d: crate::Puzzle5dGrip3d = match template.get("3d") {
-                        Some(value) => <crate::Puzzle5dGrip3d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
+                        Some(value) => <crate::Puzzle5dGrip3d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
                         None => Default::default(),
                     };
                     self.grips.push(crate::Puzzle5dGrip { id: format!("v{}", self.grip_cursor), grip_kind: Some(grip_kind), grip_2d, grip_3d });
@@ -7139,8 +7133,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         return Err(Fault::from("puzzle5d-add-brush-part-grip-capacity"));
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
-                    let grip_2d = template.get("2d").map(|value| <crate::Puzzle5dGrip2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
-                    let grip_3d = template.get("3d").map(|value| <crate::Puzzle5dGrip3d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
+                    let grip_2d = template.get("2d").map(|value| <crate::Puzzle5dGrip2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
+                    let grip_3d = template.get("3d").map(|value| <crate::Puzzle5dGrip3d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
                     let id = format!("v{}", self.grip_cursor);
                     if self.created_grip_id.is_none() {
                         self.created_grip_id = Some(id.clone());
@@ -7485,7 +7479,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
             }
             Puzzle5dBoardEventsStage::Decode => {
                 let start = self.event_start.ok_or_else(|| Fault::from("puzzle5d-board-events-event-owner-missing"))?;
-                self.event = Some(parse(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
+                self.event = Some(parse(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
                 self.stage = Puzzle5dBoardEventsStage::Dispatch;
                 Ok(Self::progress("puzzle5d-board-event-decode", "Decoding board event", "Board-Ereignis wird dekodiert"))
             }
@@ -7494,7 +7488,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let payload = self.take_payload();
                 match name.as_deref() {
                     Some("camera") => {
-                        self.camera2d = Some(<Puzzle5dCamera2d as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
+                        self.camera2d = Some(<Puzzle5dCamera2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
                     // 🎬️ A board drag is ONE `drag` gesture record: its targets (each once) move by its offset as a
@@ -7682,7 +7676,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 // skipped part as `mutation.partial`.
                 self.locked_refused |= drags.iter().any(|record| record.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked == Some(true))));
                 let request = world3d::utilities::transform::TransformToolRequest { base, records: drags };
-                let committed = (!request.records.is_empty()).then(|| world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &self.authoring_seed, world3d::utilities::transform::puzzle5d_transform_tool_clock(), request)).flatten();
+                let committed = (!request.records.is_empty()).then(|| world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &self.authoring_seed, semio_framework_tool_machine::authoring_clock(0), request)).flatten();
                 let mut artifact_mutations = std::mem::take(&mut self.mutations);
                 let transaction = committed.map(|(transaction, leaves)| {
                     let later = artifact_mutations.split_off(drag_at);
@@ -8219,7 +8213,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let range = Self::take_chunk(&mut self.cursor, rows.len());
                 if !range.is_empty() {
                     for row in &rows[range] {
-                        let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                        let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
@@ -8229,7 +8223,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Catalogs => {
-                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::Puzzle5dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(catalogs))).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
+                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::Puzzle5dKindCatalogs as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(catalogs))).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.stage = Puzzle5dSetActiveExampleStage::AddParts;
                 Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
@@ -8239,7 +8233,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 if !range.is_empty() {
                     for part in &target.parts[range] {
                         let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
-                        let part = <crate::Puzzle5dPart as dsl::FromValue>::from_value(dsl::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                        let part = <crate::Puzzle5dPart as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&value)).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
@@ -8600,62 +8594,14 @@ struct Puzzle5dStorePreparation {
     closing: bool,
 }
 
-fn puzzle5d_store_edit(
-    forward: Puzzle5dMutation,
-    inverse: Vec<Puzzle5dMutation>,
-    description: Option<String>,
-    authority: &store::ArtifactStoreOneItemLiveAuthority,
-) -> protocol::Edit<Puzzle5dMutation> {
-    let id = format!("puzzle5d-retained-{}", authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse,
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
-/// 🪢️ Inverse rows a removal may restore: the record itself plus the fasteners it severs, bounded like puzzle 2d's
-/// edges per node.
-const PUZZLE5D_REMOVAL_INVERSE_ROWS: usize = 1 + 64;
-
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparationFactory {
-    /// 🧾️ `work_items` counts staged edit ROWS — the forward row plus every row the inverse yields: a selection leaf
-    /// restores up to one setter per changed pose field of each target (a part's board position, world origin,
-    /// orientation, scale), a removal restores the record and the fasteners it severed, every other kind is
-    /// point-invertible.
+    /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): a selection
+    /// leaf one setter per changed pose field of each target, a removal the record and the fasteners it severs.
     fn preflight(&self, mutation: &Puzzle5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle5d Store preparation rejected its lane or description envelope".into());
         }
-        let retained = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-        Ok(match mutation {
-            Puzzle5dMutation::DragSelection2d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
-            Puzzle5dMutation::DragSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(2 * payload.targets.len(), retained),
-            Puzzle5dMutation::RotateSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
-            Puzzle5dMutation::ScaleSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
-            Puzzle5dMutation::DeletePart(_) | Puzzle5dMutation::RemovePartGrip(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE5D_REMOVAL_INVERSE_ROWS, retained),
-            _ => store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained),
-        })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle5dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -8698,7 +8644,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
             0 => {
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle5d preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get());
+                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
                 let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
@@ -8708,7 +8654,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
             1 => {
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "Puzzle5d preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(puzzle5d_store_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
+                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
                 self.phase = 2;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
@@ -8738,7 +8684,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -8747,7 +8693,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Puzzle5d preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle5d preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -8780,11 +8726,11 @@ struct Puzzle5dConfigStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dConfig, Puzzle5dConfigMutation> for Puzzle5dConfigStorePreparationFactory {
-    fn preflight(&self, _mutation: &Puzzle5dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &Puzzle5dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle5d config Store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -8822,35 +8768,10 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
         }
         let base = self.base.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d config preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get());
+        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d config mutation could not produce its post root".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its Store authority".to_string())?;
-        let id = format!("puzzle5d-config-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![mutation],
-            inverse,
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: None,
-                origin: Default::default(),
-                transaction: None,
-            }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
+        let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -8863,7 +8784,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -8871,7 +8792,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err("Puzzle5d config preparation could not return its exact base root".into()); }
+            if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle5d config preparation could not return its exact base root")); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.authority.take().is_some() {
@@ -9271,7 +9192,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let fragment_parts: Vec<Puzzle5dPart> = serde_json::from_value(fragment_value.get("parts").cloned().unwrap_or_else(|| serde_json::json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let fragment_fasteners: Vec<Puzzle5dFastener> = serde_json::from_value(fragment_value.get("fasteners").cloned().unwrap_or_else(|| serde_json::json!([]))).unwrap_or_default();
         let before = puzzle5d_projection_value(doc.snapshot.value());
-        let document: Puzzle5dDocument = <Puzzle5dDocument as dsl::FromValue>::from_value(dsl::os_pack::json::to_dsl_value(&before)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let document: Puzzle5dDocument = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
         let (fresh_parts, fresh_fasteners) = paste_selection_local(&document, &fragment_parts, &fragment_fasteners, delta);
         let mut after = document;
@@ -9285,11 +9206,16 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+    /// 📢️ The localized notices of this guest's refusal codes ([`puzzle5d_fault_notices`]).
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        puzzle5d_fault_notices()
+    }
+
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         if let Some(flag) = puzzle5d_flag_value_argument(action) {
-            args.and_then(|value| value.get(flag)).and_then(dsl::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
+            args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
-        let args = args.map(dsl::os_pack::json::from_dsl_value);
+        let args = args.map(semio_framework_pack_json::from_dsl_value);
         let window_id = args.as_ref().and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
         Puzzle5dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
     }
@@ -9315,7 +9241,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     /// parts and fasteners as flat roots, grips nested under their owning part (mirrors puzzle3d's
     /// object→vortex-marker nesting).
-    fn interaction_topology(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.value().clone()).unwrap_or_else(|_| empty_document());
         let mut ordered = Vec::new();
         for part in &document.parts {
@@ -9330,7 +9257,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PUZZLE5D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
         semio_framework_plugin::InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🔌️ Declares puzzle5d's typed media I/O surface: the implicit document ports (from
     /// `.document([...])`/`.artifact_kind(...)` in `create_puzzle5d_app`) plus `kit:in` (accepting a
@@ -9338,12 +9267,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// potentially many producers) and `design:out` (this app's own `5d.puzzle` design artifact, fanning
     /// OUT to potentially many consumers).
     fn io() -> Option<AppIo> {
-        let io = semio_framework::io::resolve_ready(AppIo::from_artifact(
+        let io = ::semio_framework_async::poll::resolve_ready(AppIo::from_artifact(
             "puzzle.5d",
             MediaType { class: MediaClass::Kit, form: MediaForm::Design },
             ArtifactPresentation { id: "5d.puzzle".into(), name: "5D Puzzle".into(), dimension: "5d".into(), component_kind: "puzzle5d".into() },
         ));
-        Some(semio_framework::io::resolve_ready(io.with_ports(vec![
+        Some(::semio_framework_async::poll::resolve_ready(io.with_ports(vec![
             MediaPortSpec {
                 id: "kit:in".into(),
                 label: "Kit Catalog".into(),
@@ -9576,8 +9505,19 @@ fn puzzle5d_default_part_kind(options: &[ActionArgOption]) -> String {
     options.first().map(|option| option.value.clone()).unwrap_or_default()
 }
 
+/// 📢️ The localized notice of every refusal code the puzzle5d guest names (design §20.12): a set-verb's missing flag value.
+fn puzzle5d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: LazyLock<[(&str, LocalizedLabel); 1]> = LazyLock::new(|| {
+        [
+            ("puzzle5d.action.flag-value-required", LocalizedLabel::native("Choose on or off for this setting.", "Für diese Einstellung Ein oder Aus wählen.")),
+        ]
+    });
+    &*NOTICES
+}
+
 /// 🗨️ The one `partKind` select both the standalone `addPartKind` arg form and the "Add Part" dialog
 /// declare — built twice from the same catalog so the two forms can never drift apart.
+
 /// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
 /// `setTargetVolumeLocked{locked}`, …) — the row target's explicit next state, so a stale view sets a value and never flips one.
 fn puzzle5d_flag_value_argument(action: &str) -> Option<&'static str> {
@@ -9875,7 +9815,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             // 🛠️ Fill is a mode-level TOOL (a whole-document generator over both projections), not a window
             // utility — it keeps its viewport interaction in both panes through the host's `active_tool_id`.
             .tool(fill_tool::definition(puzzle5d_localized(|l| l.fill)))
-            .mode_tools(edit::PUZZLE5D_PLAY_MODE_EDIT, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
+            .mode_tools(edit::PUZZLE5D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
     .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 5D puzzle with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte 5D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
     .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected part from the 5D puzzle together with its connections.", "Löscht alle ausgewählten Teile samt ihrer Verbindungen aus dem 5D-Puzzle."))
     .action_describe("duplicateSelection", LocalizedLabel::native("Adds a copy of every selected part next to the original; nothing happens without a selection.", "Fügt neben jedem ausgewählten Teil eine Kopie hinzu; ohne Auswahl geschieht nichts."))

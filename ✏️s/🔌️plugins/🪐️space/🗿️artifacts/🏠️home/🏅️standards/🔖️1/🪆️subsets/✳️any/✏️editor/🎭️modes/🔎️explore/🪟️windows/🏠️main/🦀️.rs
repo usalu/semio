@@ -233,7 +233,7 @@ pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state:
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
     let rows = match crate::home_session_identity(view_state) {
-        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
+        Some(identity) => ::semio_framework_async::poll::resolve_ready(crate::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
         None => Vec::new(),
     };
     render_rows_wrapped(&rows, table, actions, &TreeWindows::for_body(view_state, S_HOME_BODY))

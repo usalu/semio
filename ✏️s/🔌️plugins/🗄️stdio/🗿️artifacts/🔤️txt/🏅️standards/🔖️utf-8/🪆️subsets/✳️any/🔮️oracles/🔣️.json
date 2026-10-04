@@ -38,6 +38,7 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [],
       "kinds": [
+        "set-snapshot",
         "set-trailing-newline",
         "set-line-ending",
         "insert-line",
@@ -55,6 +56,28 @@
       "standardDirectoryName": "🔖️utf-8",
       "subsetDirectoryName": "✳️any",
       "mutations": [
+        {
+          "id": "set-snapshot",
+          "capability": "txt-utf-8-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "txt-utf-8-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "bstr-txt-utf-8-mutate-reader"
+            }
+          ]
+        },
         {
           "id": "insert-line",
           "capability": "txt-utf-8-mutate",

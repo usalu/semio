@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDr
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(payload: &super::GroupNodes, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+pub fn inverse(payload: &super::GroupNodes, base: &SemioDrawingSnapshot) -> Result<Vec<SemioDrawingMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if !super::is_contiguous_ascending(&payload.indices) {
         return Vec::new();
     }
@@ -18,5 +19,7 @@ pub fn inverse(payload: &super::GroupNodes, base: &SemioDrawingSnapshot) -> Vec<
         }
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

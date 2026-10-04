@@ -1,0 +1,346 @@
+{
+  "state": "MountedTestOnlyAfterThreeSourceMissingFacetAssertionRED",
+  "helper": "//! 📏️ Public preflight borrows actual typed owner state and admits concrete traversal scratch.\nuse semio_framework_os_kernel as store;\nuse store::sqlite_snapshot::*;\nuse semio_framework_value::{ValueError,ValueRefusalKind};\nuse std::fmt::Debug;\n\npub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(\n short:&S,long:&S,sql:&str,rows:usize,field_bytes:usize,cancel_at:usize,\n observe:fn(&mut dyn FnMut()->Result<(),ValueError>)->(Result<(),ValueError>,usize),\n){\n let unchanged=long.clone();\n for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{\n  let mut output_callback=|_|true;\n  let mut output_control=SqliteSnapshotControl::new(&mut output_callback,SqliteDatabaseLimits::default());\n  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control).expect(\"actual owner native producer prepares the independent file ceiling outside preflight observation\");\n  let mut input_callback=|_|true;\n  let mut input_control=SqliteSnapshotControl::new(&mut input_callback,SqliteDatabaseLimits::default());\n  assert_eq!(S::decode_sqlite_snapshot_native(&encoded,&mut input_control).unwrap(),*long,\"actual native specimen preserves every typed owner field before preflight observation\");\n  let output_bytes=match encoded{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};\n  assert!(output_bytes>0);\n  let defaults=SqliteDatabaseLimits::default();\n  let mut callback=|_|true;\n  let mut control=SqliteSnapshotControl::new(&mut callback,defaults);\n  let(result,requests)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut control));\n  result.expect(\"actual public preflight must support the actual typed owner\");\n  let debit=defaults.max_allocation_bytes-control.allocation_remaining_bytes();\n  assert_eq!(debit,requests,\"borrowed traversal must admit exactly its full concrete scratch requests\");\n  let mut callback=|_|true;\n  let mut shorter=SqliteSnapshotControl::new(&mut callback,defaults);\n  let(result,short_requests)=observe(&mut ||short.preflight_sqlite_snapshot_encoding(encoding,&mut shorter));\n  result.unwrap();\n  assert_eq!(short_requests,requests,\"same-shape preflight must not construct copied literal fields or encoded output\");\n  assert_eq!(defaults.max_allocation_bytes-shorter.allocation_remaining_bytes(),short_requests);\n  let mut callback=|_|true;\n  let mut exact=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:requests,..defaults});\n  let(result,exact_requests)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut exact));\n  result.unwrap();assert_eq!(exact_requests,requests);assert_eq!(exact.allocation_remaining_bytes(),0);\n  if requests>0{\n   let maximum=requests-1;\n   let mut callback=|_|true;\n   let mut small=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});\n   let(result,observed)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut small));\n   let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);\n   let admitted=maximum-small.allocation_remaining_bytes();\n   assert_eq!(observed,admitted+error.message.capacity(),\"failed scratch admission owns only admitted scratch and its explicit typed refusal message\");\n   let maximum=requests.checked_mul(2).unwrap();\n   let mut callback=|_|true;\n   let mut cumulative=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});\n   for _ in 0..2{long.preflight_sqlite_snapshot_encoding(encoding,&mut cumulative).unwrap();}\n   assert_eq!(cumulative.allocation_remaining_bytes(),0);\n   assert_eq!(long.preflight_sqlite_snapshot_encoding(encoding,&mut cumulative).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);\n   assert_eq!(cumulative.allocation_remaining_bytes(),0,\"retiring scratch must not refund the caller ledger\");\n  }\n  for(limits,kind)in[\n   (SqliteDatabaseLimits{max_file_bytes:output_bytes-1,..defaults},ValueRefusalKind::OwnershipLimit),\n   (SqliteDatabaseLimits{max_value_bytes:1,..defaults},ValueRefusalKind::OwnershipLimit),\n   (SqliteDatabaseLimits{max_rows:rows-1,..defaults},ValueRefusalKind::WorkLimit),\n   (SqliteDatabaseLimits{max_schema_bytes:sql.len()-1,..defaults},ValueRefusalKind::OwnershipLimit),\n  ]{\n   let mut callback=|_|true;\n   let mut denied=SqliteSnapshotControl::new(&mut callback,limits);\n   assert_eq!(long.preflight_sqlite_snapshot_encoding(encoding,&mut denied).unwrap_err().kind,kind);\n  }\n  let mut start=false;\n  let mut callback=|_:SqliteSnapshotProgress|{start=true;false};\n  let mut canceled=SqliteSnapshotControl::new(&mut callback,defaults);\n  let(result,observed)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut canceled));\n  let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);\n  assert_eq!(canceled.allocation_remaining_bytes(),defaults.max_allocation_bytes);\n  assert_eq!(observed,error.message.capacity(),\"start refusal must allocate no traversal or payload backing\");\n  drop(canceled);assert!(start);\n  let mut interior=false;\n  let mut callback=|event:SqliteSnapshotProgress|{\n   let stop=event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==field_bytes&&event.completed>=cancel_at&&event.completed<event.total;\n   interior|=stop;!stop\n  };\n  let mut canceled=SqliteSnapshotControl::new(&mut callback,defaults);\n  let error=long.preflight_sqlite_snapshot_encoding(encoding,&mut canceled).unwrap_err();\n  assert_eq!(error.kind,ValueRefusalKind::Canceled);\n  drop(canceled);assert!(interior,\"borrowed long literal census must expose its actual bounded byte frontier\");\n  assert_eq!(*long,unchanged,\"every success, refusal and cancellation must leave the full actual owner unchanged\");\n }\n}\n",
+  "owners": [
+    [
+      "space",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot",
+      "space_document",
+      "name",
+      "SpaceSnapshot",
+      "name"
+    ],
+    [
+      "collection",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot",
+      "collection_document",
+      "name",
+      "CollectionSnapshot",
+      "name"
+    ],
+    [
+      "history",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot",
+      "space_history_checkpoint",
+      "message",
+      "SpaceHistorySnapshot",
+      "checkpoints[0].message"
+    ]
+  ],
+  "bounds": [
+    "physicalFile",
+    "semanticValue",
+    "rows",
+    "schema",
+    "actualBorrowedScratch"
+  ],
+  "production": "unchanged",
+  "facets": [
+    {
+      "snapshot": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot",
+      "fixture": {
+        "owner": "space",
+        "table": "space_document",
+        "column": "name",
+        "textUnit": "日本𐀀\u0000",
+        "repeat": 32768,
+        "utf8Bytes": 360448,
+        "cancelAt": 65536,
+        "rows": 10,
+        "schemaBytes": 1240,
+        "scratch": "sameShapeFullAllocatorRequests",
+        "result": "admittedWithoutOutput",
+        "bounds": [
+          "physicalFile",
+          "semanticValue",
+          "rows",
+          "schema",
+          "actualBorrowedScratch"
+        ],
+        "encodings": [
+          "binary",
+          "text"
+        ],
+        "sourceUnchanged": true
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "table",
+          "column",
+          "textUnit",
+          "repeat",
+          "utf8Bytes",
+          "cancelAt",
+          "rows",
+          "schemaBytes",
+          "scratch",
+          "result",
+          "bounds",
+          "encodings",
+          "sourceUnchanged"
+        ],
+        "properties": {
+          "owner": {
+            "const": "space"
+          },
+          "table": {
+            "const": "space_document"
+          },
+          "column": {
+            "const": "name"
+          },
+          "textUnit": {
+            "const": "日本𐀀\u0000"
+          },
+          "repeat": {
+            "const": 32768
+          },
+          "utf8Bytes": {
+            "const": 360448
+          },
+          "cancelAt": {
+            "const": 65536
+          },
+          "rows": {
+            "const": 10
+          },
+          "schemaBytes": {
+            "const": 1240
+          },
+          "scratch": {
+            "const": "sameShapeFullAllocatorRequests"
+          },
+          "result": {
+            "const": "admittedWithoutOutput"
+          },
+          "bounds": {
+            "const": [
+              "physicalFile",
+              "semanticValue",
+              "rows",
+              "schema",
+              "actualBorrowedScratch"
+            ]
+          },
+          "encodings": {
+            "const": [
+              "binary",
+              "text"
+            ]
+          },
+          "sourceUnchanged": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "snapshot": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot",
+      "fixture": {
+        "owner": "collection",
+        "table": "collection_document",
+        "column": "name",
+        "textUnit": "日本𐀀\u0000",
+        "repeat": 32768,
+        "utf8Bytes": 360448,
+        "cancelAt": 65536,
+        "rows": 10,
+        "schemaBytes": 1079,
+        "scratch": "sameShapeFullAllocatorRequests",
+        "result": "admittedWithoutOutput",
+        "bounds": [
+          "physicalFile",
+          "semanticValue",
+          "rows",
+          "schema",
+          "actualBorrowedScratch"
+        ],
+        "encodings": [
+          "binary",
+          "text"
+        ],
+        "sourceUnchanged": true
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "table",
+          "column",
+          "textUnit",
+          "repeat",
+          "utf8Bytes",
+          "cancelAt",
+          "rows",
+          "schemaBytes",
+          "scratch",
+          "result",
+          "bounds",
+          "encodings",
+          "sourceUnchanged"
+        ],
+        "properties": {
+          "owner": {
+            "const": "collection"
+          },
+          "table": {
+            "const": "collection_document"
+          },
+          "column": {
+            "const": "name"
+          },
+          "textUnit": {
+            "const": "日本𐀀\u0000"
+          },
+          "repeat": {
+            "const": 32768
+          },
+          "utf8Bytes": {
+            "const": 360448
+          },
+          "cancelAt": {
+            "const": 65536
+          },
+          "rows": {
+            "const": 10
+          },
+          "schemaBytes": {
+            "const": 1079
+          },
+          "scratch": {
+            "const": "sameShapeFullAllocatorRequests"
+          },
+          "result": {
+            "const": "admittedWithoutOutput"
+          },
+          "bounds": {
+            "const": [
+              "physicalFile",
+              "semanticValue",
+              "rows",
+              "schema",
+              "actualBorrowedScratch"
+            ]
+          },
+          "encodings": {
+            "const": [
+              "binary",
+              "text"
+            ]
+          },
+          "sourceUnchanged": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "snapshot": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot",
+      "fixture": {
+        "owner": "history",
+        "table": "space_history_checkpoint",
+        "column": "message",
+        "textUnit": "日本𐀀\u0000",
+        "repeat": 32768,
+        "utf8Bytes": 360448,
+        "cancelAt": 65536,
+        "rows": 14,
+        "schemaBytes": 1878,
+        "scratch": "sameShapeFullAllocatorRequests",
+        "result": "admittedWithoutOutput",
+        "bounds": [
+          "physicalFile",
+          "semanticValue",
+          "rows",
+          "schema",
+          "actualBorrowedScratch"
+        ],
+        "encodings": [
+          "binary",
+          "text"
+        ],
+        "sourceUnchanged": true
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "table",
+          "column",
+          "textUnit",
+          "repeat",
+          "utf8Bytes",
+          "cancelAt",
+          "rows",
+          "schemaBytes",
+          "scratch",
+          "result",
+          "bounds",
+          "encodings",
+          "sourceUnchanged"
+        ],
+        "properties": {
+          "owner": {
+            "const": "history"
+          },
+          "table": {
+            "const": "space_history_checkpoint"
+          },
+          "column": {
+            "const": "message"
+          },
+          "textUnit": {
+            "const": "日本𐀀\u0000"
+          },
+          "repeat": {
+            "const": 32768
+          },
+          "utf8Bytes": {
+            "const": 360448
+          },
+          "cancelAt": {
+            "const": 65536
+          },
+          "rows": {
+            "const": 14
+          },
+          "schemaBytes": {
+            "const": 1878
+          },
+          "scratch": {
+            "const": "sameShapeFullAllocatorRequests"
+          },
+          "result": {
+            "const": "admittedWithoutOutput"
+          },
+          "bounds": {
+            "const": [
+              "physicalFile",
+              "semanticValue",
+              "rows",
+              "schema",
+              "actualBorrowedScratch"
+            ]
+          },
+          "encodings": {
+            "const": [
+              "binary",
+              "text"
+            ]
+          },
+          "sourceUnchanged": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}

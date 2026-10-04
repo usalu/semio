@@ -7,12 +7,6 @@ use canvas::camera::Viewport;
 use canvas::text as canvas_text;
 pub use infinite_canvas::{self as canvas, *};
 use serde::Deserialize;
-// 🧬️ `#[derive(FromValue)]` additive alongside `Deserialize` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01): every `...Json` struct below is Deserialize-ONLY (one-way WASM-boundary JSON parsing,
-// never serialized back out), so its additive twin is `FromValue` alone — mirroring what serde
-// actually derives here, not more. `semio-framework-os-kernel` above is an unconditional
-// dependency, so the derive's default `::semio_framework_os_kernel` crate path resolves without a
-// `#[value(crate = "...")]` override.
 use semio_framework_value_derive::FromValue;
 
 // #region ⚠️ Errors
@@ -67,13 +61,11 @@ impl From<store::PackError> for EditorError {
 /// `FromValue`; hand-written via its own public `components()`/`new()` rather than editing that
 /// module. `EditorCanvasTheme` below names this via `#[value(with = "color_bridge")]`.
 mod color_bridge {
-    use semio_framework_os_kernel as dsl_core;
-
-    pub fn to_value(c: &super::Color) -> dsl_core::DslValue {
-        dsl_core::ToValue::to_value(&c.components())
+    pub fn to_value(c: &super::Color) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&c.components())
     }
-    pub fn from_value(value: dsl_core::DslValue) -> Result<super::Color, dsl_core::ValueError> {
-        <[f32; 4] as dsl_core::FromValue>::from_value(value).map(super::Color::new)
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<super::Color, semio_framework_value::ValueError> {
+        <[f32; 4] as semio_framework_value::FromValue>::from_value(value).map(super::Color::new)
     }
 }
 

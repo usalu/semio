@@ -22,7 +22,10 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
     use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
     use crate::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
-    use dsl::{Diagnostic, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     #[cfg(feature = "conversion-audio")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -91,7 +94,7 @@ pub mod derived_composition {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn warning(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: dsl::FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
+        Diagnostic { code: semio_framework_diagnostic::FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
     //#endregion 🔖️Invariants
 
@@ -111,7 +114,7 @@ pub mod derived_composition {
             match decoded {
                 Some(snapshot) => check_semio_audio_invariants(&snapshot),
                 None => vec![Diagnostic {
-                    code: dsl::FaultCode::new("stdio.semio_audio.validate-decode-failed"),
+                    code: semio_framework_diagnostic::FaultCode::new("stdio.semio_audio.validate-decode-failed"),
                     severity: Severity::Warning,
                     span: TextSpan::at(1, 1),
                     message: "SemioAudioValidator: payload did not decode as a SemioAudioSnapshot -- skipped".into(),

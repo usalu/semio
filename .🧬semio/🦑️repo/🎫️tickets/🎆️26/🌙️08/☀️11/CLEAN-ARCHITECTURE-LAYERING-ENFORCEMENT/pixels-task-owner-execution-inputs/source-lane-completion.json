@@ -1,0 +1,73 @@
+{
+  "sourceLane": "complete",
+  "nativeClosure": "active",
+  "nativeOwner": "io_owner_native_execution",
+  "integrationOwner": "Root",
+  "sourceAuthorityRows": 23,
+  "registeredNeutral": {
+    "pass": 384,
+    "fail": 0,
+    "files": 11
+  },
+  "registeredOS": {
+    "pass": 66,
+    "fail": 0,
+    "files": 2,
+    "unchangedOriginalTests": 62
+  },
+  "strictDiagnostics": 0,
+  "productFreeNeutral": {
+    "pass": 384,
+    "fail": 0,
+    "files": 11,
+    "sourceInputs": 65,
+    "productsPresent": false
+  },
+  "nativeMockRequestVectorsEqual": 5,
+  "cargoExecutedBySourceLane": false,
+  "rustExecutedBySourceLane": false,
+  "generatedEvidenceRetainedForNative": "🗑️generated/pixels-task-owner-execution",
+  "rootWillIntegrateNativeRuntimeAndManagedProjection": true,
+  "authorities": [
+    {
+      "path": "pixels-task-owner-execution-inputs/full-pre-current-inverse.json",
+      "sha256": "107dba16323953d286e6b7f3dcf53fb8e154930380ccc61e6a792b07558a95cd"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/full-current-inverse.json",
+      "sha256": "0521efcca32b7e5fe824061395cc89f6f1795cde431ec58cb4d9254ec593efd4"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/source-ownership-receipt.json",
+      "sha256": "5accd0bfc579d799351ca52143814879e2ee0d87c863454373de481b7dff0b62"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/native-task-observation.json",
+      "sha256": "dbf1cc53f05c9155dd1e16160b439eb2114083f84c3e9f5159031d2f1218ccdd"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/registered-task-ownership-law.json",
+      "sha256": "76e25c7ed86af3aec4e4e48d857e9a6cfc9c7873a8ee3a0fafc9e904110831cf"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/deletion-source-closure.json",
+      "sha256": "24c502d162cd39e33936bd85b4a993d0f5283623be6e580c03f8af55df0a1fae"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/deletion-result.json",
+      "sha256": "f24fcd63a75c90f66b80d8517c0ebe5b04e71a9b87a9d9896323110b91b5da38"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/missing-owned-file-result.json",
+      "sha256": "6a99567173a5e6e069004fbc2cc74440e6c228e25c81b69121239c93fe193076"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/foreign-current-preservation-law.json",
+      "sha256": "f3953d28b9a66a4962dd315d1b0eca1010cd1fea359a637147ab5d59b476e3b4"
+    },
+    {
+      "path": "pixels-task-owner-execution-inputs/📜️script.ts",
+      "sha256": "cbcce8a94d44993aea52de3294294553f206990fb0634bb7cf32e767f02e0349"
+    }
+  ]
+}

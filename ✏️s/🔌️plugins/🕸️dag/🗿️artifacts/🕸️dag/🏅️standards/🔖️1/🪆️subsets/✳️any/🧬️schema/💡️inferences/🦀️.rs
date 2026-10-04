@@ -6,13 +6,12 @@
 
 use crate::DagSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_dag_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a dag snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag.inference")]
 pub struct DagInference {
@@ -21,9 +20,9 @@ pub struct DagInference {
 }
 
 impl protocol::Inference<DagSnapshot> for DagInference {
-    fn infer(snapshot: &DagSnapshot) -> Self {
-        let scene = crate::dag_working_scene(snapshot);
-        Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
+    fn infer(snapshot: &DagSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        let scene = crate::dag_derivable_scene(snapshot).unwrap_or_default();
+        Ok(Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) })
     }
 }
 
@@ -33,7 +32,8 @@ impl protocol::Inference<DagSnapshot> for DagInference {
 /// `AddInference`'s hand-written `Default` in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for DagInference {
     fn default() -> Self {
-        <Self as protocol::Inference<DagSnapshot>>::infer(&DagSnapshot::default())
+        let scene = crate::dag_derivable_scene(&DagSnapshot::default()).unwrap_or_default();
+        Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
     }
 }
 
@@ -49,21 +49,6 @@ impl protocol::InferenceSpec<DagSnapshot> for DagInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 🎯️ `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self` — the impl target is a
-/// pure type-level anchor, not a live instance. Retargeting onto `semio_framework_plugin::app::
-/// SnapshotBuilder<DagSnapshot, DagMutation>` (the recipe's literal suggestion for a deleted
-/// `derive_artifact_facets!` builder type) is illegal — `SnapshotBuilder` is a foreign,
-/// non-`#[fundamental]` generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>`
-/// is an orphan-rule violation (E0117) regardless of the type PARAMETERS being local. A trivial
-/// local zero-sized marker struct is the real fix (recipeGaps of the `🎬️sequence` W4 pass).
-pub struct DagInferrer;
-impl ArtifactInferrer for DagInferrer {
-    type Snapshot = DagSnapshot;
-    type Inference = DagInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.dag.dag.inference`'s facet leaves into the OS-wide inference catalog — call

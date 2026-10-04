@@ -52,20 +52,20 @@ thread_local! {
     static TEST_WORKER_CELLS: std::cell::RefCell<std::collections::HashMap<usize, &'static dyn std::any::Any>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-/// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, created from `T::default()` on first use.
-/// Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
+/// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, built by the cell's `initialize` on first
+/// use. Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
 #[cfg(test)]
 pub(crate) fn test_worker_cell<T: 'static>(key: usize, initialize: impl FnOnce() -> T) -> &'static Mutex<T> {
-    let state = TEST_WORKER_CELLS.with(|cells| *cells.borrow_mut().entry(key).or_insert_with(|| Box::leak(Box::new(Mutex::new(T::default()))) as &'static dyn std::any::Any));
+    let state = TEST_WORKER_CELLS.with(|cells| *cells.borrow_mut().entry(key).or_insert_with(|| Box::leak(Box::new(Mutex::new(initialize()))) as &'static dyn std::any::Any));
     state.downcast_ref::<Mutex<T>>().expect("one worker cell holds one state type")
 }
 
-impl<T: Default + 'static> WorkerCell<T> {
+impl<T: 'static> WorkerCell<T> {
     pub(crate) fn state(&self) -> &Mutex<T> {
         #[cfg(not(test))]
-        return self.inner.get_or_init(|| Mutex::new(T::default()));
+        return self.inner.get_or_init(|| Mutex::new((self.initialize)()));
         #[cfg(test)]
-        return test_worker_cell::<T>(std::ptr::from_ref(self).addr());
+        return test_worker_cell::<T>(std::ptr::from_ref(self).addr(), self.initialize);
     }
 
     /// 🔒️ Crate-visible like `state`: `🐚️Shell/🎯️targets/🧊️wgpu`'s `with_chrome_prefs` drives this
@@ -317,7 +317,71 @@ pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition
  * instead of reading from (or clobbering) a second, independent one. See
  * `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
-static UI_ENGINE: WorkerCell<ui_wgpu::wgpu::Ui> = WorkerCell::new();
+static UI_ENGINE: UiEngineCell = UiEngineCell::new();
+
+/// ⛔️ The named refusal of a retained UI engine access before the shell resolved its locale.
+pub(crate) const UI_ENGINE_LOCALE_UNRESOLVED: &str = "ui.engine.locale-unresolved: the retained UI engine is used before the shell resolved its locale";
+
+/// 🧫️ The locale a law's engine starts in when the law builds no shell — a test fixture, never a production default.
+#[cfg(test)]
+pub(crate) const TEST_UI_ENGINE_LOCALE: semio_framework_ui_locale::Locale = semio_framework_ui_locale::Locale::En;
+
+/// 🌐️ The retained UI engine cell. There is no default language, so the engine exists only once the shell resolved its
+/// locale ([`install_ui_engine_locale`]); every access before that is refused by name ([`UI_ENGINE_LOCALE_UNRESOLVED`]).
+pub(crate) struct UiEngineCell(WorkerCell<Option<ui_wgpu::wgpu::Ui>>);
+
+/// 🔐️ The held engine: dereferences to the `Ui`, refusing by name while none was installed.
+pub(crate) struct UiEngineGuard<'a>(MutexGuard<'a, Option<ui_wgpu::wgpu::Ui>>);
+
+impl std::ops::Deref for UiEngineGuard<'_> {
+    type Target = ui_wgpu::wgpu::Ui;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref().expect(UI_ENGINE_LOCALE_UNRESOLVED)
+    }
+}
+
+impl std::ops::DerefMut for UiEngineGuard<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0.as_mut().expect(UI_ENGINE_LOCALE_UNRESOLVED)
+    }
+}
+
+/// 🌱️ The engine before any locale: none in production; a law's fixture locale under `cfg(test)`.
+fn initial_ui_engine() -> Option<ui_wgpu::wgpu::Ui> {
+    #[cfg(test)]
+    return Some(ui_wgpu::wgpu::Ui::new(TEST_UI_ENGINE_LOCALE));
+    #[cfg(not(test))]
+    None
+}
+
+impl UiEngineCell {
+    const fn new() -> Self {
+        Self(WorkerCell::new(initial_ui_engine))
+    }
+
+    pub(crate) fn borrow(&self) -> UiEngineGuard<'_> {
+        UiEngineGuard(self.0.borrow())
+    }
+
+    pub(crate) fn borrow_mut(&self) -> UiEngineGuard<'_> {
+        self.borrow()
+    }
+
+    pub(crate) fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
+        apply(self)
+    }
+}
+
+/// 🏁️ Installs the retained UI engine in the shell's resolved locale — the first resolution builds it, every later one
+/// (a `setLocale`, a preferences load) re-sets the language of its own chrome.
+pub(crate) fn install_ui_engine_locale(locale: semio_framework_ui_locale::Locale) {
+    let mut engine = UI_ENGINE.0.borrow();
+    match engine.as_mut() {
+        Some(ui) => ui.set_locale(locale),
+        None => *engine = Some(ui_wgpu::wgpu::Ui::new(locale)),
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct UiDocumentCloseOwner {
@@ -349,7 +413,7 @@ impl UiDocumentCloseQueue {
     }
 }
 
-static UI_DOCUMENT_CLOSE_QUEUE: WorkerCell<UiDocumentCloseQueue> = WorkerCell::new();
+static UI_DOCUMENT_CLOSE_QUEUE: WorkerCell<UiDocumentCloseQueue> = WorkerCell::new(Default::default);
 
 /// 🧹️ Retains the exact mounted document generation that a closed window must retire.
 pub(crate) fn request_ui_document_close(window_id: &str) -> bool {
@@ -597,7 +661,7 @@ impl SceneInteractionIntent {
     }
 }
 
-static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new();
+static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new(Default::default);
 pub(crate) const SCENE_POINTER_OWNER_CAPACITY: usize = 16;
 
 #[derive(Clone)]
@@ -667,7 +731,7 @@ struct ScenePointerOwners {
     slots: Vec<ScenePointerOwner>,
 }
 
-static SCENE_POINTER_OWNERS: WorkerCell<ScenePointerOwners> = WorkerCell::new();
+static SCENE_POINTER_OWNERS: WorkerCell<ScenePointerOwners> = WorkerCell::new(Default::default);
 
 /// 🪪️ Captures the exact retained scene identity published by one document node.
 /// 🪟️ Every windowed tree container the retained surface `window_id` presents, measured against its scroll viewport
@@ -847,7 +911,7 @@ pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut ui_wgp
 /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
 /// detect Down/Up edges from `InputState`'s per-frame aggregate.
 #[cfg(test)]
-static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i16)>> = WorkerCell::new();
+static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i16)>> = WorkerCell::new(Default::default);
 
 /** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
  * which this ticket must not touch): routes a fully-formed `ui_wgpu::wgpu::UiEvent` (built from raw
@@ -4040,14 +4104,14 @@ mod app_catalogue_tests;
 //#endregion RetainedEngineCutover
 
 //#region UiImageLoading
-static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
-static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
-static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
-static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new();
+static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
+static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
+static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
+static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new(Default::default);
 /// 🚫️ Per image id, the inline source the raster authority refused as the image's own ([`RasterUploadRefusal::Invalid`]) — kept, not
 /// re-offered each paint; the image paints its fallback until its source changes.
-static UI_IMAGE_REFUSED: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
-static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
+static UI_IMAGE_REFUSED: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
+static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new(Default::default);
 #[cfg(test)]
 thread_local! {
     static INLINE_SVG_PARSE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -5897,13 +5961,13 @@ struct ChromeLedger {
     parked: Option<String>,
 }
 
-static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new();
+static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new(Default::default);
 
 /// 🎥️ The LIVE orbit of every world surface that painted this frame, keyed by surface id — the
 /// diagnostics twin of [`CHROME_LEDGER`], and for the same reason: `dumpMeshStats` reaches only
 /// `UI_ENGINE`, while the orbit lives on the shell's `world3d_states`, so the shell has to hand it
 /// over at the one point per frame where it holds both the surface id and the state.
-static WORLD_CAMERA_LEDGER: WorkerCell<std::collections::BTreeMap<String, Value>> = WorkerCell::new();
+static WORLD_CAMERA_LEDGER: WorkerCell<std::collections::BTreeMap<String, Value>> = WorkerCell::new(Default::default);
 
 /** 🎥️ Records ONE world surface's live orbit. Called once per surface per painted frame from
  * `🎞️Scenes/🎯️targets/🧊️wgpu`'s world3d render, gated on runtime diagnostics exactly as the chrome
@@ -5943,7 +6007,7 @@ fn chrome_ledger_now_ms() -> f64 {
 /// ✂️ Args as JSON, truncated on a CHARACTER boundary so the dump is always parseable text.
 fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
     let args = action.args.as_ref()?;
-    let mut json = dsl::json::from_dsl_value(args).to_string();
+    let mut json = semio_framework_pack_json::from_dsl_value(args).to_string();
     if json.len() > CHROME_ACTION_ARGS_BYTES {
         let cut = (0..=CHROME_ACTION_ARGS_BYTES).rev().find(|index| json.is_char_boundary(*index)).unwrap_or_default();
         json.truncate(cut);
@@ -6005,7 +6069,7 @@ struct ChromeAccessibilityPublication {
     nodes: Vec<ui_contract::AccessibilityProjectionNode>,
 }
 
-static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new();
+static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new(Default::default);
 
 const ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY: usize = 256;
 
@@ -6015,7 +6079,7 @@ struct AccessibilityVisibleWindows {
     staging: Vec<String>,
 }
 
-static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new();
+static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
 
 pub(crate) fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)> {
     let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
@@ -6685,3 +6749,7 @@ pub fn dump_accessibility(window_id: Option<String>) -> String {
 #[path = "../../🧪️tests/🔬️wgpu-introspection/🦀️.rs"]
 mod introspection_tests;
 //#endregion 🔬️Introspection
+
+#[cfg(test)]
+#[path = "../../🧵️worker-cell/🧪️tests/🦀️.rs"]
+mod worker_cell_tests;

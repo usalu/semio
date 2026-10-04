@@ -50,6 +50,7 @@
       "vectors": [],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-compression",
         "set-photometric-interpretation",
         "set-bits-per-sample",
@@ -203,6 +204,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-baseline-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "tiff-6-0-baseline-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -385,15 +407,15 @@
           "role": "expected-before",
           "path": "../🧫️fixtures/✂️remove-strip-offsets/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
-          "bytes": 1936
+          "sha256": "sha256:7acff5368c9fd6c2a28d004b493f43b76c1d54ed4bd860168ee2bbd83f7e021c",
+          "bytes": 1960
         },
         {
           "role": "expected-after",
           "path": "../🧫️fixtures/✂️remove-strip-offsets/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0a9e415dd6f1812237cd530ba3128b031ef8755a0edb7d6b05893e9ceacbf5b4",
-          "bytes": 1752
+          "sha256": "sha256:c00aa87b91a626da0e50fee6d16f785398df77a82d8b237062b7ddec3b649594",
+          "bytes": 1802
         }
       ],
       "provenance": {

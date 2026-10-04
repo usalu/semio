@@ -53,3 +53,5 @@ record set-smoothing-groups tag=19
 field payload bytes
 record set-unknown-statements tag=20
 field payload bytes
+record patch-snapshot tag=21
+field payload bytes

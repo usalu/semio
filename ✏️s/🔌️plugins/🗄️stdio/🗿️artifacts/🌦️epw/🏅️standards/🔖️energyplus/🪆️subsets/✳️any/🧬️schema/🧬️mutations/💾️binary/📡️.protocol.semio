@@ -35,3 +35,5 @@ record remove-record tag=10
 field payload bytes
 record set-record-field tag=11
 field payload bytes
+record patch-snapshot tag=12
+field payload bytes

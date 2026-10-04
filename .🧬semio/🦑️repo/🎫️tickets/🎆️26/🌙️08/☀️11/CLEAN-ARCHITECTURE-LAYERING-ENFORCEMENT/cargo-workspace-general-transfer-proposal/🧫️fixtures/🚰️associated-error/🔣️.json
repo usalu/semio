@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "owner": "PackSource",
+      "receiver": "trait",
+      "member": "read_at",
+      "expected": "Self::Error"
+    },
+    {
+      "owner": "PackSource",
+      "receiver": "trait",
+      "member": "read_exact_at",
+      "expected": "Self::Error"
+    },
+    {
+      "owner": "PackSink",
+      "receiver": "trait",
+      "member": "write_all",
+      "expected": "Self::Error"
+    },
+    {
+      "owner": "PackSink",
+      "receiver": "trait",
+      "member": "flush",
+      "expected": "Self::Error"
+    },
+    {
+      "owner": "PackSource",
+      "receiver": "&[u8]",
+      "member": "read_at",
+      "expected": "PackRefusal"
+    },
+    {
+      "owner": "PackSource",
+      "receiver": "Vec<u8>",
+      "member": "read_at",
+      "expected": "PackRefusal"
+    },
+    {
+      "owner": "PackSink",
+      "receiver": "Vec<u8>",
+      "member": "write_all",
+      "expected": "PackRefusal"
+    }
+  ]
+}

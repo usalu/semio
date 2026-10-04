@@ -73,7 +73,7 @@ async fn a_camera_gesture_without_a_concrete_map_window_is_refused_rather_than_w
 #[semio_framework_async_macros::async_test]
 async fn the_args_bridge_canonicalizes_the_hosts_camera_and_refuses_a_foreign_action() {
     for raw in ["{\"surfaceId\":\"gis2d.view.composite\",\"camera\":{\"x\":12.0,\"y\":-4.5,\"zoom\":2.0}}", "{\"camera\":\"{\\\"x\\\":12.0,\\\"y\\\":-4.5,\\\"zoom\\\":2.0}\"}"] {
-        let args = dsl::json::from_json_str::<dsl::DslValue>(raw).expect("args");
+        let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("args");
         let command = command_from_action(map::SET_CAMERA_ACTION_ID, Some(&args)).expect("the bridge accepts the host's camera");
         assert_eq!(command, GisMapViewCommand::SetCamera { camera: map::config::GisMapViewerCamera { x: 12.0, y: -4.5, zoom: 2.0 }.scene_camera_json() });
         assert_eq!(GisMapViewer::command_id(&command), map::SET_CAMERA_ACTION_ID);
@@ -97,7 +97,7 @@ async fn a_dispatched_pan_is_retained_by_its_window_and_rendered_back() {
     let view = map_view(map::WINDOW_KIND_ID);
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(view.clone());
-    let args = dsl::json::from_json_str::<dsl::DslValue>("{\"surfaceId\":\"gis2d.view.composite\",\"camera\":{\"x\":12.0,\"y\":-4.5,\"zoom\":2.0}}").expect("args");
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>("{\"surfaceId\":\"gis2d.view.composite\",\"camera\":{\"x\":12.0,\"y\":-4.5,\"zoom\":2.0}}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("args");
     app.handle_action(map::SET_CAMERA_ACTION_ID, Some(&args), &meta).await.expect("the pan is admitted");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("the pan settles");
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(map::BODY_KEY, None, &view).await.expect("render")).expect("projection");

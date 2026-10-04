@@ -22,8 +22,11 @@ pub struct GifInference {
 }
 
 impl protocol::Inference<GifSnapshot> for GifInference {
-    fn infer(snapshot: &GifSnapshot) -> Self {
+    fn infer(snapshot: &GifSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { dimensions: compute_gif_dimensions(snapshot) }
+    
+        })
     }
 }
 
@@ -34,7 +37,9 @@ impl protocol::Inference<GifSnapshot> for GifInference {
 /// `📡️spr/🎮️command/🦀️.rs`.
 impl Default for GifInference {
     fn default() -> Self {
-        <Self as protocol::Inference<GifSnapshot>>::infer(&GifSnapshot::default())
+        let snapshot = &GifSnapshot::default();
+
+        Self { dimensions: compute_gif_dimensions(snapshot) }
     }
 }
 
@@ -50,15 +55,6 @@ impl protocol::InferenceSpec<GifSnapshot> for GifInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here (a screen-descriptor/GCT/GCE read is already O(frames)) — the
-/// default `infer_cached` passthrough (`ArtifactInferrer::infer_cached`) is exact.
-impl semio_framework_plugin::ArtifactInferrer for crate::standards::v89a::subsets::any::schema::GifBuilder {
-    type Snapshot = GifSnapshot;
-    type Inference = GifInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —

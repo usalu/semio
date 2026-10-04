@@ -1,4 +1,10 @@
 use super::*;
+use crate::{DagHostSnapshotEdge, DagScene};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{apply_semio_graph_mutation, inverse_semio_graph_mutation};
+
+fn demo() -> DagScene {
+    crate::examples::demo::scene()
+}
 
 #[semio_framework_async_macros::async_test]
 async fn split_endpoint_defaults_to_out_when_no_port_is_given() {
@@ -8,13 +14,9 @@ async fn split_endpoint_defaults_to_out_when_no_port_is_given() {
 
 #[semio_framework_async_macros::async_test]
 async fn next_node_id_continues_after_the_highest_existing_suffix() {
-    let document = crate::default_snapshot();
-    let mut nodes = document.nodes();
-    nodes.push(DagNodeSpec { id: "n99".into(), ..default_node_for_kind("note", "n99", 0.0, 0.0) });
-    let edges = document.edges();
-    let content = crate::dag_content_child_with_owner(nodes, edges);
-    let document = DagSnapshot { schema: document.schema.clone(), content };
-    assert_eq!(next_node_id(&document), "n100");
+    let mut scene = demo();
+    scene.nodes.push(DagNodeSpec { id: "n99".into(), ..default_node_for_kind("note", "n99", 0.0, 0.0) });
+    assert_eq!(next_node_id(&scene), "n100");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -27,56 +29,69 @@ async fn default_node_for_kind_fits_the_widget_size_for_every_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_edge_rejects_a_connection_that_would_create_a_cycle() {
-    let document = crate::default_snapshot();
-    let nodes = document.nodes();
-    if let (Some(first), Some(second)) = (nodes.first(), nodes.get(1)) {
-        let _ = connect_edge(&document, &first.id, "out", &second.id, "in");
-        let result = connect_edge(&document, &second.id, "out", &first.id, "in");
-        // Only asserts the cycle path is reachable when the fixture's first two nodes are already
-        // linked in a way that would close a loop; a non-cyclic fixture legitimately returns `Ok`.
-        assert!(result.is_ok() || matches!(result, Err(DagPlayError::CycleDetected)));
-    }
+    let mut scene = DagScene { nodes: vec![default_node_for_kind("note", "a", 0.0, 0.0), default_node_for_kind("note", "b", 0.0, 0.0)], edges: Vec::new() };
+    scene.edges.push(connect_edge(&scene, "a", "out", "b", "in").expect("a acyclic connection"));
+    assert!(matches!(connect_edge(&scene, "b", "out", "a", "in"), Err(DagPlayError::CycleDetected)));
 }
 
+/// 🩹️ A slider field write is the ABSOLUTE `set-node-property` of that kind field (plus `resize-node` only when the widget
+/// refits), and folding it onto the composed content yields the node with the new value.
 #[semio_framework_async_macros::async_test]
-async fn node_patch_for_field_updates_slider_value_and_refits_size() {
+async fn node_field_leaves_set_the_slider_value_on_the_child_content() {
     let node = default_node_for_kind("slider", "n1", 0.0, 0.0);
-    let patch = node_patch_for_field(&node, "value", Some("5")).expect("slider value patch");
-    assert!(matches!(patch.kind, Some(DagNodeKind::Slider { value, .. }) if value == 5.0));
+    let leaves = node_field_leaves(&node, "value", "5");
+    assert!(matches!(leaves.first(), Some(SemioGraphMutation::SetNodeProperty(set)) if set.key == "value"), "{leaves:?}");
+    let mut content = crate::dag_content_snapshot(&DagScene { nodes: vec![node], edges: Vec::new() });
+    for leaf in &leaves {
+        assert!(apply_semio_graph_mutation(&mut content, leaf).messages().is_empty(), "{leaf:?}");
+    }
+    assert!(matches!(crate::dag_scene_of_content(&content).nodes[0].kind, DagNodeKind::Slider { value, .. } if value == 5.0));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn node_patch_for_field_returns_none_for_an_unknown_field() {
-    let node = default_node_for_kind("note", "n1", 0.0, 0.0);
-    assert!(node_patch_for_field(&node, "nonsense", Some("x")).is_none());
+async fn node_field_leaves_are_empty_for_an_unknown_field_or_an_unchanged_value() {
+    let note = default_node_for_kind("note", "n1", 0.0, 0.0);
+    assert!(node_field_leaves(&note, "nonsense", "x").is_empty());
+    let slider = default_node_for_kind("slider", "n2", 0.0, 0.0);
+    assert!(node_field_leaves(&slider, "value", "3").is_empty(), "the default slider value is 3");
 }
 
-/// 🧺️ `remove_nodes_operations` disconnects every edge touching a targeted node and THEN deletes the
-/// node — one `disconnect-nodes` per incident edge followed by one `delete-node` per node — so every
-/// published row is point-invertible for the retained one-item preparation
-/// (`ArtifactStoreOneItemFootprint::for_one_invertible_item`). The former one-row-per-node contract
-/// relied on `delete-node`'s internal cascade, whose inverse is one row per severed edge plus the node
-/// and failed the fold with `batched item candidate failed its exact fixed fold contract` (ticket
-/// 26/09/19, `📓️knowledge.md` §14.1).
+/// 🧺️ `remove_nodes_leaves` deletes every edge touching a targeted node and THEN the node, so every published row is
+/// point-invertible; undoing them in reverse restores the composed content byte for byte.
 #[semio_framework_async_macros::async_test]
-async fn remove_nodes_operations_disconnects_incident_edges_before_deleting_the_node() {
-    let document = crate::default_snapshot();
-    let node_id = document.nodes().first().expect("fixture has a node").id.clone();
-    let touching: Vec<String> = document
-        .edges()
-        .into_iter()
-        .filter(|edge| split_endpoint(&edge.source).0 == node_id || split_endpoint(&edge.target).0 == node_id)
-        .map(|edge| edge.id)
-        .collect();
-    assert!(!touching.is_empty(), "fixture must exercise the cascade case");
-    let operations = remove_nodes_operations(&document, std::slice::from_ref(&node_id));
-    let mut expected: Vec<DagMutation> = touching.into_iter().map(crate::mutations::disconnect_nodes).collect();
-    expected.push(crate::mutations::delete_node(node_id));
-    assert_eq!(operations, expected);
+async fn remove_nodes_leaves_delete_incident_edges_first_and_undo_exactly() {
+    use store::ArtifactPack;
+    let scene = demo();
+    let node_id = scene.nodes.first().expect("fixture has a node").id.clone();
+    let touching = scene.edges.iter().filter(|edge| split_endpoint(&edge.source).0 == node_id || split_endpoint(&edge.target).0 == node_id).count();
+    assert!(touching > 0, "fixture must exercise the cascade case");
+    let leaves = remove_nodes_leaves(&scene, std::slice::from_ref(&node_id));
+    assert_eq!(leaves.len(), touching + 1);
+    assert!(leaves[..touching].iter().all(|leaf| matches!(leaf, SemioGraphMutation::DeleteEdge(_))) && matches!(leaves.last(), Some(SemioGraphMutation::DeleteNode(_))));
+    let base = crate::dag_content_snapshot(&scene);
+    let mut content = base.clone();
+    let mut undo = Vec::new();
+    for leaf in &leaves {
+        undo.push(inverse_semio_graph_mutation(leaf, &content).expect("inverse"));
+        assert_eq!(undo.last().map(Vec::len), Some(1), "each row is point-invertible");
+        apply_semio_graph_mutation(&mut content, leaf);
+    }
+    for step in undo.into_iter().rev().flatten() {
+        apply_semio_graph_mutation(&mut content, &step);
+    }
+    assert_eq!(content.encode_pack(), base.encode_pack(), "undo restores the content bytes");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn remove_nodes_operations_is_empty_for_an_unknown_node_id() {
-    let document = crate::default_snapshot();
-    assert!(remove_nodes_operations(&document, &["nonexistent".to_string()]).is_empty());
+async fn remove_nodes_leaves_are_empty_for_an_unknown_node_id() {
+    assert!(remove_nodes_leaves(&demo(), &["nonexistent".to_string()]).is_empty());
+}
+
+/// 🌉️ The graph codec round-trips every node and edge of the bundled demo exactly: native slots + typed properties.
+#[semio_framework_async_macros::async_test]
+async fn the_graph_codec_round_trips_the_demo_scene() {
+    let scene = demo();
+    assert_eq!(crate::dag_scene_of_content(&crate::dag_content_snapshot(&scene)), scene);
+    let bare = DagHostSnapshotEdge { id: "e9".into(), source: "a".into(), target: "b@in".into(), ..Default::default() };
+    assert_eq!(crate::dag_edge_of_graph(&crate::dag_graph_edge(&bare)), bare, "a bare endpoint keeps no port");
 }

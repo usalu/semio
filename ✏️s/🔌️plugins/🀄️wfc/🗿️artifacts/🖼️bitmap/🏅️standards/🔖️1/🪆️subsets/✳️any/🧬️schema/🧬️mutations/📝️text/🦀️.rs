@@ -25,7 +25,7 @@ use crate::schema::mutations::BitmapMutation;
 use crate::schema::snapshot::text::{color_from_dsl, color_to_dsl, BitmapColorDsl};
 
 //#region 🔖️OpTextMirror
-#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum BitmapOperationDsl {
     ChangeSeed {
         seed: u64,
@@ -117,28 +117,28 @@ pub fn operation_from_dsl(operation: BitmapOperationDsl) -> BitmapMutation {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ Handcrafted `OpText` — `dsl::DslOps`/`dsl::DslEnum` emit `DslVariants` only.
 impl protocol::OpText for BitmapOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown bitmap mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown bitmap mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
 /// ⚡️ `BitmapMutation`'s compact single-line op encoding, bridged through the twin above.
 impl protocol::OpText for BitmapMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(operation_from_dsl(<BitmapOperationDsl as protocol::OpText>::parse_op(line)?))
     }
 
@@ -149,7 +149,7 @@ impl protocol::OpText for BitmapMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📖️ Parses one `.wfcbitmap` mutation line.
-pub fn parse_op(line: &str) -> Result<BitmapMutation, store::TextError> {
+pub fn parse_op(line: &str) -> Result<BitmapMutation, semio_framework_diagnostic::TextError> {
     <BitmapMutation as protocol::OpText>::parse_op(line)
 }
 

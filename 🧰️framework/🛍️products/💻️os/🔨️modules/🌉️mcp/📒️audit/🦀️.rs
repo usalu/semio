@@ -8,7 +8,7 @@
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::schema::RevisionStamp;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;

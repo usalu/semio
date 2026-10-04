@@ -17,7 +17,7 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     assert_ne!(codec.pack_schema_hash, [0; 32]);
     let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new();
     install_plugin_bundle_result(&runtime, Ok(bundle));
-    let bytes = semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
+    let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
     let wire = semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("guest descriptor bytes");
     let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(wire).expect("strict guest descriptor");
     assert_eq!(descriptor.package_id, authority["packageId"].as_str().unwrap());

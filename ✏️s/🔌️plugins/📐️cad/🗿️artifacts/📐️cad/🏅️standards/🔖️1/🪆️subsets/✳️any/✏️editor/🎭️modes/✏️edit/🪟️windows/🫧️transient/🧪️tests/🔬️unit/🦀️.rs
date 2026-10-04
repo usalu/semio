@@ -7,7 +7,7 @@ use store::ArtifactPack;
 const SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
 
 fn wire(transient: &CadWorldWindowTransient) -> serde_json::Value {
-    dsl::ToValue::to_value(transient).into()
+    semio_framework_value::ToValue::to_value(transient).into()
 }
 
 /// ⚖️ LAW: the wire keys are exactly the schema's required properties, nullable fields carry `null` at rest, and a window
@@ -42,7 +42,7 @@ fn a_live_engagement_round_trips_through_the_pack() {
 fn every_valid_fixture_row_is_its_own_wire_form() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("fixture parses");
     for row in fixture["valid"].as_array().expect("valid rows") {
-        let decoded: CadWorldWindowTransient = dsl::FromValue::from_value(row.clone().into()).expect("a valid row decodes");
+        let decoded: CadWorldWindowTransient = semio_framework_value::FromValue::from_value(row.clone().into()).expect("a valid row decodes");
         assert_eq!(&wire(&decoded), row);
     }
 }

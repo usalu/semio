@@ -1,0 +1,421 @@
+{
+  "role": "codeAdmittedIntermediateOwner",
+  "cases": [
+    {
+      "name": "unresolvedTopology",
+      "snapshot": {
+        "schema": "brep\u0000世界",
+        "nextLabel": "18446744073709551615",
+        "vertices": [],
+        "edges": [
+          {
+            "id": "e",
+            "startVertex": "unmatched-start\u0000世界",
+            "endVertex": "unmatched-end",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "direction": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "tol": 0.002
+          }
+        ],
+        "loops": [
+          {
+            "id": "l",
+            "edges": [
+              {
+                "edge": "unmatched-loop-edge",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "faces": [
+          {
+            "id": "f",
+            "outerLoop": "unmatched-outer",
+            "innerLoops": [
+              "unmatched-inner"
+            ],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "normal": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "orientation": false,
+            "tol": 0.003
+          }
+        ],
+        "shells": [
+          {
+            "id": "s",
+            "faces": [
+              {
+                "face": "unmatched-face",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "solids": [
+          {
+            "id": "b",
+            "shells": [
+              {
+                "shell": "unmatched-shell",
+                "isVoid": true
+              }
+            ]
+          }
+        ],
+        "coedges": [
+          {
+            "id": "c0",
+            "edge": "unmatched-edge",
+            "forward": true,
+            "pcurve": null,
+            "prange": [
+              -1,
+              2
+            ],
+            "loopId": "unmatched-loop",
+            "next": "unmatched-next",
+            "prev": "unmatched-previous"
+          },
+          {
+            "id": "c1",
+            "edge": "unmatched-edge",
+            "forward": false,
+            "pcurve": null,
+            "prange": [
+              0,
+              1
+            ],
+            "loopId": "unmatched-loop",
+            "next": "unmatched-next",
+            "prev": "unmatched-previous"
+          }
+        ]
+      },
+      "query": "SELECT edge_native_id,loop_native_id,next_native_id,previous_native_id FROM semio_brep_coedge ORDER BY ordinal",
+      "expectedRows": [
+        {
+          "edge_native_id": "unmatched-edge",
+          "loop_native_id": "unmatched-loop",
+          "next_native_id": "unmatched-next",
+          "previous_native_id": "unmatched-previous"
+        },
+        {
+          "edge_native_id": "unmatched-edge",
+          "loop_native_id": "unmatched-loop",
+          "next_native_id": "unmatched-next",
+          "previous_native_id": "unmatched-previous"
+        }
+      ]
+    },
+    {
+      "name": "nonreciprocalRing",
+      "snapshot": {
+        "schema": "brep\u0000世界",
+        "nextLabel": "18446744073709551615",
+        "vertices": [
+          {
+            "id": "v",
+            "point": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            },
+            "tol": 0.001
+          }
+        ],
+        "edges": [
+          {
+            "id": "e",
+            "startVertex": "v",
+            "endVertex": "v",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "direction": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "tol": 0.002
+          }
+        ],
+        "loops": [
+          {
+            "id": "l",
+            "edges": [
+              {
+                "edge": "e",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "faces": [
+          {
+            "id": "f",
+            "outerLoop": "l",
+            "innerLoops": [
+              "l"
+            ],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "normal": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "orientation": false,
+            "tol": 0.003
+          }
+        ],
+        "shells": [
+          {
+            "id": "s",
+            "faces": [
+              {
+                "face": "f",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "solids": [
+          {
+            "id": "b",
+            "shells": [
+              {
+                "shell": "s",
+                "isVoid": true
+              }
+            ]
+          }
+        ],
+        "coedges": [
+          {
+            "id": "c0",
+            "edge": "e",
+            "forward": true,
+            "pcurve": null,
+            "prange": [
+              -1,
+              2
+            ],
+            "loopId": "l",
+            "next": "c0",
+            "prev": "c1"
+          },
+          {
+            "id": "c1",
+            "edge": "e",
+            "forward": false,
+            "pcurve": null,
+            "prange": [
+              0,
+              1
+            ],
+            "loopId": "l",
+            "next": "c0",
+            "prev": "c0"
+          }
+        ]
+      },
+      "query": "SELECT edge_native_id,loop_native_id,next_native_id,previous_native_id FROM semio_brep_coedge ORDER BY ordinal",
+      "expectedRows": [
+        {
+          "edge_native_id": "e",
+          "loop_native_id": "l",
+          "next_native_id": "c0",
+          "previous_native_id": "c1"
+        },
+        {
+          "edge_native_id": "e",
+          "loop_native_id": "l",
+          "next_native_id": "c0",
+          "previous_native_id": "c0"
+        }
+      ]
+    },
+    {
+      "name": "duplicateNativeNames",
+      "snapshot": {
+        "schema": "brep\u0000世界",
+        "nextLabel": "18446744073709551615",
+        "vertices": [
+          {
+            "id": "v",
+            "point": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            },
+            "tol": 0.001
+          },
+          {
+            "id": "v",
+            "point": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            },
+            "tol": 0.001
+          }
+        ],
+        "edges": [
+          {
+            "id": "e",
+            "startVertex": "v",
+            "endVertex": "v",
+            "curve": {
+              "kind": "line",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "direction": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "tol": 0.002
+          }
+        ],
+        "loops": [
+          {
+            "id": "l",
+            "edges": [
+              {
+                "edge": "e",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "faces": [
+          {
+            "id": "f",
+            "outerLoop": "l",
+            "innerLoops": [
+              "l"
+            ],
+            "surface": {
+              "kind": "plane",
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              "normal": {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              }
+            },
+            "orientation": false,
+            "tol": 0.003
+          }
+        ],
+        "shells": [
+          {
+            "id": "s",
+            "faces": [
+              {
+                "face": "f",
+                "orientation": true
+              }
+            ]
+          }
+        ],
+        "solids": [
+          {
+            "id": "b",
+            "shells": [
+              {
+                "shell": "s",
+                "isVoid": true
+              }
+            ]
+          }
+        ],
+        "coedges": [
+          {
+            "id": "c0",
+            "edge": "e",
+            "forward": true,
+            "pcurve": null,
+            "prange": [
+              -1,
+              2
+            ],
+            "loopId": "l",
+            "next": "c1",
+            "prev": "c1"
+          },
+          {
+            "id": "c1",
+            "edge": "e",
+            "forward": false,
+            "pcurve": null,
+            "prange": [
+              0,
+              1
+            ],
+            "loopId": "l",
+            "next": "c0",
+            "prev": "c0"
+          }
+        ]
+      },
+      "query": "SELECT edge_native_id,loop_native_id,next_native_id,previous_native_id FROM semio_brep_coedge ORDER BY ordinal",
+      "expectedRows": [
+        {
+          "edge_native_id": "e",
+          "loop_native_id": "l",
+          "next_native_id": "c1",
+          "previous_native_id": "c1"
+        },
+        {
+          "edge_native_id": "e",
+          "loop_native_id": "l",
+          "next_native_id": "c0",
+          "previous_native_id": "c0"
+        }
+      ]
+    }
+  ]
+}

@@ -18,9 +18,12 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for RemoveRow {
     fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         agg_diff(&TsvMutation::RemoveRow(self.clone()), base)
     }
-    fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
-        agg_inverse(&TsvMutation::RemoveRow(self.clone()), base)
-    }
+    fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
+    Ok({
+        agg_inverse(&TsvMutation::RemoveRow(self.clone()), base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove row", "Zeile entfernen")
     }

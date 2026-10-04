@@ -35,7 +35,8 @@ pub mod derived_construction {
     use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
     use crate::standards::v1_0::subsets::valid::schema::valid_mutations::{apply_xml_valid_mutation, XmlValidMutation};
-    use dsl::{Diagnostic, Severity};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -62,7 +63,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
 
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
 
@@ -105,7 +106,11 @@ pub mod derived_analysis {
     use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlNode, XmlSnapshot};
     use crate::standards::v1_0::subsets::base::schema::XmlAnalyzer as XmlAnyAnalyzer;
     pub use crate::standards::v1_0::subsets::base::schema::XmlParts;
-    use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+    use semio_framework_diagnostic::Diagnostic;
+use semio_framework_diagnostic::FaultCode;
+use semio_framework_diagnostic::FaultScope;
+use semio_framework_diagnostic::Severity;
+use semio_framework_diagnostic::TextSpan;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -147,13 +152,13 @@ pub mod derived_analysis {
     }
 
     /// ⏱️ Checks owned validity with cancellation inside the literal boundary collections.
-    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, String> {
+    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, semio_framework_os_kernel::sqlite_snapshot::ValueError> {
         check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
     }
 
-    fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), String>) -> Result<Vec<Diagnostic>, String> {
+    fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), semio_framework_os_kernel::sqlite_snapshot::ValueError>) -> Result<Vec<Diagnostic>, semio_framework_os_kernel::sqlite_snapshot::ValueError> {
         let mut out = Vec::new();
-        let total = snapshot.doc.prolog.len().checked_add(snapshot.doc.epilog.len()).ok_or("XML validity boundary count overflow")?; progress(0, total)?;
+        let total = snapshot.doc.prolog.len().checked_add(snapshot.doc.epilog.len()).ok_or_else(|| semio_framework_os_kernel::sqlite_snapshot::ValueError::new(semio_framework_os_kernel::sqlite_snapshot::ValueRefusalKind::WorkLimit,"XML validity boundary count overflow"))?; progress(0, total)?;
         if root_element_name(snapshot).is_none() { out.push(hard("stdio.xml.valid.document-element-missing", "XML validity requires a document element".into())); }
         let mut invalid_boundary = false;
         for (ordinal, node) in snapshot.doc.prolog.iter().chain(&snapshot.doc.epilog).enumerate() { if ordinal % 256 == 0 { progress(ordinal, total)?; } invalid_boundary |= !matches!(node, XmlNode::Comment { .. } | XmlNode::ProcessingInstruction { .. }); }

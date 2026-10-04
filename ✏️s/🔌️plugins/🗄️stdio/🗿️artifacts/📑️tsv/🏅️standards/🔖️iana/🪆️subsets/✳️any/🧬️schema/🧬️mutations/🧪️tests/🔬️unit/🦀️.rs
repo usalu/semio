@@ -33,6 +33,7 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["new", "row"]) }),
@@ -58,6 +59,7 @@ async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["new", "row"]) }),
         TsvMutation::RemoveRow(remove_row::RemoveRow { index: 0 }),
@@ -66,7 +68,7 @@ async fn inverse_law() {
     for m in variants {
         let mut forward = base.clone();
         apply_tsv_mutation(&mut forward, &m);
-        for inv in m.inverse(&base) {
+        for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             apply_tsv_mutation(&mut forward, &inv);
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
@@ -212,6 +214,7 @@ async fn field_sweep_every_mutable_field_changes() {
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TsvSnapshot { records: vec![row(&["a, tricky [value]", "plain"])], trailing_newline: false, line_ending: LineEnding::Crlf, ..TsvSnapshot::default() } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: true }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
@@ -245,6 +248,7 @@ async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &TsvMutation) -> &'static str {
         match mutation {
             TsvMutation::SetSnapshot(_) => "set-snapshot",
+            TsvMutation::PatchSnapshot(_) => "patch-snapshot",
             TsvMutation::SetTrailingNewline(_) => "set-trailing-newline",
             TsvMutation::SetLineEnding(_) => "set-line-ending",
             TsvMutation::InsertRow(_) => "insert-row",
@@ -254,6 +258,7 @@ async fn kinds_match_enum_and_catalog() {
     }
     let samples = [
         TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TsvSnapshot::default() }),
+        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 0, row: Vec::new() }),

@@ -15,7 +15,7 @@ pub fn diff(payload: &super::ReplaceStepMeasure, base: &Process3dSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.measure == payload.new_measure {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" measure is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" measure is unchanged.", payload.id));
     }
     let mut steps = base.step_payloads.clone();
     if let Some(step) = steps.iter_mut().find(|step| step.id == payload.id) {

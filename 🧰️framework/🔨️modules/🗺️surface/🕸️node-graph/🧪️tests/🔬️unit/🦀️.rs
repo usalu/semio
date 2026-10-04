@@ -354,7 +354,7 @@ fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
         "edges": [],
         "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0}
     });
-    let dsl = dsl::DslValue::from(&scene);
+    let dsl = semio_framework_value::DslValue::from(&scene);
     let bytes = store::pack_rt::encode_pack_value(&dsl);
     host.sync_from_scene_pack(&bytes).expect("sync");
     assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);

@@ -1,0 +1,12 @@
+{
+  "contract": "neutral-render-exact-composition/v1",
+  "cases": [
+    { "id": "disjoint", "source": "alpha\nbeta\ngamma\n", "edits": [["alpha", "A"], ["beta", "B"]], "expected": "A\nB\ngamma\n" },
+    { "id": "foreign-conserved", "source": "alpha\nbeta\nforeign\n", "edits": [["alpha", "A"], ["beta", "B"]], "expected": "A\nB\nforeign\n" },
+    { "id": "moved-owner", "source": "neutral::canvas\nlet (a, b, c) = prepare();\n", "edits": [["let (a, b, c) =", "let prepared ="]], "expected": "neutral::canvas\nlet prepared = prepare();\n" },
+    { "id": "already-canonical", "source": "A\nbeta\n", "edits": [["alpha", "A"]], "expected": null },
+    { "id": "ambiguous", "source": "alpha\nalpha\n", "edits": [["alpha", "A"]], "expected": null },
+    { "id": "overlap", "source": "alpha\n", "edits": [["alpha", "A"], ["alpha", "B"]], "expected": null },
+    { "id": "deletion", "source": "alpha\nretired\nbeta\n", "edits": [["retired\n", ""]], "expected": "alpha\nbeta\n" }
+  ]
+}

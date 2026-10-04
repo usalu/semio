@@ -14,14 +14,14 @@ pub struct SetInteractionState {
     pub state: InteractionState,
 }
 
-impl protocol::ToValue for SetInteractionState {
-    fn to_value(&self) -> protocol::DslValue {
-        protocol::ToValue::to_value(&self.state)
+impl semio_framework_value::ToValue for SetInteractionState {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.state)
     }
 }
-impl protocol::FromValue for SetInteractionState {
-    fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
-        Ok(Self { state: protocol::FromValue::from_value(value)? })
+impl semio_framework_value::FromValue for SetInteractionState {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self { state: semio_framework_value::FromValue::from_value(value)? })
     }
 }
 //#endregion 🔖️Payload
@@ -39,8 +39,8 @@ impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for Set
     fn diff(&self, _base: &InteractionState) -> protocol::MutationOutcome<InteractionConfigMutation> {
         protocol::MutationOutcome::new(InteractionConfigMutation::SetInteractionState(self.clone()))
     }
-    fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> {
-        vec![InteractionConfigMutation::set_state(base.clone())]
+    fn inverse(&self, base: &InteractionState) -> Result<Vec<InteractionConfigMutation>, semio_framework_value::ValueError> {
+        Ok((|| vec![InteractionConfigMutation::set_state(base.clone())])())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")

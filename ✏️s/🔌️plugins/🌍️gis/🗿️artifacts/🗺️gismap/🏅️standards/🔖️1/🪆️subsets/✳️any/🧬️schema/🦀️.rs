@@ -12,8 +12,9 @@ use crate::mutations::{create_position, create_region, create_route, delete_posi
 use crate::op::GisMapMutation;
 use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
-use dsl::{FromValue, ToValue};
-use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
@@ -24,7 +25,7 @@ use std::collections::HashSet;
 
 //#region 🔹Artifact
 /// 🧬️ GIS map document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapArtifact {
@@ -125,7 +126,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct GismapBuilderConstruction {
         snapshot: GisMapSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
     impl ArtifactBuilder for GismapBuilderConstruction {
@@ -138,7 +139,7 @@ pub mod derived_construction {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
             Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -148,7 +149,7 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -157,7 +158,7 @@ pub mod derived_construction {
             self.snapshot = snapshot;
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -199,14 +200,14 @@ pub mod derived_analysis {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                 }
@@ -235,11 +236,11 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisMapSnapshot`/`MapFeature`, no app-state dependency — an artifact must never depend on an app.
-pub(crate) fn value_to_dsl(value: &Value) -> dsl::DslValue {
-    dsl::DslValue::from(value)
+pub(crate) fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::from(value)
 }
 
-pub(crate) fn dsl_to_value(value: &dsl::DslValue) -> Value {
+pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
     Value::from(value)
 }
 
@@ -300,7 +301,7 @@ fn feature_collection_operations(
     after: &[MapFeature],
     create: impl Fn(usize, MapFeature) -> GisMapMutation,
     delete: impl Fn(String) -> GisMapMutation,
-    replace: impl Fn(String, dsl::DslValue) -> GisMapMutation,
+    replace: impl Fn(String, semio_framework_value::DslValue) -> GisMapMutation,
 ) -> Vec<GisMapMutation> {
     let mut operations = Vec::new();
     let after_ids: HashSet<&str> = after.iter().map(|feature| feature.id.as_str()).collect();
@@ -358,7 +359,7 @@ const GIS_LINE_STYLE: &str = "gis-line";
 
 /// 📍️ Reads `{ lon, lat }` off a position feature's opaque payload (the shape both
 /// `gis_map_document_from_descriptor_json` and the reuse-map DSL fixture use).
-fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
+fn feature_lon_lat(data: &semio_framework_value::DslValue) -> Option<(f64, f64)> {
     let value = dsl_to_value(data);
     let lon = value.get("lon").and_then(Value::as_f64)?;
     let lat = value.get("lat").and_then(Value::as_f64)?;
@@ -366,7 +367,7 @@ fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
 }
 
 /// 〰️ Reads a `{ points: [[lon, lat], …] }` route or `{ ring: [[lon, lat], …] }` region chain.
-fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
+fn feature_line(data: &semio_framework_value::DslValue) -> Option<Vec<SemioPoint2>> {
     let value = dsl_to_value(data);
     let points = value.get("points").or_else(|| value.get("ring")).and_then(Value::as_array)?;
     let vertices: Vec<SemioPoint2> = points
@@ -535,7 +536,7 @@ fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32,
     let height = drawing.canvas.height.round().max(1.0) as u32;
     let pack_bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing);
     let source = ErasedComposeSource { dialect: SemioDrawingToSvg::FROM, payload: IoPayload::Binary(pack_bytes) };
-    let composed = resolve_ready(io_dispatch(&drawing_to_svg_io_key(), std::slice::from_ref(&source))).map_err(|error| error.message)?;
+    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&drawing_to_svg_io_key(), std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("drawing->svg bridge returned Text, expected an ArtifactPack-encoded SvgSnapshot".into()),

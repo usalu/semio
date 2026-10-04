@@ -11,21 +11,21 @@ fn vectors() -> Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🧬️direct/🔣️.json")).expect("domain neutral vectors")
 }
 
-fn decode<T: dsl::FromValue>(value: &Value) -> T {
-    dsl::json::from_json_str(&(value.clone()).to_string()).expect("typed neutral value")
+fn decode<T: semio_framework_value::FromValue>(value: &Value) -> T {
+    semio_framework_pack_json::from_json_str(&(value.clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed neutral value")
 }
 
 fn assert_schema_cases<T>(cases: &Value)
 where
-    T: dsl::FromValue + dsl::ToValue + PartialEq + Debug,
+    T: semio_framework_value::FromValue + semio_framework_value::ToValue + PartialEq + Debug,
 {
     for value in cases["valid"].as_array().expect("valid cases") {
         let decoded: T = decode(value);
-        let encoded = serde_json::from_str::<Value>(&dsl::json::to_json_string(&decoded)).expect("encode typed value");
+        let encoded = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("encode typed value");
         assert_eq!(decode::<T>(&encoded), decoded);
     }
     for value in cases["invalid"].as_array().expect("invalid cases") {
-        assert!(dsl::json::from_json_str::<T>(&(value.clone()).to_string()).is_err(), "{} accepted {value}", std::any::type_name::<T>());
+        assert!(semio_framework_pack_json::from_json_str::<T>(&(value.clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{} accepted {value}", std::any::type_name::<T>());
     }
 }
 //#endregion 🧫️NeutralFixture
@@ -37,11 +37,11 @@ fn strict_snapshot_and_aggregate_json_vectors() {
     assert_schema_cases::<GisTerrainWindowConfig>(&fixture["config"]);
     for value in fixture["config"]["valid"].as_array().expect("valid snapshots") {
         let snapshot: GisTerrainWindowConfig = decode(value);
-        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
+        assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
     store::os_store::test_support::assert_wire_witness::<GisTerrainWindowConfigMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🎥️set-camera/🧾️wire-witness/🦠️mutation/🔣️.json"));
     for value in fixture["mutations"]["invalid"].as_array().expect("invalid operations") {
-        assert!(dsl::json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string()).is_err(), "accepted {value}");
+        assert!(semio_framework_pack_json::from_json_str::<GisTerrainWindowConfigMutation>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "accepted {value}");
     }
 }
 
@@ -116,7 +116,7 @@ fn assert_operation_codecs(operation: &GisTerrainWindowConfigMutation, keyword: 
     bad_format[0] = 0;
     assert!(matches!(GisTerrainWindowConfigMutation::decode_op(&bad_format), Err(protocol::ProtocolError::Malformed { what: "op format", .. })));
     let mut unknown_ordinal = bytes.clone();
-    unknown_ordinal[1] = u8::try_from(<GisTerrainWindowConfigMutation as dsl::DslVariants>::variants().len()).expect("fixture roster fits one byte");
+    unknown_ordinal[1] = u8::try_from(<GisTerrainWindowConfigMutation as semio_framework_dsl_record::DslVariants>::variants().len()).expect("fixture roster fits one byte");
     assert!(matches!(GisTerrainWindowConfigMutation::decode_op(&unknown_ordinal), Err(protocol::ProtocolError::Malformed { what: "op variant", .. })));
     assert!(GisTerrainWindowConfigMutation::decode_op(&[dsl::variants_binary::OP_BINARY_FORMAT, 0x80]).is_err());
     assert!(GisTerrainWindowConfigMutation::parse_op("").is_err());
@@ -129,7 +129,7 @@ fn assert_operation_codecs(operation: &GisTerrainWindowConfigMutation, keyword: 
 /// 🧬️ Executes a leaf's exact neutral cases through its intrinsic and aggregate contracts.
 pub(crate) fn assert_leaf_contract<T>(key: &str, authored_descriptor: &str)
 where
-    T: MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + MutationLeaf + dsl::DslField + Into<GisTerrainWindowConfigMutation> + PartialEq + Debug,
+    T: MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + MutationLeaf + semio_framework_dsl_record::DslField + Into<GisTerrainWindowConfigMutation> + PartialEq + Debug,
 {
     let fixture = vectors();
     let row = fixture["leaves"].as_array().expect("leaf roster").iter().find(|row| row["key"] == key).expect("leaf fixture");
@@ -168,8 +168,8 @@ where
     assert_schema_cases::<T>(&fixture["payloads"][key]);
     for payload in fixture["payloads"][key]["valid"].as_array().expect("valid payloads") {
         let leaf: T = decode(payload);
-        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&leaf)).expect("payload JSON"), *payload);
-        assert_eq!(<T as dsl::DslField>::from_value(&<T as dsl::DslField>::to_value(&leaf)).expect("intrinsic record roundtrip"), leaf);
+        assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&leaf)).expect("payload JSON"), *payload);
+        assert_eq!(<T as semio_framework_dsl_record::DslField>::from_value(&<T as semio_framework_dsl_record::DslField>::to_value(&leaf)).expect("intrinsic record roundtrip"), leaf);
     }
     for law in row["cases"].as_array().expect("leaf cases") {
         let before: GisTerrainWindowConfig = decode(&law["before"]);
@@ -186,21 +186,21 @@ where
         if let Some(code) = law["warning"].as_str() {
             assert_eq!(outcome.messages().len(), 1, "{}", law["id"]);
             assert_eq!(outcome.messages()[0].code.0, code);
-            assert_eq!(outcome.messages()[0].level, dsl::Severity::Warning);
+            assert_eq!(outcome.messages()[0].level, semio_framework_diagnostic::Severity::Warning);
             assert_eq!(outcome.diff(), &GisTerrainWindowConfigDiff::default());
         } else {
             assert!(outcome.messages().is_empty(), "{}", law["id"]);
         }
         let expected_inverse: Vec<GisTerrainWindowConfigMutation> = decode(&law["inverse"]);
-        let stored = operation.inverse(&before);
+        let stored = operation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(stored, expected_inverse, "{}", law["id"]);
-        assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::inverse(&leaf, &before), stored, "{}", law["id"]);
-        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&stored)).expect("stored inverse JSON"), law["inverse"]);
+        assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::inverse(&leaf, &before).expect("valid retained mutation inverse fixture"), stored, "{}", law["id"]);
+        assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&stored)).expect("stored inverse JSON"), law["inverse"]);
         let restored = stored.iter().rev().try_fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state)).expect("stored inverse application");
         assert_eq!(restored, before, "{}", law["id"]);
         let mut envelope = law["payload"].as_object().expect("payload object").clone();
         envelope.insert("operation".into(), law["inverse"][0]["operation"].clone());
-        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&operation)).expect("forward JSON"), Value::Object(envelope));
+        assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&operation)).expect("forward JSON"), Value::Object(envelope));
         assert_operation_codecs(&operation, T::DESCRIPTOR.text_opcode.expect("text opcode"), T::DESCRIPTOR.binary_tag.expect("binary ordinal"));
     }
 }

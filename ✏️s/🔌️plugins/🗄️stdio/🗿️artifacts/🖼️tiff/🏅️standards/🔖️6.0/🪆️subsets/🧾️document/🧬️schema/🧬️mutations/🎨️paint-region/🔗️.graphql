@@ -1,0 +1,13 @@
+# 🎨️ Revision-guarded tiled TIFF region paint.
+input PaintRegionMutation {
+  revision: String!
+  ifdIndex: Int!
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+  red: Int!
+  green: Int!
+  blue: Int!
+  alpha: Int!
+}

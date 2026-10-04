@@ -7,7 +7,6 @@
 
 use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::duration::compute_semio_animation_duration;
 //#region 🔖️Inference
@@ -22,8 +21,11 @@ pub struct SemioAnimationInference {
 }
 
 impl protocol::Inference<SemioAnimationSnapshot> for SemioAnimationInference {
-    fn infer(snapshot: &SemioAnimationSnapshot) -> Self {
+    fn infer(snapshot: &SemioAnimationSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { duration: compute_semio_animation_duration(snapshot) }
+    
+        })
     }
 }
 
@@ -31,7 +33,9 @@ impl protocol::Inference<SemioAnimationSnapshot> for SemioAnimationInference {
 /// `SemioAnimationSnapshot::default()`'s `timelines` ever stops being empty.
 impl Default for SemioAnimationInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SemioAnimationSnapshot>>::infer(&SemioAnimationSnapshot::default())
+        let snapshot = &SemioAnimationSnapshot::default();
+
+        Self { duration: compute_semio_animation_duration(snapshot) }
     }
 }
 
@@ -47,16 +51,6 @@ impl protocol::InferenceSpec<SemioAnimationSnapshot> for SemioAnimationInference
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-/// 💡️ No `InferredField`s here — `duration` is a single max-`t` fold over every keyframe of every
-/// channel of every timeline, already O(n) in total keyframe count with no honest per-entity
-/// incremental decomposition — the default `infer_cached` passthrough is exact.
-impl ArtifactInferrer for crate::standards::v1::subsets::animation::schema::SemioAnimationBuilder {
-    type Snapshot = SemioAnimationSnapshot;
-    type Inference = SemioAnimationInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.stdio.semio.animation.inference`'s facet leaves into the OS-wide inference

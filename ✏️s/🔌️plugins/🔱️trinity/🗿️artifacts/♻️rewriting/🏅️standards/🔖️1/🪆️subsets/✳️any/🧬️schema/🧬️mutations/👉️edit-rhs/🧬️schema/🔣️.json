@@ -6,26 +6,14 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "newRhsJson"
+    "newRhs"
   ],
   "properties": {
     "mutation": {
       "const": "editRhs"
     },
-    "newRhsJson": {
-      "type": "string",
-      "x-semio-ui": {
-        "widget": "multiline",
-        "role": "value",
-        "label": {
-          "en": "New Replacement",
-          "de": "Neue Ersetzung"
-        },
-        "description": {
-          "en": "Right-hand side of the rule as JSON.",
-          "de": "Rechte Regelseite als JSON."
-        }
-      }
+    "newRhs": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs"
     }
   }
 }

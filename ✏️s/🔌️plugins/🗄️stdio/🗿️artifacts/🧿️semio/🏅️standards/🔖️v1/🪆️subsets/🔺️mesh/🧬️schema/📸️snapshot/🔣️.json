@@ -302,6 +302,91 @@
               "de": "PBR-Rauheit, 0 glatt bis 1 rau."
             }
           }
+        },
+        "baseColorTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Base color texture",
+              "de": "Grundfarbtextur"
+            },
+            "description": {
+              "en": "The owned texture this slot samples, by its ID; empty when the slot is unset.",
+              "de": "Die eigene Textur, die dieser Kanal abtastet, über ihre ID; leer, wenn der Kanal nicht belegt ist."
+            }
+          }
+        },
+        "metallicRoughnessTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Metallic-roughness texture",
+              "de": "Metallizitäts-Rauheits-Textur"
+            },
+            "description": {
+              "en": "The owned texture this slot samples, by its ID; empty when the slot is unset.",
+              "de": "Die eigene Textur, die dieser Kanal abtastet, über ihre ID; leer, wenn der Kanal nicht belegt ist."
+            }
+          }
+        },
+        "normalTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Normal texture",
+              "de": "Normalentextur"
+            },
+            "description": {
+              "en": "The owned texture this slot samples, by its ID; empty when the slot is unset.",
+              "de": "Die eigene Textur, die dieser Kanal abtastet, über ihre ID; leer, wenn der Kanal nicht belegt ist."
+            }
+          }
+        },
+        "occlusionTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Occlusion texture",
+              "de": "Okklusionstextur"
+            },
+            "description": {
+              "en": "The owned texture this slot samples, by its ID; empty when the slot is unset.",
+              "de": "Die eigene Textur, die dieser Kanal abtastet, über ihre ID; leer, wenn der Kanal nicht belegt ist."
+            }
+          }
+        },
+        "emissiveTexture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owned SemioTexture ID reference.",
+          "x-semio-ui": {
+            "label": {
+              "en": "Emissive texture",
+              "de": "Emissionstextur"
+            },
+            "description": {
+              "en": "The owned texture this slot samples, by its ID; empty when the slot is unset.",
+              "de": "Die eigene Textur, die dieser Kanal abtastet, über ihre ID; leer, wenn der Kanal nicht belegt ist."
+            }
+          }
         }
       },
       "required": [

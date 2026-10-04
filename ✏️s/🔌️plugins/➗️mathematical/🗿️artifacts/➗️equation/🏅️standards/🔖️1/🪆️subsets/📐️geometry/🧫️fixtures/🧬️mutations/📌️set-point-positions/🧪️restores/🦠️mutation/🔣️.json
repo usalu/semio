@@ -1,0 +1,16 @@
+{
+  "SetPointPositions": {
+    "positions": [
+      {
+        "index": 0,
+        "x": 0.0,
+        "y": 0.0
+      },
+      {
+        "index": 2,
+        "x": 30.0,
+        "y": 40.0
+      }
+    ]
+  }
+}

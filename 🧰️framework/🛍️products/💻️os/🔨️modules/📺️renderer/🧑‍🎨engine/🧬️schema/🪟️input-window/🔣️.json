@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.renderer.input-window-ownership.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "owner",
+    "focused",
+    "label",
+    "value",
+    "draft",
+    "action",
+    "controller"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.renderer.input-window-ownership.v1"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "focused": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {
+      "type": "string",
+      "minLength": 1
+    },
+    "draft": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "controller": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -5,6 +5,9 @@ use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
 
 /// ↩️ Inverse of insert-frame — a `RemoveFrame` at the same index.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse(base: &SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> Vec<SemioImageMutation> {
-    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }), base)
+pub fn inverse(base: &SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
+    Ok({
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }), base)?
+
+    })
 }

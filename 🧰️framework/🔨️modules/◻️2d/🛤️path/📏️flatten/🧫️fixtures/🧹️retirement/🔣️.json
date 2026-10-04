@@ -1,0 +1,365 @@
+[
+  {
+    "phase": "fresh",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 0,
+    "work": 3,
+    "output": null
+  },
+  {
+    "phase": "preparing",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 1,
+    "work": 4,
+    "output": null
+  },
+  {
+    "phase": "subdividing",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "cubic",
+          "ctrl1": [
+            0,
+            10
+          ],
+          "ctrl2": [
+            10,
+            10
+          ],
+          "to": [
+            10,
+            0
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 2,
+    "work": 4,
+    "output": null
+  },
+  {
+    "phase": "complete",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            0,
+            2
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 4096,
+    "work": 3,
+    "output": [
+      {
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "closed": true
+      }
+    ]
+  },
+  {
+    "phase": "failure",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            10000000000,
+            0
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 4096,
+    "work": 4,
+    "output": null
+  },
+  {
+    "phase": "cancelled",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "cubic",
+          "ctrl1": [
+            0,
+            10
+          ],
+          "ctrl2": [
+            10,
+            10
+          ],
+          "to": [
+            10,
+            0
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 2,
+    "work": 3,
+    "output": null
+  },
+  {
+    "phase": "preparing",
+    "name": "multiple private contours",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            1,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            3,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "to": [
+            4,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            5,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "to": [
+            6,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            7,
+            0
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 7,
+    "work": 7,
+    "output": null
+  }
+]

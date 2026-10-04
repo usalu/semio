@@ -9,7 +9,7 @@ fn raster_asset_capacity_matches_the_json_oracle() {
     for vector in vectors["cases"].as_array().expect("cases") {
         let count = usize::try_from(vector["count"].as_u64().expect("count")).expect("bounded count");
         let oracle: serde_json::Map<String, serde_json::Value> = (0..count).map(|index| (format!("asset-{index:03}"), serde_json::json!({"mime":"application/octet-stream","data":""}))).collect();
-        let delta: RasterAssetsDelta = dsl::os_pack::from_json_str(&serde_json::json!({"entries":oracle}).to_string()).expect("first-party input");
+        let delta: RasterAssetsDelta = semio_framework_pack_json::from_json_str(&serde_json::json!({"entries":oracle}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party input");
         let diff = RasterDiff { assets: Some(delta), ..Default::default() };
         for full_artifact in [false, true] {
             let base = RasterSnapshot::default();

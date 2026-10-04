@@ -91,6 +91,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
       | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapselträger, Ostkern"}} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -128,6 +129,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
       | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
+      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapselträger, Ostkern"}} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive

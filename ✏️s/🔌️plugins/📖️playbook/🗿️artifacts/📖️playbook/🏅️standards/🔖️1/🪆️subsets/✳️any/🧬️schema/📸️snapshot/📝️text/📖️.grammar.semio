@@ -7,12 +7,12 @@ start document
 # Real grammar for `PlaybookSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
 # `PlaybookPackRecord` (📸️snapshot/🦀️.rs), the same record the pack encodes. Fields are
 # space-separated `key=value` tokens in any order; `title` is optional. A composed child handle is
-# the `ArtifactChild` record printed inline: `child_id=<id> target=<artifactId>!<kind>@<standard>/<subset>`.
-# `steps` is the `flow` handle's local working scene as its first-party JSON text (a quoted string).
+# the `ArtifactChild` record printed inline: `child_id=<id> target=<artifactId>!<kind>@<standard>/<subset>`. The steps live
+# in the `flow` child's own document, never in this text.
 #
 #   semio playbook.playbook.dsl v1
-#   schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" steps="[…]" document=child_id=… target="…" flow=child_id=… target="…"
+#   schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" flow=child_id=… target="…"
 artifact-mark = "semio playbook.playbook.dsl v1"
 document = artifact-mark field*
-field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"version" "=" TEXT} | {"title" "=" TEXT} | {"document" "=" child-handle} | {"flow" "=" child-handle} | {"steps" "=" TEXT}
+field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"version" "=" TEXT} | {"title" "=" TEXT} | {"flow" "=" child-handle}
 child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}

@@ -1,11 +1,8 @@
 {
   "mutation": "patchSnapshot",
   "patch": {
-    "edits": [
-      {
-        "path": ["hasHeader"],
-        "edit": { "operation": "set", "value": false }
-      }
-    ]
+    "operation": "set",
+    "path": "/hasHeader",
+    "value": false
   }
 }

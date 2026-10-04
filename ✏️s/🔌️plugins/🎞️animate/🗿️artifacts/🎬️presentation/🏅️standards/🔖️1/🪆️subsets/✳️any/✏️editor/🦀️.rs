@@ -146,8 +146,8 @@ pub struct PresentationDispatchCtx {
 /// 🕹️ JSON-encodes `ids` as the `Vec<InteractionTarget>` string the framework's `interactionSelect`
 /// action requires in its `targets` arg — every hit id shares the domain's one granularity.
 fn interaction_targets_json(ids: &[String]) -> String {
-    let targets = ids.iter().map(|id| dsl::os_pack::json::object([("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), dsl::os_pack::json::Value::from(id.clone()))])).collect();
-    dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(targets))
+    let targets = ids.iter().map(|id| semio_framework_pack_json::object([("granularity".to_string(), semio_framework_pack_json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)), ("id".to_string(), semio_framework_pack_json::Value::from(id.clone()))])).collect();
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(targets))
 }
 
 /// 🕹️ Requests the shell to redispatch the framework-owned `interactionSelect` verb through its
@@ -157,11 +157,11 @@ fn interaction_targets_json(ids: &[String]) -> String {
 pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-        args: Some(dsl::DslValue::object([
-            ("domainId".to_string(), dsl::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
-            ("targets".to_string(), dsl::DslValue::String(interaction_targets_json(ids))),
-            ("merge".to_string(), dsl::DslValue::String(merge.into())),
-            ("method".to_string(), dsl::DslValue::String("pick".into())),
+        args: Some(semio_framework_value::DslValue::object([
+            ("domainId".to_string(), semio_framework_value::DslValue::String(PRESENTATION_INTERACTION_DOMAIN.into())),
+            ("targets".to_string(), semio_framework_value::DslValue::String(interaction_targets_json(ids))),
+            ("merge".to_string(), semio_framework_value::DslValue::String(merge.into())),
+            ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
         ])),
     }
 }
@@ -236,10 +236,11 @@ pub(crate) fn valid_tile_ids(deck: &PresentationSnapshot, ids: Vec<String>) -> V
 fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     match &media.payload {
         MediaPayload::Structured { json, .. } => {
-            let value = dsl::os_pack::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map_or_else(|| "Imported frame".into(), str::to_string))
         }
         MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
+        MediaPayload::Intrinsic { value, .. } => Ok(value.get("name").and_then(semio_framework_value::DslValue::as_str).or_else(|| value.get("src").and_then(semio_framework_value::DslValue::as_str)).map_or_else(|| "Imported frame".into(), str::to_string)),
     }
 }
 
@@ -264,7 +265,7 @@ pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Ef
     // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
     // guest (`unreachable`) at boot, before any window kind existed. `🗒️note`/`✒️writer`/`📐️cad` all
     // take the `empty_document_spr` route; the log is edit-free by construction either way.
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
@@ -484,35 +485,6 @@ struct AnimatePresentationConfigPreparation {
     closing: bool,
 }
 
-fn animate_presentation_config_edit(forward: PresentationConfigMutation, inverse: PresentationConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PresentationConfigMutation> {
-    let id = format!("animate-presentation-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    protocol::Edit { line: authority.line_id().map(str::to_owned),
-        id: id.clone(),
-        actor: Some(authority.actor().to_string()),
-        forwards: vec![forward],
-        inverse: vec![inverse],
-        mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-            dependencies: Vec::new(),
-            base_version: authority.base_applied_edit_count() as u64,
-            author_id: Some(protocol::ActorId(authority.actor().to_string())),
-            timestamp: authority.next_clock(),
-            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-            payload_hash: None,
-            semantic_kind: None,
-            label: None,
-            group_id: None,
-            origin: Default::default(),
-            transaction: None,
-        }],
-        description, verb: None,
-        coalesce_key: None,
-        sequence_number: authority.next_sequence_number(),
-        started_at: String::new(),
-        finished_at: None,
-    }
-}
-
 struct AnimatePresentationConfigByteCounter {
     bytes: usize,
 }
@@ -533,7 +505,7 @@ impl std::io::Write for AnimatePresentationConfigByteCounter {
 fn animate_presentation_config_edit_bytes(edit: &protocol::Edit<PresentationConfigMutation>) -> Result<usize, String> {
     let mut counter = AnimatePresentationConfigByteCounter { bytes: 0 };
     use std::io::Write as _;
-    counter.write_all(dsl::json::to_json_string(edit).as_bytes()).map_err(|_| "Animate Presentation config edit exceeds its serialized byte envelope".to_string())?;
+    counter.write_all(semio_framework_pack_json::to_json_string(edit).as_bytes()).map_err(|_| "Animate Presentation config edit exceeds its serialized byte envelope".to_string())?;
     Ok(counter.bytes)
 }
 
@@ -545,7 +517,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
         if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Animate Presentation config preparation rejected its lane or byte envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES))
     }
 
     fn begin(
@@ -610,7 +582,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         if self.sealed_candidate.is_none() {
             let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Animate Presentation config preparation lost its candidate".to_string())?;
             let authority = self.authority.as_ref().ok_or_else(|| "Animate Presentation config preparation lost its Store authority".to_string())?;
-            self.sealed_candidate = Some((post, animate_presentation_config_edit(forward, inverse, self.description.take(), authority)));
+            self.sealed_candidate = Some((post, authority.next_edit(forward, vec![inverse])));
         }
         if self.serialized_bytes.is_none() {
             let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Animate Presentation config preparation lost its semantic edit".to_string())?;
@@ -645,7 +617,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -657,7 +629,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Animate Presentation config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Animate Presentation config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -905,9 +877,12 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     const DIALECT: Dialect = crate::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_presentation_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     /// 🧺️ Without these owners the document store holds no `initial_snapshot_retirement_factory`, so
     /// the boot `setActiveExample` archive load is refused with `module.vcs: validation failed:
@@ -1116,15 +1091,15 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `setActiveExample`, every Actions-pane row and every canvas pick died before reaching
     /// `handle`. The `#[dsl(block)]` payloads (`crop`/`frame`/`source`) decode through
     /// `semio_framework_value::FromValue::from_value`, the same codec the typed channel uses.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PresentationCommand, Fault> {
-        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
-        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64)).unwrap_or_default();
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PresentationCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64)).unwrap_or_default();
         let id_list = |keys: &[&str]| match keys.iter().find_map(|key| args.and_then(|value| value.get(key))) {
-            Some(dsl::DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
-            Some(dsl::DslValue::String(raw)) if !raw.is_empty() => vec![raw.clone()],
+            Some(semio_framework_value::DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
+            Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => vec![raw.clone()],
             _ => Vec::new(),
         };
-        fn decode<T: dsl::FromValue>(action: &str, args: Option<&dsl::DslValue>, key: &str) -> Result<T, Fault> {
+        fn decode<T: semio_framework_value::FromValue>(action: &str, args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<T, Fault> {
             let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("presentation {action} requires a '{key}' block")))?;
             semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid presentation {action} '{key}': {error}")))
         }
@@ -1147,9 +1122,9 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             "copyPrompt" => Ok(PresentationCommand::CopyPrompt(copy_prompt::CopyPrompt {})),
             "exportVideoFromDeck" => Ok(PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck {
                 scene_json: match args.and_then(|value| value.get("scene")) {
-                    Some(dsl::DslValue::String(text)) => text.clone(),
-                    Some(dsl::DslValue::Null) | None => String::new(),
-                    Some(value) => dsl::json::to_json_string(value),
+                    Some(semio_framework_value::DslValue::String(text)) => text.clone(),
+                    Some(semio_framework_value::DslValue::Null) | None => String::new(),
+                    Some(value) => semio_framework_pack_json::to_json_string(value),
                 },
             })),
             other => Err(Fault::from(format!("presentation: unhandled action id {other}"))),

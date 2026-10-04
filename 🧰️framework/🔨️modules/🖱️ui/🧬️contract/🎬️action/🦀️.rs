@@ -225,9 +225,9 @@ impl ::protocol::value::FromValue for UiText {
     fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
         let text = match value {
             ::protocol::value::DslValue::String(s) => s,
-            other => return Err(::protocol::value::ValueError::new(format!("expected a string for UiText, found {other:?}"))),
+            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected a string for UiText, found {other:?}"))),
         };
-        Self::try_from_string(text).map_err(|value| ::protocol::value::ValueError::new(format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
+        Self::try_from_string(text).map_err(|value| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiText exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))
     }
 }
 
@@ -237,7 +237,7 @@ impl ::protocol::value::FromValue for UiText {
 mod fixed_list_storage_tests;
 
 use protocol::value::list as fixed_list_storage;
-pub use fixed_list_storage::{PagedListAllocationError, PagedListProgress};
+pub use fixed_list_storage::{PagedListAllocationError, PagedListError, PagedListProgress, PagedListRefusalKind};
 
 #[path = "../🔗️bindings/📋️copy/🦀️.rs"]
 mod binding_copy;
@@ -309,7 +309,7 @@ impl<T, const N: usize> UiFixedList<T, N> {
         Self { storage: fixed_list_storage::PagedList::empty() }
     }
     /// 🧊️ Cold full-capacity reservation; interactive owners admit one page with try_reserve_one.
-    pub fn try_reserve(&mut self) -> Result<bool, &'static str> {
+    pub fn try_reserve(&mut self) -> Result<bool, PagedListError> {
         self.storage.reserve_full()
     }
 
@@ -319,19 +319,19 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn has_reserved_slot(&self) -> bool {
         self.storage.has_reserved_slot()
     }
-    pub fn next_allocation_bytes(&self) -> Result<usize, &'static str> {
+    pub fn next_allocation_bytes(&self) -> Result<usize, PagedListError> {
         self.storage.next_allocation_bytes()
     }
     pub fn try_reserve_one(&mut self, bytes: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         self.storage.reserve_one(bytes)
     }
-    pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<PagedListProgress, &'static str> {
+    pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.place_reserved(source, bytes)
     }
-    pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, &'static str> {
+    pub fn release_empty_page(&mut self, maximum_bytes: usize) -> Result<PagedListProgress, PagedListError> {
         self.storage.release_empty_page(maximum_bytes)
     }
-    pub(crate) fn truncate_retired_last(&mut self) -> Result<(), &'static str> {
+    pub(crate) fn truncate_retired_last(&mut self) -> Result<(), PagedListError> {
         self.storage.truncate_retired_last()
     }
 
@@ -346,11 +346,11 @@ impl<T, const N: usize> UiFixedList<T, N> {
     /// copies (~240 KiB) and one `RowAction` at ~300 KiB, which capped a surface at ~16 actionable rows
     /// of its 8 MiB reconcile budget (process3d workshop, 12 machines + 4 catalogs: `ui.surface-render
     /// … bytes: 8390387`, ticket 26/09/15/DEV-PROCESS-REACT-E2E).
-    fn reserve_next_slot(&mut self) -> Result<(), &'static str> {
+    fn reserve_next_slot(&mut self) -> Result<(), PagedListError> {
         while !self.has_reserved_slot() {
             let bytes = self.next_allocation_bytes()?;
-            if !self.try_reserve_one(bytes).map_err(|error| error.reason)?.progressed {
-                return Err("fixed list page admission made no progress");
+            if !self.try_reserve_one(bytes).map_err(PagedListAllocationError::refusal)?.progressed {
+                return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list page admission made no progress" });
             }
         }
         Ok(())
@@ -371,9 +371,9 @@ impl<T, const N: usize> UiFixedList<T, N> {
     }
 
     /// 🧾️ Releases only empty backing; a live payload rejects the operation without mutation.
-    pub fn release_empty_allocation(&mut self) -> Result<bool, &'static str> {
+    pub fn release_empty_allocation(&mut self) -> Result<bool, PagedListError> {
         if !self.is_empty() {
-            return Err("UI fixed-list payloads must be transferred before backing release");
+            return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "UI fixed-list payloads must be transferred before backing release" });
         }
         let released = !self.terminal_is_empty();
         while !self.terminal_is_empty() {
@@ -568,13 +568,13 @@ impl<T: ::protocol::value::FromValue, const N: usize> ::protocol::value::FromVal
     fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
         let items = match value {
             ::protocol::value::DslValue::Array(items) => items,
-            other => return Err(::protocol::value::ValueError::new(format!("expected an array, found {other:?}"))),
+            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an array, found {other:?}"))),
         };
         let mut values = UiFixedList::default();
         for item in items {
             let item = <T as ::protocol::value::FromValue>::from_value(item)?;
             if values.try_push(item).is_err() {
-                return Err(::protocol::value::ValueError::new(format!("UiFixedList exceeds {N} items")));
+                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedList exceeds {N} items")));
             }
         }
         Ok(values)
@@ -747,17 +747,17 @@ impl<V: ::protocol::value::FromValue> ::protocol::value::FromValue for UiFixedMa
     fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
         let entries = match value {
             ::protocol::value::DslValue::Object(entries) => entries,
-            other => return Err(::protocol::value::ValueError::new(format!("expected an object, found {other:?}"))),
+            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an object, found {other:?}"))),
         };
         let mut values = UiFixedMap::default();
         for (key, value) in entries {
-            let key = UiText::try_from_string(key).map_err(|value| ::protocol::value::ValueError::new(format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
+            let key = UiText::try_from_string(key).map_err(|value| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedMap key exceeds {UI_TEXT_MAX_BYTES} bytes with {}", value.len())))?;
             let value = <V as ::protocol::value::FromValue>::from_value(value)?;
             if values.contains(&key) {
-                return Err(::protocol::value::ValueError::new(format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
+                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedMap keys must be unique; '{key}' arrived twice")));
             }
             if values.try_insert(key, value).is_err() {
-                return Err(::protocol::value::ValueError::new(values.refusal()));
+                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, values.refusal()));
             }
         }
         Ok(values)
@@ -861,17 +861,17 @@ impl ::protocol::value::FromValue for UiFixedBytes {
     fn from_value(value: ::protocol::value::DslValue) -> Result<Self, ::protocol::value::ValueError> {
         let items = match value {
             ::protocol::value::DslValue::Array(items) => items,
-            other => return Err(::protocol::value::ValueError::new(format!("expected an array for UiFixedBytes, found {other:?}"))),
+            other => return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("expected an array for UiFixedBytes, found {other:?}"))),
         };
         let mut bytes = Vec::with_capacity(items.len().min(UI_FIXED_BYTES));
         for item in items {
             let byte = <u8 as ::protocol::value::FromValue>::from_value(item)?;
             if bytes.len() == UI_FIXED_BYTES {
-                return Err(::protocol::value::ValueError::new(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
+                return Err(::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
             }
             bytes.push(byte);
         }
-        UiFixedBytes::try_from_vec(bytes).map_err(|_| ::protocol::value::ValueError::new(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
+        UiFixedBytes::try_from_vec(bytes).map_err(|_| ::protocol::value::ValueError::new(::protocol::value::ValueRefusalKind::InvalidValue, format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
     }
 }
 

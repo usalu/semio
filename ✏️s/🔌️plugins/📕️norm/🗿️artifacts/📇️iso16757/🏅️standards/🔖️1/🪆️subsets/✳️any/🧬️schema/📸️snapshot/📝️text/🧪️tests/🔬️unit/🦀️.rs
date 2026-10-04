@@ -19,7 +19,7 @@ async fn catalogue_value_integer_variant_round_trips_through_the_dsl_field_bridg
     // into a JSON float `50.0` that `serde_json::from_value` then rejected for the `i64` field.
     // Not exercised by the reference fixture (it only uses `Decimal`), so covered directly here.
     let value = CatalogueValue::Integer { value: 50 };
-    let printed = <CatalogueValue as dsl::DslField>::to_value(&value);
-    let parsed = <CatalogueValue as dsl::DslField>::from_value(&printed).expect("integer variant must round trip");
+    let printed = <CatalogueValue as semio_framework_dsl_record::DslField>::to_value(&value);
+    let parsed = <CatalogueValue as semio_framework_dsl_record::DslField>::from_value(&printed).expect("integer variant must round trip");
     assert_eq!(parsed, value);
 }

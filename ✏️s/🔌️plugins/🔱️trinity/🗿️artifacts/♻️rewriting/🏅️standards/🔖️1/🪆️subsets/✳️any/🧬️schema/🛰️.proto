@@ -1,19 +1,12 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.artifact;
-import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
-
-// 🧬️ Rewriting's durable document contract.
-message RewritingArtifact {
-  // @state artifact
-  string before_fixture_json = 1;
-  // @state artifact
-  string lhs_json = 2;
-  // @state artifact
-  string rhs_json = 3;
-  // @state artifact
-  map<string, semio.framework.value.DslValue> parameter_bindings = 4;
-  // @state artifact
-  map<string, LayoutPoint> rule_layout = 5;
-}
-
-message LayoutPoint { double x = 1; double y = 2; }
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
+message RewritingArtifact { semio.s.trinity.jack.snapshot.JackSnapshot working_graph = 1; Lhs lhs = 2; Rhs rhs = 3; map<string, semio.framework.graph.manifest.PropertyValue> parameter_bindings = 4; map<string, LayoutPoint> rule_layout = 5; }
+message Pattern { string left_var = 1; string left_kind = 2; optional string edge_var = 3; optional string edge_kind = 4; optional string right_var = 5; optional string right_kind = 6; }
+message Lhs { Pattern pattern = 1; optional string where_clause = 2; }
+enum ParameterKind { PARAMETER_KIND_UNSPECIFIED = 0; STRING = 1; NUMBER = 2; BOOLEAN = 3; }
+message ParameterSpec { string name = 1; ParameterKind kind = 2; semio.framework.graph.manifest.PropertyValue default = 3; }
+message Assignment { string var = 1; string prop = 2; semio.framework.graph.manifest.PropertyValue value = 3; }
+message Rhs { repeated Pattern create = 1; repeated string delete = 2; repeated Assignment set = 3; repeated Pattern merge = 4; repeated ParameterSpec parameters = 5; }
+message LayoutPoint { fixed64 x_ieee754_bits = 1; fixed64 y_ieee754_bits = 2; }

@@ -36,7 +36,7 @@ async fn tessellate_all_returns_every_object() {
 #[semio_framework_async_macros::async_test]
 async fn projection_json_embeds_paint_pixels_as_base64() {
     let doc = LowpolyDocument::new(default_snapshot(), default_mesh_workspace()).unwrap();
-    let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&doc.snapshot))).unwrap();
+    let json = serde_json::to_string(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&doc.snapshot))).unwrap();
     assert!(json.contains("\"pixels\""));
     // base64 white, never a raw integer array.
     assert!(!json.contains("255,255,255"));

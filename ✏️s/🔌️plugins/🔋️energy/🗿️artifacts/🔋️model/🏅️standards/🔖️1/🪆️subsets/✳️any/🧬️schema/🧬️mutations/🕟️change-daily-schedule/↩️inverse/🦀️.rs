@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeDailyScheduleLimits, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::ChangeDailyScheduleLimits, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let limits = match (payload.new_limits_min, payload.new_limits_max) {
         (Some(min), Some(max)) => Some(crate::schedule::ScheduleLimits { min, max }),
         _ => None,
@@ -18,5 +19,7 @@ pub fn inverse(payload: &super::ChangeDailyScheduleLimits, base: &EnergyModelSna
         Some(item) if item.limits != limits => vec![vocabulary::change_daily_schedule_limits(payload.id, item.limits.map(|old| old.min), item.limits.map(|old| old.max))],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

@@ -8,7 +8,7 @@ fn shared_artifact_addressing_matches_neutral_identities_and_rejects_foreign_fie
         let value = DslValue::from(row["child"].clone());
         let mut child = ArtifactChild::<()>::from_value(value).unwrap();
         child.set_local_owner(Arc::new(String::from("local-only")));
-        let encoded = crate::os_pack::json::to_json_string(&child);
+        let encoded = semio_framework_pack_json::to_json_string(&child);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), row["child"]);
         assert_eq!(child.target.dialect.to_coordinate(), row["coordinate"].as_str().unwrap());
         assert_eq!(child.target.to_uri(), row["uri"].as_str().unwrap());
@@ -34,7 +34,7 @@ fn shared_artifact_addressing_links_match_neutral_pin_variants_and_reject_foreig
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-addressing/🔣️.json")).unwrap();
     for row in fixture["validLinks"].as_array().unwrap() {
         let link = ArtifactLink::from_value(DslValue::from(row.clone())).unwrap();
-        let encoded = crate::os_pack::json::to_json_string(&link);
+        let encoded = semio_framework_pack_json::to_json_string(&link);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), *row);
         assert_eq!(ArtifactLink::from_value(link.to_value()).unwrap(), link);
     }

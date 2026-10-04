@@ -324,6 +324,22 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             };
             stub_document(&Preamble { version, maintenance_version: number(snapshot, "maintenanceVersion").unwrap_or(0.0) as u8, codepage: number(snapshot, "codepage").unwrap_or(0.0) as u16, ..current })
         }
+        "patch-snapshot" => {
+            let patch = params.get("patch").ok_or("patch-snapshot: missing `patch`")?;
+            let field = match (patch.str("operation").as_str(), patch.str("path").as_str()) {
+                ("set", "/version") => "version",
+                ("set", "/maintenanceVersion") => "maintenanceVersion",
+                ("set", "/codepage") => "codepage",
+                (operation, path) => return Err(format!("patch-snapshot {operation} {path} reaches past the preamble this oracle reads")),
+            };
+            let mut fields = vec![
+                ("version".to_string(), Json::String(current.version.clone())),
+                ("maintenanceVersion".to_string(), Json::Number(f64::from(current.maintenance_version))),
+                ("codepage".to_string(), Json::Number(f64::from(current.codepage))),
+            ];
+            fields.iter_mut().filter(|(name, _)| name == field).for_each(|(_, value)| *value = patch.get("value").cloned().unwrap_or(Json::Null));
+            oracle_apply_mutation(input, &Json::Object(vec![("kind".to_string(), Json::String("set-version-info".to_string())), ("params".to_string(), Json::Object(fields))]))
+        }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
@@ -338,7 +354,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 pub fn oracle_restore(base: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let preamble = read_preamble(base)?;
     match spec.str("kind").as_str() {
-        "set-version-info" => {
+        "set-version-info" | "patch-snapshot" => {
             let params = Json::Object(vec![
                 ("version".to_string(), Json::String(preamble.version)),
                 ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),

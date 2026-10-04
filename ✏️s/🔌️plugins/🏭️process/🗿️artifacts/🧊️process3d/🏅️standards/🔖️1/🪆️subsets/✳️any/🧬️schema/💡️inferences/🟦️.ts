@@ -69,8 +69,10 @@ export function parseProcess3dInference(value: unknown, at = "$"): Process3dInfe
 
 export function parseBoundingBox(value: unknown, at = "$"): BoundingBox {
   const row = processProcess3dInferenceGuardObject(value, at);
+  const min = processProcess3dInferenceGuardArray(row.min, `${at}.min`, {minItems: 3, maxItems: 3});
+  const max = processProcess3dInferenceGuardArray(row.max, `${at}.max`, {minItems: 3, maxItems: 3});
   return {
-    min: processProcess3dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => processProcess3dInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: processProcess3dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => processProcess3dInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: [processProcess3dInferenceGuardNumber(min[0], `${at}.min[0]`), processProcess3dInferenceGuardNumber(min[1], `${at}.min[1]`), processProcess3dInferenceGuardNumber(min[2], `${at}.min[2]`)],
+    max: [processProcess3dInferenceGuardNumber(max[0], `${at}.max[0]`), processProcess3dInferenceGuardNumber(max[1], `${at}.max[1]`), processProcess3dInferenceGuardNumber(max[2], `${at}.max[2]`)],
   };
 }

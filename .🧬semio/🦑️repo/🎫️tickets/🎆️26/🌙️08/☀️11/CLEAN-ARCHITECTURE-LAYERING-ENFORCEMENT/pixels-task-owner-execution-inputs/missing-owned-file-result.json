@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "missing": "🟦️.ts",
+      "status": 1,
+      "source": "#!/usr/bin/env bun\n/** 🖌️ The OS-owned complete Paint2dHost editing source gate. */\nimport { access } from \"node:fs/promises\";\nimport { join } from \"node:path\";\nimport { runOwnedCommand } from \"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport { cmdBudgetMs } from \"../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    if (segments.length) throw Error(\"Paint2dHost editing test accepts no arguments\");\n    const source = join(this.root,\"🟦️.ts\"), tests = join(this.root,\"🧪️tests/🟦️.ts\"), ownership = join(this.root,\"🧪️tests/🧭️ownership/🟦️.ts\");\n    await Promise.all([access(source),access(tests),access(ownership)]);\n    await runOwnedCommand(process.execPath,[join(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--noUncheckedIndexedAccess\",\"--skipLibCheck\",\"--target\",\"ES2022\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",source],this.repoRoot,\"tool:owner\",cmdBudgetMs(),{env:process.env});\n    await runOwnedCommand(process.execPath,[\"test\",tests,ownership],this.repoRoot,\"tool:owner\",cmdBudgetMs(),{env:process.env});\n  }\n}\n\nawait runScriptMain(new ScriptRouter(import.meta.dir).register(\"test\",TestScript),{defaultCommand:\"test\"});\n",
+      "stderrHash": "766e05e163b1af119ef07ae6938d9caaf7939a967e47cb13bf72ec66e078255f",
+      "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownedFilePresent": false,
+      "compilerStarted": false
+    },
+    {
+      "missing": "🧪️tests/🟦️.ts",
+      "status": 1,
+      "source": "#!/usr/bin/env bun\n/** 🖌️ The OS-owned complete Paint2dHost editing source gate. */\nimport { access } from \"node:fs/promises\";\nimport { join } from \"node:path\";\nimport { runOwnedCommand } from \"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport { cmdBudgetMs } from \"../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    if (segments.length) throw Error(\"Paint2dHost editing test accepts no arguments\");\n    const source = join(this.root,\"🟦️.ts\"), tests = join(this.root,\"🧪️tests/🟦️.ts\"), ownership = join(this.root,\"🧪️tests/🧭️ownership/🟦️.ts\");\n    await Promise.all([access(source),access(tests),access(ownership)]);\n    await runOwnedCommand(process.execPath,[join(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--noUncheckedIndexedAccess\",\"--skipLibCheck\",\"--target\",\"ES2022\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",source],this.repoRoot,\"tool:owner\",cmdBudgetMs(),{env:process.env});\n    await runOwnedCommand(process.execPath,[\"test\",tests,ownership],this.repoRoot,\"tool:owner\",cmdBudgetMs(),{env:process.env});\n  }\n}\n\nawait runScriptMain(new ScriptRouter(import.meta.dir).register(\"test\",TestScript),{defaultCommand:\"test\"});\n",
+      "stderrHash": "81fae186a68e9620ccd99853e1d89320204ba3c30f16b841a8ef5ffe59da5b26",
+      "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownedFilePresent": false,
+      "compilerStarted": false
+    }
+  ],
+  "oracle": "node:fs actual absent owned file and actual unchanged script refusal before compilation",
+  "cargoExecuted": false,
+  "rustExecuted": false
+}

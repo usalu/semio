@@ -1,6 +1,6 @@
 //! 🧵️ Shared retained shell for app-owned typed command reducers.
 
-use crate::app::{AppOperationContext, ArtifactApp, ArtifactOwnedToolJobContext, ArtifactToolCompletion, Emit, EphemeralEmit, HistoryView, InteractionHoverState};
+use crate::app::{AppOperationContext, ArtifactApp, ArtifactOwnedToolJobContext, ArtifactToolCompletion, ArtifactDownloadOutput, Emit, EphemeralEmit, HistoryView, InteractionHoverState};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
@@ -86,6 +86,7 @@ pub enum ArtifactCommandWorkStep<A: ArtifactApp> {
     Replay { stage: &'static str, preview: &'static [u8] },
     Progress { stage: &'static str, preview: &'static [u8] },
     Complete(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>),
+    CompleteDownload {download:ArtifactDownloadOutput,ephemeral:EphemeralEmit<A>},
     CompleteWithEphemeral { emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, ephemeral: EphemeralEmit<A> },
 }
 
@@ -108,7 +109,8 @@ pub struct ArtifactCommandInputs<'a, A: ArtifactApp> {
 /// answered [`ArtifactRetainedCommandPhase::Preflight`] with (items), and the `maximum_work_items`
 /// its payload carried (items) — so nothing could compare them and the three drifted freely. They
 /// are one declaration now: `work_items()` IS the preflight ceiling, `rows(1)` IS the footprint one
-/// durable item declares, and `rows_for_items(n)` IS what an `extent` returns. Every comparison the
+/// point-invertible durable item derives (`ArtifactStoreOneItemFootprint::for_leaf`), and `rows_for_items(n)` IS what an
+/// `extent` returns. Every comparison the
 /// runtime makes — preflight's `extent <= maximum_work_items`, `ArtifactStore::fold_batch_item`'s
 /// `forwards.len() + inverse.len() <= footprint.work_items` — therefore measures the same thing
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -149,12 +151,6 @@ impl ArtifactRetainedWorkCapacity {
         }
     }
 
-    /// 🧺️ The store footprint one durable item of this route declares — the same rows
-    /// [`Self::rows`] counts, so a preflight and an extent can never disagree again.
-    pub fn one_item_footprint(self, retained_bytes: usize) -> store::ArtifactStoreOneItemFootprint {
-        store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes)
-    }
-
     pub const fn admits(self, extent: usize) -> bool {
         extent != 0 && extent <= self.work_items()
     }
@@ -167,7 +163,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         0
     }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize>;
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
     fn checkpoint(&self, _target: &mut [u8]) -> Result<usize, Fault> {
         Ok(0)
     }
@@ -209,7 +205,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
         let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
         if self.consumed {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
@@ -300,6 +296,8 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     raw: Vec<u8>,
     raw_page_cursor: usize,
     emit: Option<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>,
+    download:Option<ArtifactDownloadOutput>,
+    download_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     ephemeral: Option<EphemeralEmit<A>>,
     phase: ArtifactRetainedCommandPhase,
     checkpoint_pending: bool,
@@ -350,6 +348,8 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             raw: payload.raw,
             raw_page_cursor: 0,
             emit: None,
+            download:None,
+            download_retirement:None,
             ephemeral: None,
             phase,
             checkpoint_pending: false,
@@ -426,7 +426,8 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     fn reducer_fault(&mut self, cx: &mut StepContext<'_>, fault: &Fault) -> StepOutcome {
         self.phase = ArtifactRetainedCommandPhase::Fault;
         crate::plugin_runtime::debug_runtime_line(format_args!("[TRACE] retained command {} reducer faulted: {}: {}", self.work.as_ref().map(|work| work.tool_id()).unwrap_or("<no work>"), fault.code.0, fault.message));
-        StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, reducer_fault_detail(fault).as_bytes()) })
+        let detail = reducer_fault_detail(fault);
+        StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, &detail) })
     }
 
     #[cfg(test)]
@@ -435,31 +436,17 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     }
 }
 
-/// 🏷️ The fixed prefix every reducer fault detail starts with — written by [`reducer_fault_detail`], read back by
-/// [`reducer_fault_of_detail`].
-const REDUCER_FAULT_DETAIL_PREFIX: &str = "retained command reducer rejected operation: ";
-
-/// 🧯️ The fault detail one refused reducer step reports: the fixed prefix every reader already keys on,
-/// then the app's OWN code and message. Clipped to [`ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES`] on a
-/// char boundary, so a runaway message narrows the report instead of truncating mid-codepoint.
-pub fn reducer_fault_detail(fault: &Fault) -> String {
-    let mut detail = format!("{REDUCER_FAULT_DETAIL_PREFIX}{} {}", fault.code.0.as_str(), fault.message);
-    if detail.len() > ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES {
-        let mut end = ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES;
-        while end > 0 && !detail.is_char_boundary(end) {
-            end -= 1;
-        }
-        detail.truncate(end);
-    }
-    detail
+/// 🧯️ The bounded canonical Fault wire one refused reducer step reports. A normal fault crosses exactly;
+/// an oversized one keeps its typed code, source span, and named params while prose is narrowed.
+pub fn reducer_fault_detail(fault: &Fault) -> Vec<u8> {
+    semio_framework_diagnostic::encode_fault_bytes_bounded(fault, ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES).unwrap_or_else(|| {
+        semio_framework_diagnostic::encode_fault_bytes(&Fault::new(semio_framework::FaultOrigin::Framework, "retained-command.fault-capacity", "the reducer fault exceeded its bounded diagnostic carrier"))
+    })
 }
 
-/// 🔎️ The reducer's own code and message back out of a detail [`reducer_fault_detail`] wrote, `None` for any other
-/// job fault detail — so the agent lane's preview answers an agent with the reducer's exact refusal code, the one it
-/// branches on, instead of the generic app-owned output code the shell's fault page carries.
-pub fn reducer_fault_of_detail(detail: &str) -> Option<Fault> {
-    let (code, message) = detail.strip_prefix(REDUCER_FAULT_DETAIL_PREFIX)?.split_once(' ')?;
-    (!code.is_empty()).then(|| Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new(code), message))
+/// 🔎️ Recovers the exact typed reducer fault while leaving framework-authored plain fault pages distinct.
+pub fn reducer_fault_of_detail(detail: &[u8]) -> Option<Fault> {
+    semio_framework_diagnostic::try_decode_fault_bytes(detail)
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
@@ -562,7 +549,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 else {
                     return self.fault(cx, b"retained command reducer owner is absent");
                 };
-                match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation }) {
+                match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation }, cx) {
                     Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => {
                         cx.set_stage(stage);
                         self.checkpoint_pending = true;
@@ -573,6 +560,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                         self.work_progress = self.work_progress.saturating_add(1);
                         self.checkpoint_pending = true;
                         self.preview(cx, preview)
+                    }
+                    Ok(ArtifactCommandWorkStep::CompleteDownload{download,ephemeral})=>{
+                        self.download=Some(download);self.ephemeral=Some(ephemeral);self.phase=ArtifactRetainedCommandPhase::Publish;
+                        self.preview(cx,r#"{"en":"Publishing download","de":"Download wird veröffentlicht"}"#.as_bytes())
                     }
                     Ok(ArtifactCommandWorkStep::Complete(emit)) => {
                         self.emit = Some(emit);
@@ -594,6 +585,12 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 let Some(completion) = self.completion.as_ref() else { return self.fault(cx, b"retained command completion owner is absent") };
                 if !completion.has_mounted_consumer() {
                     return self.fault(cx, b"retained command completion consumer is absent");
+                }
+                if let Some(download)=self.download.take(){
+                    let Some(ephemeral)=self.ephemeral.take()else{self.download=Some(download);return self.fault(cx,b"retained download ephemeral owner is absent")};
+                    if let Err(rejected)=completion.complete_download(Ok(download),ephemeral){self.download=rejected.download.ok();self.ephemeral=Some(rejected.ephemeral);return self.reducer_fault(cx,&rejected.fault)}
+                    self.phase=ArtifactRetainedCommandPhase::Complete;
+                    return StepOutcome::Complete(CommitCandidate{state:RetainedJobPayload::empty(JobPayloadStream::CommitState),output:RetainedJobPayload::empty(JobPayloadStream::CommitOutput)});
                 }
                 let Some(emit) = self.emit.take() else { return self.fault(cx, b"retained command result owner is absent") };
                 let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"retained command ephemeral result owner is absent") };
@@ -693,6 +690,10 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 };
             }
         }
+        if self.download_retirement.is_none(){if let Some(download)=self.download.take(){self.download_retirement=Some(semio_framework_value::retirement::owned_retirement(download));}}
+        if let Some(retirement)=self.download_retirement.as_mut(){
+            return match retirement.close_step(maximum_items,maximum_bytes){Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.download_retirement.take();InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0}},Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},_=>InteractiveJobCloseStep::Blocked};
+        }
         retire_one!(emit);
         retire_one!(ephemeral);
         if let Some(work) = self.work.as_mut() {
@@ -735,6 +736,8 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             && self.checkpoint_input.is_none()
             && self.raw_input.is_none()
             && self.emit.is_none()
+            && self.download.is_none()
+            && self.download_retirement.is_none()
             && self.ephemeral.is_none()
             && self.work.is_none()
             && self.command.is_none()
@@ -778,6 +781,8 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             raw,
             raw_page_cursor: 0,
             emit: None,
+            download:None,
+            download_retirement:None,
             ephemeral: None,
             phase: ArtifactRetainedCommandPhase::Complete,
             checkpoint_pending: false,

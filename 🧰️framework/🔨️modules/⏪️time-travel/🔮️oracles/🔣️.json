@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ This owner's contribution to the repository test platform: the third-party references its own laws judge against.",
+  "oracles": [
+    {
+      "id": "time-travel-xstate",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "xstate",
+      "version": "5.32.5",
+      "engine": {
+        "family": "xstate",
+        "implementation": "xstate createMachine()",
+        "version": "5.32.5"
+      },
+      "capabilities": [
+        "time-travel.lifecycle"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://stately.ai/docs/xstate",
+      "rationale": "Judges the time-travel session lifecycle in `🧪️tests/🧪️conformance` (design §4): the `🧫️lifecycle-law` matrix built as an xstate machine with an independent context model must accept and refuse exactly what the TypeScript twin does."
+    },
+    {
+      "id": "time-travel-fast-check",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check fc.assert",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "time-travel.lifecycle"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "homepage": "https://fast-check.dev",
+      "rationale": "Generates random event sequences for the lifecycle law in `🧪️tests/🧪️conformance`; each sequence is folded by the twin and by the xstate oracle and the two must agree at every step."
+    }
+  ],
+  "noOracleDecisions": []
+}

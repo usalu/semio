@@ -20,6 +20,18 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "PatchSnapshot"
+      ],
+      "properties": {
+        "PatchSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/basic/mutation/patch-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "StampBaseProfile"
       ],
       "properties": {

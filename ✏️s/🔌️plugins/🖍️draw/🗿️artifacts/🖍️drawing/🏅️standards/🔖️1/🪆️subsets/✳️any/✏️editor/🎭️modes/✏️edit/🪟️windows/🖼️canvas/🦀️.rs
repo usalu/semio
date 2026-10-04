@@ -3,7 +3,7 @@
 use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
 use crate::schema::resolve_drawing_artboard;
 use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
 
 pub const DRAWING_PLAY_WINDOW_CANVAS: &str = "drawing-composite";
@@ -23,26 +23,26 @@ const DRAWING_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAWING_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAWING_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
-fn overlay_record<T: dsl::ToValue + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> DslValue {
-    DslValue::object([
-        ("id".to_string(), DslValue::String(id.to_string())),
-        ("role".to_string(), DslValue::String("overlay".to_string())),
-        ("transform".to_string(), dsl::ToValue::to_value(&transform.to_vec())),
-        ("segments".to_string(), dsl::ToValue::to_value(segments)),
-        ("fill".to_string(), fill.map_or(DslValue::Null, |color| DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&color.to_vec()))]))),
+fn overlay_record<T: semio_framework_value::ToValue + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> DslValue {
+    semio_framework_value::DslValue::object([
+        ("id".to_string(), semio_framework_value::DslValue::String(id.to_string())),
+        ("role".to_string(), semio_framework_value::DslValue::String("overlay".to_string())),
+        ("transform".to_string(), semio_framework_value::ToValue::to_value(&transform.to_vec())),
+        ("segments".to_string(), semio_framework_value::ToValue::to_value(segments)),
+        ("fill".to_string(), fill.map_or(semio_framework_value::DslValue::Null, |color| semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&color.to_vec()))]))),
         (
             "stroke".to_string(),
-            DslValue::object([
-                ("color".to_string(), dsl::ToValue::to_value(&stroke_color.to_vec())),
-                ("width".to_string(), DslValue::float(stroke_width)),
-                ("cap".to_string(), DslValue::String("round".to_string())),
-                ("join".to_string(), DslValue::String("round".to_string())),
+            semio_framework_value::DslValue::object([
+                ("color".to_string(), semio_framework_value::ToValue::to_value(&stroke_color.to_vec())),
+                ("width".to_string(), semio_framework_value::DslValue::float(stroke_width)),
+                ("cap".to_string(), semio_framework_value::DslValue::String("round".to_string())),
+                ("join".to_string(), semio_framework_value::DslValue::String("round".to_string())),
             ]),
         ),
-        ("opacity".to_string(), DslValue::float(1.0)),
-        ("blendMode".to_string(), DslValue::String("normal".to_string())),
-        ("visible".to_string(), DslValue::Bool(true)),
-        ("fillRule".to_string(), DslValue::String("evenodd".to_string())),
+        ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
+        ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
+        ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
+        ("fillRule".to_string(), semio_framework_value::DslValue::String("evenodd".to_string())),
     ])
 }
 
@@ -66,40 +66,41 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
     let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
     vec![
         overlay_record("artboard:frame", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAWING_ARTBOARD_FILL), DRAWING_ARTBOARD_STROKE, 1.0),
-        DslValue::object([
-            ("id".to_string(), DslValue::String("artboard:dimensions".to_string())),
-            ("role".to_string(), DslValue::String("overlay".to_string())),
-            ("transform".to_string(), dsl::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35])),
-            ("segments".to_string(), DslValue::Array(Vec::new())),
-            ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), dsl::ToValue::to_value(&DRAWING_ARTBOARD_LABEL.to_vec()))])),
-            ("opacity".to_string(), DslValue::float(1.0)),
-            ("blendMode".to_string(), DslValue::String("normal".to_string())),
-            ("visible".to_string(), DslValue::Bool(true)),
-            ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(label)), ("size".to_string(), DslValue::float(label_size))])),
+        semio_framework_value::DslValue::object([
+            ("id".to_string(), semio_framework_value::DslValue::String("artboard:dimensions".to_string())),
+            ("role".to_string(), semio_framework_value::DslValue::String("overlay".to_string())),
+            ("transform".to_string(), semio_framework_value::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35])),
+            ("segments".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
+            ("fill".to_string(), semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&DRAWING_ARTBOARD_LABEL.to_vec()))])),
+            ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
+            ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
+            ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
+            ("text".to_string(), semio_framework_value::DslValue::object([("content".to_string(), semio_framework_value::DslValue::String(label)), ("size".to_string(), semio_framework_value::DslValue::float(label_size))])),
         ]),
     ]
 }
 
 /// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
-pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let mut scene_nodes = crate::schema::flatten_drawing_document_with_transformation(document,preview.transformation.as_ref());
+pub fn render(plan: Option<&crate::schema::scene_preparation::DocumentScenePlan>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+    let mut scene_nodes=match plan{Some(plan)=>crate::schema::scene_view::nodes(plan,preview.transformation.as_ref()).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.canvas",error.to_string()))?,None=>Vec::new()};
+    let selected_bounds=if let Some(plan)=plan{crate::schema::scene_view::selection_bounds(plan,selection).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
     if let Some(movement)=&preview.node_translation {
         for node in &mut scene_nodes {
             let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|crate::schema::geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();
             if points.is_empty() {continue;}
-            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(&node.segments,&points,node.transform,movement.delta) {node.segments=segments;}
+            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(&node.segments,&points,node.transform,movement.delta) {node.segments=std::borrow::Cow::Owned(segments);}
         }
     }
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
-    records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
+    records.push(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String("meta:utility".to_string())), ("role".to_string(), semio_framework_value::DslValue::String("meta".to_string())), ("utility".to_string(), semio_framework_value::DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(dsl::ToValue::to_value(node));
+        records.push(semio_framework_value::ToValue::to_value(node));
     }
     if active_utility=="editNodes" {
         let zoom=config.viewport.zoom.max(1e-6);
-        for node in scene_nodes.iter().filter(|node|selection.contains(&node.id)) {
+        for node in scene_nodes.iter().filter(|node|selection.iter().any(|id|id==node.id)) {
             if !matches!(crate::schema::find_drawing_layer(document,&node.id),Some(crate::DrawingLayerNode::Path(_))) || crate::schema::drawing_layer_is_locked(document,&node.id) {continue;}
             let [a,b,c,d,e,f]=node.transform;
             let world=|point:[f64;2]|[a*point[0]+c*point[1]+e,b*point[0]+d*point[1]+f];
@@ -137,7 +138,7 @@ pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowCo
         }
     }
     if active_utility=="selectDirect" {
-        if let Some(bounds)=crate::editor::drawing::commands::canvas_pointer_down::selected_transform_bounds(document,selection) {
+        if let Some(bounds)=selected_bounds {
             let [x,y,w,h]=bounds;
             let transform=preview.transformation.as_ref().map_or([1.0,0.0,0.0,1.0,0.0,0.0],|(_,matrix)|*matrix);
             let zoom=config.viewport.zoom.max(1e-6);
@@ -180,6 +181,6 @@ pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowCo
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: dsl::json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_framework_plugin::Canvas2dFraming { revision,bounds: crate::schema::scene_view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

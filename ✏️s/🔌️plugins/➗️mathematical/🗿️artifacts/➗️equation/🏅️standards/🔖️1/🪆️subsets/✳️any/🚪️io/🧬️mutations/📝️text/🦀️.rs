@@ -5,14 +5,14 @@
 
 pub use crate::schema::mutations::EquationMutation;
 
-// 🪆️ Direct absolute paths, not the `schema::mutations` shim: these 14 leaf modules moved to
+// 🪆️ Direct absolute paths, not the `schema::mutations` shim: these leaf modules moved to
 // their real owning subset (ticket
 // 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION),
 // so they are no longer reachable through `✳️any::schema::mutations::<name>`.
 use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient::ChangeCoefficient,
-    geometry::schema::mutations::{insert_point::InsertPoint, move_point::MovePoint, remove_point::RemovePoint, replace_points::ReplacePoints},
+    geometry::schema::mutations::{insert_point::InsertPoint, move_points::MovePoints, remove_point::RemovePoint, replace_points::ReplacePoints, set_point_positions::{EquationPointPosition, SetPointPositions}},
     graph::schema::mutations::{
         change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode, delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode,
         move_nodes::MoveNodes, replace_graph::ReplaceGraph, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
@@ -167,10 +167,10 @@ fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, 
 /// `ToValue`/`FromValue`) rather than a second handcrafted graph grammar; `enc_str`/`dec_str`'s
 /// backslash/quote escaping round-trips it byte-for-byte.
 fn enc_graph(graph: &EquationGraph) -> String {
-    enc_str(&pack::json::to_json_string(graph))
+    enc_str(&semio_framework_pack_json::to_json_string(graph))
 }
 fn dec_graph(s: &str) -> Result<EquationGraph, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 //#endregion 🔖️GraphCodec
 
@@ -190,10 +190,11 @@ fn print_equation_mutation(mutation: &EquationMutation) -> String {
         EquationMutation::ReplacePoints(p) => format!("replace-points points={}", enc_points(&p.points)),
         EquationMutation::InsertPoint(p) => format!("insert-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
         EquationMutation::RemovePoint(p) => format!("remove-point index={}", enc_usize(p.index)),
-        EquationMutation::MovePoint(p) => format!("move-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
+        EquationMutation::MovePoints(p) => format!("move-points indices={} dx={} dy={}", enc_str(&semio_framework_pack_json::to_json_string(&p.indices)), enc_f64(p.dx), enc_f64(p.dy)),
         EquationMutation::ChangeCoefficient(p) => format!("change-coefficient label={} numer={} denom={}", enc_usize(p.label.0 as usize), enc_str(&p.numer), enc_str(&p.denom)),
-        EquationMutation::MoveNodes(p) => format!("move-nodes ids={} dx={} dy={}", enc_str(&pack::json::to_json_string(&p.ids)), enc_f64(p.dx), enc_f64(p.dy)),
-        EquationMutation::SetNodePositions(p) => format!("set-node-positions positions={}", enc_str(&pack::json::to_json_string(&p.positions))),
+        EquationMutation::MoveNodes(p) => format!("move-nodes ids={} dx={} dy={}", enc_str(&semio_framework_pack_json::to_json_string(&p.ids)), enc_f64(p.dx), enc_f64(p.dy)),
+        EquationMutation::SetNodePositions(p) => format!("set-node-positions positions={}", enc_str(&semio_framework_pack_json::to_json_string(&p.positions))),
+        EquationMutation::SetPointPositions(p) => format!("set-point-positions positions={}", enc_str(&semio_framework_pack_json::to_json_string(&p.positions))),
     }
 }
 
@@ -215,10 +216,11 @@ fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
         "replace-points" => Ok(EquationMutation::ReplacePoints(ReplacePoints { points: dec_points(&arg("points")?)? })),
         "insert-point" => Ok(EquationMutation::InsertPoint(InsertPoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "remove-point" => Ok(EquationMutation::RemovePoint(RemovePoint { index: dec_usize(&arg("index")?)? })),
-        "move-point" => Ok(EquationMutation::MovePoint(MovePoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
+        "move-points" => Ok(EquationMutation::MovePoints(MovePoints { indices: semio_framework_pack_json::from_json_str(&dec_str(&arg("indices")?)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())?, dx: dec_f64(&arg("dx")?)?, dy: dec_f64(&arg("dy")?)? })),
         "change-coefficient" => Ok(EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(dec_usize(&arg("label")?)? as u64), numer: dec_str(&arg("numer")?)?, denom: dec_str(&arg("denom")?)? })),
-        "move-nodes" => Ok(EquationMutation::MoveNodes(MoveNodes { ids: pack::json::from_json_str(&dec_str(&arg("ids")?)?).map_err(|e| e.to_string())?, dx: dec_f64(&arg("dx")?)?, dy: dec_f64(&arg("dy")?)? })),
-        "set-node-positions" => Ok(EquationMutation::SetNodePositions(SetNodePositions { positions: pack::json::from_json_str::<Vec<EquationNodePosition>>(&dec_str(&arg("positions")?)?).map_err(|e| e.to_string())? })),
+        "move-nodes" => Ok(EquationMutation::MoveNodes(MoveNodes { ids: semio_framework_pack_json::from_json_str(&dec_str(&arg("ids")?)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())?, dx: dec_f64(&arg("dx")?)?, dy: dec_f64(&arg("dy")?)? })),
+        "set-node-positions" => Ok(EquationMutation::SetNodePositions(SetNodePositions { positions: semio_framework_pack_json::from_json_str::<Vec<EquationNodePosition>>(&dec_str(&arg("positions")?)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())? })),
+        "set-point-positions" => Ok(EquationMutation::SetPointPositions(SetPointPositions { positions: semio_framework_pack_json::from_json_str::<Vec<EquationPointPosition>>(&dec_str(&arg("positions")?)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())? })),
         other => Err(format!("equation mutation: unknown keyword {other:?}")),
     }
 }
@@ -227,8 +229,8 @@ impl protocol::OpText for EquationMutation {
     fn print_op(&self) -> String {
         print_equation_mutation(self)
     }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_equation_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        parse_equation_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -287,10 +289,11 @@ impl protocol::OpBinary for EquationMutation {
             EquationMutation::ReplacePoints(_) => 10,
             EquationMutation::InsertPoint(_) => 11,
             EquationMutation::RemovePoint(_) => 12,
-            EquationMutation::MovePoint(_) => 13,
+            EquationMutation::MovePoints(_) => 13,
             EquationMutation::ChangeCoefficient(_) => 14,
             EquationMutation::MoveNodes(_) => 15,
             EquationMutation::SetNodePositions(_) => 16,
+            EquationMutation::SetPointPositions(_) => 17,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -337,10 +340,13 @@ impl protocol::OpBinary for EquationMutation {
                 out.extend_from_slice(&p.y.to_le_bytes());
             }
             EquationMutation::RemovePoint(p) => store::pack_rt::write_varint_u64(&mut out, p.index as u64),
-            EquationMutation::MovePoint(p) => {
-                store::pack_rt::write_varint_u64(&mut out, p.index as u64);
-                out.extend_from_slice(&p.x.to_le_bytes());
-                out.extend_from_slice(&p.y.to_le_bytes());
+            EquationMutation::MovePoints(p) => {
+                store::pack_rt::write_varint_u64(&mut out, p.indices.len() as u64);
+                for index in &p.indices {
+                    store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                }
+                out.extend_from_slice(&p.dx.to_le_bytes());
+                out.extend_from_slice(&p.dy.to_le_bytes());
             }
             EquationMutation::ChangeCoefficient(p) => {
                 store::pack_rt::write_varint_u64(&mut out, p.label.0);
@@ -359,6 +365,14 @@ impl protocol::OpBinary for EquationMutation {
                 store::pack_rt::write_varint_u64(&mut out, p.positions.len() as u64);
                 for position in &p.positions {
                     write_str_bin(&mut out, &position.id);
+                    out.extend_from_slice(&position.x.to_le_bytes());
+                    out.extend_from_slice(&position.y.to_le_bytes());
+                }
+            }
+            EquationMutation::SetPointPositions(p) => {
+                store::pack_rt::write_varint_u64(&mut out, p.positions.len() as u64);
+                for position in &p.positions {
+                    store::pack_rt::write_varint_u64(&mut out, position.index as u64);
                     out.extend_from_slice(&position.x.to_le_bytes());
                     out.extend_from_slice(&position.y.to_le_bytes());
                 }
@@ -428,10 +442,11 @@ impl protocol::OpBinary for EquationMutation {
                 Ok(EquationMutation::RemovePoint(RemovePoint { index }))
             }
             13 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("index", reader.position(), e.to_string()))? as usize;
-                let x = reader.read_f64_le().map_err(|e| malformed("x", reader.position(), e.to_string()))?;
-                let y = reader.read_f64_le().map_err(|e| malformed("y", reader.position(), e.to_string()))?;
-                Ok(EquationMutation::MovePoint(MovePoint { index, x, y }))
+                let count = reader.read_varint_u64().map_err(|e| malformed("indices", reader.position(), e.to_string()))?;
+                let indices = (0..count).map(|_| reader.read_varint_u64().map(|index| index as usize)).collect::<Result<Vec<_>, _>>().map_err(|e| malformed("indices", reader.position(), e.to_string()))?;
+                let dx = reader.read_f64_le().map_err(|e| malformed("dx", reader.position(), e.to_string()))?;
+                let dy = reader.read_f64_le().map_err(|e| malformed("dy", reader.position(), e.to_string()))?;
+                Ok(EquationMutation::MovePoints(MovePoints { indices, dx, dy }))
             }
             14 => {
                 let label = reader.read_varint_u64().map_err(|e| malformed("label", reader.position(), e.to_string()))?;
@@ -453,6 +468,14 @@ impl protocol::OpBinary for EquationMutation {
                     .collect::<Result<Vec<_>, _>>()
                     .map_err(|e| malformed("positions", reader.position(), e))?;
                 Ok(EquationMutation::SetNodePositions(SetNodePositions { positions }))
+            }
+            17 => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("positions", reader.position(), e.to_string()))?;
+                let positions = (0..count)
+                    .map(|_| -> Result<EquationPointPosition, String> { Ok(EquationPointPosition { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? }) })
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|e| malformed("positions", reader.position(), e))?;
+                Ok(EquationMutation::SetPointPositions(SetPointPositions { positions }))
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
@@ -480,10 +503,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
         EquationMutation::ReplacePoints(ReplacePoints { points: vec![EquationPoint { x: 1.0, y: 2.0 }] }),
         EquationMutation::InsertPoint(InsertPoint { index: 0, x: 3.0, y: 4.0 }),
         EquationMutation::RemovePoint(RemovePoint { index: 0 }),
-        EquationMutation::MovePoint(MovePoint { index: 0, x: 7.0, y: 8.0 }),
+        EquationMutation::MovePoints(MovePoints { indices: vec![0, 2], dx: 7.0, dy: -8.5 }),
         EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(3), numer: "5".into(), denom: "2".into() }),
         EquationMutation::MoveNodes(MoveNodes { ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 }),
         EquationMutation::SetNodePositions(SetNodePositions { positions: vec![EquationNodePosition { id: "a".into(), x: 120.0, y: 40.0 }, EquationNodePosition { id: "b".into(), x: -30.5, y: 260.0 }] }),
+        EquationMutation::SetPointPositions(SetPointPositions { positions: vec![EquationPointPosition { index: 0, x: 40.0, y: 220.0 }, EquationPointPosition { index: 2, x: 360.5, y: -14.0 }] }),
     ]
 }
 //#endregion 🔖️DemoCases

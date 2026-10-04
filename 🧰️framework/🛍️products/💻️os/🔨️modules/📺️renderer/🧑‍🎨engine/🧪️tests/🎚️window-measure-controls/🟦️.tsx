@@ -19,6 +19,7 @@ import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelp
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { FlowProvider } from "@semio-tech/ui-react";
+import readingFlow from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🔤️text-flow/🔣️.json";
 
 it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
   const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
@@ -40,12 +41,13 @@ it("interprets the neutral compact Tree and preserves checkbox identity, authori
     const view = render(createElement(FlowProvider, { inline: "rtl", children: createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }) }));
     const tree = view.container.querySelector("[role='tree']")!;
     expect(tree.getAttribute("data-tree-presentation")).toBe("compact");
-    expect(tree.getAttribute("dir")).toBe("rtl");
+    expect(tree.getAttribute("dir")).toBe(readingFlow.root.direction);
     const input = view.container.querySelector<HTMLInputElement>("input[type='checkbox'][aria-label='Grid']")!;
     expect(input).toBeTruthy();
     expect(input.checked).toBe(true);
     expect(input.disabled).toBe(disabled);
-    expect(input.id).toBe("compact-tree-law/puzzle3d-main/grid-visible");
+    expect(input.closest('[role="treeitem"]')?.id).toBe("compact-tree-law/puzzle3d-main/grid-visible.row");
+    expect(input.id).toBe("compact-tree-law/puzzle3d-main/grid-visible.row/puzzle3d-main/grid-visible");
     fireEvent.click(input);
     expect(intents).toHaveLength(disabled ? 0 : 1);
     if (!disabled) {

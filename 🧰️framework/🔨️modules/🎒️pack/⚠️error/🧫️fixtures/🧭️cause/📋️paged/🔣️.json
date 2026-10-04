@@ -1,0 +1,13 @@
+{
+  "cases": [
+    {"id":"refusal-ownership","factory":"refusal","kind":"ownershipLimit","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":null,"expectedKind":"ownershipLimit"},
+    {"id":"refusal-allocation","factory":"refusal","kind":"allocationFailed","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":null,"expectedKind":"allocationFailed"},
+    {"id":"refusal-invariant","factory":"refusal","kind":"invariantViolated","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":null,"expectedKind":"invariantViolated"},
+    {"id":"allocation-ownership-zero","factory":"allocation","kind":"ownershipLimit","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":0,"expectedKind":"ownershipLimit"},
+    {"id":"allocation-ownership-reserved","factory":"allocation","kind":"ownershipLimit","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":4096,"expectedKind":"ownershipLimit"},
+    {"id":"allocation-allocation-zero","factory":"allocation","kind":"allocationFailed","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":0,"expectedKind":"allocationFailed"},
+    {"id":"allocation-allocation-reserved","factory":"allocation","kind":"allocationFailed","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":4096,"expectedKind":"allocationFailed"},
+    {"id":"allocation-invariant-zero","factory":"allocation","kind":"invariantViolated","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":0,"expectedKind":"invariantViolated"},
+    {"id":"allocation-invariant-reserved","factory":"allocation","kind":"invariantViolated","reason":"same deliberately misleading cancellation/limit prose","allocatedBytes":4096,"expectedKind":"invariantViolated"}
+  ]
+}

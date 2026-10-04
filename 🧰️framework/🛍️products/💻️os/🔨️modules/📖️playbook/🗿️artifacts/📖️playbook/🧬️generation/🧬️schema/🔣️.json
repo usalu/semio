@@ -7,14 +7,36 @@
       "title": "Generation Play Root V1",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "grants", "generation", "expected"],
+      "required": [
+        "schema",
+        "grants",
+        "generation",
+        "expected",
+        "rankedValues"
+      ],
       "properties": {
-        "schema": { "const": "semio.playbook.generation-root.v1" },
-        "grants": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 4096 } },
+        "schema": {
+          "const": "semio.playbook.generation-root.v1"
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          }
+        },
         "generation": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["generations", "selectedGenerationId", "previewText"],
+          "required": [
+            "generations",
+            "selectedGenerationId",
+            "previewText"
+          ],
           "properties": {
             "generations": {
               "type": "array",
@@ -22,29 +44,133 @@
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["id", "name", "values"],
+                "required": [
+                  "id",
+                  "name",
+                  "values"
+                ],
                 "properties": {
-                  "id": { "type": "string", "minLength": 1 },
-                  "name": { "type": "string", "minLength": 1 },
-                  "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/GenerationValueV1" } }
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/$defs/GenerationValueV1"
+                    }
+                  }
                 }
               }
             },
-            "selectedGenerationId": { "type": "string", "minLength": 1 },
-            "previewText": { "type": "string" }
+            "selectedGenerationId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "previewText": {
+              "type": "string"
+            }
           }
         },
         "expected": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["sharesAllocation", "cloneCount", "retirementRootDrops", "liveDropRejected", "unwindDoesNotRecurse", "zeroGrantPreservesOwner"],
+          "required": [
+            "sharesAllocation",
+            "cloneCount",
+            "retirementRootDrops",
+            "liveDropRejected",
+            "unwindDoesNotRecurse",
+            "zeroGrantPreservesOwner"
+          ],
           "properties": {
-            "sharesAllocation": { "const": true },
-            "cloneCount": { "type": "integer", "minimum": 0 },
-            "retirementRootDrops": { "const": 1 },
-            "liveDropRejected": { "const": true },
-            "unwindDoesNotRecurse": { "const": true },
-            "zeroGrantPreservesOwner": { "const": true }
+            "sharesAllocation": {
+              "const": true
+            },
+            "cloneCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "retirementRootDrops": {
+              "const": 1
+            },
+            "liveDropRejected": {
+              "const": true
+            },
+            "unwindDoesNotRecurse": {
+              "const": true
+            },
+            "zeroGrantPreservesOwner": {
+              "const": true
+            }
+          }
+        },
+        "rankedValues": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "grants",
+            "entries",
+            "expectedKeys",
+            "aliasReleaseOrders"
+          ],
+          "properties": {
+            "grants": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/GenerationValueV1"
+                  }
+                ],
+                "additionalItems": false
+              }
+            },
+            "expectedKeys": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string"
+              }
+            },
+            "aliasReleaseOrders": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "uniqueItems": true,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                }
+              }
+            }
           }
         }
       }
@@ -52,12 +178,30 @@
     "GenerationValueV1": {
       "title": "Generation Value V1",
       "anyOf": [
-        { "type": "null" },
-        { "type": "boolean" },
-        { "type": "number" },
-        { "type": "string" },
-        { "type": "array", "items": { "$ref": "#/$defs/GenerationValueV1" } },
-        { "type": "object", "additionalProperties": { "$ref": "#/$defs/GenerationValueV1" } }
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GenerationValueV1"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/GenerationValueV1"
+          }
+        }
       ]
     }
   }

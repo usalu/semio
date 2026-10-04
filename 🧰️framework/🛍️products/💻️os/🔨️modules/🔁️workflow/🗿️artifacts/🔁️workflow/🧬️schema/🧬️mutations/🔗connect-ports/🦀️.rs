@@ -2,7 +2,7 @@ use super::super::{DisconnectEdge, WorkflowDiff, WorkflowEdge, WorkflowMutation,
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "connect-ports")]
@@ -17,9 +17,12 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts
     fn diff(&self, _base: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         protocol::MutationOutcome::new(WorkflowDiff::ConnectPorts { edge: self.edge.clone() })
     }
-    fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
+    fn inverse(&self, _base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: self.edge.id.clone() })]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect workflow ports {}", self.edge.id), &format!("Arbeitsablaufanschlüsse {} verbinden", self.edge.id))
     }

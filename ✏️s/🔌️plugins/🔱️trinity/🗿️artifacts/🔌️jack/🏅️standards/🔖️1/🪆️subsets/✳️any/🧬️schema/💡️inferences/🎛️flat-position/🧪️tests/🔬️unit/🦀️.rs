@@ -1,6 +1,6 @@
 use crate::JackWorkingScene;
 use super::*;
-use crate::{Camera, Manifest, Port, PortDirection, PropertyBag};
+use crate::{Camera, Manifest, Port, PortDirection, PropertyBag, Node, Edge, PropertyValue};
 
 //#region 🧸️Fixtures
 fn mini_fixture() -> JackSnapshot {
@@ -45,7 +45,7 @@ fn mini_fixture() -> JackSnapshot {
 //#region 🧪️FlatPositionLaws
 #[semio_framework_async_macros::async_test]
 async fn flat_position_bfs_walks_from_root() {
-    let flat = compute_flat_position(&mini_fixture());
+    let flat = compute_flat_position(&mini_fixture()).expect("valid retained child inference fixture");
     assert_eq!(flat.positions.get("root"), Some(&JackFlatPositionUv { u: 0.0, v: 0.0 }));
     assert_eq!(flat.positions.get("child"), Some(&JackFlatPositionUv { u: 1.2, v: -0.6 }));
 }
@@ -123,7 +123,7 @@ async fn flat_position_covers_disconnected_components() {
                 },
             },
         ] }, Some("root-a".into()));
-    let flat = compute_flat_position(&fixture);
+    let flat = compute_flat_position(&fixture).expect("valid retained child inference fixture");
     assert_eq!(flat.positions.get("child-a"), Some(&JackFlatPositionUv { u: 2.0, v: 1.0 }));
     assert_eq!(flat.positions.get("child-b"), Some(&JackFlatPositionUv { u: 3.0, v: -1.0 }));
 }
@@ -168,13 +168,13 @@ async fn flat_position_handles_cycles_without_looping() {
             },
             Edge { id: "ba".into(), kind: "Connection".into(), source: "b@out".into(), target: "a@out".into(), properties: PropertyBag::new() },
         ] }, Some("a".into()));
-    let flat = compute_flat_position(&fixture);
+    let flat = compute_flat_position(&fixture).expect("valid retained child inference fixture");
     assert!(flat.positions.contains_key("a"));
     assert!(flat.positions.contains_key("b"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_empty_snapshot_yields_default() {
-    assert_eq!(compute_flat_position(&JackSnapshot::default()), JackFlatPosition::default());
+    assert_eq!(compute_flat_position(&JackSnapshot::default()).expect("valid retained child inference fixture"), JackFlatPosition::default());
 }
 //#endregion 🧪️FlatPositionLaws

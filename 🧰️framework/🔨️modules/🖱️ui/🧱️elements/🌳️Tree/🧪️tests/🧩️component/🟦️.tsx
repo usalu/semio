@@ -12,7 +12,43 @@ import disclosureCases from "../../🧫️fixtures/♿️disclosure/🔣️.json
 import actionCases from "../../🧫️fixtures/♿️actions/🔣️.json";
 import focusCases from "../../🧫️fixtures/♿️focus-retention/🔣️.json";
 import disclosureSchema from "../../../../🧬️schema/♿️tree-disclosure/🔣️.json";
+import disabledActionCases from "../../../../🧫️fixtures/♿️disabled-row-action/🔣️.json";
+import disabledActionSchema from "../../../../🧬️schema/♿️disabled-row-action/🔣️.json";
 // #endregion 🔌️Adapters
+
+describe("Disabled row action focus", () => {
+  it("matches the closed corpus and independent native button focus and dispatch", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(disabledActionSchema);
+    expect(validate(disabledActionCases), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate([...disabledActionCases, disabledActionCases[0]])).toBe(false);
+    for (const entry of disabledActionCases) {
+      const onClick = vi.fn();
+      const referenceClick = vi.fn();
+      const reference = document.createElement("button");
+      reference.disabled = entry.disabled && !entry.reason;
+      reference.setAttribute("aria-disabled", String(entry.disabled));
+      reference.addEventListener("click", () => { if (!entry.disabled) referenceClick(); });
+      document.body.append(reference);
+      reference.focus();
+      const referenceFocusable = document.activeElement === reference;
+      reference.click();
+      reference.remove();
+      const { container, unmount } = render(<Tree sections={[{ id: entry.id, label: entry.label, actions: [{ icon: <span aria-hidden="true" />, text: entry.label, disabled: entry.disabled, reason: entry.reason ?? undefined, onClick }], items: [] }]} />);
+      const button = container.querySelector<HTMLButtonElement>("[data-slot=action]")!;
+      button.focus();
+      expect(document.activeElement === button).toBe(entry.focusable);
+      expect(document.activeElement === button).toBe(referenceFocusable);
+      expect(button.disabled).toBe(entry.disabled && !entry.focusable);
+      expect(button.getAttribute("aria-disabled")).toBe(entry.disabled ? "true" : null);
+      const descriptionId = button.getAttribute("aria-describedby");
+      expect(descriptionId ? document.getElementById(descriptionId)?.textContent : null).toBe(entry.description);
+      button.click();
+      expect(onClick.mock.calls.length).toBe(entry.actionable ? 1 : 0);
+      expect(onClick.mock.calls.length).toBe(referenceClick.mock.calls.length);
+      unmount();
+    }
+  });
+});
 
 describe("Tree focus retention", () => {
   const sections = (parent: string, action: string, id: string): TreeDataSection[] => [{id:"focus-section", label:"Nodes", defaultOpen:true, items:[{id:"focus-anchor", label:parent, defaultOpen:true, items:[{id, label:action, onClick:() => {}}]}]}];

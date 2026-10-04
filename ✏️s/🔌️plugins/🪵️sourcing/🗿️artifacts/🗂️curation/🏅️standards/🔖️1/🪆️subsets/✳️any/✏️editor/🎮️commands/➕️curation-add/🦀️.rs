@@ -42,7 +42,7 @@ fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingC
 //#region 🔖️DropOnCurated
 //#endregion 🔖️DropOnCurated
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "curation-add")]
 pub struct CurationAdd {
     pub object_id: String,

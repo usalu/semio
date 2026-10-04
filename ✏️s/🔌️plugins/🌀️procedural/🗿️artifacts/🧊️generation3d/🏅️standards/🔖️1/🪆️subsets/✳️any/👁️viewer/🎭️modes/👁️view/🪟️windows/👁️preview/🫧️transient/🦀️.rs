@@ -35,7 +35,7 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dViewPreviewWin
 fn preflight(mutation: &Generation3dViewTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let Generation3dViewTransientMutation::SetPreviewEval(SetPreviewEval { eval_text }) = mutation;
     let retained_bytes = size_of::<Generation3dViewTransient>().checked_add(eval_text.as_ref().map_or(0, String::capacity)).ok_or_else(|| "Generation3d viewer preview window transient footprint overflowed".to_string())?;
-    let footprint = store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes };
+    let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Generation3d viewer preview window transient exceeds its retained publication envelope".into())
 }
 

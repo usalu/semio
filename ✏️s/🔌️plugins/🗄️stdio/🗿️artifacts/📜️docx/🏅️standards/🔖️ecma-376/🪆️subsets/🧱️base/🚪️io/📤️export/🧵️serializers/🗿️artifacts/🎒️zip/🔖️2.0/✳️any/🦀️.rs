@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Encode DocxSnapshot as ZIP container bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &DocxSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::engine::encode_docx(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let bytes = crate::engine::encode_docx(from).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 

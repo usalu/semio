@@ -48,6 +48,7 @@ pub use manifest::{Manifest, NodeKindDef, EdgeKindDef, PortKindDef};
 pub enum TrinityRamError {
     /// 🧬️ JSON (de)serialization failure.
     Json(String),
+    ValueRefusal(semio_framework_value::ValueError),
     /// 🧭️ VCS store/dispatch failure.
     Vcs(vcs::VcsError),
     /// 🧬️ Persisted mutation diff rejection.
@@ -115,6 +116,7 @@ impl std::fmt::Display for TrinityRamError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => write!(formatter, "{error}"),
+            Self::ValueRefusal(error) => write!(formatter,"{error}"),
             Self::Vcs(error) => write!(formatter, "{error}"),
             Self::MutationApply(error) => write!(formatter, "{error}"),
             Self::Manifest(error) => write!(formatter, "{}: {}", error.path, error.message),
@@ -153,15 +155,15 @@ impl std::error::Error for TrinityRamError {
     }
 }
 
-impl From<pack::JsonError> for TrinityRamError {
-    fn from(error: pack::JsonError) -> Self {
+impl From<semio_framework_pack_json::JsonError> for TrinityRamError {
+    fn from(error: semio_framework_pack_json::JsonError) -> Self {
         Self::Json(error.to_string())
     }
 }
 
-impl From<dsl::ValueError> for TrinityRamError {
-    fn from(error: dsl::ValueError) -> Self {
-        Self::Json(error.to_string())
+impl From<semio_framework_value::ValueError> for TrinityRamError {
+    fn from(error: semio_framework_value::ValueError) -> Self {
+        Self::ValueRefusal(error)
     }
 }
 
@@ -185,167 +187,9 @@ impl From<ManifestValidationError> for TrinityRamError {
 }
 //#endregion ⚠️ Errors
 
-//#region 🔖️ContentBridge
-/// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — jack's `nodes`/`edges`
-/// instance data now lives in this composed child's own `nodes`/`edges`, not on `JackSnapshot`.
-pub type JackContentChild = store::ArtifactChild<SemioGraphSnapshot>;
-
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{
-    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
-};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
-
-/// 🏷️ `jack.node` is the honest string boundary carrying the FULL [`Node`] (id/kind/name/x/y/
-/// width/height/properties/ports — every field this plugin's own rich node model can hold, none of
-/// which `SemioGraphNode`'s native fields alone can carry: `width`/`height` have no native slot at
-/// all, and a port's own `kind`/`properties` don't survive the native `ports` projection below) as
-/// JSON. `id`/`kind`/`label`/`position` are ALSO projected onto `SemioGraphNode`'s own native fields,
-/// and `ports` is a best-effort projection (`Port.id` → `SemioGraphPort.name`, `Port.direction` →
-/// `SemioGraphPortKind`), for genuine graph-shape tooling that only understands the neutral subset —
-/// but the JSON blob is the round-trip SOURCE OF TRUTH on decode (matches `dag`'s own precedent, see
-/// `📓️wave4-reports/dag-report.md`).
-const JACK_NODE_JSON_PROPERTY: &str = "jack.node";
-
-fn semio_port_kind_from_direction(direction: PortDirection) -> SemioGraphPortKind {
-    match direction {
-        PortDirection::In => SemioGraphPortKind::In,
-        PortDirection::Out => SemioGraphPortKind::Out,
-    }
-}
-
-fn port_direction_from_semio_port_kind(kind: SemioGraphPortKind) -> PortDirection {
-    match kind {
-        SemioGraphPortKind::In | SemioGraphPortKind::InOut => PortDirection::In,
-        SemioGraphPortKind::Out => PortDirection::Out,
-    }
-}
-
-fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
-    let ports = node.ports.iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: semio_port_kind_from_direction(port.direction) }).collect();
-    SemioGraphNode {
-        id: SemioGraphNodeId::new(node.id.clone()),
-        kind: node.kind.clone(),
-        label: node.name.clone(),
-        position: SemioPoint2 { x: node.x, y: node.y },
-        ports,
-        properties: vec![SemioValueEntry { key: JACK_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: pack::to_json_string(node) } }],
-    }
-}
-
-/// 🌉 Inverse of [`semio_node_from_jack_node`] — reconstructs the exact [`Node`] from its `jack.node`
-/// JSON property. Falls back to a minimal node built from the graph-native `id`/`kind`/`label`/
-/// `position`/`ports` fields only if the property is missing (content authored outside this plugin,
-/// e.g. a hand-written `graph` doc) — never panics.
-fn jack_node_from_semio_node(node: &SemioGraphNode) -> Node {
-    for property in &node.properties {
-        if property.key == JACK_NODE_JSON_PROPERTY {
-            if let SemioValue::Str { value } = &property.value {
-                if let Ok(parsed) = pack::from_json_str::<Node>(value) {
-                    return parsed;
-                }
-            }
-        }
-    }
-    Node {
-        id: node.id.value.clone(),
-        kind: node.kind.clone(),
-        name: node.label.clone(),
-        x: node.position.x,
-        y: node.position.y,
-        width: 0.0,
-        height: 0.0,
-        properties: PropertyBag::new(),
-        ports: node.ports.iter().map(|port| Port { id: port.name.clone(), kind: String::new(), direction: port_direction_from_semio_port_kind(port.kind), properties: PropertyBag::new() }).collect(),
-    }
-}
-
-/// 🏷️ `SemioGraphEdge` has no `properties` slot (unlike `SemioGraphNode`) — its `label` field (which
-/// this plugin's own [`Edge`] never populates on its own behalf) is repurposed to carry the FULL
-/// `Edge` (port-qualified `source`/`target` endpoint strings, `properties`) as JSON, the round-trip
-/// source of truth on decode. `source`/`target`/`kind` are also projected onto their native fields
-/// (node-id only, port suffix stripped via [`crate::port_node_id`]) for genuine
-/// graph-shape tooling.
-fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
-    let source_node = port_node_id(&edge.source).unwrap_or(&edge.source);
-    let target_node = port_node_id(&edge.target).unwrap_or(&edge.target);
-    SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node.to_string()), target: SemioGraphNodeId::new(target_node.to_string()), kind: edge.kind.clone(), label: pack::to_json_string(edge) }
-}
-
-/// 🌉 Inverse of [`semio_edge_from_jack_edge`] — falls back to a bare node-id (no port qualifier)
-/// edge if `label` isn't valid `Edge` JSON (content authored outside this plugin) — never panics.
-fn jack_edge_from_semio_edge(edge: &SemioGraphEdge) -> Edge {
-    pack::from_json_str::<Edge>(&edge.label).unwrap_or_else(|_| Edge { id: edge.id.value.clone(), kind: edge.kind.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), properties: PropertyBag::new() })
-}
-
-/// 🌉 REAL bidirectional converter between jack's own live `Node`/`Edge` editing state and the
-/// composed child's `SemioGraphSnapshot` node/edge graph (the "ModelBridge"/"DocumentBridge" pattern
-/// — see `📓️wave3-reports/cad-report.md` and `📓️wave4-reports/dag-report.md`).
-pub fn jack_content_snapshot_from_working(nodes: &[Node], edges: &[Edge]) -> SemioGraphSnapshot {
-    SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_jack_node).collect(), edges: edges.iter().map(semio_edge_from_jack_edge).collect() }
-}
-
-/// 🌉 Inverse of [`jack_content_snapshot_from_working`].
-pub fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<Node>, Vec<Edge>) {
-    (content.nodes.iter().map(jack_node_from_semio_node).collect(), content.edges.iter().map(jack_edge_from_semio_edge).collect())
-}
-
-/// 🕸️ Deterministic content-addressed CHILD handle for the jack content — same `(child_id, target)`
-/// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
-/// `dag_content_child_handle`/`flow_content_child_handle`/`document_child_handle`.
-pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
-    let snapshot = jack_content_snapshot_from_working(nodes, edges);
-    let content_json = pack::to_json_string(&snapshot);
-    let child_id = store::content_id("jack-content", content_json.as_bytes());
-    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
-}
-//#endregion 🔖️ContentBridge
-
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral node/edge representation owned by one exact composed content child. It is
-/// never serialized or process-global and retires with that owner.
-#[derive(Clone, Debug, Default)]
-pub struct JackWorkingScene {
-    pub nodes: Vec<Node>,
-    pub edges: Vec<Edge>,
-}
-
-/// 📝 Transfers decoded or test-provided content into one exact child owner.
-pub fn materialize_jack_content(handle: &mut JackContentChild, nodes: Vec<Node>, edges: Vec<Edge>) {
-    handle.set_local_owner(std::sync::Arc::new(JackWorkingScene { nodes, edges }));
-}
-
-/// 🔎 Reads only the addressed child owner. A wire-only handle fails soft until host
-/// materialization.
-pub fn jack_working_scene_for_handle(handle: &JackContentChild) -> JackWorkingScene {
-    handle.local_owner::<JackWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
-}
-
-/// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
-/// call site every mutation diff/inverse/app command in this plugin uses instead of the old
-/// `snapshot.nodes`/`.edges` field access.
-pub fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
-    jack_working_scene_for_handle(&snapshot.content)
-}
-
-/// 🌱️ The `content` member's genesis pack — the composed `s.stdio.semio` graph child a whole-document
-/// load materialises; the shell sends `members: []`, so without it the archive closure is `Incomplete`.
-pub fn genesis_jack_child_pack(snapshot: &JackSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
-    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
-        let scene = jack_working_scene(snapshot);
-        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&jack_content_snapshot_from_working(&scene.nodes, &scene.edges))
-    })
-}
-
-/// 🏗️ Mints a new content-addressed handle and transfers its scene into that exact owner.
-pub fn jack_content_child_with_owner(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
-    let handle = jack_content_child_handle(&nodes, &edges);
-    handle.with_local_owner(std::sync::Arc::new(JackWorkingScene { nodes, edges }))
-}
-//#endregion 🔖️WorkingScene
+#[path = "🪆️content/🦀️.rs"]
+pub mod content;
+pub use content::*;
 
 // #region 🔖️Runtime
 /// 🔌️ Runtime port on a node.
@@ -379,7 +223,7 @@ pub struct Node {
 }
 
 /// 🔗️ Runtime edge (connection).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Edge {
     pub id: String,
@@ -391,7 +235,7 @@ pub struct Edge {
 }
 
 /// 📷️ Camera for snapshot documents.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Camera {
     pub x: f64,
@@ -415,27 +259,10 @@ impl JackSnapshot {
         Ok(())
     }
 
-    /// 📤️ JSON snapshot text — unlike `Serialize`'s derive (which would emit the opaque `content`
-    /// handle only, unrecoverable once the working-scene cache that minted it is gone, e.g. across a
-    /// process boundary or a persisted embedded snapshot string), this hand-rolled JSON shape embeds
-    /// the REAL `nodes`/`edges` at the top level, mirroring the old pre-migration wire shape and
-    /// matching the same "wire format carries real content, not just the handle" fix the hand-rolled
-    /// `ArtifactDsl`/`ArtifactPack` codecs use (see `📸️snapshot/📝️text/🦀️.rs`'s own doc
-    /// comment for the full rationale).
+    /// 📤️ Encodes the actual Jack parent; composed Semio content travels through its independent child owner.
     pub fn to_json(&self) -> Result<String, TrinityRamError> {
-        let scene = jack_working_scene(self);
-        let value = pack::json!({
-            "schema": self.schema,
-            "name": self.name,
-            "manifestId": self.manifest_id,
-            "manifest": self.manifest,
-            "camera": self.camera,
-            "nodes": scene.nodes,
-            "edges": scene.edges,
-            "rootNodeId": self.root_node_id,
-            "query": self.query,
-        });
-        Ok(pack::json_to_string_pretty(&value))
+        let value = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(self), false)?;
+        Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))
     }
 
     pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
@@ -449,23 +276,10 @@ impl JackSnapshot {
         Ok(())
     }
 
-    /// 📥️ Inverse of [`Self::to_json`] — parses the real `nodes`/`edges` JSON arrays and mints+caches
-    /// a fresh content-addressed handle from them (deterministic: identical `(nodes, edges)` always
-    /// re-derives the same handle, so peers replaying the same JSON text converge).
+    /// 📥️ Decodes the literal parent with its unresolved content address; the host supplies the exact child owner.
     pub fn from_json(json: &str) -> Result<Self, TrinityRamError> {
-        let value: pack::JsonValue = pack::parse_json(json)?;
-        let schema = value.get("schema").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-        let name = value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-        let manifest_id: Option<String> = value.get("manifestId").and_then(|v| v.as_str()).map(str::to_string);
-        let manifest: Manifest = value.get("manifest").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
-        let camera: Camera = value.get("camera").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
-        let nodes: Vec<Node> = value.get("nodes").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
-        let edges: Vec<Edge> = value.get("edges").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
-        let root_node_id: Option<String> = value.get("rootNodeId").and_then(|v| v.as_str()).map(str::to_string);
-        let query = value.get("query").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-        let mut snapshot = Self { query, ..Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id) };
+        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::decode_jack_snapshot_json(json)?;
         snapshot.validate_schema()?;
-        snapshot.resolve_manifest()?;
         Ok(snapshot)
     }
 
@@ -477,13 +291,13 @@ impl JackSnapshot {
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
     /// field access (see `🔖️WorkingScene`'s module doc for why this indirection exists).
-    pub fn nodes(&self) -> Vec<Node> {
-        jack_working_scene(self).nodes
+    pub fn nodes(&self) -> Result<Vec<Node>, semio_framework_value::ValueError> {
+        Ok(jack_working_scene(self)?.nodes)
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub fn edges(&self) -> Vec<Edge> {
-        jack_working_scene(self).edges
+    pub fn edges(&self) -> Result<Vec<Edge>, semio_framework_value::ValueError> {
+        Ok(jack_working_scene(self)?.edges)
     }
 }
 
@@ -501,15 +315,20 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn from_snapshot(mut snapshot: JackSnapshot) -> Result<Self, TrinityRamError> {
+    pub fn from_snapshot(snapshot: JackSnapshot) -> Result<Self, TrinityRamError> {
+        let scene = jack_working_scene(&snapshot)?;
+        Self::with_scene(snapshot, scene)
+    }
+
+    /// 🧸️ The in-memory graph of a parent document over the scene its composed `content` child holds.
+    pub fn with_scene(mut snapshot: JackSnapshot, scene: JackWorkingScene) -> Result<Self, TrinityRamError> {
         snapshot.validate_schema()?;
         snapshot.resolve_manifest()?;
         if let Some(id) = snapshot.manifest_id.as_deref() {
             if let Some(gm) = manifest_by_id(id) {
-                validate_trinity_snapshot(&gm, &snapshot)?;
+                validate_trinity_scene(&gm, &scene)?;
             }
         }
-        let scene = jack_working_scene(&snapshot);
         let mut nodes = BTreeMap::new();
         for node in scene.nodes {
             nodes.insert(node.id.clone(), node);
@@ -595,9 +414,8 @@ impl Graph {
 }
 
 /// 🛡️ Validates trinity snapshot instances against a compile-time graph manifest.
-fn validate_trinity_snapshot(gm: &GraphManifest, snapshot: &JackSnapshot) -> Result<(), TrinityRamError> {
+fn validate_trinity_scene(gm: &GraphManifest, scene: &JackWorkingScene) -> Result<(), TrinityRamError> {
     let validator = ManifestValidator::new(gm);
-    let scene = jack_working_scene(snapshot);
     for node in &scene.nodes {
         validator.validate_node_kind(&node.kind)?;
         validator.validate_node_properties(&node.kind, &node.properties)?;
@@ -698,60 +516,60 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// tree's `🪆️subsets/✳️any/🦀️.rs` reads these same five `LanguageSpec`s to build its
 /// `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a sibling
 /// `crate::standards::v1::subsets::any::io::io()` the way `🗒️note`/`🖍️draw` do).
-pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
             vec![
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "jack.document",
                     extension: Some("trinity"),
-                    role: dsl::LanguageRole::Document,
+                    role: semio_framework_dsl::LanguageRole::Document,
                     grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("jack.document"),
+                    hooks: semio_framework_dsl::passthrough_hooks("jack.document"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "jack.op",
                     extension: None,
-                    role: dsl::LanguageRole::Ops,
+                    role: semio_framework_dsl::LanguageRole::Ops,
                     grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("jack.op"),
+                    hooks: semio_framework_dsl::passthrough_hooks("jack.op"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "jack.diff",
                     extension: None,
-                    role: dsl::LanguageRole::Diff,
+                    role: semio_framework_dsl::LanguageRole::Diff,
                     grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: dsl::passthrough_hooks("jack.diff"),
+                    hooks: semio_framework_dsl::passthrough_hooks("jack.diff"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "jack.pack",
                     extension: None,
-                    role: dsl::LanguageRole::Pack,
+                    role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("jack.pack"),
+                    hooks: semio_framework_dsl::passthrough_hooks("jack.pack"),
                 },
-                dsl::LanguageSpec {
+                semio_framework_dsl::LanguageSpec {
                     id: "jack.spr",
                     extension: None,
-                    role: dsl::LanguageRole::Spr,
+                    role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("jack.spr"),
+                    hooks: semio_framework_dsl::passthrough_hooks("jack.spr"),
                 },
             ]
         })
@@ -869,6 +687,8 @@ pub mod standards {
                         pub mod binary;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
                         pub mod text;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"]
+                        pub(crate) mod sqlite;
                     }
                     #[path = "."]
                     pub mod inferences {
@@ -924,142 +744,6 @@ pub mod standards {
                         pub mod binary;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
-                        #[path = "."]
-                        pub mod create_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_a_node_id_the_scene_already_holds;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-node/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod delete_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_deleting_a_node_the_scene_never_had;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod create_edge {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_an_edge_whose_endpoints_are_absent;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️create-edge/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod delete_edge {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/🚫️rejects/🦀️.rs"]
-                            mod tests_rejects_cutting_an_edge_the_scene_never_had;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod rename_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/✏️keeps/🦀️.rs"]
-                            mod tests_keeps_the_name_a_node_already_carries;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod move_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/📍️keeps/🦀️.rs"]
-                            mod tests_keeps_a_node_at_the_point_it_already_occupies;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod change_data_property {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/🏷️keeps/🦀️.rs"]
-                            mod tests_keeps_a_node_property_at_the_value_it_already_holds;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
-                        #[path = "."]
-                        pub mod remove_data_property {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/💾️binary/🦀️.rs"]
-                            pub mod binary;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/🧹️keeps/🦀️.rs"]
-                            mod tests_keeps_an_edge_without_the_property_it_never_had;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/📝️text/🦀️.rs"]
-                            pub mod text;
-                        }
                         #[path = "."]
                         pub mod set_query {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/🦀️.rs"]
@@ -1157,9 +841,8 @@ pub mod standards {
 }
 
 pub use crate::standards::v1::subsets::any::schema::diff::JackDiff;
-/// 📍️ Cross-artifact node movement constructor used by Rewriting's Jack-backed editor world.
-pub use crate::standards::v1::subsets::any::schema::mutations::move_node::move_node;
 pub use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+pub use executor::GraphEffect;
 pub use crate::standards::v1::subsets::any::schema::operations::*;
 /// 📸️ Persisted Jack snapshot shared by the artifact's schema and app surfaces.
 pub use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
@@ -1418,3 +1101,7 @@ pub fn jack_child_restore_projection(snapshot: &crate::JackSnapshot) -> Result<s
 #[cfg(test)]
 #[path = "🛂️manifest/🧪️tests/🔬️unit/🦀️.rs"]
 mod graph_manifest_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪆️record-owner/🦀️.rs"]
+mod canonical_record_owner_tests;

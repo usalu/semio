@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/schema-source-closure-ts",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-absence": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-absence",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

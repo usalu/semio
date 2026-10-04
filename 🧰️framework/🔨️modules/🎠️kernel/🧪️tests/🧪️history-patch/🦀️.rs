@@ -12,9 +12,9 @@ fn cases(section: &str) -> Vec<(String, serde_json::Value, serde_json::Value)> {
     fixture[section].as_array().expect("fixture section").iter().map(|case| (case["id"].as_str().expect("case id").to_string(), case["patch"].clone(), case.get("keys").cloned().unwrap_or(serde_json::Value::Null))).collect()
 }
 
-fn value_decode(json: &serde_json::Value) -> Result<HistoryPatch, dsl::ValueError> {
-    let value = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("fixture patch is JSON"));
-    <HistoryPatch as dsl::FromValue>::from_value(value)
+fn value_decode(json: &serde_json::Value) -> Result<HistoryPatch, semio_framework_value::ValueError> {
+    let value = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture patch is JSON"));
+    <HistoryPatch as semio_framework_value::FromValue>::from_value(value)
 }
 
 #[test]
@@ -25,7 +25,7 @@ fn every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips
         assert_eq!(by_serde, by_value, "{id}: serde and value decode differently");
         let reserialized: HistoryPatch = serde_json::from_value(serde_json::to_value(&by_serde).expect("serde encodes")).expect("serde decodes its own encoding");
         assert_eq!(reserialized, by_serde, "{id}: serde round trip");
-        let revalued = <HistoryPatch as dsl::FromValue>::from_value(dsl::ToValue::to_value(&by_value)).expect("value decodes its own encoding");
+        let revalued = <HistoryPatch as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&by_value)).expect("value decodes its own encoding");
         assert_eq!(revalued, by_value, "{id}: value round trip");
         let folded: Vec<String> = by_value.upserts.iter().map(HistoryEntry::key).collect();
         let expected: Vec<String> = keys.as_array().expect("keys").iter().map(|key| key.as_str().expect("key").to_string()).collect();
@@ -45,5 +45,5 @@ fn every_invalid_patch_is_refused_by_both_decoders() {
 fn an_absent_time_travel_is_omitted_from_both_encodings() {
     let patch = HistoryPatch { cursor: 1, ..HistoryPatch::default() };
     assert!(serde_json::to_value(&patch).expect("serde encodes").get("timeTravel").is_none());
-    assert!(dsl::ToValue::to_value(&patch).get("timeTravel").is_none());
+    assert!(semio_framework_value::ToValue::to_value(&patch).get("timeTravel").is_none());
 }

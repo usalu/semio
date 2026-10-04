@@ -1,7 +1,12 @@
 //! 🧪️ Canonical pack parity, exact frozen-owner transfer, cancellation, and fault-latching laws.
 
 use super::*;
-use crate::os_dsl::schema::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+use semio_framework_dsl_record::FieldSpec;
+use semio_framework_dsl_record::FieldValue;
+use semio_framework_dsl_record::RecordLayout;
+use semio_framework_dsl_record::RecordSpec;
+use semio_framework_dsl_record::RecordValue;
+use semio_framework_dsl_record::Shape;
 use serde::Deserialize;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
@@ -66,9 +71,9 @@ fn root(case: &Case) -> Arc<Root> {
         ordinal: case.ordinal,
         fields: std::array::from_fn(|index| {
             case.fields[index].as_ref().map(|field| match field {
-                Field::Text { unit, repeat, suffix } => FieldValue::Text(unit.repeat(*repeat) + suffix),
-                Field::U64 { value } => FieldValue::UInt(value.parse().unwrap()),
-                Field::F64 { value } => FieldValue::Float(value.parse().unwrap()),
+                Field::Text { unit, repeat, suffix } => semio_framework_dsl_record::FieldValue::Text(unit.repeat(*repeat) + suffix),
+                Field::U64 { value } => semio_framework_dsl_record::FieldValue::UInt(value.parse().unwrap()),
+                Field::F64 { value } => semio_framework_dsl_record::FieldValue::Float(value.parse().unwrap()),
             })
         }),
         dropped: Arc::new(AtomicUsize::new(0)),
@@ -79,30 +84,30 @@ fn view(root: &Root) -> Result<ScalarRecordView<'_>, &'static str> {
         ordinal: root.ordinal,
         fields: std::array::from_fn(|index| {
             root.fields[index].as_ref().map(|field| match field {
-                FieldValue::Text(value) => ScalarRecordField::Text(value),
-                FieldValue::UInt(value) => ScalarRecordField::U64(*value),
-                FieldValue::Float(value) => ScalarRecordField::F64(*value),
+                semio_framework_dsl_record::FieldValue::Text(value) => ScalarRecordField::Text(value),
+                semio_framework_dsl_record::FieldValue::UInt(value) => ScalarRecordField::U64(*value),
+                semio_framework_dsl_record::FieldValue::Float(value) => ScalarRecordField::F64(*value),
                 _ => unreachable!(),
             })
         }),
     })
 }
 fn actual_wire(root: &Root) -> Vec<u8> {
-    let spec = RecordSpec::new(
+    let spec = semio_framework_dsl_record::RecordSpec::new(
         None,
-        RecordLayout::Inline,
+        semio_framework_dsl_record::RecordLayout::Inline,
         root.fields
             .iter()
             .enumerate()
             .filter_map(|(index, field)| {
                 field.as_ref().map(|field| {
-                    FieldSpec::new(
+                    semio_framework_dsl_record::FieldSpec::new(
                         index as u16,
                         &format!("field{index}"),
                         match field {
-                            FieldValue::Text(_) => Shape::Text,
-                            FieldValue::UInt(_) => Shape::UInt,
-                            FieldValue::Float(_) => Shape::Float,
+                            semio_framework_dsl_record::FieldValue::Text(_) => semio_framework_dsl_record::Shape::Text,
+                            semio_framework_dsl_record::FieldValue::UInt(_) => semio_framework_dsl_record::Shape::UInt,
+                            semio_framework_dsl_record::FieldValue::Float(_) => semio_framework_dsl_record::Shape::Float,
                             _ => unreachable!(),
                         },
                     )

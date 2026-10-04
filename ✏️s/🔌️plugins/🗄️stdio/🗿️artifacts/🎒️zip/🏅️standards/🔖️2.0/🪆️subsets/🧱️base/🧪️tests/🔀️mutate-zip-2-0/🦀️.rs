@@ -135,7 +135,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         let mut snapshot = original.clone();
         apply_zip_mutation(&mut snapshot, &mutation);
-        for step in mutation_inverse(&mutation, &original) {
+        for step in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
             apply_zip_mutation(&mut snapshot, &step);
         }
         let bytes = encode(&snapshot)?;

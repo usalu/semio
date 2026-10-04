@@ -1,0 +1,27 @@
+module Stdio_png_file;
+
+public type PngFile = unit {
+    png_signature: bytes &size=8;   # 0x89 "PNG" CR LF SUB LF
+    chunks: Chunk[] &until($$.chunk_type == b"IEND");
+};
+
+# §5.3 — one chunk: 4-byte big-endian length, 4-byte ASCII type, `length` bytes of data,
+# 4-byte CRC-32 over (type + data).
+type Chunk = unit {
+    length: uint32;
+    chunk_type: bytes &size=4;
+    data: bytes &size=self.length;
+    crc32: uint32;
+};
+
+# §11.2.2 — the always-present image header (compression/filter method always 0, validated,
+# not modeled as mutable fields upstream).
+type IhdrBody = unit {
+    width: uint32;
+    height: uint32;
+    bit_depth: uint8;
+    color_type: uint8;
+    compression_method: uint8;
+    filter_method: uint8;
+    interlace_method: uint8;
+};

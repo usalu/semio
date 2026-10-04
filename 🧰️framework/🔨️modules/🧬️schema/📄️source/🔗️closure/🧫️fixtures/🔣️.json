@@ -1,0 +1,1286 @@
+{
+  "contract": "schema-source-reference-closure",
+  "cases": [
+    {
+      "id": "boolean-root",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "true"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": []
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 0,
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-pointer-segments",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$defs\":{\"\":{\"$defs\":{\"\":{\"type\":\"boolean\"}}}},\"$ref\":\"#/$defs//$defs/\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/$defs//$defs/",
+            "root",
+            "/$defs//$defs/",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": true,
+            "valid": true
+          },
+          {
+            "value": 1,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "escaped-pointer",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"a/b~c\":{\"type\":\"integer\"}},\"$ref\":\"#/definitions/a~1b~0c\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/definitions/a~1b~0c",
+            "root",
+            "/definitions/a~1b~0c",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 3,
+            "valid": true
+          },
+          {
+            "value": "3",
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "percent-pointer",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"ä\":{\"type\":\"null\"}},\"$ref\":\"#/definitions/%C3%A4\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/definitions/%C3%A4",
+            "root",
+            "/definitions/ä",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": null,
+            "valid": true
+          },
+          {
+            "value": false,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "annotation-data",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"const\":{\"$ref\":\"missing\"},\"default\":{\"$id\":\"https://case.test/fake\"},\"enum\":[{\"$ref\":\"missing\"}],\"examples\":[{\"$anchor\":\"fake\"}]}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": []
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": {
+              "$ref": "missing"
+            },
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested-relative-id",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$id\":\"https://case.test/base/root\",\"definitions\":{\"child\":{\"$id\":\"child\",\"type\":\"boolean\"}},\"$ref\":\"child\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "child",
+            "root",
+            "/definitions/child",
+            "https://case.test/base/child"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": false,
+            "valid": true
+          },
+          {
+            "value": 7,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "static-anchor",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$id\":\"https://case.test/base/root\",\"$defs\":{\"child\":{\"$id\":\"child\",\"$anchor\":\"flag\",\"type\":\"boolean\"}},\"$ref\":\"child#flag\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "child#flag",
+            "root",
+            "/$defs/child",
+            "https://case.test/base/child"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": false,
+            "valid": true
+          },
+          {
+            "value": 7,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "boolean-target",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"no\":false},\"$ref\":\"#/definitions/no\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/definitions/no",
+            "root",
+            "/definitions/no",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 0,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "explicit-external",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":\"a\"}"
+        },
+        "resources": [
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/A",
+            "source": "{\"$id\":\"https://case.test/a\",\"type\":\"string\"}"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [
+          "A"
+        ],
+        "targets": [
+          [
+            "a",
+            "A",
+            "",
+            "https://case.test/a"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": "x",
+            "valid": true
+          },
+          {
+            "value": 1,
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "repeated-external",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"allOf\":[{\"$ref\":\"a\"},{\"$ref\":\"a\"}]}"
+        },
+        "resources": [
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/A",
+            "source": "{\"$id\":\"https://case.test/a\",\"type\":\"string\"}"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [
+          "A"
+        ],
+        "targets": [
+          [
+            "a",
+            "A",
+            "",
+            "https://case.test/a"
+          ],
+          [
+            "a",
+            "A",
+            "",
+            "https://case.test/a"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": "x",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cyclic-external",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"allOf\":[{\"$ref\":\"a\"},{\"$ref\":\"a\"}]}"
+        },
+        "resources": [
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/A",
+            "source": "{\"$id\":\"https://case.test/a\",\"$ref\":\"b\"}"
+          },
+          {
+            "id": "B",
+            "path": "authored/B.json",
+            "baseUri": "https://case.test/B",
+            "source": "{\"$id\":\"https://case.test/b\",\"$ref\":\"root\"}"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [
+          "A",
+          "B"
+        ],
+        "targets": [
+          [
+            "a",
+            "A",
+            "",
+            "https://case.test/a"
+          ],
+          [
+            "a",
+            "A",
+            "",
+            "https://case.test/a"
+          ],
+          [
+            "b",
+            "B",
+            "",
+            "https://case.test/b"
+          ],
+          [
+            "root",
+            "root",
+            "",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": null
+    },
+    {
+      "id": "unused-input",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"type\":\"number\"}"
+        },
+        "resources": [
+          {
+            "id": "unused",
+            "path": "authored/unused.json",
+            "baseUri": "https://case.test/unused",
+            "source": "{\"type\":\"boolean\"}"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": []
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 1,
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "utf8-document-order",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"allOf\":[{\"$ref\":\"emoji\"},{\"$ref\":\"umlaut\"},{\"$ref\":\"z\"},{\"$ref\":\"a\"}]}"
+        },
+        "resources": [
+          {
+            "id": "😀",
+            "path": "authored/😀.json",
+            "baseUri": "https://case.test/emoji",
+            "source": "true"
+          },
+          {
+            "id": "ä",
+            "path": "authored/ä.json",
+            "baseUri": "https://case.test/umlaut",
+            "source": "true"
+          },
+          {
+            "id": "z",
+            "path": "authored/z.json",
+            "baseUri": "https://case.test/z",
+            "source": "true"
+          },
+          {
+            "id": "a",
+            "path": "authored/a.json",
+            "baseUri": "https://case.test/a",
+            "source": "true"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [
+          "a",
+          "z",
+          "ä",
+          "😀"
+        ],
+        "targets": [
+          [
+            "emoji",
+            "😀",
+            "",
+            "https://case.test/emoji"
+          ],
+          [
+            "umlaut",
+            "ä",
+            "",
+            "https://case.test/umlaut"
+          ],
+          [
+            "z",
+            "z",
+            "",
+            "https://case.test/z"
+          ],
+          [
+            "a",
+            "a",
+            "",
+            "https://case.test/a"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 0,
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "declared-annotation",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"x-note\":{\"$ref\":\"missing\"},\"type\":\"string\"}"
+        },
+        "resources": [],
+        "annotations": [
+          "x-note"
+        ]
+      },
+      "expected": {
+        "documents": [],
+        "targets": []
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": "x",
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "recursive-object",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"type\":\"object\",\"properties\":{\"next\":{\"$ref\":\"#\"}}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#",
+            "root",
+            "",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": {
+              "next": {}
+            },
+            "valid": true
+          },
+          {
+            "value": {
+              "next": 1
+            },
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "escaped-duplicate",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"a\":1,\"\\u0061\":2}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "duplicate-member"
+      },
+      "oracle": null
+    },
+    {
+      "id": "nested-id-collision",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"a\":{\"$id\":\"same\"},\"b\":{\"$id\":\"same\"}}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "duplicate-resource-id"
+      },
+      "oracle": {
+        "compile": false,
+        "instances": []
+      }
+    },
+    {
+      "id": "unknown-reference",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":\"missing\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unknown-resource"
+      },
+      "oracle": {
+        "compile": false,
+        "instances": []
+      }
+    },
+    {
+      "id": "unknown-pointer",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":\"#/missing\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unknown-schema-pointer"
+      },
+      "oracle": {
+        "compile": false,
+        "instances": []
+      }
+    },
+    {
+      "id": "data-target-refusal",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"const\":{\"type\":\"string\"},\"$ref\":\"#/const\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unknown-schema-pointer"
+      },
+      "oracle": null
+    },
+    {
+      "id": "bad-percent",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":\"#/%ZZ\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "malformed-reference-fragment"
+      },
+      "oracle": null
+    },
+    {
+      "id": "bad-tilde",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":\"#/definitions/a~2b\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "malformed-json-pointer"
+      },
+      "oracle": null
+    },
+    {
+      "id": "malformed-json",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"type\":\"string\",}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "malformed-json"
+      },
+      "oracle": null
+    },
+    {
+      "id": "dynamic-ref",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$dynamicRef\":\"#node\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unsupported-dynamic-reference"
+      },
+      "oracle": null
+    },
+    {
+      "id": "dynamic-anchor",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$dynamicAnchor\":\"node\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unsupported-dynamic-reference"
+      },
+      "oracle": null
+    },
+    {
+      "id": "unknown-keyword",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"extra\":{\"$ref\":\"missing\"}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unknown-keyword"
+      },
+      "oracle": null
+    },
+    {
+      "id": "lone-surrogate-name",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"\\ud800\":true}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-unicode"
+      },
+      "oracle": null
+    },
+    {
+      "id": "wrong-schema-child",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"properties\":{\"a\":3}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-schema"
+      },
+      "oracle": null
+    },
+    {
+      "id": "wrong-dialect-items",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"items\":[true]}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-schema"
+      },
+      "oracle": null
+    },
+    {
+      "id": "wrong-anchor-dialect",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$anchor\":\"node\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unsupported-keyword"
+      },
+      "oracle": null
+    },
+    {
+      "id": "bad-reference-type",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$ref\":3}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-schema"
+      },
+      "oracle": null
+    },
+    {
+      "id": "id-fragment",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$id\":\"child#node\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-resource-id"
+      },
+      "oracle": null
+    },
+    {
+      "id": "duplicate-root-external",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$id\":\"https://case.test/root\"}"
+        },
+        "resources": [
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/A",
+            "source": "{\"$id\":\"https://case.test/root\"}"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "error": "duplicate-resource-id"
+      },
+      "oracle": {
+        "compile": false,
+        "instances": []
+      }
+    },
+    {
+      "id": "duplicate-anchor",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$defs\":{\"a\":{\"$anchor\":\"same\"},\"b\":{\"$anchor\":\"same\"}}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "duplicate-anchor"
+      },
+      "oracle": {
+        "compile": false,
+        "instances": []
+      }
+    },
+    {
+      "id": "duplicate-input-id",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "true"
+        },
+        "resources": [
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/A",
+            "source": "true"
+          },
+          {
+            "id": "A",
+            "path": "authored/A.json",
+            "baseUri": "https://case.test/other",
+            "source": "false"
+          }
+        ],
+        "annotations": []
+      },
+      "expected": {
+        "error": "duplicate-input-identity"
+      },
+      "oracle": null
+    },
+    {
+      "id": "invalid-absolute-base",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "relative",
+          "source": "true"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "invalid-base-uri"
+      },
+      "oracle": null
+    },
+    {
+      "id": "nested-relative-pointer",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$defs\":{\"child\":{\"$id\":\"child\",\"$defs\":{\"flag\":{\"type\":\"boolean\"}},\"$ref\":\"#/$defs/flag\"}},\"$ref\":\"child\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "child",
+            "root",
+            "/$defs/child",
+            "https://case.test/child"
+          ],
+          [
+            "#/$defs/flag",
+            "root",
+            "/$defs/child/$defs/flag",
+            "https://case.test/child"
+          ]
+        ]
+      },
+      "oracle": null,
+      "oracleFailure": {
+        "vendor": "ajv",
+        "stage": "compile",
+        "message": "Maximum call stack size exceeded."
+      }
+    },
+    {
+      "id": "retrieval-static-anchor",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$id\":\"https://case.test/canonical\",\"$defs\":{\"child\":{\"$anchor\":\"flag\",\"type\":\"boolean\"}},\"$ref\":\"https://case.test/root#flag\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "https://case.test/root#flag",
+            "root",
+            "/$defs/child",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": null
+    },
+    {
+      "id": "percent-escaped-pointer",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"definitions\":{\"a/b\":true},\"$ref\":\"#/definitions/a%7E1b\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/definitions/a%7E1b",
+            "root",
+            "/definitions/a~1b",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": 0,
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "draft07-dependency-positions",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"dependencies\":{\"must\":[\"a\"],\"schema\":{\"$ref\":\"#/definitions/check\"}},\"definitions\":{\"check\":true}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/definitions/check",
+            "root",
+            "/definitions/check",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": {},
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "2020-dependent-schema",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"dependentSchemas\":{\"a\":{\"$ref\":\"#/$defs/check\"}},\"$defs\":{\"check\":true}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/$defs/check",
+            "root",
+            "/$defs/check",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": {
+              "a": 1
+            },
+            "valid": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "2020-prefix-items",
+      "request": {
+        "dialect": "2020-12",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"prefixItems\":[{\"$ref\":\"#/$defs/check\"}],\"$defs\":{\"check\":{\"type\":\"boolean\"}}}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "documents": [],
+        "targets": [
+          [
+            "#/$defs/check",
+            "root",
+            "/$defs/check",
+            "https://case.test/root"
+          ]
+        ]
+      },
+      "oracle": {
+        "compile": true,
+        "instances": [
+          {
+            "value": [
+              true
+            ],
+            "valid": true
+          },
+          {
+            "value": [
+              1
+            ],
+            "valid": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "draft07-prefix-items-refusal",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"prefixItems\":[true]}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unknown-keyword"
+      },
+      "oracle": null
+    },
+    {
+      "id": "dialect-disagreement",
+      "request": {
+        "dialect": "draft-07",
+        "root": {
+          "id": "root",
+          "path": "authored/root.json",
+          "baseUri": "https://case.test/root",
+          "source": "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\"}"
+        },
+        "resources": [],
+        "annotations": []
+      },
+      "expected": {
+        "error": "unsupported-dialect"
+      },
+      "oracle": null
+    }
+  ]
+}

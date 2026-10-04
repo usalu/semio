@@ -1,0 +1,2 @@
+semio stdio.csv.dsl v1
+schema="csv.owner.雪\u{0}" has-header=false records=[ { fields=[ ] } { fields=[ { value="Grüße,\n\"雪\"\u{0}" quoted=false } { value="" quoted=true } ] } { fields=[ { value="" quoted=false } ] } { fields=[ ] } ]

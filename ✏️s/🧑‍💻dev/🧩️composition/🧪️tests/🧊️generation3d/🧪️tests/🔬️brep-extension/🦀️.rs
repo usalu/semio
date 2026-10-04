@@ -17,14 +17,36 @@ fn bad_request(capability: &str, detail: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new(format!("extension.{capability}.bad-request")), detail.into())
 }
 
-/// 🧠️ The packaged operator registry, built once per test binary — `evaluate`'s own dispatch table.
-fn module_registry() -> &'static semio_framework_os_flow::neural::Registry {
-    static REGISTRY: std::sync::OnceLock<semio_framework_os_flow::neural::Registry> = std::sync::OnceLock::new();
-    REGISTRY.get_or_init(|| {
-        let mut registry = semio_framework_os_flow::neural::Registry::new();
-        crate::flow_operators::install(&mut registry);
-        registry
-    })
+static GEOMETRY_CONTEXT: std::sync::Mutex<Option<semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext>> = std::sync::Mutex::new(None);
+static MATH_CONTEXT: std::sync::Mutex<Option<semio_framework_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
+
+/// 🎟️ Borrows the original packaged geometry execution owner across every fixture hop.
+pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext) -> T) -> T {
+    let mut owner = GEOMETRY_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    operation(owner.get_or_insert_with(|| semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext::new(crate::flow_operators::geometry_session().capture())))
+}
+
+/// 🧹️ Releases the existing fixture execution owners through their bounded close authority.
+pub(crate) fn retire_execution_owners() {
+    use semio_framework_plugin::{ExtensionResourceOwner, PluginCloseStep};
+    let mut geometry = GEOMETRY_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    if let Some(owner) = geometry.as_mut() {
+        owner.begin_close();
+        for _ in 0..1_000_000 {
+            if owner.close_step(8, 4096).expect("geometry fixture owner closure") == PluginCloseStep::Complete && owner.terminal_is_empty() { break; }
+        }
+        assert!(owner.terminal_is_empty(), "geometry fixture owner must retire before release");
+        geometry.take();
+    }
+    let mut math = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    if let Some(owner) = math.as_mut() {
+        owner.begin_close();
+        for _ in 0..1_000_000 {
+            if owner.close_step(8, 4096).expect("math fixture owner closure") == PluginCloseStep::Complete && owner.terminal_is_empty() { break; }
+        }
+        assert!(owner.terminal_is_empty(), "math fixture owner must retire before release");
+        math.take();
+    }
 }
 
 /// 🔌️ Runs one declared capability exactly the way the packaged guest bundle's handler does.
@@ -37,15 +59,54 @@ fn module_registry() -> &'static semio_framework_os_flow::neural::Registry {
 pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
     use crate::flow_operators::{BREP_EXTENSION_PLUGIN_ID, MATH_EXTENSION_PLUGIN_ID};
     match (pending.extension_id.as_str(), pending.capability.as_str()) {
-        (BREP_EXTENSION_PLUGIN_ID | MATH_EXTENSION_PLUGIN_ID, "evaluate") => semio_framework_os_flow::evaluate_invoke_json(module_registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error)),
+        (BREP_EXTENSION_PLUGIN_ID, "evaluate") => {
+            use semio_s_plugin_flow_extension_brep::geometry_inference::{GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA};
+            let service = semio_framework_plugin::artifact_inference_service(GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA).map_err(|error| bad_request("evaluate", error.message))?.ok_or_else(|| bad_request("evaluate", "geometry inference is not registered"))?;
+            let payload: semio_framework_os_flow::EvaluateRequest = semio_framework_pack_json::from_json_str(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluate", error.to_string()))?;
+            let units = if payload.round_units > 0 { payload.round_units } else if payload.budget > 0 { payload.budget } else { semio_framework_os_flow::EVALUATE_STEP_BUDGET as u64 };
+            let cancellation_id = if payload.cancellation_id.is_empty() { "previewEval" } else { &payload.cancellation_id };
+            let budget = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: units, recursion_depth: 64 };
+            let request = semio_framework_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id, previous_state: None, requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: pending.request_json.as_bytes(), dependencies: &[] };
+            let execution = with_geometry_context(|owner| service.infer_with_context(&request, owner));
+            let execution = execution.map_err(|error| bad_request("evaluate", error.message))?;
+            eprintln!("[DEBUG] packaged geometry inference {} complete={}", payload.operator_id, execution.complete);
+            Ok(execution.canonical_payload)
+        }
+        (MATH_EXTENSION_PLUGIN_ID, "evaluate") => {
+            let mut context = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let owner = context.get_or_insert_with(|| {
+                let mut registry = semio_framework_os_flow::neural::Registry::new();
+                semio_s_plugin_flow_extension_math::register(&mut registry);
+                semio_framework_os_flow::ExtensionEvaluationResources::new(registry)
+            });
+            semio_framework_os_flow::evaluate_invoke_json(owner.registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error))
+        }
         (BREP_EXTENSION_PLUGIN_ID, "tessellate") => {
-            let request = dsl::json::parse(&pending.request_json).map_err(|error| bad_request("tessellate", error.to_string()))?;
-            let handle = request.get("handle").and_then(dsl::json::Value::as_str).ok_or_else(|| bad_request("tessellate", "missing field `handle`"))?;
-            let tolerance = request.get("tolerance").and_then(dsl::json::Value::as_f64).unwrap_or(0.05);
-            let budget = request.get("budget").and_then(dsl::json::Value::as_f64).map_or(24, |value| (value as usize).max(1));
-            let wall_micros = request.get("wallMicros").and_then(dsl::json::Value::as_f64).map_or(semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
-            let chunk = request.get("chunk").and_then(dsl::json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
+            let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellate", error.to_string()))?;
+            let handle = request.get("handle").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| bad_request("tessellate", "missing field `handle`"))?;
+            let tolerance = request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.05);
+            let budget = request.get("budget").and_then(semio_framework_pack_json::Value::as_f64).map_or(24, |value| (value as usize).max(1));
+            let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(semio_framework_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
+            let chunk = request.get("chunk").and_then(semio_framework_pack_json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
             Ok(crate::flow_operators::geometry_session().tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
+        }
+        (BREP_EXTENSION_PLUGIN_ID, "evaluateCancel") => {
+            let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluateCancel", error.to_string()))?;
+            with_geometry_context(|owner| {
+                let retired = match (request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str), request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_f64)) {
+                    (Some(operator), Some(hash)) => usize::from(semio_framework_os_flow::cancel_evaluation(owner.registry(), operator, hash.max(0.0) as u64)),
+                    _ => semio_framework_os_flow::cancel_all_evaluations(owner.registry()),
+                };
+                Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(), semio_framework_pack_json::Value::Bool(semio_framework_os_flow::evaluation_retirement_pending(owner.registry())))] )).into_bytes())
+            })
+        }
+        (BREP_EXTENSION_PLUGIN_ID, "tessellateCancel") => {
+            let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellateCancel", error.to_string()))?;
+            let retired = match (request.get("handle").and_then(semio_framework_pack_json::Value::as_str), request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64)) {
+                (Some(handle), Some(tolerance)) => usize::from(crate::flow_operators::geometry_session().cancel_tessellation(handle, tolerance)),
+                _ => crate::flow_operators::geometry_session().cancel_all_tessellations(),
+            };
+            Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64))])).into_bytes())
         }
         (extension, capability) => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), format!("no loaded plugin is addressed by '{extension}' (capability '{capability}')"))),
     }
@@ -72,10 +133,10 @@ pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &Acti
 /// 🏛️ Redispatches one `Effect::DispatchAction` naming an app COMMAND exactly the way
 /// `makeEffectDispatchOne` (`🛠️ShellHelpers/🟦️.tsx`) does: through the typed command channel with the
 /// shell's own live view attached, never the scoped action channel.
-pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str, args: Option<&dsl::DslValue>, action_meta: &ActionMeta) -> Result<(), Fault> {
+pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), Fault> {
     use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
     let arguments = match args {
-        Some(dsl::DslValue::Object(entries)) => entries.iter().cloned().collect(),
+        Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().cloned().collect(),
         _ => std::collections::BTreeMap::new(),
     };
     let app_id = app.app_id().await.to_string();
@@ -115,7 +176,7 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
         let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve).await.expect("in-process extension round trip");
         receipt.answered += settled.answered;
         effects.extend(settled.effects);
-        let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut effects)
+        let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects)
             .into_iter()
             .filter_map(|effect| match effect {
                 Effect::DispatchAction { action, args, .. } => Some((action, args)),
@@ -134,7 +195,7 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
             }
             if action == "flowEvalTick" {
                 receipt.hops += 1;
-                receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string());
+                receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string());
             }
             receipt.releases += usize::from(action == "flowEvalRelease");
             dispatch_effect_command(app, &action, args.as_ref(), &action_meta).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));

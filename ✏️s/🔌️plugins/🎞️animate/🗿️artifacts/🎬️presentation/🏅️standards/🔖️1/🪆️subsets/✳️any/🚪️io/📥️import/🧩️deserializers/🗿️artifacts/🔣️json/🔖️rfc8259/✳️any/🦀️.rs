@@ -19,13 +19,13 @@ impl Deserializer<PresentationSnapshot> for JsonIntoPresentation {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(payload: &IoPayload) -> IoResult<PresentationSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "JsonIntoPresentation: expected a binary json payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"JsonIntoPresentation: expected a binary json payload")));
         };
-        let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoPresentation: not valid utf-8: {error}"), diagnostics: Vec::new() })?;
-        let value = parse_json_text(text).map_err(|error| IoError { message: format!("JsonIntoPresentation: {error}"), diagnostics: Vec::new() })?;
+        let text = std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("JsonIntoPresentation: not valid utf-8: {error}"))))?;
+        let value = parse_json_text(text).map_err(|mut error| { error.message=format!("JsonIntoPresentation: {}",error.message);IoError::from_text_error_controlled(error,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).unwrap_or_else(IoError::from_value_error) })?;
         let json = JsonSnapshot::from_value(value);
-        let dsl_value: dsl::DslValue = json.to_serde_value().into();
-        let mut out: PresentationSnapshot = dsl::FromValue::from_value(dsl_value).map_err(|error| IoError { message: format!("JsonIntoPresentation: {error}"), diagnostics: Vec::new() })?;
+        let dsl_value: semio_framework_value::DslValue = json.to_serde_value().into();
+        let mut out: PresentationSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| { let mut cause=error;cause.message=format!("JsonIntoPresentation: {}",cause.message);IoError::from_value_error(cause) })?;
         if out.schema.is_empty() {
             out.schema = PRESENTATION_DOCUMENT_SCHEMA.into();
         }

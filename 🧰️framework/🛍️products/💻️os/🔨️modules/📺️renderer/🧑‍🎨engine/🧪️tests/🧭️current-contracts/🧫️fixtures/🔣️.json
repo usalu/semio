@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "spacing": [
+    {
+      "id": "empty-space",
+      "multiplier": 0,
+      "expectedCss": "calc(0 * var(--ui-spacing))"
+    },
+    {
+      "id": "small-space",
+      "multiplier": 1,
+      "expectedCss": "calc(1 * var(--ui-spacing))"
+    },
+    {
+      "id": "medium-space",
+      "multiplier": 4,
+      "expectedCss": "calc(4 * var(--ui-spacing))"
+    }
+  ],
+  "presses": [
+    {
+      "id": "repeated-widget",
+      "clockMs": 42,
+      "keys": [
+        "surface:a:slider",
+        "surface:a:slider"
+      ],
+      "expectedSerialSteps": [
+        1
+      ],
+      "expectedUnique": true
+    },
+    {
+      "id": "distinct-widgets",
+      "clockMs": 42,
+      "keys": [
+        "surface:a:slider",
+        "surface:b:slider"
+      ],
+      "expectedSerialSteps": [
+        1
+      ],
+      "expectedUnique": true
+    }
+  ],
+  "labels": [
+    {
+      "id": "english-placeholder",
+      "locale": "en",
+      "language": null,
+      "expected": "Artifact"
+    },
+    {
+      "id": "german-placeholder",
+      "locale": "de",
+      "language": null,
+      "expected": "Dokument"
+    },
+    {
+      "id": "english-language",
+      "locale": "en",
+      "language": "Python",
+      "expected": "Python document"
+    },
+    {
+      "id": "german-language",
+      "locale": "de",
+      "language": "Python",
+      "expected": "Python-Dokument"
+    }
+  ]
+}

@@ -22,6 +22,6 @@ fn update_paragraph_style_changes_size_and_inverse_restores_it() {
     assert_eq!(updated.leading, 19.2);
     assert_eq!(updated.alignment, "center");
     assert_eq!(next.pages, base.pages);
-    let restored = mutation.inverse(&base)[0].diff(&next).diff().apply(&next).expect("inverse applies");
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse applies");
     assert_eq!(restored.paragraph_styles, base.paragraph_styles);
 }

@@ -134,7 +134,7 @@ fn layer_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutatio
 //#region 🔖️PatchFrame
 //#endregion 🔖️PatchFrame
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-page")]
 pub struct PatchPage {
     pub page_id: Option<String>,

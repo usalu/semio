@@ -25,10 +25,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertAnnotation {
         MutationOutcome::new(diff::diff_insert_annotation(self.index, self.at, self.annotation.clone()))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         let _ = base;
         vec![PdfMutation::RemoveAnnotation(super::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert annotation at {} on page {}", self.at, self.index), &format!("Anmerkung an {} auf Seite {} einfügen", self.at, self.index))

@@ -12,7 +12,7 @@ use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, 
 use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
 use crate::standards::v1::subsets::any::schema::inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
-use protocol::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_plugin::mesh_from_kind;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::world3d_environment_json;
@@ -104,7 +104,7 @@ pub const CAD_WORLD_PICK_GRANULARITY: &str = "object";
 /// pack::json::Value` — reached here through `protocol`'s `os_pack` re-export of the same `pack`
 /// crate, never `serde_json`. Bridged once, here, at the point each mesh payload is assembled.
 fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> DslValue {
-    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
+    semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(data.clone()))
 }
 
 /// 🥽️ Mesh id an instance references — a URL-backed asset keeps its stable `mesh:{slug}` id (one
@@ -142,7 +142,7 @@ pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) ->
             ])
         })
         .collect();
-    protocol::json::to_json_string(&instances)
+    semio_framework_pack_json::to_json_string(&instances)
 }
 
 /// 🥽️ The pane's mesh roster: one `{ id, url }` reference per URL-backed asset and one inline
@@ -173,7 +173,7 @@ pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeom
         let data = mesh_from_kind(CAD_FALLBACK_MESH_KIND);
         meshes.push(DslValue::object([("id".to_string(), DslValue::String(CAD_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&data))]));
     }
-    protocol::json::to_json_string(&meshes)
+    semio_framework_pack_json::to_json_string(&meshes)
 }
 
 //#region 🔖️MeshLaneCache
@@ -278,7 +278,7 @@ pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects:
     let owned = |id: &String| objects.iter().any(|object| &object.id == id);
     let ids: Vec<String> = view.interaction.ids.iter().filter(|id| owned(id)).cloned().collect();
     let hovered = view.interaction.hovered_ids.iter().find(|id| owned(id)).map(String::as_str);
-    let mut value: DslValue = protocol::json::from_json_str(&world3d_selection_json("rectangle", &ids, hovered)).unwrap_or_else(|_| DslValue::object(Vec::new()));
+    let mut value: DslValue = semio_framework_pack_json::from_json_str(&world3d_selection_json("rectangle", &ids, hovered), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| DslValue::object(Vec::new()));
     if let DslValue::Object(entries) = &mut value {
         let active = gumball_active(&ids, active_utility, options);
         if active_utility == Some(CAD_DISLOCATE_UTILITY_ID) {
@@ -310,7 +310,7 @@ pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects:
             }
         }
     }
-    protocol::json::to_json_string(&value)
+    semio_framework_pack_json::to_json_string(&value)
 }
 
 pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
@@ -333,7 +333,7 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
             ])
         })
         .collect();
-    Some(protocol::json::to_json_string(&records))
+    Some(semio_framework_pack_json::to_json_string(&records))
 }
 
 /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: a pane's object/geometry data
@@ -501,7 +501,7 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         if accepts_selection(session) {
             items.extend(pick_target_preview_items(objects, geometry, pane));
         }
-        protocol::json::to_json_string(&DslValue::Array(items))
+        semio_framework_pack_json::to_json_string(&DslValue::Array(items))
     });
     // 🧲️ The hit-testable pick lane rides the SAME gate as the paint overlay — React's
     // `hostSelectionEnabled` (`replHostGeometryPickingEnabled`): sub-object picking is offered while
@@ -511,7 +511,7 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         .engagement_session
         .as_ref()
         .filter(|session| session.pane == pane && accepts_selection(session))
-        .map(|_| protocol::json::to_json_string(&DslValue::Array(pick_target_lane_items(envelope, objects, geometry, pane))));
+        .map(|_| semio_framework_pack_json::to_json_string(&DslValue::Array(pick_target_lane_items(envelope, objects, geometry, pane))));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/

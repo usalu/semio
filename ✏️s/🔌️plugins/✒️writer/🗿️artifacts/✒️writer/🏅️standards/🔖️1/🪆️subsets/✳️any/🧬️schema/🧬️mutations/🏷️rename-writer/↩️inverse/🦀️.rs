@@ -6,7 +6,10 @@ use crate::WriterSnapshot;
 //#region 🔖️Inverse
 /// ↩️ Undo restores `base.id`; a document's identity field always has a prior value, so this
 /// always yields exactly one restoring mutation.
-pub fn inverse(_payload: &RenameWriter, base: &WriterSnapshot) -> Vec<WriterMutation> {
+pub fn inverse(_payload: &RenameWriter, base: &WriterSnapshot) -> Result<Vec<WriterMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     vec![WriterMutation::RenameWriter(RenameWriter { new_id: base.id.clone() })]
+
+    })())
 }
 //#endregion 🔖️Inverse

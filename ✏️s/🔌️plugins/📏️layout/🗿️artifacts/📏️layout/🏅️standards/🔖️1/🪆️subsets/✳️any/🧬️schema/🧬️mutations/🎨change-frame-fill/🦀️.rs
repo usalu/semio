@@ -24,9 +24,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_fill(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_frame_fill(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_frame_fill(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" fill", self.frame_id), &format!("Füllung von Rahmen \"{}\" ändern", self.frame_id))
     }
@@ -46,7 +49,7 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
     };
     if let Frame::Rect { fill, .. } = frame {
         if *fill == payload.new_fill {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Frame \"{}\" already has that fill.", payload.frame_id));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has that fill.", payload.frame_id));
         }
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -63,7 +66,8 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
 //#endregion 🎨ChangeFrameFill
 
 //#region 🎨ChangeFrameFill
-pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -74,5 +78,7 @@ pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapsho
         return Vec::new();
     };
     vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_fill: *fill })]
+
+    })())
 }
 //#endregion 🎨ChangeFrameFill

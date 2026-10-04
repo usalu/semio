@@ -1,8 +1,8 @@
 //! 🗂️ Playbook files window — a deterministic read-only hierarchy over current steps and blocks.
 
 use crate::editor::playbook::terminology::PlaybookPlayLabels;
-use crate::PlaybookSnapshot;
-use dsl::ToValue;
+use crate::PlaybookSpec;
+use semio_framework_value::ToValue;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
@@ -33,34 +33,34 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-fn file_node_kind(id: &str, name: &str, icon: &str) -> dsl::DslValue {
-    dsl::DslValue::Object(vec![("id".into(), id.to_value()), ("name".into(), name.to_value()), ("icon".into(), icon.to_value()), ("descriptors".into(), dsl::DslValue::Array(Vec::new()))])
+fn file_node_kind(id: &str, name: &str, icon: &str) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::Object(vec![("id".into(), id.to_value()), ("name".into(), name.to_value()), ("icon".into(), icon.to_value()), ("descriptors".into(), semio_framework_value::DslValue::Array(Vec::new()))])
 }
 
-fn row(id: String, file_node_kind_id: &str, name: String, parent_id: Option<String>, has_children: bool) -> dsl::DslValue {
-    dsl::DslValue::Object(vec![
+fn row(id: String, file_node_kind_id: &str, name: String, parent_id: Option<String>, has_children: bool) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::Object(vec![
         ("id".into(), id.to_value()),
         ("fileNodeKindId".into(), file_node_kind_id.to_value()),
         ("name".into(), name.to_value()),
         ("parentId".into(), parent_id.to_value()),
         ("hasChildren".into(), has_children.to_value()),
-        ("descriptorValues".into(), dsl::DslValue::Object(Vec::new())),
+        ("descriptorValues".into(), semio_framework_value::DslValue::Object(Vec::new())),
     ])
 }
 
-pub fn scene(spec: &PlaybookSnapshot, labels: &PlaybookPlayLabels) -> VirtualFileSystemScene {
-    let steps = spec.steps();
-    let schema = dsl::DslValue::Object(vec![
+pub fn scene(spec: &PlaybookSpec, labels: &PlaybookPlayLabels) -> VirtualFileSystemScene {
+    let steps = &spec.steps;
+    let schema = semio_framework_value::DslValue::Object(vec![
         (
             "fileNodeKinds".into(),
-            dsl::DslValue::Object(vec![
+            semio_framework_value::DslValue::Object(vec![
                 ("root".into(), file_node_kind("root", labels.files_root.as_str(), "layout-grid")),
                 ("step".into(), file_node_kind("step", labels.files_step.as_str(), "folder")),
                 ("block".into(), file_node_kind("block", labels.files_block.as_str(), "file")),
             ]),
         ),
-        ("descriptorKinds".into(), dsl::DslValue::Object(Vec::new())),
-        ("descriptorColumnIds".into(), dsl::DslValue::Array(Vec::new())),
+        ("descriptorKinds".into(), semio_framework_value::DslValue::Object(Vec::new())),
+        ("descriptorColumnIds".into(), semio_framework_value::DslValue::Array(Vec::new())),
     ]);
     let mut rows = Vec::new();
     rows.push(row(
@@ -72,16 +72,16 @@ pub fn scene(spec: &PlaybookSnapshot, labels: &PlaybookPlayLabels) -> VirtualFil
     ));
     for step in steps {
         let step_id = format!("step/{}", step.id);
-        let step_name = if step.title.is_empty() { step.id.clone() } else { step.title };
+        let step_name = if step.title.is_empty() { step.id.clone() } else { step.title.clone() };
         rows.push(row(step_id.clone(), "step", step_name, Some(PLAYBOOK_PLAY_FILES_ROOT.into()), !step.blocks.is_empty()));
-        for block in step.blocks {
-            let block_name = if block.label.is_empty() { block.id.clone() } else { block.label };
+        for block in &step.blocks {
+            let block_name = if block.label.is_empty() { block.id.clone() } else { block.label.clone() };
             rows.push(row(format!("block/{}/{}", step.id, block.id), "block", block_name, Some(step_id.clone()), false));
         }
     }
     VirtualFileSystemScene {
-        schema_json: protocol::json::to_json_string(&schema),
-        rows_json: protocol::json::to_json_string(&dsl::DslValue::Array(rows)),
+        schema_json: semio_framework_pack_json::to_json_string(&schema),
+        rows_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(rows)),
         selected_row_ids_json: None,
         hovered_row_id: None,
         empty_message: None,
@@ -89,7 +89,7 @@ pub fn scene(spec: &PlaybookSnapshot, labels: &PlaybookPlayLabels) -> VirtualFil
     }
 }
 
-pub fn render(spec: &PlaybookSnapshot, labels: &PlaybookPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSpec, labels: &PlaybookPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_FILES, semio_framework_ui_contract::SurfaceKind::VirtualFileSystem, &scene(spec, labels))
 }
 

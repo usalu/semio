@@ -443,7 +443,7 @@ impl Grid2dInferenceJob {
             1 => Some(match self.assignments.get(self.cursor) {
                 Some((x, y, tile)) => {
                     let separator = if self.cursor == 0 { "" } else { "," };
-                    format!("{separator}[{x},{y},{}]", protocol::json::to_json_string(tile)).into_bytes()
+                    format!("{separator}[{x},{y},{}]", semio_framework_pack_json::to_json_string(tile)).into_bytes()
                 }
                 None => format!(r#"],"contradiction":{},"entropy":["#, self.contradiction).into_bytes(),
             }),
@@ -452,7 +452,7 @@ impl Grid2dInferenceJob {
                 let x = (self.cursor % width) as u32;
                 let y = (self.cursor / width) as u32;
                 let separator = if self.cursor == 0 { "" } else { "," };
-                format!("{separator}[{x},{y},{}]", protocol::json::to_json_string(&self.cell_entropy(x, y))).into_bytes()
+                format!("{separator}[{x},{y},{}]", semio_framework_pack_json::to_json_string(&self.cell_entropy(x, y))).into_bytes()
             } else {
                 b"]}".to_vec()
             }),
@@ -741,7 +741,7 @@ impl semio_framework::ToolJobFactory for Grid2dInferenceJobFactory {
 
     fn create_job_from_wire(&mut self, operation: semio_framework_job::Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
         let payload_text = std::str::from_utf8(payload).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid2d-inference-wire-decode:{error}")))?;
-        let mut request: Grid2dInferenceRequest = protocol::json::from_json_str(payload_text).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid2d-inference-wire-decode:{error}")))?;
+        let mut request: Grid2dInferenceRequest = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework::ToolJobFactoryError::new(format!("grid2d-inference-wire-decode:{error}")))?;
         if checkpoint.is_some() {
             request.checkpoint = checkpoint;
         }
@@ -810,7 +810,7 @@ pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) 
             semio_framework_job::StepOutcome::Complete(candidate) => Some(
                 std::str::from_utf8(&payload_bytes(&candidate.output))
                     .map_err(|error| format!("grid2d-invalid-commit:{error}"))
-                    .and_then(|text| protocol::json::from_json_str::<Grid2dInferenceCommit>(text).map_err(|error| format!("grid2d-invalid-commit:{error}"))),
+                    .and_then(|text| semio_framework_pack_json::from_json_str::<Grid2dInferenceCommit>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("grid2d-invalid-commit:{error}"))),
             ),
             semio_framework_job::StepOutcome::Cancelled => Some(Err("grid2d-inference-cancelled".into())),
             semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
@@ -861,7 +861,7 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dSolve {
         vec![store::InferenceStep { key: "grid2d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match solve_with_job(snapshot) {
@@ -891,7 +891,7 @@ impl store::InferredField<Grid2dSnapshot> for Grid2dContradiction {
         vec![store::InferenceStep { key: "grid2d".to_string(), parents: Vec::new() }]
     }
     fn dep_input(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        protocol::json::to_json_string(snapshot).into_bytes()
+        semio_framework_pack_json::to_json_string(snapshot).into_bytes()
     }
     fn compute(snapshot: &Grid2dSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         matches!(solve_with_job(snapshot), Ok(commit) if commit.contradiction) || solve_with_job(snapshot).is_err()

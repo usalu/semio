@@ -24,9 +24,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameStroke {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_stroke(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_change_frame_stroke(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_change_frame_stroke(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" stroke", self.frame_id), &format!("Kontur von Rahmen \"{}\" ändern", self.frame_id))
     }
@@ -46,7 +49,7 @@ pub fn diff_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapsh
     };
     if let Frame::Rect { stroke, .. } = frame {
         if *stroke == payload.new_stroke {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Frame \"{}\" already has that stroke.", payload.frame_id));
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has that stroke.", payload.frame_id));
         }
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -63,7 +66,8 @@ pub fn diff_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapsh
 //#endregion 🖊️ChangeFrameStroke
 
 //#region 🖊️ChangeFrameStroke
-pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
     };
@@ -74,5 +78,7 @@ pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSna
         return Vec::new();
     };
     vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_stroke: *stroke })]
+
+    })())
 }
 //#endregion 🖊️ChangeFrameStroke

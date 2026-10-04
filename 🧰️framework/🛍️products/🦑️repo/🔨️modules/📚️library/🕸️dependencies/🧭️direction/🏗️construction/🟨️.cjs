@@ -3,6 +3,14 @@
  * @returns {import("../🚀️bootstrap/🟦️.ts").DependencyPolicySnapshot["policy"]}
  */
 function buildDependencyDirectionPolicy({ taxonomy: TAXONOMY, plugins: PLUGINS, workspacePackages, nodeBuiltins }) {
+const packageOwners = new Map(), packageNames = new Map();
+for (const pkg of workspacePackages) {
+  const previous = packageOwners.get(pkg.owner), named = packageNames.get(pkg.name);
+  if (previous && (previous.name !== pkg.name || previous.dependencyRole !== pkg.dependencyRole || previous.exports.length !== pkg.exports.length || previous.exports.some((value,index) => value !== pkg.exports[index]))) throw Error("Dependency policy owner has conflicting package authority: "+pkg.owner);
+  if (named !== undefined && named !== pkg.owner) throw Error("Dependency policy package name has distinct owners: "+pkg.name+" ("+named+", "+pkg.owner+")");
+  packageOwners.set(pkg.owner,pkg); packageNames.set(pkg.name,pkg.owner);
+}
+workspacePackages = [...packageOwners.values()];
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
 const BOOTSTRAP_TOOLING_ENTRY_PATH = "(^|/)(?:📜️script\\.ts|🏗️builder/🌐️vite/🟦️\\.ts|🧪️tests/🎚️config/🟦️\\.ts|(?:⚙️|🧪️)?(?:vite|vitest)\\.config\\.[cm]?[jt]s)$";
 const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(🎯️targets/⚛️react|🧱️elements)/";

@@ -13,7 +13,6 @@
 use crate::SHomeSnapshot;
 use protocol::Inference;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::digest::compute_content_digest;
 
@@ -29,8 +28,11 @@ pub struct SHomeInference {
 }
 
 impl Inference<SHomeSnapshot> for SHomeInference {
-    fn infer(snapshot: &SHomeSnapshot) -> Self {
+    fn infer(snapshot: &SHomeSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { content_digest: compute_content_digest(snapshot) }
+    
+        })
     }
 }
 
@@ -40,7 +42,9 @@ impl Inference<SHomeSnapshot> for SHomeInference {
 /// default snapshot" makes the two definitionally equal.
 impl Default for SHomeInference {
     fn default() -> Self {
-        Self::infer(&SHomeSnapshot::default())
+        let snapshot = &SHomeSnapshot::default();
+
+        Self { content_digest: compute_content_digest(snapshot) }
     }
 }
 
@@ -56,21 +60,6 @@ impl protocol::InferenceSpec<SHomeSnapshot> for SHomeInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::HomeBuilder {
-    type Snapshot = SHomeSnapshot;
-    type Inference = SHomeInference;
-
-    /// 🎯️ Whole-snapshot scalar — nothing here is per-entity, so the cache/session are unused
-    /// (same "plain `Inference`" shape the family doc calls out as correct for `dimensions`/
-    /// `outline`/`bounds`-style facets).
-    async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
-        let _ = (cache, session);
-        <SHomeInference as Inference<SHomeSnapshot>>::infer(snapshot)
-    }
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.space.home.inference`'s facet leaves into the OS-wide inference catalog — call

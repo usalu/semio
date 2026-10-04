@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeStepEnabled, base: &Process3dSnapshot) -> pro
     };
     if existing.enabled == payload.new_enabled {
         let state = if payload.new_enabled { "enabled" } else { "disabled" };
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already {state}.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already {state}.", payload.id));
     }
     let mut steps = base.step_payloads.clone();
     if let Some(step) = steps.iter_mut().find(|step| step.id == payload.id) {

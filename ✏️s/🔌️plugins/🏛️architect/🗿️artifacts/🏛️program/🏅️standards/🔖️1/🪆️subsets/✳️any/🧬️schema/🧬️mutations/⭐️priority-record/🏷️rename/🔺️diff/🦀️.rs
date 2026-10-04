@@ -13,7 +13,7 @@ pub fn diff(payload: &RenamePriorityRecord, base: &ProgramSnapshot) -> protocol:
         return protocol::MutationOutcome::error("mutation.target-missing", "No priority record exists with this id.", [payload.id.0.clone()]);
     };
     if existing.header.name == payload.new_name {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This priority record already has this name.").at([payload.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This priority record already has this name.").at([payload.id.0.clone()])]);
     }
     let patch = PriorityRecordPatch { name: Some(payload.new_name.clone()), ..Default::default() };
     protocol::MutationOutcome::new(ProgramDiff { priorities: Some(ProgramPrioritiesDelta { patched: vec![ProgramPrioritiesPatchEntry { id: payload.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

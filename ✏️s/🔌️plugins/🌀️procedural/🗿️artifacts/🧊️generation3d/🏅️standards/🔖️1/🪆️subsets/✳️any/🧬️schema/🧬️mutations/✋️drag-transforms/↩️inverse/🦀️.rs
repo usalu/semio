@@ -5,9 +5,12 @@ use crate::standards::v1::subsets::any::schema::mutations::{generation3d_transfo
 use crate::Generation3dSnapshot;
 
 /// ↩️ Absolute `update-widget` rows of the base operators.
-pub fn inverse(payload: &DragTransforms, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &DragTransforms, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok({
     if [payload.dx, payload.dy, payload.dz] == [0.0; 3] {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    generation3d_transform_inverse(base, &payload.targets, &GENERATION3D_TRANSLATE_KINDS)
+    generation3d_transform_inverse(base, &payload.targets, &GENERATION3D_TRANSLATE_KINDS)?
+
+    })
 }

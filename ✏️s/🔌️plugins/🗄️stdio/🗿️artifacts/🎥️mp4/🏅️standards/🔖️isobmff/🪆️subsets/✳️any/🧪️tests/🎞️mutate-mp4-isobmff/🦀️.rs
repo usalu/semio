@@ -111,7 +111,7 @@ mod subject {
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
         let mut snapshot = original.clone();
         apply_mp4_mutation(&mut snapshot, &mutation);
-        for undo in mutation_inverse(&mutation, &original) {
+        for undo in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
             apply_mp4_mutation(&mut snapshot, &undo);
         }
         let bytes = encode_mp4(&snapshot);

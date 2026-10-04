@@ -16,7 +16,7 @@ pub fn diff(payload: &super::PinCell, base: &Grid3dSnapshot) -> protocol::Mutati
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cell {key} is masked out and cannot be pinned."), [key]);
     }
     if base.pinned.iter().any(|cell| cell == &payload.pinned) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell {key} already carries that pin."));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell {key} already carries that pin."));
     }
     let at = crate::mutations::ordered_index(&base.pinned, &key, |cell| cell_key(cell.x, cell.y, cell.z));
     protocol::MutationOutcome::new(Grid3dDiff { pinned_upserted: vec![(at, payload.pinned.clone())], ..Default::default() })

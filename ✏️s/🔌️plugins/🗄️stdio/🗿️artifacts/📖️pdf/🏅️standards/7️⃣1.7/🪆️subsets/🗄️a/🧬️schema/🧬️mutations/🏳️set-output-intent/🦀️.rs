@@ -25,12 +25,15 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetOutputIntent {
         MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
-    fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfAMutation> {
+    fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         match support::output_intent_identifier(base) {
             Some(identifier) => vec![PdfAMutation::SetOutputIntent(SetOutputIntent { identifier })],
             None => vec![PdfAMutation::RemoveOutputIntent(RemoveOutputIntent {})],
         }
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/A output intent \"{}\"", self.identifier), &format!("PDF/A-Ausgabebedingung \"{}\" setzen", self.identifier))

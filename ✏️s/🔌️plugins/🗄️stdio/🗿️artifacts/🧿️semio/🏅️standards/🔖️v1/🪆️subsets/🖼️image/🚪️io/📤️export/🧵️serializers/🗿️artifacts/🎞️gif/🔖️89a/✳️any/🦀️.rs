@@ -44,7 +44,7 @@ fn quantize(frames: &[&[u8]]) -> Result<QuantizedFrames, store::PackError> {
                 Some(pos) => pos,
                 None => {
                     if colors.len() >= 256 {
-                        return Err(store::PackError::Schema("semio/image→gif: frame has more than 256 distinct colors — GIF's palette cannot represent it losslessly".into()));
+                        return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "semio/image→gif: frame has more than 256 distinct colors — GIF's palette cannot represent it losslessly")));
                     }
                     colors.push(rgb);
                     colors.len() - 1
@@ -76,13 +76,13 @@ impl ArtifactSerializer for SemioImageToGif {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.frames.is_empty() {
-            return Err(store::PackError::Schema("semio/image→gif: no frames to export".into()));
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→gif: no frames to export")));
         }
         let expected_len = (from.width as usize) * (from.height as usize) * 4;
         let refs: Vec<&[u8]> = from.frames.iter().map(|f| f.rgba8.as_slice()).collect();
         for r in &refs {
             if r.len() != expected_len {
-                return Err(store::PackError::Schema("semio/image→gif: a frame's pixel length does not match width*height*4".into()));
+                return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→gif: a frame's pixel length does not match width*height*4")));
             }
         }
         let (gct, indexed_frames, transparent_index) = quantize(&refs)?;

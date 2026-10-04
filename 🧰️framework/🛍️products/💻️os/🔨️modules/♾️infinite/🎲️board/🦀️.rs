@@ -68,42 +68,42 @@ pub mod scene_json {
         pub scale: Option<f64>,
     }
 
-    impl dsl::ToValue for NodeDescJson {
-        fn to_value(&self) -> dsl::DslValue {
-            let entries: Vec<(String, dsl::DslValue)> = vec![
-                ("id".to_string(), dsl::ToValue::to_value(&self.id)),
-                ("x".to_string(), dsl::ToValue::to_value(&self.x)),
-                ("y".to_string(), dsl::ToValue::to_value(&self.y)),
-                ("draggable".to_string(), dsl::ToValue::to_value(&self.draggable)),
-                ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
-                ("style".to_string(), dsl::ToValue::to_value(&self.style)),
-                ("text".to_string(), dsl::ToValue::to_value(&self.text)),
-                ("iconKind".to_string(), dsl::ToValue::to_value(&self.icon_kind)),
-                ("nodeKind".to_string(), dsl::ToValue::to_value(&self.node_kind)),
+    impl semio_framework_value::ToValue for NodeDescJson {
+        fn to_value(&self) -> semio_framework_value::DslValue {
+            let entries: Vec<(String, semio_framework_value::DslValue)> = vec![
+                ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
+                ("x".to_string(), semio_framework_value::ToValue::to_value(&self.x)),
+                ("y".to_string(), semio_framework_value::ToValue::to_value(&self.y)),
+                ("draggable".to_string(), semio_framework_value::ToValue::to_value(&self.draggable)),
+                ("selected".to_string(), semio_framework_value::ToValue::to_value(&self.selected)),
+                ("style".to_string(), semio_framework_value::ToValue::to_value(&self.style)),
+                ("text".to_string(), semio_framework_value::ToValue::to_value(&self.text)),
+                ("iconKind".to_string(), semio_framework_value::ToValue::to_value(&self.icon_kind)),
+                ("nodeKind".to_string(), semio_framework_value::ToValue::to_value(&self.node_kind)),
                 (
                     "userData".to_string(),
                     match &self.user_data {
-                        Some(v) => dsl::DslValue::from(v),
-                        None => dsl::DslValue::Null,
+                        Some(v) => semio_framework_value::DslValue::from(v),
+                        None => semio_framework_value::DslValue::Null,
                     },
                 ),
-                ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
-                ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
-                ("root".to_string(), dsl::ToValue::to_value(&self.root)),
-                ("shape".to_string(), dsl::ToValue::to_value(&self.shape)),
-                ("radius".to_string(), dsl::ToValue::to_value(&self.radius)),
-                ("width".to_string(), dsl::ToValue::to_value(&self.width)),
-                ("height".to_string(), dsl::ToValue::to_value(&self.height)),
-                ("scale".to_string(), dsl::ToValue::to_value(&self.scale)),
+                ("visible".to_string(), semio_framework_value::ToValue::to_value(&self.visible)),
+                ("locked".to_string(), semio_framework_value::ToValue::to_value(&self.locked)),
+                ("root".to_string(), semio_framework_value::ToValue::to_value(&self.root)),
+                ("shape".to_string(), semio_framework_value::ToValue::to_value(&self.shape)),
+                ("radius".to_string(), semio_framework_value::ToValue::to_value(&self.radius)),
+                ("width".to_string(), semio_framework_value::ToValue::to_value(&self.width)),
+                ("height".to_string(), semio_framework_value::ToValue::to_value(&self.height)),
+                ("scale".to_string(), semio_framework_value::ToValue::to_value(&self.scale)),
             ];
-            dsl::DslValue::object(entries)
+            semio_framework_value::DslValue::object(entries)
         }
     }
 
-    impl dsl::FromValue for NodeDescJson {
-        fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-            let dsl::DslValue::Object(fields) = value else {
-                return Err(dsl::ValueError::new(format!("expected an object for NodeDescJson, found {value:?}")));
+    impl semio_framework_value::FromValue for NodeDescJson {
+        fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+            let semio_framework_value::DslValue::Object(fields) = value else {
+                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for NodeDescJson, found {value:?}")));
             };
             let mut id = None;
             let mut x = None;
@@ -125,31 +125,31 @@ pub mod scene_json {
             let mut scale = None;
             for (key, entry) in fields {
                 match key.as_str() {
-                    "id" => id = Some(<String as dsl::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
-                    "x" => x = Some(<f64 as dsl::FromValue>::from_value(entry).map_err(|e| e.under("x"))?),
-                    "y" => y = Some(<f64 as dsl::FromValue>::from_value(entry).map_err(|e| e.under("y"))?),
-                    "draggable" => draggable = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("draggable"))?,
-                    "selected" => selected = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
-                    "style" => style = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
-                    "text" => text = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("text"))?,
-                    "iconKind" => icon_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("iconKind"))?,
-                    "nodeKind" => node_kind = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("nodeKind"))?,
-                    "userData" => user_data = if matches!(entry, dsl::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
-                    "visible" => visible = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
-                    "locked" => locked = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
-                    "root" => root = <Option<bool> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("root"))?,
-                    "shape" => shape = <Option<String> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("shape"))?,
-                    "radius" => radius = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("radius"))?,
-                    "width" => width = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("width"))?,
-                    "height" => height = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("height"))?,
-                    "scale" => scale = <Option<f64> as dsl::FromValue>::from_value(entry).map_err(|e| e.under("scale"))?,
+                    "id" => id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("id"))?),
+                    "x" => x = Some(<f64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("x"))?),
+                    "y" => y = Some(<f64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("y"))?),
+                    "draggable" => draggable = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("draggable"))?,
+                    "selected" => selected = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selected"))?,
+                    "style" => style = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("style"))?,
+                    "text" => text = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("text"))?,
+                    "iconKind" => icon_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("iconKind"))?,
+                    "nodeKind" => node_kind = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("nodeKind"))?,
+                    "userData" => user_data = if matches!(entry, semio_framework_value::DslValue::Null) { None } else { Some(serde_json::Value::from(&entry)) },
+                    "visible" => visible = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("visible"))?,
+                    "locked" => locked = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("locked"))?,
+                    "root" => root = <Option<bool> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("root"))?,
+                    "shape" => shape = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("shape"))?,
+                    "radius" => radius = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("radius"))?,
+                    "width" => width = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("width"))?,
+                    "height" => height = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("height"))?,
+                    "scale" => scale = <Option<f64> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("scale"))?,
                     _ => {}
                 }
             }
             Ok(NodeDescJson {
-                id: id.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing id"))?,
-                x: x.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing x"))?,
-                y: y.ok_or_else(|| dsl::ValueError::new("NodeDescJson missing y"))?,
+                id: id.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "NodeDescJson missing id"))?,
+                x: x.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "NodeDescJson missing x"))?,
+                y: y.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "NodeDescJson missing y"))?,
                 draggable,
                 selected,
                 style,

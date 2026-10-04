@@ -1,0 +1,118 @@
+{
+  "cases": [
+    {
+      "id": "en-missing",
+      "locale": "en",
+      "labels": [
+        "Depth",
+        "Segments"
+      ],
+      "staged": {},
+      "defaults": false,
+      "expectedReason": "Depth, Segments",
+      "expectedDisabled": true,
+      "expectedDispatch": false
+    },
+    {
+      "id": "en-partial",
+      "locale": "en",
+      "labels": [
+        "Depth",
+        "Segments"
+      ],
+      "staged": {
+        "depth": 3
+      },
+      "defaults": false,
+      "expectedReason": "Segments",
+      "expectedDisabled": true,
+      "expectedDispatch": false
+    },
+    {
+      "id": "en-ready",
+      "locale": "en",
+      "labels": [
+        "Depth",
+        "Segments"
+      ],
+      "staged": {
+        "depth": 3,
+        "segments": 2
+      },
+      "defaults": false,
+      "expectedReason": null,
+      "expectedDisabled": false,
+      "expectedDispatch": true
+    },
+    {
+      "id": "en-default",
+      "locale": "en",
+      "labels": [
+        "Depth",
+        "Segments"
+      ],
+      "staged": {},
+      "defaults": true,
+      "expectedReason": null,
+      "expectedDisabled": false,
+      "expectedDispatch": true
+    },
+    {
+      "id": "de-missing",
+      "locale": "de",
+      "labels": [
+        "Tiefe",
+        "Abschnitte"
+      ],
+      "staged": {},
+      "defaults": false,
+      "expectedReason": "Tiefe, Abschnitte",
+      "expectedDisabled": true,
+      "expectedDispatch": false
+    },
+    {
+      "id": "de-partial",
+      "locale": "de",
+      "labels": [
+        "Tiefe",
+        "Abschnitte"
+      ],
+      "staged": {
+        "depth": 3
+      },
+      "defaults": false,
+      "expectedReason": "Abschnitte",
+      "expectedDisabled": true,
+      "expectedDispatch": false
+    },
+    {
+      "id": "de-ready",
+      "locale": "de",
+      "labels": [
+        "Tiefe",
+        "Abschnitte"
+      ],
+      "staged": {
+        "depth": 3,
+        "segments": 2
+      },
+      "defaults": false,
+      "expectedReason": null,
+      "expectedDisabled": false,
+      "expectedDispatch": true
+    },
+    {
+      "id": "de-default",
+      "locale": "de",
+      "labels": [
+        "Tiefe",
+        "Abschnitte"
+      ],
+      "staged": {},
+      "defaults": true,
+      "expectedReason": null,
+      "expectedDisabled": false,
+      "expectedDispatch": true
+    }
+  ]
+}

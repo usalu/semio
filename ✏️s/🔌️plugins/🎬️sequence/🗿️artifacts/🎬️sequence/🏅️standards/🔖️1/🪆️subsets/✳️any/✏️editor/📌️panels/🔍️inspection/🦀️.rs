@@ -43,7 +43,7 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, selected: &[String], labels:
             fields.try_push((labels.id.as_str(), step.id.clone())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector id admission failed"))?;
         }
         fields.try_push((labels.kind.as_str(), step.kind.clone())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector kind admission failed"))?;
-        fields.try_push((labels.params.as_str(), dsl::os_pack::to_json_string(&step.params))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector parameters admission failed"))?;
+        fields.try_push((labels.params.as_str(), semio_framework_pack_json::to_json_string(&step.params))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence inspector parameters admission failed"))?;
         for (index, (label, value)) in fields.into_iter().enumerate() {
             let field = ui::text(ui_label(format!("{label}: {value}"))?)
                 .try_id(format!("sequence-play-inspector.field.{index}"))

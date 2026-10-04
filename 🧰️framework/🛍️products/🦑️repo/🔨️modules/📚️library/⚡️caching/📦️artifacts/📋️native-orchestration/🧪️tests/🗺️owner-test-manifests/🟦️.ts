@@ -1,0 +1,46 @@
+import {expect,test} from "bun:test";
+import {readFileSync} from "node:fs";
+import {resolve,join,dirname} from "node:path";
+import Ajv from "ajv";
+import ts from "typescript";
+import {nativeOwnerTestManifestRequestV1} from "../../🗺️owner-test-manifests/🟦️.ts";
+const root=resolve(import.meta.dir,"../../../../../../../../../../"),owner=resolve(import.meta.dir,"../.."),general=join(root,"🧰️framework/📦️packages/🦀️rust/📜️script.ts"),processOwner=join(root,"🧰️framework/🔨️modules/🏃️process"),source=process.env.SEMIO_GENERAL_SOURCE_PAIRS?(JSON.parse(readFileSync(process.env.SEMIO_GENERAL_SOURCE_PAIRS,"utf8")).pairs as {path:string;after:string}[]).find(row=>row.path==="🧰️framework/📦️packages/🦀️rust/📜️script.ts")!.after:readFileSync(general,"utf8");
+const fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🗺️owner-test-manifests/🔣️.json"),"utf8")) as {cases:{id:string;args:string[];valid:boolean;testManifests?:string[]}[]},schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🗺️owner-test-manifests/🔣️.json"),"utf8")),oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
+test("explicit manifest requests agree with the independent closed-schema oracle",()=>{
+ for(const row of fixture.cases){let request;try{request=nativeOwnerTestManifestRequestV1(row.args);}catch{}expect(Boolean(request)).toBe(row.valid);if(request){expect(oracle(request)).toBe(true);expect(request.testManifests).toEqual(row.testManifests!);}console.log(`[DEBUG] native-manifest-request ${row.id} admitted=${Boolean(request)}`);}
+ const admitted=nativeOwnerTestManifestRequestV1(fixture.cases[0]!.args);expect(oracle({...admitted,unexpected:true})).toBe(false);
+});
+test("General task ownership follows its neutral imports and exact route roster",()=>{
+ const program=ts.createSourceFile(general,source,ts.ScriptTarget.Latest,true),imports:string[]=[],routes:string[]=[];
+ const visit=(node:ts.Node)=>{if(ts.isImportDeclaration(node)&&ts.isStringLiteral(node.moduleSpecifier))imports.push(node.moduleSpecifier.text);if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&node.expression.name.text==="register"&&ts.isStringLiteral(node.arguments[0]!))routes.push(node.arguments[0].text);ts.forEachChild(node,visit);};visit(program);
+ expect(imports.some(value=>value.includes("🛍️products"))).toBe(false);
+ expect(source.includes("semio-framework-os-")).toBe(false);expect(source.includes('segments[0] === "io"')).toBe(false);
+ expect(routes).toContain("test-fixture-ownership-source");expect(routes).toContain("test-artifact-kind-source");expect(routes).not.toContain("test-fixture-ownership");expect(routes).not.toContain("test-artifact-kind");
+ console.log(`[DEBUG] general-owner imported=${imports.length} routes=${routes.length}`);
+});
+function route(command:string[],status=0,processStatus=0){
+ const ast=ts.createSourceFile(general,source,ts.ScriptTarget.Latest,true);let executable=source;
+ const replacements:{start:number;end:number;value:string}[]=[];
+ const visit=(node:ts.Node)=>{if(ts.isImportDeclaration(node)&&ts.isStringLiteral(node.moduleSpecifier)){const spec=node.moduleSpecifier.text.startsWith(".")?resolve(dirname(general),node.moduleSpecifier.text):node.moduleSpecifier.text,clause=node.importClause!,bindings=clause.namedBindings?.getText(ast).replaceAll(" as ",": ");replacements.push({start:node.getStart(ast),end:node.end,value:bindings?`const ${bindings}=await import(${JSON.stringify(spec)});`:`const ${clause.name!.text}=(await import(${JSON.stringify(spec)})).default;`});return;}if(ts.isStringLiteral(node)&&node.text.startsWith(".")&&ts.isCallExpression(node.parent)&&node.parent.expression.kind===ts.SyntaxKind.ImportKeyword)replacements.push({start:node.getStart(ast),end:node.end,value:JSON.stringify(resolve(dirname(general),node.text))});ts.forEachChild(node,visit);};visit(ast);
+ for(const row of replacements.sort((a,b)=>b.start-a.start))executable=executable.slice(0,row.start)+row.value+executable.slice(row.end);
+ executable=executable.replaceAll("import.meta.dir",JSON.stringify(dirname(general)));
+ const neutral=(path:string)=>join(processOwner,path),cargo=neutral("🧪️testing/🦀️cargo/🟦️.ts"),execution=neutral("🧪️testing/🎛️execution/🟦️.ts"),vitest=neutral("🧪️testing/🧪️vitest/🟦️.ts"),capture=neutral("📥️capture/🟦️.ts"),base=JSON.parse(readFileSync(neutral("🧪️testing/🦀️cargo/🧫️fixtures/🔣️.json"),"utf8")).policies[0];
+ const modules=["🔏️hash","🔲️pixels","📏️intrinsic-size","🏗️mesh-engine","🗜️deflate","🚪️io/🪶️sqlite-snapshot"],policies=modules.map(module=>({...base,manifestPath:join(root,`🧰️framework/🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`),artifactDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR??"/owner/artifacts"}));
+ const policy={...base,manifestPath:join(dirname(general),"Cargo.toml"),artifactDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR??"/owner/artifacts"};
+ const code=`const{mock}=await import("bun:test");const cargo=await import(${JSON.stringify(cargo)});const emit=value=>console.log("[DEBUG] route-receipt="+JSON.stringify(value));mock.module(${JSON.stringify(cargo)},()=>({...cargo,runCargoTestsV1:async(request,policy)=>emit({kind:"cargo",manifest:request.manifestPath,packages:request.packages,args:request.extraArgs,plan:cargo.cargoTestPlanV1(request,policy,"/owner/binaries.json")}),runCargoLintV1:async(request,policy)=>emit({kind:"lint",plan:cargo.cargoLintPlanV1(request,policy)})}));const execution=await import(${JSON.stringify(execution)}),execute=execution.runBudgetedTestCommand;mock.module(${JSON.stringify(execution)},()=>({runBudgetedTestCommand:async(command,args,options)=>{emit({kind:"process",command,args,budgetMs:options.budgetMs,throwOnFailure:options.throwOnFailure});if(${processStatus})await execute(process.execPath,["-e","process.exit(${processStatus})"],options);}}));const vitest=await import(${JSON.stringify(vitest)});mock.module(${JSON.stringify(vitest)},()=>({...vitest,runVitestV1:async(policy,args,config)=>emit({kind:"vitest",args,config,budgetMs:policy.budgetMs})}));mock.module(${JSON.stringify(capture)},()=>({captureOwnedProcess:async(command,args,options)=>{emit({kind:"capture",command,args,budgetMs:options.budgetMs});return{status:${status},signal:null,reason:"exit",stdout:"",stderr:""}}}));process.env.SEMIO_CARGO_TEST_POLICY=${JSON.stringify(JSON.stringify(policy))};process.env.SEMIO_CARGO_TEST_POLICIES=${JSON.stringify(JSON.stringify(policies))};process.env.SEMIO_VITEST_POLICY=JSON.stringify({version:1,cwd:${JSON.stringify(dirname(general))},toolPath:"/owner/vitest.js",runtime:process.execPath,coverageRuntime:process.execPath,cacheRoot:"/owner/cache",coverageDirectory:"/owner/coverage",budgetMs:15000});process.argv=[process.execPath,"owned-route",...${JSON.stringify(command)}];const code=new Bun.Transpiler({loader:"ts"}).transformSync(${JSON.stringify(executable)});try{await import("data:text/javascript;base64,"+Buffer.from(code).toString("base64"));}catch(error){console.error(error);process.exit(1)}`;
+ const evaluated=code.replace('await import("data:text/javascript;base64,"+Buffer.from(code).toString("base64"));','await new Function("return (async()=>{"+code+"})()")();');
+ const result=Bun.spawnSync([process.execPath,"--eval",evaluated],{cwd:root,env:{...process.env,SEMIO_TEST_LEVEL:"fundamental"},stdout:"pipe",stderr:"pipe"});
+ return {status:result.exitCode,stderr:result.stderr.toString(),receipts:result.stdout.toString().split("\n").filter(line=>line.startsWith("[DEBUG] route-receipt=")).map(line=>JSON.parse(line.slice("[DEBUG] route-receipt=".length)))};
+}
+test("registered General commands keep neutral package filters and runner budgets",()=>{
+ const cases:[string[],string[][]][]=[[["test-action-choices"],[["semio-framework"]]],[["test-core-modules"],[["semio-framework-hash"],["semio-framework-pixels"],["semio-framework-intrinsic-size"],["semio-framework-mesh-engine"]]],[["test-deflate-encoding"],[["semio-framework-deflate"]]],[["test-snapshot-sqlite","native"],[["semio-framework-io-sqlite-snapshot"]]],[["test"],[["semio-framework"]]]];
+ for(const [command,packages] of cases){const result=route(command);expect(result.stderr).not.toContain("error:");expect(result.status).toBe(0);expect(result.receipts.filter(row=>row.kind==="cargo").map(row=>row.packages)).toEqual(packages);console.log(`[DEBUG] General route ${command.join(" ")} packages=${packages.length}`);}
+ for(const command of [["test-artifact-kind-source"],["test-fixture-ownership-source"],["test-host-effect-invocation"]]){const result=route(command);expect(result.status).toBe(0);expect(result.receipts[0].kind).toBe("process");expect(result.receipts[0].budgetMs).toBe(15000);}
+});
+test("package descriptor capture preserves the exact filter boundary and failure exit",()=>{
+ const result=route(["test-package-descriptor-value-codec"]);expect(result.status).toBe(0);const args=result.receipts[0].args as string[];expect(args.indexOf("--manifest-path")).toBeLessThan(args.indexOf("--"));expect(args.slice(-2)).toEqual(["--","--exact"]);
+ expect(route(["test-package-descriptor-value-codec"],3).status).toBe(3);
+});
+test("ordinary neutral source commands retain the process runner's failure exit status",()=>{
+ expect(route(["test-host-effect-invocation"],0,7).status).toBe(7);
+});

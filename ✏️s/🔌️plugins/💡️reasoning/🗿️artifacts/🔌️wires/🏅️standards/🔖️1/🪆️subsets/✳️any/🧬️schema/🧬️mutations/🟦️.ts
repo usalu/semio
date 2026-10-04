@@ -1,43 +1,5 @@
-/** 🧩️ Wires mutation union references its leaf-owned payload contracts. */
+/** 🧩️ Wires parent mutation union — empty: board edits are child-lane leaves of the composed `content` graph child. */
 
-import type { DisconnectNodes } from "./✂️disconnect-nodes/🧬️schema/🟦️.ts";
-import type { EditNodeText } from "./✏️edit-node-text/🧬️schema/🟦️.ts";
-import type { CreateNode } from "./🌱create-node/🧬️schema/🟦️.ts";
-import type { ChangeNodeKind } from "./🏷️change-node-kind/🧬️schema/🟦️.ts";
-import type { ResizeNode } from "./📐resize-node/🧬️schema/🟦️.ts";
-import type { ChangeNodeShape } from "./🔷change-node-shape/🧬️schema/🟦️.ts";
-import type { DeleteNode } from "./🗑️delete-node/🧬️schema/🟦️.ts";
-import type { SetNodeRoot } from "./🚩set-node-root/🧬️schema/🟦️.ts";
-import type { ConnectNodes } from "./🤝️connect-nodes/🧬️schema/🟦️.ts";
-import type { MoveNode } from "./🧭move-node/🧬️schema/🟦️.ts";
-import type { MoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
-import type { SetNodePositions } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
-
-export type { DisconnectNodes } from "./✂️disconnect-nodes/🧬️schema/🟦️.ts";
-export type { EditNodeText } from "./✏️edit-node-text/🧬️schema/🟦️.ts";
-export type { CreateNode } from "./🌱create-node/🧬️schema/🟦️.ts";
-export type { ChangeNodeKind } from "./🏷️change-node-kind/🧬️schema/🟦️.ts";
-export type { ResizeNode } from "./📐resize-node/🧬️schema/🟦️.ts";
-export type { ChangeNodeShape } from "./🔷change-node-shape/🧬️schema/🟦️.ts";
-export type { DeleteNode } from "./🗑️delete-node/🧬️schema/🟦️.ts";
-export type { SetNodeRoot } from "./🚩set-node-root/🧬️schema/🟦️.ts";
-export type { ConnectNodes } from "./🤝️connect-nodes/🧬️schema/🟦️.ts";
-export type { MoveNode } from "./🧭move-node/🧬️schema/🟦️.ts";
-export type { MoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
-export type { SetNodePositions, WiresNodePosition } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
-export { parseMoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
-export { parseSetNodePositions } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
-
-export type WiresMutation =
-  | DisconnectNodes
-  | EditNodeText
-  | CreateNode
-  | ChangeNodeKind
-  | ResizeNode
-  | ChangeNodeShape
-  | DeleteNode
-  | SetNodeRoot
-  | ConnectNodes
-  | MoveNode
-  | MoveNodes
-  | SetNodePositions;
+//#region 🧬️Aggregate
+export type WiresMutation = never;
+//#endregion 🧬️Aggregate

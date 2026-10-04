@@ -2,7 +2,7 @@
 
 use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[dsl(keyword = "set-camera")]
 #[mutation_leaf(contract = ::protocol)]
@@ -15,17 +15,20 @@ impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfig
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
     fn diff(&self, base: &EquationGraphWindowConfig) -> protocol::MutationOutcome<EquationGraphWindowConfig> {
         if base.camera == self.camera {
-            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Configuration field is unchanged.");
+            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Configuration field is unchanged.");
         }
         protocol::MutationOutcome::new(EquationGraphWindowConfig { camera: self.camera.clone() })
     }
-    fn inverse(&self, base: &EquationGraphWindowConfig) -> Vec<EquationGraphWindowConfigMutation> {
+    fn inverse(&self, base: &EquationGraphWindowConfig) -> Result<Vec<EquationGraphWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         if base.camera == self.camera {
             Vec::new()
         } else {
             vec![EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]
         }
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
     }

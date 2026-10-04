@@ -7,9 +7,12 @@ use crate::standards::v1::subsets::any::schema::mutations::{widget_index, Genera
 use crate::Generation3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()` (nothing to undo).
-pub fn inverse(payload: &DeleteWidget, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
+pub fn inverse(payload: &DeleteWidget, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match widget_index(&base.host_snapshot, &payload.id) {
         Some(index) => vec![Generation3dMutation::CreateWidget(CreateWidget { index, widget: base.host_snapshot.widgets[index].clone() })],
         None => Vec::new(),
     }
+
+    })())
 }

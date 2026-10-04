@@ -952,6 +952,11 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "member": {
+          "description": "The composed-child slot whose owned member store a mutating run edits; absent: the document's own store.",
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -1356,6 +1361,7 @@
             "stepArgsMax",
             "countersMax",
             "provisionalOpsMax",
+            "memberOpsMax",
             "traceResidentRecords",
             "tracePageOpsMax",
             "tracePageBytesMax",
@@ -1376,6 +1382,9 @@
             },
             "provisionalOpsMax": {
               "const": 65536
+            },
+            "memberOpsMax": {
+              "const": 4096
             },
             "traceResidentRecords": {
               "const": 1048576

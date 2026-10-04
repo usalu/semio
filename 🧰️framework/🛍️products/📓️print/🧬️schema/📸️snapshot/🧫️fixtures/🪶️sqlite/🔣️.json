@@ -1,0 +1,666 @@
+{
+  "format": 1,
+  "artifactKind": "s.print.chart",
+  "dialect": {
+    "standard": "v1",
+    "subset": "any"
+  },
+  "envelope": "print.chart",
+  "cases": [
+    {
+      "id": "full-domain",
+      "complete": true,
+      "snapshot": {
+        "chart": {
+          "width": 120,
+          "height": 80,
+          "margin": {
+            "top": 2,
+            "right": 3,
+            "bottom": 4,
+            "left": 5
+          },
+          "theme": {
+            "name": "authored",
+            "appearance": "dark",
+            "palette": [
+              "#102030",
+              "#abcdef"
+            ]
+          },
+          "language": "de",
+          "tables": [
+            {
+              "name": "series",
+              "columns": [
+                "x",
+                "x",
+                "y",
+                "note",
+                "flag",
+                "nil"
+              ],
+              "rows": [
+                {
+                  "x": 1.5,
+                  "y": 2.25,
+                  "note": "Grüße 😀\u0000",
+                  "flag": true,
+                  "nil": null,
+                  "unlisted": "retained"
+                },
+                {
+                  "x": -3,
+                  "y": 0,
+                  "note": "",
+                  "flag": false,
+                  "nil": null,
+                  "unlisted": "second"
+                }
+              ]
+            }
+          ],
+          "scales": [
+            {
+              "name": "x",
+              "kind": "linear",
+              "domain": [
+                -3,
+                1.5
+              ],
+              "range": [
+                0,
+                120
+              ],
+              "options": {
+                "nice": true,
+                "clamp": false,
+                "tickValues": [
+                  -3,
+                  0,
+                  1.5
+                ],
+                "tickFormat": ".2f",
+                "unknown": null
+              }
+            },
+            {
+              "name": "paint",
+              "kind": "ordinal",
+              "domain": [
+                "A",
+                "B"
+              ],
+              "range": [
+                "#102030",
+                "#abcdef"
+              ],
+              "options": {
+                "unknown": "missing"
+              }
+            }
+          ],
+          "coordinate": {
+            "kind": "cartesian",
+            "options": {
+              "axes": [
+                "x",
+                "y"
+              ],
+              "transpose": false,
+              "normalized": false
+            }
+          },
+          "layers": [
+            {
+              "mark": "point",
+              "data": "series",
+              "transform": [
+                {
+                  "kind": "filter",
+                  "options": {
+                    "column": "x",
+                    "operation": "gte",
+                    "value": -3
+                  }
+                },
+                {
+                  "kind": "sort",
+                  "options": {
+                    "columns": [
+                      "x"
+                    ],
+                    "reverse": false
+                  }
+                }
+              ],
+              "layout": {
+                "algorithm": "jitter",
+                "options": {
+                  "amplitude": 0.5,
+                  "seed": 7
+                }
+              },
+              "encodings": {
+                "x": {
+                  "column": "x",
+                  "scale": "x"
+                },
+                "y": {
+                  "value": 2.5
+                },
+                "fill": {
+                  "value": "#102030"
+                },
+                "opacity": {
+                  "value": 0.75
+                }
+              },
+              "options": {
+                "visible": true,
+                "label": "points"
+              }
+            },
+            {
+              "mark": "rule",
+              "data": "unresolved-table",
+              "encodings": {
+                "x": {
+                  "column": "missing-column",
+                  "scale": "unresolved-scale"
+                }
+              }
+            }
+          ],
+          "guides": [
+            {
+              "kind": "axis",
+              "scale": "x",
+              "orient": "bottom",
+              "title": {
+                "en": "Horizontal",
+                "de": "Waagerecht"
+              },
+              "ticks": 4,
+              "tickValues": [
+                -3,
+                0,
+                1.5
+              ],
+              "tickFormat": ".2f",
+              "tickSize": 2,
+              "minor": false,
+              "grid": true,
+              "offset": 1.5,
+              "options": {
+                "lineWidth": 0.2,
+                "dash": "solid"
+              }
+            }
+          ],
+          "title": {
+            "en": "Authored Chart",
+            "de": "Erstelltes Diagramm"
+          },
+          "annotations": [
+            {
+              "kind": "text",
+              "x": 1,
+              "y": 2,
+              "x2": 3,
+              "y2": 4,
+              "width": 5,
+              "height": 6,
+              "radius": 7,
+              "text": {
+                "en": "Note",
+                "de": "Hinweis"
+              },
+              "options": {
+                "rotation": 30,
+                "visible": false
+              }
+            }
+          ],
+          "presets": [
+            {
+              "kind": "authored-preset",
+              "data": "unresolved-preset-table",
+              "options": {
+                "enabled": true,
+                "label": "preset"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "explicit-language-minimal",
+      "complete": true,
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 40,
+          "language": "en",
+          "layers": []
+        }
+      }
+    },
+    {
+      "id": "authored-default-without-language",
+      "complete": false,
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 40,
+          "layers": []
+        }
+      }
+    },
+    {
+      "id": "present-empty-optionals",
+      "complete": true,
+      "snapshot": {
+        "chart": {
+          "width": 80,
+          "height": 40,
+          "language": "de",
+          "layers": [],
+          "tables": [],
+          "scales": [],
+          "guides": [],
+          "annotations": [],
+          "presets": [],
+          "theme": {
+            "palette": []
+          },
+          "coordinate": {
+            "kind": "cartesian",
+            "options": {}
+          }
+        }
+      }
+    }
+  ],
+  "requiredTables": [
+    "chart_document",
+    "chart_margin",
+    "chart_theme",
+    "chart_palette",
+    "chart_table",
+    "chart_column",
+    "chart_row",
+    "chart_cell",
+    "chart_scale",
+    "chart_domain",
+    "chart_range",
+    "chart_coordinate",
+    "chart_layer",
+    "chart_transform",
+    "chart_layout",
+    "chart_encoding",
+    "chart_guide",
+    "chart_tick",
+    "chart_annotation",
+    "chart_preset"
+  ],
+  "queries": [
+    {
+      "sql": "SELECT width,height,language FROM chart_document",
+      "rows": [
+        {
+          "width": 120,
+          "height": 80,
+          "language": "de"
+        }
+      ]
+    },
+    {
+      "sql": "SELECT ordinal,name FROM chart_column ORDER BY ordinal",
+      "rows": [
+        {
+          "ordinal": 0,
+          "name": "x"
+        },
+        {
+          "ordinal": 1,
+          "name": "x"
+        },
+        {
+          "ordinal": 2,
+          "name": "y"
+        },
+        {
+          "ordinal": 3,
+          "name": "note"
+        },
+        {
+          "ordinal": 4,
+          "name": "flag"
+        },
+        {
+          "ordinal": 5,
+          "name": "nil"
+        }
+      ]
+    },
+    {
+      "sql": "SELECT ordinal,mark,data FROM chart_layer ORDER BY ordinal",
+      "rows": [
+        {
+          "ordinal": 0,
+          "mark": "point",
+          "data": "series"
+        },
+        {
+          "ordinal": 1,
+          "mark": "rule",
+          "data": "unresolved-table"
+        }
+      ]
+    },
+    {
+      "sql": "SELECT value_kind,COUNT(*) AS count FROM chart_cell GROUP BY value_kind ORDER BY value_kind",
+      "rows": [
+        {
+          "value_kind": "boolean",
+          "count": 2
+        },
+        {
+          "value_kind": "null",
+          "count": 2
+        },
+        {
+          "value_kind": "number",
+          "count": 4
+        },
+        {
+          "value_kind": "string",
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "edit": {
+    "sql": "UPDATE chart_document SET width=125",
+    "expectedWidth": 125
+  },
+  "corruptions": [
+    "UPDATE chart_layer SET ordinal=7 WHERE ordinal=0",
+    "UPDATE chart_cell SET row_id=99999 WHERE id=1"
+  ],
+  "surrogateOffset": 1000,
+  "expectedColumnOccurrences": 6,
+  "expectedRowOccurrences": 2,
+  "invalidCases": [
+    {
+      "id": "guide-ticks-zero",
+      "path": [
+        "guides",
+        0,
+        "ticks"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.ticks.minimum"
+    },
+    {
+      "id": "guide-ticks-fractional",
+      "path": [
+        "guides",
+        0,
+        "ticks"
+      ],
+      "value": 1.5,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.ticks.type"
+    },
+    {
+      "id": "guide-orient-unknown",
+      "path": [
+        "guides",
+        0,
+        "orient"
+      ],
+      "value": "diagonal",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartGuide.properties.orient.enum"
+    },
+    {
+      "id": "scale-nice-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "nice"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.nice.anyOf.number.exclusiveMinimum"
+    },
+    {
+      "id": "scale-nice-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "nice"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.nice.anyOf.number.exclusiveMinimum"
+    },
+    {
+      "id": "scale-padding-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "padding"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.padding.minimum"
+    },
+    {
+      "id": "scale-padding-inner-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingInner"
+      ],
+      "value": -0.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingInner.minimum"
+    },
+    {
+      "id": "scale-padding-inner-above-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingInner"
+      ],
+      "value": 1.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingInner.maximum"
+    },
+    {
+      "id": "scale-padding-outer-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "paddingOuter"
+      ],
+      "value": -1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.paddingOuter.minimum"
+    },
+    {
+      "id": "scale-align-negative",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "align"
+      ],
+      "value": -0.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.align.minimum"
+    },
+    {
+      "id": "scale-align-above-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "align"
+      ],
+      "value": 1.1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.align.maximum"
+    },
+    {
+      "id": "scale-base-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "base"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.base.exclusiveMinimum"
+    },
+    {
+      "id": "scale-base-one",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "base"
+      ],
+      "value": 1,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.base.not.const"
+    },
+    {
+      "id": "scale-constant-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "constant"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.constant.exclusiveMinimum"
+    },
+    {
+      "id": "scale-ticks-zero",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "ticks"
+      ],
+      "value": 0,
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.ticks.exclusiveMinimum"
+    },
+    {
+      "id": "scale-interpolator-unknown",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "interpolator"
+      ],
+      "value": "linear",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.interpolator.enum"
+    },
+    {
+      "id": "scale-interval-unknown",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "interval"
+      ],
+      "value": "hour",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.interval.enum"
+    },
+    {
+      "id": "scale-scheme-empty",
+      "path": [
+        "scales",
+        0,
+        "options",
+        "scheme"
+      ],
+      "value": "",
+      "expectedValid": false,
+      "normativePath": "$defs.ChartScaleOptions.properties.scheme.minLength"
+    }
+  ],
+  "operations": [
+    {
+      "id": "remove-member",
+      "mutation": {
+        "path": [
+          "tables",
+          "0",
+          "rows",
+          "0",
+          "nil"
+        ]
+      }
+    },
+    {
+      "id": "present-null",
+      "mutation": {
+        "path": [
+          "tables",
+          "0",
+          "rows",
+          "0",
+          "nil"
+        ],
+        "value": null
+      }
+    },
+    {
+      "id": "unicode-nul",
+      "mutation": {
+        "path": [
+          "tables",
+          "0",
+          "rows",
+          "0",
+          "note"
+        ],
+        "value": "Grüße 😀\u0000"
+      }
+    },
+    {
+      "id": "ordered-numeric-array",
+      "mutation": {
+        "path": [
+          "guides",
+          "0",
+          "tickValues"
+        ],
+        "value": [
+          -3,
+          0,
+          1.5
+        ]
+      }
+    }
+  ]
+}

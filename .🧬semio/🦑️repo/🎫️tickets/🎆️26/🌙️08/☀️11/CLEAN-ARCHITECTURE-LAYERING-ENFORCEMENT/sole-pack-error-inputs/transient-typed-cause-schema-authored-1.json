@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owner", "semanticReturn", "messageClassification", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owner": { "const": "semio-framework-plugin::transient_root" },
+    "semanticReturn": { "const": "PackRefusal" },
+    "messageClassification": { "const": false },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "route", "bytes", "sourceOwner", "protocolEnvelope"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "route": { "enum": ["op-utf8", "op-json", "pack-utf8", "pack-json", "pack-header", "pack-identity", "op-text-json", "dsl-json"] },
+          "bytes": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+          "sourceOwner": { "enum": ["Utf8Error", "JsonError", "SemioError", "ValueError"] },
+          "protocolEnvelope": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

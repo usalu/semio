@@ -27,7 +27,7 @@ use crate::op::ProgramMutation;
 use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
-use dsl::DslValue as Value;
+use semio_framework_value::DslValue as Value;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
@@ -162,7 +162,7 @@ pub const ARCHITECT_INTERACTION_GRANULARITY_ENTITY: &str = "entity";
 /// whole-document replace carries.
 pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ProgramSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(ARCHITECT_APP_ID, ARCHITECT_PROGRAM_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(ARCHITECT_APP_ID, ARCHITECT_PROGRAM_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -226,7 +226,7 @@ pub mod behavior {
 
     //#region 📐️Template
     /// 📋️ Result of applying a template to a program.
-    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -613,7 +613,7 @@ pub mod behavior {
 
     //#region 📤️ExchangeImport
     /// 🔀️ Strategy for merging imported register rows.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::ToValue, dsl::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -998,7 +998,7 @@ pub mod behavior {
 
     //#region 🧭️Trace
     /// ⛓️ Ordered chain of trace links from a root entity.
-    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1008,7 +1008,7 @@ pub mod behavior {
     }
 
     /// 💥️ Reverse impact set from trace links pointing at an entity.
-    #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -1528,9 +1528,12 @@ impl ArtifactEditor for ArchitectPlayApp {
     const DIALECT: Dialect = crate::ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_program_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
@@ -1688,8 +1691,8 @@ impl ArtifactEditor for ArchitectPlayApp {
     /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
     /// `OpBinary` bytes directly (mirrors `gis2d`'s `command_from_action`).
     fn command_from_action(action: &str, args: Option<&Value>) -> Result<ArchitectCommand, Fault> {
-        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
         match action {
             "selectRegister" => Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: parse_register_id(args).unwrap_or_default() })),
             "addRegisterItem" => {
@@ -1701,12 +1704,12 @@ impl ArtifactEditor for ArchitectPlayApp {
             "patchRegisterItem" => Ok(ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem {
                 register_id: parse_register_id(args).unwrap_or_default(),
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
-                patch_json: args.and_then(|value| value.get("patch")).map_or_else(|| "null".into(), dsl::json::to_json_string),
+                patch_json: args.and_then(|value| value.get("patch")).map_or_else(|| "null".into(), semio_framework_pack_json::to_json_string),
             })),
             "setAdjacencyField" => Ok(ArchitectCommand::SetAdjacencyField(set_adjacency_field::SetAdjacencyField {
                 entity_id: parse_entity_id_from_args(args, "entityId").map(|id| id.0).unwrap_or_default(),
                 field: str_field("field").unwrap_or_default(),
-                value_json: args.and_then(|value| value.get("value")).map_or_else(|| "null".into(), dsl::json::to_json_string),
+                value_json: args.and_then(|value| value.get("value")).map_or_else(|| "null".into(), semio_framework_pack_json::to_json_string),
             })),
             "applyTemplate" => Ok(ArchitectCommand::ApplyTemplate(apply::ApplyTemplate { template_id: parse_entity_id_from_args(args, "templateId").map(|id| id.0).unwrap_or_default() })),
             "exportRegistersCsv" => Ok(ArchitectCommand::ExportRegistersCsv(export_registers_csv::ExportRegistersCsv {})),
@@ -1720,7 +1723,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             "exportProgram" => Ok(ArchitectCommand::ExportProgram(export_program::ExportProgram {})),
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
+            "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), semio_framework_pack_json::to_json_string) })),
             // 🖼️ An ABSENT `viewport` is the Graph window's own default, not a fault: this action carries
             // no `action_args` row, so a palette/keybinding dispatch (and the framework's own
             // `assert_declared_actions_bridge_to_commands` law) hands the bridge no payload at all.

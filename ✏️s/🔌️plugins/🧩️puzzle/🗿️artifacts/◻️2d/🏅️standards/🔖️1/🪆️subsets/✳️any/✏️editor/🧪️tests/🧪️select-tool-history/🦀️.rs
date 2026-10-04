@@ -37,7 +37,7 @@ pub(super) fn seeded_app(board: &Value) -> Puzzle2dApp {
 }
 
 fn leaf(value: &Value) -> Puzzle2dMutation {
-    dsl::json::from_json_str(&value.to_string()).unwrap_or_else(|error| panic!("corpus leaf {value} decodes: {error:?}"))
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("corpus leaf {value} decodes: {error:?}"))
 }
 
 fn ids(value: &Value) -> Vec<String> {
@@ -54,7 +54,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&dsl::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::DslValue::from(&args)), &meta)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -145,7 +145,7 @@ fn same(actual: &Value, expected: &Value) -> bool {
 fn row_leaf(row: &HistoryEntry) -> Value {
     let line = row.op_lines.first().expect("the row prints its op");
     let mutation = <Puzzle2dMutation as OpText>::parse_op(line).unwrap_or_else(|error| panic!("row op {line} parses: {error:?}"));
-    serde_json::from_str(&dsl::json::to_json_string(&dsl::ToValue::to_value(&mutation))).expect("leaf payload")
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&mutation))).expect("leaf payload")
 }
 
 /// 🧾️ The row's first mutation as the history wire carries it.
@@ -405,7 +405,7 @@ fn reference_chips_name_board_entities_like_the_outliner() {
     });
     let label = |kinds: &[&str], id: &str| {
         let kinds: Vec<String> = kinds.iter().map(|kind| kind.to_string()).collect();
-        puzzle2d_entity_label(&fixture, &kinds, id).map(|label| (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()))
+        puzzle2d_entity_label(&fixture, &kinds, id).map(|label| (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()))
     };
     let both = |text: &str| Some((text.to_string(), text.to_string()));
     assert_eq!(label(&["node", "targetRegion"], "a"), both("Alpha"));
@@ -435,7 +435,7 @@ fn edited_log(scenario: &Value) -> Vec<Value> {
 #[semio_framework_async_macros::async_test]
 async fn every_corpus_edit_previews_and_replays_through_the_store() {
     let corpus = corpus();
-    let board: Puzzle2dSnapshot = dsl::json::from_json_str(&corpus["board"].to_string()).expect("the corpus board decodes");
+    let board: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(&corpus["board"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus board decodes");
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
         let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None)).await.expect("the store opens");

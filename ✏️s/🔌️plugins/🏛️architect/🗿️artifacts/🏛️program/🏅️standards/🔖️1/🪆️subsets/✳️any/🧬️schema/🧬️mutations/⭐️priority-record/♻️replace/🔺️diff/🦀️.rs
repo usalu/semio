@@ -13,7 +13,7 @@ pub fn diff(payload: &ReplacePriorityRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No priority record exists with this id.", [payload.priority_record.header.id.0.clone()]);
     };
     if existing == &payload.priority_record {
-        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This priority record already matches the requested value.").at([existing.header.id.0.clone()])]);
+        return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "This priority record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.priority_record).expect("diff_patch always produces a full patch");
     protocol::MutationOutcome::new(ProgramDiff { priorities: Some(ProgramPrioritiesDelta { patched: vec![ProgramPrioritiesPatchEntry { id: payload.priority_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeMaterialThickness, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: thickness (m) must be a positive finite value, got {}.", payload.id.0, payload.new_thickness_m), [payload.id.0.to_string()]);
     }
     if existing.thickness_m == payload.new_thickness_m {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this thickness (m): {}.", payload.id.0, payload.new_thickness_m));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Material {} already carries this thickness (m): {}.", payload.id.0, payload.new_thickness_m));
     }
     let mut model = base.model.clone();
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {

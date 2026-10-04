@@ -1,28 +1,6 @@
-/** 🧩️ Fem3d direct-mutation discriminated union — mirrors the Rust `Fem3dMutation` dispatch enum
- * (sibling `🦀️.rs`, `#[serde(tag = "mutation", rename_all = "camelCase")]`), same
- * declaration order and camelCase discriminant per variant. No mutation leaf has a TS file on disk
- * for this artifact, so every payload interface — and every shared document entity type it
- * references (`FemDof`, `FemNode`, `FemElement`, `FemMaterial`, `FemSection`, `FemSupport`,
- * `FemSolid`, `FemLoad`, `FemLoadCase`, `FemCombination`, `FemAnalysisSettings`) — is declared
- * locally, each annotated with its Rust source. None of these entity shapes are declared yet in the
- * sibling `../📸️snapshot/🟦️.ts` (checked first, per convention) to import instead.
- */
-
-/** 🔒️ Mirrors Rust `FemDof` (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from `fem2d::FemDof`) — a
- * fieldless enum, so it serializes as its bare variant name. */
-export type FemDof = "Tx" | "Ty" | "Tz" | "Rx" | "Ry" | "Rz";
-
-/** 🧭️ The world axis a solid's footprint is extruded along. Mirrors Rust `FemAxis`
- * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export type FemAxis = "x" | "y" | "z";
-
-/** 📍️ Mirrors Rust `FemNode` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemNode {
-  id: string;
-  x: number;
-  y: number;
-  z: number;
-}
+import type {Binary64,FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+/** 🧩️ Direct mutations reuse the canonical persisted Snapshot entity types. */
 
 /** 🌱️ Mirrors Rust `CreateNode` (`⚪️create-node/🦀️.rs`). */
 export interface CreateNode {
@@ -33,11 +11,6 @@ export interface CreateNode {
 export interface DeleteNode {
   id: string;
 }
-
-/** 🔩️ Mirrors Rust `FemElement` (`🗿️artifacts/🧊️3d/🦀️.rs`), tagged on `kind`. */
-export type FemElement =
-  | { kind: "bar"; id: string; start: string; end: string; materialId: string; sectionId: string }
-  | { kind: "frame"; id: string; start: string; end: string; materialId: string; sectionId: string; roll: number };
 
 /** 🌱️ Mirrors Rust `CreateElement` (`🧩️create-element/🦀️.rs`). */
 export interface CreateElement {
@@ -53,16 +26,6 @@ export interface DeleteElement {
 export interface ReplaceElement {
   id: string;
   newElement: FemElement;
-}
-
-/** 🧱️ Mirrors Rust `FemMaterial` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemMaterial {
-  id: string;
-  name: string;
-  e: number;
-  g: number;
-  nu: number;
-  rho: number;
 }
 
 /** 🌱️ Mirrors Rust `CreateMaterial` (`🌱️create-material/🦀️.rs`). */
@@ -81,16 +44,6 @@ export interface ReplaceMaterial {
   newMaterial: FemMaterial;
 }
 
-/** 📐️ Mirrors Rust `FemSection` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSection {
-  id: string;
-  name: string;
-  area: number;
-  iy: number;
-  iz: number;
-  j: number;
-}
-
 /** 🌱️ Mirrors Rust `CreateSection` (`📐️create-section/🦀️.rs`). */
 export interface CreateSection {
   section: FemSection;
@@ -105,13 +58,6 @@ export interface DeleteSection {
 export interface ReplaceSection {
   id: string;
   newSection: FemSection;
-}
-
-/** 🔒️ Mirrors Rust `FemSupport` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSupport {
-  id: string;
-  nodeId: string;
-  fixed: FemDof[];
 }
 
 /** 🌱️ Mirrors Rust `CreateSupport` (`🛡️create-support/🦀️.rs`). */
@@ -130,20 +76,6 @@ export interface ReplaceSupport {
   newSupport: FemSupport;
 }
 
-/** 🧱️ Mirrors Rust `FemSolid` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemSolid {
-  id: string;
-  name: string;
-  outline: [number, number][];
-  holes: [number, number][][];
-  baseZ: number;
-  height: number;
-  layers: number;
-  meshSize: number;
-  materialId: string;
-  axis: FemAxis;
-}
-
 /** 🌱️ Mirrors Rust `CreateSolid` (`🧊️create-solid/🦀️.rs`). */
 export interface CreateSolid {
   solid: FemSolid;
@@ -158,20 +90,6 @@ export interface DeleteSolid {
 export interface ReplaceSolid {
   id: string;
   newSolid: FemSolid;
-}
-
-/** 🏋️ Mirrors Rust `FemLoad` (`🗿️artifacts/🧊️3d/🦀️.rs`), tagged on `kind`. */
-export type FemLoad =
-  | { kind: "nodal"; id: string; nodeId: string; dof: FemDof; value: number }
-  | { kind: "memberUdl"; id: string; elementId: string; wx: number; wy: number; wz: number }
-  | { kind: "area"; id: string; solidId: string; pressure: number };
-
-/** 📦️ Mirrors Rust `FemLoadCase` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemLoadCase {
-  id: string;
-  name: string;
-  loads: FemLoad[];
-  selfWeight: boolean;
 }
 
 /** 🌱️ Mirrors Rust `CreateLoadCase` (`📋️create-load-case/🦀️.rs`). */
@@ -200,13 +118,6 @@ export interface RemoveLoad {
 export interface ChangeLoadCaseSelfWeight {
   caseId: string;
   newSelfWeight: boolean;
-}
-
-/** 📦️ Mirrors Rust `FemCombination` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
-export interface FemCombination {
-  id: string;
-  name: string;
-  terms: Record<string, number>;
 }
 
 /** 🌱️ Mirrors Rust `CreateCombination` (`🔗️create-combination/🦀️.rs`). */
@@ -248,27 +159,19 @@ export interface ReplaceCombination {
 export interface MoveSelection {
   nodeIds: string[];
   solidIds: string[];
-  pivotX: number;
-  pivotY: number;
-  pivotZ: number;
-  dx: number;
-  dy: number;
-  dz: number;
-  axisX: number;
-  axisY: number;
-  axisZ: number;
-  angle: number;
-  sx: number;
-  sy: number;
-  sz: number;
-}
-
-/** ⚙️ Mirrors Rust `FemAnalysisSettings` (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from
- * `fem2d::FemAnalysisSettings`). */
-export interface FemAnalysisSettings {
-  modalCount: number;
-  bucklingCount: number;
-  deformationScale: number;
+  pivotX: Binary64;
+  pivotY: Binary64;
+  pivotZ: Binary64;
+  dx: Binary64;
+  dy: Binary64;
+  dz: Binary64;
+  axisX: Binary64;
+  axisY: Binary64;
+  axisZ: Binary64;
+  angle: Binary64;
+  sx: Binary64;
+  sy: Binary64;
+  sz: Binary64;
 }
 
 /** 🎛️ Mirrors Rust `UpdateAnalysisSettings` (`🎛️update-analysis-settings/🦀️.rs`). */

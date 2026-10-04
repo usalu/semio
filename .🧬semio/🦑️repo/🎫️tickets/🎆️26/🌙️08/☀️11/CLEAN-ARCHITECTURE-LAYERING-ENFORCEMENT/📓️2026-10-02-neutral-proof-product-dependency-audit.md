@@ -1,0 +1,23 @@
+# Neutral Proof Product Dependency Audit
+
+Read-only inspection; no lower source edits, Nx/Cargo/compiler runs, deletion experiment, or Git mutations. The new lower decode ownership proof has two actual product dependencies: its static Rust inspector import from Repo discovery (line9), and unconditional reading of higher OS snapshot public assembly (line57). Deleting products therefore prevents this registered `test-decode-ownership` proof from loading or completing. Removing only the inspector import cannot close the second failure. Default `test portable` currently runs original construction and original decode portable corpus, without selecting the ownership proof; that narrower route must be distinguished from the separate ownership target.
+
+## Actual Policy Authority
+
+Repo taxonomy `🔣️taxonomy.json:28675–28709` assigns `🧰️framework/🔨️modules` to framework-modules and all `🧰️framework/🛍️products` to framework-products. Repo is inside the latter; no Repo infrastructure role exception appears in this rule. Its `framework-modules-no-products` direction forbids the former importing the latter. Actual construction `🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs:121–131` emits semantic rules without a test/tooling path exemption. The separate cross-technology bootstrap exception does not change this semantic rule. Consequently the new proof's inspector import is an authored forbidden lower-to-product source edge, not merely a hypothetical runtime concern.
+
+Ordinary Value package script imports neutral process routing, entrypoint, budget, owned execution and Cargo policy modules. Inspected direct support modules use Node/platform primitives or neutral helpers, not Repo discovery. Existing generic owned schema validator remains neutral. Original portable decode uses Ajv and SQLite as independent test references. These test references can remain.
+
+Repository-level Nx execution has a separate orchestration dependency: `nx.json:85` and `:97` load Repo library and test plugins by source path. Removing the entire products tree breaks this current root Nx configuration before lower commands are discovered. The root script also statically imports numerous products. These are distinct infrastructure obligations; a lower proof cleanup alone cannot establish that ordinary root Nx works with products deleted, and no exception should be inferred from calling them infrastructure.
+
+## Smallest Rigorous Ownership Split
+
+Remove the new neutral proof's Repo inspector import. For the declared fixed discovery chain, require exact literal package→Value-root and Value-root→decode mounts, and pin the complete captured package/root source hashes or full captured source. Retain exact control inverse (remove precisely one cfg(test) mount), exact native import inverse, entire captured original native/control files, original two-name roster, and seven original reference/schema/fixture hashes. Actual successful complete native roster execution remains the compiler-backed semantic discovery proof; fixed literal assertions are narrow authored wiring checks rather than a generic Rust parser. There is no need to copy Repo's parser or introduce a second parser API to validate these fully pinned files.
+
+Move higher duplicate-retirement and retained snapshot scenario assertions into an actual higher OS or Hub composition proof. Require that higher proof unconditionally there; do not skip lower assertions opportunistically when products are absent. Lower proof should have no need to read higherSource. This preserves both lower deletion survival and separately enforced higher case retention.
+
+## Older Obligations and Existing Absence Scope
+
+Older ValueType proof does not import Repo discovery, but unconditionally reads OS Neural source at `🏷️type/🧪️tests/🟦️.ts:72`; its registered `test-type-ownership` is independently broken by products absence. Its Graph/Neural integration assertion should eventually reside above those owners. Keep that older proof migration distinct from fixing the newly introduced decode edge.
+
+Existing `🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts:45–65` copies Value/Base64 only, asserts products and S absent, and runs native Cargo from an authored minimal workspace. It does not run Value portable package scripts, the new ownership target, root Nx, or TypeScript type-ownership target inside the absent-products copy. Its narrow native absence success therefore cannot prove these ordinary portable or root orchestration deletion obligations. Newly mounted native laws additionally invoke Bun/Ajv under the copy cwd; their dependency resolution needs explicit available third-party test installation/storage in an eventual absent-tree runtime receipt.

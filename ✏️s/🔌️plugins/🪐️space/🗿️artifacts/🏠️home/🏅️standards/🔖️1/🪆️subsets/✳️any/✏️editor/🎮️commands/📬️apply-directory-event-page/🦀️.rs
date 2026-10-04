@@ -12,7 +12,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "apply-directory-event-page")]
 pub struct ApplyDirectoryEventPage {
     /// 📄️ Canonical `DirectoryEventPageV1` JSON returned by the authenticated hub.
@@ -75,7 +75,7 @@ where
         (self.page_json)(command).filter(|page_json| page_json.len() <= HOME_DIRECTORY_PAGE_BYTES).map(|_| 1)
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
         if self.consumed {
             return Err(Fault::new(FaultOrigin::App, "s.home.directory-event-page.work-repeated", "a directory page work steps once"));
         }
@@ -84,7 +84,7 @@ where
         context.view_state.as_ref().and_then(crate::home_session_identity).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.session-identity-required", "a directory page needs a signed-in session"))?;
         let page_json = (self.page_json)(input.command).ok_or_else(|| Fault::new(FaultOrigin::App, "s.home.directory-event-page-input-missing", "the command carries no page"))?;
         let answer = directory_page_answer(page_json, context.transient.directory())?;
-        let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: protocol::ToValue::to_value(&answer.receipt) };
+        let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: semio_framework_value::ToValue::to_value(&answer.receipt) };
         let emit = Emit { events: vec![event], ..Default::default() };
         let ephemeral = EphemeralEmit { presence: Vec::new(), transient: answer.item.into_iter().collect(), window_transient: Vec::new() };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })

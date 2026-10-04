@@ -6,7 +6,8 @@ use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+pub fn inverse(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     if (base.model.air_loops.iter().any(|item| item.id == payload.id))
         || (payload.name.trim().is_empty())
         || (base.model.air_loops.iter().any(|item| item.name == payload.name))
@@ -19,5 +20,7 @@ pub fn inverse(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> Ve
         return Vec::new();
     }
     vec![vocabulary::delete_air_loop(payload.id)]
+
+    })())
 }
 //#endregion 🔖️Inverse

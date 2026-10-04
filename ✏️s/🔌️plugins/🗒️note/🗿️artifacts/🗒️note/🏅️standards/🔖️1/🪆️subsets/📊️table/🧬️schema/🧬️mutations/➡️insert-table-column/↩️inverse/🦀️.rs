@@ -5,10 +5,13 @@ use crate::schema::mutations::RemoveTableColumn;
 use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &InsertTableColumn, base: &NoteSnapshot) -> Vec<NoteMutation> {
+pub fn inverse(payload: &InsertTableColumn, base: &NoteSnapshot) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match crate::schema::find_block(&base.blocks, &payload.id) {
         Some(crate::NoteBlockNode::Table { .. }) => vec![NoteMutation::RemoveTableColumn(RemoveTableColumn { id: payload.id.clone() })],
         _ => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔖️Inverse

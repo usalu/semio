@@ -7,12 +7,12 @@ use semio_framework_plugin::PluginApp;
 async fn editable_archive_restores_nested_masks_assets_adjustments_and_history() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut document=semio_fixture_snapshot();document.title=Some(fixture["title"].as_str().unwrap().into());
-    let layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();crate::retire_raster_layers(std::mem::replace(&mut document.layers,layers));
+    let layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();crate::retire_raster_layers(std::mem::replace(&mut document.layers,layers));
     let mut envelope=store::create_document_envelope::<crate::RasterSnapshot,crate::RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"raster",document,None);envelope.dialect=Some(crate::RASTER_DIALECT.into());
     let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-    let mut source=context::app().await;source.load_document_pack(&files).await.unwrap();
+    let mut source=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut source, &files).await.unwrap();
     let before=source.snapshot().unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&before.layers)).unwrap(),fixture["layers"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&before.layers)).unwrap(),fixture["layers"]);
     let rename=&fixture["rename"];let id=rename["id"].as_str().unwrap();
     context::dispatch(&mut source,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.into(),field:"name".into(),value:rename["after"].as_str().unwrap().into()})).await;
     let edited=source.snapshot().unwrap();let archive=source.document_archive().await.unwrap();
@@ -23,7 +23,7 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
         let status=restored.poll_document_archive_load(71).await.unwrap();
         match status.state {
             protocol::DocumentArchiveLoadState::Ready=>{ready=true;break;},
-            protocol::DocumentArchiveLoadState::Fault=>panic!("{}",dsl::diagnostic::decode_fault_bytes(&status.fault).describe()),
+            protocol::DocumentArchiveLoadState::Fault=>panic!("{}",semio_framework_diagnostic::decode_fault_bytes(&status.fault).describe()),
             protocol::DocumentArchiveLoadState::Cancelled=>panic!("archive unexpectedly cancelled"),
             _=>{}
         }

@@ -1,0 +1,58 @@
+//! 🗂️ Literal collection folders and document/blob bodies with exact unsigned sizes.
+#[path="📏️preflight/🦀️.rs"]mod preflight;
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use crate::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,S_COLLECTION_SCHEMA};
+use semio_framework_os_kernel as store;
+use store::ArtifactSqliteSnapshot;
+use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell}};
+#[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
+/// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
+pub const SQLITE_SNAPSHOT_DIALECT:store::os_io::Dialect=store::os_io::Dialect{artifact_kind:S_COLLECTION_SCHEMA,standard:store::os_io::StandardId("1"),subset:store::os_io::SubsetId("*")};
+/// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
+pub fn register_sqlite_snapshot()->Result<(),store::os_io::ArtifactAssemblyRegistryError>{store::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<CollectionSnapshot,crate::CollectionMutation>(S_COLLECTION_SCHEMA))}
+fn rows(value:&CollectionSnapshot)->Result<usize,ValueError>{fields::add(fields::add(1,value.folders.len())?,value.entries.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit, "collection row count overflow"))?)}
+fn schema(control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{if CollectionSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "collection authored schema byte limit exceeded"))}else{Ok(())}}
+fn word(row:&store::sqlite_snapshot::SqliteRow,index:usize)->Result<u64,ValueError>{let high=u32::try_from(row.integer(index)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue, "collection unsigned high word exceeds u32"))?;let low=u32::try_from(row.integer(index+1)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue, "collection unsigned low word exceeds u32"))?;Ok((u64::from(high)<<32)|u64::from(low))}
+impl ArtifactSqliteSnapshot for CollectionSnapshot{
+ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;schema(control)?;control.check_rows(rows(self)?)?;
+  store::encode_sqlite_snapshot_record_native(encoding,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ }
+ fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;let maximum=control.limits().max_rows;
+  store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record,native|{
+   let folders=fields::list_count(record,2)?;let entries=fields::list_count(record,3)?;
+   let count=fields::add(fields::add(1,folders)?,entries.checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"collection row count overflow"))?)?;
+   if count>maximum{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"collection semantic row limit exceeded"))}Self::__dsl_from_record_controlled(record,native)
+  },control)
+ }
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+  let total=rows(self)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,total)?;schema(control)?;control.check_rows(total)?;let mut p=Projection::new(Self::SQLITE_SCHEMA,control)?;
+  let document=p.insert("collection_document",&[Cell::Text(&self.schema),Cell::Text(&self.name)])?;p.checkpoint_total(total)?;
+  for(index,row)in self.folders.iter().enumerate(){p.insert("collection_folder",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(&row.id),row.parent_id.as_deref().map(Cell::Text).unwrap_or(Cell::Null),Cell::Text(&row.name)])?;p.checkpoint_total(total)?;}
+  for(index,row)in self.entries.iter().enumerate(){let kind=match row.body.as_ref(){ArtifactBody::Document{..}=>"document",ArtifactBody::Blob{..}=>"blob"};
+   let entry=p.insert("collection_entry",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(&row.id),row.folder_id.as_deref().map(Cell::Text).unwrap_or(Cell::Null),Cell::Text(&row.name),Cell::Text(&row.kind_id),Cell::Text(kind)])?;p.checkpoint_total(total)?;
+   match row.body.as_ref(){ArtifactBody::Document{schema,document_id}=>p.insert_key("collection_document_body",entry,&[Cell::Text(schema),Cell::Text(document_id)])?,ArtifactBody::Blob{blob}=>p.insert_key("collection_blob_body",entry,&[Cell::Text(&blob.hash),Cell::Integer((blob.size>>32)as i64),Cell::Integer((blob.size&0xffff_ffff)as i64),Cell::Text(&blob.media_type)])?}p.checkpoint_total(total)?;
+  }p.finish()
+ }
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  schema(control)?;validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
+  let doc=database.table("collection_document")?.single_row()?;if doc.values.len()!=3||doc.integer(0)?!=doc.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection document identity differs"))}
+  let document_bodies=database.table("collection_document_body")?;let blob_bodies=database.table("collection_blob_body")?;let entry_table=database.table("collection_entry")?;if document_bodies.rows.len().checked_add(blob_bodies.rows.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit, "collection body count overflow"))?!=entry_table.rows.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection requires exactly one owned body per entry"))}
+  fields::reconstruct(control,|mut native|{native.charge(std::mem::size_of::<Self>())?;
+  let schema=fields::text(doc,1,&mut native)?;let name=fields::text(doc,2,&mut native)?;let ordered=fields::ordered(database.table("collection_folder")?,doc.rowid,6,&mut native)?;let mut folders=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;for row in ordered{folders.push(CollectionFolder{id:fields::text(row,3,&mut native)?,parent_id:fields::optional(row,4,&mut native)?,name:fields::text(row,5,&mut native)?});native.step()?;}
+  let document_bodies=fields::keyed(document_bodies,3,&mut native)?;let blob_bodies=fields::keyed(blob_bodies,5,&mut native)?;let ordered=fields::ordered(entry_table,doc.rowid,8,&mut native)?;let mut entries=native.allocate_vec(ordered.len())?;native.begin_stage(ordered.len())?;
+  for row in ordered{let document=document_bodies.binary_search_by_key(&row.rowid,|body|body.rowid).ok().map(|index|document_bodies[index]);let blob=blob_bodies.binary_search_by_key(&row.rowid,|body|body.rowid).ok().map(|index|blob_bodies[index]);
+   let body=match(row.text(7)?,document,blob){("document",Some(body),None)=>{if body.values.len()!=3||body.integer(0)?!=body.rowid{return Err(fields::invalid("collection document body identity differs"))}ArtifactBody::Document{schema:fields::text(body,1,&mut native)?,document_id:fields::text(body,2,&mut native)?}},("blob",None,Some(body))=>{if body.values.len()!=5||body.integer(0)?!=body.rowid{return Err(fields::invalid("collection blob body identity differs"))}ArtifactBody::Blob{blob:store::BlobRef{hash:fields::text(body,1,&mut native)?,size:word(body,2)?,media_type:fields::text(body,4,&mut native)?}}},_=>return Err(fields::invalid("collection body variant or ownership differs"))};
+   native.charge(std::mem::size_of::<ArtifactBody>())?;entries.push(CollectionEntry{id:fields::text(row,3,&mut native)?,folder_id:fields::optional(row,4,&mut native)?,name:fields::text(row,5,&mut native)?,kind_id:fields::text(row,6,&mut native)?,body:Box::new(body)});native.step()?;
+  }native.checkpoint()?;Ok(Self{schema,name,folders,entries})})
+ }
+ fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+  (|| -> Result<store::io_schema::IoOutcome<()>,ValueError> {
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!=S_COLLECTION_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection does not own this SQLite coordinate"))}let candidate=Self::from_sqlite_database(database,control)?;if self!=&candidate{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "collection semantic state differs"))}Ok(store::io_schema::IoOutcome::clean(()))
+ 
+  })().map_err(store::io_schema::IoError::from_value_error)
+ }
+}

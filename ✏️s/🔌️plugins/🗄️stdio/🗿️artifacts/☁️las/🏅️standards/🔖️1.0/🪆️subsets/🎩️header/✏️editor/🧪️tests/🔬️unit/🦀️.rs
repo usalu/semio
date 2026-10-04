@@ -16,3 +16,5 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<LasAnyEditor, crate::viewer::las::LasAnyViewer>().await;
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::LasAnyEditor, || semio_framework_plugin::App { definition: super::create_las_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/🎩️header");

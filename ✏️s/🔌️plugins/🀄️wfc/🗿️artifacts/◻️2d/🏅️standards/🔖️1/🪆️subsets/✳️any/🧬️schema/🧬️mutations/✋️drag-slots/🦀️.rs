@@ -47,9 +47,12 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DragSlots {
     fn diff(&self, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
-        super::inverse::inverse(self, base)
-    }
+    fn inverse(&self, base: &Wfc2dSnapshot) -> Result<Vec<Wfc2dMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (wfc2d_offset_text(self.dx), wfc2d_offset_text(self.dy));
         let (items_en, items_de) = match self.targets.len() {

@@ -1,0 +1,434 @@
+{
+  "state": "FreshProductionReadbackNotMountRoster",
+  "capturedAt": "2026-10-04T20:00:57.171Z",
+  "scope": "Historical 23 classified domain paths; absent proposed path explicit; exact line readback only",
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+      "family": "CAD",
+      "declared": "SemioModelSnapshot (model pane) / SemioDrawingSnapshot (drawing)",
+      "current": "CadWorkingScene and bundled example fallback",
+      "required": "Actual model schema must retain all pane raw geometry before checked projection. Catalogue-by-child-id fallback cannot be global typed capture authority.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 857,
+          "text": "        Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "family": "CAD",
+      "declared": "SemioModelSnapshot (model pane) / SemioDrawingSnapshot (drawing)",
+      "current": "CadWorkingScene and bundled example fallback",
+      "required": "Actual model schema must retain all pane raw geometry before checked projection. Catalogue-by-child-id fallback cannot be global typed capture authority.",
+      "matchedLines": 3,
+      "exists": true,
+      "matches": [
+        {
+          "line": 171,
+          "text": "    child.local_owner::<CadWorkingScene>().or_else(|| cad_bundled_pane_scene(&child.child_id))"
+        },
+        {
+          "line": 183,
+          "text": "            CadPaneId::all().into_iter().filter_map(|pane| cad_pane_model(&forest, pane).and_then(|child| Some((child.child_id.clone(), child.local_owner::<CadWorkingScene>()?)))).collect()"
+        },
+        {
+          "line": 254,
+          "text": "    Some(cad_model_child_handle(pane, &content_json).with_local_owner(next))"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🦀️.rs",
+      "family": "Block3d",
+      "declared": "SemioKitSnapshot catalog (Block) or SemioMeshSnapshot (WFC)",
+      "current": "Correct S requested through arbitrary local Any",
+      "required": "Actual typed read can select S; no scene bridge. Return through real retained registry/member disposal, not Arc try_unwrap ownership inference.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 178,
+          "text": "        let catalog_owner = match value.catalog.take_local_owner::<SemioKitSnapshot>() {"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "family": "Writer",
+      "declared": "SemioDocumentSnapshot",
+      "current": "Arc<str> and separate persisted text",
+      "required": "Full document blocks/styles/images owner is sole child. Code-body projection must be checked domain projection; empty unresolved text cannot stand for full owner.",
+      "matchedLines": 4,
+      "exists": true,
+      "matches": [
+        {
+          "line": 90,
+          "text": "    handle.set_local_text(Arc::<str>::from(text));"
+        },
+        {
+          "line": 95,
+          "text": "    handle.local_text().unwrap_or_default().to_string()"
+        },
+        {
+          "line": 112,
+          "text": "    snapshot.document.local_text_owner().filter(|owner| **owner == *snapshot.text).unwrap_or_else(|| Arc::<str>::from(snapshot.text.as_str()))"
+        },
+        {
+          "line": 117,
+          "text": "    document_child_handle(id, text, language_id).with_local_text(Arc::<str>::from(text))"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "family": "Sequence",
+      "declared": "SemioFlowSnapshot",
+      "current": "SequenceWorkingScene",
+      "required": "Use complete Semio Flow node/edge owner; projected Sequence fields are checked editing view, preserve unedited raw node labels/ports/params and relationships.",
+      "matchedLines": 3,
+      "exists": true,
+      "matches": [
+        {
+          "line": 288,
+          "text": "    handle.local_owner::<SequenceWorkingScene>().map(|scene| scene.as_ref().clone())"
+        },
+        {
+          "line": 293,
+          "text": "    handle.require_local_owner::<SequenceWorkingScene>().map(|scene| scene.as_ref().clone())"
+        },
+        {
+          "line": 308,
+          "text": "    handle.with_local_owner(std::sync::Arc::new(SequenceWorkingScene { steps, edges }))"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "family": "Sequence",
+      "declared": "SemioFlowSnapshot",
+      "current": "SequenceWorkingScene",
+      "required": "Use complete Semio Flow node/edge owner; projected Sequence fields are checked editing view, preserve unedited raw node labels/ports/params and relationships.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 94,
+          "text": "        if let Ok(Some(owner)) = self.content.take_local_owner::<crate::SequenceWorkingScene>() {"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 51,
+          "text": "                let scene = snapshot.content.take_local_owner::<FlowWorkingScene>().map_err(|message|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 2,
+      "exists": true,
+      "matches": [
+        {
+          "line": 2549,
+          "text": "    let scene = composed.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from(\"flow-edit-scene-owner-missing\"))?;"
+        },
+        {
+          "line": 2567,
+          "text": "    if composed.content.local_owner::<FlowWorkingScene>().is_some_and(|scene| crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout) == next) {"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🗿️artifact/📬️preparation/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 0,
+      "exists": false,
+      "matches": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "family": "Flow",
+      "declared": "SemioFlowSnapshot",
+      "current": "FlowWorkingScene",
+      "required": "Actual retained child is full Semio Flow; bounded preparation/hash and mutation diff/inverse must use that owner with explicit projection, no empty unresolved scene.",
+      "matchedLines": 6,
+      "exists": true,
+      "matches": [
+        {
+          "line": 173,
+          "text": "    let scene = document.content.local_owner::<FlowWorkingScene>()?;"
+        },
+        {
+          "line": 198,
+          "text": "        None => snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| {"
+        },
+        {
+          "line": 203,
+          "text": "    content.set_local_owner(scene);"
+        },
+        {
+          "line": 269,
+          "text": "    store::ArtifactChild::new(child_id, target).with_local_owner(scene)"
+        },
+        {
+          "line": 309,
+          "text": "    handle.set_local_owner(Arc::new(FlowWorkingScene { widgets, synapses, layout }));"
+        },
+        {
+          "line": 314,
+          "text": "    handle.local_owner::<FlowWorkingScene>().map(|scene| (*scene).clone()).unwrap_or_default()"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 40,
+          "text": "            let image=document.assets.get(key).and_then(|asset|asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(||fault(\"Selection image is unavailable\"))?;"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 48,
+          "text": "        let image = document.assets.get(key).and_then(|asset| asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(|| Fault::from(\"raster.mask-image-unavailable\"))?;"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 58,
+          "text": "            let image = mask.image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<crate::SemioImageSnapshot>());"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 175,
+          "text": "    let image = child.local_owner::<SemioImageSnapshot>().ok_or_else(|| Refusal::Fatal(\"mutation.apply.image-unmaterialized\", format!(\"Image asset \\\"{key}\\\" has no materialized pixels.\")))?;"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 2,
+      "exists": true,
+      "matches": [
+        {
+          "line": 272,
+          "text": "        let image=handle.local_owner::<SemioImageSnapshot>().ok_or_else(||format!(\"asset {key:?} must be materialized before rendering\"))?;"
+        },
+        {
+          "line": 328,
+          "text": "            let source=document.assets.get(key).and_then(|asset|asset.local_owner::<SemioImageSnapshot>()).ok_or(\"Composite source image is unavailable\")?;"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "family": "Raster",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S requested through arbitrary local Any; per-command derived image copies",
+      "required": "Bind actual typed image lease. Distinguish derived composite buffers from child owner, preserve frames/media state, propagate read refusal at checked consumer boundary.",
+      "matchedLines": 4,
+      "exists": true,
+      "matches": [
+        {
+          "line": 690,
+          "text": "        Ok(image) => image_content_child_handle(asset_id, &image).with_local_owner(std::sync::Arc::new(image)),"
+        },
+        {
+          "line": 699,
+          "text": "    let image = handle.local_owner::<SemioImageSnapshot>()?;"
+        },
+        {
+          "line": 712,
+          "text": "    if let Some(owner) = source.local_owner::<SemioImageSnapshot>() {"
+        },
+        {
+          "line": 713,
+          "text": "        target.set_local_owner(owner);"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛜️wire-runtime/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 3,
+      "exists": true,
+      "matches": [
+        {
+          "line": 261,
+          "text": "                    let scene = match value.content.take_local_owner::<crate::JackWorkingScene>() {"
+        },
+        {
+          "line": 1270,
+          "text": "                    if let Some(owner) = source.content.local_owner::<crate::JackWorkingScene>() {"
+        },
+        {
+          "line": 1271,
+          "text": "                        target.content.set_local_owner(owner);"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 579,
+          "text": "                    content.set_local_owner(std::sync::Arc::new(crate::JackWorkingScene { nodes: std::mem::take(&mut self.nodes), edges: std::mem::take(&mut self.edges) }));"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🦀️.rs",
+      "family": "Jack",
+      "declared": "SemioGraphSnapshot",
+      "current": "JackContentOwner for content helpers, incompatible JackWorkingScene in clone/retirement/executor",
+      "required": "Complete nine-case raw graph owner sole child, exact geometry words/all node+edge state. Queries may project checked Node/Edge views; retained clone, close and mutation must use exact S.",
+      "matchedLines": 3,
+      "exists": true,
+      "matches": [
+        {
+          "line": 60,
+          "text": "pub fn jack_content_child_with_snapshot(snapshot:SemioGraphSnapshot)->JackContentChild{jack_content_handle(&snapshot).with_local_owner(Arc::new(JackContentOwner::new(snapshot)))}"
+        },
+        {
+          "line": 62,
+          "text": "pub fn materialize_jack_snapshot(handle:&mut JackContentChild,snapshot:SemioGraphSnapshot){handle.set_local_owner(Arc::new(JackContentOwner::new(snapshot)))}"
+        },
+        {
+          "line": 64,
+          "text": "pub fn jack_content_for_handle(handle:&JackContentChild)->Result<Arc<JackContentOwner>,ValueError>{let dialect=&handle.target.dialect;if dialect.artifact_kind!=\"s.stdio.semio\"||dialect.standard!=\"v1\"||dialect.subset!=\"graph\"{return Err(invalid(\"Jack content requires the exact Semio v1 graph child dialect\"))}handle.require_local_owner::<JackContentOwner>().map_err(|error|invalid(error.to_string()))}"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "family": "Shooting",
+      "declared": "SemioImageSnapshot",
+      "current": "Correct S but accessor deep-clones snapshot",
+      "required": "Retained typed read, full frames and typed media; checked derived byte representation separate from lease, admission when owned output requested.",
+      "matchedLines": 2,
+      "exists": true,
+      "matches": [
+        {
+          "line": 558,
+          "text": "            let handle = shooting_emblem_child_handle(&content).with_local_owner(std::sync::Arc::new(content));"
+        },
+        {
+          "line": 568,
+          "text": "    handle.local_owner::<SemioImageSnapshot>().map(|content| content.as_ref().clone())"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "family": "Architect",
+      "declared": "SemioTableSnapshot for benchmarks/knowledge",
+      "current": "Program*WorkingTable plus parent payload and JSON table-cell bridge",
+      "required": "Actual declared rich record schema-first cell/relationship representation needed; JSON string payload and duplicate parent table cannot be full interpreted child authority.",
+      "matchedLines": 2,
+      "exists": true,
+      "matches": [
+        {
+          "line": 100,
+          "text": "    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))"
+        },
+        {
+          "line": 166,
+          "text": "    store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "family": "Equation",
+      "declared": "SemioTextSnapshot / SemioTableSnapshot / SemioValueSnapshot",
+      "current": "One EquationWorkingScene Any Arc shared across all three incompatible S",
+      "required": "Publish and retain three exact typed owners, all field/word semantics. Equation scene becomes checked derived view rather than ownership source.",
+      "matchedLines": 0,
+      "exists": true,
+      "matches": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️preview/🦀️.rs",
+      "family": "Block3d",
+      "declared": "SemioKitSnapshot catalog (Block) or SemioMeshSnapshot (WFC)",
+      "current": "Correct S requested through arbitrary local Any",
+      "required": "Actual typed read can select S; no scene bridge. Return through real retained registry/member disposal, not Arc try_unwrap ownership inference.",
+      "matchedLines": 1,
+      "exists": true,
+      "matches": [
+        {
+          "line": 102,
+          "text": "            let owner = child.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>()?;"
+        }
+      ]
+    }
+  ]
+}

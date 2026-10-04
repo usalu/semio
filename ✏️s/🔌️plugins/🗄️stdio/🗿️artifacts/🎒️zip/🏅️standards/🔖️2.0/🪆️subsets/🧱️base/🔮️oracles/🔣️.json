@@ -112,6 +112,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-archive-comment",
         "add-entry",
         "remove-entry",
@@ -268,6 +269,27 @@
             "operation": "set-snapshot",
             "bridgeVersion": 1,
             "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "zip-2-0-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "yauzl-zip-2-0-base-mutate-reader"
+            }
+          ]
+        },
+        {
+          "id": "patch-snapshot",
+          "capability": "zip-2-0-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

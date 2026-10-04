@@ -950,7 +950,7 @@ fn db_io_fixed_page_max_plus_one_and_zero_are_exact() {
 fn db_io_artifact_rejection_is_an_internal_executor_boundary_violation() {
     let _owner = fixture_owner();
     let before = ledger_witness();
-    let fault = db_io_task_fault(DbIoFaultKind::Backend, &DbError::Rejected { policy: protocol::MergePolicy::Normal, worst: protocol::Severity::Error, messages: Vec::new() });
+    let fault = db_io_task_fault(DbIoFaultKind::Backend, &DbError::Rejected { policy: protocol::MergePolicy::Normal, worst: semio_framework_diagnostic::Severity::Error, messages: Vec::new() });
     assert_eq!(fault.cause, DbIoFaultCause::Internal);
     assert_eq!(fault.into_db_error(), DbError::Internal("DB I/O backend returned an artifact-layer rejection".to_string()));
     while db_io_maintenance_step().unwrap() {}

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "maximumSlots": 2147483648,
+  "maximumHalfLoadEntries": 1073741824,
+  "firstImpossibleEntries": 1073741825,
+  "slotBytes": 4,
+  "refusal": "workLimit",
+  "expectedOwnedBytes": 0,
+  "expectedTraversal": false
+}

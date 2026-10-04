@@ -1,88 +1,79 @@
 use super::*;
-use crate::schema::default_snapshot;
+use crate::schema::default_path;
 use crate::Dictionary;
 use neural_engine::{Atom, Value};
-use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-use protocol::SemanticMutation;
-
 use std::collections::BTreeMap;
 
 fn step(id: &str, kind: &str) -> Step {
     Step { id: id.into(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() }
 }
 
-//#region 🔖️MutationLaws
-#[semio_framework_async_macros::async_test]
-async fn create_step_inverse_law() {
-    let base = default_snapshot();
-    assert_mutation_inverse_law(&base, &create_step(PathRef::default(), step("step-99", "log.print"))).await;
+fn ids(steps: &[Step]) -> Vec<&str> {
+    steps.iter().map(|step| step.id.as_str()).collect()
 }
 
-#[semio_framework_async_macros::async_test]
-async fn delete_step_inverse_law() {
-    let base = default_snapshot();
-    assert_mutation_inverse_law(&base, &delete_step(PathRef::default(), "step-1".into())).await;
+fn body_ref() -> PathRef {
+    PathRef { owner: Some("loop".into()), slot: Some("body".into()) }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn delete_step_missing_target_is_error() {
-    let base = default_snapshot();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &delete_step(PathRef::default(), "step-missing".into())).await;
+fn with_loop() -> Path {
+    let mut path = default_path();
+    path.steps.push(step("loop", "control.repeat"));
+    path
 }
 
+/// 📍️ A command's owner/slot addresses a real step's body; anything else addresses the root scope.
 #[semio_framework_async_macros::async_test]
-async fn reorder_steps_inverse_law() {
-    let base = default_snapshot();
-    assert_mutation_inverse_law(&base, &reorder_steps(PathRef::default(), "step-2".into(), 0)).await;
+async fn path_ref_in_addresses_only_real_owners() {
+    let path = with_loop();
+    assert_eq!(path_ref_in(&path, Some("loop"), Some("body")), body_ref());
+    assert_eq!(path_ref_in(&path, Some("ghost"), Some("body")), PathRef::default());
+    assert_eq!(path_ref_in(&path, Some("loop"), None), PathRef::default());
 }
 
+/// 🆔️ The next id is one past the highest `step-N` anywhere in the program, nested bodies included.
 #[semio_framework_async_macros::async_test]
-async fn reorder_steps_missing_target_is_error() {
-    let base = default_snapshot();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &reorder_steps(PathRef::default(), "step-missing".into(), 0)).await;
+async fn next_step_id_counts_nested_bodies() {
+    let mut path = with_loop();
+    assert_eq!(next_step_id(&path), "step-3");
+    insert_step(&mut path, &body_ref(), None, step("step-7", "log.print"));
+    assert_eq!(next_step_id(&path), "step-8");
 }
 
+/// ➕️ Inserts land at the clamped index of the addressed scope; a duplicate id in that scope is no edit.
 #[semio_framework_async_macros::async_test]
-async fn edit_step_params_inverse_law() {
-    let base = default_snapshot();
-    let params = Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into())));
-    // 🧊️ `new_params` is a live neural `Dictionary`: the operation is RETIRED, never dropped
-    // (`ProcedureMutation`'s `retire_cold = retire_procedure_mutation`). The law itself retires every
-    // inverse it mints — see `protocol_laws::assert_mutation_inverse_law`.
-    let operation = edit_step_params(PathRef::default(), "step-2".into(), params);
-    assert_mutation_inverse_law(&base, &operation).await;
-    protocol::Mutation::retire_cold(operation);
+async fn insert_step_lands_at_the_clamped_index_and_refuses_duplicates() {
+    let mut path = with_loop();
+    insert_step(&mut path, &PathRef::default(), Some(0), step("first", "log.print"));
+    insert_step(&mut path, &PathRef::default(), Some(99), step("last", "log.print"));
+    insert_step(&mut path, &PathRef::default(), None, step("step-1", "log.print"));
+    assert_eq!(ids(&path.steps), ["first", "step-1", "step-2", "loop", "last"]);
+    insert_step(&mut path, &body_ref(), None, step("inner", "log.print"));
+    assert_eq!(ids(&resolve_steps_in_path(&path, &body_ref())), ["inner"]);
 }
 
+/// ➖️ Removing the last step of a body prunes the emptied slot; moving clamps within its scope.
 #[semio_framework_async_macros::async_test]
-async fn edit_step_params_missing_target_is_error() {
-    let base = default_snapshot();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &edit_step_params(PathRef::default(), "step-missing".into(), Dictionary::new())).await;
+async fn remove_prunes_emptied_slots_and_move_clamps() {
+    let mut path = with_loop();
+    insert_step(&mut path, &body_ref(), None, step("inner", "log.print"));
+    remove_step(&mut path, &body_ref(), "inner");
+    assert!(path.steps.iter().find(|step| step.id == "loop").expect("loop").bodies.is_empty(), "the emptied body slot is pruned");
+    move_step(&mut path, &PathRef::default(), "loop", 0);
+    move_step(&mut path, &PathRef::default(), "step-1", 99);
+    assert_eq!(ids(&path.steps), ["loop", "step-2", "step-1"]);
+    move_step(&mut path, &PathRef::default(), "ghost", 0);
+    assert_eq!(ids(&path.steps), ["loop", "step-2", "step-1"]);
 }
 
+/// 🎚️ Params replace in place; an unknown step leaves the program untouched.
 #[semio_framework_async_macros::async_test]
-async fn create_step_duplicate_id_fatal_never_applies() {
-    let base = default_snapshot();
-    let mutation = create_step(PathRef::default(), step("step-1", "log.print"));
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&protocol::Mutation::diff(&mutation, &base)).await;
+async fn set_step_params_replaces_in_place() {
+    let mut path = default_path();
+    set_step_params(&mut path, &PathRef::default(), "step-2", Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into()))));
+    let params = &path.steps.iter().find(|step| step.id == "step-2").expect("step-2").params;
+    assert_eq!(params.get("message"), Some(&Value::Atom(Atom::String("hi".into()))));
+    let before = path.clone();
+    set_step_params(&mut path, &PathRef::default(), "ghost", Dictionary::new());
+    assert_eq!(path, before);
 }
-
-#[semio_framework_async_macros::async_test]
-async fn create_step_diff_absorb_law() {
-    use protocol::Mutation;
-    let base = default_snapshot();
-    let d1 = create_step(PathRef::default(), step("step-97", "log.print")).diff(&base).into_parts().0;
-    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
-    let d2 = create_step(PathRef::default(), step("step-98", "log.print")).diff(&mid).into_parts().0;
-    assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-
-#[semio_framework_async_macros::async_test]
-async fn dispatch_registers_semantic_descriptors() {
-    register_procedure_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
-    for kind in ProcedureMutation::kinds() {
-        assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-    }
-    assert_eq!(ProcedureMutation::kinds().len(), 4);
-}
-//#endregion 🔖️MutationLaws

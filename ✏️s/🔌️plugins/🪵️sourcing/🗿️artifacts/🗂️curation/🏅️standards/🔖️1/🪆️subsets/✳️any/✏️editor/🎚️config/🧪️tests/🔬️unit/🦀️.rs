@@ -24,7 +24,7 @@ fn sample_config() -> SourcingCurationConfig {
 /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
 fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfigMutation) -> SourcingCurationConfig {
     let forward = operation.diff(config).into_parts().0;
-    let backwards = operation.inverse(config);
+    let backwards = operation.inverse(config).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
         restored = back.diff(&restored).into_parts().0;

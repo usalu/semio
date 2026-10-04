@@ -6,7 +6,6 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 //#region 🧭️Topology
@@ -39,8 +38,11 @@ pub struct PlaygroundInference {
 }
 
 impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
-    fn infer(snapshot: &PlaygroundSnapshot) -> Self {
+    fn infer(snapshot: &PlaygroundSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: infer_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -48,7 +50,9 @@ impl protocol::Inference<PlaygroundSnapshot> for PlaygroundInference {
 /// `PlaygroundSnapshot::default()` happens to contain.
 impl Default for PlaygroundInference {
     fn default() -> Self {
-        <Self as protocol::Inference<PlaygroundSnapshot>>::infer(&PlaygroundSnapshot::default())
+        let snapshot = &PlaygroundSnapshot::default();
+
+        Self { topology: infer_topology(snapshot) }
     }
 }
 
@@ -64,13 +68,6 @@ impl protocol::InferenceSpec<PlaygroundSnapshot> for PlaygroundInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::PlaygroundBuilderFacets {
-    type Snapshot = PlaygroundSnapshot;
-    type Inference = PlaygroundInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.demonstrator.playground.inference`'s facet leaves into the OS-wide inference

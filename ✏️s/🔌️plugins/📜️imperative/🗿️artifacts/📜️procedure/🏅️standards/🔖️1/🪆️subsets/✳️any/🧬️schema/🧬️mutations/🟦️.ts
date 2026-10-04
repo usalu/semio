@@ -1,11 +1,5 @@
-/** 📜️ Imperative direct-mutation discriminated union. */
-import type { CreateStep } from "./🌱create-step/🟦️.ts";
-import type { DeleteStep } from "./🗑️delete-step/🟦️.ts";
-import type { EditStepParams } from "./🔧edit-step-params/🟦️.ts";
-import type { ReorderSteps } from "./🔀reorder-steps/🟦️.ts";
+/** 📜️ Procedure parent mutation union — empty: content edits are child-lane leaves of the composed `flow`/`text` children. */
 
-export type ProcedureMutation =
-  | ({ mutation: "createStep" } & CreateStep)
-  | ({ mutation: "deleteStep" } & DeleteStep)
-  | ({ mutation: "reorderSteps" } & ReorderSteps)
-  | ({ mutation: "editStepParams" } & EditStepParams);
+//#region 🧬️Aggregate
+export type ProcedureMutation = never;
+//#endregion 🧬️Aggregate

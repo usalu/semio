@@ -24,9 +24,12 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
         MutationOutcome::new(diff::diff_insert_page(self.index, self.page.clone()))
     }
 
-    fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfMutation> {
+    fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![PdfMutation::RemovePage(RemovePage { index: self.index })]
-    }
+    
+    })())
+}
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert page {}", self.index), &format!("Seite {} einfügen", self.index))

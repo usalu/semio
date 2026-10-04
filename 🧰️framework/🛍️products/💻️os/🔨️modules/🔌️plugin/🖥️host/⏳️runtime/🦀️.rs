@@ -354,6 +354,15 @@ impl AsyncActorTask {
                     return;
                 }
             };
+            let version_instance = Arc::clone(&instance);
+            let admitted = match store.run_concurrent(async move |accessor: &Accessor<AsyncActorHostState>| version_instance.semio_framework_reactor().call_channel_version(accessor).await).await.and_then(|inner| inner) {
+                Ok(guest) => protocol::admit_guest_channel_version(guest, protocol::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault))),
+                Err(error) => Err(PluginHostError::Wasmtime(error.to_string())),
+            };
+            if let Err(error) = admitted {
+                let _ = ready_tx.send(Err(error));
+                return;
+            }
             let _ = ready_tx.send(Ok(()));
 
             let _ = store

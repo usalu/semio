@@ -8,9 +8,7 @@ field: 'schema' '=' TEXT
      | 'id' '=' TEXT
      | 'version' '=' TEXT
      | 'title' '=' TEXT
-     | 'document' '=' childHandle
-     | 'flow' '=' childHandle
-     | 'steps' '=' TEXT ;
+     | 'flow' '=' childHandle ;
 childHandle: 'child_id' '=' TEXT 'target' '=' TEXT ;
 
 // 📐 Framework dialect-primitive terminal: a bare word or a double-quoted, backslash-escaped string.

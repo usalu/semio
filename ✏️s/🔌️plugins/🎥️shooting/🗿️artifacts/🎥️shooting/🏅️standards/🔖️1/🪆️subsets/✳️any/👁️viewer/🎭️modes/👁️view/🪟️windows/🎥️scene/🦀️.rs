@@ -9,8 +9,8 @@
 
 use crate::standards::v1::subsets::any::schema::{active_shot, is_transparent_shooting_background};
 use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
-use dsl::json;
-use dsl::os_pack::json::Value;
+use semio_framework_pack_json::json;
+use semio_framework_pack_json::Value;
 use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
 use semio_framework_plugin::world3d_scene;

@@ -101,6 +101,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
       | set-header-var     | {"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}} |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/headerVars/1", "value": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -117,6 +118,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
       | set-header-var     | {"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}} |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
+      | patch-snapshot | {"patch": {"operation": "set", "path": "/headerVars/1", "value": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}} |
 
   @id-identity-round-trip
   @level-long

@@ -40,7 +40,7 @@ async fn upsert_then_inverse_restores_absent_id_via_remove() {
     let base = snap.clone();
     apply_ifc2x3_mutation(&mut snap, &mutation);
     assert_eq!(snap.document.instances.len(), 1);
-    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
+    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
 }
 
@@ -52,7 +52,7 @@ async fn remove_then_inverse_restores_prior_instance() {
     let mutation = Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 2 });
     apply_ifc2x3_mutation(&mut snap, &mutation);
     assert!(snap.document.instances.is_empty());
-    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
+    let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
 }
 
@@ -127,7 +127,7 @@ async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
     let reparsed = crate::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).expect("re-import supported dirty export");
     assert_eq!(reparsed.document.header, changed.document.header);
 
-    let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
+    let inverse_mutation = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse mutation");
     let d2 = Mutation::diff(&inverse_mutation, &changed);
     let restored = MutationDiff::apply(d2.diff(), &changed).expect("valid inverse diff");
     assert!(restored == imported, "inverse mutation must restore imported snapshot and provenance");
@@ -214,7 +214,7 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     let changed_outcome = Mutation::diff(&mutation, &imported);
     let changed = MutationDiff::apply(changed_outcome.diff(), &imported).expect("valid upsert diff");
     assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
-    let inverse = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse");
+    let inverse = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse");
     let restored_outcome = Mutation::diff(&inverse, &changed);
     let restored = MutationDiff::apply(restored_outcome.diff(), &changed).expect("valid inverse diff");
     assert_eq!(restored, imported);
@@ -235,6 +235,7 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::default() }),
+        Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await }),
         Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 }),
         Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: Part21Header::default() }),

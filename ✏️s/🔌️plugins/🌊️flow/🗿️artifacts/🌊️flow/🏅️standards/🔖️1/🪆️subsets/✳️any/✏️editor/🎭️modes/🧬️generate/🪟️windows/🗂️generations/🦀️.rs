@@ -117,7 +117,8 @@ fn generation_item(generation: &FormGeneration, selected: bool, surface_prefix: 
 }
 
 pub fn render(transient: &FlowWindowTransient, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let generation = transient.generation();
+    let mut generation_owner = transient.generation().map_err(|error| PluginAssemblyError::new("ui.generations", error.into_message()))?;
+    let generation = generation_owner.as_mut();
     let surface_prefix = "flow-play-generate";
     let mut builder = PanelTreeBuilder::new(surface_prefix)?.window_section_or_placeholder(
         windows,

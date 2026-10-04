@@ -27,7 +27,7 @@ fn eval_result_seeds_the_node_cache_settles_the_window_and_arms_nothing() {
     let output = Dictionary::new().insert("drawing", NeuralValue::Atom(Atom::String("2d:polyline-1".into()))).insert("count", NeuralValue::Atom(Atom::Integer(2)));
     let node_hash = 0x2d2d_beef_u64;
     assert!(!cache.contains(node_hash), "the node must be uncached before the extension answers");
-    let payload = FlowEvalResolve { window_id: window.into(), window_kind_id: "generation2d-preview".into(), node_hash, output_json: dsl::json::to_json_string(&output), ok: true, ..Default::default() };
+    let payload = FlowEvalResolve { window_id: window.into(), window_kind_id: "generation2d-preview".into(), node_hash, output_json: semio_framework_pack_json::to_json_string(&output), ok: true, ..Default::default() };
     let emit = handle(&payload, &doc, &cfg, &mut session).expect("flowEvalResolve");
     let cached = cache.get(node_hash).expect("the seeded node must be readable from the shared neural cache");
     assert_eq!(cached, output, "the extension output must round-trip through the shared neural cache");

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "cwd-normal",
+      "field": "cwd",
+      "kind": "normal",
+      "valid": true
+    },
+    {
+      "id": "cwd-nul-prefix",
+      "field": "cwd",
+      "kind": "nul-prefix",
+      "valid": false
+    },
+    {
+      "id": "cwd-nul-suffix",
+      "field": "cwd",
+      "kind": "nul-suffix",
+      "valid": false
+    },
+    {
+      "id": "cwd-relative",
+      "field": "cwd",
+      "kind": "relative",
+      "valid": false
+    },
+    {
+      "id": "cacheRoot-normal",
+      "field": "cacheRoot",
+      "kind": "normal",
+      "valid": true
+    },
+    {
+      "id": "cacheRoot-nul-prefix",
+      "field": "cacheRoot",
+      "kind": "nul-prefix",
+      "valid": false
+    },
+    {
+      "id": "cacheRoot-nul-suffix",
+      "field": "cacheRoot",
+      "kind": "nul-suffix",
+      "valid": false
+    },
+    {
+      "id": "cacheRoot-relative",
+      "field": "cacheRoot",
+      "kind": "relative",
+      "valid": false
+    },
+    {
+      "id": "leaseDirectory-normal",
+      "field": "leaseDirectory",
+      "kind": "normal",
+      "valid": true
+    },
+    {
+      "id": "leaseDirectory-nul-prefix",
+      "field": "leaseDirectory",
+      "kind": "nul-prefix",
+      "valid": false
+    },
+    {
+      "id": "leaseDirectory-nul-suffix",
+      "field": "leaseDirectory",
+      "kind": "nul-suffix",
+      "valid": false
+    },
+    {
+      "id": "leaseDirectory-relative",
+      "field": "leaseDirectory",
+      "kind": "relative",
+      "valid": false
+    }
+  ]
+}

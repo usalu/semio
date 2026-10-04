@@ -3,7 +3,7 @@
 use super::{Wfc3dTransient, Wfc3dTransientMutation};
 use crate::editor::wfc3d::transient::Wfc3dAssignment;
 
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-solve")]
 #[mutation_leaf(contract = ::protocol)]
@@ -18,9 +18,12 @@ impl protocol::MutationKind<Wfc3dTransient, Wfc3dTransientMutation> for SetSolve
     fn diff(&self, _base: &Wfc3dTransient) -> protocol::MutationOutcome<Wfc3dTransient> {
         protocol::MutationOutcome::new(Wfc3dTransient { assignments: self.assignments.clone(), contradiction: self.contradiction })
     }
-    fn inverse(&self, base: &Wfc3dTransient) -> Vec<Wfc3dTransientMutation> {
+    fn inverse(&self, base: &Wfc3dTransient) -> Result<Vec<Wfc3dTransientMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { assignments: base.assignments.clone(), contradiction: base.contradiction }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
     }

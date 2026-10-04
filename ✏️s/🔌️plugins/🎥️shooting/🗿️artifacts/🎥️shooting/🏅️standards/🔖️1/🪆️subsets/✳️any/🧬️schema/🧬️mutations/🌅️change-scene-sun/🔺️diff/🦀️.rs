@@ -9,7 +9,7 @@ pub fn diff(payload: &ChangeSceneSunElevation, base: &ShootingSnapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sun elevation must be between -90 and 90 degrees, got {}.", payload.new_elevation), Vec::<String>::new());
     }
     if base.scene.sun.elevation == payload.new_elevation {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sun elevation is already {} degrees.", payload.new_elevation));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Sun elevation is already {} degrees.", payload.new_elevation));
     }
     let mut scene = base.scene.clone();
     scene.sun.elevation = payload.new_elevation;

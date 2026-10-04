@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "packageName": "semio-framework-io-schema",
+  "normalDependencies": [
+    "semio-framework-value",
+    "semio-framework-value-derive",
+    "semio-framework-diagnostic",
+    "semio-framework-schema-registry"
+  ],
+  "exports": [
+    "StandardId",
+    "SubsetId",
+    "Dialect",
+    "ArtifactDialect",
+    "ArtifactKindId",
+    "ArtifactRef",
+    "is_canonical_artifact_kind",
+    "IoPayload",
+    "CARRIER_BINARY",
+    "CARRIER_TEXT",
+    "SQLITE_SNAPSHOT",
+    "Confidence",
+    "IoFidelity",
+    "IoError",
+    "IoOutcome",
+    "IoResult",
+    "IoEntryDescriptor",
+    "IoRoute",
+    "register_io_schema_exports"
+  ],
+  "references": [
+    {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "",
+        "standard": "",
+        "subset": ""
+      }
+    },
+    {
+      "artifactId": "!@/世界\u0000",
+      "dialect": {
+        "artifactKind": "kind!@/\u0000",
+        "standard": "standard/@!",
+        "subset": "subset/@!世界"
+      }
+    },
+    {
+      "artifactId": "a!b",
+      "dialect": {
+        "artifactKind": "s.sample.kind",
+        "standard": "",
+        "subset": "*"
+      }
+    }
+  ]
+}

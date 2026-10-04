@@ -23,9 +23,12 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_reorder_pages(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
-        inverse_reorder_pages(self, base)
-    }
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok({
+        inverse_reorder_pages(self, base)?
+    
+    })
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder page \"{}\"", self.id), &format!("Reihenfolge von Seite \"{}\" ändern", self.id))
     }
@@ -48,17 +51,20 @@ pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> prot
         ids.insert(to, item);
     }
     if ids == current {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" is already at the requested position.", payload.id));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" is already at the requested position.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔀ReorderPages
 
 //#region 🔀ReorderPages
-pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
+pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match base.pages.iter().position(|page| page.id == payload.id) {
         Some(original_index) => vec![LayoutMutation::ReorderPages(ReorderPages { id: payload.id.clone(), to_index: original_index })],
         None => Vec::new(),
     }
+
+    })())
 }
 //#endregion 🔀ReorderPages

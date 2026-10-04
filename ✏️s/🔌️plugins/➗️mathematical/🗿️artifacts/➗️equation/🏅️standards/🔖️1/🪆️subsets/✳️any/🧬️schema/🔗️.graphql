@@ -1,6 +1,38 @@
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+type EquationNode {
+  id: String!
+  label: String!
+  x: Float!
+  y: Float!
+}
+
+type EquationEdge {
+  id: String!
+  source: String!
+  target: String!
+}
+
+type EquationGraph {
+  directed: Boolean!
+  nodes: [EquationNode!]!
+  edges: [EquationEdge!]!
+  algorithm: String!
+  algorithmSeed: String
+}
+
+type EquationPoint {
+  x: Float!
+  y: Float!
+}
+
+type EquationGeometry {
+  points: [EquationPoint!]!
+}
+
 type EquationArtifact {
+  graph: EquationGraph! @state(class: ARTIFACT)
+  geometry: EquationGeometry! @state(class: ARTIFACT)
   notation: ArtifactChild! @state(class: ARTIFACT)
   results: ArtifactChild! @state(class: ARTIFACT)
   computed: ArtifactChild! @state(class: ARTIFACT)

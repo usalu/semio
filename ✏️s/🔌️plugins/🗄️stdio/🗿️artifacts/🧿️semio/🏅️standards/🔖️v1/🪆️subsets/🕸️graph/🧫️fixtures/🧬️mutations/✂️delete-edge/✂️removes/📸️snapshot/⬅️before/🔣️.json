@@ -8,11 +8,21 @@
       "kind": "source",
       "label": "Source",
       "position": {
-        "x": 0.0,
-        "y": 0.0
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
       },
       "ports": [],
-      "properties": []
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
     },
     {
       "id": {
@@ -21,11 +31,21 @@
       "kind": "sink",
       "label": "Sink",
       "position": {
-        "x": 4.0,
-        "y": 0.0
+        "x": {
+          "bits": "4010000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        }
       },
       "ports": [],
-      "properties": []
+      "properties": [],
+      "width": {
+        "bits": "0000000000000000"
+      },
+      "height": {
+        "bits": "0000000000000000"
+      }
     }
   ],
   "edges": [
@@ -40,7 +60,8 @@
         "value": "b"
       },
       "kind": "data",
-      "label": "A to B"
+      "label": "A to B",
+      "properties": []
     },
     {
       "id": {
@@ -53,7 +74,8 @@
         "value": "a"
       },
       "kind": "feedback",
-      "label": "B back to A"
+      "label": "B back to A",
+      "properties": []
     }
   ]
 }

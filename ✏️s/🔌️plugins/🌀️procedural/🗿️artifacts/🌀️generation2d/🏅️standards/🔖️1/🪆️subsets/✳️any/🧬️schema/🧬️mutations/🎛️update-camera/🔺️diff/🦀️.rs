@@ -10,7 +10,7 @@ pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.invariant", "Camera x/y/zoom must be finite.".to_string(), Vec::<String>::new());
     }
     if base.host_snapshot.camera == *camera {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.".to_string());
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Camera is already at the requested position.".to_string());
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&camera), None))
 }

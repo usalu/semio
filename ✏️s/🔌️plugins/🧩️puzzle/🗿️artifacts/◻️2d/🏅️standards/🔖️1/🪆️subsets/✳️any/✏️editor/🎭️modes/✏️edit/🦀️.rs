@@ -29,7 +29,7 @@ pub fn definition() -> ModeDefinition {
         id: PUZZLE2D_PLAY_MODE_EDIT.into(),
         label: LocalizedLabel::native("Edit", "Bearbeiten"),
         icon_id: "pencil".into(),
-        tools: vec![semio_framework::io::resolve_ready(ToolRef::new(fill::TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill::TOOL_ID))],
         layout_id: None,
         commands: Vec::new(),
     }

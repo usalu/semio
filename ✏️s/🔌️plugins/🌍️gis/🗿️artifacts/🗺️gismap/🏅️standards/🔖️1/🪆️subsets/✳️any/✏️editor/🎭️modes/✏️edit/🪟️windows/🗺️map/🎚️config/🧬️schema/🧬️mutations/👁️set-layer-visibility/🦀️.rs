@@ -7,7 +7,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, dsl::DslRecord, dsl::MutationLeaf, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -26,13 +26,16 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerVisibili
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-visibility", kind: "set-layer-visibility", record: "SetLayerVisibility" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if base.layer_visibility.get(&self.layer_id).copied() == self.visible {
-            return MutationOutcome::empty().warn("mutation.no-op", "Layer visibility override is already at the requested value.");
+            return MutationOutcome::empty().warning("mutation.no-op", "Layer visibility override is already at the requested value.");
         }
         MutationOutcome::new(MapWindowConfigDelta { layer_visibility: [(self.layer_id.clone(), self.visible)].into(), ..Default::default() }.into())
     }
-    fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
+    fn inverse(&self, base: &MapWindowConfig) -> Result<Vec<MapWindowConfigMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
         vec![Self { layer_id: self.layer_id.clone(), visible: base.layer_visibility.get(&self.layer_id).copied() }.into()]
-    }
+    
+    })())
+}
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
     }

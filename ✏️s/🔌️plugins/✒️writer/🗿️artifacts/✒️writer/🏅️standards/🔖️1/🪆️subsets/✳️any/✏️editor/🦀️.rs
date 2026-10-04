@@ -95,7 +95,7 @@ pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn writer_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
+pub fn writer_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: WRITER_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
@@ -208,7 +208,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
 fn reset_document_effect_now(scene: &WriterSnapshot) -> Effect {
     let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
-    let spr = semio_framework::io::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -284,19 +284,21 @@ semio_framework_plugin::app_commands! {
 /// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
 /// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
 /// through `.action(...)` against `registry`.
-fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
+fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&ContextMenuTextContext>, view_state: &semio_framework_plugin::ViewModel) -> Vec<ContextMenuItemSpec> {
+    let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
     let can_suggest = text.is_some_and(|t| t.has_completions);
     let has_selection = text.is_some_and(|t| t.has_selection);
     let can_rename = text.is_some_and(|t| t.can_rename);
-    let bespoke = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| ContextMenuItemSpec {
-        id: id.into(),
-        label: Some(label.into()),
-        icon: Some(icon.into()),
-        action: Some(action.into()),
-        disabled: disabled.then_some(true),
-        ..Default::default()
+    let reason = semio_framework_plugin::nothing_selected().resolve(view_state.terminology, view_state.locale).to_string();
+    let bespoke = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| {
+        let row = ContextMenuItemSpec { id: id.into(), label: Some(label.into()), icon: Some(icon.into()), action: Some(action.into()), ..Default::default() };
+        if disabled {
+            row.disabled_because(reason.clone())
+        } else {
+            row
+        }
     };
-    Menu::of(registry)
+    Menu::of(registry, view_state)
         .item(bespoke("writer-select-token", if is_de { "Token auswählen" } else { "Select token" }, "text-cursor", "selectToken", false))
         .item(bespoke("writer-copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", !has_selection))
         .item(bespoke("writer-paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", false))
@@ -512,18 +514,18 @@ impl WriterCommandToolJob {
                 emit.effects.push(reset_document_effect_now(&set_active_example::document_for_example_id(&payload.example_id)));
             }
             WriterCommand::SetSnapshot(payload) => {
-                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     emit.effects.push(reset_document_effect_now(&document));
                 }
             }
             WriterCommand::OpenDocument(payload) => emit = open_document::emit(&payload),
             WriterCommand::SetSnapshotJson(payload) => {
-                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     emit.effects.push(reset_document_effect_now(&document));
                 }
             }
             WriterCommand::SetFixtureJson(payload) => {
-                if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {
+                if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     emit.effects.push(reset_document_effect_now(&document));
                 }
             }
@@ -924,7 +926,7 @@ fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::Ar
     if bytes > MAX_WRITER_COMMAND_TEXT_BYTES {
         return Err("Writer text edit exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(bytes))
+    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, bytes))
 }
 
 fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> Result<(WriterSnapshot, Vec<WriterMutation>, WriterMutation), String> {
@@ -932,7 +934,7 @@ fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> R
     if writer_snapshot_retained_bytes(base) > WRITER_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Writer Artifact base exceeds its fixed retained preparation envelope".into());
     }
-    let inverse = crate::op::inverse_writer_mutation(base, &mutation);
+    let inverse = crate::op::inverse_writer_mutation(base, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
     let mut post = base.clone();
     crate::op::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
     Ok((post, inverse, mutation))
@@ -983,32 +985,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         let mutation = self.mutation.take().ok_or_else(|| "Writer Artifact preparation lost its mutation owner".to_string())?;
         let (post, inverse, forward) = prepare_writer_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Writer Artifact preparation lost its Store authority".to_string())?;
-        let id = format!("writer-artifact-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
-            id: id.clone(),
-            actor: Some(authority.actor().to_string()),
-            forwards: vec![forward],
-            inverse,
-            mutation_meta: vec![protocol::MutationMeta {
-                mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
-                dependencies: Vec::new(),
-                base_version: authority.base_applied_edit_count() as u64,
-                author_id: Some(protocol::ActorId(authority.actor().to_string())),
-                timestamp: authority.next_clock(),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
-                payload_hash: None,
-                semantic_kind: None,
-                label: None,
-                group_id: authority.group_id().map(str::to_owned),
-                origin: Default::default(),
-                transaction: None,
-            }],
-            description: self.description.take(), verb: None,
-            coalesce_key: None,
-            sequence_number: authority.next_sequence_number(),
-            started_at: String::new(),
-            finished_at: None,
-        };
+        let edit = authority.next_edit(forward, inverse);
         let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
@@ -1035,7 +1012,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1044,7 +1021,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Writer Artifact preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer Artifact preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -1112,9 +1089,12 @@ impl ArtifactEditor for WriterPlayApp {
         }
     }
 
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
+ Ok((||{
         crate::genesis_writer_child_pack(snapshot, slot, child_id)
-    }
+    
+})())
+}
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(Arc::new(WriterArtifactStorePreparationFactory))
@@ -1241,9 +1221,9 @@ impl ArtifactEditor for WriterPlayApp {
     /// every Actions-pane row and every chrome control died before reaching `handle`.
     /// `setEditorSetting` carries three payload types under one manifest id, so it selects on the
     /// `setting` key the way the `app_commands!` rows split on their wire keyword.
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<WriterCommand, Fault> {
-        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
-        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64));
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<WriterCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64));
         match action {
             "textEdit" => Ok(WriterCommand::TextEdit(text_edit::TextEdit { text: text_arg(&["text", "value"]).unwrap_or_default() })),
             "setText" => Ok(WriterCommand::SetText(set_text::SetText { text: text_arg(&["text", "value"]).unwrap_or_default() })),
@@ -1297,7 +1277,7 @@ impl ArtifactEditor for WriterPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("writer-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Writer command does not match its exact registered tool"));
         }
         let text = writer_text_owner(&request.snapshot);
         let view_state = request.context.view_state.clone();
@@ -1321,11 +1301,14 @@ impl ArtifactEditor for WriterPlayApp {
 
     /// 🕹️ `ast` domain: `HierarchyProvider::Topology` from the jack AST's own parent links — see
     /// `writer_ast_topology`'s doc comment.
-    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("ast".to_string(), writer_ast_topology(doc.snapshot));
         InteractionTopology { domains }
-    }
+    
+})())
+}
 
     /// 🎞️ `"text:out"` exports the writer document's current text as one "chapter" payload (see
     /// `writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended consumer. Falls through
@@ -1438,9 +1421,8 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
-        writer_context_menu_items(registry, text, is_de)
+        writer_context_menu_items(registry, text, view_state)
     }
 }
 //#endregion 🔖️WriterPlayApp

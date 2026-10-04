@@ -1,8 +1,8 @@
 use super::*;
 use crate::MapFeature;
 
-fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
-    dsl::DslValue::from(value)
+fn dsl_of(value: serde_json::Value) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::from(value)
 }
 
 #[semio_framework_async_macros::async_test]

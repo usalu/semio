@@ -20,8 +20,8 @@ use std::collections::HashSet;
 pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn error(message: impl Into<String>) -> store::TextError {
-    store::TextError::new(format!("gismap←geojson: {}", message.into()), dsl::TextSpan::at(1, 1))
+fn error(message: impl Into<String>) -> semio_framework_diagnostic::TextError {
+    semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gismap←geojson: {}", message.into()), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -112,7 +112,7 @@ pub fn gis_map_snapshot_from_geojson(features: &[GeoJsonFeature]) -> GisMapSnaps
     gis_map_snapshot_with_derived_children(families.document)
 }
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisMapSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisMapSnapshot, semio_framework_diagnostic::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|failure| error(failure.to_string()))?;
     let read = read_geojson_text(text).map_err(|failure| error(failure.to_string()))?;
     Ok(gis_map_snapshot_from_geojson(&read.features))

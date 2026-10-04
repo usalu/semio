@@ -53,7 +53,7 @@ fn fixture_state() -> World3dState {
         if let Some(granularity) = instance["interactionGranularityId"].as_str() {
             state.instance_interaction_granularity_ids.insert(id.clone(), granularity.to_string());
         }
-        instances.push(Instance3d { id, model, color: [1.0; 4], selected: false, hovered: false, material: Default::default() });
+        instances.push(Instance3d { component_source: None, id, model, color: [1.0; 4], selected: false, hovered: false, material: Default::default() });
     }
     state.draws.push(SceneDraw3d { mesh_key, mesh_version, instances, shadow_role: Default::default() });
     state
@@ -133,7 +133,7 @@ fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_
 
     let mut state = fixture_state();
     let initial = state.instance_interaction_ids.len() + state.instance_interaction_granularity_ids.len();
-    let mut retirement = World3dDynamicRetirement { phase: 5, blocked: None };
+    let mut retirement = World3dDynamicRetirement { phase: 6, blocked: None };
     let mut steps = 0;
     while !retirement.step(&mut state) {
         steps += 1;
@@ -209,7 +209,7 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
     state.interaction_objects.revision = 3;
     let mut results = WorldMarqueeResultPages::default();
     for instance in state.draws[0].instances.clone() {
-        let token = state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, &instance.id, None, instance.model, [0.0; 8]).expect("marquee object token");
+        let token = state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, &instance.id, None, instance.model, [0.0; 8], None).expect("marquee object token");
         assert!(results.push(WorldMarqueeResult::Object(token), instance.id.len()), "both rendered instances are admitted");
     }
     let gesture_state = WorldMarqueeGesture::new(3, 1, [0.0, 0.0]);

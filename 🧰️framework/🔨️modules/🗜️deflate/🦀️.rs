@@ -1,5 +1,5 @@
-//! 🗜️ First-party raw DEFLATE (RFC 1951) codec. Zero runtime dependency; `miniz_oxide` survives
-//! only as the `[dev-dependencies]` differential oracle, see the `🧪️Oracle` test region.
+//! 🗜️ First-party raw DEFLATE (RFC 1951) codec with owned Value refusal identities.
+//! `miniz_oxide` is the differential test oracle in the `🧪️Oracle` region.
 //! `inflate`/`Inflater` decompress anything `miniz_oxide::deflate::compress_to_vec` already
 //! produced (persisted `.spk`/`.spr` payloads must keep decoding). `compress` is a real LZ77 match
 //! finder over a single fixed-Huffman block (`BTYPE=1`) — not a stored-block fallback — so segment
@@ -7,9 +7,9 @@
 //! site (`📡️replication/⚙️codec`) already used `miniz_oxide::DataFormat::Raw`. See
 //! <https://www.rfc-editor.org/rfc/rfc1951>.
 
+use semio_framework_value::{ValueError,ValueRefusalKind};
 //#region 🔖️Errors
-/// 🚨️ Every fallible entry point in this module returns this — deliberately small since callers
-/// (`📡️replication`'s `PackError`) fold it into their own richer error type.
+/// 🚨️ Incremental inflate reports its closed syntax and output-limit causes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DeflateError {
     BadBlockType,
@@ -198,6 +198,7 @@ impl BitWriter {
 struct Huffman {
     counts: [u16; 16],
     symbols: [u16; 288],
+    complete: bool,
 }
 
 impl Huffman {
@@ -210,6 +211,13 @@ impl Huffman {
             counts[len as usize] += 1;
         }
         counts[0] = 0;
+        let mut available = 1i32;
+        for count in &counts[1..] {
+            available = available * 2 - i32::from(*count);
+            if available < 0 {
+                return Err(DeflateError::BadHuffmanCode);
+            }
+        }
         let mut offsets = [0u16; 16];
         for len in 1..16 {
             offsets[len] = offsets[len - 1] + counts[len - 1];
@@ -224,7 +232,11 @@ impl Huffman {
                 offsets[len as usize] += 1;
             }
         }
-        Ok(Self { counts, symbols })
+        Ok(Self { counts, symbols, complete: available == 0 })
+    }
+
+    fn valid_alphabet(&self, allow_empty: bool) -> bool {
+        self.complete || (self.counts[1] == 1 && self.counts[2..].iter().all(|&n| n == 0)) || (allow_empty && self.counts.iter().all(|&n| n == 0))
     }
 
     fn decode(&self, reader: &mut BitReader) -> Result<u16, DeflateError> {
@@ -283,6 +295,7 @@ pub struct RetainedInflateAllocationStep {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RetainedInflateAllocationError {
+    pub kind: ValueRefusalKind,
     pub allocated_bytes: usize,
     pub reason: &'static str,
 }
@@ -351,13 +364,18 @@ impl RetainedInflateHistory {
             return Ok(RetainedInflateAllocationStep::default());
         }
         if self.bytes.try_reserve_exact(exact).is_err() {
-            let fault = RetainedInflateAllocationError { allocated_bytes: self.allocated_bytes(), reason: "retained inflate history allocation failed" };
+            let fault = RetainedInflateAllocationError { kind: ValueRefusalKind::AllocationFailed, allocated_bytes: self.allocated_bytes(), reason: "retained inflate history allocation failed" };
             self.allocation_fault = Some(fault);
             return Err(fault);
         }
         let allocated_bytes = self.allocated_bytes();
-        if allocated_bytes < exact || allocated_bytes > maximum_bytes || allocated_bytes > self.maximum_allocation_bytes {
-            let fault = RetainedInflateAllocationError { allocated_bytes, reason: "retained inflate history allocation exceeded physical ceiling" };
+        if allocated_bytes < exact {
+            let fault = RetainedInflateAllocationError { kind: ValueRefusalKind::InvariantViolated, allocated_bytes, reason: "retained inflate history allocation below requested reservation" };
+            self.allocation_fault = Some(fault);
+            return Err(fault);
+        }
+        if allocated_bytes > maximum_bytes || allocated_bytes > self.maximum_allocation_bytes {
+            let fault = RetainedInflateAllocationError { kind: ValueRefusalKind::OwnershipLimit, allocated_bytes, reason: "retained inflate history allocation exceeded physical ceiling" };
             self.allocation_fault = Some(fault);
             return Err(fault);
         }
@@ -497,6 +515,11 @@ impl Inflater {
             InflateHistory::Cold(_) => 0,
             InflateHistory::Retained(history) => history.allocated_bytes(),
         }
+    }
+
+    /// 🧮️ Whole prefetched bytes remaining after the final end-of-block code.
+    pub fn terminal_unused_bytes(&self) -> Option<usize> {
+        matches!(self.phase, Phase::Done).then_some(self.reader.bits as usize / 8)
     }
 
     pub fn retained_history_ptr(&self) -> Option<usize> {
@@ -687,11 +710,17 @@ impl Inflater {
                     let hlit = self.reader.take(5) as usize + 257;
                     let hdist = self.reader.take(5) as usize + 1;
                     let hclen = self.reader.take(4) as usize + 4;
+                    if hlit > 286 {
+                        return Err(DeflateError::BadHuffmanCode);
+                    }
                     self.phase = Phase::DynamicClcLengths { read: 0, hclen, hlit, hdist, clc_lengths: [0u8; 19] };
                 }
                 Phase::DynamicClcLengths { read, hclen, hlit, hdist, mut clc_lengths } => {
                     if read == hclen {
                         let clc = Huffman::build(&clc_lengths)?;
+                        if !clc.complete {
+                            return Err(DeflateError::BadHuffmanCode);
+                        }
                         self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths: [0; 318], len: 0 };
                         continue;
                     }
@@ -704,8 +733,14 @@ impl Inflater {
                 }
                 Phase::DynamicCodeLengths { clc, hlit, hdist, mut lengths, len } => {
                     if len == hlit + hdist {
+                        if lengths[256] == 0 {
+                            return Err(DeflateError::BadHuffmanCode);
+                        }
                         let lit_len = Huffman::build(&lengths[..hlit])?;
                         let dist = Huffman::build(&lengths[hlit..hlit + hdist])?;
+                        if !lit_len.valid_alphabet(false) || !dist.valid_alphabet(true) {
+                            return Err(DeflateError::BadHuffmanCode);
+                        }
                         self.phase = Phase::DecodeSymbol { lit_len, dist };
                         continue;
                     }
@@ -871,17 +906,17 @@ pub struct DeflateEncodeProgress{pub phase:DeflateEncodePhase,pub completed:usiz
 
 /// 🧮️ The caller admits cumulative owned allocations and cancellation at physical work boundaries.
 pub trait DeflateEncodeControl{
-    fn admit(&mut self,bytes:usize)->Result<(),String>;
-    fn checkpoint(&mut self,progress:DeflateEncodeProgress)->Result<(),String>;
+    fn admit(&mut self,bytes:usize)->Result<(),ValueError>;
+    fn checkpoint(&mut self,progress:DeflateEncodeProgress)->Result<(),ValueError>;
 }
 
 /// 🛫️ Produces the exact ordinary fixed-Huffman stream under explicit ownership admission.
-pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Result<Vec<u8>,String>{
+pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Result<Vec<u8>,ValueError>{
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::ScanInput,completed:0,total:raw.len()})?;
-    if raw.len()>u32::MAX as usize{return Err("Deflate input exceeds position width".into())}
-    let output_limit=raw.len().checked_mul(9).and_then(|bytes|bytes.checked_add(17)).map(|bytes|bytes/8).ok_or("Deflate output capacity overflow")?;
-    let initialize_total=HASH_SIZE.checked_add(raw.len()).and_then(|slots|slots.checked_add(318)).ok_or("Deflate initialization overflow")?;
-    let owned=HASH_SIZE.checked_add(raw.len()).and_then(|slots|slots.checked_mul(size_of::<u32>())).and_then(|bytes|bytes.checked_add(318*size_of::<u16>())).and_then(|bytes|bytes.checked_add(output_limit)).ok_or("Deflate ownership overflow")?;
+    if raw.len()>u32::MAX as usize{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate input exceeds position width"))}
+    let output_limit=raw.len().checked_mul(9).and_then(|bytes|bytes.checked_add(17)).map(|bytes|bytes/8).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate output capacity overflow"))?;
+    let initialize_total=HASH_SIZE.checked_add(raw.len()).and_then(|slots|slots.checked_add(318)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate initialization overflow"))?;
+    let owned=HASH_SIZE.checked_add(raw.len()).and_then(|slots|slots.checked_mul(size_of::<u32>())).and_then(|bytes|bytes.checked_add(318*size_of::<u16>())).and_then(|bytes|bytes.checked_add(output_limit)).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate ownership overflow"))?;
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Initialize,completed:0,total:initialize_total})?;
     control.admit(owned)?;
     let mut initialized=0;
@@ -892,7 +927,7 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
     let mut prev=controlled_positions(raw.len(),control,&mut initialized,initialize_total)?;
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Initialize,completed:initialized,total:initialize_total})?;
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::WriteOutput,completed:0,total:output_limit})?;
-    let mut bytes=Vec::new();bytes.try_reserve_exact(output_limit).map_err(|_|"Deflate output allocation")?;
+    let mut bytes=Vec::new();bytes.try_reserve_exact(output_limit).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Deflate output allocation"))?;
     let mut writer=BitWriter{bytes,buffer:0,bits:0};writer.write_bits(1,1);writer.write_bits(1,2);
     let mut searched=0usize;let mut emitted=0usize;let mut i=0usize;
     while i<raw.len(){
@@ -927,31 +962,31 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::MatchSearch,completed:searched,total:0})?;
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::ScanInput,completed:i,total:raw.len()})?;
     writer.write_huffman_code(codes[256],lengths[256]);let bytes=writer.finish();
-    if bytes.len()>output_limit{return Err("Deflate output exceeded proved capacity".into())}
+    if bytes.len()>output_limit{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Deflate output exceeded proved capacity"))}
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::WriteOutput,completed:bytes.len(),total:output_limit})?;
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Finish,completed:bytes.len(),total:bytes.len()})?;Ok(bytes)
 }
 
-fn controlled_initialize_step<C:DeflateEncodeControl>(control:&mut C,completed:&mut usize,total:usize)->Result<(),String>{
+fn controlled_initialize_step<C:DeflateEncodeControl>(control:&mut C,completed:&mut usize,total:usize)->Result<(),ValueError>{
     *completed+=1;if *completed%256==0{control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Initialize,completed:*completed,total})?;}Ok(())
 }
 
-fn controlled_search_step<C:DeflateEncodeControl>(control:&mut C,completed:&mut usize)->Result<(),String>{
-    *completed=completed.checked_add(1).ok_or("Deflate match work overflow")?;
+fn controlled_search_step<C:DeflateEncodeControl>(control:&mut C,completed:&mut usize)->Result<(),ValueError>{
+    *completed=completed.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate match work overflow"))?;
     if *completed%256==0{control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::MatchSearch,completed:*completed,total:0})?;}Ok(())
 }
 
-fn controlled_codes<C:DeflateEncodeControl>(lengths:&[u8],control:&mut C,completed:&mut usize,total:usize)->Result<Vec<u16>,String>{
+fn controlled_codes<C:DeflateEncodeControl>(lengths:&[u8],control:&mut C,completed:&mut usize,total:usize)->Result<Vec<u16>,ValueError>{
     let mut counts=[0u16;16];let mut next=[0u16;16];for &length in lengths{if length>0{counts[length as usize]+=1;}}
     let mut code=0u16;for bits in 1..16{code=(code+counts[bits-1])<<1;next[bits]=code;}
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Initialize,completed:*completed,total})?;
-    let mut codes=Vec::new();codes.try_reserve_exact(lengths.len()).map_err(|_|"Deflate code allocation")?;
+    let mut codes=Vec::new();codes.try_reserve_exact(lengths.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Deflate code allocation"))?;
     for &length in lengths{let code=if length==0{0}else{let code=next[length as usize];next[length as usize]+=1;code};codes.push(code);controlled_initialize_step(control,completed,total)?;}Ok(codes)
 }
 
-fn controlled_positions<C:DeflateEncodeControl>(count:usize,control:&mut C,completed:&mut usize,total:usize)->Result<Vec<u32>,String>{
+fn controlled_positions<C:DeflateEncodeControl>(count:usize,control:&mut C,completed:&mut usize,total:usize)->Result<Vec<u32>,ValueError>{
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::Initialize,completed:*completed,total})?;
-    let mut positions=Vec::new();positions.try_reserve_exact(count).map_err(|_|"Deflate position allocation")?;
+    let mut positions=Vec::new();positions.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Deflate position allocation"))?;
     for _ in 0..count{positions.push(u32::MAX);controlled_initialize_step(control,completed,total)?;}Ok(positions)
 }
 
@@ -1041,6 +1076,9 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
     writer.write_huffman_code(lit_len_codes[256], lit_len_lengths[256]);
     writer.finish()
 }
+#[path="🫳️measure/🦀️.rs"]
+mod measurement;
+pub use measurement::DeflateMeasure;
 //#endregion 🔖️Deflate
 
 #[path = "🎒️zip/🦀️.rs"]

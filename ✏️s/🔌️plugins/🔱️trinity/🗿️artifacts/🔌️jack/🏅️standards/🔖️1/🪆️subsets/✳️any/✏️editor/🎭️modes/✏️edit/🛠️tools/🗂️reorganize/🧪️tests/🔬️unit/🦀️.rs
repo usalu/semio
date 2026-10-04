@@ -37,12 +37,18 @@ fn number(value: &Value) -> f64 {
     value.as_f64().expect("fixture number")
 }
 
-fn nakagin() -> JackSnapshot {
-    crate::editor::jack::default_fixture()
+/// 🗼️ The curated Nakagin example's content child.
+fn nakagin() -> SemioGraphSnapshot {
+    crate::jack_content_for_handle(&crate::editor::jack::default_fixture().content).expect("curated example content child").snapshot().clone()
 }
 
-fn node_positions(document: &JackSnapshot) -> BTreeMap<String, (f64, f64)> {
-    crate::jack_working_scene(document).nodes.into_iter().map(|node| (node.id, (node.x, node.y))).collect()
+/// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).
+fn node_positions(app: &JackApp) -> BTreeMap<String, (f64, f64)> {
+    use store::{ArtifactPack, SpaceMember};
+    let snapshot = app.snapshot().expect("Jack parent projection");
+    let member = ::semio_framework_async::poll::resolve_ready(app.child_store("content", &snapshot.content.child_id)).expect("Jack content child");
+    let bytes = ::semio_framework_async::poll::resolve_ready(member.document_pack_bytes()).expect("Jack content child pack");
+    SemioGraphSnapshot::decode_pack(&bytes).expect("Jack content child snapshot").nodes.into_iter().map(|node| (node.id.value, (node.position.x, node.position.y))).collect()
 }
 
 /// ⏯️ The tool declares exactly the shared layout run over the graph's 120-iteration budget, stands in the edit mode,
@@ -54,7 +60,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let definition = definition();
     assert_eq!((definition.id.as_str(), definition.icon_id.as_str()), (tool["id"].as_str().expect("id"), tool["iconId"].as_str().expect("icon")));
     let run = definition.run.as_ref().expect("reorganize declares run");
-    assert_eq!(run, &layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)));
+    assert_eq!(run, &semio_framework_tool_run::ToolRunDefinition { member: Some(LAYOUT_RUN_MEMBER.into()), ..layout_run_definition(JobKindId::new(LAYOUT_RUN_JOB)) });
     let json = serde_json::to_value(run).expect("run serializes");
     for key in ["mutating", "rebase", "reconfigure", "trace", "runJob"] {
         assert_eq!(json[key], tool[key], "{key}");
@@ -79,10 +85,9 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
 fn jack_graph_maps_to_the_language_neutral_layout_graph() {
     let fixture = fixture();
     let mapping = &fixture["mapping"];
-    let nodes = mapping["nodes"].as_array().expect("nodes").iter().map(|node| Node { id: node["id"].as_str().expect("id").into(), kind: "Piece".into(), name: String::new(), x: number(&node["x"]), y: number(&node["y"]), width: number(&node["width"]), height: number(&node["height"]), properties: Default::default(), ports: Vec::new() }).collect();
-    let edges = mapping["edges"].as_array().expect("edges").iter().map(|edge| Edge { id: edge["id"].as_str().expect("id").into(), kind: "Connection".into(), source: edge["source"].as_str().expect("source").into(), target: edge["target"].as_str().expect("target").into(), properties: Default::default() }).collect();
-    let document = JackSnapshot { content: crate::jack_content_child_with_owner(nodes, edges), ..crate::empty_trinity_graph_fixture() };
-    let layout = layout_graph(&document);
+    let nodes: Vec<Node> = mapping["nodes"].as_array().expect("nodes").iter().map(|node| Node { id: node["id"].as_str().expect("id").into(), kind: "Piece".into(), name: String::new(), x: number(&node["x"]), y: number(&node["y"]), width: number(&node["width"]), height: number(&node["height"]), properties: Default::default(), ports: Vec::new() }).collect();
+    let edges: Vec<Edge> = mapping["edges"].as_array().expect("edges").iter().map(|edge| Edge { id: edge["id"].as_str().expect("id").into(), kind: "Connection".into(), source: edge["source"].as_str().expect("source").into(), target: edge["target"].as_str().expect("target").into(), properties: Default::default() }).collect();
+    let layout = layout_graph(&crate::jack_content_snapshot_from_working(&nodes, &edges));
     let expected = &mapping["expected"];
     let expected_nodes = expected["nodes"].as_array().expect("expected nodes");
     assert_eq!(layout.node_ids, expected_nodes.iter().map(|node| node["id"].as_str().expect("id").to_string()).collect::<Vec<_>>());
@@ -122,10 +127,10 @@ fn reorganize_run_over_the_nakagin_example_matches_the_fixture() {
     assert_eq!(recording.ops.len() as u64, law["movedNodes"].as_u64().expect("moved"), "finalize publishes exactly one op per moved node");
     let mut expected_entities = std::collections::BTreeSet::new();
     for bytes in &recording.ops {
-        let TrinityGraphMutation::MoveNode(payload) = protocol::OpBinary::decode_op(bytes).expect("move op decodes") else { panic!("only move-node ops are provisional") };
-        let index = layout.node_ids.iter().position(|id| *id == payload.id).expect("moved node is laid out");
-        assert_eq!((payload.x, payload.y), (positions[index].x, positions[index].y), "the op carries the final position");
-        expected_entities.insert(layout_run_entity(&payload.id));
+        let SemioGraphMutation::MoveNode(payload) = <SemioGraphMutation as protocol::OpBinary>::decode_op(bytes).expect("move op decodes") else { panic!("only move-node ops are provisional") };
+        let index = layout.node_ids.iter().position(|id| *id == payload.id.value).expect("moved node is laid out");
+        assert_eq!((payload.new_position.x, payload.new_position.y), (positions[index].x, positions[index].y), "the op carries the final position");
+        expected_entities.insert(layout_run_entity(&payload.id.value));
     }
     assert_eq!(recording.entity_set(), expected_entities, "the provisional entity set is the moved nodes");
     assert_eq!(serde_json::to_value(&verdicts).expect("verdicts"), law["finalVerdicts"]);
@@ -177,7 +182,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_nakagin_example() 
 
 fn tool_run_action(app: &mut JackApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    semio_framework::io::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &JackApp) -> Option<&'static str> {
@@ -191,26 +196,26 @@ fn pump_until(app: &mut JackApp, what: &str, done: impl Fn(&JackApp) -> bool) {
             return;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        semio_framework::io::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
-        let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion()).expect("completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
         let _ = app.take_typed_operation_ui_scope();
     }
     panic!("{what} never settled; state {:?}", run_state(app));
 }
 
 fn history_len(app: &mut JackApp) -> usize {
-    semio_framework::io::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
+    ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("history").upserts.len()
 }
 
 fn nakagin_app() -> JackApp {
-    let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }));
-    semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+    let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(|| App { definition: create_trinity_jack_app(), examples: Vec::new() }));
+    ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
     app
 }
 
@@ -228,21 +233,21 @@ fn run_arguments() -> [(&'static str, DslValue); 2] {
 fn reorganize_start_complete_finalize_is_one_undo_entry() {
     let law = &fixture()["lifecycle"];
     let mut app = nakagin_app();
-    let before = node_positions(&app.snapshot().expect("snapshot"));
+    let before = node_positions(&app);
     let history = history_len(&mut app);
     start(&mut app);
     pump_until(&mut app, "reorganize completes", |app| run_state(app) == Some("complete"));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "a complete run has committed nothing");
+    assert_eq!(node_positions(&app), before, "a complete run has committed nothing");
     assert_eq!(history_len(&mut app), history);
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty()), "the run published trace pages");
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
-    let after = node_positions(&app.snapshot().expect("snapshot"));
+    let after = node_positions(&app);
     assert_eq!(after.keys().collect::<Vec<_>>(), before.keys().collect::<Vec<_>>());
     assert_ne!(after, before, "finalize published the laid out positions");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
-    assert_eq!(node_positions(&app.snapshot().expect("snapshot")), before, "one undo restores every committed position");
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
+    assert_eq!(node_positions(&app), before, "one undo restores every committed position");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -251,15 +256,17 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
 fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     let law = &fixture()["lifecycle"];
     let mut app = nakagin_app();
-    let pack = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let pack = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
+    let positions = node_positions(&app);
     let history = history_len(&mut app);
     start(&mut app);
     let iterations = law["abortAfterIterations"].as_u64().expect("iterations");
     pump_until(&mut app, "provisional moves exist", |app| app.tool_run_presence().is_some_and(|presence| presence.completed >= iterations));
     assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     pump_until(&mut app, "abort settles", |app| run_state(app) == Some("aborted"));
-    let after = semio_framework::io::resolve_ready(app.document_pack()).expect("pack");
+    let after = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
+    assert_eq!(node_positions(&app), positions, "abort leaves the content child untouched");
     assert_eq!(history_len(&mut app), history);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

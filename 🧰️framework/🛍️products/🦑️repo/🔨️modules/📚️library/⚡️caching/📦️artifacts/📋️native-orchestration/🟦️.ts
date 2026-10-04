@@ -1,3 +1,4 @@
+import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -39,17 +40,22 @@ export class NativeScript extends BundleScript {
     const index = args.indexOf("--manifest");
     const manifest = index >= 0 ? args[index + 1] : undefined;
     if(tool==="owner-command"){
-      const cwdIndex=args.indexOf("--cwd"), separator=args.indexOf("--"), command=args[separator+1];
-      if(index!==1||cwdIndex!==3||separator!==5||!manifest||!args[cwdIndex+1]||!command)throw Error("native owner-command --manifest <Cargo.toml> --cwd <directory> -- <command> <args>");
-      const path=resolve(this.repoRoot,manifest),cwd=resolve(this.repoRoot,args[cwdIndex+1]!);
+      const request=nativeOwnerTestManifestRequestV1(args.slice(1)),path=resolve(this.repoRoot,request.manifest),cwd=resolve(this.repoRoot,request.cwd);
       prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",path],cwd);
       const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
       const env: Record<string,string|undefined>={...process.env,SEMIO_VITEST_POLICY:JSON.stringify(repositoryVitestPolicyV1(cwd)),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd)),SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd))};
       delete env.SEMIO_CARGO_TEST_POLICY;
       if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd)) });
+      const policies=request.testManifests.map(manifest=>{
+        const selected=resolve(this.repoRoot,manifest);
+        prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",selected],cwd);
+        return repositoryCargoTestPolicyV1(selected,cwd);
+      });
+      if(new Set(policies.map(policy=>policy.manifestPath)).size!==policies.length)throw Error("Duplicate native test manifest authority");
+      env.SEMIO_CARGO_TEST_POLICIES=JSON.stringify(policies);
       if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,{SEMIO_WASM_BUILD_POLICY:JSON.stringify(repositoryWasmBuildPolicyV1(cwd))});
-      await runOwnedCommand(command,args.slice(separator+2),cwd,"native:owner-command",0,{env});
+      await runOwnedCommand(request.command,[...request.args],cwd,"native:owner-command",0,{env,onProgress:line=>process.stderr.write(`${line}\n`)});
       return;
     }
     if (tool === "cargo" && operation === "metadata") {

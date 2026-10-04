@@ -9,12 +9,12 @@ pub fn register() {}
 /// `pack::JsonValue` directly (stdio's RFC8259 rework) — bridge via `JsonSnapshot::from_value`,
 /// which now accepts `pack::JsonValue` too (`impl From<pack::JsonValue> for JsonValue`, stdio's
 /// own snapshot component).
-pub fn serialize(snapshot: &SHomeSnapshot) -> Result<JsonSnapshot, store::TextError> {
+pub fn serialize(snapshot: &SHomeSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = pack::json_from_dsl_value(&dsl::ToValue::to_value(snapshot));
+    let value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot));
     Ok(JsonSnapshot::from_value(value))
 }
 
-pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &SHomeSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     Ok(write_json_pretty(&serialize(snapshot)?.value).into_bytes())
 }

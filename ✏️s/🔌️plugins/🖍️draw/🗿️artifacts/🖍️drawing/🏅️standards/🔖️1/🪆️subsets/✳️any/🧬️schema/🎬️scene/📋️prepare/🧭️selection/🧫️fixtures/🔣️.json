@@ -1,0 +1,449 @@
+[
+  {
+    "name": "unselected unlocked leaf",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "selected ordinary group",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": 0
+    }
+  },
+  {
+    "name": "locked descendant belongs to selected unlocked group",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 2,
+    "selectedPaths": [
+      [
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": 0
+    }
+  },
+  {
+    "name": "locked selected group blocks its whole subtree",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 1,
+    "selectedPaths": [
+      [
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "a locked ancestor blocks selected child",
+    "sourcePath": [
+      0,
+      1,
+      2
+    ],
+    "lockedAncestors": 1,
+    "selectedPaths": [
+      [
+        0,
+        1
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "locked selected leaf contributes no handles",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 2,
+    "selectedPaths": [
+      [
+        0,
+        1
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "outermost selected ancestor wins regardless of selection order",
+    "sourcePath": [
+      0,
+      1,
+      2
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": 2
+    }
+  },
+  {
+    "name": "matching indices at another depth do not match",
+    "sourcePath": [
+      0,
+      1,
+      2
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "sibling selection never includes a leaf",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        0,
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "repeated selected addresses choose stable first index",
+    "sourcePath": [
+      0,
+      1
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        0
+      ],
+      [
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": 0
+    }
+  },
+  {
+    "name": "unsigned deepest lock below selected ancestor",
+    "sourcePath": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "lockedAncestors": 2147483648,
+    "selectedPaths": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": 0
+    }
+  },
+  {
+    "name": "unsigned deepest own lock refuses own handles",
+    "sourcePath": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "lockedAncestors": 2147483648,
+    "selectedPaths": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "all locked depths refuse every selection prefix",
+    "sourcePath": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "lockedAncestors": 4294967295,
+    "selectedPaths": [
+      [
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "expected": {
+      "pickable": false,
+      "boundsSelection": null
+    }
+  },
+  {
+    "name": "unsigned maximum layer address participates normally",
+    "sourcePath": [
+      65535,
+      65535
+    ],
+    "lockedAncestors": 0,
+    "selectedPaths": [
+      [
+        65535
+      ]
+    ],
+    "expected": {
+      "pickable": true,
+      "boundsSelection": 0
+    }
+  }
+]

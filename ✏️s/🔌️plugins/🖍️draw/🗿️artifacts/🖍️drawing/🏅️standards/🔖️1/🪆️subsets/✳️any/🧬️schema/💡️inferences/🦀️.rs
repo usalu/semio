@@ -6,7 +6,6 @@
 
 use crate::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::compute_drawing_topology;
 //#region 🔖️Inference
@@ -15,7 +14,7 @@ use super::topology::compute_drawing_topology;
 /// real tree (`Group.children: Vec<DrawingLayerNode>`), so `topology` here is a real pre-order
 /// traversal of that structural nesting: `topoOrder`/`depth`/`nodeCount` plus `cycleFree`, which is
 /// always `true` — a Rust `Vec<Self>` embedded by value cannot express a structural cycle.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.drawing.inference")]
 pub struct DrawingInference {
@@ -24,8 +23,11 @@ pub struct DrawingInference {
 }
 
 impl protocol::Inference<DrawingSnapshot> for DrawingInference {
-    fn infer(snapshot: &DrawingSnapshot) -> Self {
+    fn infer(snapshot: &DrawingSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+        Ok({
         Self { topology: compute_drawing_topology(snapshot) }
+    
+        })
     }
 }
 
@@ -33,7 +35,9 @@ impl protocol::Inference<DrawingSnapshot> for DrawingInference {
 /// `DrawingSnapshot::default()`'s `layers` field ever stops being empty.
 impl Default for DrawingInference {
     fn default() -> Self {
-        <Self as protocol::Inference<DrawingSnapshot>>::infer(&DrawingSnapshot::default())
+        let snapshot = &DrawingSnapshot::default();
+
+        Self { topology: compute_drawing_topology(snapshot) }
     }
 }
 
@@ -49,13 +53,6 @@ impl protocol::InferenceSpec<DrawingSnapshot> for DrawingInference {
     }
 }
 //#endregion 🔖️Inference
-
-//#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::DrawingInferrer {
-    type Snapshot = DrawingSnapshot;
-    type Inference = DrawingInference;
-}
-//#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.draw.drawing.inference`'s facet leaves into the OS-wide inference catalog — call

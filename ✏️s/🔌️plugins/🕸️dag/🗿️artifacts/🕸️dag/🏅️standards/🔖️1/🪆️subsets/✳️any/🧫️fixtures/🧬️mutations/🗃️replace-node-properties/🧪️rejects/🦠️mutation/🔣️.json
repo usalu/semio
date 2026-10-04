@@ -1,7 +1,0 @@
-{
-  "mutation": "replaceNodeProperties",
-  "id": "node-a",
-  "newProperties": {
-    "units": "mm"
-  }
-}

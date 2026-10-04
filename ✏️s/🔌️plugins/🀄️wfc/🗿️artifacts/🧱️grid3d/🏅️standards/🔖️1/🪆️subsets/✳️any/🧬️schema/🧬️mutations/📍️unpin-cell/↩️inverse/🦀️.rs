@@ -4,9 +4,12 @@
 use crate::mutations::Grid3dMutation;
 use crate::schema::snapshot::*;
 
-pub fn inverse(payload: &super::UnpinCell, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
+pub fn inverse(payload: &super::UnpinCell, base: &Grid3dSnapshot) -> Result<Vec<Grid3dMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     match pinned_index(base, payload.x, payload.y, payload.z) {
         Some(index) => vec![crate::mutations::pin_cell(base.pinned[index].clone())],
         None => Vec::new(),
     }
+
+    })())
 }

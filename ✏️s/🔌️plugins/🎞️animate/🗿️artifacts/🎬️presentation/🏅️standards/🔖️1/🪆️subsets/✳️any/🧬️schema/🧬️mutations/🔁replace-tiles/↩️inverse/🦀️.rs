@@ -5,8 +5,11 @@ use crate::PresentationSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.tiles` wholesale — captured from pre-state, never from the applied diff.
-pub fn inverse(_payload: &ReplaceTiles, base: &PresentationSnapshot) -> Vec<PresentationMutation> {
+pub fn inverse(_payload: &ReplaceTiles, base: &PresentationSnapshot) -> Result<Vec<PresentationMutation>, semio_framework_value::ValueError> {
+    Ok((|| {
     let (_, tiles) = crate::presentation_working_scene(base);
     vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })]
+
+    })())
 }
 //#endregion 🔹Inverse

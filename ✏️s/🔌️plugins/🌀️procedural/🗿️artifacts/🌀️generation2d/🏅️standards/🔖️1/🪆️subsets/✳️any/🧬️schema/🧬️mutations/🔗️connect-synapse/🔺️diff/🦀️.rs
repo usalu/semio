@@ -16,7 +16,7 @@ pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> pro
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Target widget \"{}\" does not exist.", synapse.to), [synapse.to.clone()]);
     }
     if base.host_snapshot.synapses.iter().any(|entry| entry.from == synapse.from && entry.from_port == synapse.from_port && entry.to == synapse.to && entry.to_port == synapse.to_port) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel synapses are not allowed.", synapse.from, synapse.to));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel synapses are not allowed.", synapse.from, synapse.to));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(payload.index, synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

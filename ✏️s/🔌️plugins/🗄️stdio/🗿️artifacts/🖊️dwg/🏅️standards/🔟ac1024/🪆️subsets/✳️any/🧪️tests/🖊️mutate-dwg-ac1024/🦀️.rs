@@ -200,7 +200,7 @@ mod subject {
         let original = project_dwg(&input)?;
         let base = decode_dwg(&input)?;
         let mut snapshot = decode_dwg(&apply_and_encode(&input, &spec)?)?;
-        for step in mutation_inverse(&mutation_of(&spec)?, &base) {
+        for step in mutation_inverse(&mutation_of(&spec)?, &base).expect("valid retained mutation inverse fixture") {
             apply_mutation_checked(&mut snapshot, &step)?;
         }
         let restored = encode_dwg(&snapshot).map_err(|error| format!("encode_dwg failed: {error}"))?;

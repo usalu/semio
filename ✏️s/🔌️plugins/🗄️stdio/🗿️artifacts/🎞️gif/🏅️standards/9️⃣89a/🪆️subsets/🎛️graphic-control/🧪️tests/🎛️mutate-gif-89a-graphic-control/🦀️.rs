@@ -124,7 +124,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec)?;
         let mut mutated = original.clone();
         apply_gif_mutation(&mut mutated, &mutation);
-        for inverse in mutation_inverse(&mutation, &original) {
+        for inverse in mutation_inverse(&mutation, &original).expect("valid retained mutation inverse fixture") {
             apply_gif_mutation(&mut mutated, &inverse);
         }
         let bytes = encode_gif(&mutated).map_err(|error| format!("encode_gif failed: {error}"))?;

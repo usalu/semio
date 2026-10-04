@@ -1,42 +1,17 @@
 #!/usr/bin/env python3
-"""📖️ An INDEPENDENT second implementation of the `s.playbook.playbook` document and its nine typed
-mutations, in Python, serving as this case's differential oracle.
+"""📖️ An INDEPENDENT second implementation of the `s.playbook.playbook` parent document and its one parent-lane mutation,
+`change-title`, in Python, serving as this case's differential oracle.
 
-**Why a second implementation and not a third-party library.** A `playbook` document is a HANDLE
-RECORD over a step/block programme: the snapshot itself carries only `schema`, `id`, `version`,
-`title` and two composed child handles (`document`, `flow`), while the steps and blocks the vocabulary
-addresses live in a WORKING SCENE inside the child. No form or checklist format models a programme
-whose content is a child artifact addressed by content, and none of them reads `.dsl.semio`. That a
-semio-native mutation algebra IS adjudicable was settled in this same wave by the fifteen `📕️norm`
-references and the nineteen `🧿️semio` ones.
+**Why a second implementation and not a third-party library.** A `playbook` document is a HANDLE RECORD: the snapshot carries
+`schema`, `id`, `version`, `title` and ONE composed child handle (`flow`), while the steps and blocks live in that child and are
+edited only on its own lane (design §20.15 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). No form or checklist format
+models a programme whose content is a child artifact, and none of them reads `.dsl.semio`.
 
-**What it was written from.**
+**What it was written from.** ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` (the snapshot's members) and the
+committed `(before, mutation, after, outcome)` vector. **No Rust was read to write this.**
 
-* ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` — the snapshot's members.
-* rules 1, 2 and 3 of
-  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
-* the nine committed `(before, mutation, after, outcome)` vectors AND the `scene` array each scenario
-  carries in its own doc string — which is what makes this case adjudicable at all: the scene is the
-  child's content, and without it no reader could tell whether `s-archive` exists.
-
-**No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
-
-**WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than implied.** EIGHT of the nine
-committed vectors leave the snapshot BYTE-IDENTICAL, because eight of the nine kinds address records
-that live in the child scene and not in this document. What each of those vectors really pins is a
-DIAGNOSTIC — a `mutation.no-op` warning or a `mutation.target-missing` refusal — and the reference
-derives that diagnostic from the scene rather than reading it off the committed outcome, which is the
-only way the comparison says anything. Only `change-title` moves the document. So this case's evidence
-is one applied mutation and eight diagnostics; no committed vector in it exercises an
-add/remove/move/replace that SUCCEEDS.
-
-**A CROSS-CASE DIVERGENCE the reference surfaced.** `s.forms.form` is the same shape with the same
-verbs, and the two subsets answer the same situation differently: a duplicate step id is an APPLIED
-`mutation.no-op` here (`add-step`) and a REJECTED `mutation.duplicate-id` there (`create-step`); a
-block added to a step that does not exist is `mutation.target-missing` here (`add-block`) and
-`mutation.invariant` there (`create-block`). Neither divergence is stated anywhere; both are visible
-only because one reference was written against both surfaces.
+The child-leaf builders the step/block verbs use are pinned separately by the language-neutral vectors
+``🗿️artifacts/📖️playbook/🧫️fixtures/🧫️child-leaves/🔣️.json``, written by another independent Python implementation.
 """
 
 # region 🔖️Imports
@@ -49,125 +24,40 @@ from semio_repo_test import Adapter, Outcome
 
 
 # region 🔖️Vocabulary
-REQUIRED = ("schema", "id", "version", "document", "flow")
-"""🗂️ The members every committed playbook snapshot carries. `title` is nullable and always present in
-the committed vectors, but is written by `change-title` and so is checked rather than required."""
+REQUIRED = ("schema", "id", "version", "flow")
+"""🗂️ The members every committed playbook snapshot carries; `title` is nullable and written by `change-title`."""
 
 MEMBERS = REQUIRED + ("title",)
 
-KINDS = ("add-step", "remove-step", "move-step", "add-block", "remove-block", "move-block", "replace-block", "update-step", "change-title")
+KINDS = ("change-title",)
 """🏷️ Every kind the catalog declares, in its declared order."""
 
-
-def tag_of(kind):
-    """🔤️ The internally tagged `mutation` discriminator of a kind — lowerCamelCase of its words."""
-    head, *rest = kind.split("-")
-    return head + "".join(word[:1].upper() + word[1:] for word in rest)
-
-
-TAGS = {kind: tag_of(kind) for kind in KINDS}
+TAGS = {"change-title": "changeTitle"}
+"""🔤️ The internally tagged `mutation` discriminator of each kind."""
 
 NO_OP = "mutation.no-op"
-TARGET_MISSING = "mutation.target-missing"
-"""🚨️ The two diagnostic codes this subset's committed vectors raise."""
+"""🚨️ The diagnostic a title change to the current title raises."""
 # endregion 🔖️Vocabulary
 
 
-# region 🔖️Scene
-def step_at(scene, identity):
-    """🔎️ The index of a step in the working scene, or `None`."""
-    for at, step in enumerate(scene):
-        if step["id"] == identity:
-            return at
-    return None
-
-
-def block_at(step, identity):
-    """🔎️ The index of a block inside one step, or `None`."""
-    for at, block in enumerate(step.get("blocks", [])):
-        if block["id"] == identity:
-            return at
-    return None
-
-
-def numbers_equal(left, right):
-    """🔢 Two committed payload values compared as the wire compares them: a scene written `1` and a
-    payload written `1.0` are the same number, which is what makes `replace-block`'s committed no-op a
-    no-op at all."""
-    if isinstance(left, dict) and isinstance(right, dict):
-        return set(left) == set(right) and all(numbers_equal(left[key], right[key]) for key in left)
-    if isinstance(left, list) and isinstance(right, list):
-        return len(left) == len(right) and all(numbers_equal(one, other) for one, other in zip(left, right))
-    if isinstance(left, bool) or isinstance(right, bool):
-        return left is right
-    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-        return float(left) == float(right)
-    return left == right
-# endregion 🔖️Scene
-
-
 # region 🔖️Verbs
-def diagnose(kind, payload, scene):
-    """🚦️ The diagnostic this kind raises against this working scene, derived rather than read off the
-    committed outcome. `None` means the verb applies with nothing to say."""
-    if kind == "add-step":
-        return (NO_OP, None) if step_at(scene, payload["step"]["id"]) is not None else (None, None)
-    if kind == "remove-step":
-        return (None, None) if step_at(scene, payload["stepId"]) is not None else (TARGET_MISSING, [payload["stepId"]])
-    if kind == "move-step":
-        at = step_at(scene, payload["stepId"])
-        if at is None:
-            return (TARGET_MISSING, [payload["stepId"]])
-        return (NO_OP, None) if at == payload["index"] else (None, None)
-    if kind == "add-block":
-        at = step_at(scene, payload["stepId"])
-        return (None, None) if at is not None else (TARGET_MISSING, [payload["stepId"]])
-    if kind == "remove-block":
-        at = step_at(scene, payload["stepId"])
-        if at is None:
-            return (TARGET_MISSING, [payload["stepId"]])
-        held = block_at(scene[at], payload["blockId"])
-        return (None, None) if held is not None else (TARGET_MISSING, [payload["stepId"], payload["blockId"]])
-    if kind == "move-block":
-        if step_at(scene, payload["fromStepId"]) is None:
-            return (TARGET_MISSING, [payload["fromStepId"]])
-        if step_at(scene, payload["toStepId"]) is None:
-            return (TARGET_MISSING, [payload["toStepId"]])
-        return (None, None)
-    if kind == "replace-block":
-        at = step_at(scene, payload["stepId"])
-        if at is None:
-            return (TARGET_MISSING, [payload["stepId"]])
-        held = block_at(scene[at], payload["block"]["id"])
-        if held is None:
-            return (TARGET_MISSING, [payload["stepId"], payload["block"]["id"]])
-        return (NO_OP, None) if numbers_equal(scene[at]["blocks"][held], payload["block"]) else (None, None)
-    if kind == "update-step":
-        at = step_at(scene, payload["stepId"])
-        if at is None:
-            return (TARGET_MISSING, [payload["stepId"]])
-        step = scene[at]
-        unchanged = step.get("title") == payload.get("title") and step.get("description") == payload.get("description")
-        return (NO_OP, None) if unchanged else (None, None)
+def diagnose(kind, payload, document):
+    """🚦️ The diagnostic this kind raises against this document, derived rather than read off the committed outcome."""
     if kind == "change-title":
-        return (None, None)
+        return (NO_OP, None) if payload.get("newTitle") == document.get("title") else (None, None)
     raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
 
 
-def apply_mutation(document, kind, payload, scene):
-    """🦠️ Applies one kind to the SNAPSHOT. Eight of the nine kinds address the child scene and cannot
-    move a document that holds only handles, so they answer it unchanged; `change-title` is the one
-    that writes a member this document really carries."""
+def apply_mutation(document, kind, payload):
+    """🦠️ Applies one kind to the snapshot: `change-title` writes the title member and nothing else."""
     document = copy.deepcopy(document)
     if kind == "change-title":
-        document["title"] = payload["newTitle"]
+        document["title"] = payload.get("newTitle")
     return document
 
 
-def inverse_mutation(document, kind, payload, scene):
-    """↩️ The kind's OWN inverse over the snapshot. A verb that could not move the snapshot has no
-    inverse to express here — which is exactly why this case's inverse scenarios establish so little,
-    and why that is said out loud rather than left to be inferred from a green row."""
+def inverse_mutation(document, kind, payload):
+    """↩️ The kind's OWN inverse over the snapshot: a title change back to the base title."""
     if kind == "change-title":
         return [(kind, {"newTitle": document.get("title")})]
     return []
@@ -183,13 +73,12 @@ def declared(outcome):
 
 
 def diagnoses_as_committed(kind, produced, outcome):
-    """⚖️ The derived diagnostic against the committed one — status, code and path. This is the whole
-    of what eight of the nine vectors pin, so it is asserted before anything else."""
+    """⚖️ The derived diagnostic against the committed one — status, code and path — asserted before anything else."""
     status, code, path = declared(outcome)
     derived_code, derived_path = produced
-    derived_status = "rejected" if derived_code == TARGET_MISSING else "no-op" if derived_code == NO_OP else "applied"
+    derived_status = "no-op" if derived_code == NO_OP else "applied"
     if (derived_status, derived_code) != (status, code):
-        raise AssertionError("mutate-%s: this implementation derives %r/%r from the scene, the committed 🎯️outcome vector declares %r/%r" % (kind, derived_status, derived_code, status, code))
+        raise AssertionError("mutate-%s: this implementation derives %r/%r from the document, the committed 🎯️outcome vector declares %r/%r" % (kind, derived_status, derived_code, status, code))
     if derived_path is not None and path is not None and derived_path != path:
         raise AssertionError("mutate-%s: this implementation derives the path %r, the committed vector declares %r" % (kind, derived_path, path))
 
@@ -209,22 +98,20 @@ def restores(kind, restored, original):
 
 
 def validate(document, where):
-    """✅️ Holds the document to the shape the committed vectors agree on: the five always-present
-    members, `title` only beyond them, and two well-formed composed child handles."""
+    """✅️ Holds the document to the shape the committed vectors agree on: the four always-present members, `title` only beyond
+    them, and one well-formed composed `flow` child handle."""
     if not set(REQUIRED) <= set(document):
         raise AssertionError("%s: a playbook document must carry %r, found %r" % (where, sorted(REQUIRED), sorted(document)))
     if not set(document) <= set(MEMBERS):
         raise AssertionError("%s: a playbook document may carry only %r, found %r" % (where, sorted(MEMBERS), sorted(document)))
-    for member in ("document", "flow"):
-        if set(document[member]) != {"childId", "target"}:
-            raise AssertionError("%s: the composed %s child handle must carry exactly childId and target, found %r" % (where, member, sorted(document[member])))
+    if set(document["flow"]) != {"childId", "target"}:
+        raise AssertionError("%s: the composed flow child handle must carry exactly childId and target, found %r" % (where, sorted(document["flow"])))
 # endregion 🔖️Laws
 
 
 # region 🔖️Plan
 def doc_json(ctx):
-    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own. It carries this
-    case's `scene`, the child content without which no diagnostic here is derivable."""
+    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return json.loads(step["docString"])
@@ -261,45 +148,40 @@ def outcome_of(payload):
 
 # region 🔖️Handlers
 def mutate_handler(kind):
-    """🎯️ Derives this kind's diagnostic from the working scene, asserts it against the committed
-    outcome, and answers the snapshot the verb leaves behind."""
+    """🎯️ Derives this kind's diagnostic from the document, asserts it against the committed outcome, and answers the snapshot
+    the verb leaves behind."""
 
     def handler(ctx):
         spec = doc_json(ctx)
         if spec.get("kind") != kind:
             raise AssertionError("mutate-%s: the feature's doc string states %r" % (kind, spec.get("kind")))
-        scene = spec.get("scene", [])
         before = json_fixture(ctx, "⬅️before")
         after = json_fixture(ctx, "➡️after")
         outcome = json_fixture(ctx, "🎯️outcome")
         validate(before, "mutate-%s" % kind)
         payload = payload_of(ctx, kind)
-        diagnoses_as_committed(kind, diagnose(kind, payload, scene), outcome)
-        applied = apply_mutation(before, kind, payload, scene)
+        diagnoses_as_committed(kind, diagnose(kind, payload, before), outcome)
+        applied = apply_mutation(before, kind, payload)
         validate(applied, "mutate-%s" % kind)
         equals_committed(kind, applied, after)
-        if kind != "change-title" and applied != before:
-            raise AssertionError("mutate-%s: this kind addresses the child scene, so it cannot move a snapshot that holds only handles, yet the snapshot moved" % kind)
         return outcome_of(applied)
 
     return handler
 
 
 def inverse_handler(kind):
-    """↩️ Applies one kind and then its OWN computed inverse and requires the committed before-snapshot
-    back, member for member."""
+    """↩️ Applies one kind and then its OWN computed inverse and requires the committed before-snapshot back, member for member."""
 
     def handler(ctx):
         spec = doc_json(ctx)
         if spec.get("kind") != kind:
             raise AssertionError("inverse-%s: the feature's doc string states %r" % (kind, spec.get("kind")))
-        scene = spec.get("scene", [])
         before = json_fixture(ctx, "⬅️before")
         payload = payload_of(ctx, kind)
         validate(before, "inverse-%s" % kind)
-        current = apply_mutation(before, kind, payload, scene)
-        for step_kind, step_payload in inverse_mutation(before, kind, payload, scene):
-            current = apply_mutation(current, step_kind, step_payload, scene)
+        current = apply_mutation(before, kind, payload)
+        for step_kind, step_payload in inverse_mutation(before, kind, payload):
+            current = apply_mutation(current, step_kind, step_payload)
         restores(kind, current, before)
         return outcome_of(current)
 
@@ -313,16 +195,16 @@ def refuse_carrier(ctx):
     generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`,
     `layer = shape-layer | path-layer | text-layer`, `canvas-field = "id" | "x" | "y" | "fill" |
     "stroke" | "opacity"` — and the committed artifact contains no `layers` block, no layer and no
-    canvas field. What it does contain is five HEX-ENCODED scalars and two `[hex,hex]` child-handle
-    pairs, none of which the grammar mentions. Four more subsets — `📋️forms`, `📏️layout`, `🖍️draw` and
+    canvas field. What it does contain is HEX-ENCODED scalars and a `[hex,hex]` child-handle pair,
+    none of which the grammar mentions. Four more subsets — `📋️forms`, `📏️layout`, `🖍️draw` and
     `🖨️raster` — carry the same canvas grammar over four equally unrelated documents, differing from
     this one only in the `grammar`, `extension` and `artifact-mark` lines."""
     committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar describes a "
         "DIFFERENT document — the generic `family-scene` canvas grammar, `doc-body = schema-line layers-block` with shape/path/text layers and "
-        "`id`/`x`/`y`/`fill`/`stroke`/`opacity` fields — while the committed artifact carries no `layers` block at all, and instead five HEX-ENCODED "
-        "scalars and two `[hex,hex]` child-handle pairs the grammar never mentions. Nothing committed says the values are hex, that a pair is "
+        "`id`/`x`/`y`/`fill`/`stroke`/`opacity` fields — while the committed artifact carries no `layers` block at all, and instead HEX-ENCODED "
+        "scalars and a `[hex,hex]` child-handle pair the grammar never mentions. Nothing committed says the values are hex, that a pair is "
         "`(childId, target)`, or how the second element's `<artifactId>!<kind>@<standard>/<subset>` spelling is split. Four more subsets — `📋️forms`, `📏️layout`, "
         "`🖍️draw` and `🖨️raster` — carry the same canvas grammar over four equally unrelated documents, differing only in their `grammar`, "
         "`extension` and `artifact-mark` lines. Read %d bytes of the committed artifact and refused to "

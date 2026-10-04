@@ -183,7 +183,7 @@ mod kinds_catalog;
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes one committed mutation JSON document into [`En1990Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1990_mutation_json(text: &str) -> Result<En1990Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1990_mutation(base: &En1990Snapshot, mutation: &En1990Mutation) -> Result<(En1990Snapshot, Vec<String>), String> {
@@ -193,7 +193,10 @@ pub fn apply_en1990_mutation(base: &En1990Snapshot, mutation: &En1990Mutation) -
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-pub fn inverse_en1990_mutation(mutation: &En1990Mutation, base: &En1990Snapshot) -> Vec<En1990Mutation> {
-    <En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(mutation, base)
+pub fn inverse_en1990_mutation(mutation: &En1990Mutation, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(mutation, base)?
+
+    })
 }
 //#endregion 🌉️ExternalCodecBridge
